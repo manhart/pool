@@ -1,0 +1,33 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    position: relative;
+    padding: .5rem .9rem;
+}
+
+nav > ul {
+    padding: 0;
+}
+nav > ul li {
+    display: inline-block;
+}
+
+.schema {
+    position: inherit;
+}
+
+footer {
+    position: absolute;
+    bottom: 0px;
+}
