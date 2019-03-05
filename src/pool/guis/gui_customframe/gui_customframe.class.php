@@ -13,8 +13,8 @@
  * @version
  *
  * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @link http://www.misterelsa.de
  */
 
 /**
@@ -166,8 +166,6 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * GUI_CustomFrame::addBodyLoad()
-     *
      * Fuegt dem (Document) Body Load-Ereignis eine (JavaScript-)Funktion hinzu.
      *
      * @access public
@@ -181,8 +179,6 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * GUI_CustomFrame::addBodyUnload()
-     *
      * Fuegt dem (Document) Body Unload-Ereignis eine (JavaScript-) Funktion hinzu.
      *
      * @access public
@@ -211,8 +207,6 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * GUI_CustomFrame::addBodyMousemove()
-     *
      * Fuegt dem (Document) Body Mousemove-Ereignis eine JavaScript-Funktion hinzu.
      *
      * @access public
@@ -226,8 +220,6 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * GUI_CustomFrame::addBodyMouseout()
-     *
      * Fuegt dem (Document) Body Mouseout-Ereignis eine JavaScript-Funktion hinzu.
      *
      * @access public
@@ -241,8 +233,6 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * GUI_CustomFrame::addBodyMousedown()
-     *
      * Fuegt dem (Document) Body Mousedown-Ereignis eine JavaScript-Funktion hinzu.
      *
      * @access public
@@ -347,7 +337,7 @@ class GUI_CustomFrame extends GUI_Module
         $content = str_replace('{DOKEYDOWN}', $dokeydown, $content);
         $content = str_replace('{DOKEYPRESS}', $dokeypress, $content);
 
-
+        
         if (version_compare(phpversion(), '5.0.0', '>=')) {
             if($header_name) $content = str_ireplace(array('<'.$header_name.'>'.'</'.$header_name.'>','<'.$header_name.'>', '<'.$header_name.'/>'), $content_header, $content);
             if($tooltip_name) $content = str_ireplace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);
