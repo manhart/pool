@@ -35,7 +35,7 @@
 		 * @access public
 		 * @package pool
 		 **/
-		class Component extends Object
+		class Component extends PoolObject
 		{
 			/**
 			 * Eigentuemer vom Typ Component
@@ -91,7 +91,7 @@
 			 * @access public
 			 * @param Component $Owner Der Eigentuemer erwartet ein Objekt vom Typ Component. Es kann auch unser NULL Objekt Nil verwendet werden, falls kein Eigent�mer feststeht.
 			 */
-			function Component(&$Owner)
+			function __construct(&$Owner)
 			{
 				if (@is_a($Owner, 'component')) {
 					$this->Owner = &$Owner;
@@ -115,7 +115,7 @@
 			 * @access public
 			 * @param Component $Owner Objekt vom Typ Component
 			 * @return Component Neue Klasse
-			 * @see Object::createNew()
+			 * @see PoolObject::createNew()
 			 */
 			function &createNew()
 			{

@@ -64,7 +64,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
          * @param MySQL_Interface $db Datenbank Layer (Class MySQL_db)
          * @see MySQL_db
          **/
-        function MySQL_Resultset(& $db)
+        function __construct(& $db)
         {
             $this->db = & $db;
         }

@@ -96,9 +96,9 @@ if(!defined('CLASS_MODULE')) {
          * @access public
          * @param Component $Owner Eigent�mer dieser Instanz
          **/
-        function Module(&$Owner)
+        function __construct(&$Owner)
         {
-            parent::Component($Owner);
+            parent::__construct($Owner);
 
             $this->Modules = Array();
             $this->Handoff = Array();
@@ -370,7 +370,7 @@ if(!defined('CLASS_MODULE')) {
          **/
         function destroy()
         {
-            parent:: destroy();
+            parent::destroy();
 
             unset($this -> Modules);
         }

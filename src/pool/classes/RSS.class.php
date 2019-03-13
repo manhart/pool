@@ -41,7 +41,7 @@ define("RSS_PARSED_NOT_RSS",                   "*Not* RSS data");
  * @version $Id: RSS.class.php,v 1.2 2006/08/07 11:34:51 manhart Exp $
  * @access public
  **/
-class RSS extends Object
+class RSS extends PoolObject
 {
     //@var array Chanels
     var $channels = array();
@@ -101,27 +101,27 @@ class RSS extends Object
      * @access public
      * @param string $data XML (RSS feed) Daten (kein Pflichtparameter)
      **/
-    function RSS($data = "")
+    function __construct($data = "")
     {
         if (empty($data)) {
             $this -> clearChannels();
         }
         else {
             $error = $this -> _parseRSS($data);
-            if (! Object::isError($error)) {
+            if (! PoolObject::isError($error)) {
                 $this->rss_type = RSS_PARSED_COMPLIANT;
             } else {
                 $this->channelsElements1["language"]="?";
                 $this->clearChannels();
                 $error=$this->_parseRSS($data);
 
-                if (! Object::isError($error)) {
+                if (! PoolObject::isError($error)) {
                     $this->rss_type = RSS_PARSED_ALMOST_COMPLIANT;
                 } else {
                     $this->clearChannels();
                     $error=$this->_parseElement($data, "item", "+", RSS_PARSE_MULTI);
 
-                    if (! Object::isError($error)) {
+                    if (! PoolObject::isError($error)) {
                         $this->channels[0]["item"] = $error;
                         $this->rss_type = RSS_PARSED_SIMPLE;
                     } else {
@@ -164,7 +164,7 @@ class RSS extends Object
                 $a = array();
                 foreach($this->channelsElements1 AS $key=>$val) {
                     $elem = $this->_parseElement($info, $key, $val, RSS_PARSE_SINGLE);
-                    if (Object::isError($elem)) {
+                    if (PoolObject::isError($elem)) {
                         return $elem;
                     } else {
                         $a[$key] = $elem;
@@ -172,7 +172,7 @@ class RSS extends Object
                 }
                 foreach($this->channelsElements2 AS $key=>$val) {
                     $elem = $this->_parseElement($data, $key, $val, RSS_PARSE_MULTI);
-                    if (Object::isError($elem)) {
+                    if (PoolObject::isError($elem)) {
                         return $elem;
                     } else {
                         $a[$key] = $elem;
@@ -180,7 +180,7 @@ class RSS extends Object
                 }
                 foreach($this->channelsElements3 AS $key=>$val) {
                     $elem = $this->_parseElement($info, $key, $val, RSS_PARSE_ARRAY);
-                    if (Object::isError($elem)) {
+                    if (PoolObject::isError($elem)) {
                         return $elem;
                     } else {
                         $a[$key] = $elem;
@@ -264,14 +264,14 @@ class RSS extends Object
                     foreach($elements AS $key=>$val) {
                         if ($parseMode==RSS_PARSE_MULTI) {
                             $elem = $this->_parseElement($value,$key,$val,RSS_PARSE_SINGLE);
-                            if (Object::isError($elem)) {
+                            if (PoolObject::isError($elem)) {
                                 return $elem;
                             } else {
                                 $returnValue[$c][$key]=$elem;
                             }
                         } else {
                             $elem = $this->_parseElement($value,$key,$val,RSS_PARSE_SINGLE);
-                            if (Object::isError($elem)) {
+                            if (PoolObject::isError($elem)) {
                                 return $elem;
                             } else {
                                 $returnValue=$elem;

@@ -18,16 +18,16 @@
 	*
 	* $Log: ActionHandler.class.php,v $
 	* Revision 1.16  2006/09/18 10:21:41  manhart
-	* Fix Partner/Verlage löschen
+	* Fix Partner/Verlage lï¿½schen
 	*
 	* Revision 1.15  2006/09/15 13:05:39  manhart
-	* Fix in Partner/Verlage - doppelte Listeneinträge
+	* Fix in Partner/Verlage - doppelte Listeneintrï¿½ge
 	*
 	* Revision 1.14  2006/09/15 12:42:50  manhart
 	* Beschleunigung durch foreach
 	*
 	* Revision 1.13  2006/07/05 15:21:35  manhart
-	* beim Selektieren wird autoamatisch der selektierte Datensatz aktualisiert (vor Selektion!), dabei wird after_search aufgerufen um die Listenformatierungen zu übernehmen...
+	* beim Selektieren wird autoamatisch der selektierte Datensatz aktualisiert (vor Selektion!), dabei wird after_search aufgerufen um die Listenformatierungen zu ï¿½bernehmen...
 	*
 	* Revision 1.12  2006/02/02 13:12:31  manhart
 	* nur Kommentare
@@ -36,13 +36,13 @@
 	* comment
 	*
 	* Revision 1.10  2005/12/06 13:17:59  manhart
-	* Löschen nur, falls keine Aufträge existieren.
+	* Lï¿½schen nur, falls keine Auftrï¿½ge existieren.
 	*
 	* Revision 1.9  2005/10/06 14:21:28  schmidseder
 	* Bruttoabschluss
 	*
 	* Revision 1.8  2005/08/17 14:35:04  manhart
-	* Schöne Fehlermeldung wenn kein PK gefunden wurde
+	* Schï¿½ne Fehlermeldung wenn kein PK gefunden wurde
 	*
 	* Revision 1.7  2005/07/20 14:56:29  manhart
 	* Verlags-Mediensuche in Partner/Verlage
@@ -177,9 +177,9 @@
 		 * @access public
 		 * @param Component $Owner Besitzer
 		 **/
-		function ActionHandler(& $Owner)
+		function __construct(& $Owner)
 		{
-			parent :: Component($Owner);
+			parent::__construct($Owner);
 		}
 
 		/**
@@ -347,7 +347,7 @@
 
 
 				//
-				// Update der Daten in der Liste (auch beim Selektieren ... z.B. beim zurück klicken erforderlich)
+				// Update der Daten in der Liste (auch beim Selektieren ... z.B. beim zurï¿½ck klicken erforderlich)
 				$list = $this->buffer['list'];
 
 				$numRecords = count($list);
@@ -377,7 +377,7 @@
 				// Error oder nichts gefunden $Resultset -> getLastError
 				$this->buffer['id'] = null;
 				$this->buffer['record'] = null;
-				$this->addError('Keinen Datensatz mit Primärschlüssel ('.
+				$this->addError('Keinen Datensatz mit Primï¿½rschlï¿½ssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
 					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
 				return false;
@@ -653,7 +653,7 @@
 				if($continue) {
 					$Resultset = & $this -> DAO -> delete($id);
 					if(!$Resultset) {
-						$this -> addError('Löschvorgang abgebrochen! Unbekannter Fehler.', 0);
+						$this -> addError('Lï¿½schvorgang abgebrochen! Unbekannter Fehler.', 0);
 						return 0;
 					}
 					if($error_message = $Resultset -> getLastError()) {

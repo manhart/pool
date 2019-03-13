@@ -32,9 +32,9 @@ class GUI_DBCount extends GUI_Module
 {
     var $returnValue = '';
 
-    function GUI_DBCount(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner, false);
+        parent::__construct($Owner, false);
     }
 
     function loadFiles()

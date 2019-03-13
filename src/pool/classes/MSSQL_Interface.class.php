@@ -119,7 +119,7 @@ if(!defined('MYSQL_LAYER'))
         *
         * @access public
         */
-        function MSSQL_Interface()
+        function __construct()
         {
         }
 

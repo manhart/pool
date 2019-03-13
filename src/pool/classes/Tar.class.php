@@ -62,7 +62,7 @@ Version History:
 =======================================================================
 */
 
-class Tar extends Object {
+class Tar extends PoolObject {
 	// Unprocessed Archive Information
 	var $filename;
 	var $isGzipped;
@@ -76,7 +76,7 @@ class Tar extends Object {
 
 
 	// Class Constructor -- Does nothing...
-	function Tar() {
+	function __construct() {
 		return true;
 	}
 

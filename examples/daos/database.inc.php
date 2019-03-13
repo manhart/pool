@@ -18,12 +18,14 @@
 
 	#### Datainterface Types:
 	define('DATAINTERFACE_MYSQL', 'MySQL_Interface');
-	// define('DATAINTERFACE_POSTGRESQL', 'PostgreSQL_Interface');
-	// define('DATAINTERFACE_CISAM', 'CISAM_Interface');
+	define('DATAINTERFACE_MYSQLI', 'MySQLi_Interface');
+	define('DATAINTERFACE_POSTGRESQL', 'PostgreSQL_Interface');
+	define('DATAINTERFACE_CISAM', 'CISAM_Interface');
+	define('DATAINTERFACE_C16', 'C16_Interface');
 
 	/* ===== */
 	/* MySQL */
 	/* ===== */
-	$Testing_User 	= array(DATAINTERFACE_MYSQL, DB_TESTING, 'User');
+	$Testing_User 	= array(DATAINTERFACE_MYSQLI, DB_TESTING, 'User');
 
 	define('DBACCESSFILE', DIR_POOL_ROOT. '/configs/access.inc.php');

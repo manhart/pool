@@ -12,9 +12,9 @@
 */
 class GUI_Comments extends GUI_Module
 {
-    function GUI_Comments(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner, false);
+        parent::__construct($Owner, false);
     }
 
     function init($superglobals=I_EMPTY)

@@ -30,13 +30,13 @@ if(!defined('CLASS_RESULTSET')) {
      *
      * Abstrakte Klasse Resultset als Mittel zur komfortablen Datenverwaltung.
      *
-     * @package rml
+     * @package pool
      * @access public
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @version $Id: Resultset.class.php,v 1.34 2007/08/06 11:59:39 manhart Exp $
      * @access public
      **/
-    class Resultset extends Object
+    class Resultset extends PoolObject
     {
         //@var array Entitaetsmenge (Sammlung von Datensaetzen)
         //@access protected

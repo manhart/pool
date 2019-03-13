@@ -1,6 +1,6 @@
 <?php
 /**
- * POOL (PHP Object Oriented Library): die Datei Object.class.php enthaelt die Grundklasse, der Uhrahn aller Objekte.
+ * POOL (PHP Object Oriented Library): die Datei PoolObject.class.php enthaelt die Grundklasse, der Uhrahn aller Objekte.
  *
  * Die Klasse Nil ist ein NULL Objekt und hat keine Bedeutung (wie in Pascal/Delphi).<br>
  *
@@ -9,7 +9,7 @@
  *
  * Letzte aenderung am: $Date: 2006/10/20 08:42:17 $
  *
- * $Log: Object.class.php,v $
+ * $Log: PoolObject.class.php,v $
  * Revision 1.12  2006/10/20 08:42:17  manhart
  * n/a
  *
@@ -17,7 +17,7 @@
  * Exception -> Xception (PHP5 kompatibel)
  *
  *
- * @version $Id: Object.class.php,v 1.12 2006/10/20 08:42:17 manhart Exp $
+ * @version $Id: PoolObject.class.php,v 1.12 2006/10/20 08:42:17 manhart Exp $
  * @version $Revision 1.0$
  * @version
  *
@@ -27,12 +27,12 @@
  * @package pool
  */
 
-if(!defined('CLASS_OBJECT')) {
+if(!defined('CLASS_POOLOBJECT')) {
     /**
      * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)
      * @ignore
      */
-    define('CLASS_OBJECT',			1);
+    define('CLASS_POOLOBJECT',			1);
 
     if (substr(PHP_OS, 0, 3) == 'WIN') {
         $os_windows = true;
@@ -72,7 +72,7 @@ if(!defined('CLASS_OBJECT')) {
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @package pool
      */
-    class Object
+    class PoolObject extends stdClass
     {
         /**
          * Debug-Modus (Default: false)
@@ -95,7 +95,7 @@ if(!defined('CLASS_OBJECT')) {
          *
          * @access public
          */
-        function Object()
+        function __construct()
         {
         }
 
@@ -103,7 +103,7 @@ if(!defined('CLASS_OBJECT')) {
          * Erzeugt eine neue Instanz der Klasse.
          *
          * @access public
-         * @return Object
+         * @return PoolObject
          */
         function &createNew()
         {
@@ -148,7 +148,7 @@ if(!defined('CLASS_OBJECT')) {
         * Die Methode assignObject kopiert alle Eigenschaften eines Objektes gleichen Typs auf sich selbst.
         *
         * @access public
-        * @param Object $object Objekt, von dem Eigenschaften uebernommen werden sollen
+        * @param PoolObject $object Objekt, von dem Eigenschaften uebernommen werden sollen
         * @return bool Erfolgsstatus
         */
         function assignObject($object)
@@ -192,7 +192,7 @@ if(!defined('CLASS_OBJECT')) {
          *
          * @access public
          * @param string $text Text
-         * @see Object::$new_line
+         * @see PoolObject::$new_line
          */
         function debug($text)
         {
@@ -314,8 +314,8 @@ if(!defined('CLASS_OBJECT')) {
          */
         function destroy()
         {
-            unset($this -> new_line);
-            unset($this -> isDebugMode);
+            unset($this->new_line);
+            unset($this->isDebugMode);
         }
     }
 

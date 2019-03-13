@@ -148,7 +148,7 @@ if(!defined('MYSQL_LAYER'))
         *
         * @access public
         */
-        function MySQL_Interface()
+        function __construct()
         {
         }
 

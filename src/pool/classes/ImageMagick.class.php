@@ -30,7 +30,7 @@
  * @version $Id: ImageMagick.class.php,v 1.5 2007/07/11 07:56:54 manhart Exp $
  * @access public
  **/
-class ImageMagick extends Object
+class ImageMagick extends PoolObject
 {
     //@var string Zielverzeichnis, wohin das fertige Bild gespeichert werden soll
     //@access private
@@ -108,7 +108,7 @@ class ImageMagick extends Object
      * @param string $temp_dir "Temp" Verzeichnis
      * @param boolean $verbose Debugausgaben
      **/
-    function ImageMagick($imagemagickdir='/usr/local/bin', $temp_dir='/var/tmp', $verbose=false)
+    function __construct($imagemagickdir='/usr/local/bin', $temp_dir='/var/tmp', $verbose=false)
     {
         $this -> setVerbose($verbose);
         $this -> imagemagickdir = $imagemagickdir;

@@ -26,7 +26,7 @@ if(!defined('CLASS_SUBCODERESULT'))
      * @version $Id: SubcodeResult.class.php,v 1.5 2007/02/16 07:46:03 manhart Exp $
      * @access public
      **/
-    class SubcodeResult extends Object
+    class SubcodeResult extends PoolObject
     {
         /**
          * Ergebnisliste

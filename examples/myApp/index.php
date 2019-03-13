@@ -24,8 +24,8 @@ if($Weblication instanceof Weblication) {
         'database' => constant('DB_TESTING')
         /* 'charset' => MYSQL_CHARSET */
     );
-    $MySQL_db = DataInterface::createDataInterface(DATAINTERFACE_MYSQL, $MySQL_Packet);
-    $Weblication->addDataInterface($MySQL_db);
+    $MySQLi_db = DataInterface::createDataInterface(DATAINTERFACE_MYSQLI, $MySQL_Packet);
+    $Weblication->addDataInterface($MySQLi_db);
 
     $Session = $Weblication->startPHPSession();
 

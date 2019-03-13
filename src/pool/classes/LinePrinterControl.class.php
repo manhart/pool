@@ -42,7 +42,7 @@ if(!defined('CLASS_LPC')) {
      * @access public
      * @package pool
      */
-    class LinePrinterControl extends Object
+    class LinePrinterControl extends PoolObject
     {
         /**
          * Server
@@ -69,7 +69,7 @@ if(!defined('CLASS_LPC')) {
 
         var $useRSH = false;
 
-        function LinePrinterControl($serverName, $printerName)
+        function __construct($serverName, $printerName)
         {
             $this -> serverName = $serverName;
             $this -> printerName = $printerName;
@@ -176,7 +176,7 @@ if(!defined('CLASS_LPC')) {
 
                 default:
                     $Xception = new Xception('Action: "' . $action . '" not known!');
-                    Object::throwException($Xception);
+                    PoolObject::throwException($Xception);
                     break;
              }
         }

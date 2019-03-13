@@ -27,14 +27,12 @@ class GUI_ProtectEMail extends GUI_Module
 {
     var $jsEMailLink='';
 
-    function GUI_ProtectEMail(&$Owner)
+    function __construct(&$Owner)
     {
-        parent :: GUI_Module($Owner, false);
+        parent::__construct($Owner, false);
     }
 
     /**
-     * GUI_ProtectEMail::init()
-     *
      * Initialisiert Standardwerte:
      *
      * TODO Parameter

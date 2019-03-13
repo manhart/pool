@@ -37,7 +37,7 @@ if(!defined('CLASS_CUPSPRINTER')) {
      * @access public
      * @package pool
      */
-    class CupsPrinter extends Object
+    class CupsPrinter extends PoolObject
     {
         /**
          * Server
@@ -62,7 +62,7 @@ if(!defined('CLASS_CUPSPRINTER')) {
          */
         var $useSSH = true;
 
-        function CupsPrinter($serverName, $printerName)
+        function __construct($serverName, $printerName)
         {
             $this -> serverName = $serverName;
             $this -> printerName = $printerName;
@@ -123,7 +123,7 @@ if(!defined('CLASS_CUPSPRINTER')) {
 
                 default:
                     $Xception = new Xception('Action: "' . $action . '" not known!');
-                    Object::throwException($Xception);
+                    PoolObject::throwException($Xception);
                     break;
              }
         }

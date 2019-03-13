@@ -35,9 +35,9 @@ class GUI_DisplayImage extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_DisplayImage(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner, false);
+        parent::__construct($Owner, false);
     }
 
     /**

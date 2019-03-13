@@ -40,7 +40,7 @@ if(!defined('CLASS_DAO')) {
      * @version $Id: DAO.class.php,v 1.12 2007/05/07 11:15:01 manhart Exp $
      * @access public
      **/
-    class DAO extends Object
+    class DAO extends PoolObject
     {
         //@var string DAO Type
         //@access private
@@ -82,7 +82,7 @@ if(!defined('CLASS_DAO')) {
          *
          * @access protected
          **/
-        function DAO()
+        function __construct()
         {
         }
 
@@ -226,6 +226,7 @@ if(!defined('CLASS_DAO')) {
          * Liefert den Typ einer Spalte
          *
          * @param string $fieldname
+         * @return null
          */
         function getFieldType($fieldname)
         {
@@ -405,6 +406,7 @@ if(!defined('CLASS_DAO')) {
             }
             switch($type) {
                 case DATAINTERFACE_MYSQL:
+                case DATAINTERFACE_MYSQLI:
                     $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_MYSQL).$dbname.'/'.utf8_encode($table).'.class.php';
                     $file_exists = file_exists($include);
                     if (!class_exists($table) and $file_exists) {

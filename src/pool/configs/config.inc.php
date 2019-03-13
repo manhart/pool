@@ -38,7 +38,10 @@
 */
 
 $loc = setlocale(LC_TIME, 'de_DE.UTF-8'); // charset must be installed on system!
-mb_detect_order('UTF-8,ISO-8859-1');
+
+if(extension_loaded('mbstring')) {
+    mb_detect_order('UTF-8,ISO-8859-1');
+}
 
 /* check Servername und stelle die Weichen */
 switch($_SERVER['SERVER_NAME']) {

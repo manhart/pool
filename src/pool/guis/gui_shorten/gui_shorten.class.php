@@ -69,10 +69,10 @@ class GUI_Shorten extends GUI_Module
      * @access public
      * @param Component $Owner Besitzer vom Typ Component
      **/
-    function GUI_Shorten(& $Owner)
+    function __construct(& $Owner)
     {
         // Kein Bedarf an einem Template
-        parent :: Module($Owner);
+        parent::__construct($Owner);
     }
 
     /**
