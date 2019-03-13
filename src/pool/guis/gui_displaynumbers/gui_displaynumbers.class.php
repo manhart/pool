@@ -35,14 +35,12 @@ class GUI_DisplayNumbers extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_DisplayNumbers(& $Owner, $AutoLoadFiles=false)
+    function __construct(& $Owner, $AutoLoadFiles=false)
     {
-        parent :: GUI_Module($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $AutoLoadFiles);
     }
 
     /**
-     * GUI_DisplayNumbers::init()
-     *
      * Default Werte setzen. Input initialisieren.
      *
      * @access public

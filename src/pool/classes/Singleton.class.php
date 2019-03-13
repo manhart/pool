@@ -57,7 +57,7 @@ if(!defined('CLASS_SINGLETON')) {
          *
          * @access public
          **/
-        function Singleton()
+        function __construct()
         {
         }
 

@@ -42,7 +42,7 @@
  * @version $Id: DBSession.class.php,v 1.6 2007/05/16 15:17:59 manhart Exp $
  * @access public
  **/
-class DBSession extends Object
+class DBSession extends PoolObject
 {
     /**
      * Session ID
@@ -99,7 +99,7 @@ class DBSession extends Object
      * @param string $sid Session ID
      * @param boolean $ipUserAgentRestriction Beschraenkung der DBSession auf IP/Browser (solange nicht die Gefahr besteht, dass man die URL z.B. in Foren kopiert, kann man dieses Feature ausschalten)
      **/
-    function DBSession (&$interfaces, $tabledefine, $sid='', $ipUserAgentRestriction=true)
+    function __construct(&$interfaces, $tabledefine, $sid='', $ipUserAgentRestriction=true)
     {
         $this->ipUserAgentRestriction = $ipUserAgentRestriction;
 

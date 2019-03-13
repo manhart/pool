@@ -12,14 +12,12 @@ if (!defined('CLASS_CISAM')) {
 		var $client = null;
 
 		/**
-		 * CISAM_Resultset::CISAM_Resultset()
-		 *
 		 * @param $client
-		 * @return
 		 **/
-		function CISAM_Resultset(& $client)
+		function __construct(& $client)
 		{
-			$this -> client = & $client;
+			$this->client = & $client;
+            parent::__construct();
 		}
 
 		/**

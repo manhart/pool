@@ -108,7 +108,7 @@
  * @version $Id: MCrypt.class.php,v 1.3 2005/12/30 12:45:18 manhart Exp $
  * @access public
  **/
-class MCrypt extends Object
+class MCrypt extends PoolObject
 {
     //@var string Cipher zum Verschluesseln
     //@access private
@@ -127,9 +127,9 @@ class MCrypt extends Object
      *
      * @access public
      **/
-    function MCrypt ()
+    function __construct ()
     {
-        parent :: Object();
+        parent::__construct();
 
         // make sure we can use mcrypt_generic_init
         if (!function_exists('mcrypt_generic_init')) {

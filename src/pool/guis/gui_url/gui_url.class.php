@@ -35,9 +35,9 @@ class GUI_Url extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_Url(& $Owner, $AutoLoadFiles=false)
+    function __construct(& $Owner, $AutoLoadFiles=false)
     {
-        parent :: GUI_Module($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $AutoLoadFiles);
     }
 
     /**

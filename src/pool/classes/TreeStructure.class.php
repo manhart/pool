@@ -13,7 +13,12 @@ class TreeStructure
     var $root = null;
     var $activeNode = null;
 
-    function TreeStructure(&$TreeNode_root, &$Input) {
+    /**
+     * TreeStructure constructor.
+     * @param TreeNode $TreeNode_root TreeNode
+     * @param Input $Input Input
+     */
+    function __construct(&$TreeNode_root, &$Input) {
         $this -> root = $TreeNode_root;
 
         $nodeIdent = $Input -> getVar('nodeIdent');
@@ -117,10 +122,10 @@ class TreeNode
     var $ident = 1;
     var $name = '';
 
-    function TreeNode($caption, $properties=null, $options=null)
+    function __construct($caption, $properties=null, $options=null)
     {
-        $this -> caption = $caption;
-        $this -> options = $options;
+        $this->caption = $caption;
+        $this->options = $options;
 
         if(is_array($properties)) {
             foreach($properties as $property_key => $property_value) {

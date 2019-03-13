@@ -167,9 +167,9 @@
 			 * Konstruktor
 			 *
 			 **/
-			function CISAM_DAO()
+			function __construct()
 			{
-				parent :: DAO();
+				parent::__construct();
 			}
 
 			/**

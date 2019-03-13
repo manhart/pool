@@ -10,12 +10,12 @@ define('CHOOSY_TRANSFER_DB', 		'transfer_by_db');
 
 class GUI_Selectionlist extends GUI_Module
 {
-    function GUI_Selectionlist(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner, false);
+        parent::__construct($Owner, false);
     }
 
-    function init()
+    function init($superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -89,7 +89,7 @@ class GUI_Selectionlist extends GUI_Module
         $inputfile = $Input -> getVar('inputfile');
         $selectionfile = $Input -> getVar('selectionfile');
         $tabledefine = $Input -> getVar('tabledefine');
-        $outputfile = $Input -> getVar('outputfile');
+//        $outputfile = $Input -> getVar('outputfile');
         $separator = $Input -> getVar('separator');
 
         #### suche

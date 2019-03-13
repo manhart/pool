@@ -9,7 +9,7 @@
 	define('SMTP_STATUS_NOT_CONNECTED', 1, TRUE);
 	define('SMTP_STATUS_CONNECTED', 2, TRUE);
 
-	class smtp extends Object {
+	class smtp extends PoolObject {
 
 		var $authenticated;
 		var $connection;
@@ -43,7 +43,7 @@
 		*             to fsockopen()
         */
 
-		function smtp($params = array()){
+		function __construct($params = array()){
 
 			if(!defined('CRLF'))
 				define('CRLF', "\r\n", TRUE);

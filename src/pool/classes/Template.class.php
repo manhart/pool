@@ -57,7 +57,7 @@
 		 * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
 		 * @access private
 		 **/
-		class TempHandle extends Object
+		class TempHandle extends PoolObject
 		{
 			//@var string Typ des Handles
 			//@access public
@@ -88,16 +88,14 @@
 			 * @access public
 			 * @param string $type Typ set of (FILE, BLOCK)
 			 */
-			function TempHandle($type)
+			function __construct($type)
 			{
-				parent :: Object();
+				parent::__construct();
 
-				$this -> setType($type);
+				$this->setType($type);
 			}
 
 			/**
-			* TempHandle::setHandle()
-			*
 			* Setzt eindeutigen Handle.
 			*
 			* @access public
@@ -261,9 +259,9 @@
 			* @param string $type Handle-Typ set of (BLOCK, FILE)
 			* @param string $directory Verzeichnis zum Template
 			*/
-			function TempCoreHandle($type, $directory)
+			function __construct($type, $directory)
 			{
-				parent :: TempHandle($type);
+				parent::__construct($type);
 
 				$this -> setDirectory($directory);
 				$this -> BlockList = Array();
@@ -630,13 +628,13 @@
 			* @param string $directory Verzeichnis zum Template
 			* @param string $content Inhalt des Blocks
 			*/
-			function TempBlock($handle, $directory, $content)
+			function __construct($handle, $directory, $content)
 			{
-				parent :: TempCoreHandle('BLOCK', $directory);
+				parent::__construct('BLOCK', $directory);
 
-				$this -> SetHandle($handle);
-    	        $this -> AllowParse = false;
-				$this -> SetContent($content);
+				$this->SetHandle($handle);
+    	        $this->AllowParse = false;
+				$this->SetContent($content);
 			}
 
 			/**
@@ -733,13 +731,13 @@
 			* @param string $directory Verzeichnis zur Datei
 			* @param string $filename Dateiname
 			*/
-			function TempFile($handle, $directory, $filename)
+			function __construct($handle, $directory, $filename)
 			{
-				parent :: TempCoreHandle('FILE', $directory);
+				parent::__construct('FILE', $directory);
 
-				$this -> setHandle($handle);
-				$this -> Filename = $filename;
-				$this -> loadFile();
+				$this->setHandle($handle);
+				$this->Filename = $filename;
+				$this->loadFile();
 			}
 
 			/**
@@ -795,11 +793,11 @@
 /* --------------------- */
 		class TempSimple extends TempFile
 		{
-			function TempSimple($handle, $content)
+			function __construct($handle, $content)
 			{
-				parent :: TempCoreHandle('FILE', '');
-				$this -> setHandle($handle);
-				$this -> setContent($content);
+				parent::__construct('FILE', '');
+				$this->setHandle($handle);
+				$this->setContent($content);
 			}
 		}
 
@@ -833,9 +831,9 @@
 			* @param string $directory Verzeichnis zur Datei
 			* @param string $filename Dateiname
 			*/
-			function TempScript($handle, $directory, $filename)
+			function __construct($handle, $directory, $filename)
 			{
-				parent :: TempFile($handle, $directory, $filename);
+				parent::__construct($handle, $directory, $filename);
 			}
 
 			/**
@@ -876,7 +874,7 @@
 		 * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
 		 * @access public
 		 **/
-		class Template extends Object
+		class Template extends PoolObject
 		{
 			//@var string Verzeichnis zu den Templates
 			//@access private
@@ -915,10 +913,10 @@
 			* @access public
 			* @param string $dir Verzeichnis zu den Templates (Standardwert ./)
 			*/
-			function Template($dir = './')
+			function __construct($dir = './')
 			{
-				$this -> FileList = Array();
-				$this -> setDirectory($dir);
+				$this->FileList = Array();
+				$this->setDirectory($dir);
 			}
 
 			/**

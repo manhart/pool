@@ -43,17 +43,15 @@ class GUI_Box extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_Box(& $Owner, $AutoLoadFiles=true)
+    function __construct(& $Owner, $AutoLoadFiles=true)
     {
         $this -> enabledBox = false;
         $this -> TplBox = & new Template();
 
-        parent :: GUI_Module($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $AutoLoadFiles);
     }
 
     /**
-     * GUI_Box::init()
-     *
      * Default Werte setzen. Input initialisieren.
      *
      * @access public

@@ -29,9 +29,9 @@ class GUI_Calendar extends GUI_Module
     */
     var $highlightDate = false;
 
-    function GUI_Calendar(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner);
+        parent::__construct($Owner);
     }
 
     function init($superglobals=I_EMPTY)

@@ -239,9 +239,9 @@ if(!defined('CLASS_MYSQLDAO')) {
          *
          * @access public
          **/
-        function MySQL_DAO()
+        function __construct()
         {
-            parent :: DAO();
+            parent::__construct();
 
             $this->reserved_words = $GLOBALS['MySQL_RESERVED_WORDS'];
         }
@@ -1016,9 +1016,9 @@ class CustomMySQL_DAO extends MySQL_DAO
      * @param string $table Tabelle
      * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
      **/
-    function CustomMySQL_DAO(& $db, $dbname, $table, $autoload_fields=true)
+    function __construct(& $db, $dbname, $table, $autoload_fields=true)
     {
-        parent::MySQL_DAO();
+        parent::__construct();
 
         if(!is_a($db, 'DataInterface')) {
             $Xeption = new Xception('Es wurde kein DataInterface �bergeben!', 0, array('file' => __FILE__,

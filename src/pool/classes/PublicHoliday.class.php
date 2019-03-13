@@ -30,7 +30,7 @@ if(!defined('CLASS_PUBLICHOLIDAY')) {
      * @access public
      * @package pool
      */
-    class PublicHoliday extends Object
+    class PublicHoliday extends PoolObject
     {
         /**
          * Ostersonntag Zeitstempel
@@ -47,7 +47,7 @@ if(!defined('CLASS_PUBLICHOLIDAY')) {
          * @param int $year
          * @return PublicHoliday
          */
-        function PublicHoliday($year=null)
+        function __construct($year=null)
         {
             if(!$year) $year = date('Y');
             $this -> year = $year;

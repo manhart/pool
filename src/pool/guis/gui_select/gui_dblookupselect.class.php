@@ -32,9 +32,9 @@ class GUI_DBLookupSelect extends GUI_Select
      * @see Component
      * @access public
      **/
-    function GUI_DBLookupSelect(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Select($Owner);
+        parent::__construct($Owner);
     }
 
     /**

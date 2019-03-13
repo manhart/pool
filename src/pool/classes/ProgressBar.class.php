@@ -31,7 +31,7 @@ if(!defined('CLASS_PROGRESSBAR')) {
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @package pool
      */
-    class ProgressBar extends Object
+    class ProgressBar extends PoolObject
     {
         /**
          * Die Eigenschaft max legt die obere Bereichsgrenze f�r die m�glichen Positionen fest. Default 100.
@@ -126,7 +126,7 @@ if(!defined('CLASS_PROGRESSBAR')) {
 
         var $paintFirstGap = false;
 
-        function ProgressBar($imageBar, $flush=true)
+        function __construct($imageBar, $flush=true)
         {
             $result = $this -> setImage($imageBar);
             if($this -> isError($result)) {

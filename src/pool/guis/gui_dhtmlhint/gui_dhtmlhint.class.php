@@ -33,9 +33,9 @@ class GUI_DHtmlHint extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_DHtmlHint(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner);
+        parent::__construct($Owner);
     }
 
     /**

@@ -136,7 +136,7 @@ if(!defined('CLASS_EXCEPTION')) {
          * @param array $backtrace Optionen wie __FILE__, __LINE__ und Callback-Funktion
          * @access public
          */
-        function Xception($message=null, $code=0, $magicInfo=array(), $mode=null)
+        function __construct($message=null, $code=0, $magicInfo=array(), $mode=null)
         {
 /*				if (version_compare(phpversion(), '4.3.0', '>=')) {
                 // you're on 4.3.0 or later
@@ -587,7 +587,7 @@ if(!defined('CLASS_EXCEPTION')) {
          */
 //			var $defaultTriggerErrorType = E_USER_NOTICE;
 
-        function ExceptionHandler($mode=POOL_ERROR_DISPLAY, $error_handler='pool_error_handler')
+        function __construct($mode=POOL_ERROR_DISPLAY, $error_handler='pool_error_handler')
         {
             $this->from = $_SERVER['SERVER_NAME'];
             $this->mode = $mode;

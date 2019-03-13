@@ -68,7 +68,7 @@
 			 * @param C16_Interface $db Datenbank Layer
 			 * @see C16_Interface
 			 **/
-			function C16_Resultset(& $db)
+			function __construct(& $db)
 			{
 				$this->db = &$db;
 			}

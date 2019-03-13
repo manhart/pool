@@ -51,7 +51,7 @@
 * 
 */
 
-class Contact_Vcard_Parse extends Object {
+class Contact_Vcard_Parse extends PoolObject {
     
     /**
     *
@@ -62,7 +62,7 @@ class Contact_Vcard_Parse extends Object {
     *
     */
     
-    function Contact_Vcard_Parse()
+    function __construct()
     {
         $this->PEAR();
     }

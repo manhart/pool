@@ -8,7 +8,7 @@
 	* alle C16 spezifischen PHP API Befehle (z.B. c16_connect).
 	*
 	* Dabei kapselt sie nicht nur einfach die API Befehle, sondern
-	* enthält eine Verbindungs-Kennung-Verwaltung zur Resourcen-Sharing.
+	* enthï¿½lt eine Verbindungs-Kennung-Verwaltung zur Resourcen-Sharing.
 	* Sie liefert eine Statistik ueber Anzahl der ausgefuehrten
 	* Queries in einem Script, hilft beim Debug durch den Log des...
 	*
@@ -71,7 +71,7 @@
 			var $rowset = array();
 
 			/**
-			 * Enthält den Hostnamen
+			 * Enthï¿½lt den Hostnamen
 			 *
 			 * @var string Servername
 			 * @access private
@@ -79,7 +79,7 @@
 			var $host = '';
 
 			/**
-			 * Enthält den Variablennamen des Authentication-Arrays; Der Variablenname wird vor dem Connect aufgeloest; Das Database Objekt soll keine USER und PASSWOERTER intern speichern. Vorsicht wegem ERRORHANDLER!
+			 * Enthï¿½lt den Variablennamen des Authentication-Arrays; Der Variablenname wird vor dem Connect aufgeloest; Das Database Objekt soll keine USER und PASSWOERTER intern speichern. Vorsicht wegem ERRORHANDLER!
 			 *
 			 * @var array
 			 * @access private
@@ -118,7 +118,7 @@
 		    *
 	    	* @access public
 		    */
-			function C16_Interface()
+			function __construct()
 			{
 				$this -> setInterfaceType(DATAINTERFACE_C16);
 			}
@@ -227,10 +227,10 @@
 	        }
 
 			/**
-			* Holt die Authentication-Daten und gibt den Usernamen zurück
+			* Holt die Authentication-Daten und gibt den Usernamen zurï¿½ck
 			*
 			* @param $database string Datenbank
-		    * @return string Gibt den Usernamen zurück
+		    * @return string Gibt den Usernamen zurï¿½ck
 			*
 	    	* @access private
 		    */
@@ -249,10 +249,10 @@
 	        }
 
 			/**
-			* Holt die Authentication-Daten und gibt das Server Passwort zurück
+			* Holt die Authentication-Daten und gibt das Server Passwort zurï¿½ck
 			*
 			* @param $database string Datenbank
-		    * @return string Gibt das Server Passwort zurück
+		    * @return string Gibt das Server Passwort zurï¿½ck
 			*
 	    	* @access private
 		    */
@@ -428,13 +428,13 @@
 					//return $bResult;
 				}
 				else {
-					$Exception = new Xception('C16 fatal error! Es konnte kein Selektionspuffer für '.$selname.
+					$Exception = new Xception('C16 fatal error! Es konnte kein Selektionspuffer fï¿½r '.$selname.
 						' angelegt werden.', 0, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__), POOL_ERROR_DIE);
 					$this->throwException($Exception);
 				}
 
-				// TODO sinnvoll, den Status von c16 zurück zu geben?
-				// Nein, muss abgeändert werden auf true | false und fehler via getError abfragen
+				// TODO sinnvoll, den Status von c16 zurï¿½ck zu geben?
+				// Nein, muss abgeï¿½ndert werden auf true | false und fehler via getError abfragen
 				return $bResult;
 			}
 
@@ -459,24 +459,24 @@
 			 */
 			function escapeValue($value)
 			{
-				// ü = 138
-				// ß = 140
-				// ä = 156
-				// Ö = 172
+				// ï¿½ = 138
+				// ï¿½ = 140
+				// ï¿½ = 156
+				// ï¿½ = 172
 				// ? = 176
-				// Ä = 186
-				// ö = 228
-				// Ü = 235
+				// ï¿½ = 186
+				// ï¿½ = 228
+				// ï¿½ = 235
 				return $value;
 
 				/**
 				 *
 				 * Hallo Frau Meinzinger,
-				 * die Benutzung der Umlaute findet nun im ANSI Standard statt. In der vorher eingesetzten Version von Conzept16 wurden diese mit falschen Ascii Zeichen übermittelt - das man nun erkennt wenn es jetzt richtig umgesetzt wird.
-				 * Ich habe einen Link gefunden, der Ihnen die nötigen Codes auflistet: http://www.asphelper.de/referenz/ASCIIANSI.asp
+				 * die Benutzung der Umlaute findet nun im ANSI Standard statt. In der vorher eingesetzten Version von Conzept16 wurden diese mit falschen Ascii Zeichen ï¿½bermittelt - das man nun erkennt wenn es jetzt richtig umgesetzt wird.
+				 * Ich habe einen Link gefunden, der Ihnen die nï¿½tigen Codes auflistet: http://www.asphelper.de/referenz/ASCIIANSI.asp
 				 */
-				// Alex Anmerkung: ? wird von Zend als Ascii 63 geschrieben. ISO-8859-1 enthält das Zeichen nicht. Unter Windows funktioniert jedoch 128 CP1252, daher chr(128)
-				//return str_replace(array('ß', 'ä', 'ö', 'ü', 'Ö', 'Ä', 'Ü', chr(128)), array(chr(140), chr(156), chr(228), chr(138), chr(172), chr(186), chr(235), chr(176)), $value);
+				// Alex Anmerkung: ? wird von Zend als Ascii 63 geschrieben. ISO-8859-1 enthï¿½lt das Zeichen nicht. Unter Windows funktioniert jedoch 128 CP1252, daher chr(128)
+				//return str_replace(array('ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', chr(128)), array(chr(140), chr(156), chr(228), chr(138), chr(172), chr(186), chr(235), chr(176)), $value);
 			}
 
 			/**
@@ -487,7 +487,7 @@
 			 */
 			function escapeColumn($column)
 			{
-				return str_replace(array('ß', 'ä', 'ü'), array(chr(238), chr(163), chr(216)), $column);
+				return str_replace(array('ï¿½', 'ï¿½', 'ï¿½'), array(chr(238), chr(163), chr(216)), $column);
 			}
 
 			/**
@@ -516,7 +516,7 @@
 			 */
 			function unescapeColumn($column)
 			{
-				return str_replace(array(chr(238), chr(163), chr(216)), array('ß','ä', 'ü'), $column);
+				return str_replace(array(chr(238), chr(163), chr(216)), array('ï¿½','ï¿½', 'ï¿½'), $column);
 			}
 
 			/**
@@ -554,15 +554,15 @@
 							break;
 
 						case _rMultiKey:
-							$errorMsg = 'Der Schlüssel ist nicht eindeutig. In der Datei sind mehrere Sätze mit dem gewünschten Schlüsselwert vorhanden, der erste Satz wurde geladen';
+							$errorMsg = 'Der Schlï¿½ssel ist nicht eindeutig. In der Datei sind mehrere Sï¿½tze mit dem gewï¿½nschten Schlï¿½sselwert vorhanden, der erste Satz wurde geladen';
 							break;
 
 						case _rNoKey:
-							$errorMsg = 'In der Datei ist kein Satz mit dem gewünschten Schlüsselwert vorhanden. Es wurde der Satz mit dem nächst größeren Schlüsselwert geladen.';
+							$errorMsg = 'In der Datei ist kein Satz mit dem gewï¿½nschten Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem nï¿½chst grï¿½ï¿½eren Schlï¿½sselwert geladen.';
 							break;
 
 						case _rLastRec:
-							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewünschten Schlüsselwert noch ein Satz mit einem größeren Schlüsselwert vorhanden. Es wurde der Satz mit dem größten Schlüsselwert geladen.';
+							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewï¿½nschten Schlï¿½sselwert noch ein Satz mit einem grï¿½ï¿½eren Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem grï¿½ï¿½ten Schlï¿½sselwert geladen.';
 							break;
 
 						case _rNoRec:
@@ -598,11 +598,11 @@
 				if($result != _rOk) {
 					switch($result) {
 						case _rExists:
-							$errorMsg = 'Der Datensatz konnte nicht zurückgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlüsselwert bereits existiert.';
+							$errorMsg = 'Der Datensatz konnte nicht zurï¿½ckgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlï¿½sselwert bereits existiert.';
 							break;
 
 						case _rNoLock:
-							$errorMsg = 'Der Datensatz konnte nicht zurückgespeichert werden, da er nicht gesperrt ist.';
+							$errorMsg = 'Der Datensatz konnte nicht zurï¿½ckgespeichert werden, da er nicht gesperrt ist.';
 							break;
 
 						case _rDeadLock:
@@ -635,15 +635,15 @@
 						break;
 
 					case _rMultiKey:
-						$errorMsg = 'Der Schlüssel ist nicht eindeutig. In der Datei sind mehrere Sätze mit dem gewünschten Schlüsselwert vorhanden, der erste Satz wurde geladen';
+						$errorMsg = 'Der Schlï¿½ssel ist nicht eindeutig. In der Datei sind mehrere Sï¿½tze mit dem gewï¿½nschten Schlï¿½sselwert vorhanden, der erste Satz wurde geladen';
 						break;
 
 					case _rNoKey:
-						$errorMsg = 'In der Datei ist kein Satz mit dem gewünschten Schlüsselwert vorhanden. Es wurde der Satz mit dem nächst größeren Schlüsselwert geladen.';
+						$errorMsg = 'In der Datei ist kein Satz mit dem gewï¿½nschten Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem nï¿½chst grï¿½ï¿½eren Schlï¿½sselwert geladen.';
 						break;
 
 					case _rLastRec:
-						$errorMsg = 'In der Datei ist weder ein Satz mit dem gewünschten Schlüsselwert noch ein Satz mit einem größeren Schlüsselwert vorhanden. Es wurde der Satz mit dem größten Schlüsselwert geladen.';
+						$errorMsg = 'In der Datei ist weder ein Satz mit dem gewï¿½nschten Schlï¿½sselwert noch ein Satz mit einem grï¿½ï¿½eren Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem grï¿½ï¿½ten Schlï¿½sselwert geladen.';
 						break;
 
 					case _rNoRec:
@@ -678,11 +678,11 @@
 				if(!$result == _rOk) {
 					switch($result) {
 						case _rExists:
-							$errorMsg = 'Der Datensatz konnte nicht eingefügt oder zurückgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlüsselwert bereits existiert.';
+							$errorMsg = 'Der Datensatz konnte nicht eingefï¿½gt oder zurï¿½ckgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlï¿½sselwert bereits existiert.';
 							break;
 
 						case _rDeadLock:
-							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht eingefügt werden.';
+							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht eingefï¿½gt werden.';
 							break;
 
 						default:
@@ -713,15 +713,15 @@
 				if(!$result == _rOk) {
 					switch($result) {
 						case _rLocked:
-							$errorMsg = 'Der Datensatz konnte nicht gelöscht werden, da er von einem anderen Benutzer gesperrt ist.';
+							$errorMsg = 'Der Datensatz konnte nicht gelï¿½scht werden, da er von einem anderen Benutzer gesperrt ist.';
 							break;
 
 						case _rNoKey:
-							$errorMsg = 'In der Datei ist kein Satz mit dem gewünschten Schlüsselwert vorhanden. Es wurde der Satz mit dem nächst größeren Schlüsselwert geladen.';
+							$errorMsg = 'In der Datei ist kein Satz mit dem gewï¿½nschten Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem nï¿½chst grï¿½ï¿½eren Schlï¿½sselwert geladen.';
 							break;
 
 						case _rLastRec:
-							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewünschten Schlüsselwert noch ein Satz mit einem größeren Schlüsselwert vorhanden. Es wurde der Satz mit dem größten Schlüsselwert geladen.';
+							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewï¿½nschten Schlï¿½sselwert noch ein Satz mit einem grï¿½ï¿½eren Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem grï¿½ï¿½ten Schlï¿½sselwert geladen.';
 							break;
 
 						case _rNoRec:
@@ -729,7 +729,7 @@
 							break;
 
 						case _rDeadLock:
-							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht gelöscht werden.';
+							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht gelï¿½scht werden.';
 							break;
 
 						default:
@@ -841,7 +841,7 @@
 			}
 
 			/**
-			 * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurück.
+			 * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurï¿½ck.
 			 *
 			 * @return int Anzahl Zeilen
 			 */
@@ -853,19 +853,19 @@
 			 * Gibt eine Liste aller Felder einer Tabelle zurueck
 			 *
 			 * Ergebnis mehrdimensionales assoziatives Array:
-			 * Schlüssel Wert
+			 * Schlï¿½ssel Wert
 			 * _FileNumber Dateinummer
 			 * _SbrNumber Teildatensatznummer
 			 * _FldNumber Feldnummer
 			 * _FldName Feldname
 			 * _FldType Typ des Feldes
-			 * _FldMaxLen Maximale Länge
+			 * _FldMaxLen Maximale Lï¿½nge
 			 * _FldInputRight Eingabeberechtigung
 			 * _FldOutputRight Ausgabeberechtigung
 			 *
 			 * @access public
 			 * @param int $filenr Datei-Nummer
-			 * @param array $fldnames Parameter füllt sich mit den Feldnamen (man erhält indiziertes Array mit Feldnamen)
+			 * @param array $fldnames Parameter fï¿½llt sich mit den Feldnamen (man erhï¿½lt indiziertes Array mit Feldnamen)
 			 * @param string $database Datenbankname (falls nicht angegeben, wird Standard Database verwendet)
 			 * @return array mehrdimensionales assoziatives Array mit allen Feldinformationen zur Datei
 			 **/
@@ -901,23 +901,23 @@
 			}
 
 			/**
-			 * Gibt eine Liste aller Schlüssel einer Tabelle zurück
+			 * Gibt eine Liste aller Schlï¿½ssel einer Tabelle zurï¿½ck
 			 *
 			 * Ergebnis mehrdimensionales assoziatives Array:
-			 * Schlüssel Wert
+			 * Schlï¿½ssel Wert
 			 * _FileNumber Nummer der Datei
 			 * _SbrNumber Nummer des Teildatensatzes
-			 * _FldNumber Nummer des Schlüsselfeldes
-			 * _FldName Name des Schlüsselfeldes
+			 * _FldNumber Nummer des Schlï¿½sselfeldes
+			 * _FldName Name des Schlï¿½sselfeldes
 			 * _FldType Feldtyp
-			 * _KeyFldAttributes Attribute des Schlüsselfeldes
-			 * _KeyFldMaxLen Die definierte Maximallänge des Schlüsselfeldes
+			 * _KeyFldAttributes Attribute des Schlï¿½sselfeldes
+			 * _KeyFldMaxLen Die definierte Maximallï¿½nge des Schlï¿½sselfeldes
 			 *
 			 * @access public
 			 * @param int $filenr Datei-Nummer
-			 * @param array $keynames referenzierter Parameter füllt sich mit den Schlüsselnamen (man erhält indiziertes Array mit Schlüsselnamen)
+			 * @param array $keynames referenzierter Parameter fï¿½llt sich mit den Schlï¿½sselnamen (man erhï¿½lt indiziertes Array mit Schlï¿½sselnamen)
 			 * @param string $database Datenbankname (falls nicht angegeben, wird Standard Database verwendet)
-			 * @return array mehrdimensionales assoziatives Array mit allen Schlüsselinformationen zur Datei
+			 * @return array mehrdimensionales assoziatives Array mit allen Schlï¿½sselinformationen zur Datei
 			 */
 			function listkeys($filenr, &$keynames, $database='')
 			{
@@ -949,19 +949,19 @@
 			}
 
 			/**
-			 * Gibt eine Liste aller Dateien (Tabellen) einer Datenbank zurück
+			 * Gibt eine Liste aller Dateien (Tabellen) einer Datenbank zurï¿½ck
 			 *
 			 * Ergebnis mehrdimensionales assoziates Array:
-			 * Schlüssel Wert
+			 * Schlï¿½ssel Wert
 			 * _FileNumber Nummer der Datei
 			 * _SbrNumber Nummer des Teildatensatzes
-			 * _FldNumber Nummer des Schlüsselfeldes
-			 * _FldName Name des Schlüsselfeldes
+			 * _FldNumber Nummer des Schlï¿½sselfeldes
+			 * _FldName Name des Schlï¿½sselfeldes
 			 * _FldType Feldtyp
-			 * _KeyFldAttributes Attribute des Schlüsselfeldes
-			 * _KeyFldMaxLen Die definierte Maximallänge des Schlüsselfeldes
+			 * _KeyFldAttributes Attribute des Schlï¿½sselfeldes
+			 * _KeyFldMaxLen Die definierte Maximallï¿½nge des Schlï¿½sselfeldes
 			 *
-			 * @param array $filenames referenzierter Parameter (Array) füllt sich mit den Namen der Dateien (Tabellen) - (man erhält indiziertes Array mit Dateinamen)
+			 * @param array $filenames referenzierter Parameter (Array) fï¿½llt sich mit den Namen der Dateien (Tabellen) - (man erhï¿½lt indiziertes Array mit Dateinamen)
 			 * @return array mehrdimensionales assoziates Array mit allen Datei-Informationen zur Datenbank
 			 */
 			function listfiles(&$filenames, $database='')
@@ -1024,12 +1024,12 @@
 			 *
 			 * _FileNumber Dateinummer
 			 * _FileName Dateiname
-			 * _FileMaster Dateinummer der übergeordneten Datei
-			 * _FileSbrCount Anzahl der Teildatensätze
-			 * _FileKeyCount Anzahl der Schlüssel
-			 * _FileLnkCount Anzahl der Verknüpfungen
+			 * _FileMaster Dateinummer der ï¿½bergeordneten Datei
+			 * _FileSbrCount Anzahl der Teildatensï¿½tze
+			 * _FileKeyCount Anzahl der Schlï¿½ssel
+			 * _FileLnkCount Anzahl der Verknï¿½pfungen
 			 * _FileUserLevel Benutzerberechtigung
-			 * _FileOemMark Markierung für das OEM-Kit
+			 * _FileOemMark Markierung fï¿½r das OEM-Kit
 			 *
 			 * @access public
 			 * @param int $filenr Datei-Nummer
@@ -1081,7 +1081,7 @@
 					$errortext = c16_errortext($c16_link);
 					switch($error) {
 						case C16ERR_NO_KEY:
-							$errortext = 'Schlüssel fehlend oder falsch (C16 ERR: ' . $errortext . ')!';
+							$errortext = 'Schlï¿½ssel fehlend oder falsch (C16 ERR: ' . $errortext . ')!';
 							break;
 
 						case C16ERR_NO_FILE:

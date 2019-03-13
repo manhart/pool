@@ -34,9 +34,9 @@
 		 *
 		 * @param object $Owner Klasse vom Typ Component
 		 **/
-		function GUI_CustomListView(& $Owner, $autoload_files=true)
+		function __construct(& $Owner, $autoload_files=true)
 		{
-			parent :: GUI_Module($Owner, $autoload_files);
+			parent::__construct($Owner, $autoload_files);
 		}
 
 		/**
