@@ -34,9 +34,9 @@ class GUI_DHtmlXGridExport extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_DHtmlXGridExport(& $Owner, $AutoLoadFiles=true)
+    function __construct(& $Owner, $AutoLoadFiles=true)
     {
-        parent::GUI_Module($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $AutoLoadFiles);
     }
 
     /**

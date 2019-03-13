@@ -8,7 +8,7 @@
 * @access public
 * @package pool
 */
-class LinkBlocker extends Object {
+class LinkBlocker extends PoolObject {
 
     /**
      * Server
@@ -25,7 +25,7 @@ class LinkBlocker extends Object {
      * @param string $host2Block
      * @return LinkBlocker
      */
-    function LinkBlocker($host2Block)
+    function __construct($host2Block)
     {
         $this -> host2Block = $host2Block;
     }

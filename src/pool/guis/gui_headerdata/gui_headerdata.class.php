@@ -108,9 +108,9 @@
      * @access public
      * @param object $Owner Besitzer vom Typ Component
      **/
-    function GUI_Headerdata(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner);
+        parent::__construct($Owner);
 
         $php_default_charset = ini_get('default_charset');
         if(strlen($php_default_charset) > 0) {

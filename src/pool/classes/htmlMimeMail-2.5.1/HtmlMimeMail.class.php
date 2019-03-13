@@ -7,7 +7,7 @@
 * Copyright......: 2001, 2002 Richard Heyes
 */
 
-class HtmlMimeMail extends Object
+class HtmlMimeMail extends PoolObject
 {
 	/**
 	* The html part of the message
@@ -87,7 +87,7 @@ class HtmlMimeMail extends Object
 * if supplied.
 */
 
-	function HtmlMimeMail()
+	function __construct()
 	{
 		/**
         * Initialise some variables.
@@ -646,7 +646,7 @@ class HtmlMimeMail extends Object
 	}
 
 	/**
-	 * Verschlüsselt Betreffzeile in Unicode-Entsprechungen
+	 * Verschlï¿½sselt Betreffzeile in Unicode-Entsprechungen
 	 *
 	 * @param string $input
 	 * @param string $charset

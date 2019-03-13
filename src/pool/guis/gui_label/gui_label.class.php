@@ -31,14 +31,12 @@ class GUI_Label extends GUI_Module
      * @param object $Owner Klasse vom Typ Component
      * @see Component
      **/
-    function GUI_Label(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner);
+        parent::__construct($Owner);
     }
 
     /**
-     * GUI_Label::init()
-     *
      * Initialisiert Standardwerte;
      * Verwendet INPUT_GET und INPUT_POST Variablen.
      * INPUT_SESSION nur zum Speichern von abgeschickten Daten.

@@ -33,7 +33,7 @@ define("TRIGGER2", "GET \/default\.ida\?XXXXXX" ); /* CodeRed II */
 define("TRIGGER3", "GET \/scripts\/root\.exe" ); /* Nimda */
 //	define("TRIGGER4", "" ); /* W32.Klez */
 
-class Worms extends Object
+class Worms extends PoolObject
 {
 	/**
 	* @var	accesslog
@@ -70,9 +70,9 @@ class Worms extends Object
 	/**
 	* Class worms constructor
 	*/
-	function Worms()
+	function __construct()
 	{
-		parent :: Object();
+		parent::__construct();
 	}
 
 	/**

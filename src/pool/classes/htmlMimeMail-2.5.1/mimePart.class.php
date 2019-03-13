@@ -75,7 +75,7 @@
 * @package Mail
 */
 
-class Mail_mimePart extends Object {
+class Mail_mimePart extends PoolObject {
 
    /**
     * The encoding type of this part
@@ -123,7 +123,7 @@ class Mail_mimePart extends Object {
      *                  charset      - Character set to use
      * @access public
      */
-    function Mail_mimePart($body = '', $params = array())
+    function __construct($body = '', $params = array())
     {
         if (!defined('MAIL_MIMEPART_CRLF')) {
             define('MAIL_MIMEPART_CRLF', defined('MAIL_MIME_CRLF') ? MAIL_MIME_CRLF : "\r\n", TRUE);

@@ -118,7 +118,7 @@ if(!defined('KONTOCHECK_CLASS'))
 		 *
 		 * @access public
 		 **/
-		function Kontocheck($blz=0)
+		function __construct($blz=0)
 		{
 			$this -> blz = $blz;
 		}

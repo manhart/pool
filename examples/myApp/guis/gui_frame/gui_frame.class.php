@@ -7,11 +7,11 @@
  */
     class GUI_Frame extends GUI_CustomFrame
     {
-        function GUI_Frame(&$Owner)
+        function __construct(&$Owner)
         {
             $this->preventDefaultJavaScript = true;
             $this->preventDefaultDynToolTip = true;
-            parent::GUI_CustomFrame($Owner);
+            parent::__construct($Owner);
         }
 
         /**

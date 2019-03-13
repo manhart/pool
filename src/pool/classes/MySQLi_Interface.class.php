@@ -40,8 +40,8 @@
 	    	require_once $dbaccessfile;
 		}
 
-		define('SQL_READ', 'READ');
-		define('SQL_WRITE', 'WRITE');
+		if(!defined('SQL_READ')) define('SQL_READ', 'READ');
+		if(!defined('SQL_WRITE')) define('SQL_WRITE', 'WRITE');
 
 		/**
 		 * MySQLi_Interface
@@ -150,7 +150,7 @@
 		    *
 	    	* @access public
 		    */
-			function MySQLi_Interface()
+			function __construct()
 			{
 			}
 

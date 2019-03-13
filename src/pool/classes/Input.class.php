@@ -62,7 +62,7 @@ if(!defined('INPUT_ALL')) define ('INPUT_ALL', 255);
  * @version $Id: Input.class.php,v 1.14 2007/08/06 12:18:23 manhart Exp $
  * @access public
  **/
-class Input extends Object
+class Input extends PoolObject
 {
     /**
      * Variablen Container
@@ -97,7 +97,7 @@ class Input extends Object
     * @access public
     * @param integer $superglobals Einzulesende Superglobals (siehe Konstanten)
     */
-    function Input($superglobals = 0)
+    function __construct($superglobals = 0)
     {
         $this->Vars = Array();
 
@@ -716,7 +716,7 @@ class Input extends Object
     * Speicherfreigabe des Containers (wir ueberschreiben die Methode Object::destroy()).
     *
     * @access public
-    * @see Object::destroy()
+    * @see PoolObject::destroy()
     */
     function destroy()
     {
@@ -756,9 +756,9 @@ class ICookie extends Input
     * @access public
     * @param integer $superglobals Konstante, Standard: INPUT_COOKIE
     */
-    function ICookie($superglobals = I_COOKIE)
+    function __construct($superglobals = I_COOKIE)
     {
-        parent :: Input($superglobals);
+        parent::__construct($superglobals);
     }
 
     /**
@@ -851,9 +851,9 @@ class IGet extends Input
      * @access public
      * @param integer $superglobals Standard: INPUT_GET
      **/
-    function IGet($superglobals = I_GET)
+    function __construct($superglobals = I_GET)
     {
-        parent :: Input($superglobals);
+        parent::__construct($superglobals);
     }
 
     /**
@@ -903,9 +903,9 @@ class IGet extends Input
 
 class IPost extends Input
 {
-    function IPost($superglobals = I_POST)
+    function __construct($superglobals = I_POST)
     {
-        parent :: Input($superglobals);
+        parent::__construct($superglobals);
     }
 }
 
@@ -917,9 +917,9 @@ class IPost extends Input
 
 class IFiles extends Input
 {
-    function IFiles($superglobals = I_FILES)
+    function __construct($superglobals = I_FILES)
     {
-        parent :: Input($superglobals);
+        parent::__construct($superglobals);
     }
 }
 
@@ -931,9 +931,9 @@ class IFiles extends Input
 
 class IEnv extends Input
 {
-    function IEnv($superglobals = I_ENV)
+    function __construct($superglobals = I_ENV)
     {
-        parent :: Input($superglobals);
+        parent::__construct($superglobals);
     }
 }
 
@@ -945,9 +945,9 @@ class IEnv extends Input
 
 class IServer extends Input
 {
-    function IServer($superglobals = I_SERVER)
+    function __construct($superglobals = I_SERVER)
     {
-        parent :: Input($superglobals);
+        parent::__construct($superglobals);
     }
 }
 
@@ -972,12 +972,12 @@ class ISession extends Input
      */
     var $autoClose = true;
 
-    function ISession($autoClose=true)
+    function __construct($autoClose=true)
     {
         $this->setAutoClose($autoClose);
 
         $this->start();
-        parent::Input(I_SESSION);
+        parent::__construct(I_SESSION);
         $this->write_close();
     }
 
@@ -1132,8 +1132,8 @@ class ISession extends Input
 
 class IRequest extends Input
 {
-    function IRequest($superglobals = I_REQUEST)
+    function __construct($superglobals = I_REQUEST)
     {
-        parent :: Input($superglobals);
+        parent::__construct($superglobals);
     }
 }

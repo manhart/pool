@@ -38,9 +38,9 @@ class GUI_Splitter extends GUI_Module
      * @access public
      * @param object $Owner Besitzer vom Typ Component
      **/
-    function GUI_Splitter(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner);
+        parent::__construct($Owner);
     }
 
     /**

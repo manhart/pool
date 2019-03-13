@@ -120,9 +120,9 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     * @param Component $Owner Besitzer vom Typ Component
     * @param boolean $AutoLoadFiles Laedt automatisch Templates und sucht darin GUIs
     */
-    function GUI_Module(&$Owner, $AutoLoadFiles=true, $params='')
+    function __construct(&$Owner, $AutoLoadFiles=true, $params='')
     {
-        parent::Module($Owner);
+        parent::__construct($Owner);
 
         // AM, 15.07.2009, vergibt Modulname fr�her
         if($params) { // falls der dritte Parameter gesetzt

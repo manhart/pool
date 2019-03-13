@@ -119,7 +119,7 @@ if(!defined('CISAM_LAYER'))
 		*
 		* @access public
 		*/
-		function CISAM_Interface()
+		function __construct()
 		{
 		}
 

@@ -42,9 +42,9 @@ class GUI_Selezione extends GUI_Module
      * @param array $params
      * @see Component
      **/
-    function GUI_Selezione(&$Owner, $autoLoadFiles, $params)
+    function __construct(&$Owner, $autoLoadFiles, $params)
     {
-        parent::GUI_Module($Owner, $autoLoadFiles, $params);
+        parent::__construct($Owner, $autoLoadFiles, $params);
     }
 
     /**

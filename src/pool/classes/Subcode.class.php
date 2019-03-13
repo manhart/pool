@@ -50,9 +50,9 @@ if(!defined('CLASS_SUBCODE'))
          * @param constant $superglobals Input Konstanten fuer die Superglobals
          * @see Input
          **/
-        function Subcode(& $Owner)
+        function __construct(& $Owner)
         {
-            parent::Module($Owner);
+            parent::__construct($Owner);
 
             $this->SubcodeResult = new SubcodeResult();
         }

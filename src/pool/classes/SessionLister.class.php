@@ -51,7 +51,7 @@ if(!defined('CLASS_SESSIONLISTER')) {
      * @version $Id: SessionLister.class.php,v 1.1.1.1 2004/09/21 07:49:25 manhart Exp $
      * @access public
      **/
-    class SessionLister extends Object
+    class SessionLister extends PoolObject
     {
         //@var array Zwischenspeicher der gelesenen Session
         //@access private
