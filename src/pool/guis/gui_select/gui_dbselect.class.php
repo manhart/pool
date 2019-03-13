@@ -34,14 +34,12 @@ class GUI_DBSelect extends GUI_Select
      * @see Component
      * @access public
      **/
-    function GUI_DBSelect(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Select($Owner);
+        parent::__construct($Owner);
     }
 
     /**
-     * GUI_DBSelect::init()
-     *
      * Initialisiert Standardwerte:
      *
      * tabledefine 		= ''	Tabellendefinition (siehe database.inc.php)

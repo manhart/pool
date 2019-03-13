@@ -160,7 +160,7 @@ if(!defined('CLASS_WEBLICATION')) {
          * @param string $PathBaselib absoluter Pfad zur Baselib
          * @param string $RelativePathBaselib relativer Pfad zur Baselib
          **/
-        function Weblication($Project='', $PathBaselib = '', $RelativePathBaselib = '')
+        function __construct($Project='', $PathBaselib = '', $RelativePathBaselib = '')
         {
             if($Project != '') {
                 $this->Project = $Project;
@@ -168,7 +168,8 @@ if(!defined('CLASS_WEBLICATION')) {
             $this->PathBaselib = $PathBaselib;
             $this->RelativePathBaselib = $RelativePathBaselib;
 
-            parent::Component(new Nil());
+            $Nil = new Nil();
+            parent::__construct($Nil);
         }
 
         /**

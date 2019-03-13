@@ -43,7 +43,7 @@ if(!defined('CLASS_SESSIONHANDLER')) {
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @version $Id: SessionHandler.class.php,v 1.2 2007/05/31 14:39:46 manhart Exp $
      **/
-    class SessionHandler extends Object
+    class SessionHandler extends PoolObject
     {
         //@var object Datenbankhandle
         //@access private
@@ -78,7 +78,7 @@ if(!defined('CLASS_SESSIONHANDLER')) {
          * @param array $interfaces
          * @param array $tabledefine
          **/
-        function SessionHandler(& $interfaces, $tabledefine)
+        function __construct(& $interfaces, $tabledefine)
         {
             # extract Tabellendefinition:
             $this -> tabledefine = $tabledefine;

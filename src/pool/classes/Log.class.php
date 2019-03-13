@@ -36,7 +36,7 @@ if(!defined('CLASS_LOG')) {
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @package pool
      */
-    class Log extends Object
+    class Log extends PoolObject
     {
         /**
          * Datei
@@ -122,7 +122,7 @@ if(!defined('CLASS_LOG')) {
          *
          * @access public
          */
-        function Log()
+        function __construct()
         {
             $this->sid = rand(0, 9999);
         }

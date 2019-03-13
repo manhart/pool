@@ -90,9 +90,9 @@ class GUI_DBGrid extends GUI_Module
      * @param object $Owner Besitzer vom Typ Component
      * @see Component
      **/
-    function GUI_DBGrid(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner, true);
+        parent::__construct($Owner, true);
     }
 
     /**
@@ -386,7 +386,7 @@ class GUI_DBGrid extends GUI_Module
                     $cellFormat = isset($colFormats[$c]) ? $colFormats[$c] : '';
                     $colAlign = isset($colAligns[$c]) ? $colAligns[$c] : '';
                     $colWidth = isset($colWidths[$c]) ? $colWidths[$c] : '';
-                    $this->colClass = isset($colClass[$c]) ? $colClass[$c] : '';
+                    $this->colClass = isset($colClasses[$c]) ? $colClasses[$c] : '';
                     $shortenValue = isset($shorten[$c]) ? $shorten[$c] : '';
 
                     switch($cellType) {

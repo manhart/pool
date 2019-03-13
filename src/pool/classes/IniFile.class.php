@@ -5,7 +5,7 @@
  * @link https://alexander-manhart.de
  */
 
-class IniFile extends Object
+class IniFile extends PoolObject
 {
     var $filename="";
     var $content="";
@@ -13,9 +13,10 @@ class IniFile extends Object
     var $filetime=0;
 
     // Constructor
-    function IniFile($filename="")
+    function __construct($filename="")
     {
         $this->setIniFile($filename);
+        parent::__construct();
     }
 
     // Destructor

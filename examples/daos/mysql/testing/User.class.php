@@ -16,9 +16,9 @@ class User extends CustomMySQL_DAO
      * @param string $dbname Datenbankname
      * @param string $table Tabelle
      **/
-    function User(&$db, $dbname, $table, $autoload_fields=true)
+    function __construct(&$db, $dbname, $table, $autoload_fields=true)
     {
-        parent::CustomMySQL_DAO($db, $dbname, $table, $autoload_fields);
+        parent::__construct($db, $dbname, $table, $autoload_fields);
 
         if(!$autoload_fields) {
             $this->setPrimaryKey('idUser');

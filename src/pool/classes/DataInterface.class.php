@@ -54,7 +54,7 @@ if(!defined('CLASS_DATAINTERFACE')) {
      * @version $Id: DataInterface.class.php,v 1.1.1.1 2004/09/21 07:49:25 manhart Exp $
      * @access public
      **/
-    class DataInterface extends Object
+    class DataInterface extends PoolObject
     {
         //@var string Interface Typ
         //@access private

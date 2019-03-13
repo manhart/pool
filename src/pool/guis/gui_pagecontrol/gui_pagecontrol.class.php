@@ -11,9 +11,9 @@ class GUI_PageControl extends GUI_Module
     var $function_name = null;
     var $Url = null;
 
-    function GUI_PageControl(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner, true);
+        parent::__construct($Owner, true);
 
         $this->Url = new Url();
     }
@@ -107,15 +107,15 @@ class GUI_PageControl extends GUI_Module
             for ($i=0; $i<$count; $i++) {
                 $pagename = $pagenames[$i];
 
-                $function_name = $this -> function_name;
+                $function_name = $this->function_name;
                 if (!is_null($function_name)) {
                     if (is_array($function_name)) {
                         $obj = $function_name[0];
                         $func = $function_name[1];
-                        $obj -> $func($pagename);
+                        $obj->$func($pagename);
                     }
                     else {
-                        $func($pagename);
+                        call_user_func($function_name, $pagename);
                     }
                 }
 

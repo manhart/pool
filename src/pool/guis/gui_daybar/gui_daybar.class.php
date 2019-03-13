@@ -29,9 +29,9 @@ class GUI_DayBar extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_DayBar(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner, true);
+        parent::__construct($Owner, true);
     }
 
     /**

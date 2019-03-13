@@ -120,14 +120,12 @@ class GUI_Choosy extends GUI_Module
      * @access public
      * @param object $Owner Besitzer vom Typ Component
      **/
-    function GUI_Choosy(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner, false);
+        parent::__construct($Owner, false);
     }
 
     /**
-     * GUI_Choosy::init()
-     *
      * Initialisiert Standardwerte. Uebernimmt Daten kommend von INPUT_REQUEST (GET, POST, COOKIE).
      *
      * Steuerparameter:

@@ -33,9 +33,9 @@ class GUI_Schema extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_Schema(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner, false);
+        parent::__construct($Owner, false);
     }
 
     /**

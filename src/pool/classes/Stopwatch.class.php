@@ -33,7 +33,7 @@ if(!defined('CLASS_STOPWATCH')) {
      * @version $Id: Stopwatch.class.php,v 1.1.1.1 2004/09/21 07:49:25 manhart Exp $
      * @access public
      **/
-    class Stopwatch extends Object
+    class Stopwatch extends PoolObject
     {
         //@var array Holds all timer values
         //@access private
@@ -48,9 +48,9 @@ if(!defined('CLASS_STOPWATCH')) {
          *
          * @access public
          **/
-        function Stopwatch()
+        function __construct()
         {
-            parent :: Object();
+            parent::__construct();
         }
 
         /**

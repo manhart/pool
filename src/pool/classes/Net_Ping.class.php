@@ -58,7 +58,7 @@ define('NET_PING_RESULT_UNSUPPORTED_BACKEND', 4);
 * @package  Net
 * @access   public
 */
-class Net_Ping extends Object
+class Net_Ping extends PoolObject
 {
     /**
     * Location where the ping program is stored
@@ -121,7 +121,7 @@ class Net_Ping extends Object
     *
     * @access private
     */
-    function Net_Ping($ping_path, $sysname)
+    function __construct($ping_path, $sysname)
     {
         $this->_ping_path = $ping_path;
         $this->_sysname   = $sysname;
@@ -645,7 +645,7 @@ class Net_Ping_Result
     *
     * @access private
     */
-    function Net_Ping_Result($result, $sysname)
+    function __construct($result, $sysname)
     {
         $this->_raw_data = $result;
 

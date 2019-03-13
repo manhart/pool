@@ -60,9 +60,9 @@ class GUI_Article extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_Article(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner);
+        parent::__construct($Owner);
         $Frame = $this->Weblication->getMain(); /* @var $Frame GUI_Frame */
         if($Frame  instanceof GUI_CustomFrame) {
             $Frame->readoutErrorList($this->getClassName());

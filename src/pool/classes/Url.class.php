@@ -38,7 +38,7 @@ if(!defined('CLASS_URL')) {
      * @version $Id: Url.class.php,v 1.10 2007/05/31 14:39:34 manhart Exp $
      * @access public
      **/
-    class Url extends Object
+    class Url extends PoolObject
     {
         /**
          * Objekt IGet
@@ -110,7 +110,7 @@ if(!defined('CLASS_URL')) {
          * @param string $KeyWord not yet implemented
          * @see Input.class.php
          **/
-        function Url($superglobal=I_GET, $KeyWord='')
+        function __construct($superglobal=I_GET, $KeyWord='')
         {
             $this->InpGet = new IGet($superglobal);
             $this->Host = $_SERVER['SERVER_NAME'];
@@ -128,7 +128,7 @@ if(!defined('CLASS_URL')) {
 
             $this->port = intval($_SERVER['SERVER_PORT']);
 
-            parent::Object();
+            parent::__construct();
         }
 
         /**

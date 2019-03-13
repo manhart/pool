@@ -73,9 +73,9 @@ class GUI_DynToolTip extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_DynToolTip(& $Owner)
+    function __construct(& $Owner)
     {
-        parent::GUI_Module($Owner);
+        parent::__construct($Owner);
     }
 
     /**

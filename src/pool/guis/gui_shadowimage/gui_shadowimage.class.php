@@ -43,9 +43,9 @@ class GUI_Shadowimage extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function GUI_Shadowimage(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner);
+        parent::__construct($Owner);
     }
 
     /**

@@ -8,9 +8,9 @@
  */
 class GUI_Marquee extends GUI_Module
 {
-    function GUI_Marquee(& $Owner)
+    function __construct(& $Owner)
     {
-        parent :: GUI_Module($Owner);
+        parent::__construct($Owner);
     }
 
     function init($superglobals=I_EMPTY)

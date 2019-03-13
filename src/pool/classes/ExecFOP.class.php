@@ -32,7 +32,7 @@ if(!defined('CLASS_EXECFOP')) {
      * @access public
      * @package pool
      */
-    class ExecFOP extends Object
+    class ExecFOP extends PoolObject
     {
         var $progressBar = null;
         /**
@@ -325,7 +325,7 @@ if(!defined('CLASS_EXECFOP')) {
 
                 default:
                     $Xception = new Xception('Render type: "' . $renderer . '" undefined!');
-                    Object::throwException($Xception);
+                    PoolObject::throwException($Xception);
                     break;
              }
         }
