@@ -93,15 +93,15 @@
 			 */
 			function __construct(&$Owner)
 			{
-				if (@is_a($Owner, 'component')) {
+				if ($Owner instanceof Component) {
 					$this->Owner = &$Owner;
 					$Owner->insertComponent($this);
 
 					// for direct access to weblication!
-					if (is_a($Owner, 'weblication')) {
+					if ($Owner instanceof Weblication) {
 					    $this->Weblication = &$Owner;
-						if (is_a($this->Weblication->Session, 'input')) {
-							$this->Session = & $this->Weblication->Session;
+						if ($this->Weblication->Session instanceof Input) {
+							$this->Session = &$this->Weblication->Session;
 						}
 					}
 	            }
@@ -132,19 +132,19 @@
 			 */
 			function getUniqueName()
 			{
-				if ($this -> Owner != null) {
-					$ClassName = $this -> getClassName();
-					if (isset($this -> Owner -> Counter[$ClassName])) {
-					    $sufix = ($this -> Owner -> Counter[$ClassName] + 1);
+				if ($this->Owner != null) {
+					$ClassName = $this->getClassName();
+					if (isset($this->Owner->Counter[$ClassName])) {
+					    $sufix = ($this->Owner->Counter[$ClassName] + 1);
 					}
 					else {
 						$sufix = 1;
 					}
 					$new_name = $ClassName . $sufix;
-					$this -> Owner -> Counter[$ClassName] = $sufix;
+					$this->Owner->Counter[$ClassName] = $sufix;
 				}
 				else {
-					$new_name = $this -> getClassName();
+					$new_name = $this->getClassName();
 				}
 
 				return $new_name;
@@ -199,8 +199,8 @@
 			 **/
 			function & getWeblication()
 			{
-				if (is_a($this -> Owner, 'weblication')){
-					return $this -> Owner;
+				if ($this->Owner instanceof Weblication){
+					return $this->Owner;
 				}
 				else {
 					return null;
@@ -217,8 +217,8 @@
 			 */
 			function validateName($NewName)
 			{
-				if ($this -> Owner != null){
-					if($this -> Owner -> findComponent($NewName)) {
+				if ($this->Owner != null){
+					if($this->Owner->findComponent($NewName)) {
 						return false;
 					}
 				}
@@ -254,7 +254,7 @@
 			 */
 			function getComponentCount()
 			{
-			    return count($this -> Components);
+			    return count($this->Components);
 			}
 
 			/**
@@ -279,13 +279,13 @@
 				$new_Components = Array();
 
 				// Rebuild Components
-				for ($i = 0; $i < count($this -> Components); $i++) {
-					if ($Component != $this -> Components[$i]) {
+				for ($i = 0; $i < count($this->Components); $i++) {
+					if ($Component != $this->Components[$i]) {
 					    $new_Components[] = &$this->Components[$i];
 					}
 				}
 
-				$this -> Components = $new_Components;
+				$this->Components = $new_Components;
 			}
 
 			/**
@@ -295,18 +295,18 @@
 			 */
 			function clear()
 			{
-				unset($this -> Components);
-				$this -> Components = Array();
+				unset($this->Components);
+				$this->Components = Array();
 			}
 
 			function destroy()
 			{
 				parent::destroy();
 
-				unset($this -> Components);
-				unset($this -> Weblication);
-				unset($this -> Counter);
-				unset($this -> Name);
+				unset($this->Components);
+				unset($this->Weblication);
+				unset($this->Counter);
+				unset($this->Name);
 			}
 		}
 	}
