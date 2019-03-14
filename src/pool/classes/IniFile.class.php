@@ -23,7 +23,6 @@ class IniFile extends PoolObject
     function destroy()
     {
         $this->clear();
-        unset($this);
     }
 
     // Leere Buffer

@@ -14,7 +14,7 @@
  * n/a
  *
  * Revision 1.11  2006/08/07 11:36:16  manhart
- * Exception -> Xception (PHP5 kompatibel)
+ * Exception->Xception (PHP5 kompatibel)
  *
  *
  * @version $Id: PoolObject.class.php,v 1.12 2006/10/20 08:42:17 manhart Exp $
@@ -236,7 +236,7 @@ if(!defined('CLASS_POOLOBJECT')) {
          **/
         function throwException($Xception=null)
         {
-            if(is_null($Xception) and is_a($this, 'Xception')) {
+            if(is_null($Xception) and $this instanceof Xception) {
                 $Xception = &$this;
             }
             if($Xception) {
@@ -259,7 +259,7 @@ if(!defined('CLASS_POOLOBJECT')) {
          **/
         function isError($data, $code=null)
         {
-            if(is_a($data, 'Xception')) {
+            if($data instanceof Xception) {
                 if (is_null($code)) {
                     return true;
                 }
@@ -344,7 +344,7 @@ if(!defined('CLASS_POOLOBJECT')) {
      **/
     function isNil($instance)
     {
-        if (is_a($instance, 'nil')) {
+        if ($instance instanceof Nil) {
             return true;
         }
         return false;

@@ -159,7 +159,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             (isset($_REQUEST['modulename']) and $this->Name == $_REQUEST['modulename'])) and
             isset($_REQUEST['method']));*/
 
-        if (is_a($Owner, 'weblication')) {
+        if ($Owner instanceof Weblication) {
             if(is_null($Owner->getMain())) {
                 $Owner->setMain($this);
             }
@@ -199,11 +199,11 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         $parent_directory = '';
         if($lookInside and $Parent != null) {
             do {
-                if(is_a($Parent, 'GUI_Schema')) {
+                if($Parent instanceof GUI_Schema) {
                     $Parent = &$Parent->getParent();
                     continue;
                 }
-                if($without_frame and is_a($Parent, 'GUI_CustomFrame')) {
+                if($without_frame and $Parent instanceof GUI_CustomFrame) {
                     $Parent = &$Parent->getParent();
                     continue;
                 }
@@ -230,7 +230,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     {
         $Parent = $OrigParent = null;
 
-        if(isset($ParentGUI) and is_a($ParentGUI, 'GUI_Module')) {
+        if(isset($ParentGUI) and $ParentGUI instanceof GUI_Module) {
             $Parent = &$ParentGUI;
             $OrigParent = &$Parent;
         }
@@ -253,11 +253,11 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
                     $parent_directory = '';
                     $parent_directory_without_frame = '';
                     do {
-                        if(is_a($Parent, 'GUI_Schema')) { // GUI_Schema ist nicht schachtelbar
+                        if($Parent instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
                             $Parent = &$Parent->getParent();
                             continue;
                         }
-                        if(!is_a($Parent, 'GUI_CustomFrame')) {
+                        if(!$Parent instanceof GUI_CustomFrame) {
                             $parent_directory_without_frame = $Parent->getClassName().'/'.$parent_directory_without_frame;
                         }
                         $parent_directory = $Parent->getClassName().'/'.$parent_directory;
@@ -490,7 +490,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         }*/
 
         $charset = '';
-        if(is_a($this->Owner, 'Weblication')) {
+        if($this->Owner instanceof Weblication) {
             $charset = $this->Owner->getCharset();
         }
 

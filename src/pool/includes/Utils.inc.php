@@ -222,7 +222,7 @@ function pray($data, $functions=0) {
 
 				case "\r":
 					if(!$enclosed && $data{$i+1} == "\n")
-						continue;
+						continue 2;
 
 				case "\n":
 					if(!$enclosed) {
@@ -3156,7 +3156,7 @@ function getClientIP()
                     $dir = $filename;
                     if($dirPattern) {
                         if (!preg_match($dirPattern, $dir)) {
-                            continue;
+                            continue 2;
                         }
                     }
                     $subdirectory = $fileRelative;
@@ -3168,7 +3168,7 @@ function getClientIP()
                 case 'file':
                     if($filePattern) {
                         if (!preg_match($filePattern, $filename))
-                            continue;
+                            continue 2;
                     }
                     $file = ($absolute) ? $file : $fileRelative;
                     if($callback != null) {
