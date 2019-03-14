@@ -41,7 +41,7 @@ if(!defined('CLASS_MODULE')) {
     class Module extends Component
     {
         /**
-         * Eltern-Objekt (Parent) -> auf wem sitze ich fest?
+         * Eltern-Objekt (Parent)->auf wem sitze ich fest?
          *
          * @var Module $Parent
          * @access private
@@ -49,7 +49,7 @@ if(!defined('CLASS_MODULE')) {
         var $Parent=null;
 
         /**
-         * Modul-Container enth�lt alle Kinder-Objekte (Childs) -> welche Module sitzen auf mir?
+         * Modul-Container enth�lt alle Kinder-Objekte (Childs)->welche Module sitzen auf mir?
          *
          * @var array $Modules
          * @access private
@@ -127,8 +127,8 @@ if(!defined('CLASS_MODULE')) {
          **/
         function mergeDefaults()
         {
-            if (@is_a($this->Input, 'Input')) {
-                if (count($this->Defaults) > 0) {
+            if ($this->Input instanceof Input) {
+                if (count($this->Defaults->Vars) > 0) {
                     return $this->Input->mergeVarsSkipEmpty($this->Defaults);
                 }
             }
@@ -147,13 +147,13 @@ if(!defined('CLASS_MODULE')) {
          **/
         function importHandoff($Handoff)
         {
-            if (!is_a($this -> Input, 'Input')) {
+            if (!$this->Input instanceof Input) {
                 return false;
             }
 
             if (count($Handoff) > 0) {
-                $this -> addHandoffVar($Handoff);
-                $this -> Input -> setVar($Handoff);
+                $this->addHandoffVar($Handoff);
+                $this->Input->setVar($Handoff);
             }
             return true;
         }
@@ -173,7 +173,7 @@ if(!defined('CLASS_MODULE')) {
          **/
         function importParams($params)
         {
-            if (!is_a($this->Input, 'Input')) {
+            if (!$this->Input instanceof Input) {
                 return false;
             }
 
@@ -212,13 +212,13 @@ if(!defined('CLASS_MODULE')) {
         function setParam($modulename, $param, $value=null)
         {
             $bResult = false;
-            $Module = &$this -> Weblication -> findComponent($modulename);
-            if (is_a($Module, 'Module')) {
-                $Module -> Input -> setVar($param, $value);
+            $Module = &$this->Weblication->findComponent($modulename);
+            if ($Module instanceof Module) {
+                $Module->Input->setVar($param, $value);
                 $bResult = true;
             }
             else {
-                $this -> raiseError(__FILE__, __LINE__,
+                $this->raiseError(__FILE__, __LINE__,
                     sprintf('Cannot find Module "%s" (@setParam). Param "%s" not set.', $modulename, $param));
             }
             return $bResult;
@@ -235,10 +235,10 @@ if(!defined('CLASS_MODULE')) {
         function addHandoffVar($key, $value = '')
         {
             if (!is_array($key)) {
-                $this -> Handoff[$key] = $value;
+                $this->Handoff[$key] = $value;
             }
             else {
-                $this -> Handoff = array_merge($key, $this -> Handoff);
+                $this->Handoff = array_merge($key, $this->Handoff);
             }
             return true;
         }
@@ -253,7 +253,7 @@ if(!defined('CLASS_MODULE')) {
          */
         function setHandoffVar($key, $value = '')
         {
-            return $this -> addHandoffVar($key, $value);
+            return $this->addHandoffVar($key, $value);
         }
 
         /**
@@ -271,6 +271,7 @@ if(!defined('CLASS_MODULE')) {
          * Liest eine Variable aus dem Container Input
          *
          * @param string $key
+         * @return mixed
          */
         function getVar($key)
         {
@@ -332,8 +333,8 @@ if(!defined('CLASS_MODULE')) {
             $new_Modules = Array();
 
             // Rebuild Modules
-            for ($i = 0; $i < count($this -> Modules); $i++) {
-                if ($Module != $this -> Modules[$i]) {
+            for ($i = 0; $i < count($this->Modules); $i++) {
+                if ($Module != $this->Modules[$i]) {
                     $new_Modules[] = &$this->Modules[$i];
                 }
             }
@@ -348,7 +349,7 @@ if(!defined('CLASS_MODULE')) {
          **/
         function disable()
         {
-            $this -> enabled = false;
+            $this->enabled = false;
         }
 
         /**
@@ -358,7 +359,7 @@ if(!defined('CLASS_MODULE')) {
          **/
         function enable()
         {
-            $this -> enabled = true;
+            $this->enabled = true;
         }
 
         /**
@@ -372,7 +373,7 @@ if(!defined('CLASS_MODULE')) {
         {
             parent::destroy();
 
-            unset($this -> Modules);
+            unset($this->Modules);
         }
     }
 }
