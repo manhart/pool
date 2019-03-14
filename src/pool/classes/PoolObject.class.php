@@ -222,8 +222,6 @@ if(!defined('CLASS_POOLOBJECT')) {
 
             trigger_error($error);
             return 0;
-            // error_log($error, 1, 'manhart@wochenblatt.de');
-            // TODO get_object_vars($this)
         }
 
         /**

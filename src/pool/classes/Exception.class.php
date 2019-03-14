@@ -490,7 +490,7 @@ if(!defined('CLASS_EXCEPTION')) {
         var $logFile = '';
         var $mailAddress = array();
         var $from = 'ExceptionHandler';
-        var $mailFrom = 'manhart@wochenblatt.de';
+        var $mailFrom = 'no-reply@yourdomain.de';
         var $mailFormat = 'HTML';
         var $mailSubject = 'PHP error_log message';
         var $displayFormat = 'HTML';
