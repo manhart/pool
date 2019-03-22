@@ -377,7 +377,7 @@
 				// Error oder nichts gefunden $Resultset -> getLastError
 				$this->buffer['id'] = null;
 				$this->buffer['record'] = null;
-				$this->addError('Keinen Datensatz mit Primï¿½rschlï¿½ssel ('.
+				$this->addError('Keinen Datensatz mit Primärschlüssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
 					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
 				return false;
@@ -653,7 +653,7 @@
 				if($continue) {
 					$Resultset = & $this -> DAO -> delete($id);
 					if(!$Resultset) {
-						$this -> addError('Lï¿½schvorgang abgebrochen! Unbekannter Fehler.', 0);
+						$this -> addError('L&ouml;schvorgang abgebrochen! Unbekannter Fehler.', 0);
 						return 0;
 					}
 					if($error_message = $Resultset -> getLastError()) {
