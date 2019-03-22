@@ -459,24 +459,24 @@
 			 */
 			function escapeValue($value)
 			{
-				// ï¿½ = 138
-				// ï¿½ = 140
-				// ï¿½ = 156
-				// ï¿½ = 172
+				// ü = 138
+				// ß = 140
+				// ä = 156
+				// Ö = 172
 				// ? = 176
-				// ï¿½ = 186
-				// ï¿½ = 228
-				// ï¿½ = 235
+				// Ä = 186
+				// ö = 228
+				// Ü = 235
 				return $value;
 
 				/**
 				 *
 				 * Hallo Frau Meinzinger,
-				 * die Benutzung der Umlaute findet nun im ANSI Standard statt. In der vorher eingesetzten Version von Conzept16 wurden diese mit falschen Ascii Zeichen ï¿½bermittelt - das man nun erkennt wenn es jetzt richtig umgesetzt wird.
-				 * Ich habe einen Link gefunden, der Ihnen die nï¿½tigen Codes auflistet: http://www.asphelper.de/referenz/ASCIIANSI.asp
+				 * die Benutzung der Umlaute findet nun im ANSI Standard statt. In der vorher eingesetzten Version von Conzept16 wurden diese mit falschen Ascii Zeichen übermittelt - das man nun erkennt wenn es jetzt richtig umgesetzt wird.
+				 * Ich habe einen Link gefunden, der Ihnen die nötigen Codes auflistet: http://www.asphelper.de/referenz/ASCIIANSI.asp
 				 */
-				// Alex Anmerkung: ? wird von Zend als Ascii 63 geschrieben. ISO-8859-1 enthï¿½lt das Zeichen nicht. Unter Windows funktioniert jedoch 128 CP1252, daher chr(128)
-				//return str_replace(array('ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', 'ï¿½', chr(128)), array(chr(140), chr(156), chr(228), chr(138), chr(172), chr(186), chr(235), chr(176)), $value);
+				// Alex Anmerkung: ? wird von Zend als Ascii 63 geschrieben. ISO-8859-1 enthält das Zeichen nicht. Unter Windows funktioniert jedoch 128 CP1252, daher chr(128)
+				//return str_replace(array('ß', 'ä', 'ö', 'ü', 'Ö', 'Ä', 'Ü', chr(128)), array(chr(140), chr(156), chr(228), chr(138), chr(172), chr(186), chr(235), chr(176)), $value);
 			}
 
 			/**
@@ -487,7 +487,7 @@
 			 */
 			function escapeColumn($column)
 			{
-				return str_replace(array('ï¿½', 'ï¿½', 'ï¿½'), array(chr(238), chr(163), chr(216)), $column);
+				return str_replace(array('ß', 'ä', 'ü'), array(chr(238), chr(163), chr(216)), $column);
 			}
 
 			/**
@@ -516,7 +516,7 @@
 			 */
 			function unescapeColumn($column)
 			{
-				return str_replace(array(chr(238), chr(163), chr(216)), array('ï¿½','ï¿½', 'ï¿½'), $column);
+				return str_replace(array(chr(238), chr(163), chr(216)), array('ß','ä', 'ü'), $column);
 			}
 
 			/**
@@ -554,15 +554,15 @@
 							break;
 
 						case _rMultiKey:
-							$errorMsg = 'Der Schlï¿½ssel ist nicht eindeutig. In der Datei sind mehrere Sï¿½tze mit dem gewï¿½nschten Schlï¿½sselwert vorhanden, der erste Satz wurde geladen';
+							$errorMsg = 'Der Schlüssel ist nicht eindeutig. In der Datei sind mehrere Sätze mit dem gewünschten Schlüsselwert vorhanden, der erste Satz wurde geladen';
 							break;
 
 						case _rNoKey:
-							$errorMsg = 'In der Datei ist kein Satz mit dem gewï¿½nschten Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem nï¿½chst grï¿½ï¿½eren Schlï¿½sselwert geladen.';
+							$errorMsg = 'In der Datei ist kein Satz mit dem gewünschten Schlüsselwert vorhanden. Es wurde der Satz mit dem nächst größeren Schlüsselwert geladen.';
 							break;
 
 						case _rLastRec:
-							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewï¿½nschten Schlï¿½sselwert noch ein Satz mit einem grï¿½ï¿½eren Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem grï¿½ï¿½ten Schlï¿½sselwert geladen.';
+							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewünschten Schlüsselwert noch ein Satz mit einem größeren Schlüsselwert vorhanden. Es wurde der Satz mit dem größten Schlüsselwert geladen.';
 							break;
 
 						case _rNoRec:
@@ -598,11 +598,11 @@
 				if($result != _rOk) {
 					switch($result) {
 						case _rExists:
-							$errorMsg = 'Der Datensatz konnte nicht zurï¿½ckgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlï¿½sselwert bereits existiert.';
+							$errorMsg = 'Der Datensatz konnte nicht zurückgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlüsselwert bereits existiert.';
 							break;
 
 						case _rNoLock:
-							$errorMsg = 'Der Datensatz konnte nicht zurï¿½ckgespeichert werden, da er nicht gesperrt ist.';
+							$errorMsg = 'Der Datensatz konnte nicht zurückgespeichert werden, da er nicht gesperrt ist.';
 							break;
 
 						case _rDeadLock:
@@ -635,15 +635,15 @@
 						break;
 
 					case _rMultiKey:
-						$errorMsg = 'Der Schlï¿½ssel ist nicht eindeutig. In der Datei sind mehrere Sï¿½tze mit dem gewï¿½nschten Schlï¿½sselwert vorhanden, der erste Satz wurde geladen';
+						$errorMsg = 'Der Schlüssel ist nicht eindeutig. In der Datei sind mehrere Sätze mit dem gewünschten Schlüsselwert vorhanden, der erste Satz wurde geladen';
 						break;
 
 					case _rNoKey:
-						$errorMsg = 'In der Datei ist kein Satz mit dem gewï¿½nschten Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem nï¿½chst grï¿½ï¿½eren Schlï¿½sselwert geladen.';
+						$errorMsg = 'In der Datei ist kein Satz mit dem gewünschten Schlüsselwert vorhanden. Es wurde der Satz mit dem nächst größeren Schlüsselwert geladen.';
 						break;
 
 					case _rLastRec:
-						$errorMsg = 'In der Datei ist weder ein Satz mit dem gewï¿½nschten Schlï¿½sselwert noch ein Satz mit einem grï¿½ï¿½eren Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem grï¿½ï¿½ten Schlï¿½sselwert geladen.';
+						$errorMsg = 'In der Datei ist weder ein Satz mit dem gewünschten Schlüsselwert noch ein Satz mit einem größeren Schlüsselwert vorhanden. Es wurde der Satz mit dem größten Schlüsselwert geladen.';
 						break;
 
 					case _rNoRec:
@@ -678,11 +678,11 @@
 				if(!$result == _rOk) {
 					switch($result) {
 						case _rExists:
-							$errorMsg = 'Der Datensatz konnte nicht eingefï¿½gt oder zurï¿½ckgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlï¿½sselwert bereits existiert.';
+							$errorMsg = 'Der Datensatz konnte nicht eingefügt oder zurückgespeichert werden, da ein Satz mit einem identischen eindeutigen Schlüsselwert bereits existiert.';
 							break;
 
 						case _rDeadLock:
-							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht eingefï¿½gt werden.';
+							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht eingefügt werden.';
 							break;
 
 						default:
@@ -713,15 +713,15 @@
 				if(!$result == _rOk) {
 					switch($result) {
 						case _rLocked:
-							$errorMsg = 'Der Datensatz konnte nicht gelï¿½scht werden, da er von einem anderen Benutzer gesperrt ist.';
+							$errorMsg = 'Der Datensatz konnte nicht gelöscht werden, da er von einem anderen Benutzer gesperrt ist.';
 							break;
 
 						case _rNoKey:
-							$errorMsg = 'In der Datei ist kein Satz mit dem gewï¿½nschten Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem nï¿½chst grï¿½ï¿½eren Schlï¿½sselwert geladen.';
+							$errorMsg = 'In der Datei ist kein Satz mit dem gewünschten Schlüsselwert vorhanden. Es wurde der Satz mit dem nächst größeren Schlüsselwert geladen.';
 							break;
 
 						case _rLastRec:
-							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewï¿½nschten Schlï¿½sselwert noch ein Satz mit einem grï¿½ï¿½eren Schlï¿½sselwert vorhanden. Es wurde der Satz mit dem grï¿½ï¿½ten Schlï¿½sselwert geladen.';
+							$errorMsg = 'In der Datei ist weder ein Satz mit dem gewünschten Schlüsselwert noch ein Satz mit einem größeren Schlüsselwert vorhanden. Es wurde der Satz mit dem größten Schlüsselwert geladen.';
 							break;
 
 						case _rNoRec:
@@ -729,7 +729,7 @@
 							break;
 
 						case _rDeadLock:
-							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht gelï¿½scht werden.';
+							$errorMsg = 'Der Datensatz konnte aufgrund einer Verklemmung nicht gelöscht werden.';
 							break;
 
 						default:
@@ -1081,7 +1081,7 @@
 					$errortext = c16_errortext($c16_link);
 					switch($error) {
 						case C16ERR_NO_KEY:
-							$errortext = 'Schlï¿½ssel fehlend oder falsch (C16 ERR: ' . $errortext . ')!';
+							$errortext = 'Schlüssel fehlend oder falsch (C16 ERR: ' . $errortext . ')!';
 							break;
 
 						case C16ERR_NO_FILE:
