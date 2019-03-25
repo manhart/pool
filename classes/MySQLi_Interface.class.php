@@ -559,10 +559,10 @@
 				$command = '';
 
 				// falls eine ältere Query Resource ID besteht, diese leeren
-				if($this->query_result) {
-					$query_id = intval($this->query_result);
-					unset($this->row[$query_id]);
-					unset($this->rowset[$query_id]);
+				if($this->query_result) {				    
+// 					$query_id = intval($this->query_result);
+// 					unset($this->row[$query_id]);
+// 					unset($this->rowset[$query_id]);
 					unset($this->query_result);
 				}
 
