@@ -1,0 +1,78 @@
+<span id="clock"></span>
+<script type="text/javascript" language="javascript">
+<!--
+	var dayarray = new Array("Sontag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag");
+	var montharray = new Array("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember");
+	var dynClockShowSec = {showSec}; // boolean
+	
+	/*
+	1 = Freitag, 17. Oktober 2003 13:32:00
+	2 = 17. Oktober 2003 ist ein Freitag, es ist 13:33:00 Uhr
+	*/
+	
+	var dynClockFormat = {format}; 
+	
+	function showDynDateTime() {
+		var useHtml = false;
+		var mydate = new Date();
+		var year = mydate.getYear();
+		var day = mydate.getDay();
+		var month = mydate.getMonth();
+		var daym = mydate.getDate();
+		if (daym < 10) {
+			daym = "0" + daym;
+		}
+		var hours = mydate.getHours();
+		var minutes = mydate.getMinutes();
+		var seconds = mydate.getSeconds();
+		if (minutes <= 9) {
+			minutes = "0" + minutes;
+		}
+		if (seconds <= 9) {
+			seconds = "0" + seconds;
+		}
+
+		if (dynClockFormat == 1) {
+			var cdate = dayarray[day] + ", " + daym + ". " + montharray[month] + " " + year + " " + hours + ":" + minutes + 
+				((dynClockShowSec) ? (":" + seconds) : "");
+		}
+		else if (dynClockFormat == 2) {
+			var cdate = daym + ". " + montharray[month] + " " + year + " ist ein " + dayarray[day] + ", es ist " + hours + ":" + minutes + 
+				((dynClockShowSec) ? (":" + seconds) : "") + " Uhr";
+		}
+		else if (dynClockFormat == 3) {
+			var cdate = '<table border="0" cellpadding="0" cellspacing="0" width="100%">'+
+						'<tr>' +
+						'	<td width="50%"><font class="ticker">&nbsp;&nbsp;' + dayarray[day] + ", " + daym + ". " + montharray[month] + " " + year + '</font></td>' +
+						'	<td width="50%" align="right"><font class="ticker">' + hours + ":" + minutes + ((dynClockShowSec) ? (":" + seconds) : "") + ' Uhr&nbsp;&nbsp;</font></td>' +
+						'</tr></table>';
+			useHtml = true;
+		}
+	
+		var obj_clock = document.getElementById("clock");
+		if (obj_clock) {
+			if (useHtml) {
+				obj_clock.innerHTML = cdate;
+			}
+			else {
+				obj_clock.innerText = cdate;
+			}
+		}
+	}
+	
+	if (is.dom || is.ie5) {
+		showDynDateTime();
+	}
+	
+	function startDynClock(enableTimer) {
+		if (is.dom || is.ie5) {
+			if (enableTimer) {
+				setInterval("showDynDateTime()", {interval});
+			}
+			else {
+				
+			}
+		}
+	}
+-->
+</script>

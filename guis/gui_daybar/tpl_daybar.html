@@ -1,0 +1,26 @@
+<input type="hidden" name="dayBar{name}" id="dayBar{name}" value="{dayBarValue}" defaultvalue="{defaultValue}">
+<table name="{name}" id="{name}" type="daybar" border="0"  bgcolor="white" cellpadding="0" cellspacing="0" class="gui_daybar">
+  <tr>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+    <td><img name="days{name}" id="mo" selected=0 value="1" wochentag="1" border="0" src="images/{pathToImages}mo.gif" style="cursor:pointer" onclick="DayBar{name}.clickDayBar(this);" title="Montag"></td>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+    <td><img name="days{name}" id="di" selected=0 value="2" wochentag="2" border="0" src="images/{pathToImages}di.gif" style="cursor:pointer" onclick="DayBar{name}.clickDayBar(this);" title="Dienstag"></td>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+    <td><img name="days{name}" id="mi" selected=0 value="4" wochentag="3" border="0" src="images/{pathToImages}mi.gif" style="cursor:pointer" onclick="DayBar{name}.clickDayBar(this);" title="Mittwoch"></td>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+    <td><img name="days{name}" id="do" selected=0 value="8" wochentag="4" border="0" src="images/{pathToImages}do.gif" style="cursor:pointer" onclick="DayBar{name}.clickDayBar(this);" title="Donnerstag"></td>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+    <td><img name="days{name}" id="fr" selected=0 value="16" wochentag="5" border="0" src="images/{pathToImages}fr.gif" style="cursor:pointer" onclick="DayBar{name}.clickDayBar(this);" title="Freitag"></td>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+    <td><img name="days{name}" id="sa" selected=0 value="32" wochentag="6" border="0" src="images/{pathToImages}sa.gif" style="cursor:pointer" onclick="DayBar{name}.clickDayBar(this);" title="Samstag"></td>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+    <td><img name="days{name}" id="so" selected=0 value="64" wochentag="7" border="0" src="images/{pathToImages}so.gif" style="cursor:pointer" onclick="DayBar{name}.clickDayBar(this);" title="Sonntag"></td>
+    <td><img border="0" src="images/pl.gif" width="2"></td>
+  </tr>
+</table>
+<script type="text/javascript">
+	DayBar{name} = new DayBar('{name}');
+	DayBar{name}.addEventOnBeforeClick('{onbeforeclick}');
+	DayBar{name}.addEventOnClick('{onclick}');
+	DayBar{name}.prepareDayBar();
+</script>

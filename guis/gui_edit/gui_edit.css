@@ -1,0 +1,19 @@
+/* ================================ */
+/* gui_edit default POOL stylesheet */
+/* author: alexander manhart        */
+/* date: 07.07.2004                 */
+/* ================================ */
+
+.gui_edit {
+	border: 1px solid black;
+	font-family: Verdana;
+	font-size: 11px;
+	text-align: left;
+}
+
+.gui_edit_error {
+	border: 1px solid #FF0000;
+	font-family: Verdana;
+	font-size: 11px;
+	text-align: left;
+}
