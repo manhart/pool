@@ -1,0 +1,26 @@
+<!-->
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<!--><!-- AM, 24.04.09, nicht table von div entfernen, wg. firstChild -->
+<div id="DHTML_DropdownList_{NAME}" style="background-color:white; position:absolute; overflow:{OVERFLOW}; visibility:hidden; z-index:999; left:0; top:0; right:0; bottom:0; height:{LISTHEIGHT}; border:1px black dotted" onmouseup="cancelEvent(event);">
+<table cellpadding="1" cellspacing="0" style="width:100%" bgcolor="#000000">
+    <tr>
+      <td>
+      <table border="0" cellpadding="2" cellspacing="0" bgcolor="#FFFFFF" width="100%">
+        <!-- BLOCK listElement --><tr class="{CLASS}" value="{VALUE}" onmousedown="setValueById('{NAME}', this.getAttribute('value'));" style="cursor:pointer" onmouseover="this.style.backgroundColor='navy';this.style.color='white'" onmouseout="this.style.backgroundColor='';this.style.color='black'" onmouseup="closeDropdownLayer();focusCtrl(document.getElementById('{NAME}'));" onclick="{DOCLICKLIST}">
+          <td>{VALUE}</td>
+        </tr><!-- END listElement -->
+        <!-- BLOCK listElement_empty --><tr>
+          <td align="center" class="{CLASS}">(leer)</td>
+        </tr><!-- END listElement_empty -->
+      </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<table border="0" cellspacing="0" cellpadding="0" height="{EDHEIGHT}">
+  <tr>
+    <td>
+	[GUI_Edit(name={NAME}&amp;id={NAME}&amp;use.session=1&amp;style=width:{EDWIDTH}px;height:{EDHEIGHT}px&amp;defaultvalue={DEFAULTVALUE}&amp;tabindex={TABINDEX}&amp;onkeyup={ONKEYUP}&amp;value={VALUE})]</td>
+    <td><img alt="" src="{IMAGE}" onclick="openDropdownList('DHTML_DropdownList_{NAME}', document.getElementById('{NAME}'), 0, 0, {WIDTH});" onmouseover="pool_onLayer()" onmouseout="pool_offLayer()" border="0" style="cursor:pointer"></td>
+  </tr>
+</table>
