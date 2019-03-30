@@ -47,42 +47,41 @@ function pray($data, $functions=0) {
     }
 
     if (isset ($data)) {
-        if (is_array($data) || is_object($data)) {
-            if (count ($data)) {
-                $result .= "<OL>\n";
-                while (list ($key, $value) = each ($data)) {
-                    $type = gettype($value);
+        if ((is_array($data) and count($data)) || (is_object($data) and !isEmptyObject($data))) {
+            $result .= "<OL>\n";
+            foreach($data as $key => $value) {
+            // while (list ($key, $value) = each ($data)) {
+                $type = gettype($value);
 
-                    if ($type == "array" || $type == "object") {
-                        $result .= sprintf ("<li>(%s) <b>%s</b>:\n", $type, $key);
+                if ($type == "array" || $type == "object") {
+                    $result .= sprintf ("<li>(%s) <b>%s</b>:\n", $type, $key);
 
-                        if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
-                            and strtolower($key) != 'parent') { // prevent recursion
-                            $result .= pray ($value, $sf);
-                        }
-                        else {
-                            $result .= 'no follow, infinite loop';
-                        }
-                    }
-                    elseif (stripos($type, 'function') !== false) {
-                        if ($sf) {
-                            $result .= sprintf ("<li>(%s) <b>%s</b> </LI>\n", $type, $key, $value);
-                            // There doesn't seem to be anything traversable inside functions.
-                        }
+                    if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
+                        and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
+                        $result .= pray ($value, $sf);
                     }
                     else {
-                        /*	if (!$value){
-                            $value = "(none)";
-                        }*/
-                        $result .= sprintf ("<li>(%s) <b>%s</b> = %s</LI>\n", $type, $key, $value);
+                        $result .= 'no follow, infinite loop';
                     }
-                    unset($key, $value);
                 }
-                $result .= "</OL>end.\n";
+                elseif (stripos($type, 'function') !== false) {
+                    if ($sf) {
+                        $result .= sprintf ("<li>(%s) <b>%s</b> </LI>\n", $type, $key, $value);
+                        // There doesn't seem to be anything traversable inside functions.
+                    }
+                }
+                else {
+                    /*	if (!$value){
+                        $value = "(none)";
+                    }*/
+                    $result .= sprintf ("<li>(%s) <b>%s</b> = %s</LI>\n", $type, $key, $value);
+                }
+                unset($key, $value);
             }
-            else {
-                $result .= "(empty)";
-            }
+            $result .= "</OL>end.\n";
+        }
+        else {
+            $result .= "(empty)";
         }
     }
     return $result;
@@ -2607,6 +2606,18 @@ function getClientIP()
 	{
 		return ($string=='true') ? true : false;
 	}
+
+/**
+ * checks if the object is empty.
+ *
+ * @param $obj
+ * @return bool
+ */
+function isEmptyObject($obj)
+{
+    foreach($obj as $xyz) return false;
+    return true;
+}
 
 	/**
 	 * Liefert einen Wahrheitswert, wenn die Variable nicht leer ist z.B. $arr = array_filter($arr, 'isNotEmpty').
