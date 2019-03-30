@@ -120,11 +120,11 @@
 			var $default_database = '';
 
 			/**
-			 * Speichert Resource ID zwischen
+			 * Speichert das Query Result zwischen
 			 *
-			 * @var resource
+			 * @var mysqli_result|true|false
 			 */
-			var $query_result = null;
+			var $query_result = false;
 
 			/**
 			 * Zuletzt ausgefuehrtes SQL Kommando
@@ -558,12 +558,12 @@
 
 				$command = '';
 
-				// falls eine ältere Query Resource ID besteht, diese leeren
+				// reset query result
 				if($this->query_result) {
-					$query_id = intval($this->query_result);
-					unset($this->row[$query_id]);
-					unset($this->rowset[$query_id]);
-					unset($this->query_result);
+//					$query_id = intval($this->query_result);
+//					unset($this->row[$query_id]);
+//					unset($this->rowset[$query_id]);
+					$this->query_result = false;
 				}
 
 				if($this->sql != '') {
@@ -646,12 +646,9 @@
 				}
 
 				if($this->query_result) {
-					$this->last_command = $command;
-					return $this->query_result;
-				}
-				else {
-					return false;
-				}
+                    $this->last_command = $command;
+                }
+                return $this->query_result;
 			}
 
 			/**
@@ -668,19 +665,22 @@
 			/**
 			 * Anzahl gefundener Datensaetze (Rows)
 			 *
-			 * @access public
-			 * @param resource $query_id Query Ergebnis-Kennung
+			 * @param mysqli_result|false $query_result Query Ergebnis-Kennung
 			 * @return integer Bei Erfolg einen Integer, bei Misserfolg false
 			 **/
-			function numrows($query_id = false)
+			public function numrows($query_result = false)
 			{
-				if(!$query_id) {
+				if(!$query_result) {
 					if (isset($this->query_result)) {
-						$query_id = $this->query_result;
+                        $query_result = $this->query_result;
 					}
 				}
 
-				return ($query_id !== false) ? mysqli_num_rows($query_id) : false;
+				$numrows = 0;
+				if($query_result instanceof mysqli_result) {
+				    $numrows = mysqli_num_rows($query_result);
+                }
+				return $numrows;
 			}
 
 			/**
@@ -695,23 +695,25 @@
 			}
 
 			/**
-			 * MySQL_Interface::numfields()
-			 *
 			 * Ermittelt die Spaltenanzahl einer SQL Abfrage
 			 *
 			 * @access public
-			 * @param integer $query_id Query Ergebnis-Kennung
+			 * @param mysqli_result|false $query_result Query Ergebnis-Kennung
 			 * @return integer Bei Erfolg einen Integer Wert, bei Misserfolg false
 			 **/
-			function numfields($query_id = 0)
+			function numfields($query_result = false)
 			{
-				if( !$query_id ) {
+				if(!$query_result ) {
 					if (isset($this->query_result)) {
-						$query_id = $this->query_result;
+                        $query_result = $this->query_result;
 					}
 				}
 
-				return ($query_id) ? mysqli_num_fields($query_id) : false;
+				$numfields = 0;
+				if($query_result instanceof mysqli_result) {
+				    $numfields = mysqli_num_fields($query_result);
+                }
+				return $numfields;
 			}
 
 			/**
@@ -781,25 +783,24 @@
 			 * Liefert einen Datensatz als assoziatives Array und numerisches Array
 			 *
 			 * @access public
-			 * @param integer $query_resource
+			 * @param mysqli_result|false $query_result
 			 * @return array Bei Erfolg ein Array mit allen Datensaetzen ($array[index]['feldname'])
 			 **/
-			function fetchrowset($query_resource = null)
+			public function fetchrowset($query_result = false)
 			{
-				if(!$query_resource) {
+				if(!$query_result) {
 					if (isset($this->query_result)) {
-						$query_resource = $this->query_result;
+                        $query_result = $this->query_result;
 					}
 				}
 
-				if($query_resource) {
-					$rowset = array();
-					while($row = mysqli_fetch_assoc($query_resource)) {
+                $rowset = array();
+				if($query_result instanceof mysqli_result) {
+					while(($row = mysqli_fetch_assoc($query_result)) != null) {
 					    $rowset[] = $row;
 					}
-					return $rowset;
 				}
-				return false;
+                return $rowset;
 			}
 
 			/**
@@ -850,10 +851,10 @@
             /**
              * Wrapper function fuer die fruehere mysql_result
              *
-             * @param $query_result
-             * @param $rownum
+             * @param mysqli_result $query_result
+             * @param int $rownum
              * @param int $field
-             * @return bool
+             * @return mixed
              */
 			private function mysqli_result($query_result, $rownum, $field=0)
             {
@@ -953,9 +954,7 @@
 							$arr[$i]++;
 						}
 					}
-					if($result instanceof mysqli_result) {
-					    mysqli_free_result($result);
-                    }
+					$this->freeresult($result);
 				}
 
 				return $arr;
@@ -969,18 +968,29 @@
 			 * freigegeben.
 			 *
 			 * @access public
-			 * @param integer $query_id Query Ergebnis-Kennung
+			 * @param mysqli_result|false $query_result Query Ergebnis-Kennung
 			 * @return boolean Bei Erfolg true, bei Misserfolg false
 			 **/
-			function freeresult($query_id = null)
+			public function freeresult($query_result = false)
 			{
-				if(!$query_id) {
+				if(!$query_result) {
 					if (isset($this->query_result)) {
-						$query_id = $this->query_result;
+                        $query_result = $this->query_result;
 					}
 				}
 
-				return ($query_id instanceof mysqli_result) ? mysqli_free_result($query_id) : false;
+				if($query_result instanceof mysqli_result) {
+				    $xdebug_is_debugger_active = false;
+				    if(function_exists('xdebug_is_debugger_active')) {
+                        $xdebug_is_debugger_active = xdebug_is_debugger_active();
+                    }
+                    // attention: xdebug shows strange error messages: Can't fetch mysqli_result
+				    if(!$xdebug_is_debugger_active) {
+				        mysqli_free_result($query_result);
+                    }
+				    return true;
+                }
+				return false;
 			}
 
 			/**

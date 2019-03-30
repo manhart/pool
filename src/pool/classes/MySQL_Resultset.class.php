@@ -46,27 +46,25 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
     class MySQL_Resultset extends Resultset
     {
         /**
-         * Datenbankschnittstellen-Objekt MySQL_Interface
+         * Database Interface for MySQL
          *
-         * @var MySQL_Interface
+         * @var MySQLi_Interface
          */
         var $db = null;
 
         /**
-         * Konstruktor
-         *
          * Erwartet Datenbank Layer als Parameter.
          * Der Datenbank Layer ist die Schnittstelle zur MySQL Datenbank.
          * Die MySQL_db Klasse uebt die eigentlichen datenbankspezfischen
          * Operationen (z.B. mysql_connect, mysql_query) aus.
          *
          * @access public
-         * @param MySQL_Interface $db Datenbank Layer (Class MySQL_db)
+         * @param MySQLi_Interface $db database layer
          * @see MySQL_db
          **/
-        function __construct(& $db)
+        function __construct(&$db)
         {
-            $this->db = & $db;
+            $this->db = &$db;
         }
 
         /**
@@ -88,8 +86,9 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
             $bResult = false;
             $this->rowset = array();
 
+            $result = false;
             if (!is_a($this->db, 'DataInterface')) {
-                $this->raiseError(__FILE__, __LINE__, 'Kein DataInterface vorhanden (@execute).');
+                $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
             }
             else {
                 if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
@@ -103,7 +102,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
 
             if (!$result) {
                 $error_msg = $this->db->getErrormsg().' SQL Statement failed: '.$sql;
-                $this -> raiseError(__FILE__, __LINE__, $error_msg);
+                $this->raiseError(__FILE__, __LINE__, $error_msg);
                 $error = $this -> db -> getError();
                 $error['sql'] = $sql;
                 $this -> errorStack[] = $error;
@@ -111,7 +110,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
             else {
                 $cmd = $this->db->getLastSQLCommand();
                 #echo $cmd.'<br>';
-                if ($cmd == 'SELECT' or $cmd == 'SHOW'/* or substr($cmd, 0, 1) == '('*/) { // ( z.B. UNION
+                if ($cmd == 'SELECT' or $cmd == 'SHOW' or $cmd == 'DESCRIBE' or $cmd == 'EXPLAIN' /* or substr($cmd, 0, 1) == '('*/) { // ( z.B. UNION
                     if ($this->db->numrows($result) > 0) {
                         $this->rowset = $this->db->fetchrowset($result);
                         $this->reset();
@@ -119,9 +118,9 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
                     $this->db->freeresult($result);
                 }
                 elseif ($cmd == 'INSERT') {
-                    $last_insert_id = $this -> db -> nextid();
-                    $affected_rows = $this -> db -> affectedrows();
-                    $this -> rowset = array(
+                    $last_insert_id = $this->db->nextid();
+                    $affected_rows = $this->db->affectedrows();
+                    $this->rowset = array(
                         0 => array(
                             0 => $last_insert_id,
                             'last_insert_id' => $last_insert_id,
@@ -132,8 +131,8 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
                     $this -> reset();
                 }
                 elseif ($cmd == 'UPDATE' or $cmd == 'DELETE') {
-                    $affected_rows = $this -> db -> affectedrows();
-                    $this -> rowset = array(
+                    $affected_rows = $this->db->affectedrows();
+                    $this->rowset = array(
                         0 => array(
                             0 => $affected_rows,
                             'affected_rows' => $affected_rows
