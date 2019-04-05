@@ -5,7 +5,7 @@ Features:
 
 + Modularität
 + Rapid Template Engine
-+ Skinable Interface
++ Skinnable Interface
 + Graphical User Interfaces
 + Multilingual System
 + Dynamic Content with Schemes
