@@ -45,6 +45,7 @@ if(extension_loaded('mbstring')) {
 
 /* check Servername und stelle die Weichen */
 switch($_SERVER['SERVER_NAME']) {
+    case 'develop.localhost':   
     # VM develop.manhart.xx
     case 'develop.manhart.xx':
         define('DIR_DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']);
@@ -72,6 +73,10 @@ define('JAVA_PATH', '/usr/bin/java');
 define('DIR_POOL_ROOT', DIR_DOCUMENT_ROOT.'/pool/src/pool');
 // aus der App Sicht (für js from pool):
 define('DIR_POOL_ROOT_REL', '../../src/pool'); // for webprojects it would be better to symlink javascripts folder
+
+// This constant points to the root directory of the configuration files, which is the directory I am currently in.
+// The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
+define('DIR_CONFIGS_ROOT', __DIR__);
 
 // falls benoetigt, anpassen:
 //define('DIR_DATA_ROOT', DIR_DOCUMENT_ROOT . 'data');
