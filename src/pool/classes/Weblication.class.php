@@ -432,7 +432,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 }
             }
 
-            $this -> raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@findTemplate)!', $folder_images.$filename));
+            $this -> raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@)!', $folder_images.$filename));
             return '';
         }
 
@@ -474,23 +474,34 @@ if(!defined('CLASS_WEBLICATION')) {
 
             # Ordner Projekt guis
             $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
-            $folder_skins = $folder_guis . $skin;
-            $folder_language = $folder_skins . $language;
-            if (is_dir($folder_language)) { // Language Ordner
-                if (file_exists($folder_language . $filename)) {
-                    return $folder_language . $filename;
+            # Ordner Commons guis
+            $folder_commons_guis =  addEndingSlash(DIR_COMMONS_ROOT) . $folder_guis;
+           
+            $gui_directories = array(
+                $folder_guis,
+                $folder_commons_guis
+            );
+            
+            foreach ($gui_directories as $folder_guis) {
+                $folder_skins = $folder_guis . $skin;
+                $folder_language = $folder_skins . $language;
+                if (is_dir($folder_language)) { // Language Ordner
+                    if (file_exists($folder_language . $filename)) {
+                        return $folder_language . $filename;
+                    }
+                }
+                if (is_dir($folder_skins)) { // Skin Ordner
+                    if (file_exists($folder_skins . $filename)) {
+                        return $folder_skins . $filename;
+                    }
+                }
+                if (is_dir($folder_guis)) { // GUI Ordner
+                    if (file_exists($folder_guis . $filename)) {
+                        return $folder_guis . $filename;
+                    }
                 }
             }
-            if (is_dir($folder_skins)) { // Skin Ordner
-                if (file_exists($folder_skins . $filename)) {
-                    return $folder_skins . $filename;
-                }
-            }
-            if (is_dir($folder_guis)) { // GUI Ordner
-                if (file_exists($folder_guis . $filename)) {
-                    return $folder_guis . $filename;
-                }
-            }
+            
 
             # Ordner baselib
             if ($baselib) {
