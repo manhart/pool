@@ -28,4 +28,4 @@
 	/* ===== */
 	$Testing_User 	= array(DATAINTERFACE_MYSQLI, DB_TESTING, 'User');
 
-	define('DBACCESSFILE', DIR_POOL_ROOT. '/configs/access.inc.php');
+	define('DBACCESSFILE', DIR_CONFIGS_ROOT. '/access.inc.php');
