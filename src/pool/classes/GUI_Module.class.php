@@ -234,49 +234,57 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             $Parent = &$ParentGUI;
             $OrigParent = &$Parent;
         }
-
-        if(!class_exists($GUIClassName)) {
-            $path = $GUIClassName;
-
-            //$SubClassName = strtolower(substr($GUIClassName, 4, strlen($GUIClassName)-4));
-            $filename = addEndingSlash(PWD_TILL_GUIS).strtolower($path.'/'.$GUIClassName).'.class.php';
-            if (file_exists($filename)) {
-                require_once $filename;
-            }
-            else {
-                $filename = addEndingSlash(PWD_TILL_GUIS).$path.'/'.$GUIClassName.'.class.php';
+        
+        $GUIRootDirs = array(
+            getcwd(),
+            DIR_COMMONS_ROOT
+        );
+        
+        foreach ($GUIRootDirs as $GUIRootDir) {
+        
+            if(!class_exists($GUIClassName)) {
+                $path = $GUIClassName;
+                
+                //$SubClassName = strtolower(substr($GUIClassName, 4, strlen($GUIClassName)-4));
+                $filename = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS).strtolower($path.'/'.$GUIClassName).'.class.php';
                 if (file_exists($filename)) {
-                    require_once($filename);
+                    require_once $filename;
                 }
-                elseif($Parent) {
-                    // verschachtelte GUI's
-                    $parent_directory = '';
-                    $parent_directory_without_frame = '';
-                    do {
-                        if($Parent instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
-                            $Parent = &$Parent->getParent();
-                            continue;
-                        }
-                        if(!$Parent instanceof GUI_CustomFrame) {
-                            $parent_directory_without_frame = $Parent->getClassName().'/'.$parent_directory_without_frame;
-                        }
-                        $parent_directory = $Parent->getClassName().'/'.$parent_directory;
-                        $Parent = &$Parent->getParent();
-                    } while($Parent != null);
-
-                    $filename = addEndingSlash(PWD_TILL_GUIS).$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).'.class.php';
-                    $filename_without_frame = addEndingSlash(PWD_TILL_GUIS).$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).'.class.php';
-
+                else {
+                    $filename = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS).$path.'/'.$GUIClassName.'.class.php';
                     if (file_exists($filename)) {
                         require_once($filename);
                     }
-                    elseif(file_exists($filename_without_frame)) {
-                        require_once($filename_without_frame);
+                    elseif($Parent) {
+                        // verschachtelte GUI's
+                        $parent_directory = '';
+                        $parent_directory_without_frame = '';
+                        do {
+                            if($Parent instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
+                                $Parent = &$Parent->getParent();
+                                continue;
+                            }
+                            if(!$Parent instanceof GUI_CustomFrame) {
+                                $parent_directory_without_frame = $Parent->getClassName().'/'.$parent_directory_without_frame;
+                            }
+                            $parent_directory = $Parent->getClassName().'/'.$parent_directory;
+                            $Parent = &$Parent->getParent();
+                        } while($Parent != null);
+    
+                        $filename = addEndingSlash($GUIRootDir) .addEndingSlash(PWD_TILL_GUIS).$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).'.class.php';
+                        $filename_without_frame = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS).$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).'.class.php';
+    
+                        if (file_exists($filename)) {
+                            require_once($filename);
+                        }
+                        elseif(file_exists($filename_without_frame)) {
+                            require_once($filename_without_frame);
+                        }
                     }
                 }
             }
         }
-
+        
         if (class_exists($GUIClassName)) {
             // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
             // AM, 15.07.2009
@@ -291,7 +299,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         else {
             $Nil = new Nil();
             return $Nil;
-        }
+        }        
     }
 
     /**
