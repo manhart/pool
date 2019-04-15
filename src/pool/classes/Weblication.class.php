@@ -603,7 +603,7 @@ if(!defined('CLASS_WEBLICATION')) {
         function findJavaScript($filename, $classfolder='', $baselib=false)
         {
             $javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
-
+            
             # Ordner skins
             $folder_javascripts = $javascripts;
 
@@ -615,12 +615,17 @@ if(!defined('CLASS_WEBLICATION')) {
                 }
             }
             else {
-                $folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
+                
+                $folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);                
+                $folder_commons = addEndingSlash(DIR_COMMONS_ROOT_REL).addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);                
                 if (file_exists($folder_javascripts.$filename)) {
                     return $folder_javascripts.$filename;
                 }
                 elseif(file_exists($folder_guis.$filename)) {
                     return $folder_guis.$filename;
+                }
+                elseif(file_exists($folder_commons.$filename)) {
+                    return $folder_commons.$filename;
                 }
             }
 
