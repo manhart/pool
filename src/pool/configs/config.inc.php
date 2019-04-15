@@ -79,6 +79,7 @@ define('DIR_POOL_ROOT_REL', '../../src/pool'); // for webprojects it would be be
 define('DIR_CONFIGS_ROOT', __DIR__);
 
 define('DIR_COMMONS_ROOT', DIR_DOCUMENT_ROOT . '/pool/examples/commons');
+define('DIR_COMMONS_ROOT_REL', '../commons');
 
 // falls benoetigt, anpassen:
 //define('DIR_DATA_ROOT', DIR_DOCUMENT_ROOT . 'data');
