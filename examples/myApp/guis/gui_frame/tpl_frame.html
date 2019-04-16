@@ -18,11 +18,23 @@
         </ul>
     </nav>
 </header>
-[GUI_DateInput]
+
 [GUI_Login]
 
 <div class="schema">
     [GUI_Schema]
+</div>
+
+<div>
+   [GUI_AlertBox(modulename=alertbox)]
+   <button id="btnOpenAlertBox">Open AlertBox</button>
+   <script>
+    $('#btnOpenAlertBox').on('click', function() {
+        alertbox.open('Important note', 'This GUI_AlertBox uses bootstrap4 modal!', function() {
+            alert('This callback function is called after closing the AlertBox!');
+        });
+    });
+   </script>
 </div>
 
 <footer>
