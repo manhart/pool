@@ -1,0 +1,28 @@
+ <!-- ---------------------------------- AlertBox ----------------------------------------------------------- -->
+ <div class="modal fade" id="{name}" tabindex="-1" role="dialog" aria-labelledby="{name}Title" aria-hidden="true">
+   <div class="modal-dialog" role="document">
+     <div class="modal-content">
+       <div class="modal-header">
+         <h5 class="modal-title" id="{name}Title">Meldung</h5>
+         <button type="button" class="all close" data-dismiss="modal" aria-label="Close">
+           <span aria-hidden="true">&times;</span>
+         </button>
+       </div>
+       <div id="{name}Text" class="modal-body">
+           
+       </div>
+       <div class="modal-footer">
+         <button type="button" class="all btn btn-secondary" data-dismiss="modal">{buttonLabel}</button>
+       </div>
+     </div>
+   </div>
+ </div>
+ <script>
+ var {name} = null;
+ $(document).ready(function() {
+	 {name} = {};
+	 alertbox_template.apply({name});
+	 {name}.init('{name}');
+ });
+ </script>
+ <!-- ---------------------------------- AlertBox ----------------------------------------------------------- -->
