@@ -87,178 +87,151 @@ function pray($data, $functions=0) {
     return $result;
 }
 
-	/**
-	* formatBytes()
-	*
-	* @param integer $bytes Anzahl der Bytes
-     * @param bool $shortVersion Abgekuerzt
-	* @return string Formatierter String z.B.  33,44 MBytes
-	*/
-	function formatBytes($bytes, $shortVersion=false)
-	{
-		// Bytes
-		if ($bytes < 1024) {
-			return (number_format($bytes, 2, ',', '.') . (($shortVersion) ? ' b' : ' Bytes'));
-		}
-
-		// KBytes
-		$bytes = $bytes / 1024;
-		if ($bytes < 1024) {
-			return (number_format($bytes, 2, ',', '.') . (($shortVersion) ? ' KB' : ' KBytes'));
-		}
-
-		// MBytes
-		$bytes = $bytes / 1024;
-		if ($bytes < 1024) {
-			return (number_format($bytes, 2, ',', '.') . (($shortVersion) ?  'MB' : ' MBytes'));
-		}
-
-		// GBytes
-		$bytes = $bytes / 1024;
-		if ($bytes < 1024) {
-			return (number_format($bytes, 2, ',', '.') . (($shortVersion) ? 'GB' : ' GBytes'));
-		}
-
-		// TBytes
-		$bytes = $bytes / 1024;
-		return (number_format($bytes, 3, ',', '.') . (($shortVersion) ? 'TB' :  'TBytes'));
+/**
+ * formatBytes()
+ *
+ * @param integer $bytes Anzahl der Bytes
+ * @param bool $shortVersion Abgekuerzt
+ * @return string Formatierter String z.B.  33,44 MBytes
+ */
+function formatBytes($bytes, $shortVersion=false)
+{
+	// Bytes
+	if ($bytes < 1024) {
+		return (number_format($bytes, 2, ',', '.') . (($shortVersion) ? ' b' : ' Bytes'));
 	}
 
-	/**
-	 * Hilfsfunktion fuer die PHP Funktion getImageSize. getImageSize liefert je nach Grafik-Typ (1 = GIF, 2 = JPG, 3 = PNG, SWF = 4)!
-	 *
-	 * @param integer $index siehe PHP Dokumentation: getImageSize
-	 * @return string Format
-	 **/
-	function getImageFormat($index)
-	{
-		$format = array(
-			1 => 'GIF',
-			2 => 'JPEG',
-			3 => 'PNG',
-			4 => 'SWF',
-			5 => 'PSD',
-			6 => 'WBMP'
-		);
-		return $format[$index];
+	// KBytes
+	$bytes = $bytes / 1024;
+	if ($bytes < 1024) {
+		return (number_format($bytes, 2, ',', '.') . (($shortVersion) ? ' KB' : ' KBytes'));
 	}
 
-	/**
-	 * splitcsv()
-	 *
-	 * @access public
-	 * @param string $line Text / Zeile
-	 * @param string $delim Trennzeichen (the delimiter to split by)
-	 * @param boolean $removeQuotes Sollen Quotes (") vom Ergebnis entfernt werden
-	 * @return array Aufgeteilte Felder
-	 **/
-	function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
-	{
-		$fields = array();
-		$fldCount = 0;
-		$inQuotes = false;
-		for ($i = 0; $i < strlen($line); $i++) {
-			if (!isset($fields[$fldCount])) $fields[$fldCount] = '';
-			$tmp = substr($line, $i, strlen($delim));
-			if ($tmp === $delim && !$inQuotes) {
-				$fldCount++;
-				$i += strlen($delim)-1;
-			}
-			else if ($fields[$fldCount] == '' && $line[$i] == $quote && !$inQuotes) {
-				if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
-				$inQuotes = true;
-			}
-			else if ($line[$i] == $quote) {
-				if ($line[$i+1] == $quote) {
-					$i++;
-					$fields[$fldCount] .= $line[$i];
-				}
-				else {
-					if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
-					$inQuotes = false;
-				}
-			}
-			else {
+	// MBytes
+	$bytes = $bytes / 1024;
+	if ($bytes < 1024) {
+		return (number_format($bytes, 2, ',', '.') . (($shortVersion) ?  'MB' : ' MBytes'));
+	}
+
+	// GBytes
+	$bytes = $bytes / 1024;
+	if ($bytes < 1024) {
+		return (number_format($bytes, 2, ',', '.') . (($shortVersion) ? 'GB' : ' GBytes'));
+	}
+
+	// TBytes
+	$bytes = $bytes / 1024;
+	return (number_format($bytes, 3, ',', '.') . (($shortVersion) ? 'TB' :  'TBytes'));
+}
+
+
+/**
+ * splitcsv()
+ *
+ * @access public
+ * @param string $line Text / Zeile
+ * @param string $delim Trennzeichen (the delimiter to split by)
+ * @param boolean $removeQuotes Sollen Quotes (") vom Ergebnis entfernt werden
+ * @return array Aufgeteilte Felder
+ **/
+function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
+{
+	$fields = array();
+	$fldCount = 0;
+	$inQuotes = false;
+	for ($i = 0; $i < strlen($line); $i++) {
+		if (!isset($fields[$fldCount])) $fields[$fldCount] = '';
+		$tmp = substr($line, $i, strlen($delim));
+		if ($tmp === $delim && !$inQuotes) {
+			$fldCount++;
+			$i += strlen($delim)-1;
+		}
+		else if ($fields[$fldCount] == '' && $line[$i] == $quote && !$inQuotes) {
+			if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
+			$inQuotes = true;
+		}
+		else if ($line[$i] == $quote) {
+			if ($line[$i+1] == $quote) {
+				$i++;
 				$fields[$fldCount] .= $line[$i];
 			}
-		}
-		return $fields;
-	}
-
-	/**
-	 * Dr�selt nach Trennzeichen einen String $data auf. Dabei werden Steuerzeichen #10 und #13 ber�cksichtigt, sowie umschlossener (enclosure) Text
-	 *
-	 * @param string $data Inhalt (z.B. einer Datei)
-	 * @param string $delim Trennzeichen (Standard = ';')
-	 * @param string $enclosure Umklammerung [optional]
-	 * @return array mehrdimensional (Zeilen, Felder)
-	 */
-	function splitcsvByContent(&$data, $delim=';', $enclosure='"')
-	{
-		$ret_array = array();
-		$enclosed=false;
-		$fldcount=0;
-		$linecount=0;
-		$fldval='';
-		for($i=0; $i<strlen($data); $i++) {
-			$chr=$data{$i};
-			switch($chr) {
-				case $enclosure:
-					if($enclosed && $data{$i+1} == $enclosure) {
-						$fldval .= $chr;
-						++$i; //skip next char
-					}
-					else $enclosed = !$enclosed;
-					break;
-
-				case $delim:
-					if(!$enclosed) {
-						$ret_array[$linecount][$fldcount++] = $fldval;
-						$fldval = '';
-					}
-					else $fldval .= $chr;
-					break;
-
-				case "\r":
-					if(!$enclosed && $data{$i+1} == "\n")
-						continue 2;
-
-				case "\n":
-					if(!$enclosed) {
-						$ret_array[$linecount++][$fldcount] = $fldval;
-						$fldcount = 0;
-						$fldval = '';
-					}
-					else $fldval .= $chr;
-					break;
-
-				default:
-					$fldval .= $chr;
+			else {
+				if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
+				$inQuotes = false;
 			}
 		}
-		if($fldval) $ret_array[$linecount][$fldcount] = $fldval;
-		unset($fldval);
-		return $ret_array;
+		else {
+			$fields[$fldCount] .= $line[$i];
+		}
 	}
+	return $fields;
+}
 
-	/**
-	 * Wandelt alle Werte eines Arrays in Kleinbuchstaben um.
+/**
+ * Dr�selt nach Trennzeichen einen String $data auf. Dabei werden Steuerzeichen #10 und #13 ber�cksichtigt, sowie umschlossener (enclosure) Text
+ *
+ * @param string $data Inhalt (z.B. einer Datei)
+ * @param string $delim Trennzeichen (Standard = ';')
+ * @param string $enclosure Umklammerung [optional]
+ * @return array mehrdimensional (Zeilen, Felder)
+ */
+function splitcsvByContent(&$data, $delim=';', $enclosure='"')
+{
+	$ret_array = array();
+	$enclosed=false;
+	$fldcount=0;
+	$linecount=0;
+	$fldval='';
+	for($i=0; $i<strlen($data); $i++) {
+		$chr=$data{$i};
+		switch($chr) {
+			case $enclosure:
+				if($enclosed && $data{$i+1} == $enclosure) {
+					$fldval .= $chr;
+					++$i; //skip next char
+				}
+				else $enclosed = !$enclosed;
+				break;
+
+			case $delim:
+				if(!$enclosed) {
+					$ret_array[$linecount][$fldcount++] = $fldval;
+					$fldval = '';
+				}
+				else $fldval .= $chr;
+				break;
+
+			case "\r":
+				if(!$enclosed && $data{$i+1} == "\n")
+					continue 2;
+
+			case "\n":
+				if(!$enclosed) {
+					$ret_array[$linecount++][$fldcount] = $fldval;
+					$fldcount = 0;
+					$fldval = '';
+				}
+				else $fldval .= $chr;
+				break;
+
+			default:
+				$fldval .= $chr;
+		}
+	}
+	if($fldval) $ret_array[$linecount][$fldcount] = $fldval;
+	unset($fldval);
+	return $ret_array;
+}
+
+/**
+ * Wandelt alle Werte eines Arrays in Kleinbuchstaben um. Pendent zu array_change_key_case
 	 *
 	 * @param array $input Array, das umgewandelt werden soll
 	 * @param int $case CASE_LOWER|CASE_UPPER
 	 * @return array Ergebnis
 	 **/
-	function array_change_value_case($input, $case=CASE_LOWER)
-	{
-		if ($case == CASE_LOWER) {
-		    array_walk($input, 'arrayStrToLower');
-		}
-		elseif ($case == CASE_UPPER) {
-			array_walk($input, 'arrayStrToUpper');
-		}
-		return $input;
-	}
-
+function array_change_value_case($input, $case=CASE_LOWER)
+{
 	/**
 	 * Diese private Funktion gehoert zur Funktion array_change_value_case!
 	 *
@@ -266,7 +239,7 @@ function pray($data, $functions=0) {
 	 * @param string $item Item
 	 * @param $key
 	 **/
-	function arrayStrToLower(& $item, $key)
+    function __arrayStrToLower(& $item, $key)
 	{
     	$item = strtolower($item);
 	}
@@ -282,6 +255,15 @@ function pray($data, $functions=0) {
 	{
 		$item = strtoupper($item);
 	}
+
+    if ($case == CASE_LOWER) {
+        array_walk($input, 'arrayStrToLower');
+    }
+    elseif ($case == CASE_UPPER) {
+        array_walk($input, 'arrayStrToUpper');
+    }
+    return $input;
+}
 
 	/**
 	* Gibt den ersten Montag und letzten Sonntag der Kalenderwoche $week im Jahr $year zurueck
