@@ -130,6 +130,10 @@ function RequestPOOL(module, method, params, async)
 						if(typeof alert_box == 'function') {
 							alert_box(message);
 						}
+						// wenn die bootstrap4-alertbox verfuegbar ist, diese verwenden.
+						else if (typeof alertbox.open == 'function') {
+							alertbox.open('Error', message);
+						}
 						else {
 							alert(message);
 						}
