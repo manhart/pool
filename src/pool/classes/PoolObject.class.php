@@ -7,7 +7,7 @@
  * Vermerk Author:<br>
  * Ich will an diesem System nichts verkomplizieren, keep it simple stupid.
  *
- * Letzte aenderung am: $Date: 2006/10/20 08:42:17 $
+ * Letzte aenderung am: $Date: 2019-03-21 13:05:12 +0100 (Do, 21 Mrz 2019) $
  *
  * $Log: PoolObject.class.php,v $
  * Revision 1.12  2006/10/20 08:42:17  manhart
@@ -17,7 +17,7 @@
  * Exception->Xception (PHP5 kompatibel)
  *
  *
- * @version $Id: PoolObject.class.php,v 1.12 2006/10/20 08:42:17 manhart Exp $
+ * @version $Id: PoolObject.class.php 37855 2019-03-21 12:05:12Z manhart $
  * @version $Revision 1.0$
  * @version
  *
