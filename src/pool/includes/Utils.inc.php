@@ -4149,6 +4149,9 @@ if(!function_exists('hash_equals')) {
     }
 }
 
+/**
+ * PHP 7 - random_int : Generates cryptographically secure pseudo-random integers
+ */
 if (!function_exists('random_int')) {
     function random_int($min, $max) {
         if (!function_exists('mcrypt_create_iv')) {
@@ -4193,5 +4196,21 @@ if (!function_exists('random_int')) {
         } while ($result > $range);
 
         return $result + $min;
+    }
+}
+
+/*
+ * PHP 5.3/5.4 Wrapper for array_column
+ */
+
+if(!function_exists('array_column'))
+{
+    function array_column($array, $column_name)
+    {
+        return array_map(
+            function($element) use($column_name) {
+                return $element[$column_name];
+            },
+            $array);
     }
 }

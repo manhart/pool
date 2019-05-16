@@ -6,10 +6,10 @@
 	 *
 	 * Graphical User Interface zur Listendarstellung.
 	 *
-	 * @version $Id: gui_customlistview.class.php 12326 2009-05-28 11:27:54Z manhart $
-	 * @version $Revision: 12326 $
+	 * @version $Id: gui_customlistview.class.php 37657 2019-03-20 16:46:08Z manhart $
+	 * @version $Revision: 37657 $
 	 * @version $Author: manhart $
-	 * @version $Date: 2009-05-28 13:27:54 +0200 (Do, 28 Mai 2009) $
+	 * @version $Date: 2019-03-20 17:46:08 +0100 (Mi, 20 Mrz 2019) $
 	 *
 	 * @since 2004-02-11
 	 * @author alexander manhart <alexander.manhart@freenet.de>
@@ -21,7 +21,7 @@
 	 *
 	 * @package pool
 	 * @author manhart
-	 * @version $Id: gui_customlistview.class.php 12326 2009-05-28 11:27:54Z manhart $
+	 * @version $Id: gui_customlistview.class.php 37657 2019-03-20 16:46:08Z manhart $
 	 * @access public
 	 **/
 	class GUI_CustomListView extends GUI_Module
