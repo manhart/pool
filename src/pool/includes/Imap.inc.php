@@ -17,7 +17,7 @@
  **/
 
 /**
- * Gibt den Mime Typ als String zur�ck (Imap Helper)
+ * Gibt den Mime Typ als String zurück (Imap Helper)
  *
  * @param object $structure
  * @return string
