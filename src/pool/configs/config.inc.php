@@ -78,8 +78,8 @@ define('DIR_POOL_ROOT_REL', '../../src/pool'); // for webprojects it would be be
 // The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
 define('DIR_CONFIGS_ROOT', __DIR__);
 
-define('DIR_COMMONS_ROOT', DIR_DOCUMENT_ROOT . '/pool/examples/commons');
-define('DIR_COMMONS_ROOT_REL', '../commons');
+define('DIR_COMMON_ROOT', DIR_DOCUMENT_ROOT . '/pool/examples/common');
+define('DIR_COMMON_ROOT_REL', '../common');
 
 // falls benoetigt, anpassen:
 //define('DIR_DATA_ROOT', DIR_DOCUMENT_ROOT . 'data');
@@ -110,4 +110,3 @@ define('PATH_IMAGEMAGICK', '/usr/bin');
 
 // Temporaeres Verzeichnis
 define('PATH_TEMP', '/var/tmp');
-?>
