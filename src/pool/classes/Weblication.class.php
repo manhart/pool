@@ -107,7 +107,7 @@ if(!defined('CLASS_WEBLICATION')) {
          * @var string
          * @access private
          */
-        var $Language = 'de';
+        private $language = 'de';
 
         /**
          * Schema / Layout (index ist das Standard-Schema)
@@ -130,7 +130,7 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @var string
          */
-        var $Charset = '';
+        private $charset = '';
 
         /**
          * Programm ID
@@ -204,7 +204,7 @@ if(!defined('CLASS_WEBLICATION')) {
          **/
         function setLanguage($lang = 'de')
         {
-            $this->Language = $lang;
+            $this->language = $lang;
         }
 
         /**
@@ -215,7 +215,7 @@ if(!defined('CLASS_WEBLICATION')) {
          **/
         function getLanguage()
         {
-            return $this->Language;
+            return $this->language;
         }
 
         /**
@@ -225,18 +225,18 @@ if(!defined('CLASS_WEBLICATION')) {
          */
         function getCharset()
         {
-            return $this->Charset;
+            return $this->charset;
         }
 
         /**
-         * Setzt den Zeichensatz fuer die Webanwendung
+         * Set charset for the Web Application
          *
          * @param string $charset
          */
         function setCharset($charset)
         {
             header('content-type: text/html; charset='.$charset);
-            $this->Charset = strtoupper($charset);
+            $this->charset = strtoupper($charset);
         }
 
         /**
@@ -332,7 +332,7 @@ if(!defined('CLASS_WEBLICATION')) {
         function getTemplatePath($additionalDir=''/*, $baselib=false*/)
         {
             $skin = addEndingSlash($this->skin);
-            $language = addEndingSlash($this -> Language);
+            $language = addEndingSlash($this->language);
             $dir = 'templates';
 
             # Ordner skins
@@ -387,7 +387,7 @@ if(!defined('CLASS_WEBLICATION')) {
         {
             $path = '';
             $skin = addEndingSlash($this->skin);
-            $language = addEndingSlash($this->Language);
+            $language = addEndingSlash($this->language);
 
             # Ordner Skins
             $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skin;
@@ -427,7 +427,7 @@ if(!defined('CLASS_WEBLICATION')) {
         function findImage($filename)
         {
             $skin = addEndingSlash($this->skin);
-            $language = addEndingSlash($this->Language);
+            $language = addEndingSlash($this->language);
             $images = 'images/';
 
             # Ordner skins
@@ -466,7 +466,7 @@ if(!defined('CLASS_WEBLICATION')) {
             // PHP 5 liefert mit get_class() pl�tzlich richtig geschriebene Klassennamen in Gro�buchstaben
 
             $skin = addEndingSlash($this->skin);
-            $language = addEndingSlash($this->Language);
+            $language = addEndingSlash($this->language);
             $templates = 'templates/';
 
             # Ordner skins
@@ -544,7 +544,7 @@ if(!defined('CLASS_WEBLICATION')) {
         function findStyleSheet($filename, $classfolder='', $baselib=false)
         {
             $skin = addEndingSlash($this->skin);
-            $language = addEndingSlash($this -> Language);
+            $language = addEndingSlash($this->language);
             $stylesheets = $this->cssFolder.'/';
 
             # Ordner skins
@@ -930,8 +930,8 @@ if(!defined('CLASS_WEBLICATION')) {
                     if ($Header) {
                         $title = $this->Title;
                         $Header->setTitle($title);
-                        $Header->setLanguage($this->Language);
-                        if($this->Charset) $Header->setCharset($this->Charset);
+                        $Header->setLanguage($this->language);
+                        if($this->charset) $Header->setCharset($this->charset);
                     }
                 }
                 return true;
@@ -964,8 +964,8 @@ if(!defined('CLASS_WEBLICATION')) {
         function adjustImageDir($content)
         {
             $folderImages = 'skins/' . $this->skin;
-            if(is_dir($folderImages . '/' . $this -> Language)) {
-                $folderImages .= '/' . $this -> Language;
+            if(is_dir($folderImages . '/' . $this->language)) {
+                $folderImages .= '/' . $this->language;
             }
             $folderImages .= '/images/';
 
