@@ -9,7 +9,6 @@ if(!ini_set('include_path', DIR_POOL_ROOT)) {
 require_once 'pool.lib.php';
 ini_set('include_path', '.');
 
-
 define('APP_CHARSET', 'utf-8');
 
 $Weblication = &Singleton('Weblication');
