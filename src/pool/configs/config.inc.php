@@ -31,17 +31,11 @@
 *
 * IS_TESTSERVER (boolean) = gibt an, ob es sich einen Testrechner handelt.
 *
-* PATH_IMAGEMAGICK (string) = Pfad zu ImageMagick
-* PATH_TEMP (string) = Temporaeres Verzeichnis
-*
 * ############################################################################################################################
 */
-
 $loc = setlocale(LC_TIME, 'de_DE.UTF-8'); // charset must be installed on system!
-
-if(extension_loaded('mbstring')) {
-    mb_detect_order('UTF-8,ISO-8859-1');
-}
+$loc = setlocale(LC_COLLATE, 'de_DE.UTF-8'); // charset must be installed on system!
+$loc = setlocale(LC_CTYPE, 'de_DE.UTF-8'); // charset must be installed on system!
 
 /* check Servername und stelle die Weichen */
 switch($_SERVER['SERVER_NAME']) {
@@ -78,6 +72,7 @@ define('DIR_POOL_ROOT_REL', '../../src/pool'); // for webprojects it would be be
 // The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
 define('DIR_CONFIGS_ROOT', __DIR__);
 
+// This constant points to the common directory, where global code, e.g. company-specific GUI modules are located.
 define('DIR_COMMON_ROOT', DIR_DOCUMENT_ROOT . '/pool/examples/common');
 define('DIR_COMMON_ROOT_REL', '../common');
 
@@ -100,13 +95,8 @@ define('DIR_SUBCODES_ROOT', DIR_DOCUMENT_ROOT.'/pool/examples/subcodes');
 
 define('DIR_RELATIVE_3RDPARTY_ROOT', '../3rdParty');
 
-# hm?
+# DAO paths
 define('PWD_TILL_DAOS_MYSQL', 'mysql/');
-define('PWD_TILL_DAOS_CISAM', 'cisam/');
+define('PWD_TILL_DAOS_MSSQL', 'mssql/');
 define('PWD_TILL_DAOS_POSTGRESQL', 'postgresql/');
-
-// ImageMagick Pfad
-define('PATH_IMAGEMAGICK', '/usr/bin');
-
-// Temporaeres Verzeichnis
-define('PATH_TEMP', '/var/tmp');
+define('PWD_TILL_DAOS_CISAM', 'cisam/');
