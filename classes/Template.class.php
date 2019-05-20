@@ -263,15 +263,13 @@
 			{
 				parent::__construct($type);
 
-				$this -> setDirectory($directory);
-				$this -> BlockList = Array();
-				$this -> FileList = Array();
-				$this -> VarList = Array();
+				$this->setDirectory($directory);
+				$this->BlockList = Array();
+				$this->FileList = Array();
+				$this->VarList = Array();
 			}
 
 			/**
-			* TempCoreHandle::createBlock()
-			*
 			* Die Funktion createBlock legt einen neuen Block (Objekt vom Typ TempBlock) an.
 			*
 			* @access public
@@ -281,7 +279,7 @@
 			* @return object TempBlock
 			* @see TempBlock
 			*/
-	        function & createBlock($handle, $dir, $content)
+	        function &createBlock($handle, $dir, $content)
     	    {
         	    $obj = new TempBlock($handle, $dir, $content);
 				$this->BlockList[$handle] = & $obj;
@@ -298,10 +296,10 @@
 	        * @return object TempFile
     	    * @see TempFile
         	*/
-			function & createFile($handle, $dir, $filename)
+			function &createFile($handle, $dir, $filename)
 			{
 				$obj = new TempFile($handle, $dir, $filename);
-				$this->FileList[$handle] = & $obj;
+				$this->FileList[$handle] = &$obj;
 				return $obj;
 			}
 
@@ -319,7 +317,7 @@
 			function &createScript($handle, $dir, $filename)
 			{
 				$obj = new TempScript($handle, $dir, $filename);
-				$this->FileList[$handle] = & $obj;
+				$this->FileList[$handle] = &$obj;
 				return $obj;
 			}
 
@@ -391,12 +389,10 @@
 	        */
 			function setDirectory($dir)
 			{
-				$this -> Directory = $dir;
+				$this->Directory = $dir;
 			}
 
 			/**
-			* TempCoreHandle::getDirectory()
-			*
 			* Liefert das Verzeichnis.
 			*
 			* @access public
@@ -404,7 +400,7 @@
 			*/
 			function getDirectory()
 			{
-				return $this -> Directory;
+				return $this->Directory;
 			}
 
 			/**
@@ -437,8 +433,6 @@
         	}
 
 			/**
-			* TempCoreHandle::findPattern()
-			*
 			* Eine der Hauptfunktionen in der Rapid Template Engine!
 			* Objekt Elemente haben im Template das Muster <!-- FUNKTION HANDLENAME>INHALT<!-- END HANDLENAME --> .
 			* Ein Block kann in diesem Fall auch ein Include eines weiteren Templates oder Scripts sein
@@ -467,11 +461,11 @@
 
 						switch($kind) {
 							case TEMP_DYNBLOCK_IDENT:
-								$this->createBlock($handle, $this->Directory, $content);
+								$this->createBlock($handle, $this->getDirectory(), $content);
 								break;
 
 							case TEMP_INCLUDE_IDENT:
-								$this->createFile($handle, $this->Directory, $content);
+								$this->createFile($handle, $this->getDirectory(), $content);
 								break;
 
 							case TEMP_INCLUDESCRIPT_IDENT:
@@ -481,7 +475,7 @@
 									$content = basename($content);
 								} else $directory = $this -> Directory;
 								*/
-								$this->createScript($handle, $this->Directory, $content);
+								$this->createScript($handle, $this->getDirectory(), $content);
 								break;
 
 							case TEMP_SESSION_IDENT:
@@ -749,8 +743,7 @@
 			*/
 			function loadFile()
 			{
-				$fp = fopen(((strlen($this -> Directory) > 0) ? (addEndingSlash($this -> Directory)) : '') .
-					$this -> Filename, 'r');
+				$fp = fopen($this->getDirectory().$this->Filename, 'r');
 				if (!$fp) {
 					$this -> raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
 						$this -> Filename));
@@ -928,11 +921,12 @@
 			function setDirectory($dir)
 			{
 				if(strlen($dir) > 0) {
+				    $dir = addEndingSlash($dir);
 					if (is_dir($dir)) {
-					    $this -> dir = $dir;
+					    $this->dir = $dir;
 					}
 					else {
-						$this -> raiseError(__FILE__, __LINE__, sprintf('Directory \'%s\' not found!', $dir));
+						$this->raiseError(__FILE__, __LINE__, sprintf('Directory \'%s\' not found!', $dir));
 					}
 				}
 			}
@@ -945,7 +939,7 @@
 			*/
 			function getDirectory()
 			{
-				return $this -> dir;
+				return $this->dir;
 			}
 
 			/**
@@ -958,11 +952,11 @@
 			function setFile($handle, $filename = '')
 			{
 				if (!is_array($handle)) {
-				    $this -> addFile($handle, $filename);
+				    $this->addFile($handle, $filename);
 				}
 				else {
 					foreach($handle as $filehandle => $filename) {
-						$this -> addFile($filehandle, $filename);
+						$this->addFile($filehandle, $filename);
 					}
 				}
 			}
@@ -977,13 +971,13 @@
 			function setFilePath($handle, $filename='')
 			{
 				if (!is_array($handle)) {
-				    $this -> dir = addEndingSlash(dirname($filename));
-					$this -> addFile($handle, basename($filename));
+				    $this->setDirectory(dirname($filename));
+					$this->addFile($handle, basename($filename));
 				}
 				else {
 					foreach($handle as $filehandle => $filename) {
-						$this -> dir = addEndingSlash(dirname($filename));
-						$this -> addFile($filehandle, basename($filename));
+						$this->setDirectory(dirname($filename));
+						$this->addFile($filehandle, basename($filename));
 					}
 				}
 			}

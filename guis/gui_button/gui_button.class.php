@@ -4,7 +4,7 @@
  *
  * gui_button.class.php
  *
- * @version $Id: gui_select.class.php,v 1.13 2007/05/15 14:10:46 manhart Exp $
+ * @version $Id: gui_button.class.php 37657 2019-03-20 16:46:08Z manhart $
  * @version $revision 1.0$
  * @version
  *
@@ -18,7 +18,7 @@
  *
  * @package pool
  * @author manhart
- * @version $Id: gui_select.class.php,v 1.13 2007/05/15 14:10:46 manhart Exp $
+ * @version $Id: gui_button.class.php 37657 2019-03-20 16:46:08Z manhart $
  * @access public
  **/
 class GUI_Button extends GUI_Universal

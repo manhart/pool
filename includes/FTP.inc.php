@@ -17,7 +17,7 @@
  **/
 
 /**
- * Pr�ft ob es sich um ein Verzeichnis handelt
+ * Pr?ft ob es sich um ein Verzeichnis handelt
  *
  * @param resource $con_id
  * @param string $dir
@@ -52,7 +52,7 @@ function ftp_make_dir($con_id, $dir)
 }
 
 /**
- * L�dt alle Dateien reskursiv hoch
+ * L?dt alle Dateien reskursiv hoch
  *
  * @param resource $con_id FTP-Verbindung
  * @param string $source_dir Quellverzeichnis auf dem lokalen Rechner
@@ -80,10 +80,10 @@ function ftp_upload_recursive($con_id, $source_dir, $target_dir, $pattern='*')
 }
 
 /**
- * L�scht Dateien rekursiv vom FTP-Server
+ * L?scht Dateien rekursiv vom FTP-Server
  *
  * @param string $con_id FTP-Verbindung
- * @param string $dir Zu l�schendes Hauptverzeichnis auf dem FTP-Server
+ * @param string $dir Zu l?schendes Hauptverzeichnis auf dem FTP-Server
  */
 function ftp_remove_recursive($con_id, $dir)
 {

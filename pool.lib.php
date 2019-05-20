@@ -17,7 +17,7 @@
 
 define('POOL', 'POOL');
 
-# Konstanten f�r die Unterverzeichnisse
+# Konstanten für die Unterverzeichnisse
 define('PWD_TILL_INCLUDES', 'includes');
 define('PWD_TILL_CLASSES', 'classes');
 define('PWD_TILL_GUIS', 'guis');

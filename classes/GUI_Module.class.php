@@ -236,70 +236,80 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         }
         
         $GUIRootDirs = array(
-            getcwd(),
-            DIR_COMMONS_ROOT
+            getcwd()
         );
+        if(defined('DIR_COMMON_ROOT')) {
+            $GUIRootDirs[] = DIR_COMMON_ROOT;
+        }
+    
+        $class_exists = class_exists($GUIClassName);
         
-        foreach ($GUIRootDirs as $GUIRootDir) {
-        
-            if(!class_exists($GUIClassName)) {
-                $path = $GUIClassName;
+        if(!$class_exists) {
+            // try to load class
+            $extension = '.class.php';
+            
+            foreach ($GUIRootDirs as $GUIRootDir) {
+                $GUIRootDir = addEndingSlash($GUIRootDir).addEndingSlash(PWD_TILL_GUIS);
                 
-                //$SubClassName = strtolower(substr($GUIClassName, 4, strlen($GUIClassName)-4));
-                $filename = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS).strtolower($path.'/'.$GUIClassName).'.class.php';
+                $filename = $GUIRootDir.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
                 if (file_exists($filename)) {
                     require_once $filename;
+                    break;
                 }
-                else {
-                    $filename = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS).$path.'/'.$GUIClassName.'.class.php';
-                    if (file_exists($filename)) {
-                        require_once($filename);
-                    }
-                    elseif($Parent) {
-                        // verschachtelte GUI's
-                        $parent_directory = '';
-                        $parent_directory_without_frame = '';
-                        do {
-                            if($Parent instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
-                                $Parent = &$Parent->getParent();
-                                continue;
-                            }
-                            if(!$Parent instanceof GUI_CustomFrame) {
-                                $parent_directory_without_frame = $Parent->getClassName().'/'.$parent_directory_without_frame;
-                            }
-                            $parent_directory = $Parent->getClassName().'/'.$parent_directory;
+
+                $filename = $GUIRootDir.$GUIClassName.'/'.$GUIClassName.$extension;
+                if (file_exists($filename)) {
+                    require_once $filename;
+                    break;
+                }
+                
+                if($Parent) {
+                    // verschachtelte GUI's
+                    $parent_directory = '';
+                    $parent_directory_without_frame = '';
+                    do {
+                        if($Parent instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
                             $Parent = &$Parent->getParent();
-                        } while($Parent != null);
-    
-                        $filename = addEndingSlash($GUIRootDir) .addEndingSlash(PWD_TILL_GUIS).$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).'.class.php';
-                        $filename_without_frame = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS).$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).'.class.php';
-    
-                        if (file_exists($filename)) {
-                            require_once($filename);
+                            continue;
                         }
-                        elseif(file_exists($filename_without_frame)) {
-                            require_once($filename_without_frame);
+                        if(!$Parent instanceof GUI_CustomFrame) {
+                            $parent_directory_without_frame = $Parent->getClassName().'/'.$parent_directory_without_frame;
                         }
+                        $parent_directory = $Parent->getClassName().'/'.$parent_directory;
+                        $Parent = &$Parent->getParent();
+                    } while($Parent != null);
+
+                    $filename = $GUIRootDir.$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
+                    if (file_exists($filename)) {
+                        require_once $filename;
+                        break;
+                    }
+    
+                    $filename = $GUIRootDir.$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
+                    if(file_exists($filename)) {
+                        require_once $filename;
+                        break;
                     }
                 }
             }
+            
+            // retest
+            $class_exists = class_exists($GUIClassName);
         }
-        
-        if (class_exists($GUIClassName)) {
+
+        if ($class_exists) {
             // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
             // AM, 15.07.2009
-            // Ältere Version des Konstruktors von GUI_Module behandelte keine Parameter:
-            // da schon viele GUI's ohne den dritten Parameter bestehen, abw�rtskompatibel mit $GUI->importParams()
             $GUI = new $GUIClassName($Owner, true, $params); /* @var $GUI GUI_Module */
             $GUI->setParent($OrigParent);
-            if(!$GUI->importParamsDone) $GUI->importParams($params);
+            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;
         }
         else {
             $Nil = new Nil();
             return $Nil;
-        }        
+        }
     }
 
     /**

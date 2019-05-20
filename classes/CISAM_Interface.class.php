@@ -263,7 +263,7 @@ if(!defined('CISAM_LAYER'))
 		{
 			$line = str_replace(
 				array(chr(63)),
-				array('ï¿½'), $line);
+					array('ü'), $line);
 			return $line;
 		}
 
