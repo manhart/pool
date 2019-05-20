@@ -7,7 +7,7 @@ function Url() {
 	//
 	// Fix POOL clone function (not needed in this context)
 	delete(this.params.clone);
-	this.path = null;
+	this.path = '';
 }
 Url.prototype.setScript = function(script) {
 	this.init(script);

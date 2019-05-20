@@ -36,7 +36,7 @@ if(!defined('CLASS_RESULTSET')) {
      * @version $Id: Resultset.class.php,v 1.34 2007/08/06 11:59:39 manhart Exp $
      * @access public
      **/
-    class Resultset extends PoolObject
+    class Resultset extends PoolObject implements Countable
     {
         //@var array Entitaetsmenge (Sammlung von Datensaetzen)
         //@access protected
@@ -198,13 +198,13 @@ if(!defined('CLASS_RESULTSET')) {
          **/
         function reset()
         {
-            if ($this -> count() > 0) {
-                $this -> index = 0;
+            if ($this->count() > 0) {
+                $this->index = 0;
             }
             else {
-                $this -> index = -1;
+                $this->index = -1;
             }
-            return $this -> index;
+            return $this->index;
         }
 
         /**
@@ -338,9 +338,9 @@ if(!defined('CLASS_RESULTSET')) {
          * @access public
          * @return integer Anzahl
          **/
-        function count()
+        public function count()
         {
-            return count($this -> rowset);
+            return count($this->rowset);
         }
 
         /**

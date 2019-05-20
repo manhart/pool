@@ -290,22 +290,29 @@ if(!defined('CLASS_MYSQLDAO')) {
             $column_list = '';
             $count = count($this->columns);
             $alias = '';
-            if($withAlias and $this->tableAlias) $alias = $this->tableAlias.'.';
+            if($withAlias and $this->tableAlias) {
+                $alias = $this->tableAlias.'.';
+            }
             for($i=0; $i < $count; $i++) {
                 $column = trim($this->columns[$i]);
-                if(array_key_exists(strtoupper($column), $this->reserved_words)) {
-                    $column_list .= '`'.$column.'`';
+                
+                $custom_column = $alias.$column;
+
+                if(strpos($column, ' ') !== false) { // column contains space
+                    // complex column construct should not be masked
+                    if(strpos($column, '(', 0) === false and
+                       strpos($column, '\'', 0) === false and
+                       strpos($column, '"', 0) === false and
+                       stripos($column, 'as ', 0) === false) {
+                        $custom_column = '`'.$column.'`'; // should be a column with space
                 }
-//					elseif(strpos($column, '-')!== false) {
-//						$column_list .= '`'.$column.'`';
-//					}
-                elseif(strpos($column, ' ') !== false) {
-                    $column_list .= '`'.$column.'`';
                 }
-                else {
-                    $column_list .= $alias.$column;
+                elseif(array_key_exists(strtoupper($column), $this->reserved_words)) { // column name is reserved word
+                    $custom_column = '`'.$column.'`';
                 }
                 //$column_list .=  /*(($this -> table) ? $this -> table . '.' : '') . */$column;
+                $column_list .= $custom_column;
+                
                 if ($i < ($count - 1)) {
                     $column_list .= ', ';
                 }
@@ -411,15 +418,15 @@ if(!defined('CLASS_MYSQLDAO')) {
 
                 $typeinfo = array_shift($coltype);
                 $len = null;
-                $enum_values = array();
+                // $enum_values = array();
                 if(($pos = strpos($typeinfo, '(')) !== false) {
                     $type = substr($typeinfo, 0, $pos);
                     if($type != 'enum') {
                         $len = substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2);
                     }
-                    else {
-                        $enum_values = explode(',', substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2));
-                    }
+                    //else {
+                    //    $enum_values = explode(',', substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2));
+                    //}
                 }
                 else $type = $typeinfo;
 

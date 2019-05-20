@@ -99,7 +99,7 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @var string
          */
-        var $Skin = 'default';
+        var $skin = 'default';
 
         /**
          * Sprache der Seite
@@ -180,7 +180,7 @@ if(!defined('CLASS_WEBLICATION')) {
          **/
         function setSkin($skin = 'default')
         {
-            $this->Skin = $skin;
+            $this->skin = $skin;
         }
 
         /**
@@ -192,7 +192,7 @@ if(!defined('CLASS_WEBLICATION')) {
          **/
         function getSkin()
         {
-            return $this->Skin;
+            return $this->skin;
         }
 
         /**
@@ -331,7 +331,7 @@ if(!defined('CLASS_WEBLICATION')) {
          */
         function getTemplatePath($additionalDir=''/*, $baselib=false*/)
         {
-            $skin = addEndingSlash($this -> Skin);
+            $skin = addEndingSlash($this->skin);
             $language = addEndingSlash($this -> Language);
             $dir = 'templates';
 
@@ -363,27 +363,41 @@ if(!defined('CLASS_WEBLICATION')) {
             return $path;
         }
 
+    
+         /**
+          * Checks if skin exists
+          *
+          * @param string $skin
+          * @return bool
+          */
+        function skin_exists($skin='')
+        {
+            $skin = addEndingSlash(($skin ? $skin : $this->skin));
+            $pathSkin = addEndingSlash(getcwd()).addEndingSlash(PWD_TILL_SKINS).$skin;
+            return file_exists($pathSkin);
+        }
+
         /**
-         * Liefert einen Pfad zum Skin-Verzeichnis zur�ck. Wenn der Parameter $additionalDir gef�llt wird, wird er an das Skin-Verzeichnis dran geh�ngt.
+         * Liefert einen Pfad zum Skin-Verzeichnis zurück. Wenn der Parameter $additionalDir gef�llt wird, wird er an das Skin-Verzeichnis dran geh�ngt.
          *
          * @param string $additionalDir Unterverzeichnis vom Skin-Verzeichnis
          * @return string
          */
         function getSkinPath($additionalDir='', $absolute=true)
         {
-            $skin = addEndingSlash($this -> Skin);
-            $language = addEndingSlash($this -> Language);
+            $path = '';
+            $skin = addEndingSlash($this->skin);
+            $language = addEndingSlash($this->Language);
 
             # Ordner Skins
-
-            $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
+            $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skin;
             if($absolute) {
-                $folder_skins = addEndingSlash(realpath('.')) . $folder_skins;
+                $folder_skins = addEndingSlash(getcwd()).$folder_skins;
             }
             $folder_language = $folder_skins . $language;
             if($additionalDir != '') {
-                $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
-                $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
+                $folder_skin_dir = addEndingSlash($folder_skins).$additionalDir;
+                $folder_language_dir = addEndingSlash($folder_language).$additionalDir;
             }
             else {
                 $folder_skin_dir = $folder_skins;
@@ -397,7 +411,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 $path = $folder_skin_dir;
             }
             else {
-                $this -> raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' and \'%s\' not found (@getSkinPath)!',
+                $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' and \'%s\' not found (@getSkinPath)!',
                     $folder_skin_dir, $folder_language_dir));
             }
 
@@ -412,7 +426,7 @@ if(!defined('CLASS_WEBLICATION')) {
          **/
         function findImage($filename)
         {
-            $skin = addEndingSlash($this->Skin);
+            $skin = addEndingSlash($this->skin);
             $language = addEndingSlash($this->Language);
             $images = 'images/';
 
@@ -432,7 +446,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 }
             }
 
-            $this -> raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@)!', $folder_images.$filename));
+            $this->raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@findImage)!', $folder_images.$filename));
             return '';
         }
 
@@ -451,8 +465,8 @@ if(!defined('CLASS_WEBLICATION')) {
             $classfolder = strtolower($classfolder); // 29.05.2007, Workaround for PHP 5
             // PHP 5 liefert mit get_class() pl�tzlich richtig geschriebene Klassennamen in Gro�buchstaben
 
-            $skin = addEndingSlash($this -> Skin);
-            $language = addEndingSlash($this -> Language);
+            $skin = addEndingSlash($this->skin);
+            $language = addEndingSlash($this->Language);
             $templates = 'templates/';
 
             # Ordner skins
@@ -473,31 +487,32 @@ if(!defined('CLASS_WEBLICATION')) {
             }
 
             # Ordner Projekt guis
-            $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
-            # Ordner Commons guis
-            $folder_commons_guis =  addEndingSlash(DIR_COMMONS_ROOT) . $folder_guis;
-           
+            $folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
             $gui_directories = array(
-                $folder_guis,
-                $folder_commons_guis
+                $folder_guis
             );
             
+            # Ordner Commons guis
+            if(defined('DIR_COMMON_ROOT')) {
+                $gui_directories[] = addEndingSlash(DIR_COMMON_ROOT).$folder_guis;
+            }
+            
             foreach ($gui_directories as $folder_guis) {
-                $folder_skins = $folder_guis . $skin;
-                $folder_language = $folder_skins . $language;
+                $folder_skins = $folder_guis.$skin;
+                $folder_language = $folder_skins.$language;
                 if (is_dir($folder_language)) { // Language Ordner
-                    if (file_exists($folder_language . $filename)) {
-                        return $folder_language . $filename;
+                    if (file_exists($folder_language.$filename)) {
+                        return $folder_language.$filename;
                     }
                 }
                 if (is_dir($folder_skins)) { // Skin Ordner
-                    if (file_exists($folder_skins . $filename)) {
-                        return $folder_skins . $filename;
+                    if (file_exists($folder_skins.$filename)) {
+                        return $folder_skins.$filename;
                     }
                 }
                 if (is_dir($folder_guis)) { // GUI Ordner
-                    if (file_exists($folder_guis . $filename)) {
-                        return $folder_guis . $filename;
+                    if (file_exists($folder_guis.$filename)) {
+                        return $folder_guis.$filename;
                     }
                 }
             }
@@ -505,15 +520,15 @@ if(!defined('CLASS_WEBLICATION')) {
 
             # Ordner baselib
             if ($baselib) {
-                $folder = addEndingSlash($this -> PathBaselib) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
+                $folder = addEndingSlash($this->PathBaselib).addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
                 if (is_dir($folder)) {
-                    if (file_exists($folder . $filename)) {
-                        return $folder . $filename;
+                    if (file_exists($folder.$filename)) {
+                        return $folder.$filename;
                     }
                 }
             }
 
-            $this -> raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@findTemplate)!', $filename));
+            $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@findTemplate)!', $filename));
             return '';
         }
 
@@ -528,7 +543,7 @@ if(!defined('CLASS_WEBLICATION')) {
          **/
         function findStyleSheet($filename, $classfolder='', $baselib=false)
         {
-            $skin = addEndingSlash($this->Skin);
+            $skin = addEndingSlash($this->skin);
             $language = addEndingSlash($this -> Language);
             $stylesheets = $this->cssFolder.'/';
 
@@ -603,7 +618,7 @@ if(!defined('CLASS_WEBLICATION')) {
         function findJavaScript($filename, $classfolder='', $baselib=false)
         {
             $javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
-            
+
             # Ordner skins
             $folder_javascripts = $javascripts;
 
@@ -614,18 +629,22 @@ if(!defined('CLASS_WEBLICATION')) {
                     return $folder.$filename;
                 }
             }
-            else {
+            else {                
+                $folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
                 
-                $folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);                
-                $folder_commons = addEndingSlash(DIR_COMMONS_ROOT_REL).addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);                
                 if (file_exists($folder_javascripts.$filename)) {
                     return $folder_javascripts.$filename;
                 }
-                elseif(file_exists($folder_guis.$filename)) {
+                
+                if(file_exists($folder_guis.$filename)) {
                     return $folder_guis.$filename;
                 }
-                elseif(file_exists($folder_commons.$filename)) {
-                    return $folder_commons.$filename;
+    
+                if(defined('DIR_COMMON_ROOT_REL')) {
+                    $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL).addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
+                    if (file_exists($folder_common.$filename)) {
+                        return $folder_common.$filename;
+                    }
                 }
             }
 
@@ -944,7 +963,7 @@ if(!defined('CLASS_WEBLICATION')) {
          */
         function adjustImageDir($content)
         {
-            $folderImages = 'skins/' . $this -> Skin;
+            $folderImages = 'skins/' . $this->skin;
             if(is_dir($folderImages . '/' . $this -> Language)) {
                 $folderImages .= '/' . $this -> Language;
             }

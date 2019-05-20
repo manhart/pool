@@ -139,7 +139,7 @@ function getFromHost($host, $port=80, $path, &$errno, &$errstr, $extra='', $time
 //	}
 
 /**
- * Testet �ber ICMP, ob ein Host verf�gbar ist. Gibt die PING-Zeit zur�ck.
+ * Testet über ICMP, ob ein Host verfügbar ist. Gibt die PING-Zeit zurück.
  * Andernfalls kann mit socket_strerror(socket_last_error()) der letzte
  * Fehler ermittelt werden.
  *
@@ -181,7 +181,7 @@ function ping($host, $sec=1, $usec=0)
 }
 
 /**
- * Link �berpr�fen
+ * Link überprüfen
  *
  * @param string $url
  * @param int $timeout

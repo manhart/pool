@@ -6,7 +6,7 @@
  *
  * GUI_DHtmlXGridExport dient dem dhtmlxGrid zum Exportieren von PDF's und Excel-Dateien.
  *
- * @version $Id: gui_dhtmlxgridexport.class.php 34071 2017-04-11 09:54:03Z aziz $
+ * @version $Id: gui_dhtmlxgridexport.class.php 37657 2019-03-20 16:46:08Z manhart $
  * @version $Revision 1.0$
  * @version
  *
@@ -23,7 +23,7 @@
  *
  * @package pool
  * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: gui_dhtmlxgridexport.class.php 34071 2017-04-11 09:54:03Z aziz $
+ * @version $Id: gui_dhtmlxgridexport.class.php 37657 2019-03-20 16:46:08Z manhart $
  * @access public
  **/
 class GUI_DHtmlXGridExport extends GUI_Module

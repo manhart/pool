@@ -296,6 +296,16 @@ if(!defined('CLASS_URL')) {
             $url = $scheme.'://'.$this->Host.$port.$path.(($query != '') ? '?' : '').$query.$this->Anchor;
             return $url;
         }
+    
+        /**
+         * Get Domain
+         *
+         * @return string
+         */
+        public function getDomain()
+        {
+            return $this->Host;
+        }
 
         /**
          * Erstellt eine HTML <a href=""> Zeichenkette und gibt den HTML Anchor zurück

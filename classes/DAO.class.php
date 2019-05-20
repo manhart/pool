@@ -152,17 +152,17 @@ if(!defined('CLASS_DAO')) {
          **/
         function setColumns($col)
         {
-            $this -> columns = Array($col);
+            $this->columns = Array($col);
             $num_args = func_num_args();
             if ($num_args >= 2) {
                 for ($a=1; $a < $num_args; $a++) {
                     $arg = func_get_arg($a);
                     if ($arg != '') {
-                        array_push($this -> columns, $arg);
+                        array_push($this->columns, $arg);
                     }
                 }
             }
-            $this -> onSetColumns();
+            $this->onSetColumns();
         }
 
         /**
