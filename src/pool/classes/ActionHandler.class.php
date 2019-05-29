@@ -377,7 +377,7 @@
 				// Error oder nichts gefunden $Resultset -> getLastError
 				$this->buffer['id'] = null;
 				$this->buffer['record'] = null;
-				$this->addError('Keinen Datensatz mit Primärschlüssel ('.
+				$this->addError('Keinen Datensatz mit Primä²³chl?ssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
 					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
 				return false;
@@ -648,10 +648,10 @@
 				if(!$bool) break;
 			}
 			if ($bool) {
-				$continue = $this -> before_delete($id, $Input); // $Input_filtered
+				$continue = $this->before_delete($idvalue, $Input); // $Input_filtered
 
 				if($continue) {
-					$Resultset = & $this -> DAO -> delete($id);
+					$Resultset = & $this->DAO->delete($idvalue);
 					if(!$Resultset) {
 						$this -> addError('L&ouml;schvorgang abgebrochen! Unbekannter Fehler.', 0);
 						return 0;
@@ -667,7 +667,7 @@
 						foreach($pk as $pkfieldname) {
 							$l_id[] = $list[$i][$pkfieldname];
 						}
-						if ($l_id == $id) {
+						if ($l_id == $idvalue) {
 							unset($list[$i]);
 							break;
 						}
@@ -691,9 +691,9 @@
 						$id = null;
 					}
 
-					$this -> buffer['id'] = $id;
-					$this -> buffer['record'] = $record;
-					$this -> buffer['list'] = $list;
+					$this->buffer['id'] = $id;
+					$this->buffer['record'] = $record;
+					$this->buffer['list'] = $list;
 				}
 
 			}
