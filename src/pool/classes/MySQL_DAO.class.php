@@ -305,7 +305,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                        strpos($column, '"', 0) === false and
                        stripos($column, 'as ', 0) === false) {
                         $custom_column = '`'.$column.'`'; // should be a column with space
-                }
+                    }
                 }
                 elseif(array_key_exists(strtoupper($column), $this->reserved_words)) { // column name is reserved word
                     $custom_column = '`'.$column.'`';
