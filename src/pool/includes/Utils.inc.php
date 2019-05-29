@@ -225,11 +225,11 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
 
 /**
  * Wandelt alle Werte eines Arrays in Kleinbuchstaben um. Pendent zu array_change_key_case
-	 *
-	 * @param array $input Array, das umgewandelt werden soll
-	 * @param int $case CASE_LOWER|CASE_UPPER
-	 * @return array Ergebnis
-	 **/
+ *
+ * @param array $input Array, das umgewandelt werden soll
+ * @param int $case CASE_LOWER|CASE_UPPER
+ * @return array Ergebnis
+ **/
 function array_change_value_case($input, $case=CASE_LOWER)
 {
 	/**

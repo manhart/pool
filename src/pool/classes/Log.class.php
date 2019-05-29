@@ -105,7 +105,7 @@ if(!defined('CLASS_LOG')) {
          *
          * @var boolean
          */
-        var $enableCache = false;
+        protected $enableCache = false;
 
         var $sid = 0000;
         var $withSID = true;
@@ -122,7 +122,7 @@ if(!defined('CLASS_LOG')) {
          *
          * @access public
          */
-        function __construct()
+        public function __construct()
         {
             $this->sid = rand(0, 9999);
         }
@@ -265,7 +265,7 @@ if(!defined('CLASS_LOG')) {
          *
          * @return string
          */
-        function __lineFormat()
+        protected function __lineFormat()
         {
             return formatDateTime(time(), $this->formatDateTime) . (($this->withSID) ? $this->separator . '{' .
                 sprintf('%04d', $this -> sid) . '}' : '').$this->separator.'%s';
@@ -277,7 +277,7 @@ if(!defined('CLASS_LOG')) {
          * @param string $text
          * @param string $separator
          */
-        function addLine($text)
+        public function addLine($text)
         {
             $text = sprintf($this->__lineFormat(), $text);
             if($this->enableCache) {
@@ -291,7 +291,7 @@ if(!defined('CLASS_LOG')) {
         /**
          * Logfile schlie�en
          */
-        function close()
+        public function close()
         {
             $this->cache = array();
             fclose($this->fp);

@@ -21,8 +21,8 @@
 	* geschlossen.
 	*
 	*
-	* @version $Id: MySQLi_Interface.class.php 37547 2019-03-01 10:01:41Z manhart $
-	* @version $Revision: 37547 $
+	* @version $Id: MySQLi_Interface.class.php 38043 2019-04-26 07:55:22Z manhart $
+	* @version $Revision: 38043 $
 	*
 	* @see DataInterface.class.php
 	* @since 2019/02/28
@@ -50,7 +50,7 @@
 		 *
 		 * @package pool
 		 * @author Alexander Manhart <alexander@manhart.bayern>
-		 * @version $Id: MySQLi_Interface.class.php 37547 2019-03-01 10:01:41Z manhart $
+		 * @version $Id: MySQLi_Interface.class.php 38043 2019-04-26 07:55:22Z manhart $
 		 * @access public
 		 **/
 		class MySQLi_Interface extends DataInterface
@@ -646,7 +646,7 @@
 				}
 
 				if($this->query_result) {
-                    $this->last_command = $command;
+					$this->last_command = $command;
                 }
                 return $this->query_result;
 			}
