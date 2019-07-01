@@ -215,26 +215,13 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     }
 
     /**
-    * Erzeugt ein neues GUI Modul anhand des Klassennamens.
-    * Faustregel fuer Owner: als Owner sollte die Klasse Weblication uebergeben werden
-    * (damit ein Zugriff auf alle Unterobjekte gewaehrleistet werden kann).
+      * Autoloader for GUIModules
     *
-    * @method static
-    * @access public
-    * @param string $GUIClassName Name der GUI Klasse
-    * @param object $Owner Besitzer dieses Objekts
-    * @param string $params Parameter in der Form key1=value1&key2=value2=&
-    * @return object Neues GUI_Module oder Nil
+      * @param string $GUIClassName
+      * @param GUI_Module $ParentGUI
     */
-    public static function &createGUIModule($GUIClassName, &$Owner, &$ParentGUI, $params='')
+    public static function autoloadGUIModule($GUIClassName, $ParentGUI)
     {
-        $Parent = $OrigParent = null;
-
-        if(isset($ParentGUI) and $ParentGUI instanceof GUI_Module) {
-            $Parent = &$ParentGUI;
-            $OrigParent = &$Parent;
-        }
-        
         $GUIRootDirs = array(
             getcwd()
         );
@@ -242,9 +229,6 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             $GUIRootDirs[] = DIR_COMMON_ROOT;
         }
     
-        $class_exists = class_exists($GUIClassName);
-        
-        if(!$class_exists) {
             // try to load class
             $extension = '.class.php';
             
@@ -292,6 +276,26 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
                     }
                 }
             }
+    }
+
+    /**
+    * Erzeugt ein neues GUI Modul anhand des Klassennamens.
+    * Faustregel fuer Owner: als Owner sollte die Klasse Weblication uebergeben werden
+    * (damit ein Zugriff auf alle Unterobjekte gewaehrleistet werden kann).
+    *
+    * @method static
+    * @access public
+    * @param string $GUIClassName Name der GUI Klasse
+    * @param object $Owner Besitzer dieses Objekts
+    * @param string $params Parameter in der Form key1=value1&key2=value2=&
+    * @return object Neues GUI_Module oder Nil
+    */
+    public static function &createGUIModule($GUIClassName, &$Owner, &$ParentGUI, $params='')
+    {
+        $class_exists = class_exists($GUIClassName);
+        
+        if(!$class_exists) {
+            GUI_Module::autoloadGUIModule($GUIClassName, $ParentGUI);
             
             // retest
             $class_exists = class_exists($GUIClassName);
@@ -301,7 +305,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
             // AM, 15.07.2009
             $GUI = new $GUIClassName($Owner, true, $params); /* @var $GUI GUI_Module */
-            $GUI->setParent($OrigParent);
+            $GUI->setParent($ParentGUI);
             if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;
