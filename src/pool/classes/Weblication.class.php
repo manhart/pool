@@ -168,10 +168,24 @@ if(!defined('CLASS_WEBLICATION')) {
             $this->PathBaselib = $PathBaselib;
             $this->RelativePathBaselib = $RelativePathBaselib;
 
+            // Register Autoloader
+            $this->__autoload_register();
+
             $Nil = new Nil();
             parent::__construct($Nil);
         }
 
+         /**
+          * Register autloader for GUIs
+          *
+          * @throws Exception
+          */
+        private function __autoload_register()
+        {
+            spl_autoload_register(function($class) {
+                GUI_Module::autoloadGUIModule($class, null);
+            });
+        }
         /**
          * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
          *
@@ -363,7 +377,6 @@ if(!defined('CLASS_WEBLICATION')) {
             return $path;
         }
 
-    
          /**
           * Checks if skin exists
           *
