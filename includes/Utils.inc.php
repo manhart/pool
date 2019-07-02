@@ -4214,3 +4214,47 @@ if(!function_exists('array_column'))
             $array);
     }
 }
+
+/**
+ * Liefert einen Filenamen, der noch nicht im Ordner existiert.
+ * Existiert die Datei bereits, wird durchnummeriert:
+ * meinDokument.pdf
+ * meinDokument-01.pdf
+ * meinDokument-02.pdf
+ * 
+ */
+function nextFreeFilename($dir, $filename, $delimiter='-') {
+	$filepath = $dir . $filename;
+	if (file_exists($filepath)) {
+
+		$info = pathinfo($filepath);
+		// echo pray($info);
+
+		$filenameNoExtension = $info['filename'];
+		$extension           = $info['extension'];
+
+		$pos = strrpos($filenameNoExtension, $delimiter);
+		if ($pos === false) {
+			$nr = 1;
+			$newFilename = $filenameNoExtension . $delimiter . sprintf('%02d', $nr) . '.' . $extension;
+		}
+		else {
+			$filenameNoNumber =  mb_substr($filenameNoExtension, 0, $pos);
+			$nr               =  mb_substr($filenameNoExtension, $pos+1);
+			if (is_numeric($nr)) {
+				$nr =  intval($nr) + 1;
+				$newFilename = $filenameNoNumber . $delimiter . sprintf('%02d', $nr) . '.' . $extension; 
+			}
+			else {
+				$nr = 1;
+				$newFilename = $filenameNoExtension . $delimiter  . sprintf('%02d', $nr) . '.' . $extension;
+			}
+			
+		}
+		return nextFreeFilename($dir, $newFilename, $delimiter);
+	}
+	else {
+		return $filename;
+	}
+	return false;
+}
