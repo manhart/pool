@@ -4224,7 +4224,7 @@ if(!function_exists('array_column'))
  * 
  */
 function nextFreeFilename($dir, $filename, $delimiter='-') {
-	$filepath = $dir . $filename;
+	$filepath = addEndingSlash($dir) . $filename;
 	if (file_exists($filepath)) {
 
 		$info = pathinfo($filepath);
@@ -4256,5 +4256,4 @@ function nextFreeFilename($dir, $filename, $delimiter='-') {
 	else {
 		return $filename;
 	}
-	return false;
 }
