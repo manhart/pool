@@ -220,7 +220,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
       * @param string $GUIClassName
       * @param GUI_Module $ParentGUI
     */
-    public static function autoloadGUIModule($GUIClassName, $ParentGUI)
+    public static function autoloadGUIModule($GUIClassName, $ParentGUI = null)
     {
         $GUIRootDirs = array(
             getcwd()
@@ -247,6 +247,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
                     break;
                 }
                 
+            $Parent = $ParentGUI;
                 if($Parent) {
                     // verschachtelte GUI's
                     $parent_directory = '';
