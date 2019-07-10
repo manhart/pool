@@ -247,7 +247,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
                     break;
                 }
                 
-            $Parent = $ParentGUI;
+            $Parent = &$ParentGUI;
                 if($Parent) {
                     // verschachtelte GUI's
                     $parent_directory = '';
@@ -293,13 +293,13 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     */
     public static function &createGUIModule($GUIClassName, &$Owner, &$ParentGUI, $params='')
     {
-        $class_exists = class_exists($GUIClassName);
+        $class_exists = class_exists($GUIClassName, false);
         
         if(!$class_exists) {
             GUI_Module::autoloadGUIModule($GUIClassName, $ParentGUI);
             
             // retest
-            $class_exists = class_exists($GUIClassName);
+            $class_exists = class_exists($GUIClassName, false);
         }
 
         if ($class_exists) {
