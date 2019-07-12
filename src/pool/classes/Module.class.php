@@ -293,11 +293,11 @@ if(!defined('CLASS_MODULE')) {
          * Setzt das Eltern-Modul (Parent = wem gehoere ich?)
          *
          * @access public
-         * @param Module $parent Klasse vom Typ Module
+         * @param Module $Parent Klasse vom Typ Module
          */
-        function setParent(&$parent)
+        function setParent(Module &$Parent)
         {
-            $this->Parent = &$parent;
+            $this->Parent = &$Parent;
         }
 
         /**
