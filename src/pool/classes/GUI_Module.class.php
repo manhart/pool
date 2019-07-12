@@ -225,52 +225,52 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         $GUIRootDirs = array(
             getcwd()
         );
+        if(defined('DIR_POOL_ROOT')) {
+            $GUIRootDirs[] = DIR_POOL_ROOT;
+        }
         if(defined('DIR_COMMON_ROOT')) {
             $GUIRootDirs[] = DIR_COMMON_ROOT;
         }
     
             // try to load class
-            $extension = '.class.php';
-            
             foreach ($GUIRootDirs as $GUIRootDir) {
                 $GUIRootDir = addEndingSlash($GUIRootDir).addEndingSlash(PWD_TILL_GUIS);
                 
-                $filename = $GUIRootDir.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
+            $filename = $GUIRootDir.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
                     break;
                 }
 
-                $filename = $GUIRootDir.$GUIClassName.'/'.$GUIClassName.$extension;
+            $filename = $GUIRootDir.$GUIClassName.'/'.$GUIClassName.PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
                     break;
                 }
                 
-            $Parent = &$ParentGUI;
-                if($Parent) {
+            if($ParentGUI instanceof Module) {
                     // verschachtelte GUI's
                     $parent_directory = '';
                     $parent_directory_without_frame = '';
                     do {
-                        if($Parent instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
-                            $Parent = &$Parent->getParent();
+                    if($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
+                        $ParentGUI = &$ParentGUI->getParent();
                             continue;
                         }
-                        if(!$Parent instanceof GUI_CustomFrame) {
-                            $parent_directory_without_frame = $Parent->getClassName().'/'.$parent_directory_without_frame;
+                    if(!$ParentGUI instanceof GUI_CustomFrame) {
+                        $parent_directory_without_frame = $ParentGUI->getClassName().'/'.$parent_directory_without_frame;
                         }
-                        $parent_directory = $Parent->getClassName().'/'.$parent_directory;
-                        $Parent = &$Parent->getParent();
-                    } while($Parent != null);
+                    $parent_directory = $ParentGUI->getClassName().'/'.$parent_directory;
+                    $ParentGUI = &$ParentGUI->getParent();
+                } while($ParentGUI != null);
 
-                    $filename = $GUIRootDir.$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
+                $filename = $GUIRootDir.$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
                     if (file_exists($filename)) {
                         require_once $filename;
                         break;
                     }
     
-                    $filename = $GUIRootDir.$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
+                $filename = $GUIRootDir.$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
                     if(file_exists($filename)) {
                         require_once $filename;
                         break;
@@ -287,11 +287,12 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     * @method static
     * @access public
     * @param string $GUIClassName Name der GUI Klasse
-    * @param object $Owner Besitzer dieses Objekts
+    * @param Component $Owner Besitzer dieses Objekts
+    * @param Module $ParentGUI parent module
     * @param string $params Parameter in der Form key1=value1&key2=value2=&
     * @return object Neues GUI_Module oder Nil
     */
-    public static function &createGUIModule($GUIClassName, &$Owner, &$ParentGUI, $params='')
+    public static function &createGUIModule($GUIClassName, Component &$Owner, &$ParentGUI, $params='')
     {
         $class_exists = class_exists($GUIClassName, false);
         
@@ -306,7 +307,9 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
             // AM, 15.07.2009
             $GUI = new $GUIClassName($Owner, true, $params); /* @var $GUI GUI_Module */
-            $GUI->setParent($ParentGUI);
+            if($ParentGUI instanceof Module) {
+                $GUI->setParent($ParentGUI);
+            }
             if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;
