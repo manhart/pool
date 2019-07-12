@@ -44,7 +44,7 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @var string
          */
-        var $Title = '';
+        private $Title = '';
 
         /**
          * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
@@ -145,12 +145,9 @@ if(!defined('CLASS_WEBLICATION')) {
         private $cssFolder = 'css';
 
         /**
-         * Flag, ob Session initiiert wurde.
-         *
-         * @var boolean
-         * @access private
+          * @var Input App Settings
          */
-        // var $session_started = false;
+        private $Settings = null;
 
         /**
          * Der Konstruktor erwartet den Projektnamen, den absoluten und relativen Pfad zur Baselib.
@@ -159,34 +156,22 @@ if(!defined('CLASS_WEBLICATION')) {
          * @param string $Project Name des Projekts.
          * @param string $PathBaselib absoluter Pfad zur Baselib
          * @param string $RelativePathBaselib relativer Pfad zur Baselib
+         * @throws Exception
          **/
         function __construct($Project='', $PathBaselib = '', $RelativePathBaselib = '')
         {
             if($Project != '') {
                 $this->Project = $Project;
             }
+            $this->Settings = new Input();
             $this->PathBaselib = $PathBaselib;
             $this->RelativePathBaselib = $RelativePathBaselib;
-
-            // Register Autoloader
-            $this->__autoload_register();
 
             $Nil = new Nil();
             parent::__construct($Nil);
         }
 
          /**
-          * Register autloader for GUIs
-          *
-          * @throws Exception
-          */
-        private function __autoload_register()
-        {
-            spl_autoload_register(function($class) {
-                GUI_Module::autoloadGUIModule($class, null);
-            });
-        }
-        /**
          * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
          *
          * @access public
@@ -318,12 +303,16 @@ if(!defined('CLASS_WEBLICATION')) {
         /**
          * Gibt Hauptframe zurueck (falls ueberhaupt einer existiert).
          *
-         * @deprecated Bitte auf getMain() zur�ck greifen
-         * @return GUI_Frame Klasse vom Typ GUI_CustomFrame
+         * @return GUI_Frame|null Klasse vom Typ GUI_CustomFrame
          **/
         function &getFrame()
         {
+            if($this->Main instanceof GUI_CustomFrame) {
             return $this -> Main;
+        }
+            else {
+                return null;
+            }
         }
 
         /**
@@ -459,7 +448,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 }
             }
 
-            $this->raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@findImage)!', $folder_images.$filename));
+            $this->raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@Weblication->findImage)!', $folder_images.$filename));
             return '';
         }
 
@@ -476,7 +465,7 @@ if(!defined('CLASS_WEBLICATION')) {
         function findTemplate($filename, $classfolder='', $baselib=false)
         {
             $classfolder = strtolower($classfolder); // 29.05.2007, Workaround for PHP 5
-            // PHP 5 liefert mit get_class() pl�tzlich richtig geschriebene Klassennamen in Gro�buchstaben
+            // PHP > 5.x/7 liefert mit get_class() pl�tzlich richtig geschriebene Klassennamen in Gro�buchstaben
 
             $skin = addEndingSlash($this->skin);
             $language = addEndingSlash($this->language);
@@ -541,7 +530,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 }
             }
 
-            $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@findTemplate)!', $filename));
+            $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
             return '';
         }
 
@@ -560,38 +549,38 @@ if(!defined('CLASS_WEBLICATION')) {
             $language = addEndingSlash($this->language);
             $stylesheets = $this->cssFolder.'/';
 
-            # Ordner skins
+            # folder: skins
             $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
             $folder_stylesheets = $folder_skins . $stylesheets;
             $folder_language = $folder_skins . $language . $stylesheets;
 
-            if (is_dir($folder_language)) { // Language Ordner
+            if (is_dir($folder_language)) { // skins - skinname - language - stylesheet folder
                 if (file_exists($folder_language.$filename)) {
                     return $folder_language.$filename;
                 }
             }
 
-            if (is_dir($folder_stylesheets)) { // Template Ordner
+            if (is_dir($folder_stylesheets)) { // skins - skinname - stylesheet folder
                 if (file_exists($folder_stylesheets.$filename)) {
                     return $folder_stylesheets.$filename;
                 }
             }
 
-            # Ordner Projekt guis
+            # Projekt folder: guis
             $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
             $folder_skins = $folder_guis . $skin;
             $folder_language = $folder_skins . $language;
-            if (is_dir($folder_language)) { // Language Ordner
+            if (is_dir($folder_language)) { // guis - classname - skin - language folder
                 if (file_exists($folder_language . $filename)) {
                     return $folder_language . $filename;
                 }
             }
-            if (is_dir($folder_skins)) { // Skin Ordner
+            if (is_dir($folder_skins)) { // guis - classname - skin folder
                 if (file_exists($folder_skins . $filename)) {
                     return $folder_skins . $filename;
                 }
             }
-            if (is_dir($folder_guis)) { // GUI Ordner
+            if (is_dir($folder_guis)) { // guis - classname folder
                 if (file_exists($folder_guis . $filename)) {
                     return $folder_guis . $filename;
                 }
@@ -612,7 +601,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 return $this->findStyleSheet(strtolower($filename), strtolower($classfolder), $baselib);
             }
             else {
-                $this -> raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@findStyleSheet)!', $filename));
+                $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
             }
             return '';
         }
@@ -781,11 +770,24 @@ if(!defined('CLASS_WEBLICATION')) {
          * @return array Interface Objekte
          * @see DAO::createDAO()
          **/
-        function &getInterfaces()
+        public function &getInterfaces()
         {
             return $this -> Interfaces;
         }
 
+        /**
+          * starts any session derived from the class ISession
+          *
+          * @param array $settings configuration parameters:
+          *                        sessionClassName - overrides default session class
+          * @return Weblication
+          */
+        public function &setup(array $settings)
+        {
+            $this->Settings->setVar($settings);
+            return $this;
+        }
+        
         /**
          * Starts a PHP Session via session_start()!
          * We use the standard php sessions.
@@ -795,23 +797,28 @@ if(!defined('CLASS_WEBLICATION')) {
          * @param integer $use_trans_sid Transparente Session ID (Default: 0)
          * @param integer $use_cookies Verwende Cookies (Default: 1)
          * @param integer $use_only_cookies Verwende nur Cookies (Default: 0)
+         * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
          * @return ISession
          **/
-        function &startPHPSession($session_name='PHPSESSID', $use_trans_sid=0, $use_cookies=1, $use_only_cookies=0, $autoClose=true)
+        public function &startPHPSession($session_name='PHPSESSID', $use_trans_sid=0, $use_cookies=1, $use_only_cookies=0, $autoClose=true)
         {
-            ini_set('session.name', $session_name);
-            ini_set('session.use_trans_sid', $use_trans_sid);
-            ini_set('session.use_cookies', $use_cookies);
-            ini_set('session.use_only_cookies', $use_only_cookies);
-
-//				$session_started = session_start();
-            $Session = new ISession($autoClose);
-
-            if(isset($this)) { // static call possible
-//					$this->session_started = $session_started;
-                $this->Session = &$Session;
+            $sessionConfig = array(
+                'name' => $session_name,
+                'use_trans_sid' => $use_trans_sid,
+                'use_cookies' => $use_cookies,
+                'use_only_cookies' => $use_only_cookies
+            );
+            foreach($sessionConfig as $param => $value) {
+                ini_set('session.'.$param, $value);
             }
-            return $Session;
+    
+            $isStatic = !(isset($this)); // TODO static calls or static AppSettings
+            if($isStatic) {
+                return new ISession($autoClose);
+            }
+            $className = $this->Settings->getVar('sessionClassName', 'ISession');
+            $this->Session = new $className($autoClose);
+            return $this->Session;
         }
 
         /**
@@ -827,38 +834,13 @@ if(!defined('CLASS_WEBLICATION')) {
         }
 
         /**
-         * Schliesst alle Verbindungen und loescht die Interface Objekte.
-         * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
-         *
-         * @access public
-         **/
-        function destroy()
-        {
-            if(defined('DATAINTERFACE_MYSQL')) {
-                if (isset($this->Interfaces[DATAINTERFACE_MYSQL]) and is_a($this->Interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
-                    $this->Interfaces[DATAINTERFACE_MYSQL] -> close();
-                    unset($this->Interfaces[DATAINTERFACE_MYSQL]);
-                }
-            }
-            if(defined('DATAINTERFACE_C16')) {
-                if(isset($this->Interfaces[DATAINTERFACE_C16]) and is_a($this->Interfaces[DATAINTERFACE_C16], 'C16_Interface')) {
-                    $this->Interfaces[DATAINTERFACE_C16]->close();
-                    unset($this->Interfaces[DATAINTERFACE_C16]);
-                }
-            }
-            parent::destroy();
-        }
-
-        /**
-         * Weblication::compress()
-         *
          * Komprimiert Html Ausgaben (Entfernt Kommentare, Leerzeichen, Zeilenvorschuebe)
          *
          * @access public
          * @param string $html Content
          * @return string Komprimierter Content
          **/
-        function compress($html)
+        private function minify($html)
         {
             //$html = ereg_replace("<!--.*-->", "", $html);
             //$html = str_replace("\n\r", '', $html);
@@ -884,7 +866,7 @@ if(!defined('CLASS_WEBLICATION')) {
          * @param string $project
          * @return boolean
          */
-        function setProject($project)
+        public function setProject($project)
         {
             if($this->Project == 'unknown') {
                 $this->Project = $project;
@@ -898,7 +880,7 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @param string $title
          */
-        function setTitle($title)
+        public function setTitle($title)
         {
             $this->Title = $title;
         }
@@ -908,7 +890,7 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @return string
          */
-        function getTitle()
+        public function getTitle()
         {
             return $this->Title;
         }
@@ -917,16 +899,17 @@ if(!defined('CLASS_WEBLICATION')) {
          * Erzeugt das erste GUI_Module in der Kette (Momentan wird hier der Seitentitel mit dem Projektnamen gefuellt).
          *
          * @access public
-         * @param string $GUIName GUI_Module (Standard-Wert: GUI_CustomFrame)
+         * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
          * @return boolean Erfolgsstatus
          **/
-        function run($Module = 'GUI_CustomFrame')
+        public function run($className = 'GUI_CustomFrame')
         {
             // TODO Get Parameter frame
             // TODO Subcode :: createSubCode()
-            $GUI = &GUI_Module::createGUIModule($Module, $this, $this);
+            $Nil = new Nil();
+            $GUI = &GUI_Module::createGUIModule($className, $this, $Nil);
             if (isNil($GUI)) {
-                $this->raiseError(__FILE__, __LINE__, 'Klasse ' . $Module .
+                $this->raiseError(__FILE__, __LINE__, 'Klasse ' . $className .
                     ' wurde nicht gefunden oder existiert nicht. (@Weblication -> run).');
                 // TODO Page Error
                 return false;
@@ -935,9 +918,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 /** Hinweis: erstes GUI registriert sich selbst �ber setMain als
                     Haupt-GUI im GUI_Module Konstruktor **/
 
-//					$this -> Main = & $GUI;
-
-                if (is_a($this->Main, 'gui_customframe')) {
+                if ($this->Main instanceof GUI_CustomFrame) {
                     # Seitentitel (= Project)
                     $Header = & $this->Main->getHeaderdata();
                     if ($Header) {
@@ -952,15 +933,13 @@ if(!defined('CLASS_WEBLICATION')) {
         }
 
         /**
-         * Weblication::prepareContent()
-         *
          * Einleitung zur Aufbereitung des Contents (der Inhalte) der Webseite.
          *
          * @access public
          **/
-        function prepareContent()
+        public function prepareContent()
         {
-            if (is_a($this -> Main, 'gui_module')) {
+            if ($this->Main instanceof GUI_Module) {
                 $this -> Main -> prepareContent();
             }
             else {
@@ -993,17 +972,18 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @access public
          * @param boolean $print True gibt den Inhalt sofort auf den Bildschirm aus. False liefert den Inhalt zurueck
+         * @param bool $minify simple minifier
          * @return string Inhalt der Webseite
          **/
-        function finalizeContent($print=true, $compress=false)
+        public function finalizeContent($print=true, $minify=false)
         {
-            if (is_a($this->Main, 'gui_module')) {
+            if ($this->Main instanceof GUI_Module) {
                 $content = $this->Main->finalizeContent();
 
                 $content = $this->adjustImageDir($content);
 
-                if ($compress) {
-                    $content = $this->compress($content);
+                if ($minify) {
+                    $content = $this->minify($content);
                 }
 
                 if ($print) {
@@ -1017,5 +997,35 @@ if(!defined('CLASS_WEBLICATION')) {
                 $this->raiseError(__FILE__, __LINE__, 'Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
             }
         }
+    
+         /**
+          * Schliesst alle Verbindungen und loescht die Interface Objekte.
+          * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
+          *
+          * @access public
+          **/
+         function destroy()
+         {
+             if(defined('DATAINTERFACE_MYSQL')) {
+                 if (isset($this->Interfaces[DATAINTERFACE_MYSQL]) and is_a($this->Interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
+                     $this->Interfaces[DATAINTERFACE_MYSQL]->close();
+                     unset($this->Interfaces[DATAINTERFACE_MYSQL]);
+                 }
+             }
+        
+             if(defined('DATAINTERFACE_MYSQLI')) {
+                 if (isset($this->Interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->Interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
+                     $this->Interfaces[DATAINTERFACE_MYSQLI]->close();
+                     unset($this->Interfaces[DATAINTERFACE_MYSQLI]);
+                 }
+             }
+             if(defined('DATAINTERFACE_C16')) {
+                 if(isset($this->Interfaces[DATAINTERFACE_C16]) and is_a($this->Interfaces[DATAINTERFACE_C16], 'C16_Interface')) {
+                     $this->Interfaces[DATAINTERFACE_C16]->close();
+                     unset($this->Interfaces[DATAINTERFACE_C16]);
+                 }
+             }
+             parent::destroy();
+         }
     }
 }
