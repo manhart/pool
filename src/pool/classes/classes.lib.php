@@ -51,7 +51,7 @@ require_once(PWD_TILL_CLASSES.'/DataInterface.class.php');
 
 // derived from DataInterface
 //require_once(PWD_TILL_CLASSES.'/MySQL_Interface.class.php');		// necessary
-//require_once(PWD_TILL_CLASSES.'/MySQLi_Interface.class.php');		// necessary
+require_once(PWD_TILL_CLASSES.'/MySQLi_Interface.class.php');		// necessary
 //require_once(PWD_TILL_CLASSES.'/CISAM_Interface.class.php'); // necessary
 // require_once(PWD_TILL_CLASSES.'/C16_Interface.class.php');		// necessary
 
