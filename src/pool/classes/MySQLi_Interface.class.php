@@ -290,7 +290,10 @@
 				$name_of_array = $this->auth;
 //				echo $name_of_array;
 //				echo pray($GLOBALS);
-				$auth = $GLOBALS[$name_of_array];
+                $auth = false;
+                if(isset($GLOBALS[$name_of_array])) {
+                    $auth = $GLOBALS[$name_of_array];
+                }
 #				echo ' auth:'.pray($auth);
 #				global $$name_of_array;
 #				$auth = $$name_of_array;

@@ -12,4 +12,3 @@
 			DB_TESTING => $mysql_global_auth
 		)
 	);
-?>
