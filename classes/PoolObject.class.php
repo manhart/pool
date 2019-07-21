@@ -91,6 +91,11 @@ if(!defined('CLASS_POOLOBJECT')) {
         var $new_line='<br>';
 
         /**
+         * POOL class extension
+         */
+        const CLASS_EXTENSION = '.class.php';
+
+        /**
          * Konstruktor
          *
          * @access public
@@ -127,10 +132,11 @@ if(!defined('CLASS_POOLOBJECT')) {
          * Liefert den Klassennamen ohne Namespace
          *
          * @return bool|string
+         * @throws
          */
         function getClassNameShort()
         {
-            return (substr(strrchr($this->getClassName(), '\\'),1));
+            return (new \ReflectionClass($this))->getShortName();
         }
 
         /**
@@ -142,6 +148,34 @@ if(!defined('CLASS_POOLOBJECT')) {
         function getParentClass()
         {
             return get_parent_class($this);
+        }
+    
+        /**
+         * Autoloader for POOL Classes
+         *
+         * @param string $className Klasse
+         */
+        public static function autoloadClass($className)
+        {
+            $classRootDirs = array(
+                getcwd()
+            );
+            if(defined('DIR_POOL_ROOT')) {
+                $classRootDirs[] = DIR_POOL_ROOT;
+            }
+            if(defined('DIR_COMMON_ROOT')) {
+                $classRootDirs[] = DIR_COMMON_ROOT;
+            }
+            
+            foreach ($classRootDirs as $classRootDir) {
+                $classRootDir = addEndingSlash($classRootDir).addEndingSlash(PWD_TILL_CLASSES);
+    
+                $filename = $classRootDir.$className.PoolObject::CLASS_EXTENSION;
+                if (file_exists($filename)) {
+                    require_once $filename;
+                    break;
+                }
+            }
         }
 
         /**

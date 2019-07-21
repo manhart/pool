@@ -587,4 +587,3 @@ class Tar extends PoolObject {
 		return true;
 	}
 }
-?>

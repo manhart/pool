@@ -1,6 +1,6 @@
 <?php
 /**
- * -= Rapid Module Library (RML) =-
+ * -= PHP Object Oriented Library (POOL) =-
  *
  * pool.lib.php
  *
@@ -17,7 +17,7 @@
 
 define('POOL', 'POOL');
 
-# Konstanten für die Unterverzeichnisse
+# Konstanten f�r die Unterverzeichnisse
 define('PWD_TILL_INCLUDES', 'includes');
 define('PWD_TILL_CLASSES', 'classes');
 define('PWD_TILL_GUIS', 'guis');
@@ -27,13 +27,19 @@ define('PWD_TILL_JAVASCRIPTS', 'javascripts');
 define('PWD_TILL_3RDPARTY', '3rdparty');
 define('PWD_TILL_SUBCODES', 'subcodes');
 
+if(!defined('DIR_POOL_ROOT')) {
+    define('DIR_POOL_ROOT', __DIR__);
+}
+
 # Bindet die jeweiligen Includes (.lib.php) der Unterverzeichnisse mit ein.
 require (PWD_TILL_INCLUDES.'/includes.lib.php');
 require (PWD_TILL_CLASSES.'/classes.lib.php');
-require (PWD_TILL_GUIS.'/guis.lib.php');
-//	require (PWD_TILL_3RDPARTY.'/3rdparty.lib.php');
-//require (PWD_TILL_SUBCODES . '/subcodes.lib.php');
+//require (PWD_TILL_GUIS.'/guis.lib.php');
+//require (PWD_TILL_3RDPARTY.'/3rdparty.lib.php');
 
 if (defined('DIR_SUBCODES_ROOT') and is_dir(DIR_SUBCODES_ROOT)) {
     include_once (DIR_SUBCODES_ROOT.'/subcodes.lib.php');
 }
+
+require_once('autoload.inc.php');
+PoolAutoloader::getLoader()->register();

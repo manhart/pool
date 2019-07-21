@@ -727,6 +727,15 @@ function isUndefined(a) {
     return typeof a == 'undefined';
 }
 
+function isInt(n)
+{
+    return n != "" && !isNaN(n) && Math.round(n) == n;
+}
+
+function isFloat(n){
+    return n != "" && !isNaN(n) && Math.round(n) != n;
+}
+
 function popupFullscreen(url)
 {
 	var myWin=window.open(url, '_blank', 'scrollbars=auto,fullscreen=1,resizeable=1,channelmode=1');
@@ -1091,7 +1100,8 @@ function getWeekNumber(day, month, year) {
 	 */
 	function GermanValueToFloat(value) {
 		if(value == '') value = '0';
-		return parseFloat(value.replace(',', '.'));
+        if(value.indexOf(',')) value = value.replace(',', '.');
+		return parseFloat(value);
 	}
 
 	/**
@@ -1774,6 +1784,42 @@ function getDomainFromUrl(url) {
 	return arr[0] + "//" + arr[2];
 }
 
+/**
+ * Returns classname
+ *
+ * @param obj
+ * @returns {string}
+ */
 function what(obj) {
+    if(obj == null) return '';
 	return obj.toString().match(/ (\w+)/)[1];
-};
+}
+
+/**
+ * Camelize a string, cutting the string by multiple separators like
+ * hyphens, underscores and spaces.
+ *
+ * @param {text} string Text to camelize
+ * @return string Camelized text
+ */
+function camelize(text) {
+    return text.replace(/^([A-Z])|[\s-_]+(\w)/g, function(match, p1, p2, offset) {
+        if (p2) return p2.toUpperCase();
+        return p1.toLowerCase();
+    });
+}
+
+/**
+ * Decamelizes a string with/without a custom separator (underscore by default).
+ *
+ * @param str String in camelcase
+ * @param separator Separator for the new decamelized string.
+ */
+function decamelize(str, separator){
+    separator = typeof separator === 'undefined' ? '_' : separator;
+    
+    return str
+    .replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2')
+    .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
+    .toLowerCase();
+}
