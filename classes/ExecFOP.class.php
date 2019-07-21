@@ -17,6 +17,7 @@
 if(!defined('CLASS_EXECFOP')) {
     /**
      * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)
+     *
      * @ignore
      */
     define('CLASS_EXECFOP',			1);
@@ -24,7 +25,6 @@ if(!defined('CLASS_EXECFOP')) {
 
     /**
      * Wrapper Klasse f�r das Java FOP (Formatting Objects Processor) Programm
-     *
      * Mit fo (formating objects) ist es simple XML-Dokumente in PDF-Dokumente zu konvertieren. Au�er PDF werden noch
      *  ps, pcl und andere unterst�tzt.
      *
@@ -35,9 +35,9 @@ if(!defined('CLASS_EXECFOP')) {
     class ExecFOP extends PoolObject
     {
         var $progressBar = null;
+        
         /**
          * fo-Datei
-         *
          * @access private
          */
         var $fo = '';
@@ -185,6 +185,7 @@ if(!defined('CLASS_EXECFOP')) {
 
                 $success = ($returnVal==1) ? false : true ;
                 $return = array( 'success' => $success, 'errors' => $output);
+                
                 return $return;
             }
             else {
@@ -204,6 +205,7 @@ if(!defined('CLASS_EXECFOP')) {
                 }
                 pclose($handle);
                 $return = array('success' => file_exists($outputFile), 'errors' => 'Fehler sind aufgetreten!');
+                
                 return $return;
             }
         }
@@ -215,10 +217,8 @@ if(!defined('CLASS_EXECFOP')) {
 
         /**
          * fo als String in das FOP Java Main Programm schie�en.
-         *
          * Falls man das fo fo dynamisch generiert (z.B. mit einem
          *  xsl-stylesheet), kann man diese Funktion verwenden.
-         *
          *  The Fop-Java program needs a file as an input, so a
          *  temporary fo-file is created here (and will be deleted
          *  in the run() function.)
@@ -237,12 +237,12 @@ if(!defined('CLASS_EXECFOP')) {
             $this->setFoFile($fo);
             $result = $this->run($outputFile);
             @unlink($fo);
+            
             return $result;
         }
 
         /**
          * Eine Wrapper Funktion zur besseren Lesbarkeit
-         *
          * Diese Funktion ruft lediglich run auf
          *
          * @param string $fo fo input fo-string
@@ -252,6 +252,7 @@ if(!defined('CLASS_EXECFOP')) {
        function runFromFoFile($foFile, $outputFile = '')
         {
             $this -> setFoFile($foFile);
+            
             return $this -> run($outputFile);
         }
 
@@ -386,7 +387,8 @@ if(!defined('CLASS_EXECFOP')) {
         {
             if (is_null($this->fopPath)) {
                 return FOP_PATH;
-            } else {
+            }
+            else {
                 return $this->fopPath;
             }
         }
@@ -401,7 +403,8 @@ if(!defined('CLASS_EXECFOP')) {
             $this -> fo = $foFile;
         }
 
-        function setStrictValidation($strict) {
+        function setStrictValidation($strict)
+        {
             $this->strictValidation = $strict;
         }
 

@@ -21,8 +21,8 @@
 	* geschlossen.
 	*
 	*
-	* @version $Id: MySQLi_Interface.class.php 37547 2019-03-01 10:01:41Z manhart $
-	* @version $Revision: 37547 $
+	* @version $Id: MySQLi_Interface.class.php 38240 2019-05-31 09:09:13Z manhart $
+	* @version $Revision: 38240 $
 	*
 	* @see DataInterface.class.php
 	* @since 2019/02/28
@@ -50,7 +50,7 @@
 		 *
 		 * @package pool
 		 * @author Alexander Manhart <alexander@manhart.bayern>
-		 * @version $Id: MySQLi_Interface.class.php 37547 2019-03-01 10:01:41Z manhart $
+		 * @version $Id: MySQLi_Interface.class.php 38240 2019-05-31 09:09:13Z manhart $
 		 * @access public
 		 **/
 		class MySQLi_Interface extends DataInterface
@@ -290,7 +290,10 @@
 				$name_of_array = $this->auth;
 //				echo $name_of_array;
 //				echo pray($GLOBALS);
-				$auth = $GLOBALS[$name_of_array];
+                $auth = false;
+                if(isset($GLOBALS[$name_of_array])) {
+                    $auth = $GLOBALS[$name_of_array];
+                }
 #				echo ' auth:'.pray($auth);
 #				global $$name_of_array;
 #				$auth = $$name_of_array;
@@ -646,7 +649,7 @@
 				}
 
 				if($this->query_result) {
-                    $this->last_command = $command;
+					$this->last_command = $command;
                 }
                 return $this->query_result;
 			}
