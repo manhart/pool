@@ -215,6 +215,71 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     }
 
     /**
+      * Autoloader for GUIModules
+    *
+      * @param string $GUIClassName
+      * @param GUI_Module $ParentGUI
+    */
+    public static function autoloadGUIModule($GUIClassName, $ParentGUI = null)
+    {
+        $GUIRootDirs = array(
+            getcwd()
+        );
+        if(defined('DIR_POOL_ROOT')) {
+            $GUIRootDirs[] = DIR_POOL_ROOT;
+        }
+        if(defined('DIR_COMMON_ROOT')) {
+            $GUIRootDirs[] = DIR_COMMON_ROOT;
+        }
+    
+            // try to load class
+            foreach ($GUIRootDirs as $GUIRootDir) {
+                $GUIRootDir = addEndingSlash($GUIRootDir).addEndingSlash(PWD_TILL_GUIS);
+                
+            $filename = $GUIRootDir.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
+                if (file_exists($filename)) {
+                    require_once $filename;
+                    break;
+                }
+
+            $filename = $GUIRootDir.$GUIClassName.'/'.$GUIClassName.PoolObject::CLASS_EXTENSION;
+                if (file_exists($filename)) {
+                    require_once $filename;
+                    break;
+                }
+                
+            if($ParentGUI instanceof Module) {
+                    // verschachtelte GUI's
+                    $parent_directory = '';
+                    $parent_directory_without_frame = '';
+                    do {
+                    if($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
+                        $ParentGUI = &$ParentGUI->getParent();
+                            continue;
+                        }
+                    if(!$ParentGUI instanceof GUI_CustomFrame) {
+                        $parent_directory_without_frame = $ParentGUI->getClassName().'/'.$parent_directory_without_frame;
+                        }
+                    $parent_directory = $ParentGUI->getClassName().'/'.$parent_directory;
+                    $ParentGUI = &$ParentGUI->getParent();
+                } while($ParentGUI != null);
+
+                $filename = $GUIRootDir.$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
+                    if (file_exists($filename)) {
+                        require_once $filename;
+                        break;
+                    }
+    
+                $filename = $GUIRootDir.$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
+                    if(file_exists($filename)) {
+                        require_once $filename;
+                        break;
+                    }
+                }
+            }
+    }
+
+    /**
     * Erzeugt ein neues GUI Modul anhand des Klassennamens.
     * Faustregel fuer Owner: als Owner sollte die Klasse Weblication uebergeben werden
     * (damit ein Zugriff auf alle Unterobjekte gewaehrleistet werden kann).
@@ -222,86 +287,29 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     * @method static
     * @access public
     * @param string $GUIClassName Name der GUI Klasse
-    * @param object $Owner Besitzer dieses Objekts
+    * @param Component $Owner Besitzer dieses Objekts
+    * @param Module $ParentGUI parent module
     * @param string $params Parameter in der Form key1=value1&key2=value2=&
     * @return object Neues GUI_Module oder Nil
     */
-    public static function &createGUIModule($GUIClassName, &$Owner, &$ParentGUI, $params='')
+    public static function &createGUIModule($GUIClassName, Component &$Owner, &$ParentGUI, $params='')
     {
-        $Parent = $OrigParent = null;
-
-        if(isset($ParentGUI) and $ParentGUI instanceof GUI_Module) {
-            $Parent = &$ParentGUI;
-            $OrigParent = &$Parent;
-        }
-        
-        $GUIRootDirs = array(
-            getcwd()
-        );
-        if(defined('DIR_COMMON_ROOT')) {
-            $GUIRootDirs[] = DIR_COMMON_ROOT;
-        }
-    
-        $class_exists = class_exists($GUIClassName);
+        $class_exists = class_exists($GUIClassName, false);
         
         if(!$class_exists) {
-            // try to load class
-            $extension = '.class.php';
-            
-            foreach ($GUIRootDirs as $GUIRootDir) {
-                $GUIRootDir = addEndingSlash($GUIRootDir).addEndingSlash(PWD_TILL_GUIS);
-                
-                $filename = $GUIRootDir.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
-                if (file_exists($filename)) {
-                    require_once $filename;
-                    break;
-                }
-
-                $filename = $GUIRootDir.$GUIClassName.'/'.$GUIClassName.$extension;
-                if (file_exists($filename)) {
-                    require_once $filename;
-                    break;
-                }
-                
-                if($Parent) {
-                    // verschachtelte GUI's
-                    $parent_directory = '';
-                    $parent_directory_without_frame = '';
-                    do {
-                        if($Parent instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
-                            $Parent = &$Parent->getParent();
-                            continue;
-                        }
-                        if(!$Parent instanceof GUI_CustomFrame) {
-                            $parent_directory_without_frame = $Parent->getClassName().'/'.$parent_directory_without_frame;
-                        }
-                        $parent_directory = $Parent->getClassName().'/'.$parent_directory;
-                        $Parent = &$Parent->getParent();
-                    } while($Parent != null);
-
-                    $filename = $GUIRootDir.$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
-                    if (file_exists($filename)) {
-                        require_once $filename;
-                        break;
-                    }
-    
-                    $filename = $GUIRootDir.$parent_directory_without_frame.strtolower($GUIClassName.'/'.$GUIClassName).$extension;
-                    if(file_exists($filename)) {
-                        require_once $filename;
-                        break;
-                    }
-                }
-            }
+            GUI_Module::autoloadGUIModule($GUIClassName, $ParentGUI);
             
             // retest
-            $class_exists = class_exists($GUIClassName);
+            $class_exists = class_exists($GUIClassName, false);
         }
 
         if ($class_exists) {
             // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
             // AM, 15.07.2009
             $GUI = new $GUIClassName($Owner, true, $params); /* @var $GUI GUI_Module */
-            $GUI->setParent($OrigParent);
+            if($ParentGUI instanceof Module) {
+                $GUI->setParent($ParentGUI);
+            }
             if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;

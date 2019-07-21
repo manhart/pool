@@ -409,8 +409,8 @@ if(!defined('CLASS_DAO')) {
                 case DATAINTERFACE_MYSQLI:
                     $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_MYSQL).$dbname.'/'.utf8_encode($table).'.class.php';
                     $file_exists = file_exists($include);
-                    if (!class_exists($table) and $file_exists) {
-                        require_once($include);
+                    if (!class_exists($table, false) and $file_exists) {
+                        require_once $include;
                     }
                     if($file_exists) {
                         $dao = new $table($interface, $dbname, $table, $autoload_fields);
@@ -425,8 +425,8 @@ if(!defined('CLASS_DAO')) {
                 case DATAINTERFACE_CISAM:
                     $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_CISAM).utf8_encode($table).'.class.php';
                     $file_exists = file_exists($include);
-                    if (!class_exists($table) and $file_exists) {
-                        require_once($include);
+                    if (!class_exists($table, false) and $file_exists) {
+                        require_once $include;
                     }
                     if($file_exists) {
                         $dao = new $table($interface, $table, $autoload_fields);
@@ -441,8 +441,8 @@ if(!defined('CLASS_DAO')) {
                 case DATAINTERFACE_C16:
                     $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_C16).$dbname.'/'.utf8_encode($table).'.class.php';
                     $file_exists = file_exists($include);
-                    if (!class_exists($table) and $file_exists) {
-                        require_once($include);
+                    if (!class_exists($table, false) and $file_exists) {
+                        require_once $include;
                     }
                     if($file_exists) {
                         $class_table = str_replace(' ', '_', $table);
@@ -456,6 +456,7 @@ if(!defined('CLASS_DAO')) {
                     break;
 
                 default:
+                    $dao = null;
                     if (count($tabledefine) == 0) {
                         $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $varname);
                     }

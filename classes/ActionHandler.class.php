@@ -377,7 +377,7 @@
 				// Error oder nichts gefunden $Resultset -> getLastError
 				$this->buffer['id'] = null;
 				$this->buffer['record'] = null;
-				$this->addError('Keinen Datensatz mit Primärschlüssel ('.
+				$this->addError('Keinen Datensatz mit Primä²³chl?ssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
 					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
 				return false;
@@ -635,7 +635,7 @@
 
 		function actionDelete(& $Input)
 		{
-			$id = $this -> buffer['id'];
+			$id = $this->buffer['id']; // array of primary key
 			$list = $this -> buffer['list'];
 			$count = count($list);
 			$pk = $this->DAO->getPrimaryKey();
@@ -648,12 +648,12 @@
 				if(!$bool) break;
 			}
 			if ($bool) {
-				$continue = $this -> before_delete($id, $Input); // $Input_filtered
+				$continue = $this->before_delete($id, $Input); // $Input_filtered
 
 				if($continue) {
-					$Resultset = & $this -> DAO -> delete($id);
+					$Resultset = &$this->DAO->delete($id);
 					if(!$Resultset) {
-						$this -> addError('L&ouml;schvorgang abgebrochen! Unbekannter Fehler.', 0);
+						$this->addError('Loeschvorgang abgebrochen! Unbekannter Fehler.', 0);
 						return 0;
 					}
 					if($error_message = $Resultset -> getLastError()) {
@@ -661,39 +661,54 @@
 						return 0;
 					}
 
+                    $ah_status = $Resultset->getValue('ah_status');
+					
+					
 					#### Datensatz aus dem Buffer entfernen
 					for ($i=0; $i < $count; $i++) {
 						$l_id = array();
 						foreach($pk as $pkfieldname) {
 							$l_id[] = $list[$i][$pkfieldname];
 						}
-						if ($l_id == $id) {
+                        if ($l_id == $id) {
+                            if($ah_status != 'updated') {
 							unset($list[$i]);
+                            }
 							break;
 						}
 					}
 					$list = array_values($list);
+                    $numRecords = count($list);
+                    
 
-					if (count($list) == 1) {
 
+                    if ($numRecords == 1) {
+                        $select_nr = 0;
 						$Resultset = new Resultset();
-						$Resultset -> addValue($list[0]);
+						$Resultset->addValue($list[$select_nr]);
 						$this -> after_select($Resultset);
-						$record = $list[0];
+						$record = $list[$select_nr];
 
 						$id = array();
 						foreach($pk as $pkfieldname) {
-							$id[] = $list[0][$pkfieldname];
+							$id[] = $list[$select_nr][$pkfieldname];
 						}
 					}
+                    elseif($ah_status == 'updated') { // if the record was not deleted.
+                        $Data = new Input();
+                        $Data->setVar('id_'.$this->type, implode(';', $id));
+                        $this->actionSelect($Data);
+                        $record = $this->buffer['record'];
+                        $list = $this->buffer['list'];
+                    }
 					else {
 						$record = null;
 						$id = null;
 					}
 
-					$this -> buffer['id'] = $id;
-					$this -> buffer['record'] = $record;
-					$this -> buffer['list'] = $list;
+					$this->buffer['id'] = $id;
+					$this->buffer['record'] = $record;
+					$this->buffer['list'] = $list;
 				}
 
 			}

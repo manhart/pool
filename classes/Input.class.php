@@ -261,11 +261,12 @@ class Input extends PoolObject
     *
     * @access public
     * @param string $key Name der Variable
+    * @param mixed|null $default return default value, if key is not set
     * @return string Wert der Variable oder NULL, wenn die Variable nicht existiert
     */
-    function getVar($key)
+    function getVar($key, $default=null)
     {
-        return isset($this->Vars[$key]) ? $this->Vars[$key] : null;
+        return isset($this->Vars[$key]) ? $this->Vars[$key] : $default;
     }
 
     /**
@@ -273,11 +274,12 @@ class Input extends PoolObject
     *
     * @access public
     * @param string $key Name der Variable
+    * @param mixed|null $default return default value, if key is not set
     * @return object Referenz auf das Objekt oder NULL, wenn das Objekt nicht existiert
     */
-    function &getRef($key)
+    function &getRef($key, $default=null)
     {
-        $ref = null;
+        $ref = $default;
         if(isset($this -> Vars[$key])) {
             $ref = &$this -> Vars[$key];
         }
@@ -1108,7 +1110,6 @@ class ISession extends Input
     function write_close()
     {
         if($this->autoClose) {
-//				die('FUCKER:'.bool2string($this->autoClose));
             session_write_close();
         }
         //$this->session_started = 0;
