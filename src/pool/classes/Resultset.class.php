@@ -1051,6 +1051,7 @@ if(!defined('CLASS_RESULTSET')) {
          *
          * @param string $message Fehlermeldung
          * @param int $code Fehler-Code (Standard 0)
+         * @return $this
          */
         function addError($message, $code=0)
         {
@@ -1060,6 +1061,7 @@ if(!defined('CLASS_RESULTSET')) {
             else {
                 $this->errorStack[] = array('message' => $message, 'code' => $code);
             }
+            return $this;
         }
     }
 }

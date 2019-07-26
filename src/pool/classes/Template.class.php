@@ -743,13 +743,17 @@
 			*/
 			function loadFile()
 			{
+                $content = '';
 				$fp = fopen($this->getDirectory().$this->Filename, 'r');
 				if (!$fp) {
 					$this -> raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
 						$this -> Filename));
 				    return;
 				}
-				$content = fread($fp, filesize($this -> Directory . $this -> Filename));
+				$size = filesize($this->Directory.$this->Filename);
+				if($size > 0) {
+                    $content = fread($fp, $size);
+                }
 				fclose($fp);
 
 				$this -> setContent($content);

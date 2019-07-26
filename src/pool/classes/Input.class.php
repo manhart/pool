@@ -241,7 +241,7 @@ class Input extends PoolObject
             return false;
         }
         else {
-            return empty($this->Vars[$key]);
+            return (!isset($this->Vars[$key]) or empty($this->Vars[$key]));
         }
     }
 
@@ -449,20 +449,23 @@ class Input extends PoolObject
      * Sehr praktisch beim Einfuegen von Daten in eine Datenbank. Man kann so unnuetze Daten entfernen.
      *
      * @param array $keys_must_exists Felder, die bestehen bleiben muessen
+     * @param string $prefix fieldnames with prefix
+     * @param boolean $remove removes prefix
      * @return Input Neues Objekt vom Typ Input (enthaelt die gefilterten Daten)
      **/
-    function &filter($keys_must_exists)
+    function &filter($keys_must_exists, $prefix='', $remove=false)
     {
-        $InpFilteredClone = new Input(I_EMPTY);
+        $Input = new Input(I_EMPTY);
         if (is_array($keys_must_exists)) {
+            $new_prefix = ($remove) ? '' : $prefix;
             foreach($keys_must_exists as $key) {
                 // AM, 22.04.09, modified (isset nimmt kein NULL)
-                if(array_key_exists($key, $this->Vars)) {
-                    $InpFilteredClone->setVar($key, $this->Vars[$key]);
+                if(array_key_exists($prefix.$key, $this->Vars)) {
+                    $Input->setVar($new_prefix.$key, $this->Vars[$prefix.$key]);
                 }
             }
         }
-        return $InpFilteredClone;
+        return $Input;
     }
 
     /**
