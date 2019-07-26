@@ -313,6 +313,7 @@
      **/
     function prepare()
     {
+        $Url = new Url(I_EMPTY);
         $this->Template->setVar(
             array(
                 'EXPIRES' => $this -> Expires,
@@ -321,7 +322,8 @@
                 'DESCRIPTION' => $this -> Description,
                 'ROBOTS' => $this -> Robots,
                 'BASE_TARGET' => $this -> Base_Target,
-                'CHARSET' => $this -> charset
+                'CHARSET' => $this -> charset,
+                'SCRIPT' => $Url->getUrl()
             )
         );
 
