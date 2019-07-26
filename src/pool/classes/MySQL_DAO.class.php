@@ -900,6 +900,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                     else {
                         $sql .= ', ';
                     }
+                    
                     $sql .= $alias.$column.' '.$sort;
                 }
             }

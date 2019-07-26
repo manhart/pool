@@ -115,7 +115,7 @@ if(!defined('CLASS_WEBLICATION')) {
          * @var string
          * @access private
          */
-        var $Schema = 'index';
+        private $schema = 'index';
 
         /**
          * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
@@ -261,23 +261,44 @@ if(!defined('CLASS_WEBLICATION')) {
         /**
          * Setzt das Standard Schema, welches geladen wird, wenn kein Schema uebergeben wurde.
          *
+         * @deprecated
          * @access public
          * @param string $default Standard Schema
          **/
         function setSchema($default = 'index')
         {
-            $this->Schema = $default;
+            $this->schema = trim($default);
         }
 
         /**
-         * Gibt das voreingestellte Standard Schema zurueck (meist ist definiert das Schema index die Startseite).
+          * set default schema/layout, if none is loaded by request
+          *
+          * @param string $default
+          */
+        public function setDefaultSchema($default = 'index')
+        {
+            $this->schema = trim($default);
+        }
+
+        /**
+         * returns the default scheme
          *
          * @access public
-         * @return string Standard Schema
+         * @return string default schema
          **/
-        function getSchema()
+        public function getDefaultSchema()
         {
-            return $this->Schema;
+            return $this->schema;
+        }
+
+         /**
+          * determines current schema/layout
+          *
+          * @return string
+          */
+        public function getSchema()
+        {
+            return (isset($_REQUEST['schema']) and $_REQUEST['schema'] != '') ? $_REQUEST['schema'] : $this->getDefaultSchema();
         }
 
         /**
@@ -301,9 +322,9 @@ if(!defined('CLASS_WEBLICATION')) {
         }
 
         /**
-         * Gibt Hauptframe zurueck (falls ueberhaupt einer existiert).
+         * returns the main frame
          *
-         * @return GUI_Frame|null Klasse vom Typ GUI_CustomFrame
+         * @return GUI_CustomFrame|false
          **/
         function &getFrame()
         {
@@ -311,18 +332,18 @@ if(!defined('CLASS_WEBLICATION')) {
             return $this -> Main;
         }
             else {
-                return null;
+                return false;
             }
         }
 
         /**
-         * Liefert true, wenn Weblication das Frame Objekt enth�lt.
+         * Is there a frame?
          *
-         * @return bool enth�lt Frame ja/nein
+         * @return bool has GUI_CustomFrame
          */
         function hasFrame()
         {
-            return (is_a($this -> Main, 'gui_customframe'));
+            return ($this->Main instanceof GUI_CustomFrame);
         }
 
         /**
