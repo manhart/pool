@@ -57,6 +57,7 @@ class GUI_Splitter extends GUI_Module
      * maxRecordsPerPage=10 Anzahl der Datensaetze pro Seite
      * splitterPos=0 Aktuelle Startposition
      * hasDropDown=true DropDown Kaestchen aktivieren
+     * createDropDown=true erstellt per select ein DropDown Kaestchen
      * maxDigits=5 Maximale Anzahl Seiten die angezeigt werden sollen (vergroessert oder verkleinert die Leiste)
      * dropdownstyleclass="" Style fuer das DropDown Steuerelement
      * digits_urlParam=Aendert Standard URL Parameter zur Uebergabe der Position (Default: splitterPos)
@@ -93,6 +94,7 @@ class GUI_Splitter extends GUI_Module
         $this -> Defaults -> addVar('maxRecordsPerPage', 10);
         $this -> Defaults -> addVar('splitterPos', 0);
         $this -> Defaults -> addVar('hasDropDown', true);
+        $this -> Defaults -> addVar('createDropDown', true);
         $this -> Defaults -> addVar('maxDigits', 5);
         $this -> Defaults -> addVar('dropdownstyleclass', '');
 
@@ -214,6 +216,8 @@ class GUI_Splitter extends GUI_Module
                 $this -> splitter = $this -> getPage();
                 break;
 
+                
+
         }
     }
 
@@ -254,6 +258,7 @@ class GUI_Splitter extends GUI_Module
         $formatdigits = $Input->getVar('formatdigits');
 
         $hasDropDown = $Input -> getVar('hasDropDown');
+        $createDropDown = $this->Input -> getVar('createDropDown');
         $maxDigits = $Input -> getVar('maxDigits');
         $maxRecordsPerPage = $Input -> getVar('maxRecordsPerPage');
 
@@ -295,15 +300,16 @@ class GUI_Splitter extends GUI_Module
                 $token = '&';
             }
 
+            if($createDropDown) {
             if($jsClick) {
-                $buf = "<select size=\"1\" name=\"selpage\" class=\"" . $Input -> getVar('dropdownstyleclass') . "\" ".
-                    "onChange=\"".$jsClick."(this.value, '$urlParam');\">";
+                    $onchange = $jsClick."(this.value, '$urlParam');";
             }
             else {
-                $buf = "<select size=\"1\" name=\"selpage\" class=\"" . $Input -> getVar('dropdownstyleclass') . "\" ".
-                    "onChange=\"location.href='".$href.$token.$urlParam . "=' + this.value\">";
+                    $onchange = "location.href='".$href.$token.$urlParam."=' + this.value";
             }
 
+                $buf = "<select size=\"1\" name=\"selpage\" class=\"".$Input->getVar('dropdownstyleclass')."\" onchange=\"".$onchange."\">";
+    
             $navpage = '';
             for ($p = 0; $p < $numPages; $p++) {
                 $selected = '';
@@ -313,12 +319,26 @@ class GUI_Splitter extends GUI_Module
                 $navpage .= "            <option $selected value=\"".$p * $maxRecordsPerPage."\">".sprintf($formatdigits, ($p+1))."</option>";
             }
             $buf = $parenthesis_current_opened.$buf.$navpage.'</select>'.$parenthesis_current_closed;
+                $Template->setVar('middle', $buf);
+            }
+            else {
+                $activeClass = $this->Input->getVar('digits_dd_activeClass');
+                for ($p = 0; $p < $numPages; $p++) {
+                    $this->Template->newBlock('pages');
+                    $this->Template->setVar('pageNumber', $p);
+                    $active = '';
+                    if ($activePage - 1 == $p) {
+                        $active = $activeClass;
+                    }
+                    $this->Template->setVar('pageActive', $active);
+                }
+            }
 
         }
         else {
             $buf = $parenthesis_current_opened.' '.sprintf($formatdigits, $activePage).' '.$parenthesis_current_closed;
+            $Template -> setVar('middle', $buf);
         }
-        $Template -> setVar('middle', $buf);
 
         for ($i = 1; $i<=$plusmax; $i++) {
             $show_prior = true;

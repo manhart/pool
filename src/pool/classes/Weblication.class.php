@@ -324,16 +324,14 @@ if(!defined('CLASS_WEBLICATION')) {
         /**
          * returns the main frame
          *
-         * @return GUI_CustomFrame|false
+         * @return GUI_CustomFrame
          **/
         function &getFrame()
         {
             if($this->Main instanceof GUI_CustomFrame) {
             return $this -> Main;
         }
-            else {
-                return false;
-            }
+            throw new Exception('No Frame there');
         }
 
         /**

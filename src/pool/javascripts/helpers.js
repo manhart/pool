@@ -1059,6 +1059,18 @@ function isValidDateDE(DE_date)
 }
 
 /**
+ * Prueft ein deutsches Datum auf Gueltigkeit
+ */
+function isValidDateUS(US_date)
+{
+    var datumParts = US_date.split('-');
+    if(datumParts.length==3) {
+        return isValidDate(datumParts[2], datumParts[1], datumParts[0]);
+    }
+    else return false;
+}
+
+/**
  * Veraltet bitte date.js verwenden!
  * @deprecated
  */

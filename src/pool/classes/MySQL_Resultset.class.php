@@ -65,6 +65,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
         function __construct(&$db)
         {
             $this->db = &$db;
+            return $this;
         }
 
         /**
