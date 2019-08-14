@@ -450,14 +450,14 @@ class Input extends PoolObject
      *
      * @param array $keys_must_exists Felder, die bestehen bleiben muessen
      * @param string $prefix fieldnames with prefix
-     * @param boolean $remove removes prefix
+     * @param boolean $removePrefix removes prefix
      * @return Input Neues Objekt vom Typ Input (enthaelt die gefilterten Daten)
      **/
-    function &filter($keys_must_exists, $prefix='', $remove=false)
+    function &filter($keys_must_exists, $prefix='', $removePrefix=false)
     {
         $Input = new Input(I_EMPTY);
         if (is_array($keys_must_exists)) {
-            $new_prefix = ($remove) ? '' : $prefix;
+            $new_prefix = ($removePrefix) ? '' : $prefix;
             foreach($keys_must_exists as $key) {
                 // AM, 22.04.09, modified (isset nimmt kein NULL)
                 if(array_key_exists($prefix.$key, $this->Vars)) {
