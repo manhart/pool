@@ -127,7 +127,10 @@ function RequestPOOL(module, method, params, async)
 					}
 					else {
 						// wenn die alert box verfuegbar ist, zeigen wir die Fehlermeldung darin an
-						if(typeof alert_box == 'function') {
+						if (typeof MODULE_FUNCTIONS.alertbox.open == 'function') {
+							MODULE_FUNCTIONS.alertbox.open('Error', message);
+						}
+						else if(typeof alert_box == 'function') {
 							alert_box(message);
 						}
 						else {
