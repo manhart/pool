@@ -6,7 +6,7 @@
  *
  * Das GUI DBDBSelect ist ein Datenbank Steuerelement. Es steuert ein ComboBox (DropDown) sowie eine Multiselect Box.
  *
- * @version $Id: gui_dbselect.class.php,v 1.4 2007/05/08 08:46:48 manhart Exp $
+ * @version $Id: gui_dbselect.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @version $revision 1.0$
  * @version
  *
@@ -22,7 +22,7 @@
  *
  * @package pool
  * @author manhart
- * @version $Id: gui_dbselect.class.php,v 1.4 2007/05/08 08:46:48 manhart Exp $
+ * @version $Id: gui_dbselect.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @access public
  **/
 class GUI_DBSelect extends GUI_Select
