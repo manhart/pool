@@ -789,21 +789,30 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
-         * Gibt die komplette Ergebnismenge im CSV Format (String) zurueck.
+         * Returns the result set in CSV format
          *
          * @access public
-         * @param boolean $with_headline Mit Kopfzeile
-         * @param string $separator Trenner
-         * @param string $line_break Zeilenumbruch
-         * @return string CSV Liste
+         * @param boolean $with_headline with header
+         * @param string $separator column separator
+         * @param string $line_break new line
+         * @param string $text_clinch text clinch
+         * @return string csv string
          **/
-        function getCSV($with_headline=true, $separator=';', $line_break="\n"/*, $text_clinch=''*/)
+        function getCSV($with_headline=true, $separator=';', $line_break="\n", $text_clinch='"')
         {
             $csv='';
             if($this->count()) {
-                if($with_headline) $csv.=implode($separator, array_keys($this->rowset[0])).$line_break;
+                if($with_headline) {
+                    $csv .= implode($separator, array_keys($this->rowset[0])).$line_break;
+                }
                 foreach($this->rowset as $row) {
-                    $csv.=implode($separator, array_values($row)).$line_break;
+                    $line = '';
+                    $values = array_values($row);
+                    foreach($values as $val) {
+                        $val = $this->_maskTextCSVcompliant($val, $separator, $text_clinch);
+                        $line .= ($line != '') ? ($separator.$val) : (''.$val);
+                    }
+                    $csv .= $line.$line_break;
                 }
             }
             return $csv;
@@ -832,9 +841,10 @@ if(!defined('CLASS_RESULTSET')) {
          * @param boolean $with_headline
          * @param string $separator
          * @param string $line_break
+         * @param string $text_clinch Textklammer
          * @return string
          */
-        function getRowAsCSV($with_headline=true, $separator=';', $line_break="\n"/*, $text_clinch=''*/)
+        function getRowAsCSV($with_headline=true, $separator=';', $line_break="\n", $text_clinch='"')
         {
             $csv = '';
             if($this->count()) {
@@ -843,18 +853,52 @@ if(!defined('CLASS_RESULTSET')) {
                     $row = '';
                     foreach ($this->fields as $key) {
                         if($row != '') $row .= $separator;
-                        $row .= $this->rowset[$this->index][$key];
+                        $val = $this->_maskTextCSVcompliant($this->rowset[$this->index][$key], $separator, $text_clinch);
+                        $row .= $val;
                     }
                     $row .= $line_break;
 
                     $csv .= $row;
                 }
                 else {
-                    if($with_headline) $csv .= implode($separator, array_keys($this->rowset[0])).$line_break;
-                    $csv .= implode($separator, array_values($this->getRow())).$line_break;
+                    if($with_headline) {
+                        $csv .= implode($separator, array_keys($this->rowset[0])).$line_break;
+                    }
+                    
+                    $values = array_values($this->getRow());
+                    $i = 0;
+                    foreach($values as $val) {
+                        $val = $this->_maskTextCSVcompliant($val, $separator, $text_clinch);
+                        $csv .= ($i == 0) ? ''.$val : $separator.$val;
+                        $i++;
+                    }
+                    $csv .= $line_break;
                 }
             }
             return $csv;
+        }
+    
+        /**
+         * Maskiere Text CSV Konform
+         *
+         * @param string $val Wert
+         * @param string $separator Trenner
+         * @param string $text_clinch Zeichen für Textklammer
+         * @return string
+         */
+        private function _maskTextCSVcompliant($val, $separator=';', $text_clinch='"')
+        {
+            $hasTextClinch = false;
+            if($text_clinch != '') {
+                $hasTextClinch = strpos($val, $text_clinch);
+            }
+            if($hasTextClinch !== false) {
+                $val = str_replace($text_clinch, $text_clinch.$text_clinch, $val);
+            }
+            if ($hasTextClinch !== false or strpos($val, $separator) !== false or strpos($val, chr(10)) !== false or strpos($val, chr(13)) !== false) {
+                $val = $text_clinch.$val.$text_clinch;
+            }
+            return $val;
         }
 
         /**

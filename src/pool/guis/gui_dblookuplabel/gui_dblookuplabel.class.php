@@ -7,7 +7,7 @@
  * Benoetigt:
  * DAO (Data Access Objects)
  *
- * @version $Id: gui_dblookuplabel.class.php,v 1.1.1.1 2004/09/21 07:49:31 manhart Exp $
+ * @version $Id: gui_dblookuplabel.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @version $revision$
  * @version
  *
@@ -23,7 +23,7 @@
  *
  * @package pool
  * @author manhart
- * @version $Id: gui_dblookuplabel.class.php,v 1.1.1.1 2004/09/21 07:49:31 manhart Exp $
+ * @version $Id: gui_dblookuplabel.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @access public
  **/
 class GUI_DBLookupLabel extends GUI_Label

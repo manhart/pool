@@ -34,19 +34,16 @@ function exif_date2ts($str)
 
 /**
  * Get extended image metadata, exif or iptc as available.
- *
  * Retrieves the EXIF metadata aperture, credit, camera, caption, copyright, iso
  * created_timestamp, focal_length, shutter_speed, and title.
- *
  * The IPTC metadata that is retrieved is APP13, credit, byline, created date
  * and time, caption, copyright, and title. Also includes FNumber, Model,
  * DateTimeDigitized, FocalLength, ISOSpeedRatings, and ExposureTime.
  *
- * @todo Try other exif libraries if available.
- * @since 2.5.0
- *
  * @param string $file
  * @return bool|array False on failure. Image metadata array on success.
+ * @todo Try other exif libraries if available.
+ * @since 2.5.0
  */
 function readImageMetadata($file)
 {
@@ -205,25 +202,124 @@ function readImageMetadata($file)
     
         return $meta;
     }
+    
     return false;
 }
 
+/**
+ * Automatically rotates image in the right orientation.
+ *
+ * @param resource $image
+ * @param int $orientation from Metadata
+ * @return bool
+ * @see readImageMetadata()
+ */
 function fixImageOrientation(&$image, $orientation)
 {
     switch ($orientation) {
         case 3:
             $image = imagerotate($image, 180, 0);
-            
             return true;
+        
         case 6:
             $image = imagerotate($image, -90, 0);
-            
             return true;
+        
         case 8:
             $image = imagerotate($image, 90, 0);
-            
             return true;
     }
     
     return false;
+}
+
+/**
+ * Adjust picture to height.
+ *
+ * @param resource $im
+ * @param int $max_height
+ * @return false|resource
+ */
+function resizeImageToHeight($im, $max_height)
+{
+    $ratio = $max_height / imagesy($im);
+    $width = imagesx($im) * $ratio;
+    return resizeImage($width, $height, $allow_enlarge);
+}
+
+/**
+ * Adjust picture to width.
+ *
+ * @param resource $im
+ * @param int $max_width
+ * @return false|resource
+ */
+function resizeImageToWidth($im, $max_width)
+{
+    $ratio = $max_width / imagesx($im);
+    $height = imagesy($im) * $ratio;
+    
+    return resizeImage($im, $max_width, $height);
+}
+
+/**
+ * changes the dimensions of the image to best fit.
+ *
+ * @param resource $im
+ * @param int $max_width
+ * @param int $max_height
+ * @return false|resource
+ */
+function resizeImageToBestFit($im, $max_width, $max_height)
+{
+    $originalWidth = imagesx($im);
+    $originalHeight = imagesy($im);
+    
+    if ($originalWidth <= $max_width and $originalHeight <= $max_height) {
+        return $im;
+    }
+    
+    $ratio = $originalHeight / $originalWidth;
+    $width = $max_width;
+    $height = $width * $ratio;
+    if ($height > $max_height) {
+        $height = $max_height;
+        $width = $height / $ratio;
+    }
+    
+    return resizeImage($im, $width, $height);
+}
+
+/**
+ * changes the dimensions of the image
+ *
+ * @param resource $im
+ * @param int $width
+ * @param int $height
+ * @return false|resource
+ */
+function resizeImage($im, $width, $height)
+{
+    $source_x = $dest_x = 0;
+    $source_y = $dest_y = 0;
+    $source_w = imagesx($im);
+    $source_h = imagesy($im);
+    $dest_w = $width;
+    $dest_h = $height;
+    
+    $dest_im = imagecreatetruecolor($dest_w, $dest_h);
+    imagecopyresampled(
+        $dest_im,
+        $im,
+        $dest_x,
+        $dest_y,
+        $source_x,
+        $source_y,
+        $dest_w,
+        $dest_h,
+        $source_w,
+        $source_h
+    );
+    
+    return $dest_im;
 }

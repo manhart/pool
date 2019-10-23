@@ -6,7 +6,7 @@
  *
  *
  *
- * @version $Id: gui_dbdhtmldropdown.class.php,v 1.2 2005/06/14 11:44:46 manhart Exp $
+ * @version $Id: gui_dbdhtmldropdown.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @version $Revision 1.0$
  * @version
  *
@@ -20,7 +20,7 @@
  *
  * @package pool
  * @author Alexander Manhart <misterelsa@gmx.de>
- * @version $Id: gui_dbdhtmldropdown.class.php,v 1.2 2005/06/14 11:44:46 manhart Exp $
+ * @version $Id: gui_dbdhtmldropdown.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @access public
  **/
 class GUI_DBDHTMLDropdown extends GUI_DHTMLDropdown
