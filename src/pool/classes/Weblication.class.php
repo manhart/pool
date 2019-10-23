@@ -325,6 +325,7 @@ if(!defined('CLASS_WEBLICATION')) {
          * returns the main frame
          *
          * @return GUI_CustomFrame
+         * @throws Exception
          **/
         function &getFrame()
         {

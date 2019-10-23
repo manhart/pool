@@ -2342,17 +2342,42 @@ function getClientBrowser()
  **/
 function getClientIP()
 {
-    if (getenv('HTTP_CLIENT_IP')) {
-        $ip = getenv('HTTP_CLIENT_IP');
+    foreach (array(
+        'HTTP_CLIENT_IP',
+        'HTTP_X_FORWARDED_FOR',
+        'HTTP_X_FORWARDED',
+        'HTTP_X_CLUSTER_CLIENT_IP',
+        'HTTP_FORWARDED_FOR',
+        'HTTP_FORWARDED',
+        'REMOTE_ADDR'
+    ) as $key) {
+        if (array_key_exists($key, $_SERVER) === true) {
+            foreach (explode(',', $_SERVER[$key]) as $ip) {
+                if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
+                    return $ip;
     }
-    else if (getenv('HTTP_X_FORWARDED_FOR')) {
-        $ip = getenv('HTTP_X_FORWARDED_FOR');
     }
-    else {
-        $ip = getenv('REMOTE_ADDR');
+        }
+    }
+    return '';
     }
     
-    return $ip;
+/**
+ * creates a browser fingerprint
+ *
+ * @param bool $withClientIP
+ * @return string
+ */
+function getBrowserFingerprint($withClientIP=true)
+{
+    $data = ($withClientIP ? getClientIp() : '');
+    $data .= $_SERVER['HTTP_USER_AGENT'];
+    $data .= $_SERVER['HTTP_ACCEPT'];
+    $data .= $_SERVER['HTTP_ACCEPT_CHARSET'];
+    $data .= $_SERVER['HTTP_ACCEPT_ENCODING'];
+    $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    $hash = md5($data);
+    return $hash;
 }
 
 /**
@@ -2852,8 +2877,12 @@ function global_exists($key)
  */
 function magicInfo($file, $line, $function, $class, $specific = array())
 {
-    if (!is_array($specific)) if (!is_null($specific)) $specific = array($specific);
+    if (!is_array($specific)) {
+        if (!is_null($specific)) {
+            $specific = array($specific);
+        }
     else $specific = array();
+    }
     
     return array_merge(array(
         'file' => $file,
