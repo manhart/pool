@@ -3755,10 +3755,11 @@ function is_process_running($PID)
 function calcAge($from, $to = 'now')
 {
     // funktioniert leider erst ab PHP 5.3
-    if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-        $age = date_diff(date_create($from), date_create($to))->y;
-    }
-    else {
+//    if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
+//        $age = date_diff(date_create($from), date_create($to))->y;
+//      funktioniert nicht mit Schaltjahren und to = 2020-02-29
+//    }
+//    else {
         if ($to == 'now') {
             $to = date('%Y-%m-%d');
         }
@@ -3777,7 +3778,6 @@ function calcAge($from, $to = 'now')
                 $age -= 1;
             }
         }
-    }
     
     return $age;
 }
@@ -4378,4 +4378,20 @@ if (!function_exists('array_column')) {
             },
             $array);
     }
+}
+
+/**
+ * creates path from last alphanumeric characters
+ *
+ * @param $chars
+ * @param int $numberOfDirectories
+ * @return string
+ */
+function createPathFromLastChars($chars, $numberOfDirectories=4)
+{
+    $result = '';
+    for($i=(-1*$numberOfDirectories); $i<0; $i++) {
+        $result .= addEndingSlash(substr($chars, $i, 1));
+    }
+    return $result;
 }
