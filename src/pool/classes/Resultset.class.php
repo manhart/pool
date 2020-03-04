@@ -862,7 +862,7 @@ if(!defined('CLASS_RESULTSET')) {
                 }
                 else {
                     if($with_headline) {
-                        $csv .= implode($separator, array_keys($this->rowset[0])).$line_break;
+                        $csv .= implode($separator, array_keys($this->rowset[$this->index])).$line_break;
                     }
                     
                     $values = array_values($this->getRow());

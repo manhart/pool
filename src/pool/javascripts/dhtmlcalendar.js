@@ -1209,6 +1209,7 @@ function setBackgroundColor(elem, color) {
 }
 
 function setBackgroundImage(elem, url) {
+    if(!url) return false;
 	if (elem.style.backgroundImage != "url(" + url + ")") {
 		elem.style.backgroundImage = "url(" + url + ")";
 	}
