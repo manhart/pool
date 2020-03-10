@@ -753,7 +753,7 @@ function array2string(array) {
 	for(var key in array) {
 		if(!isUndefined(key) && !isFunction(array[key]) && !isUndefined(array[key])) {
 			if(result.length != 0) result += '&';
-			result += key + '=' + escape(array[key]);
+			result += key + '=' + encodeURIComponent(array[key]);
 		}
 	}
 	return result;
@@ -805,12 +805,12 @@ function form2string(form) {
 				case 'radio':
 				case 'checkbox':
 					if(element.checked) {
-						result += name + '=' + escape(value);
+						result += name + '=' + encodeURIComponent(value);
 					}
 					break;
 
 				default:
-					result += name + '=' + escape(value);
+					result += name + '=' + encodeURIComponent(value);
 			}
 		}
 	}
