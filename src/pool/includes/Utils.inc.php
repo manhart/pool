@@ -2561,8 +2561,8 @@ function emptyString()
  */
 function replaceUmlauts($subject)
 {
-    $pattern = array(chr(196), chr(228), chr(214), chr(246), chr(220), chr(252), chr(223), ' ', '\'', '`', '´', '/');
-    $replace = array('Ae', 'ae', 'Oe', 'oe', 'Ue', 'ue', 'ss', '_', '', '', '', '_');
+    $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü', chr(196), chr(228), chr(214), chr(246), chr(220), chr(252), chr(223), ' ', '\'', '`', '´', '/');
+    $replace = array('ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue', 'Ae', 'ae', 'Oe', 'oe', 'Ue', 'ue', 'ss', '_', '', '', '', '_');
     
     return str_replace($pattern, $replace, $subject);
 }
