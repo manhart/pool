@@ -1,6 +1,6 @@
 <?php
 // configs.inc.php: kann irgendwo liegen / can be placed anywhere!
-require_once '../../src/pool/configs/config.inc.php'; // <-- innerhalb config.inc.php die Pfade anpassen!
+require_once '../../src/configs/config.inc.php'; // <-- innerhalb config.inc.php die Pfade anpassen!
 require_once DIR_DAOS_ROOT.'/database.inc.php';
 
 if(!ini_set('include_path', DIR_POOL_ROOT)) {
@@ -14,7 +14,7 @@ define('APP_CHARSET', 'utf-8');
 $Weblication = &Singleton('Weblication');
 if($Weblication instanceof Weblication) {
     $Weblication->setPathBaselib(DIR_POOL_ROOT);
-    $Weblication->setRelativePathBaselib('../../src/pool'); // js, images from pool
+    $Weblication->setRelativePathBaselib('../../src'); // js, images from pool
     $Weblication->setTitle('This is myApp');
     $Weblication->setCharset(APP_CHARSET);
 
