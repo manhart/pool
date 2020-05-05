@@ -64,9 +64,9 @@ define('JAVA_PATH', '/usr/bin/java');
 // define('FOP_PATH', '/opt/fop/current/fop');
 
 // verwendet in der App
-define('DIR_POOL_ROOT', DIR_DOCUMENT_ROOT.'/pool/src/pool');
+define('DIR_POOL_ROOT', DIR_DOCUMENT_ROOT.'/pool/src');
 // aus der App Sicht (für js from pool):
-define('DIR_POOL_ROOT_REL', '../../src/pool'); // for webprojects it would be better to symlink javascripts folder
+define('DIR_POOL_ROOT_REL', '../../src'); // for webprojects it would be better to symlink javascripts folder
 
 // This constant points to the root directory of the configuration files, which is the directory I am currently in.
 // The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
