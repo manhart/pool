@@ -5,9 +5,11 @@
  * @version $Id: Utils.inc.php,v 1.65 2007/07/17 13:49:10 manhart Exp $
  * @version $Revision 1.0$
  * @version
+ *
  * @since 07/28/2003
  * @author Alexander Manhart <alexander@manhart.bayern>
  * @link https://alexander-manhart.de
+ *
  */
 
 
@@ -36,28 +38,28 @@ function getMicrotime($seed = 1)
  * @param boolean|int $functions Zeige Funktionsnamen der Objekte (Standard = 0)
  * @return string
  */
-function pray($data, $functions = 0)
+function pray($data, $functions=0)
 {
     $result = "";
-    if ($functions != 0) {
+    if($functions != 0) {
         $sf = 1;
     }
     else {
         $sf = 0;
     }
-    
+
     if (isset ($data)) {
         if ((is_array($data) and count($data)) || (is_object($data) and !isEmptyObject($data))) {
             $result .= "<OL>\n";
-            foreach ($data as $key => $value) {
-                // while (list ($key, $value) = each ($data)) {
+            foreach($data as $key => $value) {
+	            // while (list ($key, $value) = each ($data)) {
                 $type = gettype($value);
                 
                 if ($type == "array" || $type == "object") {
                     $result .= sprintf("<li>(%s) <b>%s</b>:\n", $type, $key);
                     
                     if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
-                                                        and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
+                        and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
                         $result .= pray($value, $sf);
                     }
                     else {
@@ -136,7 +138,7 @@ function formatBytes($bytes, $shortVersion = false)
  * @param boolean $removeQuotes Sollen Quotes (") vom Ergebnis entfernt werden
  * @return array Aufgeteilte Felder
  **/
-function splitcsv($line, $delim = ',', $removeQuotes = true, $quote = '"')
+function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
 {
     $fields = array();
     $fldCount = 0;
@@ -146,14 +148,14 @@ function splitcsv($line, $delim = ',', $removeQuotes = true, $quote = '"')
         $tmp = substr($line, $i, strlen($delim));
         if ($tmp === $delim && !$inQuotes) {
             $fldCount++;
-            $i += strlen($delim) - 1;
+            $i += strlen($delim)-1;
         }
         else if ($fields[$fldCount] == '' && $line[$i] == $quote && !$inQuotes) {
             if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
             $inQuotes = true;
         }
         else if ($line[$i] == $quote) {
-            if ($line[$i + 1] == $quote) {
+            if ($line[$i+1] == $quote) {
                 $i++;
                 $fields[$fldCount] .= $line[$i];
             }
@@ -178,7 +180,7 @@ function splitcsv($line, $delim = ',', $removeQuotes = true, $quote = '"')
  * @param string $enclosure Umklammerung [optional]
  * @return array mehrdimensional (Zeilen, Felder)
  */
-function splitcsvByContent(&$data, $delim = ';', $enclosure = '"')
+function splitcsvByContent(&$data, $delim=';', $enclosure='"')
 {
     $ret_array = array();
     $enclosed = false;
@@ -235,7 +237,7 @@ function splitcsvByContent(&$data, $delim = ';', $enclosure = '"')
  * @param int $case CASE_LOWER|CASE_UPPER
  * @return array Ergebnis
  **/
-function array_change_value_case($input, $case = CASE_LOWER)
+function array_change_value_case($input, $case=CASE_LOWER)
 {
     /**
      * Diese private Funktion gehoert zur Funktion array_change_value_case!
@@ -4394,4 +4396,47 @@ function createPathFromLastChars($chars, $numberOfDirectories=4)
         $result .= addEndingSlash(substr($chars, $i, 1));
     }
     return $result;
+}
+
+/**
+ * Liefert einen Filenamen, der noch nicht im Ordner existiert.
+ * Existiert die Datei bereits, wird durchnummeriert:
+ * meinDokument.pdf
+ * meinDokument-01.pdf
+ * meinDokument-02.pdf
+ * 
+ */
+function nextFreeFilename($dir, $filename, $delimiter='-') {
+	$filepath = addEndingSlash($dir) . $filename;
+	if (file_exists($filepath)) {
+
+		$info = pathinfo($filepath);
+		// echo pray($info);
+
+		$filenameNoExtension = $info['filename'];
+		$extension           = $info['extension'];
+
+		$pos = strrpos($filenameNoExtension, $delimiter);
+		if ($pos === false) {
+			$nr = 1;
+			$newFilename = $filenameNoExtension . $delimiter . sprintf('%02d', $nr) . '.' . $extension;
+		}
+		else {
+			$filenameNoNumber =  mb_substr($filenameNoExtension, 0, $pos);
+			$nr               =  mb_substr($filenameNoExtension, $pos+1);
+			if (is_numeric($nr)) {
+				$nr =  intval($nr) + 1;
+				$newFilename = $filenameNoNumber . $delimiter . sprintf('%02d', $nr) . '.' . $extension; 
+			}
+			else {
+				$nr = 1;
+				$newFilename = $filenameNoExtension . $delimiter  . sprintf('%02d', $nr) . '.' . $extension;
+			}
+			
+		}
+		return nextFreeFilename($dir, $newFilename, $delimiter);
+	}
+	else {
+		return $filename;
+	}
 }
