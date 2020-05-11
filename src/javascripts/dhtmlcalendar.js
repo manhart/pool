@@ -40,7 +40,7 @@
  * function aelterByDate added
  *
  * Revision 1.18  2003/03/12 13:48:51  alex
- * Fehlermeldung f?r startKalender added
+ * Fehlermeldung für startKalender added
  *
  * Revision 1.17  2003/03/10 17:59:12  alex
  * alterEx
@@ -238,7 +238,7 @@ function Calendar(skipMonth, name, silbling, Options) {
 	* MouseOut on Calendar Cell (=Day)
 	*/
 	Calendar.prototype.cellMouseOut = function (self) {
-		// alle Backgrounds zur?cksetzen (Hover), au?nahme selected und today
+		// alle Backgrounds zurücksetzen (Hover), außnahme selected und today
 		var clickable=self.getAttribute('clickable');
 		var today=self.getAttribute('today');
 
@@ -340,7 +340,7 @@ function Calendar(skipMonth, name, silbling, Options) {
 	}
 
 	/**
-	 * Liefert das Item f?r den den markierten Tag
+	 * Liefert das Item für den den markierten Tag
 	 *
 	 * @return CalendarItem
 	 */
@@ -349,7 +349,7 @@ function Calendar(skipMonth, name, silbling, Options) {
 	}
 
 	/**
-	 * Setzt das Item f?r den markierten Tag
+	 * Setzt das Item für den markierten Tag
 	 */
 	Calendar.prototype.setSelectedItem = function(aCalendarItem) {
 		if(this.silbling == null) {
@@ -733,7 +733,7 @@ function setSelected(child, userclick) {
 			(TodayItem.monat==SelectedItem.span.monat) &&
 			(TodayItem.tag==SelectedItem.span.tag)) {
 
-			// setze Hintergrund f?r Heute
+			// setze Hintergrund für Heute
 			setBackgroundColor(SelectedItem.td, child.Calendar.Options['TODAY_BGCOLOR']);
 		}
 		else {
@@ -938,7 +938,7 @@ function changeMonat(value, kal) {
 
 		updateKalender(kal);
 
-		// wird bei silblings unn?tig aufgerufen
+		// wird bei silblings unnötig aufgerufen
 		updateControl(kal);
 
 		// zu selektierendes versuchtes Datum erneut probieren zu selektieren (im neuen Monat - Change)
@@ -984,7 +984,7 @@ function findChildTags(childs, elem, TagName) {
 			if (elem.childNodes[i]) {
 				if ((elem.childNodes[i].nodeType == 1) &&
 				  (elem.childNodes[i].nodeName.toUpperCase() == TagName.toUpperCase())) {
-					// check attribute jump; ?berspringe tags mit jump==1
+					// check attribute jump; überspringe tags mit jump==1
 					if (DOM || MS) {
 						var jump = elem.childNodes[i].getAttribute("jump");
 					}
@@ -1180,7 +1180,7 @@ function showTag(datum) {
 	}
 }
 
-// Schaut, ob das 2. ?bergebene Datum ?lter ist.
+// Schaut, ob das 2. übergebene Datum älter ist.
 function aelter(jahr, monat, tag, jahr2, monat2, tag2) {
 	var datum1 = new Date(jahr, monat, tag+1);
 	var datum2 = new Date(jahr2, monat2, tag2);
@@ -1192,7 +1192,7 @@ function aelterByDate(datum1, datum2) {
 	return (datum2 < datum1);
 }
 
-// Schaut, ob das 2. ?bergebene Datum ?lter ist.
+// Schaut, ob das 2. übergebene Datum älter ist.
 function aelterEx(jahr, monat, tag, stunde, minute, sekunde,
   jahr2, monat2, tag2, stunde2, minute2, sekunde2) {
 	var datum1 = new Date(jahr, monat, tag, stunde, minute, sekunde);
@@ -1501,9 +1501,9 @@ function createDOMfromHTML(p4) {
 				break;
 			}
 			else {
-				// erst mal das Array mit den attributen l?schen
+				// erst mal das Array mit den attributen löschen
 				while(myAttributes.length > 0) myAttributes.pop();
-				// jetzt m?ssen noch die Attribute aus dem gesamten Tag extrahiert werden !
+				// jetzt müssen noch die Attribute aus dem gesamten Tag extrahiert werden !
 				myAttribRezult.textAfter = myTextRezult.textBefore;
 				myAttribRezult = splitText(myAttribRezult.textAfter," ");
 				while (1==1) {
