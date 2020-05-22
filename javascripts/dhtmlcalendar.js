@@ -104,7 +104,7 @@ SelectedItem = null;
 
 
 // constants
-Monate = new Array("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August",
+Monate = new Array("Januar", "Februar", "M&auml;rz", "April", "Mai", "Juni", "Juli", "August",
 	"September", "Oktober", "November", "Dezember");
 
 Tage = new Array("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So");
@@ -1209,6 +1209,7 @@ function setBackgroundColor(elem, color) {
 }
 
 function setBackgroundImage(elem, url) {
+    if(!url) return false;
 	if (elem.style.backgroundImage != "url(" + url + ")") {
 		elem.style.backgroundImage = "url(" + url + ")";
 	}

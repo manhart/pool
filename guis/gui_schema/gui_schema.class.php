@@ -41,13 +41,13 @@ class GUI_Schema extends GUI_Module
     /**
      * Initialisierung der Standard Werte und Superglobals.
      *
+     * @param int $superglobals
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init($superglobals=I_REQUEST)
     {
-        $this->Defaults->addVar('schema', null);
-
-        parent::init(I_GET|I_POST);
+        $this->Defaults->addVar('schema', '');
+        parent::init($superglobals);
     }
 
     /**
@@ -62,11 +62,12 @@ class GUI_Schema extends GUI_Module
     {
         $directory = './' . addEndingSlash(PWD_TILL_SCHEMES);
 
-        if (Count($schemes) > 0) {
+        $numSchemes = count($schemes);
+        if ($numSchemes > 0) {
             $this -> SchemeHandles = Array();
 
             $this -> Template -> setDirectory($directory);
-            for ($i=0; $i<SizeOf($schemes); $i++) {
+            for ($i=0; $i<$numSchemes; $i++) {
                 $bExists = file_exists($directory . $schemes[$i] . '.html');
                 if ($bExists) {
                     $uniqid = 'file_'.$i; // uniqid('file_'); uniqid bremst das Laufzeitverhalten emens!
@@ -108,8 +109,6 @@ class GUI_Schema extends GUI_Module
     }
 
     /**
-     * GUI_Schema::prepare()
-     *
      * Liest die _GET Variable "schema" ein, laedt Schemas und sucht nach den darin befindlichen GUIs.
      * Wurde kein Schema angegeben, wird versucht von der Weblication ein Default Schema reinzuladen.
      *
@@ -117,14 +116,27 @@ class GUI_Schema extends GUI_Module
      **/
     function prepare()
     {
-        $schemes = trim($this -> Input -> getVar('schema'));
-        if (strlen($schemes) > 0) {
-            $schemes = explode(',', $schemes);
+        $schemes = array();
+    
+        $schema = $this->Input->getVar('schema');
+        if($schema == '') {
+            $schema = $this->Weblication->getDefaultSchema();
+        }
+        
+        if(strpos($schema, ',') !== false) {
+            $schemes = explode(',', $schema);
         }
         else {
-            $schemes = Array();
-            $schemes[] = $this -> Weblication -> getSchema();
+            $schemes[] = $schema;
         }
+//        $schemes = trim($this -> Input -> getVar('schema'));
+//        if (strlen($schemes) > 0) {
+//
+//        }
+//        else {
+//            $schemes = Array();
+//            $schemes[] = $this->Weblication->getSchema();
+//        }
 
         $this -> loadSchemes($schemes);
         $this -> searchGUIsInPreloadedContent();
@@ -143,7 +155,8 @@ class GUI_Schema extends GUI_Module
     function finalize()
     {
         $content = '';
-        for ($i=0; $i<SizeOf($this -> SchemeHandles); $i++) {
+        $numSchemes = sizeof($this->SchemeHandles);
+        for ($i=0; $i<$numSchemes; $i++) {
             $this -> Template -> parse($this -> SchemeHandles[$i]);
             $content .= $this -> Template -> getContent($this -> SchemeHandles[$i]);
         }
