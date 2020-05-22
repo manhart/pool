@@ -102,7 +102,7 @@ class Input extends PoolObject
         $this->Vars = Array();
 
         if(function_exists('get_magic_quotes_gpc')) {
-            $this->magic_quotes_gpc = get_magic_quotes_gpc();
+            $this->magic_quotes_gpc = @get_magic_quotes_gpc();
         }
         $this->init($superglobals);
     }
