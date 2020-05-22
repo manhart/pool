@@ -103,6 +103,26 @@ if(!defined('CLASS_URL')) {
         var $mieserWorkaround = false;
 
         /**
+         * @var string hostname
+         */
+        private $hostname = ''; // hostname
+    
+        /**
+         * @var string Top-Level-Domain
+         */
+        private $topLevelDomain = '';
+    
+        /**
+         * @var string Second-Level-Domain
+         */
+        private $secondLevelDomain = '';
+    
+        /**
+         * @var string Third-Level-Domain
+         */
+        private $thirdLevelDomain = ''; // = subdomain = host
+        
+        /**
          * Sets up the object.
          *
          * @access public
@@ -305,6 +325,75 @@ if(!defined('CLASS_URL')) {
         public function getDomain()
         {
             return $this->Host;
+        }
+    
+        /**
+         * Get hostname
+         *
+         * @return string
+         */
+        public function getHostname()
+        {
+            $this->resolveDomainname();
+            return $this->hostname;
+        }
+    
+        /**
+         * Get Top-Level Domain
+         * @return string
+         */
+        public function getTopLevelDomain()
+        {
+            $this->resolveDomainname();
+            return $this->topLevelDomain;
+        }
+    
+        /**
+         * Get Second-Level Domain
+         * @return string
+         */
+        public function getSecondLevelDomain()
+        {
+            $this->resolveDomainname();
+            return $this->secondLevelDomain;
+        }
+    
+        /**
+         * Get Third-Level Domain
+         * @return string
+         */
+        public function getThirdLevelDomain()
+        {
+            $this->resolveDomainname();
+            return $this->thirdLevelDomain;
+        }
+    
+        /**
+         * doesn't work with tlds like .co.uk!
+         */
+        private function resolveDomainname()
+        {
+            if($this->hostname != '') return;
+            if(filter_var($this->Host, FILTER_VALIDATE_IP)) {
+                $this->hostname = $this->Host;
+            }
+    
+            $host = explode('.', $this->Host);
+            $numHostParts = count($host);
+            if($numHostParts == 1) { // mydomain, develop01
+                $this->hostname = array_pop($host);
+            }
+            elseif($numHostParts == 2) { // mydomain.de, mydomain.com
+                $this->topLevelDomain = array_pop($host);
+                $this->secondLevelDomain = array_pop($host);
+                $this->hostname = $this->secondLevelDomain;
+            }
+            elseif($numHostParts >= 3) { // www.mydomain.de, xyz.www.mydomain.com
+                $this->topLevelDomain = array_pop($host);
+                $this->secondLevelDomain = array_pop($host);
+                $this->thirdLevelDomain = implode('.', $host);
+                $this->hostname = $this->thirdLevelDomain;
+            }
         }
 
         /**

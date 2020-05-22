@@ -30,6 +30,14 @@ if(!defined('CLASS_DAO')) {
     define('DAO_NO_QUOTES', 1);
     define('DAO_NO_ESCAPE', 2);
 
+    #### Datainterface Types:
+    if(!defined('DATAINTERFACE_MYSQL')) define('DATAINTERFACE_MYSQL', 'MySQL_Interface');
+    if(!defined('DATAINTERFACE_MYSQLI')) define('DATAINTERFACE_MYSQLI', 'MySQLi_Interface');
+    if(!defined('DATAINTERFACE_CISAM')) define('DATAINTERFACE_CISAM', 'CISAM_Interface');
+    if(!defined('DATAINTERFACE_MSSQL')) define('DATAINTERFACE_MSSQL', 'MSSQL_Interface');
+    if(!defined('DATAINTERFACE_POSQL')) define('DATAINTERFACE_POSQL',	'PostgreSQL_Interface');
+    if(!defined('DATAINTERFACE_C16')) define('DATAINTERFACE_C16',			'C16_Interface');
+    
     /**
      * DAO
      *

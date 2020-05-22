@@ -377,7 +377,7 @@
 				// Error oder nichts gefunden $Resultset -> getLastError
 				$this->buffer['id'] = null;
 				$this->buffer['record'] = null;
-				$this->addError('Keinen Datensatz mit Primä²³chl?ssel ('.
+				$this->addError('Keinen Datensatz mit Primärschlüssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
 					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
 				return false;
@@ -476,7 +476,7 @@
 
 
 			#### Trenne Daten (Datenfelder <-> Muell)
-			$Input_filtered = $Input->filter($this -> DAO -> getFieldlist());
+			$Input_filtered = $Input->filter($this->DAO->getFieldlist());
 
 			$bool = $this->pk_exists($pk, new Input(I_POST));
 
@@ -526,7 +526,7 @@
 						}
 					}
 
-					$this -> buffer['id'] = $id;
+					$this->buffer['id'] = $id;
 				}
 
 //				if($this -> optimized) {
@@ -636,7 +636,7 @@
 		function actionDelete(& $Input)
 		{
 			$id = $this->buffer['id']; // array of primary key
-			$list = $this -> buffer['list'];
+			$list = $this->buffer['list'];
 			$count = count($list);
 			$pk = $this->DAO->getPrimaryKey();
 
@@ -656,37 +656,37 @@
 						$this->addError('Loeschvorgang abgebrochen! Unbekannter Fehler.', 0);
 						return 0;
 					}
-					if($error_message = $Resultset -> getLastError()) {
-						$this -> addError($error_message['message'], $error_message['code']);
+					if($error_message = $Resultset->getLastError()) {
+						$this->addError($error_message['message'], $error_message['code']);
 						return 0;
 					}
-
+                    
                     $ah_status = $Resultset->getValue('ah_status');
 					
 					
-					#### Datensatz aus dem Buffer entfernen
-					for ($i=0; $i < $count; $i++) {
-						$l_id = array();
-						foreach($pk as $pkfieldname) {
-							$l_id[] = $list[$i][$pkfieldname];
-						}
+                    #### Datensatz aus dem Buffer entfernen
+                    for ($i = 0; $i < $count; $i++) {
+                        $l_id = array();
+                        foreach ($pk as $pkfieldname) {
+                            $l_id[] = $list[$i][$pkfieldname];
+                        }
                         if ($l_id == $id) {
                             if($ah_status != 'updated') {
-							unset($list[$i]);
+                                unset($list[$i]);
                             }
-							break;
-						}
-					}
-					$list = array_values($list);
+                            break;
+                        }
+                    }
+                    $list = array_values($list);
                     $numRecords = count($list);
                     
-
-
+                    
+                    
                     if ($numRecords == 1) {
                         $select_nr = 0;
 						$Resultset = new Resultset();
 						$Resultset->addValue($list[$select_nr]);
-						$this -> after_select($Resultset);
+						$this->after_select($Resultset);
 						$record = $list[$select_nr];
 
 						$id = array();
@@ -701,14 +701,14 @@
                         $record = $this->buffer['record'];
                         $list = $this->buffer['list'];
                     }
-					else {
+                    else {
 						$record = null;
 						$id = null;
 					}
-
-					$this->buffer['id'] = $id;
-					$this->buffer['record'] = $record;
-					$this->buffer['list'] = $list;
+                    
+                    $this->buffer['id'] = $id;
+                    $this->buffer['record'] = $record;
+                    $this->buffer['list'] = $list;
 				}
 
 			}
@@ -716,7 +716,7 @@
 				// Error oder nichts gefunden
 			}
 
-			$this -> buffer['restartpage'] = 1;
+			$this->buffer['restartpage'] = 1;
 		}
 
 		/**

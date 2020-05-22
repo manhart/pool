@@ -6,7 +6,7 @@
  *
  * Das GUI_DBLookupSelect ist ein Datenbank Steuerelement. Es steuert ein ComboBox (DropDown) sowie eine Multiselect Box.
  *
- * @version $Id: gui_dblookupselect.class.php,v 1.6 2007/05/09 12:59:30 manhart Exp $
+ * @version $Id: gui_dblookupselect.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @version $revision 1.0$
  * @version
  *
@@ -20,7 +20,7 @@
  *
  * @package pool
  * @author manhart
- * @version $Id: gui_dblookupselect.class.php,v 1.6 2007/05/09 12:59:30 manhart Exp $
+ * @version $Id: gui_dblookupselect.class.php 38772 2019-09-30 09:31:12Z manhart $
  * @access public
  **/
 class GUI_DBLookupSelect extends GUI_Select
