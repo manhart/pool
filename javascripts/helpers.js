@@ -753,7 +753,7 @@ function array2string(array) {
 	for(var key in array) {
 		if(!isUndefined(key) && !isFunction(array[key]) && !isUndefined(array[key])) {
 			if(result.length != 0) result += '&';
-			result += key + '=' + escape(array[key]);
+			result += key + '=' + encodeURIComponent(array[key]);
 		}
 	}
 	return result;
@@ -805,12 +805,12 @@ function form2string(form) {
 				case 'radio':
 				case 'checkbox':
 					if(element.checked) {
-						result += name + '=' + escape(value);
+						result += name + '=' + encodeURIComponent(value);
 					}
 					break;
 
 				default:
-					result += name + '=' + escape(value);
+					result += name + '=' + encodeURIComponent(value);
 			}
 		}
 	}
@@ -1056,6 +1056,18 @@ function isValidDateDE(DE_date)
 		return isValidDate(datumParts[0], datumParts[1], datumParts[2]);
 	}
 	else return false;
+}
+
+/**
+ * Prueft ein deutsches Datum auf Gueltigkeit
+ */
+function isValidDateUS(US_date)
+{
+    var datumParts = US_date.split('-');
+    if(datumParts.length==3) {
+        return isValidDate(datumParts[2], datumParts[1], datumParts[0]);
+    }
+    else return false;
 }
 
 /**

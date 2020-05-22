@@ -21,8 +21,8 @@
 	* geschlossen.
 	*
 	*
-	* @version $Id: MySQLi_Interface.class.php 38240 2019-05-31 09:09:13Z manhart $
-	* @version $Revision: 38240 $
+	* @version $Id: MySQLi_Interface.class.php 38690 2019-09-03 15:08:59Z manhart $
+	* @version $Revision: 38690 $
 	*
 	* @see DataInterface.class.php
 	* @since 2019/02/28
@@ -50,7 +50,7 @@
 		 *
 		 * @package pool
 		 * @author Alexander Manhart <alexander@manhart.bayern>
-		 * @version $Id: MySQLi_Interface.class.php 38240 2019-05-31 09:09:13Z manhart $
+		 * @version $Id: MySQLi_Interface.class.php 38690 2019-09-03 15:08:59Z manhart $
 		 * @access public
 		 **/
 		class MySQLi_Interface extends DataInterface
