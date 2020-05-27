@@ -188,10 +188,10 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
     $linecount = 0;
     $fldval = '';
     for ($i = 0; $i < strlen($data); $i++) {
-        $chr = $data{$i};
+        $chr = $data[$i];
         switch ($chr) {
             case $enclosure:
-                if ($enclosed && $data{$i + 1} == $enclosure) {
+                if ($enclosed && $data[$i + 1] == $enclosure) {
                     $fldval .= $chr;
                     ++$i; //skip next char
                 }
@@ -207,7 +207,7 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
                 break;
             
             case "\r":
-                if (!$enclosed && $data{$i + 1} == "\n") {
+                if (!$enclosed && $data[$i + 1] == "\n") {
                     continue 2;
                 }
             
@@ -1111,7 +1111,7 @@ if (!function_exists('addEndingSlash')) {
     function addEndingSlash($value)
     {
         if ($value != '') {
-            if ($value{strlen($value) - 1} != '/') {
+            if ($value[strlen($value) - 1] != '/') {
                 $value .= '/';
             }
         }
@@ -1132,7 +1132,7 @@ if (!function_exists('removeEndingSlash')) {
     {
         if (!empty($value)) {
             $len = strlen($value) - 1;
-            if ($value{$len} == '/') {
+            if ($value[$len] == '/') {
                 $value = substr($value, 0, $len);
             }
         }
