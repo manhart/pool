@@ -173,7 +173,7 @@ function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
 }
 
 /**
- * Dr�selt nach Trennzeichen einen String $data auf. Dabei werden Steuerzeichen #10 und #13 ber�cksichtigt, sowie umschlossener (enclosure) Text
+ * Dröselt nach Trennzeichen einen String $data auf. Dabei werden Steuerzeichen #10 und #13 berücksichtigt, sowie umschlossener (enclosure) Text
  *
  * @param string $data Inhalt (z.B. einer Datei)
  * @param string $delim Trennzeichen (Standard = ';')
