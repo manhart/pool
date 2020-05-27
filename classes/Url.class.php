@@ -174,7 +174,7 @@ if(!defined('CLASS_URL')) {
          **/
         function setScriptName($scriptname)
         {
-            if ((strlen($scriptname) > 0) and ($scriptname{0} == '/')) {
+            if ((strlen($scriptname) > 0) and ($scriptname[0] == '/')) {
                 $scriptname = substr($scriptname, 1, strlen($scriptname)-1);
             }
             $this->ScriptName = $scriptname;
@@ -206,7 +206,7 @@ if(!defined('CLASS_URL')) {
 
             $bool = false;
             $path = isset($parsed_url['path']) ? $parsed_url['path'] : '';
-            if(strlen($path)>0 and $path{strlen($path)-1} != '/') {
+            if(strlen($path)>0 and $path[strlen($path)-1] != '/') {
                 $path = dirname($path);
                 $bool = true;
             }
@@ -302,7 +302,7 @@ if(!defined('CLASS_URL')) {
             $scheme = $this->scheme;
             $port = ($this->port != URL_DEFAULT_PORT ? ':'.$this->port : '');
             $path = addEndingSlash($this->path).$this->script;
-            if(strlen($path) > 0 and $path{0} != '/') {
+            if(strlen($path) > 0 and $path[0] != '/') {
                 $path = '/'.$path;
             }
             $query = $this->InpGet->getQuery('', $this->entityAmpersand);
@@ -591,7 +591,7 @@ if(!defined('CLASS_URL')) {
         function setAnchor($value = '#')
         {
             if (strlen($value) > 0) {
-                if ($value{0} != '#') {
+                if ($value[0] != '#') {
                     $value = '#' . $value;
                 }
                 $this -> Anchor = $value;
