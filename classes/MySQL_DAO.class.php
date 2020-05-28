@@ -392,10 +392,10 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $enclosed = false;
                 $coltype_mysql = $colinfo['Type'];
                 for($i=0, $len=strlen($coltype_mysql); $i<$len; $i++) {
-                    $chr = $coltype_mysql{$i};
+                    $chr = $coltype_mysql[$i];
                     switch($chr) {
                         case $enclosure:
-                            if($enclosed && $coltype_mysql{$i+1} == $enclosure) {
+                            if($enclosed && $coltype_mysql[$i+1] == $enclosure) {
                                 $fldval .= $chr;
                                 ++$i; //skip next char
                             }
