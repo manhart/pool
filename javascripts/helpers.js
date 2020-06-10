@@ -1433,10 +1433,10 @@ function getWeekNumber(day, month, year) {
 		if(order != 'asc') retval = retval * -1;
 		return retval;
 	}
-	
-	/** 
+
+	/**
 	 * Sortierfunktion Float/Waehrung
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @param order
@@ -1446,7 +1446,7 @@ function getWeekNumber(day, month, year) {
 	{
 		a = GermanValueToFloat(a);
 		b = GermanValueToFloat(b);
-		
+
 		var retval = 0;
 		if(a > b) {
 			retval = 1;
@@ -1460,7 +1460,7 @@ function getWeekNumber(day, month, year) {
 
 	/**
 	 * console.log Ersatz
-	 * 
+	 *
 	 * @param text
 	 * @returns {Boolean}
 	 */
@@ -1473,7 +1473,7 @@ function getWeekNumber(day, month, year) {
 					console.log(time + ' ' + type + ':');
 					console.log(text);
 					break;
-					
+
 				default:
 					console.log(time + ' ' + text);
 			}
@@ -1481,11 +1481,11 @@ function getWeekNumber(day, month, year) {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Vererbung von Klassen/Objekten
 	 */
-	Function.prototype.inheritsFrom = function(parentClassOrObject) 
+	Function.prototype.inheritsFrom = function(parentClassOrObject)
 	{
 		if (parentClassOrObject.constructor == Function) {
 			// Normal Inheritance
@@ -1501,7 +1501,7 @@ function getWeekNumber(day, month, year) {
 		}
 		return this;
 	}
-	
+
 	/**
 	 * Falls Object.create nicht existiert wie im IE8 (Pseudo-Funktion)
 	 */
@@ -1518,7 +1518,7 @@ function getWeekNumber(day, month, year) {
 			}
 		})()
 	}
-	
+
 	/**
 	 * Falls Object.keys nicht exisstiert wie im IE8/9
 	 */
@@ -1545,13 +1545,13 @@ function getWeekNumber(day, month, year) {
 				}
 
 				var result = [], prop, i;
-		
+
 				for (prop in obj) {
 					if (hasOwnProperty.call(obj, prop)) {
 						result.push(prop);
 					}
 				}
-		
+
 				if (hasDontEnumBug) {
 					for (i = 0; i < dontEnumsLength; i++) {
 						if (hasOwnProperty.call(obj, dontEnums[i])) {
@@ -1688,20 +1688,20 @@ function string2bool(val)
 function downloadFile(file)
 {
 	var ts = new Date().getTime(); // Timestamp
-	
+
 	var link = document.createElement('a');
 
 	link.setAttribute('id', 'tmpdownload' + ts);
 	link.setAttribute('type', 'application/octet-stream');
-	
+
 	var isIE = /*@cc_on!@*/false;
 	if(isIE) {
 		link.target = '_blank';
 		document.body.appendChild(link);
 	}
-	
+
 	link.href = file + '?' + ts;
-	
+
 	// HTML 5
 	link.download = basename(file);
 
@@ -1710,14 +1710,14 @@ function downloadFile(file)
 		// funktioniert leider nicht im Safari unter Windows
 		var clickEvent = document.createEvent('MouseEvent');
 		clickEvent.initEvent('click', true, true);
-		
+
 		link.target = '_blank';
 		link.dispatchEvent(clickEvent);
 	}
 	else if(link.click) {
 		link.click();
 	}
-	
+
 	if(isIE) {
 		document.body.removeChild(link);
 	}
@@ -1738,16 +1738,16 @@ function base64ToBlob(data, contentType)
 	else {
 		var byteChars = window.atob(data);
 	}
-	
+
 	byteNumbers = new Array(byteChars.length);
-	
+
 	for (var i = 0; i < byteChars.length; i++) {
 		byteNumbers[i] = byteChars.charCodeAt(i);
 	}
-	
+
 	// < IE 10 benoetigt typedarray.js
 	var byteArray = new Uint8Array(byteNumbers);
-	
+
 	try{
 		// < IE 10 benoetigt Blob.js
 		var blob = new Blob([byteArray], {type : contentType});
@@ -1771,13 +1771,13 @@ function base64ToBlob(data, contentType)
 			// We're screwed, blob constructor unsupported entirely
 		}
 	}
-	
+
 	return blob;
 }
 
 /*
  var blob = base64ToBlob(pdf_b64, 'application/pdf');
- 
+
  if (window.navigator && window.navigator.msSaveOrOpenBlob) {
  window.navigator.msSaveOrOpenBlob(blob); // for IE
  }
@@ -1800,11 +1800,40 @@ function getDomainFromUrl(url) {
  * Returns classname
  *
  * @param obj
- * @returns {string}
+ * @returns string
  */
 function what(obj) {
-    if(obj == null) return '';
-	return obj.toString().match(/ (\w+)/)[1];
+    /*
+     *  for browsers which have name property in the constructor
+     *  of the object,such as chrome
+     */
+    if(obj && typeof obj === 'object' && obj.constructor) {
+        if (obj.constructor.name) {
+            return obj.constructor.name;
+        }
+
+        var str = obj.constructor.toString();
+
+        /*
+         * executed if the return of object.constructor.toString() is
+         * "[object objectClass]"
+         */
+        if(str.charAt(0) == '[') {
+            var arr = str.match(/\[\w+\s*(\w+)\]/);
+        }
+        else {
+            /*
+             * executed if the return of object.constructor.toString() is
+             * "function objectClass () {}"
+             * for IE Firefox
+             */
+            var arr = str.match(/function\s*(\w+)/);
+        }
+        if (arr && arr.length == 2) {
+            return arr[1];
+        }
+    }
+    return undefined;
 }
 
 /**
@@ -1829,7 +1858,7 @@ function camelize(text) {
  */
 function decamelize(str, separator){
     separator = typeof separator === 'undefined' ? '_' : separator;
-    
+
     return str
     .replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2')
     .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
