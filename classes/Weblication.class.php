@@ -330,8 +330,8 @@ if(!defined('CLASS_WEBLICATION')) {
         function &getFrame()
         {
             if($this->Main instanceof GUI_CustomFrame) {
-            return $this -> Main;
-        }
+                return $this->Main;
+            }
             throw new Exception('No Frame there');
         }
 
@@ -513,12 +513,12 @@ if(!defined('CLASS_WEBLICATION')) {
             $gui_directories = array(
                 $folder_guis
             );
-            
+
             # Ordner Commons guis
             if(defined('DIR_COMMON_ROOT')) {
                 $gui_directories[] = addEndingSlash(DIR_COMMON_ROOT).$folder_guis;
             }
-            
+
             foreach ($gui_directories as $folder_guis) {
                 $folder_skins = $folder_guis.$skin;
                 $folder_language = $folder_skins.$language;
@@ -538,7 +538,7 @@ if(!defined('CLASS_WEBLICATION')) {
                     }
                 }
             }
-            
+
 
             # Ordner baselib
             if ($baselib) {
@@ -651,17 +651,17 @@ if(!defined('CLASS_WEBLICATION')) {
                     return $folder.$filename;
                 }
             }
-            else {                
+            else {
                 $folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
-                
+
                 if (file_exists($folder_javascripts.$filename)) {
                     return $folder_javascripts.$filename;
                 }
-                
+
                 if(file_exists($folder_guis.$filename)) {
                     return $folder_guis.$filename;
                 }
-    
+
                 if(defined('DIR_COMMON_ROOT_REL')) {
                     $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL).addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
                     if (file_exists($folder_common.$filename)) {
@@ -807,7 +807,7 @@ if(!defined('CLASS_WEBLICATION')) {
             $this->Settings->setVar($settings);
             return $this;
         }
-        
+
         /**
          * Starts a PHP Session via session_start()!
          * We use the standard php sessions.
@@ -831,7 +831,7 @@ if(!defined('CLASS_WEBLICATION')) {
             foreach($sessionConfig as $param => $value) {
                 ini_set('session.'.$param, $value);
             }
-    
+
             $isStatic = !(isset($this)); // TODO static calls or static AppSettings
             if($isStatic) {
                 return new ISession($autoClose);
@@ -1017,7 +1017,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 $this->raiseError(__FILE__, __LINE__, 'Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
             }
         }
-    
+
          /**
           * Schliesst alle Verbindungen und loescht die Interface Objekte.
           * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
@@ -1032,7 +1032,7 @@ if(!defined('CLASS_WEBLICATION')) {
                      unset($this->Interfaces[DATAINTERFACE_MYSQL]);
                  }
              }
-        
+
              if(defined('DATAINTERFACE_MYSQLI')) {
                  if (isset($this->Interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->Interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
                      $this->Interfaces[DATAINTERFACE_MYSQLI]->close();
