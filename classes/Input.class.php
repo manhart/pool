@@ -29,7 +29,6 @@
 * @link https://alexander-manhart.de
 */
 
-// LEIDER haben die Entwickler von PHP in PHP5.2.0 die selben Konstanten-Namen wie im POOL verwendet
 // define PHP Superglobals
 define ('I_EMPTY', 0);
 define ('I_COOKIE', 1);
@@ -42,17 +41,6 @@ define ('I_SESSION', 64);
 define ('I_REQUEST', 128);
 define ('I_ALL', 255);
 
-// define PHP Superglobals
-if(!defined('INPUT_EMPTY')) define ('INPUT_EMPTY', 0);
-if(!defined('INPUT_COOKIE')) define ('INPUT_COOKIE', 1);
-if(!defined('INPUT_GET')) define ('INPUT_GET', 2);
-if(!defined('INPUT_POST')) define ('INPUT_POST', 4);
-if(!defined('INPUT_FILES')) define ('INPUT_FILES', 8);
-if(!defined('INPUT_ENV')) define ('INPUT_ENV', 16);
-if(!defined('INPUT_SERVER')) define ('INPUT_SERVER', 32);
-if(!defined('INPUT_SESSION')) define ('INPUT_SESSION', 64);
-if(!defined('INPUT_REQUEST')) define ('INPUT_REQUEST', 128);
-if(!defined('INPUT_ALL')) define ('INPUT_ALL', 255);
 
 /**
  * Basisklasse fuer alle Inputs. Input kapselt den Zugriff auf die PHP Superglobals wie $_GET, $_POST etc.
@@ -73,37 +61,20 @@ class Input extends PoolObject
     var $Vars = array();
 
     /**
-     * Einstellung zu Superglobals
-     *
-     * @var int
-     * @access public
+     * @var int Superglobals
+     * @see https://www.php.net/manual/de/language.variables.superglobals.php
      */
-    var $superglobals = 0;
+    private int $superglobals = I_EMPTY;
 
     /**
-     * Einstellung zu Magic Quotes
-     *
-     * @var int
-     * @access public
+     * Input constructor. Initialization of the superglobals.
+     * @param int $superglobals Select a predefined constant: INPUT_GET, INPUT_POST, INPUT_REQUEST, INPUT_SERVER, INPUT_FILES, INPUT_COOKIE
+     * @see https://www.php.net/manual/de/language.variables.superglobals.php
      */
-    var $magic_quotes_gpc = 0;
-
-    /**
-    * Konstruktor
-    *
-    * Initialisiert angefragte Superglobals.
-    * Beruecksichtigt Magic Quotes!
-    *
-    * @access public
-    * @param integer $superglobals Einzulesende Superglobals (siehe Konstanten)
-    */
-    function __construct($superglobals = 0)
+    public function __construct($superglobals = I_EMPTY)
     {
         $this->Vars = Array();
 
-        if(function_exists('get_magic_quotes_gpc')) {
-            $this->magic_quotes_gpc = @get_magic_quotes_gpc();
-        }
         $this->init($superglobals);
     }
 
@@ -115,7 +86,7 @@ class Input extends PoolObject
     * @access public
     * @param integer $superglobals Einzulesende Superglobals (siehe Konstanten)
     */
-    function init($superglobals=0)
+    function init($superglobals = I_EMPTY)
     {
         if ($superglobals == 0) {
             return;
@@ -139,30 +110,15 @@ class Input extends PoolObject
         }
 
         if ($superglobals & I_POST) {
-            if ($this -> magic_quotes_gpc == 1) {
-                $this -> addVar($this -> stripSlashes($_POST));
-            }
-            else {
-                $this -> addVar($_POST);
-            }
+            $this->addVar($_POST);
         }
 
         if ($superglobals & I_GET) {
-            if ($this -> magic_quotes_gpc == 1) {
-                $this -> addVar($this -> stripSlashes($_GET));
-            }
-            else {
-                $this -> addVar($_GET);
-            }
+            $this->addVar($_GET);
         }
 
         if ($superglobals & I_COOKIE) {
-            if ($this -> magic_quotes_gpc == 1) {
-                $this -> addVar($this -> stripSlashes($_COOKIE));
-            }
-            else {
-                $this -> addVar($_COOKIE);
-            }
+            $this->addVar($_COOKIE);
         }
 
         if ($superglobals != I_ALL and $superglobals & I_SESSION) {

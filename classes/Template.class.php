@@ -747,7 +747,7 @@
 				$fp = fopen($this->getDirectory().$this->Filename, 'r');
 				if (!$fp) {
 					$this -> raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
-						$this -> Filename));
+                        $this->getDirectory().$this->Filename));
 				    return;
 				}
 				$size = filesize($this->Directory.$this->Filename);
