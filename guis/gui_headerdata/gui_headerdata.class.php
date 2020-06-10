@@ -78,9 +78,15 @@
      */
     var $StyleSheetsMedia = array();
 
-    // @var array JavaScript Files
-    // @access private
-    var $JavaScripts = array();
+     /**
+      * @var array javascript files with properties
+      */
+    private array $javaScripts = array();
+
+     /**
+      * @var array javascript file names to prevent double inclusion
+      */
+    private array $javaScriptFiles = array();
 
     //@var string Base Target
     //@access private
@@ -277,15 +283,23 @@
     }
 
     /**
-     * Fuegt der Seite eine JavaScript Datei (.js) hinzu.
+     * Add a javascript file to the page
      *
      * @access public
-     * @param string $filename
+     * @param string $file file
+     * @param string $type (optional) type
      **/
-    function addJavaScript($filename)
+    function addJavaScript($file, $type='')
     {
-        if (!in_array($filename, $this->JavaScripts)) {
-            $this->JavaScripts[] = $filename;
+        if (!in_array($file, $this->javaScriptFiles)) {
+            $js = array(
+                'file' => $file
+            );
+            if($type != '') {
+                $js['type'] = $type;
+            }
+            $this->javaScripts[] = $js;
+            $this->javaScriptFiles[] = $file;
         }
     }
 
@@ -363,10 +377,15 @@
             }
         }
 
-        if (count($this->JavaScripts) > 0) {
-            foreach($this->JavaScripts as $js) {
+        if (count($this->javaScripts) > 0) {
+            foreach($this->javaScripts as $js) {
                 $this->Template->newBlock('JAVASCRIPT');
-                $this->Template->setVar('FILENAME', $js);
+                $this->Template->setVar('FILENAME', $js['file']);
+                $type = '';
+                if(isset($js['type'])) {
+                    $type = ' type="'.$js['type'].'"';
+                }
+                $this->Template->setVar('TYPE', $type);
             }
         }
 
