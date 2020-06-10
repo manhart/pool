@@ -1,8 +1,5 @@
 <meta charset="{CHARSET}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Script-Type" content="text/javascript">
-    <meta http-equiv="Content-Style-Type" content="text/css">
-    <meta http-equiv="Content-Language" content="{LANGUAGE}">
     <meta http-equiv="expires" content="{EXPIRES}">
     <!-- BLOCK XUACOMPATIBLE --><meta http-equiv="X-UA-Compatible" content="{XUACOMPATIBLE_VALUE}"><!-- END XUACOMPATIBLE -->
     <!-- BLOCK BROWSERNOCACHE --><meta http-equiv="cache-control" content="no-store, no-cache, must-revalidate"><!-- END BROWSERNOCACHE -->
@@ -14,19 +11,21 @@
     <meta name="revisit-after" content="7 days">
     <meta name="author" content="GROUP7 AG">
     <!-- DC = Dublin Core - Metadata: -->
-    <meta name="DC.Creator" content="GROUP7 AG">
-    <meta name="DC.Title" content="{TITLE}">
-    <meta name="DC.Publisher" content="GROUP7 AG">
-    <meta name="DC.Contributor" content="GROUP7 AG">
-    <meta name="DC.Format" content="text/html">
-    <meta name="DC.Source" content="HTML-Referenz">
-    <meta name="DC.Language" content="{LANGUAGE}">
-    <meta name="DC.Coverage" content="Schwaig">
-    <meta name="DC.Rights" content="Alle Rechte liegen beim Publisher">
+    <link rel="schema.DC" href="http://purl.org/dc/elements/1.1">
+    <link rel="schema.DCTERMS" href="http://purl.org/dc/terms">
+    <meta name="DC.title" content="{TITLE}">
+    <meta name="DC.publisher" content="GROUP7 AG">
+    <meta name="DC.creator" content="GROUP7 AG">
+    <meta name="DC.contributor" content="GROUP7 AG Developers">
+    <meta name="DC.format" scheme="DCTERMS.IMT" content="text/html">
+    <meta name="DC.type" scheme="DCTERMS.DCMITYPE" content="Text">
+    <meta name="DC.language" content="{LANGUAGE}">
+    <meta name="DC.coverage" content="Schwaig">
+    <meta name="DC.rights" content="Alle Rechte liegen beim Publisher">
     <!-- DC = Dublin Core - Metadata -->
+    <meta name="generator" content="POOL">
     <title>{TITLE}</title>
     <base target="{BASE_TARGET}">
     <!-- BLOCK favicon --><link rel="shortcut icon" href="favicon.ico"><!-- END favicon -->
-    <!-- BLOCK STYLESHEET --><link rel="stylesheet" type="text/css" href="{FILENAME}"{MEDIA}><!-- END STYLESHEET -->
-    <!-- BLOCK JAVASCRIPT --><script src="{FILENAME}" type="text/javascript"></script>
-    <!-- END JAVASCRIPT -->
+    <!-- BLOCK STYLESHEET --><link rel="stylesheet" href="{FILENAME}"{MEDIA}><!-- END STYLESHEET -->
+    <!-- BLOCK JAVASCRIPT --><script src="{FILENAME}"{TYPE}></script><!-- END JAVASCRIPT -->
