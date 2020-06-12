@@ -96,6 +96,16 @@ if(!defined('CLASS_POOLOBJECT')) {
         const CLASS_EXTENSION = '.class.php';
 
         /**
+         * @var string the full name of the class of the object
+         */
+        private string $class = '';
+
+        /**
+         * @var string the short name of the class of the object
+         */
+        private string $className = '';
+
+        /**
          * Konstruktor
          *
          * @access public
@@ -118,25 +128,31 @@ if(!defined('CLASS_POOLOBJECT')) {
         }
 
         /**
-         * Liefert den Namen der Klasse inkl. Namespace.
+         * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
          *
-         * @access public
-         * @return string Name der Klasse
+         * @return string name of the class
          */
-        function getClassName()
+        public function getClass()
         {
-            return get_class($this);
+            if($this->class == '') {
+                $this->class = get_class($this);
+            }
+
+            return $this->class;
         }
 
         /**
-         * Liefert den Klassennamen ohne Namespace
+         * Determines the short name of the class of the object, stores it temporarily and returns it.
          *
          * @return bool|string
-         * @throws
+         * @throws ReflectionException
          */
-        function getClassNameShort()
+        function getClassName()
         {
-            return (new \ReflectionClass($this))->getShortName();
+            if($this->className == '') {
+                $this->className = (new \ReflectionClass($this))->getShortName();
+            }
+            return $this->className;
         }
 
         /**
@@ -149,7 +165,7 @@ if(!defined('CLASS_POOLOBJECT')) {
         {
             return get_parent_class($this);
         }
-    
+
         /**
          * Autoloader for POOL Classes
          *
@@ -166,10 +182,10 @@ if(!defined('CLASS_POOLOBJECT')) {
             if(defined('DIR_COMMON_ROOT')) {
                 $classRootDirs[] = DIR_COMMON_ROOT;
             }
-            
+
             foreach ($classRootDirs as $classRootDir) {
                 $classRootDir = addEndingSlash($classRootDir).addEndingSlash(PWD_TILL_CLASSES);
-    
+
                 $filename = $classRootDir.$className.PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
