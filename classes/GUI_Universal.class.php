@@ -17,13 +17,16 @@
  * Class GUI_Universal
  *
  * @package pool
- * @author manhart
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @version $Id: GUI_Universal.class.php,v 1.5 2007/02/27 10:36:31 hoesl Exp $
  * @access public
  **/
 class GUI_Universal extends GUI_Module
 {
-    var $id = '';
+    /**
+     * @var string ID (unique identifier)
+     */
+    protected string $id = '';
 
     var $attributes = '';
 
@@ -101,13 +104,13 @@ class GUI_Universal extends GUI_Module
 
         $Input = & $this -> Input;
 
-        $this -> id = $Input -> getVar('id');
+        $this->id = $Input->getVar('id');
 
 
         $class = $Input -> getVar('class');
         $class_error = $Input -> getVar('class_error');
         $guierror = $Input->getVar('guierror');
-        if ($guierror and $guierror == $Input->getVar('name')) {
+        if ($guierror and $guierror == $this->Input->getVar('name')) {
             $class = $class_error;
         }
         #### Events
