@@ -746,7 +746,7 @@
                 $content = '';
 				$fp = fopen($this->getDirectory().$this->Filename, 'r');
 				if (!$fp) {
-					$this -> raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
+					$this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
                         $this->getDirectory().$this->Filename));
 				    return;
 				}
@@ -788,11 +788,11 @@
 /* --------------------- */
 ######## TempSimple #######
 /* --------------------- */
-		class TempSimple extends TempFile
+		class TempSimple extends TempCoreHandle
 		{
 			function __construct($handle, $content)
 			{
-				parent::__construct('FILE', '');
+				parent::__construct('FILE', '', '');
 				$this->setHandle($handle);
 				$this->setContent($content);
 			}
@@ -1262,11 +1262,10 @@
 			function parse($handle = '')
 			{
 				if ($handle != '') {
-				    $this -> useFile($handle);
+				    $this->useFile($handle);
 				}
-				if (@is_a($this->ActiveFile, 'TempFile')) {
-					$TempFile = & $this -> ActiveFile;
-					$TempFile -> parse();
+				if($this->ActiveFile) {
+                    $this->ActiveFile->parse();
 				}
 				return $this;
 			}
@@ -1280,16 +1279,14 @@
 			*/
 			function getContent($handle = '')
 			{
-        	 	$content = '';
             	if ($handle != '') {
-                	$this -> useFile($handle);
+                	$this->useFile($handle);
 	            }
 
-	            if (@is_a($this->ActiveFile, 'TempFile')) {
-    	            $TempFile = & $this -> ActiveFile;
-        	        $content = $TempFile -> getParsedContent();
+	            if ($this->ActiveFile) {
+        	        return $this->ActiveFile->getParsedContent();
             	}
-	            return $content;
+	            return '';
 			}
 
 			/**
