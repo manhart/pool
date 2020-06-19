@@ -932,6 +932,10 @@ function addOption(selectElement, caption, value) {
 	optn.text = caption;
 	optn.value = value;
 
+	if(arguments[3]) {
+	    optn.selected = arguments[3];
+    }
+
 	try {
 		selectElement.add(optn, null);
 	}
