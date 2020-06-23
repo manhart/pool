@@ -288,8 +288,9 @@
      * @access public
      * @param string $file file
      * @param string $type (optional) type
+     * @param array $dataset
      **/
-    function addJavaScript($file, $type='')
+    function addJavaScript($file, $type='', $dataset=[])
     {
         if (!in_array($file, $this->javaScriptFiles)) {
             $js = array(
@@ -297,6 +298,9 @@
             );
             if($type != '') {
                 $js['type'] = $type;
+            }
+            if($dataset) {
+                $js['dataset'] = $dataset;
             }
             $this->javaScripts[] = $js;
             $this->javaScriptFiles[] = $file;
