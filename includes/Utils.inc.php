@@ -21,7 +21,7 @@
 function getMicrotime($seed = 1)
 {
     list($usec, $sec) = explode(' ', microtime());
-    
+
     return ((float)$usec + ((float)$sec * $seed));
 }
 
@@ -54,10 +54,10 @@ function pray($data, $functions=0)
             foreach($data as $key => $value) {
 	            // while (list ($key, $value) = each ($data)) {
                 $type = gettype($value);
-                
+
                 if ($type == "array" || $type == "object") {
                     $result .= sprintf("<li>(%s) <b>%s</b>:\n", $type, $key);
-                    
+
                     if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
                         and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
                         $result .= pray($value, $sf);
@@ -86,7 +86,7 @@ function pray($data, $functions=0)
             $result .= "(empty)";
         }
     }
-    
+
     return $result;
 }
 
@@ -103,28 +103,28 @@ function formatBytes($bytes, $shortVersion = false)
     if ($bytes < 1024) {
         return (number_format($bytes, 2, ',', '.').(($shortVersion) ? ' b' : ' Bytes'));
     }
-    
+
     // KBytes
     $bytes = $bytes / 1024;
     if ($bytes < 1024) {
         return (number_format($bytes, 2, ',', '.').(($shortVersion) ? ' KB' : ' KBytes'));
     }
-    
+
     // MBytes
     $bytes = $bytes / 1024;
     if ($bytes < 1024) {
         return (number_format($bytes, 2, ',', '.').(($shortVersion) ? 'MB' : ' MBytes'));
     }
-    
+
     // GBytes
     $bytes = $bytes / 1024;
     if ($bytes < 1024) {
         return (number_format($bytes, 2, ',', '.').(($shortVersion) ? 'GB' : ' GBytes'));
     }
-    
+
     // TBytes
     $bytes = $bytes / 1024;
-    
+
     return (number_format($bytes, 3, ',', '.').(($shortVersion) ? 'TB' : 'TBytes'));
 }
 
@@ -168,7 +168,7 @@ function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
             $fields[$fldCount] .= $line[$i];
         }
     }
-    
+
     return $fields;
 }
 
@@ -197,7 +197,7 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
                 }
                 else $enclosed = !$enclosed;
                 break;
-            
+
             case $delim:
                 if (!$enclosed) {
                     $ret_array[$linecount][$fldcount++] = $fldval;
@@ -205,12 +205,12 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
                 }
                 else $fldval .= $chr;
                 break;
-            
+
             case "\r":
                 if (!$enclosed && $data[$i + 1] == "\n") {
                     continue 2;
                 }
-            
+
             case "\n":
                 if (!$enclosed) {
                     $ret_array[$linecount++][$fldcount] = $fldval;
@@ -219,14 +219,14 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
                 }
                 else $fldval .= $chr;
                 break;
-            
+
             default:
                 $fldval .= $chr;
         }
     }
     if ($fldval) $ret_array[$linecount][$fldcount] = $fldval;
     unset($fldval);
-    
+
     return $ret_array;
 }
 
@@ -250,7 +250,7 @@ function array_change_value_case($input, $case=CASE_LOWER)
     {
         $item = strtolower($item);
     }
-    
+
     /**
      * Diese private Funktion gehoert zur Funktion array_change_value_case!
      *
@@ -262,14 +262,14 @@ function array_change_value_case($input, $case=CASE_LOWER)
     {
         $item = strtoupper($item);
     }
-    
+
     if ($case == CASE_LOWER) {
         array_walk($input, 'arrayStrToLower');
     }
     elseif ($case == CASE_UPPER) {
         array_walk($input, 'arrayStrToUpper');
     }
-    
+
     return $input;
 }
 
@@ -292,11 +292,11 @@ function getDateOfWeeknum($week, $year = '')
     // echo date('d.m.Y', $firstdate) . '<br>';
     $kw = strftime('%V', $firstdate)/* . '<br>'*/
     ;
-    
+
     // Sekunden eines Tages / Woche
     $secday = 60 * 60 * 24;
     $secweek = 7 * $secday;
-    
+
     if (date('D', $firstdate) == 'Mon') {
         $mondate = $firstdate;
     }
@@ -309,7 +309,7 @@ function getDateOfWeeknum($week, $year = '')
         else {
             $var = 'next';
         }
-        
+
         if ((int)$kw == 1) {
             $mondate = (strtotime($var.' Monday', $firstdate) - $secweek);
         }
@@ -318,39 +318,39 @@ function getDateOfWeeknum($week, $year = '')
         }
     }
     //	echo 'datum: ' . date('d.m.Y', $mondate);
-    
+
     // create Array
     $date = Array();
-    
+
     // Fuer jeden Tag genau das Datum
     $date['Monday'] = strtotime('+'.($week - 1).' week', $mondate);
     $date['Montag'] = $date['Monday'];
     $date[1] = $date['Monday'];
-    
+
     $date['Tuesday'] = ($date['Monday'] + (1 * $secday));
     $date['Dienstag'] = $date['Tuesday'];
     $date[2] = $date['Tuesday'];
-    
+
     $date['Wednesday'] = ($date['Monday'] + (2 * $secday));
     $date['Mittwoch'] = $date['Wednesday'];
     $date[3] = $date['Wednesday'];
-    
+
     $date['Thursday'] = ($date['Monday'] + (3 * $secday));
     $date['Donnerstag'] = $date['Thursday'];
     $date[4] = $date['Thursday'];
-    
+
     $date['Friday'] = ($date['Monday'] + (4 * $secday));
     $date['Freitag'] = $date['Friday'];
     $date[5] = $date['Friday'];
-    
+
     $date['Saturday'] = ($date['Monday'] + (5 * $secday));
     $date['Samstag'] = $date['Saturday'];
     $date[6] = $date['Saturday'];
-    
+
     $date['Sunday'] = ($date['Monday'] + (6 * $secday));
     $date['Sonntag'] = $date['Sunday'];
     $date[7] = $date['Sunday'];
-    
+
     return $date;
 }
 
@@ -362,7 +362,7 @@ function getTimestmapOfCalenderWeek($calenderWeek, $year)
     $sommertime = false;
     $day = 60 * 60 * 24;
     $week = $day * 7;
-    
+
     $monday = firstCW($year) + ($week * ($calenderWeek - 1));
     if (date('I', $monday)) { // Sommerzeit
         $monday -= 3600;
@@ -378,7 +378,7 @@ function getTimestmapOfCalenderWeek($calenderWeek, $year)
     if ($sommertime and date('I', $achter) == 0) { // Winderzeit
         $achter += 3600;
     }
-    
+
     return array(
         1 => $monday,
         2 => $tuesday,
@@ -401,7 +401,7 @@ function getTimestmapOfCalenderWeek($calenderWeek, $year)
 function getMonthOfWeek($week, $year = '')
 {
     $weekdays = getDateOfWeeknum($week, $year);
-    
+
     return date('m', $weekdays[4]);
 }
 
@@ -417,10 +417,10 @@ function is_date($string, &$date)
     $datepieces = explode('.', $string, 3);
     if (isset($datepieces[2]) and checkdate((int)$datepieces[1], (int)$datepieces[0], (int)$datepieces[2])) {
         $date = $datepieces;
-        
+
         return true;
     }
-    
+
     return false;
 }
 
@@ -436,7 +436,7 @@ function is_date_en($date, $delim = '-')
     if (isset($datepieces[2]) and checkdate((int)$datepieces[1], (int)$datepieces[2], (int)$datepieces[0])) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -452,15 +452,15 @@ function is_date_en($date, $delim = '-')
 function getSeriesOfAppointments($from, $to, $intervall = 7, $step = 1)
 {
     $dates = array();
-    
+
     if (empty($to)) {
         return array(0 => array('timestamp' => $from, 'date' => date('d.m.Y', $from), 'step' => $step));
     }
-    
+
     if ($intervall > 0 and $step > 0 and $to >= $from) {
         $secDay = 86400; // Sekunden eines Tages
         $rhythmus = $intervall * $secDay;
-        
+
         $diff = ($to + ($secDay - 1)) - $from;
         $numAppointments = ceil(($diff / $rhythmus) / $step);
         if (@constant('DEBUG')) echo 'Anzahl generierter Termine: '.$numAppointments."\n";
@@ -482,7 +482,7 @@ function getSeriesOfAppointments($from, $to, $intervall = 7, $step = 1)
             unset($new_date);
         }
     }
-    
+
     return $dates;
 }
 
@@ -498,7 +498,7 @@ function firstCW($jahr)
 {
     $erster = mktime(0, 0, 0, 1, 1, $jahr);
     $wtag = date('w', $erster);
-    
+
     if ($wtag <= 4) {
         /**
          * Donnerstag oder kleiner: auf den Montag zur�ckrechnen.
@@ -511,7 +511,7 @@ function firstCW($jahr)
          */
         $montag = mktime(0, 0, 0, 1, 1 + (7 - $wtag + 1), $jahr);
     }
-    
+
     return $montag;
 }
 
@@ -529,11 +529,11 @@ function mondayCW($kw, $jahr)
     $mon_monat = date('m', $firstmonday);
     $mon_jahr = date('Y', $firstmonday);
     $mon_tage = date('d', $firstmonday);
-    
+
     $tage = ($kw - 1) * 7;
-    
+
     $mondaykw = mktime(0, 0, 0, $mon_monat, $mon_tage + $tage, $mon_jahr);
-    
+
     return $mondaykw;
 }
 
@@ -560,7 +560,7 @@ function weekOfYear($day = '', $month = '', $year = '')
     $iso = gregorianToISO($day, $month, $year);
     $parts = explode('-', $iso);
     $week_number = intval($parts[1]);
-    
+
     return $week_number;
 } // end func weekOfYear
 
@@ -633,7 +633,7 @@ function gregorianToISO($day, $month, $year)
     if ($weeknumber < 10) {
         $weeknumber = '0'.$weeknumber;
     }
-    
+
     return "{$yearnumber}-{$weeknumber}-{$weekday}";
 }
 
@@ -665,15 +665,15 @@ function isLeapYear($year = '')
     if (empty($year)) {
         $year = dateNow('%Y');
     }
-    
+
     if (preg_match('/\D/', $year)) {
         return false;
     }
-    
+
     if ($year < 1000) {
         return false;
     }
-    
+
     if ($year < 1582) {
         // vor Gregorio XIII - 1582
         return ($year % 4 == 0);
@@ -712,7 +712,7 @@ function isWeekendDay($day, $month, $year)
 function getWeekNumber($day, $month, $year)
 {
     $weekNumber = (int)date('W', mktime(0, 0, 0, $month, $day, $year));
-    
+
     return $weekNumber;
 }
 
@@ -725,7 +725,7 @@ function getWeekNumber($day, $month, $year)
 function getWeekNumberFromTS($ts)
 {
     $weekNumber = (int)date('W', $ts);
-    
+
     return $weekNumber;
 }
 
@@ -751,27 +751,27 @@ function getMonthInfo($month, $year)
     $firstCalendarWeek = (int)strftime('%V', $tsFirstDay_of_Month);
     $firstCalendarWeek_Year = (int)strftime('%G', $tsFirstDay_of_Month);
     // echo 'Fuer monat: ' . date('m.Y', $tsFirstDay_of_Month) . '<br>';
-    
+
     #### Tage in diesem Monat
     $numberOfDays = (int)date('t', $tsFirstDay_of_Month);
-    
+
     #### letzter Tag im Monat, letzte KW im Monat
     $tsLastDay_of_Month = mktime(0, 0, 0, $month, $numberOfDays, $year);
     $lastCalendarWeek = (int)strftime('%V', $tsLastDay_of_Month);
-    
+
     $wochentag = (int)strftime('%u', $tsFirstDay_of_Month); // 1-7 (Mo-So)
     if ($wochentag > 1) $day = 1 - ($wochentag - 1);
-    
+
     #### erster Tag der ersten Kalenderwoche im gesuchten Monat x
     $firstDayOfCalendarWeek = mktime(0, 0, 0, $month, $day, $year);
-    
+
     $cws = array();
     do {
         $day = (int)date('d', $firstDayOfCalendarWeek);
         $month = (int)date('m', $firstDayOfCalendarWeek);
         $year = (int)strftime('%Y', $firstDayOfCalendarWeek);
         $calendarWeek = (int)strftime('%V', $firstDayOfCalendarWeek);
-        
+
         array_push($cws, array(
                 'nr' => $calendarWeek,
                 'd' => $day,
@@ -779,11 +779,11 @@ function getMonthInfo($month, $year)
                 'y' => $year
             )
         );
-        
+
         $day = $day + 7; // oa Wocha dazua = 7 Dog
         $firstDayOfCalendarWeek = mktime(0, 0, 0, $month, $day, $year);
     } while ($calendarWeek != $lastCalendarWeek);
-    
+
     $monthInfo = array(
         'calendarWeeks' => $cws,
         'firstCalendarWeek' => $firstCalendarWeek,
@@ -793,7 +793,7 @@ function getMonthInfo($month, $year)
         'tsLastDayOfMonth' => $tsLastDay_of_Month,
         'numberOfDays' => $numberOfDays
     );
-    
+
     // echo pray($monthInfo);
     return $monthInfo;
 }
@@ -819,66 +819,66 @@ function getMonth($decimal_value = 0, $locale = 'de_DE')
             $result['de_DE'] = 'Januar';
             $result['en_US'] = 'January';
             break;
-        
+
         case 2:
             $result['de_DE'] = 'Februar';
             $result['en_US'] = 'February';
             break;
-        
+
         case 3:
             $result['de_DE'] = 'M&auml;rz';
             $result['en_US'] = 'March';
             break;
-        
+
         case 4:
             $result['de_DE'] = 'April';
             $result['en_US'] = 'April';
             break;
-        
+
         case 5:
             $result['de_DE'] = 'Mai';
             $result['en_US'] = 'May';
             break;
-        
+
         case 6:
             $result['de_DE'] = 'Juni';
             $result['en_US'] = 'June';
             break;
-        
+
         case 7:
             $result['de_DE'] = 'Juli';
             $result['en_US'] = 'July';
             break;
-        
+
         case 8:
             $result['de_DE'] = 'August';
             $result['en_US'] = 'August';
             break;
-        
+
         case 9:
             $result['de_DE'] = 'September';
             $result['en_US'] = 'September';
             break;
-        
+
         case 10:
             $result['de_DE'] = 'Oktober';
             $result['en_US'] = 'October';
             break;
-        
+
         case 11:
             $result['de_DE'] = 'November';
             $result['en_US'] = 'November';
             break;
-        
+
         case 12:
             $result['de_DE'] = 'Dezember';
             $result['en_US'] = 'December';
             break;
-        
+
         default:
             trigger_error('Unknown Month "'.$decimal_value.'" in '.__FUNCTION__);
     }
-    
+
     if (!is_null($locale)) {
         return $result[$locale];
     }
@@ -907,42 +907,42 @@ function getWeekday($decimal_value = 0, $locale = 'de_DE')
             $result['de_DE'] = 'montag';
             $result['en_US'] = 'monday';
             break;
-        
+
         case 2:
             $result['de_DE'] = 'dienstag';
             $result['en_US'] = 'tuesday';
             break;
-        
+
         case 3:
             $result['de_DE'] = 'mittwoch';
             $result['en_US'] = 'wednesday';
             break;
-        
+
         case 4:
             $result['de_DE'] = 'donnerstag';
             $result['en_US'] = 'thursday';
             break;
-        
+
         case 5:
             $result['de_DE'] = 'freitag';
             $result['en_US'] = 'friday';
             break;
-        
+
         case 6:
             $result['de_DE'] = 'samstag';
             $result['en_US'] = 'saturday';
             break;
-        
+
         case 0:
         case 7:
             $result['de_DE'] = 'sonntag';
             $result['en_US'] = 'sunday';
             break;
-        
+
         default:
             trigger_error('Unknown Weekday "'.$decimal_value.'" in '.__FUNCTION__);
     }
-    
+
     if (!is_null($locale)) {
         return $result[$locale];
     }
@@ -966,44 +966,44 @@ function getWeekdayAsInt($weekday)
         case 'monday'        :
             $result = 1;
             break;
-        
+
         case 'dienstag'        :
         case 'di'            :
         case 'tuesday'        :
             $result = 2;
             break;
-        
+
         case 'mittwoch'        :
         case 'mi'            :
         case 'wednesday'    :
             $result = 3;
             break;
-        
+
         case 'donnerstag'    :
         case 'do'            :
         case 'thursday'        :
             $result = 4;
             break;
-        
+
         case 'freitag'        :
         case 'fr'            :
         case 'friday'        :
             $result = 5;
             break;
-        
+
         case 'samstag'        :
         case 'sa'            :
         case 'saturday'        :
             $result = 6;
             break;
-        
+
         case 'sonntag'        :
         case 'so'            :
         case 'sunday'        :
             $result = 7;
             break;
     }
-    
+
     return $result;
 }
 
@@ -1021,7 +1021,7 @@ function getWeekdayAsDayBarValue($weekday)
     foreach ($weekday as $day) {
         $retValue += pow(2, ($day - 1));
     }
-    
+
     return $retValue;
 }
 
@@ -1035,7 +1035,7 @@ function getWeekdayStringAsDayBarValue($weekday)
 {
     $weekday = getWeekdayAsInt($weekday);
     $weekday = pow(2, ($weekday - 1));
-    
+
     return $weekday;
 }
 
@@ -1057,10 +1057,10 @@ function getDayBarValueAsString($value, $short = true)
     if (16 & $value) $ayDays[] = 5;
     if (32 & $value) $ayDays[] = 6;
     if (64 & $value) $ayDays[] = 7;
-    
+
     sort($ayDays);
     $count = count($ayDays);
-    
+
     $bOrder = true;
     for ($w = 0; $w < $count; $w++) {
         if ($result != '') $result .= ', ';
@@ -1076,7 +1076,7 @@ function getDayBarValueAsString($value, $short = true)
         if ($short) $wd2 = substr($wd2, 0, 2);
         $result = ucfirst($wd1).'-'.ucfirst($wd2);
     }
-    
+
     return $result;
 }
 
@@ -1096,7 +1096,7 @@ function getDayBarValueAsArray($value)
     if (16 & $value) $ayDays[] = 5;
     if (32 & $value) $ayDays[] = 6;
     if (64 & $value) $ayDays[] = 7;
-    
+
     return $ayDays;
 }
 
@@ -1115,7 +1115,7 @@ if (!function_exists('addEndingSlash')) {
                 $value .= '/';
             }
         }
-        
+
         return $value;
     }
 }
@@ -1136,7 +1136,27 @@ if (!function_exists('removeEndingSlash')) {
                 $value = substr($value, 0, $len);
             }
         }
-        
+
+        return $value;
+    }
+}
+
+if (!function_exists('removeBeginningSlash')) {
+    /**
+     * Entfernt endenden Slash im String
+     *
+     * @access public
+     * @param string $value String (z.B. Verzeichnis)
+     * @return string String ohne Slash am Ende
+     */
+    function removeBeginningSlash($value)
+    {
+        if (!empty($value)) {
+            if ($value[0] == '/') {
+                $value = substr($value, 1);
+            }
+        }
+
         return $value;
     }
 }
@@ -1160,7 +1180,7 @@ if (!function_exists('is_a')) {
                 return true;
             }
         }
-        
+
         return false;
     }
 }
@@ -1182,7 +1202,7 @@ function mkdirs($strPath, $mode = 0777)
         if (!mkdirs($pStrPath, $mode)) {
             return false;
         }
-        
+
         return @mkdir($strPath, $mode);
     }
 }
@@ -1204,7 +1224,7 @@ function hex_encode($text)
         $encoded = chunk_split($encoded, 2, '%');
         $encoded = '%'.substr($encoded, 0, strlen($encoded) - 1);
     }
-    
+
     return $encoded;
 }
 
@@ -1230,7 +1250,7 @@ function getJSEMailLink($email, $caption = null)
 					var caption = "'.$en_caption.'";
 					var at = "'.$en_at.'";
 					var ext = "'.$en_ext.'";';
-    
+
     $js .= 'document.write(\'<a href="mailto:\' + caption + at + ext + \'">\');';
     if ($caption) {
         $js .= '	document.write(\''.$caption.'\');';
@@ -1239,11 +1259,11 @@ function getJSEMailLink($email, $caption = null)
         $js .= '	document.write(urlDecode("'.$en_caption.'") + urlDecode("'.$en_at.'") + urlDecode("'.$en_ext.'"));';
     }
     $js .= '	document.write(\'</a>\');';
-    
+
     $js .= '
 				//-->
 				</script>';
-    
+
     return $js;
 }
 
@@ -1283,7 +1303,7 @@ function deleteDir($dir, $rmSelf = true)
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -1330,7 +1350,7 @@ function countWords($str, $realwords = 1)
     if ($realwords) {
         $str = preg_replace("/(\s+)[^a-zA-Z0-9](\s+)/", " ", $str);
     }
-    
+
     return (count(split("[[:space:]]+", $str)));
 }
 
@@ -1345,7 +1365,7 @@ function countWords($str, $realwords = 1)
 function countSentences($str)
 {
     if (is_array($str)) return false;
-    
+
     return preg_match_all('/[^\s]\.(?!\w)/', $str, $blah);
 }
 
@@ -1360,7 +1380,7 @@ function countSentences($str)
 function countParagraphs($str)
 {
     if (is_array($str)) return false;
-    
+
     return count(preg_split('/[\r\n]+/', $str));
 }
 
@@ -1380,7 +1400,7 @@ function stringInfo($str, $realwords = 1)
     $info['words'] = countWords($str, $realwords);
     $info['sentences'] = countSentences($str);
     $info['paragraphs'] = countParagraphs($str);
-    
+
     return $info;
 }
 
@@ -1414,7 +1434,7 @@ function custom_tags($foo)
         $foo = preg_replace("/\[\*\](.*?)$/ism", "<li>\\1</li>", $foo);
         $foo = preg_replace("/\[color=(.*?)\](.*?)\[\/color\]/is", "<font color=\"\\1\">\\2</font>", $foo);
         $foo = preg_replace("/\[colour=(.*?)\](.*?)\[\/colour\]/is", "<font color=\"\\1\">\\2</font>", $foo);
-        
+
         return nl2br($foo);
     }
     else {
@@ -1439,7 +1459,7 @@ function custom_tags($foo)
             }
         }
     }
-    
+
     return $foo;
 }
 
@@ -1462,7 +1482,7 @@ function strip_custom_tags($foo)
         $foo = preg_replace("/\[colour=(.*?)\](.*?)\[\/colour\]/is", "\\2", $foo);
         $foo = eregi_replace("\\[\/colour\\]", "", $foo);
         $foo = eregi_replace("\\[\/color\\]", "", $foo);
-        
+
         return $foo;
     }
     else {
@@ -1489,7 +1509,7 @@ function strip_custom_tags($foo)
             }
         }
     }
-    
+
     return $foo;
 }
 
@@ -1506,7 +1526,7 @@ function stripRs($foo)
 {
     if (!is_array($foo)) {
         $foo = str_replace("\r", "", $foo);
-        
+
         return $foo;
     }
     else {
@@ -1517,7 +1537,7 @@ function stripRs($foo)
             else $foo[$k] = str_replace("\r", "", $foo[$k]);
         }
     }
-    
+
     return $foo;
 }
 
@@ -1534,7 +1554,7 @@ function stripNs($foo)
 {
     if (!is_array($foo)) {
         $foo = str_replace("\n", "", $foo);
-        
+
         return $foo;
     }
     else {
@@ -1545,7 +1565,7 @@ function stripNs($foo)
             else $foo[$k] = str_replace("\n", "", $foo[$k]);
         }
     }
-    
+
     return $foo;
 }
 
@@ -1590,7 +1610,7 @@ function remove_word($str = '', $end = 0)
     if (is_array($str)) return $str;
     $str = trim($str);
     if (!substr_count($str, ' ')) return $str;
-    
+
     return ($end ? substr($str, 0, strrpos($str, ' ')) :
         substr($str, strpos($str, ' ') + 1, strlen($str)));
 }
@@ -1612,10 +1632,10 @@ function shorten($str = '', $len = 150, $more = 1, $backtrack = true)
     if ($str == '') return $str;
     if (is_array($str)) return $str;
     $str = trim($str);
-    
+
     // if it's les than the size given, then return it
     if (strlen($str) <= $len) return $str;
-    
+
     // else get that size of text
     $encoding = @mb_detect_encoding($str);
     if ($encoding === false) {
@@ -1625,16 +1645,16 @@ function shorten($str = '', $len = 150, $more = 1, $backtrack = true)
     else {
         $str = mb_substr($str, 0, $len, $encoding);
     }
-    
+
     // backtrack to the end of a word
     if ($str != '') {
         // check to see if there are any spaces left
         if (!substr_count($str, ' ')) {
             if ($more) $str .= (($more == 1) ? '...' : $more);
-            
+
             return $str;
         }
-        
+
         // backtrack
         if ($backtrack) {
             while (strlen($str) && ($str[strlen($str) - 1] != ' ')) {
@@ -1644,7 +1664,7 @@ function shorten($str = '', $len = 150, $more = 1, $backtrack = true)
         $str = mb_substr($str, 0, -1, $encoding);
         if ($more) $str .= (($more == 1) ? '...' : $more);
     }
-    
+
     return $str;
 }
 
@@ -1666,7 +1686,7 @@ function loadJpeg($imgname, $text = 'Fehler beim �ffnen von: %s')
         /* Ausgabe einer Fehlermeldung */
         ImageString($im, 1, 5, 5, sprintf($text, $imgname), $tc);
     }
-    
+
     return $im;
 }
 
@@ -1683,7 +1703,7 @@ function imageremoveframe($im_src, $red = 255, $green = 255, $blue = 255, $toler
 {
     $imagesizey = imagesy($im_src);
     $imagesizex = imagesx($im_src);
-    
+
     $toplefty = -1;
     $topleftx = -1;
     for ($y = 0; $y < $imagesizey; $y++) {
@@ -1697,7 +1717,7 @@ function imageremoveframe($im_src, $red = 255, $green = 255, $blue = 255, $toler
             }
         }
     }
-    
+
     $toprighty = -1;
     $toprightx = -1;
     for ($y = 0; $y < $imagesizey; $y++) {
@@ -1711,7 +1731,7 @@ function imageremoveframe($im_src, $red = 255, $green = 255, $blue = 255, $toler
             }
         }
     }
-    
+
     $bottomlefty = -1;
     $bottomleftx = -1;
     for ($y = $imagesizey - 1; $y >= 0; $y--) {
@@ -1725,7 +1745,7 @@ function imageremoveframe($im_src, $red = 255, $green = 255, $blue = 255, $toler
             }
         }
     }
-    
+
     $bottomrighty = -1;
     $bottomrightx = -1;
     for ($y = $imagesizey - 1; $y >= 0; $y--) {
@@ -1739,12 +1759,12 @@ function imageremoveframe($im_src, $red = 255, $green = 255, $blue = 255, $toler
             }
         }
     }
-    
+
     $topX = ($topleftx < $bottomleftx) ? $topleftx : $bottomleftx;
     $topY = ($toplefty < $toprighty) ? $toplefty : $toprighty;
     $bottomX = ($toprightx > $bottomrightx) ? $toprightx : $bottomrightx;
     $bottomY = ($bottomlefty > $bottomrighty) ? $bottomlefty : $bottomrighty;
-    
+
     /*echo $toplefty . ' - ' . $topleftx;
 		echo '<br>';
 		echo $toprighty . ' - ' . $toprightx;
@@ -1757,7 +1777,7 @@ function imageremoveframe($im_src, $red = 255, $green = 255, $blue = 255, $toler
 		*/
     $im_dst = imagecreatetruecolor($bottomX - $topX, $bottomY - $topY);
     imagecopy($im_dst, $im_src, 0, 0, $topX, $topY, $bottomX - $topX, $bottomY - $topY);
-    
+
     return $im_dst;
 }
 
@@ -1773,7 +1793,7 @@ function image_createThumb($im_src, $maxWidth, $maxHeight)
 {
     $imagesizey = imagesy($im_src);
     $imagesizex = imagesx($im_src);
-    
+
     // image dest size $imagesizex = width, $imagesizey = height
     $srcRatio = $imagesizex / $imagesizey; // width/height ratio
     $destRatio = $maxWidth / $maxHeight;
@@ -1785,14 +1805,14 @@ function image_createThumb($im_src, $maxWidth, $maxHeight)
         $destSize[0] = $maxWidth;
         $destSize[1] = $maxWidth / $srcRatio;
     }
-    
+
     // true color image, with anti-aliasing
     $im_dest = imageCreateTrueColor($destSize[0], $destSize[1]);
     //imageAntiAlias($destImage, true);
-    
+
     // resampling
     imageCopyResampled($im_dest, $im_src, 0, 0, 0, 0, $destSize[0], $destSize[1], $imagesizex, $imagesizey);
-    
+
     return $im_dest;
 }
 
@@ -1948,7 +1968,7 @@ function OEMtoAnsi(& $text)
         254 => '�',
         255 => '�'
     );
-    
+
     for ($i = 0; $i < strlen($text); $i++) {
         $ord = ord($text[$i]);
         if ($ord > 127) {
@@ -1956,7 +1976,7 @@ function OEMtoAnsi(& $text)
         }
     }
     unset($i, $ord, $extended_ascii);
-    
+
     return $text;
 }
 
@@ -1975,7 +1995,7 @@ function formatDateTime($datetime, $format)
             $datetime = $timestamp;
         }
     }
-    
+
     return strftime($format, $datetime);
 }
 
@@ -1993,7 +2013,7 @@ function formatDateTime($datetime, $format)
 function formatDEDateToEN($strDate, $delimiter = '.')
 {
     $arrDate = explode($delimiter, $strDate);
-    
+
     return strftime("%Y-%m-%d", strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0]));
 }
 
@@ -2012,7 +2032,7 @@ function convertDEDateToUnix($strDate, $delimiter = '.')
         $date = explode($delimiter, $strDate);
         $time = mktime(0, 0, 0, (int)$date[1], (int)$date[0], (int)$date[2]);
     }
-    
+
     return $time;
 }
 
@@ -2054,7 +2074,7 @@ function convertDEDateAndTimeToUnix($strDate, $strZeit, $delimiterD = '.', $deli
         }
         $time = mktime($stu, $min, $sek, (int)$date[1], (int)$date[0], (int)$date[2]);
     }
-    
+
     return $time;
 }
 
@@ -2081,7 +2101,7 @@ function convertENDateAndTimeToUnix($strDate, $strZeit, $delimiterD = '-', $deli
         #echo "#### ".(int)$date[1]." - ".(int)$date[2]." - ".(int)$date[0]."\n";
         $time = mktime($stu, $min, $sek, (int)$date[1], (int)$date[2], (int)$date[0]);
     }
-    
+
     return $time;
 }
 
@@ -2089,7 +2109,7 @@ function win_to_utf8($str)
 {
     $str = convert_cyr_string($str, 'w', 'i'); // w - windows-1251   to  i - iso8859-5
     $str = utf8_encode($str); //  iso8859-5   to  utf8
-    
+
     return $str;
 }
 
@@ -2097,7 +2117,7 @@ function utf8_to_win($str)
 {
     $str = utf8_decode($str); //  utf8 to iso8859-5
     $str = convert_cyr_string($str, 'i', 'w'); // w - windows-1251   to  i - iso8859-5
-    
+
     return $str;
 }
 
@@ -2125,7 +2145,7 @@ function strip_body($file_content)
     if (preg_match('#<body[^>]*?>(.*?)</body>#si', $file_content, $matches)) {
         $body = $matches[1];
     }
-    
+
     return $body;
 }
 
@@ -2141,7 +2161,7 @@ function strip_head($html)
     if (preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches)) {
         $head = $matches[1];
     }
-    
+
     return $head;
 }
 
@@ -2157,18 +2177,18 @@ function cleanUpHTML($text)
 {
     // remove escape slashes
     $text = stripslashes($text);
-    
+
     // trim everything before the body tag right away, leaving possibility for body attributes
     $text = stristr($text, "<body");
-    
+
     // strip tags, still leaving attributes, second variable is allowable tags
     $text = strip_tags($text, '<p><b><i><u><a><h1><h2><h3><h4><h4><h5><h6>');
-    
+
     // removes the attributes for allowed tags, use separate replace for heading tags since a
     // heading tag is two characters
     $text = ereg_replace("<([p|b|i|u])[^>]*>", "<\\1>", $text);
     $text = ereg_replace("<([h1|h2|h3|h4|h5|h6][1-6])[^>]*>", "<\\1>", $text);
-    
+
     return ($text);
 }
 
@@ -2217,7 +2237,7 @@ function getClientOS()
     else {
         $os = 'Other';
     }
-    
+
     return $os;
 }
 
@@ -2232,7 +2252,7 @@ function getBrowserOS()
     $bname = 'Unknown';
     $platform = 'Unknown';
     $version = "";
-    
+
     //First get the platform?
     if (preg_match('/linux/i', $u_agent)) {
         $platform = 'linux';
@@ -2243,7 +2263,7 @@ function getBrowserOS()
     elseif (preg_match('/windows|win32/i', $u_agent)) {
         $platform = 'windows';
     }
-    
+
     // Next get the name of the useragent yes seperately and for good reason
     if (preg_match('/MSIE/i', $u_agent) && !preg_match('/Opera/i', $u_agent)) {
         $bname = 'Internet Explorer';
@@ -2269,7 +2289,7 @@ function getBrowserOS()
         $bname = 'Netscape';
         $ub = "Netscape";
     }
-    
+
     // finally get the correct version number
     $known = array('Version', $ub, 'other');
     $pattern = '#(?<browser>'.join('|', $known).
@@ -2277,7 +2297,7 @@ function getBrowserOS()
     if (!preg_match_all($pattern, $u_agent, $matches)) {
         // we have no matching number just continue
     }
-    
+
     // see how many we have
     $i = count($matches['browser']);
     if ($i != 1) {
@@ -2293,12 +2313,12 @@ function getBrowserOS()
     else {
         $version = $matches['version'][0];
     }
-    
+
     // check if we have a number
     if ($version == null || $version == "") {
         $version = "?";
     }
-    
+
     return array(
         'userAgent' => $u_agent,
         'name' => $bname,
@@ -2330,7 +2350,7 @@ function getClientBrowser()
     else {
         $browser = 'Other';
     }
-    
+
     return array(
         'name' => $browser,
         'version' => $version
@@ -2363,7 +2383,7 @@ function getClientIP()
     }
     return '';
     }
-    
+
 /**
  * creates a browser fingerprint
  *
@@ -2409,7 +2429,7 @@ function getWoblaKW($mon, $day, $year, $wobla_spec = 4)
     if ($weekday >= $wobla_spec) {
         $kw = strftime('%V', mktime(0, 0, 0, $mon, $day + 7, $year)); // KW der n�chsten Woche ausrechnen
     }
-    
+
     return sprintf('%02d', $kw);
 }
 
@@ -2430,7 +2450,7 @@ function getWoblaMonat($mon, $day, $year, $wobla_spec = 4)
     if ($weekday >= $wobla_spec) {
         $monat = strftime('%m', mktime(0, 0, 0, $mon, $day + 7, $year)); // KW der naechsten Woche ausrechnen
     }
-    
+
     return sprintf('%02d', $monat);
 }
 
@@ -2452,7 +2472,7 @@ function getWoblaJahr($mon, $day, $year, $wobla_spec = 4)
     if ($weekday >= $wobla_spec) {
         $jahr = strftime('%G', mktime(0, 0, 0, $mon, $day + 7, $year)); // KW der n�chsten Woche ausrechnen
     }
-    
+
     return sprintf('%04d', $jahr);
 }
 
@@ -2468,7 +2488,7 @@ function getContentFromInclude($includeFile)
     include($includeFile);
     $content = ob_get_contents();
     ob_end_clean();
-    
+
     return $content;
 }
 
@@ -2500,7 +2520,7 @@ function formatDBTimestampAsDatetime($datetime, $format = '%d.%m.%Y %H:%M')
     $hour = substr($datetime, 8, 2);
     $min = substr($datetime, 10, 2);
     $sec = substr($datetime, 12, 2);
-    
+
     return formatDateTime(mktime($hour, $min, $sec, $mon, $day, $year), $format);
 }
 
@@ -2519,7 +2539,7 @@ function arrayToAttr($array)
             $strHtmlTagAttr .= $key.'="'.$value.'"';
         }
     }
-    
+
     return $strHtmlTagAttr;
 }
 
@@ -2565,7 +2585,7 @@ function replaceUmlauts($subject)
 {
     $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü', chr(196), chr(228), chr(214), chr(246), chr(220), chr(252), chr(223), ' ', '\'', '`', '´', '/');
     $replace = array('ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue', 'Ae', 'ae', 'Oe', 'oe', 'Ue', 'ue', 'ss', '_', '', '', '', '_');
-    
+
     return str_replace($pattern, $replace, $subject);
 }
 
@@ -2580,7 +2600,7 @@ function formatFilename($filename, $replace = '')
 {
     $filename = replaceUmlauts($filename);
     $pattern = array('|', '*', ':', '<', '>', '"', '?');
-    
+
     return str_replace($pattern, $replace, $filename);
 }
 
@@ -2594,7 +2614,7 @@ function umlauts2html($subject)
 {
     $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
     $replace = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;');
-    
+
     return str_replace($pattern, $replace, $subject);
 }
 
@@ -2608,7 +2628,7 @@ function html2umlauts($subject)
 {
     $pattern = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;');
     $replace = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-    
+
     return str_replace($pattern, $replace, $subject);
 }
 
@@ -2622,7 +2642,7 @@ function sonderzeichen2Mailtozeichen($subject)
 {
     $pattern = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;', '�', '�', '�', '�', '�', '�', '�', 'ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
     $replace = array('%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC', '%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC', '%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC');
-    
+
     return str_replace($pattern, $replace, $subject);
 }
 
@@ -2636,7 +2656,7 @@ function sonder2umlauts($subject)
 {
     $pattern = array('%C3%A4', '%C3%B6', '%C3%BC', '%C3%9F', '%C3%84', '%C3%96', '%C3%9C', '%20', '%26', '%2C', '%2F', '%2B');
     $replace = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü', ' ', '&', ',', '/', '+');
-    
+
     return str_replace($pattern, $replace, $subject);
 }
 
@@ -2650,7 +2670,7 @@ function umlauts2htmlv2($subject)
 {
     $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
     $replace = array('&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';');
-    
+
     return str_replace($pattern, $replace, $subject);
 }
 
@@ -2696,7 +2716,7 @@ function string2bool($string)
 function isEmptyObject($obj)
 {
     foreach ($obj as $xyz) return false;
-    
+
     return true;
 }
 
@@ -2751,7 +2771,7 @@ function generateDirectory($string, $minOccurrence = 1, $minLen = 10, $char = ' 
         $string = substr($string, 0, $len);
     }
     $string = replaceUmlauts($string);
-    
+
     return $string;
 }
 
@@ -2766,7 +2786,7 @@ function printFiles($printer, $files)
     $files = array_map('escapeshellarg', $files);
     $command = 'lp -d '.$printer.' '.implode(' ', $files);
     exec($command, $output, $return_value);
-    
+
     return ($return_value == 0);
 }
 
@@ -2787,7 +2807,7 @@ function splitFixedLength($str)
         $pos += $arg;
     }
     unset($a, $pos, $arg, $str, $num_args);
-    
+
     return $record;
 }
 
@@ -2805,7 +2825,7 @@ function shellFileExists($file, $remote = '')
     exec($cmd, $arrOutFileExists);
     if (!isset($arrOutFileExists[0])) return false;
     $file_exists = (trim($arrOutFileExists[0]) === '1') ? true : false;
-    
+
     return $file_exists;
 }
 
@@ -2821,16 +2841,16 @@ function shellFileExists($file, $remote = '')
 function getSearchPattern4SQL($wert, $min = 2)
 {
     $len_wert = strlen($wert);
-    
+
     if ($len_wert > 0) {
         $pattern = $wert.'%';
         if ($len_wert > $min) {
             $pattern = '%'.$pattern;
         }
-        
+
         return $pattern;
     }
-    
+
     return '';
 }
 
@@ -2885,7 +2905,7 @@ function magicInfo($file, $line, $function, $class, $specific = array())
         }
     else $specific = array();
     }
-    
+
     return array_merge(array(
         'file' => $file,
         'line' => $line,
@@ -2917,10 +2937,10 @@ function array2json($arr)
     if (!is_array($arr)) {
         return json_encode($arr);
     }
-    
+
     $parts = array();
     $is_list = false;
-    
+
     // Ermitteln ob es sich bei dem Uebergabe-Array um ein numerisches/indexiertes Array handelt
     $keys = array_keys($arr);
     $max_length = count($arr) - 1;
@@ -2934,7 +2954,7 @@ function array2json($arr)
             }
         }
     }
-    
+
     foreach ($arr as $key => $value) {
         if (is_array($value)) { // Spezial Behandlung fuer Arrays
             if ($is_list) {
@@ -2947,7 +2967,7 @@ function array2json($arr)
         else {
             $str = '';
             if (!$is_list) $str = '"'.$key.'":';
-            
+
             // Spezial Behandlungen fuer mehrere Datentypen
             if (is_numeric($value)) {
                 $str .= $value;
@@ -2956,14 +2976,14 @@ function array2json($arr)
             elseif ($value === true) $str .= 'true';
             else $str .= '"'.addslashes($value).'"'; // alles andere
             // :TODO: Andere Datentypen (Objekt?)
-            
+
             $parts[] = $str;
         }
     }
     $json = implode(',', $parts);
-    
+
     if ($is_list) return '['.$json.']';//Rueckgabe: indexiertes JSON
-    
+
     return '{'.$json.'}';//Rueckgabe assoziatives JSON
 }
 
@@ -2988,11 +3008,11 @@ function arrayEncodeToRFC1738($array)
     else {
         if (is_string($array)) {
             $val = $array;
-            
+
             return rawurlencode($val);
         }
     }
-    
+
     return $array;
 }
 
@@ -3021,7 +3041,7 @@ if (!function_exists('array_combine')) {
     function array_combine($keys, $values)
     {
         foreach ($keys as $key) $array[$key] = array_shift($values);
-        
+
         return $array;
     }
 }
@@ -3036,7 +3056,7 @@ if (!function_exists('array_combine')) {
 function hyphenation($word)
 {
     $hyphenationPositions = array();
-    
+
     $wordLen = strlen($word);
     if ($wordLen > 2) {
         $allowHyphenation = false;
@@ -3055,7 +3075,7 @@ function hyphenation($word)
 			*/
         $splices = array('sch', 'ch', 'ph', 'ck', 'pf', 'br', 'pl', 'tr', 'st', 'gr');
         $divider = array('-', '/', '\\', '*', '#', ';', '.', '+', '=', ')', '(', '&', '!', '?', '<', '>', ':', ' ', '_', '~');
-        
+
         for ($i = 2; $i < $wordLen - 1; $i++) {
             $c0 = $word[$i - 1];
             if ($allowHyphenation == false and in_array($c0, $vowels)) {
@@ -3080,7 +3100,7 @@ function hyphenation($word)
             }
         }
     }
-    
+
     return $hyphenationPositions;
 }
 
@@ -3132,7 +3152,7 @@ function HTTPStatus($num)
         503 => "HTTP/1.1 503 Service Unavailable",
         504 => "HTTP/1.1 504 Gateway Time-out"
     );
-    
+
     header($http[$num]);
 }
 
@@ -3173,7 +3193,7 @@ if (!function_exists('array_intersect_key')) {
                     }
                 }
             }
-            
+
             return $isec;
         }
         else {
@@ -3183,7 +3203,7 @@ if (!function_exists('array_intersect_key')) {
                     $res[$key] = $isec[$key];
                 }
             }
-            
+
             return $res;
         }
     }
@@ -3199,7 +3219,7 @@ function move_file($source, $dest)
 {
     $res_copy = copy($source, $dest);
     if ($res_copy) $res_unlink = unlink($source);
-    
+
     return ($res_copy and $res_unlink);
 }
 
@@ -3215,7 +3235,7 @@ function move_file($source, $dest)
 function readFiles($path, $absolute = true, $filePattern = '/.JPG/i', $subdir = '')
 {
     $files = array();
-    
+
     $path = addEndingSlash($path).addEndingSlash($subdir);
     if ($res = opendir($path)) {
         while (($filename = readdir($res)) !== false) {
@@ -3227,7 +3247,7 @@ function readFiles($path, $absolute = true, $filePattern = '/.JPG/i', $subdir = 
         }
         closedir($res);
     }
-    
+
     return $files;
 }
 
@@ -3246,7 +3266,7 @@ function readFiles($path, $absolute = true, $filePattern = '/.JPG/i', $subdir = 
 function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPattern = '/^[^\.].*$/', $subdir = '', $callback = null)
 {
     $files = array();
-    
+
     $root = $path;
     $path = addEndingSlash($path).addEndingSlash($subdir);
     $res = @opendir($path);
@@ -3256,7 +3276,7 @@ function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPatt
     while (($filename = readdir($res)) !== false) {
         $file = $path.$filename;
         $fileRelative = addEndingSlash($subdir).$filename;
-        
+
         $filetyp = filetype($file);
         switch ($filetyp) {
             case 'dir':
@@ -3271,7 +3291,7 @@ function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPatt
                 // Doppelte gleichnamige Dateien gibt es nicht. Aber afufgrund der Callback Funktion implementiert (u.a. basename):
                 // $files = array_unique($files, SORT_STRING);
                 break;
-            
+
             case 'file':
                 if ($filePattern) {
                     if (!preg_match($filePattern, $filename)) {
@@ -3289,7 +3309,7 @@ function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPatt
         }
     }
     closedir($res);
-    
+
     return $files;
 }
 
@@ -3308,12 +3328,12 @@ function multisort($hauptArray, $columnName, $sorttype = SORT_STRING, $sortorder
     foreach ($hauptArray as $row) {
         $sortarr[] = $row[$columnName];
     }
-    
+
     if ($sorttype == SORT_STRING) {
         $sortarr = array_map('strtolower', $sortarr);
     }
     array_multisort($sortarr, $sortorder, $sorttype, $hauptArray);
-    
+
     return $hauptArray;
 }
 
@@ -3352,18 +3372,18 @@ function xmlEntities($s)
 {
     //build first an assoc. array with the entities we want to match
     $table1 = get_html_translation_table(HTML_ENTITIES, ENT_QUOTES);
-    
+
     //now build another assoc. array with the entities we want to replace (numeric entities)
     foreach ($table1 as $k => $v) {
         $table1[$k] = "/$v/";
         $c = htmlentities($k, ENT_QUOTES, "UTF-8");
         $table2[$c] = "&#".ord($k).";";
     }
-    
+
     //now perform a replacement using preg_replace
     //each matched value in array 1 will be replaced with the corresponding value in array 2
     $s = preg_replace($table1, $table2, $s);
-    
+
     return $s;
 }
 
@@ -3383,7 +3403,7 @@ function xml_entitiy_encode($string, $charset = 'ISO-8859-1')
     else {
         $strout = htmlentities($string, ENT_QUOTES, $charset, false);
     }
-    
+
     /*        $strout = '';
 
         for ($i = 0, $len = strlen($string); $i < $len; $i++) {
@@ -3415,7 +3435,7 @@ function xml_entitiy_encode($string, $charset = 'ISO-8859-1')
                 }
             }
         }*/
-    
+
     return $strout;
 }
 
@@ -3433,17 +3453,17 @@ function charset_decode_utf_8($string)
     if (!ereg("[\200-\237]", $string) and !ereg("[\241-\377]", $string)) {
         return $string;
     }
-    
+
     // decode three byte unicode characters
     $string = preg_replace("/([\340-\357])([\200-\277])([\200-\277])/e",
         "'&#'.((ord('\\1')-224)*4096 + (ord('\\2')-128)*64 + (ord('\\3')-128)).';'",
         $string);
-    
+
     // decode two byte unicode characters
     $string = preg_replace("/([\300-\337])([\200-\277])/e",
         "'&#'.((ord('\\1')-192)*64+(ord('\\2')-128)).';'",
         $string);
-    
+
     return $string;
 }
 
@@ -3480,7 +3500,7 @@ function getNumCW($y)
 function pt2mm($pt)
 {
     $mm = $pt * 0.35277;
-    
+
     return $mm;
 }
 
@@ -3495,7 +3515,7 @@ function forceFileDownload($file, $mimetype = '')
     if (empty($mimetype)) $mimetype = mime_content_type($file);
     if (empty($mimetype)) $mimetype = 'application/octet-stream';
     $filesize = filesize($file);
-    
+
     // Start sending headers
     header('Pragma: public'); // required
     header('Expires: 0');
@@ -3505,7 +3525,7 @@ function forceFileDownload($file, $mimetype = '')
     header('Content-Type: '.$mimetype);
     header('Content-Length: '.(string)$filesize);
     header('Content-Disposition: attachment; filename="'.basename($file).'";');
-    
+
     readfile($file);
     exit;
 }
@@ -3534,10 +3554,10 @@ function isMounted($mountPoint)
         $mountPoint = removeEndingSlash($mountPoint);
         $cmd = 'mount | grep "'.$mountPoint.'" | wc -l | tr -d " "';
         $isMounted = intval(shell_exec($cmd));
-        
+
         return $isMounted;
     }
-    
+
     return 0;
 }
 
@@ -3561,7 +3581,7 @@ function array_range($start, $end, $step = 1)
         //do something with array
         $result[] = $i;
     }
-    
+
     return $result;
 }
 
@@ -3575,7 +3595,7 @@ function extractTagFromDatum($datum)
 {
     list($jahr, $monat, $tag) = explode('-', $datum);
     $ts = mktime(0, 0, 0, $monat, $tag, $jahr);
-    
+
     return strftime('%u', $ts); // %u liefert 1 - 7 (=> Mo - So)
 }
 
@@ -3608,7 +3628,7 @@ function parseQueryString($string, $separator = '&')
             $array[$key] = $val;
         }
     }
-    
+
     return $array;
 }
 
@@ -3638,9 +3658,9 @@ function Sec2Time($time)
             $value["minutes"] = floor($time / 60);
             $time = ($time % 60);
         }
-        
+
         $value["seconds"] = floor($time);
-        
+
         return (array)$value;
     }
     else {
@@ -3684,11 +3704,11 @@ function randColor()
     $red = dechex(mt_rand(0, 255));
     $green = dechex(mt_rand(0, 255));
     $blue = dechex(mt_rand(0, 255));
-    
+
     $rgb = $red.$green.$blue;
-    
+
     if ($red == $green && $green == $blue) $rgb = substr($rgb, 0, 3);
-    
+
     return '#'.$rgb;
 }
 
@@ -3711,7 +3731,7 @@ function utf8_to_rtf($utf8_text)
     foreach ($utf8_patterns as $pattern) {
         $new_str = preg_replace("/($pattern)/e", "'\u'.hexdec(bin2hex(iconv('UTF-8', 'UTF-16BE', '$1'))).'?'", $new_str);
     }
-    
+
     return $new_str;
 }
 
@@ -3730,7 +3750,7 @@ function shell_exec_background($cmd, $priority = 0)
     else {
         $PID = shell_exec('nohup '.$cmd.' >/dev/null 2>&1 & echo $!');
     }
-    
+
     return trim($PID);
 }
 
@@ -3743,7 +3763,7 @@ function shell_exec_background($cmd, $priority = 0)
 function is_process_running($PID)
 {
     exec('ps '.$PID, $state);
-    
+
     return (count($state) >= 2);
 }
 
@@ -3765,10 +3785,10 @@ function calcAge($from, $to = 'now')
         if ($to == 'now') {
             $to = date('%Y-%m-%d');
         }
-        
+
         $from = strtotime($from); // von (eventl. Geburtsdatum)
         $to = strtotime($to); // bis
-        
+
         $age = (intval(date('Y', $to)) - intval(date('Y', $from)));
         $from_month = date('m', $from);
         $to_month = date('m', $to);
@@ -3780,7 +3800,7 @@ function calcAge($from, $to = 'now')
                 $age -= 1;
             }
         }
-    
+
     return $age;
 }
 
@@ -3793,7 +3813,7 @@ function calcAge($from, $to = 'now')
 function formatStdMin($min)
 {
     $val = intval($min);
-    
+
     return floor($val / 60).' Std. '.($val % 60).' Min.';
 }
 
@@ -3806,7 +3826,7 @@ function formatStdMin($min)
 function format24h($min)
 {
     $val = intval($min);
-    
+
     return str_pad((($val < 0) ? ceil($val / 60) : floor($val / 60)), 2, '0', STR_PAD_LEFT).':'.str_pad((($val % 60) * (($val < 0) ? -1 : 1)), 2, '0', STR_PAD_LEFT);
 }
 
@@ -3820,7 +3840,7 @@ function isWochenende($intTag, $intMonat, $intJahr)
     if ($wochentag == 0 || $wochentag == 6) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -3853,7 +3873,7 @@ function isFeiertag($intTag, $intMonat, $intJahr)
     if ($intTag == 26 AND $intMonat == 12) {
         return true; /*return "2. Weihnachtstag";*/
     }
-    
+
     # nichtfeste Feiertage
     if ($intTag == date("j", easter_date($intJahr)) AND $intMonat == date("n", easter_date($intJahr))) {
         return true; /*return "Ostersonntag";*/
@@ -3873,7 +3893,7 @@ function isFeiertag($intTag, $intMonat, $intJahr)
     if ($intTag == date("j", (easter_date($intJahr)) + 60 * 86400) AND $intMonat == date("n", (easter_date($intJahr)) + 60 * 86400)) {
         return true; /*return "Fronleichnam";*/                    /* 2. Donnerstag nach Ostersonntag */
     }
-    
+
     return false;
 }
 
@@ -3886,7 +3906,7 @@ function isHalbfeiertag($intTag, $intMonat, $intJahr)
     if ($intTag == 31 AND $intMonat == 12) {
         return true; /*return "Silvester";*/
     }
-    
+
     return false;
 }
 
@@ -3905,7 +3925,7 @@ function count_chars_upper($str)
             $i_Count++;
         }
     }
-    
+
     return $i_Count;
 }
 
@@ -3924,7 +3944,7 @@ function count_chars_lower($str)
             $i_Count++;
         }
     }
-    
+
     return $i_Count;
 }
 
@@ -3954,7 +3974,7 @@ function convertBytes($value)
                 $qty *= 1073741824;
                 break;
         }
-        
+
         return $qty;
     }
 }
@@ -3977,30 +3997,30 @@ function pool_hash_code($code, $pepper = '', array $options = [])
     if (empty($code)) {
         throw new InvalidArgumentException('Cannot hash an empty code.');
     }
-    
+
     $length = 22;
     $binaryLength = ($length * 3 / 4 + 1);
-    
+
     $options += [
         'salt' => substr(strtr(base64_encode(mcrypt_create_iv($binaryLength, MCRYPT_DEV_URANDOM)), '+', '.'), 0, $length),
         'cost' => 10
     ];
-    
+
     if (version_compare(PHP_VERSION, '5.3.7') >= 0) {
         $algorithm = '2y'; // BCrypt, mit korrigiertem Unicode Problem
     }
     else {
         $algorithm = '2a'; // BCrypt
     }
-    
+
     $cryptParams = sprintf('$%s$%02d$%s', $algorithm, $options['cost'], $options['salt']);
     $hash = crypt($code, $cryptParams);
-    
+
     if ($pepper) {
         $encryptedHash = encryptTwofish($hash, $pepper);
         $hash = base64_encode($encryptedHash);
     }
-    
+
     return $hash;
 }
 
@@ -4020,21 +4040,21 @@ function pool_verify_hash($code, $existingHash, $pepper = '')
     if (!defined('CRYPT_BLOWFISH')) {
         throw new Exception('The CRYPT_BLOWFISH algorithm is required (PHP 5.3).');
     }
-    
+
     if (empty($code)) {
         return false;
     }
-    
+
     // Hashwert mit dem serverseitigem Key entschlüsseln
     if ($pepper != '') {
         $encryptedHash = base64_decode($existingHash);
         $existingHash = decryptTwofish($encryptedHash, $pepper);
     }
-    
+
     // Die Parameter, die urspruenglich zum Erstellen von $existingHash verwendet wurden,
     // werden automatisch aus den ersten 29 Zeichen von $existingHash extrahiert.
     $newHash = crypt($code, $existingHash);
-    
+
     return $newHash === $existingHash;
 }
 
@@ -4046,23 +4066,23 @@ function encryptRijndael256($data, $key)
     if (!defined('MCRYPT_RIJNDAEL_256')) {
         throw new Exception('The MCRYPT_RIJNDAEL_256 algorithm is required (PHP 5.3).');
     }
-    
-    
+
+
     // Der cbc mode ist dem ecb mode vorzuziehen
     $td = mcrypt_module_open(MCRYPT_RIJNDAEL_256, '', MCRYPT_MODE_CBC, '');
-    
+
     // Twofish akzeptiert einen Schlüssel von 32 Bytes. Da in der Regel längere Strings
     // mit nur lesbaren Zeichen übergeben werden, wird ein binärer String erzeugt.
     $binaryKey = hash('sha256', $key, true);
-    
+
     // Erstelle Initialisierungsvektor mit 16 Bytes
     $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_DEV_URANDOM);
-    
+
     mcrypt_generic_init($td, $binaryKey, $iv);
     $encryptedData = mcrypt_generic($td, $data);
     mcrypt_generic_deinit($td);
     mcrypt_module_close($td);
-    
+
     // Kombiniere iv und verschlüsselten Text
     return $iv.$encryptedData;
 }
@@ -4072,21 +4092,21 @@ function decryptRijndael256($encryptedData, $key)
     if (!defined('MCRYPT_RIJNDAEL_256')) {
         throw new Exception('The MCRYPT_RIJNDAEL_256 algorithm is required (PHP 5.3).');
     }
-    
+
     $td = mcrypt_module_open(MCRYPT_RIJNDAEL_256, '', MCRYPT_MODE_CBC, '');
-    
+
     // Extrahiere Initialisierungsvektor
     $ivSize = mcrypt_enc_get_iv_size($td);
     $iv = substr($encryptedData, 0, $ivSize);
     $encryptedData = substr($encryptedData, $ivSize);
-    
+
     $binaryKey = hash('sha256', $key, true);
-    
+
     mcrypt_generic_init($td, $binaryKey, $iv);
     $decryptedData = mdecrypt_generic($td, $encryptedData);
     mcrypt_generic_deinit($td);
     mcrypt_module_close($td);
-    
+
     // Originaldaten wurden ergänzt mit 0-Zeichen bis zur Blockgrösse
     return rtrim($decryptedData, "\0");
 }
@@ -4099,23 +4119,23 @@ function encryptRijndael($data, $key)
     if (!defined('MCRYPT_RIJNDAEL_128')) {
         throw new Exception('The MCRYPT_RIJNDAEL_128 algorithm is required (PHP 5.3).');
     }
-    
-    
+
+
     // Der cbc mode ist dem ecb mode vorzuziehen
     $td = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
-    
+
     // Twofish akzeptiert einen Schlüssel von 16 Bytes. Da in der Regel längere Strings
     // mit nur lesbaren Zeichen übergeben werden, wird ein binärer String erzeugt.
     $binaryKey = hash('md5', $key, true);
-    
+
     // Erstelle Initialisierungsvektor mit 16 Bytes
     $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_DEV_URANDOM);
-    
+
     mcrypt_generic_init($td, $binaryKey, $iv);
     $encryptedData = mcrypt_generic($td, $data);
     mcrypt_generic_deinit($td);
     mcrypt_module_close($td);
-    
+
     // Kombiniere iv und verschlüsselten Text
     return $iv.$encryptedData;
 }
@@ -4125,21 +4145,21 @@ function decryptRijndael($encryptedData, $key)
     if (!defined('MCRYPT_RIJNDAEL_128')) {
         throw new Exception('The MCRYPT_RIJNDAEL_128 algorithm is required (PHP 5.3).');
     }
-    
+
     $td = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
-    
+
     // Extrahiere Initialisierungsvektor
     $ivSize = mcrypt_enc_get_iv_size($td);
     $iv = substr($encryptedData, 0, $ivSize);
     $encryptedData = substr($encryptedData, $ivSize);
-    
+
     $binaryKey = hash('md5', $key, true);
-    
+
     mcrypt_generic_init($td, $binaryKey, $iv);
     $decryptedData = mdecrypt_generic($td, $encryptedData);
     mcrypt_generic_deinit($td);
     mcrypt_module_close($td);
-    
+
     // Originaldaten wurden ergänzt mit 0-Zeichen bis zur Blockgrösse
     return rtrim($decryptedData, "\0");
 }
@@ -4161,22 +4181,22 @@ function encryptTwofish($data, $key)
     if (!defined('MCRYPT_TWOFISH')) {
         throw new Exception('The MCRYPT_TWOFISH algorithm is required (PHP 5.3).');
     }
-    
+
     // Der cbc mode ist dem ecb mode vorzuziehen
     $td = mcrypt_module_open(MCRYPT_TWOFISH, '', MCRYPT_MODE_CBC, '');
-    
+
     // Twofish akzeptiert einen Schlüssel von 32 Bytes. Da in der Regel längere Strings
     // mit nur lesbaren Zeichen übergeben werden, wird ein binärer String erzeugt.
     $binaryKey = hash('sha256', $key, true);
-    
+
     // Erstelle Initialisierungsvektor mit 16 Bytes
     $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_DEV_URANDOM);
-    
+
     mcrypt_generic_init($td, $binaryKey, $iv);
     $encryptedData = mcrypt_generic($td, $data);
     mcrypt_generic_deinit($td);
     mcrypt_module_close($td);
-    
+
     // Kombiniere iv und verschlüsselten Text
     return $iv.$encryptedData;
 }
@@ -4194,21 +4214,21 @@ function decryptTwofish($encryptedData, $key)
     if (!defined('MCRYPT_TWOFISH')) {
         throw new Exception('The MCRYPT_TWOFISH algorithm is required (PHP 5.3).');
     }
-    
+
     $td = mcrypt_module_open(MCRYPT_TWOFISH, '', MCRYPT_MODE_CBC, '');
-    
+
     // Extrahiere Initialisierungsvektor
     $ivSize = mcrypt_enc_get_iv_size($td);
     $iv = substr($encryptedData, 0, $ivSize);
     $encryptedData = substr($encryptedData, $ivSize);
-    
+
     $binaryKey = hash('sha256', $key, true);
-    
+
     mcrypt_generic_init($td, $binaryKey, $iv);
     $decryptedData = mdecrypt_generic($td, $encryptedData);
     mcrypt_generic_deinit($td);
     mcrypt_module_close($td);
-    
+
     // Originaldaten wurden ergänzt mit 0-Zeichen bis zur Blockgrösse
     return rtrim($decryptedData, "\0");
 }
@@ -4227,13 +4247,13 @@ function pool_generate_code($bytes = 10, $parts = 1, array $options = [])
         0 => array(48, 57), // 0-9
         1 => array(97, 122) // a-z
     );
-    
+
     $options += [
         'uppercase' => 1,
         'numbers' => 50,
         'delimiter' => '-'
     ];
-    
+
     $code = '';
     for ($p = 0; $p < $parts; $p++) {
         if ($p > 0) {
@@ -4245,11 +4265,11 @@ function pool_generate_code($bytes = 10, $parts = 1, array $options = [])
             $code .= $byte;
         }
     }
-    
+
     if ($options['uppercase']) {
         $code = strtoupper($code);
     }
-    
+
     return $code;
 }
 
@@ -4265,14 +4285,14 @@ function pdf2jpg($pdf, $jpg, &$output, $resolution = 72, $sudo = false)
 {
     # Setzen der Fontmap
     //    GS_FONTMAP=/opt/AVE_Javaserver/EDV_ORG/gs/Fontmap
-    
+
     # Setzen des Fontdirectories
     //    GS_LIB=/opt/AVE_Javaserver/EDV_ORG/gs/wobla_fonts:/opt/AVE_Javaserver/EDV_ORG/ghostscript-9.06/share/ghostscript/9.06/lib
     //    export GS_LIB
-    
+
     //    $GS_BIN/gs -dSAFER -dNOPAUSE -dBATCH -dNOPROMPT -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dAlignToPixels=0 -dGridFitTT=2 -sFONTMAP=$GS_FONTMAP -sDEVICE=jpeg -dNumRenderingThreads=4 -dBufferSpace=300000000 -sOutputFile=$OUTPUT.${RESOLUTION}dpi.jpg -r$RESOLUTION -dUseCropBox $INPUT
-    
-    
+
+
     $cmd = ($sudo ? 'sudo ' : '').GHOSTSCRIPT_BIN.' -q  -dQUIET -dSAFER -dBATCH -dNOPAUSE -dNOPROMPT -dMaxBitmap=500000000 -dAlignToPixels=0 -dGridFitTT=2 "-sDEVICE=jpeg" -dTextAlphaBits=4 '.
            '-dGraphicsAlphaBits=4 "-r'.$resolution.'x'.$resolution.'" -dUseCropBox "-sOutputFile='.$jpg.'" "-f'.$pdf.'"';
     exec($cmd, $output, $return_var);
@@ -4280,7 +4300,7 @@ function pdf2jpg($pdf, $jpg, &$output, $resolution = 72, $sudo = false)
     if (!$result and count($output) == 0 and $sudo) {
         $output[] = 'Sudo ist für Ghostscript auf dem Rechner '.$_SERVER['SERVER_NAME'].' nicht konfiguriert!';
     }
-    
+
     return $result;
 }
 
@@ -4298,18 +4318,18 @@ if (!function_exists('hash_equals')) {
     function hash_equals($known_string, $user_string)
     {
         $ret = 0;
-        
+
         if (strlen($known_string) !== strlen($user_string)) {
             $user_string = $known_string;
             $ret = 1;
         }
-        
+
         $res = $known_string ^ $user_string;
-        
+
         for ($i = strlen($res) - 1; $i >= 0; --$i) {
             $ret |= ord($res[$i]);
         }
-        
+
         return !$ret;
     }
 }
@@ -4325,36 +4345,36 @@ if (!function_exists('random_int')) {
                 'mcrypt must be loaded for random_int to work',
                 E_USER_WARNING
             );
-            
+
             return null;
         }
-        
+
         if (!is_int($min) || !is_int($max)) {
             trigger_error('$min and $max must be integer values', E_USER_NOTICE);
             $min = (int)$min;
             $max = (int)$max;
         }
-        
+
         if ($min > $max) {
             trigger_error('$max can\'t be lesser than $min', E_USER_WARNING);
-            
+
             return null;
         }
-        
+
         $range = $counter = $max - $min;
         $bits = 1;
-        
+
         while ($counter >>= 1) {
             ++$bits;
         }
-        
+
         $bytes = (int)max(ceil($bits / 8), 1);
         $bitmask = pow(2, $bits) - 1;
-        
+
         if ($bitmask >= PHP_INT_MAX) {
             $bitmask = PHP_INT_MAX;
         }
-        
+
         do {
             $result = hexdec(
                           bin2hex(
@@ -4362,7 +4382,7 @@ if (!function_exists('random_int')) {
                           )
                       ) & $bitmask;
         } while ($result > $range);
-        
+
         return $result + $min;
     }
 }
@@ -4404,7 +4424,7 @@ function createPathFromLastChars($chars, $numberOfDirectories=4)
  * meinDokument.pdf
  * meinDokument-01.pdf
  * meinDokument-02.pdf
- * 
+ *
  */
 function nextFreeFilename($dir, $filename, $delimiter='-') {
 	$filepath = addEndingSlash($dir) . $filename;
@@ -4426,13 +4446,13 @@ function nextFreeFilename($dir, $filename, $delimiter='-') {
 			$nr               =  mb_substr($filenameNoExtension, $pos+1);
 			if (is_numeric($nr)) {
 				$nr =  intval($nr) + 1;
-				$newFilename = $filenameNoNumber . $delimiter . sprintf('%02d', $nr) . '.' . $extension; 
+				$newFilename = $filenameNoNumber . $delimiter . sprintf('%02d', $nr) . '.' . $extension;
 			}
 			else {
 				$nr = 1;
 				$newFilename = $filenameNoExtension . $delimiter  . sprintf('%02d', $nr) . '.' . $extension;
 			}
-			
+
 		}
 		return nextFreeFilename($dir, $newFilename, $delimiter);
 	}
