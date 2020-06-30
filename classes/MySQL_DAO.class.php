@@ -295,7 +295,7 @@ if(!defined('CLASS_MYSQLDAO')) {
             }
             for($i=0; $i < $count; $i++) {
                 $column = trim($this->columns[$i]);
-                
+
                 $custom_column = $alias.$column;
 
                 if(strpos($column, ' ') !== false) { // column contains space
@@ -312,7 +312,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 }
                 //$column_list .=  /*(($this -> table) ? $this -> table . '.' : '') . */$column;
                 $column_list .= $custom_column;
-                
+
                 if ($i < ($count - 1)) {
                     $column_list .= ', ';
                 }
@@ -900,7 +900,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                     else {
                         $sql .= ', ';
                     }
-                    
+
                     $sql .= $alias.$column.' '.$sort;
                 }
             }
@@ -1024,12 +1024,12 @@ class CustomMySQL_DAO extends MySQL_DAO
      * @param string $table Tabelle
      * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
      **/
-    function __construct(& $db, $dbname, $table, $autoload_fields=true)
+    public function __construct(& $db, $dbname, $table, $autoload_fields=true)
     {
         parent::__construct();
 
         if(!is_a($db, 'DataInterface')) {
-            $Xeption = new Xception('Es wurde kein DataInterface �bergeben!', 0, array('file' => __FILE__,
+            $Xeption = new Xception('No data interface was passed!', 0, array('file' => __FILE__,
                 'line' => __LINE__), null);
             $this -> throwException($Xeption);
         }
@@ -1041,6 +1041,24 @@ class CustomMySQL_DAO extends MySQL_DAO
             //$this -> column_list = '*';
             //$this -> pk = 'id';
             $this->init();
+        }
+        else {
+            // Maybe there are columns in the "columns" property
+            $this->rebuildColumnList();
+        }
+    }
+
+    /**
+     * rebuild column list
+     */
+    protected function rebuildColumnList()
+    {
+        // Columns are predefined as property "columns".
+        if(count($this->columns) > 0) {
+            $table = '`'.$this->table.'`';
+            $glue = '`, '.$table.'.`';
+            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
+            $this->column_list = $column_list;
         }
     }
 }
