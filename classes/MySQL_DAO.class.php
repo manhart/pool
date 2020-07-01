@@ -1051,7 +1051,7 @@ class CustomMySQL_DAO extends MySQL_DAO
     /**
      * rebuild column list
      */
-    protected function rebuildColumnList()
+    private function rebuildColumnList()
     {
         // Columns are predefined as property "columns".
         if(count($this->columns) > 0) {
