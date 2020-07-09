@@ -1870,6 +1870,17 @@ function decamelize(str, separator){
 }
 
 /**
+ * UnknownClassException
+ *
+ * @param message
+ * @constructor
+ */
+function UnknowClassException(message) {
+    this.message = message;
+    this.name = 'UnknownClassException';
+}
+
+/**
  * Calls function (fn) after DOM content is loaded
  *
  * @param function fn
