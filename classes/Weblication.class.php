@@ -99,7 +99,7 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @var string
          */
-        var $skin = 'default';
+        private $skin = 'default';
 
         /**
          * Sprache der Seite
@@ -570,9 +570,19 @@ if(!defined('CLASS_WEBLICATION')) {
             $stylesheets = $this->cssFolder.'/';
 
             # folder: skins
-            $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
-            $folder_stylesheets = $folder_skins . $stylesheets;
-            $folder_language = $folder_skins . $language . $stylesheets;
+            $folder_skins = addEndingSlash(PWD_TILL_SKINS);
+            $folder_default = $folder_skins . 'default/'; // TODO AM, making it configurable
+            $folder_skins_stylesheets = $folder_default . $stylesheets;
+
+            if (is_dir($folder_skins_stylesheets)) { // skins - skinname - stylesheet folder
+                if (file_exists($folder_skins_stylesheets.$filename)) {
+                    return $folder_skins_stylesheets.$filename;
+                }
+            }
+
+            $folder_skin = $folder_skins . $skin;
+            $folder_skin_stylesheets = $folder_skin . $stylesheets;
+            $folder_language = $folder_skin . $language . $stylesheets;
 
             if (is_dir($folder_language)) { // skins - skinname - language - stylesheet folder
                 if (file_exists($folder_language.$filename)) {
@@ -580,24 +590,24 @@ if(!defined('CLASS_WEBLICATION')) {
                 }
             }
 
-            if (is_dir($folder_stylesheets)) { // skins - skinname - stylesheet folder
-                if (file_exists($folder_stylesheets.$filename)) {
-                    return $folder_stylesheets.$filename;
+            if (is_dir($folder_skin_stylesheets)) { // skins - skinname - stylesheet folder
+                if (file_exists($folder_skin_stylesheets.$filename)) {
+                    return $folder_skin_stylesheets.$filename;
                 }
             }
 
             # Projekt folder: guis
             $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
-            $folder_skins = $folder_guis . $skin;
-            $folder_language = $folder_skins . $language;
+            $folder_skin = $folder_guis . $skin;
+            $folder_language = $folder_skin . $language;
             if (is_dir($folder_language)) { // guis - classname - skin - language folder
                 if (file_exists($folder_language . $filename)) {
                     return $folder_language . $filename;
                 }
             }
-            if (is_dir($folder_skins)) { // guis - classname - skin folder
-                if (file_exists($folder_skins . $filename)) {
-                    return $folder_skins . $filename;
+            if (is_dir($folder_skin)) { // guis - classname - skin folder
+                if (file_exists($folder_skin . $filename)) {
+                    return $folder_skin . $filename;
                 }
             }
             if (is_dir($folder_guis)) { // guis - classname folder
