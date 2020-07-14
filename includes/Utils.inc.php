@@ -2364,25 +2364,26 @@ function getClientBrowser()
  **/
 function getClientIP()
 {
-    foreach (array(
-        'HTTP_CLIENT_IP',
-        'HTTP_X_FORWARDED_FOR',
-        'HTTP_X_FORWARDED',
-        'HTTP_X_CLUSTER_CLIENT_IP',
-        'HTTP_FORWARDED_FOR',
-        'HTTP_FORWARDED',
-        'REMOTE_ADDR'
+    foreach (
+        array(
+            'HTTP_CLIENT_IP',
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_FORWARDED',
+            'HTTP_X_CLUSTER_CLIENT_IP',
+            'HTTP_FORWARDED_FOR',
+            'HTTP_FORWARDED',
+            'REMOTE_ADDR'
     ) as $key) {
         if (array_key_exists($key, $_SERVER) === true) {
             foreach (explode(',', $_SERVER[$key]) as $ip) {
                 if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
                     return $ip;
-    }
-    }
+                }
+            }
         }
     }
     return '';
-    }
+}
 
 /**
  * creates a browser fingerprint
@@ -2414,41 +2415,42 @@ function getHTTPReferer()
 }
 
 /**
- * Berechnet die Wochenblatt Kalenderwoche
+ * Calculates a custom week number
  *
- * @param int $mon Monat
- * @param int $day Tag
- * @param int $year Jhar
- * @return unknown
+ * @param int $mon month
+ * @param int $day day
+ * @param int $year year
+ * @param int $breakpoint calendar week based on this weekday
+ * @return string
  */
-function getWoblaKW($mon, $day, $year, $wobla_spec = 4)
+function getCustomWeekNumber($mon, $day, $year, $breakpoint = 4)
 {
     $date = mktime(0, 0, 0, $mon, $day, $year);
     $kw = strftime('%V', $date); // KW nach ISO 8601:1988
     $weekday = strftime('%u', $date);
-    if ($weekday >= $wobla_spec) {
-        $kw = strftime('%V', mktime(0, 0, 0, $mon, $day + 7, $year)); // KW der n�chsten Woche ausrechnen
+    if ($weekday >= $breakpoint) {
+        $kw = strftime('%V', mktime(0, 0, 0, $mon, $day + 7, $year));
     }
 
     return sprintf('%02d', $kw);
 }
 
 /**
- * Liefert das Wochenblatt Monat
+ * Calculates a custom month
  *
- * @param int $mon Monat
- * @param int $day Tag
- * @param int $year Jahr
- * @param int $wobla_spec Wochentagschalter
+ * @param int $mon month
+ * @param int $day day
+ * @param int $year year
+ * @param int $breakpoint calendar week based on this weekday
  * @return int
  */
-function getWoblaMonat($mon, $day, $year, $wobla_spec = 4)
+function getCustomMonth($mon, $day, $year, $breakpoint = 4)
 {
     $date = mktime(0, 0, 0, $mon, $day, $year);
     $monat = strftime('%m', $date); // KW nach ISO 8601:1988
     $weekday = strftime('%u', $date);
-    if ($weekday >= $wobla_spec) {
-        $monat = strftime('%m', mktime(0, 0, 0, $mon, $day + 7, $year)); // KW der naechsten Woche ausrechnen
+    if ($weekday >= $breakpoint) {
+        $monat = strftime('%m', mktime(0, 0, 0, $mon, $day + 7, $year));
     }
 
     return sprintf('%02d', $monat);
@@ -2456,21 +2458,21 @@ function getWoblaMonat($mon, $day, $year, $wobla_spec = 4)
 
 
 /**
- * Berechnet das Wochenblatt Jahr
+ * Calculates a custom year
  *
  * @param int $mon
  * @param int $day
  * @param int $year
- * @param int $wobla_spec
+ * @param int $breakpoint calendar week based on this weekday
  * @return int
  */
-function getWoblaJahr($mon, $day, $year, $wobla_spec = 4)
+function getCustomYear($mon, $day, $year, $breakpoint = 4)
 {
     $date = mktime(0, 0, 0, $mon, $day, $year);
-    $jahr = strftime('%G', $date); // Jahr
+    $jahr = strftime('%G', $date);
     $weekday = strftime('%u', $date);
-    if ($weekday >= $wobla_spec) {
-        $jahr = strftime('%G', mktime(0, 0, 0, $mon, $day + 7, $year)); // KW der n�chsten Woche ausrechnen
+    if ($weekday >= $breakpoint) {
+        $jahr = strftime('%G', mktime(0, 0, 0, $mon, $day + 7, $year));
     }
 
     return sprintf('%04d', $jahr);
