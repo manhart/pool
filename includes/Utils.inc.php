@@ -4470,7 +4470,7 @@ function nextFreeFilename($dir, $filename, $delimiter='-') {
  * @param $data
  * @return bool|false|string
  */
-function URLTokenEncode($data)
+function base64url_encode($data)
 {
     $data = base64_encode($data);
 
@@ -4496,7 +4496,7 @@ function URLTokenEncode($data)
  * @param $token
  * @return bool|false|string
  */
-function URLTokenDecode($token)
+function base64url_decode($token)
 {
     $length = strlen($token);
     if($length == 0) return false;
