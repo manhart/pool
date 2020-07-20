@@ -1065,6 +1065,16 @@ class ISession extends Input
     }
 
     /**
+     * get the session ID
+     *
+     * @return string
+     */
+    public function getSID()
+    {
+        return session_id();
+    }
+
+    /**
      * Schliesst Session. Zu empfehlen bei lang laufenden Programmen, damit andere Scripte nicht gesperrt werden
      *
      */
