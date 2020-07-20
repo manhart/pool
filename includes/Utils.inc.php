@@ -2395,10 +2395,10 @@ function getBrowserFingerprint($withClientIP=true)
 {
     $data = ($withClientIP ? getClientIp() : '');
     $data .= $_SERVER['HTTP_USER_AGENT'];
-    $data .= $_SERVER['HTTP_ACCEPT'];
-    $data .= $_SERVER['HTTP_ACCEPT_CHARSET'];
-    $data .= $_SERVER['HTTP_ACCEPT_ENCODING'];
-    $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    $data .= $_SERVER['HTTP_ACCEPT'] ?? '';
+    $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
+    $data .= $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
+    $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
     $hash = md5($data);
     return $hash;
 }
