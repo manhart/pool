@@ -4462,3 +4462,48 @@ function nextFreeFilename($dir, $filename, $delimiter='-') {
 		return $filename;
 	}
 }
+
+/**
+ * Pendant to the .NET API HttpServerUtility.UrlTokenEncode.
+ * Encodes a string into its base 64 digit equivalent string representation suitable for transmission in the URL.
+ *
+ * @param $data
+ * @return bool|false|string
+ */
+function URLTokenEncode($data)
+{
+    $data = base64_encode($data);
+
+    $length = strlen($data);
+    if($length == 0) return false;
+
+    $numPaddingChars = 0;
+    while($data[$length-1] == '=') {
+        $numPaddingChars++;
+        $data = substr($data, 0, -1);
+        $length--;
+    }
+
+    $data = $data.$numPaddingChars;
+    $data = strtr($data, '+/', '-_');
+    return $data;
+}
+
+/**
+ * Pendant to the .NET API HttpServerUtility.UrlTokenDecode.
+ * Decodes a base64 URL token back into a string.
+ *
+ * @param $token
+ * @return bool|false|string
+ */
+function URLTokenDecode($token)
+{
+    $length = strlen($token);
+    if($length == 0) return false;
+
+    $numPaddingChars = (int)$token[$length-1];
+    $token = substr($token, 0, -1);
+    $token = strtr($token, '-_', '+/');
+    $token .= str_repeat('=', $numPaddingChars);
+    return base64_decode($token, true);
+}
