@@ -108,11 +108,9 @@ if(!defined('CLASS_MODULE')) {
             $this->Modules = Array();
             $this->Handoff = Array();
             $this->Defaults = new Input(I_EMPTY);
+            $this->params = $params;
 
             $this->init();
-
-            // AM, 15.07.2009, vergibt Modulname fr�her
-            $this->importParams($params);
         }
 
         /**
@@ -126,6 +124,7 @@ if(!defined('CLASS_MODULE')) {
         {
             $this->Input = new Input($superglobals);
             $this->mergeDefaults();
+            // assigns the module name
             $this->importParams($this->params);
         }
 
