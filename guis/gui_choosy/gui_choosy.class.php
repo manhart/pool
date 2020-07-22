@@ -112,17 +112,9 @@ class GUI_Choosy extends GUI_Module
     //@access private
     var $enable_GUI_DHtmlHint = false;
 
-    /**
-     * GUI_Choosy::GUI_Choosy()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer vom Typ Component
-     **/
-    function __construct(& $Owner)
+    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false);
+        parent::__construct($Owner, false, $params);
     }
 
     /**

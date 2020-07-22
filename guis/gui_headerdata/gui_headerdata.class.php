@@ -106,17 +106,19 @@
      */
     var $charset = 'ISO-8859-1';
 
-    /**
-     * GUI_Headerdata::GUI_Headerdata()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer vom Typ Component
-     **/
-    function __construct(& $Owner)
+     /**
+      * GUI_Headerdata::GUI_Headerdata()
+      *
+      * Konstruktor
+      *
+      * @access public
+      * @param object $Owner Besitzer vom Typ Component
+      * @param bool $autoLoadFiles
+      * @param array $params
+      */
+    function __construct(& $Owner, $autoLoadFiles = true, array $params = [])
     {
-        parent::__construct($Owner);
+        parent::__construct($Owner, $autoLoadFiles, $params);
 
         $php_default_charset = ini_get('default_charset');
         if(strlen($php_default_charset) > 0) {

@@ -26,19 +26,6 @@
 class GUI_DHtmlHint extends GUI_Module
 {
     /**
-     * GUI_DHtmlHint::GUI_DHtmlHint()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
-    /**
      * GUI_DHtmlHint::init()
      *
      * Default Werte setzen. Input initialisieren.

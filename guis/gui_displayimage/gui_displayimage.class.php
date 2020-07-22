@@ -27,17 +27,9 @@
  **/
 class GUI_DisplayImage extends GUI_Module
 {
-    /**
-     * GUI_DisplayImage::GUI_DisplayImage()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
+    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false);
+        parent::__construct($Owner, false, $params);
     }
 
     /**

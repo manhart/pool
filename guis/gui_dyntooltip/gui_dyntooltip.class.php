@@ -66,19 +66,6 @@ class GUI_DynToolTip extends GUI_Module
     var $styleIndex = -1;
 
     /**
-     * GUI_DynToolTip::GUI_DynToolTip()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
-    /**
      * Initialisierung der Standard Werte und Superglobals.
      *
      * Standard:

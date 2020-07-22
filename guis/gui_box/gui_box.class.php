@@ -43,12 +43,12 @@ class GUI_Box extends GUI_Module
      * @access public
      * @param object $Owner Besitzer
      **/
-    function __construct(& $Owner, $AutoLoadFiles=true)
+    function __construct(& $Owner, $autoLoadFiles=true, array $params = [])
     {
         $this -> enabledBox = false;
         $this -> TplBox = & new Template();
 
-        parent::__construct($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $autoLoadFiles, $params);
     }
 
     /**

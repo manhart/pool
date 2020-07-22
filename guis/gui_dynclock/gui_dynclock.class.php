@@ -7,11 +7,6 @@
 
 class GUI_DynClock extends GUI_Module
 {
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
     function init($superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('cycleClock', 'true');

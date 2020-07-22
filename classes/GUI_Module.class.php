@@ -81,13 +81,6 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     var $enabledBox = false;
 
     /**
-     * Steht auf true, sobald Parameter importiert wurden
-     *
-     * @var boolean Flag, ob Parameter importiert wurden
-     */
-    var $importParamsDone = false;
-
-    /**
      * Ajax Request / XMLHttpRequest
      *
      * @var boolean
@@ -114,21 +107,15 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     var $plainJSON = false;
 
     /**
-    * Konstruktor
-    *
-    * @access public
-    * @param Component $Owner Besitzer vom Typ Component
-    * @param boolean $AutoLoadFiles Laedt automatisch Templates und sucht darin GUIs
-    */
-    function __construct(&$Owner, $AutoLoadFiles=true, $params='')
+     * Konstruktor
+     *
+     * @param Component $Owner Besitzer vom Typ Component
+     * @param boolean $autoLoadFiles Laedt automatisch Templates und sucht darin GUIs
+     * @param array $params additional parameters
+     */
+    function __construct(&$Owner, $autoLoadFiles = true, array $params = [])
     {
-        parent::__construct($Owner);
-
-        // AM, 15.07.2009, vergibt Modulname fr�her
-        if($params) { // falls der dritte Parameter gesetzt
-            $this->importParams($params);
-            $this->importParamsDone = true; // verhindert mehrmaliges Ausf�hren von importParams in createGUI
-        }
+        parent::__construct($Owner, $params);
 
         if(isAjax()) {
             if(isset($_REQUEST['module']) and strtolower($this->getClassName()) == strtolower($_REQUEST['module'])) {
@@ -166,7 +153,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         }
 
         $this->Template = new Template();
-        $this->AutoLoadFiles = $AutoLoadFiles;
+        $this->AutoLoadFiles = $autoLoadFiles;
     }
 
     /**
@@ -305,13 +292,16 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         }
 
         if ($class_exists) {
-            // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
             // AM, 15.07.2009
-            $GUI = new $GUIClassName($Owner, true, $params); /* @var $GUI GUI_Module */
+            // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
+            // AM, 22.07.2020
+            $Params = new Input(I_EMPTY);
+            $Params->setParams($params);
+            $GUI = new $GUIClassName($Owner, true, $Params->getData()); /* @var $GUI GUI_Module */
             if($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
             }
-            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
+//            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;
         }
