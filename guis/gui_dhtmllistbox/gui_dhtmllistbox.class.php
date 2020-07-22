@@ -29,19 +29,6 @@
 class GUI_DHTMLListbox extends GUI_Module
 {
     /**
-     * GUI_DHTMLListbox::GUI_DHTMLListbox()
-     *
-     * Constructor
-     *
-     * @param object $Owner Klasse vom Typ Component
-     * @see Component
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
-    /**
      *
      * Initialisiert Standardwerte:
      *

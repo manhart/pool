@@ -35,19 +35,6 @@ class GUI_Selezione extends GUI_Module
     var $callback_formatSelectionList = null;
 
     /**
-     * Constructor
-     *
-     * @param Object $Owner Klasse vom Typ Component
-     * @param boolean $autoLoadFiles
-     * @param array $params
-     * @see Component
-     **/
-    function __construct(&$Owner, $autoLoadFiles, $params)
-    {
-        parent::__construct($Owner, $autoLoadFiles, $params);
-    }
-
-    /**
      * Initialisiert Standardwerte
      *
      * @access public

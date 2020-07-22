@@ -32,10 +32,12 @@ class GUI_Schema extends GUI_Module
      *
      * @access public
      * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
+     * @param bool $autoLoadFiles
+     * @param array $params
+     */
+    function __construct(& $Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false);
+        parent::__construct($Owner, false, $params);
     }
 
     /**
@@ -117,12 +119,12 @@ class GUI_Schema extends GUI_Module
     function prepare()
     {
         $schemes = array();
-    
+
         $schema = $this->Input->getVar('schema');
         if($schema == '') {
             $schema = $this->Weblication->getDefaultSchema();
         }
-        
+
         if(strpos($schema, ',') !== false) {
             $schemes = explode(',', $schema);
         }

@@ -108,12 +108,13 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @access public
      * @param object $Owner
-     * @param boolean $AutoLoadFiles
+     * @param bool $autoLoadFiles
+     * @param array $params
      * @return
      **/
-    function __construct(&$Owner, $AutoLoadFiles=true)
+    function __construct(&$Owner, $autoLoadFiles=true, array $params = [])
     {
-        parent::__construct($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $autoLoadFiles, $params);
 
         if(!$this->preventDefaultHeaderdata) {
             $this->Headerdata = new GUI_Headerdata($Owner);
