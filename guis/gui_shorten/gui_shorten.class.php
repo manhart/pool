@@ -64,18 +64,6 @@ class GUI_Shorten extends GUI_Module
     var $modified = false;
 
     /**
-     * Ruft den Konstruktor von Module auf, �bersringt damit GUI_Module. Da kein Template verwendet wird.
-     *
-     * @access public
-     * @param Component $Owner Besitzer vom Typ Component
-     **/
-    function __construct(& $Owner)
-    {
-        // Kein Bedarf an einem Template
-        parent::__construct($Owner);
-    }
-
-    /**
      * Standardwerte initialisieren:
      *
      * - text = Text

@@ -27,17 +27,9 @@ class GUI_Url extends GUI_Module
 {
     var $returnValue = '';
 
-    /**
-     * GUI_Url::GUI_Url()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner, $AutoLoadFiles=false)
+    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, false, $params);
     }
 
     /**

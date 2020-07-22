@@ -29,17 +29,6 @@
 class GUI_DHtmlXGridExport extends GUI_Module
 {
     /**
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner, $AutoLoadFiles=true)
-    {
-        parent::__construct($Owner, $AutoLoadFiles);
-    }
-
-    /**
      * Default Werte setzen. Input initialisieren.
      *
      * @access public

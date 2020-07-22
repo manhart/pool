@@ -24,17 +24,6 @@
 class GUI_DayBar extends GUI_Module
 {
     /**
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner, true);
-    }
-
-    /**
      * Default Werte setzen. Input initialisieren.
      *
      * @access public

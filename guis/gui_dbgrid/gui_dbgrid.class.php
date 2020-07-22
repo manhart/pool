@@ -84,18 +84,6 @@ class GUI_DBGrid extends GUI_Module
     var $colClass = '';
 
     /**
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer vom Typ Component
-     * @see Component
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner, true);
-    }
-
-    /**
      * Initialisierung der Standard Werte und Superglobals.
      *
      * @access public

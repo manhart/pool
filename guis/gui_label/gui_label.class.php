@@ -26,17 +26,6 @@
 class GUI_Label extends GUI_Module
 {
     /**
-     * Constructor
-     *
-     * @param object $Owner Klasse vom Typ Component
-     * @see Component
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
-    /**
      * Initialisiert Standardwerte;
      * Verwendet INPUT_GET und INPUT_POST Variablen.
      * INPUT_SESSION nur zum Speichern von abgeschickten Daten.

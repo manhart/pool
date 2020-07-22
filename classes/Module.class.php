@@ -89,14 +89,19 @@ if(!defined('CLASS_MODULE')) {
         var $enabled = true;
 
         /**
-         * Konstruktor
-         *
+         * @var array additional params
+         * @see Module::importParams()
+         */
+        private array $params = [];
+
+        /**
          * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
          *
          * @access public
-         * @param Component $Owner Eigent�mer dieser Instanz
-         **/
-        function __construct(&$Owner)
+         * @param Component $Owner Owner
+         * @param array $params
+         */
+        function __construct(&$Owner, array $params = [])
         {
             parent::__construct($Owner);
 
@@ -105,6 +110,9 @@ if(!defined('CLASS_MODULE')) {
             $this->Defaults = new Input(I_EMPTY);
 
             $this->init();
+
+            // AM, 15.07.2009, vergibt Modulname fr�her
+            $this->importParams($params);
         }
 
         /**
@@ -118,6 +126,7 @@ if(!defined('CLASS_MODULE')) {
         {
             $this->Input = new Input($superglobals);
             $this->mergeDefaults();
+            $this->importParams($this->params);
         }
 
         /**
@@ -171,18 +180,13 @@ if(!defined('CLASS_MODULE')) {
          * @param string $params Im Format: key=value&key2=value2&
          * @return bool Erfolgsstatus
          **/
-        function importParams($params)
+        function importParams(array $params)
         {
             if (!$this->Input instanceof Input) {
                 return false;
             }
 
-            if(is_array($params)) {
-                $this->Input->setVar($params);
-            }
-            else {
-                $this->Input->setParams($params);
-            }
+            $this->Input->setVar($params);
 
             // set Component Name, if set by param.
             $ModuleName = $this->Input->getVar('ModuleName');
@@ -208,6 +212,7 @@ if(!defined('CLASS_MODULE')) {
          * @param string $param Name des Parameters
          * @param string $value Zu setzender Wert
          * @return bool Erfolgsstatus
+         * @deprecated
          */
         function setParam($modulename, $param, $value=null)
         {
