@@ -601,6 +601,7 @@ class Input extends PoolObject
     */
     function setParams($params, $translate_specialchars = true)
     {
+        $params = ltrim($params);
         if (strlen($params) > 0) {
             if ($translate_specialchars) {
                 # &amp; => &
