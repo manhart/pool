@@ -120,7 +120,7 @@ if(!defined('CLASS_MODULE')) {
          * @param const $superglobals Konstanten aus der Input.class.php
          * @see Input.class.php
          **/
-        function init($superglobals=I_EMPTY)
+        function init($superglobals = I_EMPTY)
         {
             $this->Input = new Input($superglobals);
             $this->mergeDefaults();
