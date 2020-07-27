@@ -89,17 +89,17 @@ if(!defined('CLASS_MODULE')) {
         var $enabled = true;
 
         /**
-         * @var array additional params
+         * @var array fixed params
          * @see Module::importParams()
          */
-        private array $params = [];
+        private array $fixedParams = [];
 
         /**
          * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
          *
          * @access public
          * @param Component $Owner Owner
-         * @param array $params
+         * @param array $params fixed params
          */
         function __construct(&$Owner, array $params = [])
         {
@@ -108,7 +108,7 @@ if(!defined('CLASS_MODULE')) {
             $this->Modules = Array();
             $this->Handoff = Array();
             $this->Defaults = new Input(I_EMPTY);
-            $this->params = $params;
+            $this->fixedParams = $params;
 
             $this->init();
         }
@@ -125,7 +125,7 @@ if(!defined('CLASS_MODULE')) {
             $this->Input = new Input($superglobals);
             $this->mergeDefaults();
             // assigns the module name
-            $this->importParams($this->params);
+            $this->importParams($this->fixedParams);
         }
 
         /**
@@ -176,7 +176,7 @@ if(!defined('CLASS_MODULE')) {
          * @access public
          * @see Component::setName()
          * @see Module::disable()
-         * @param string $params Im Format: key=value&key2=value2&
+         * @param array $params Im Format: key=value&key2=value2&
          * @return bool Erfolgsstatus
          **/
         function importParams(array $params)
@@ -200,6 +200,16 @@ if(!defined('CLASS_MODULE')) {
                 $this->disable();
             }
             return true;
+        }
+
+        /**
+         * exports fixed params as base64
+         *
+         * @return string params
+         */
+        public function exportParams(): string
+        {
+            return base64url_encode(http_build_query($this->fixedParams));
         }
 
         /**
