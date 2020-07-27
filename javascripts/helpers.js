@@ -1906,3 +1906,319 @@ function ready(fn) {
         });
     }
 }
+
+/**
+ * Fuelle Steuerelemente
+ */
+function fillControls(containerSelector, rowSet)
+{
+    if(!Array.isArray(rowSet) && !isObject(rowSet)) {
+        return false;
+    }
+
+    if(rowSet[0] === undefined) {
+        rowSet = [rowSet];
+    }
+
+    // Zeile fuer Zeile durch das Rowset
+    for(var r=0; r<rowSet.length; r++) {
+        var row2 = rowSet[r];
+
+        // Feld fuer Feld ermitteln wir die HTML-Elemente
+        for(var field in row2) {
+            // Felder mit dem Namen/Suffix _class dienen zur Zuweisung von Styles und sind keine Felder
+            if(field.substr(field.length-6) == '_class') continue;
+            // Felder mit dem Namen/Suffix _title dienen zur Zuweisung von Titles/ToolTips und sind keine Felder
+            if(field.substr(field.length-6) == '_title') continue;
+
+            // Wert
+            var value = row2[field];
+
+            if((typeof value) == 'string') {
+                value = value.replace(String.fromCharCode(128), String.fromCharCode(8364));
+            }
+
+            // 21.01.2013, AM, Beschleunigung der Feldersuche ueber die Ids
+            // var selector = containerSelector+' [name='+field+'], '+containerSelector+' #'+field;
+            var selectors = explode(containerSelector, ',', false);
+
+            var name_selector = '', id_selector = '';
+            for(var s=0; s<selectors.length; s++) {
+                if(name_selector != '') name_selector += ',';
+                name_selector += selectors[s] +' [name='+field+']';
+                if(id_selector != '') id_selector += ',';
+                id_selector += selectors[s]+' #'+field;
+            }
+
+            //log('jFillControlls name_selector: '+name_selector);
+            //log('jFillControlls id_selector: '+id_selector);
+            jQuery(name_selector).add(id_selector).each(function() {
+                var Ctrl = jQuery(this);
+                //log('HTMLElement: '+Ctrl.attr('id')+'='+value);
+                if(row2[field+'_class']) Ctrl.addClass(row2[field+'_class']);
+                if(row2[field+'_title']) Ctrl.attr('title', row2[field+'_title']);
+
+                if(r == rowSet.length-1) {
+                    switch(Ctrl[0].tagName) {
+                        case 'TEXTAREA':
+                        case 'SPAN':
+                        case 'DIV':
+                            Ctrl.html(value);
+
+                            // Chrome Fix
+                            // CS,31.05.2015 : Auch bei anderen Browsern (IE) val() verwenden bei TEXTAREA.
+                            // Zeilenenden (\r\n) funktionieren bei html() im IE nicht.
+                            if(Ctrl[0].tagName == 'TEXTAREA') {
+                                Ctrl.val(value);
+                            }
+                            break;
+
+                        case 'IMG':
+                            if(isEmpty(value)) Ctrl.hide();
+                            else {
+                                Ctrl.attr('src', value);
+                                Ctrl.show();
+                            }
+                            break;
+
+                        case 'INPUT':
+                            var ctrlType = Ctrl.attr('type');
+
+                            // Checkbox mit 3 Statis
+                            if(Ctrl.data('tri-state-checkbox')) {
+                                // TODO implementierung in jquery
+                                var possibleValues = explode(Ctrl.data('possible-values'), ',');
+                                var img = jQuery('#tri-state-checkbox-'+Ctrl.attr('id'));
+                                switch(value) {
+                                    case null:
+                                    case possibleValues[0]:
+                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-partial');
+                                        break;
+
+                                    case possibleValues[1]:
+                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-full');
+                                        break;
+
+                                    case possibleValues[2]:
+                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-none');
+                                        break;
+                                }
+                                Ctrl.val(value);
+                                break;
+                            }
+
+                            switch(ctrlType) {
+                                case 'checkbox':
+                                case 'radio':
+                                    Ctrl.prop('checked', (value == Ctrl.val()));
+                                    break;
+
+                                default:
+                                    Ctrl.val(value);
+                            }
+                            break;
+
+                        default:
+                            Ctrl.val(value);
+                            if(Ctrl.data('initialValue') == undefined) {
+                                Ctrl.data('initialValue', value);
+                            }
+                            break;
+                    }
+                }
+                else {
+                    if(value != rowSet[rowSet.length-1][field]) {
+                        // Werte werden aufaddiert; TODO String u. Int/Double Unterscheidung
+                        if(Ctrl.data('fill-sum')) {
+                            var shorten = Ctrl.data('fill-sum-shorten');
+                        }
+                        else {
+                            rowSet[rowSet.length-1][field] = null;
+                        }
+                    }
+                }
+
+                Ctrl[0].classList.remove('is-invalid');
+                Ctrl[0].classList.remove('is-valid');
+                if(Ctrl[0].closest('.needs-validation')) {
+                    Ctrl[0].closest('.needs-validation').classList.remove('was-validated');
+                }
+            });
+        }
+    }
+}
+
+/**
+ * Füllt Eingabecontrols
+ */
+// function fillControls(doc, daten, gui_error)
+// {
+//     if (is.ie) {
+//         var attrClass = 'className';
+//     }
+//     else {
+//         // firefox
+//         var attrClass = 'class';
+//     }
+//
+//     for (var feld in daten) {
+//         var controls = doc.getElementsByName(feld);
+//         //alert('Control '+feld+' not found in your browser! doc.getElementsByName(\''+feld+'\')');
+//
+//         var daten_value = daten[feld];
+//
+//         if(daten_value == null) {
+//             daten_value = ''; // TODO f. multiselect <-> null
+//         }
+//
+//         // Alex, Euro Symbol in HTML Euro Zeichen transformieren
+//         // siehe http://www.cs.tut.fi/~jkorpela/html/euro.html
+//         if(typeof daten_value == 'string') {
+//             daten_value = daten_value;
+//             daten_value = daten_value.replace(String.fromCharCode(128), String.fromCharCode(8364));
+//         }
+//
+//         if (controls && controls.length > 0) {
+//             for (var i=0; i<controls.length; i++) {
+//                 var elem = controls[i];
+//                 var tagName = elem.tagName.toUpperCase();
+//
+//                 if (tagName == 'SPAN' || tagName == 'DIV') {
+//                     elem.innerHTML = daten_value;
+//                     if(daten[feld + '_class']) {
+//                         elem.className  = unescape(daten[feld + '_class']);
+//                     }
+//                 }
+//                 else if(tagName == 'IMG') {
+//                     //alert(elem.src);
+//                     if(isEmpty(daten_value)) {
+//                         jQuery(elem).hide();
+//                     }
+//                     else {
+//                         elem.src = daten_value;
+//                         if(daten[feld + '_title']) {
+//                             elem.title = unescape(daten[feld + '_title']);
+//                         }
+//                         jQuery(elem).show();
+//                     }
+//                 }
+//                 else if(tagName == 'FONT') {
+//                     if(daten[feld + '_color']) {
+//                         elem.color  = unescape(daten[feld + '_color']);
+//                     }
+//                 }
+//                 else if(tagName == 'INPUT') {
+//                     elem.setAttribute('set_value', daten_value);
+//                     var elemType = elem.type.toUpperCase();
+//
+//                     if(elemType == 'CHECKBOX') {
+//                         var triStateCheckbox = elem.getAttribute('data-tri-state-checkbox');
+//                         if(!triStateCheckbox) {
+//                             elem.checked = (daten_value == 1) || (elem.value == daten_value);
+//                         }
+//                         else {
+//                             // TODO implement in jQuery
+//                             setTriStateCheckboxValue(elem, daten_value);
+//                         }
+//                     }
+//                     else if(elemType == 'RADIO') {
+//                         elem.checked = (elem.value == daten_value);
+//                     }
+//                     else {
+//                         elem.value = daten_value;
+//                     }
+//
+//                     if (feld == gui_error) {
+//                         elem.setAttribute('save_class', elem.getAttribute(attrClass));
+//                         elem.setAttribute(attrClass, elem.getAttribute('class_error'));
+//                     }
+//                     else {
+//                         var save_class = elem.getAttribute('save_class');
+//                         if (save_class) {
+//                             elem.setAttribute(attrClass, save_class);
+//                         }
+//                     }
+//                 }
+//                 else {
+//                     elem.setAttribute('set_value', daten_value);
+//                     elem.value = daten_value;
+//                 }
+//             }
+//         }
+//     }
+// }
+
+/**
+ * Empties the contents of the elements
+ *
+ * @param elements
+ */
+function clearControls(elements)
+{
+    for (let z=0; z<elements.length; z++) {
+        let elem = elements[z];
+
+        let tagName = elem.tagName.toUpperCase();
+        let elemType = (elem.type) ? elem.type.toUpperCase() : '';
+        if (tagName == 'SPAN') {
+            elem.innerHTML = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+        }
+        else if(elemType == 'CHECKBOX' || elemType == 'RADIO') {
+            if(elem.getAttribute('data-default-checked') != null) {
+                elem.checked = elem.getAttribute('data-default-checked');
+            }
+            else elem.checked = false;
+        }
+        else if(elemType == 'SELECT-ONE') {
+            if(elem.getAttribute('data-default-value') != null) {
+                for(var x=0; x<elem.options.length; x++) {
+                    if(elem.options[x].value == elem.getAttribute('data-default-value')) {
+                        elem.options.selectedIndex = x;
+                        break;
+                    }
+                }
+            }
+            else {
+                elem.options.selectedIndex = 0;
+            }
+        }
+        else {
+            // if(checkIsSuchfeld == 1) {
+            //     if(elem.getAttribute('isSuchfeld') == 1) {
+            //         elem.setAttribute('defaultValue', null);
+            //         continue;
+            //     }
+            // }
+            if(elem.getAttribute('data-empty-default-value')) {
+                elem.setAttribute('data-default-value', null);
+            }
+            elem.value = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+        }
+
+        elem.classList.remove('is-invalid');
+        elem.classList.remove('is-valid');
+        if(elem.closest('.needs-validation')) {
+            elem.closest('.needs-validation').classList.remove('was-validated');
+        }
+    }
+}
+
+/**
+ * Returns all elements with a Name attribute.
+ *
+ * @param containerSelector
+ * @returns {NodeListOf<Element>}
+ */
+function getControlsWithNameAttribut(containerSelector) {
+    return document.querySelectorAll(containerSelector+' [name]');
+}
+
+/**
+ * Returns all form-controls for bootstrap
+ *
+ * @param containerSelector
+ * @returns {NodeListOf<Element>}
+ */
+function getBootstrapControls(containerSelector) {
+    return document.querySelectorAll(containerSelector+' .form-control');
+}
