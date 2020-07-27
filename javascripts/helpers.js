@@ -2202,23 +2202,3 @@ function clearControls(elements)
         }
     }
 }
-
-/**
- * Returns all elements with a Name attribute.
- *
- * @param containerSelector
- * @returns {NodeListOf<Element>}
- */
-function getControlsWithNameAttribut(containerSelector) {
-    return document.querySelectorAll(containerSelector+' [name]');
-}
-
-/**
- * Returns all form-controls for bootstrap
- *
- * @param containerSelector
- * @returns {NodeListOf<Element>}
- */
-function getBootstrapControls(containerSelector) {
-    return document.querySelectorAll(containerSelector+' .form-control');
-}
