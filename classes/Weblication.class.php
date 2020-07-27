@@ -936,8 +936,13 @@ if(!defined('CLASS_WEBLICATION')) {
         {
             // TODO Get Parameter frame
             // TODO Subcode :: createSubCode()
+            $params  = $_REQUEST['params'] ?? '';
+            if($params != '' and isAjax()) {
+                $params = base64url_decode($params);
+            }
+
             $Nil = new Nil();
-            $GUI = &GUI_Module::createGUIModule($className, $this, $Nil);
+            $GUI = &GUI_Module::createGUIModule($className, $this, $Nil, $params);
             if (isNil($GUI)) {
                 $this->raiseError(__FILE__, __LINE__, 'Klasse ' . $className .
                     ' wurde nicht gefunden oder existiert nicht. (@Weblication -> run).');
