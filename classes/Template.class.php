@@ -1158,24 +1158,22 @@
         	 	unset($this -> ActiveBlock);
 			}
 
-			/**
-			 * Weist die Template Engine an, als n�chstes einen anderen BLOCK zu verwenden.
-			 *
-			 * @param string $blockHandle Name des Block
-			 * @return boolean Erfolgsstatus
-			 **/
+            /**
+             * Weist die Template Engine an, als nächstes einen anderen BLOCK zu verwenden.
+             *
+             * @param string $blockHandle name of block
+             * @return bool|TempBlock
+             */
 			function useBlock($blockHandle)
 			{
-				$bResult = false;
-				if ($this -> ActiveFile)
-				{
-					$ActiveBlock = &$this -> ActiveFile -> getTempBlock($blockHandle);
-					if(is_object($ActiveBlock)) {
-						$this -> ActiveBlock = &$ActiveBlock;
-						$bResult = true;
+				if ($this->ActiveFile) {
+					$ActiveBlock = &$this->ActiveFile->getTempBlock($blockHandle);
+					if($ActiveBlock != false) {
+						$this->ActiveBlock = &$ActiveBlock;
+						return $this->ActiveBlock;
 					}
 				}
-				return $bResult;
+				return false;
 			}
 
 			/**
