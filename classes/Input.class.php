@@ -411,7 +411,7 @@ class Input extends PoolObject
      * @param boolean $removePrefix removes prefix
      * @return Input Neues Objekt vom Typ Input (enthaelt die gefilterten Daten)
      **/
-    function &filter($keys_must_exists, $prefix='', $removePrefix=false)
+    function &filter($keys_must_exists, $prefix='', $removePrefix=false): Input
     {
         $Input = new Input(I_EMPTY);
         if (is_array($keys_must_exists)) {

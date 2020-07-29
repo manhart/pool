@@ -20,21 +20,18 @@
 	@version
 
 	@since 2003-08-21
-	@author Alexander Manhart <alexander.manhart@freenet.de>
-	@link http://www.misterelsa.de
+	@author Alexander Manhart <alexander.manhart@gmx.de>
+	@link https://www.alexander-manhart.de
 */
 
-function implode(arr, separator) {
-	fixedImplode = "";
-	separator = new String(separator);
-	if (separator == "undefined") {
-		separator = " ";
-	}
-	for (x = 0; x < arr.length; x++) {
-		fixedImplode += (separator + String(arr[x]));
+function implode(glue, pieces) {
+	let fixedImplode = '';
+
+	for (x = 0; x < pieces.length; x++) {
+		fixedImplode += (glue + String(pieces[x]));
 	}
 
-	fixedImplode = fixedImplode.substring(separator.length, fixedImplode.length);
+	fixedImplode = fixedImplode.substring(glue.length, fixedImplode.length);
 	return fixedImplode;
 }
 
