@@ -35,7 +35,7 @@ function implode(glue, pieces) {
 	return fixedImplode;
 }
 
-function explode(inputstring, separators, includeEmpties) {
+function explode(separators, inputstring, includeEmpties) {
 	inputstring = new String(inputstring);
 	separators = new String(separators);
 	if (separators == "undefined") {
