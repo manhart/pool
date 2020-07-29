@@ -1942,7 +1942,7 @@ function fillControls(containerSelector, rowSet)
 
             // 21.01.2013, AM, Beschleunigung der Feldersuche ueber die Ids
             // var selector = containerSelector+' [name='+field+'], '+containerSelector+' #'+field;
-            let selectors = explode(containerSelector, ',', false);
+            let selectors = explode(',', containerSelector, false);
 
             let name_selector = '', id_selector = '';
             for(let s=0; s<selectors.length; s++) {
@@ -1989,7 +1989,7 @@ function fillControls(containerSelector, rowSet)
                             // Checkbox mit 3 Statis
                             if(Ctrl.data('tri-state-checkbox')) {
                                 // TODO implementierung in jquery
-                                var possibleValues = explode(Ctrl.data('possible-values'), ',');
+                                var possibleValues = explode(',', Ctrl.data('possible-values'));
                                 var img = jQuery('#tri-state-checkbox-'+Ctrl.attr('id'));
                                 switch(value) {
                                     case null:
