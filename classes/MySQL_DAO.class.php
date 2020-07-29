@@ -1049,6 +1049,14 @@ class CustomMySQL_DAO extends MySQL_DAO
     }
 
     /**
+     * @return string
+     */
+    public function getTableName()
+    {
+        return $this->table;
+    }
+
+    /**
      * rebuild column list
      */
     private function rebuildColumnList()

@@ -689,13 +689,15 @@ function isBoolean(a) {
 }
 
 function isEmpty(o) {
-    var i, v;
     if (isObject(o)) {
-        for (i in o) {
-            v = o[i];
-            if (isUndefined(v) && isFunction(v)) {
+        for (let prop in o) {
+            if(o.hasOwnProperty(prop)) {
                 return false;
             }
+            // v = o[i];
+            // if (isUndefined(v) && isFunction(v)) {
+            //     return false;
+            // }
         }
     }
     else {
@@ -1940,10 +1942,10 @@ function fillControls(containerSelector, rowSet)
 
             // 21.01.2013, AM, Beschleunigung der Feldersuche ueber die Ids
             // var selector = containerSelector+' [name='+field+'], '+containerSelector+' #'+field;
-            var selectors = explode(containerSelector, ',', false);
+            let selectors = explode(containerSelector, ',', false);
 
-            var name_selector = '', id_selector = '';
-            for(var s=0; s<selectors.length; s++) {
+            let name_selector = '', id_selector = '';
+            for(let s=0; s<selectors.length; s++) {
                 if(name_selector != '') name_selector += ',';
                 name_selector += selectors[s] +' [name='+field+']';
                 if(id_selector != '') id_selector += ',';
@@ -2279,5 +2281,26 @@ function findPropertyDescriptor(object, propertyName) {
         const parentClass = Object.getPrototypeOf(object);
 
         return findPropertyDescriptor(parentClass, propertyName);
+    }
+}
+
+/**
+ * Trigger an event
+ *
+ * @param element Element
+ * @param type Event Type
+ */
+function triggerEvent(element, type) {
+    if ('createEvent' in document) {
+        // modern browsers, IE9+
+        let Event = document.createEvent('HTMLEvents');
+        Event.initEvent(type, false, true);
+        element.dispatchEvent(Event);
+    }
+    else {
+        // IE 8
+        let Event = document.createEventObject();
+        Event.eventType = type;
+        element.fireEvent('on'+Event.eventType, Event);
     }
 }
