@@ -95,37 +95,75 @@ function pray($data, $functions=0)
  *
  * @param integer $bytes Anzahl der Bytes
  * @param bool $shortVersion Abgekuerzt
+ * @param int $decimals
+ * @param string $blank
  * @return string Formatierter String z.B.  33,44 MBytes
  */
-function formatBytes($bytes, $shortVersion = false)
+function formatBytes($bytes, $shortVersion = false, $decimals = 2, $blank = ' ')
 {
     // Bytes
     if ($bytes < 1024) {
-        return (number_format($bytes, 2, ',', '.').(($shortVersion) ? ' b' : ' Bytes'));
+        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'b' : 'Bytes'));
     }
 
     // KBytes
     $bytes = $bytes / 1024;
     if ($bytes < 1024) {
-        return (number_format($bytes, 2, ',', '.').(($shortVersion) ? ' KB' : ' KBytes'));
+        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'KB' : 'KBytes'));
     }
 
     // MBytes
     $bytes = $bytes / 1024;
     if ($bytes < 1024) {
-        return (number_format($bytes, 2, ',', '.').(($shortVersion) ? 'MB' : ' MBytes'));
+        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'MB' : 'MBytes'));
     }
 
     // GBytes
     $bytes = $bytes / 1024;
     if ($bytes < 1024) {
-        return (number_format($bytes, 2, ',', '.').(($shortVersion) ? 'GB' : ' GBytes'));
+        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'GB' : 'GBytes'));
     }
 
     // TBytes
     $bytes = $bytes / 1024;
+    return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'TB' : 'TBytes'));
+}
 
-    return (number_format($bytes, 3, ',', '.').(($shortVersion) ? 'TB' : 'TBytes'));
+/**
+ * @param $val
+ * @return int
+ */
+function returnBytes($val)
+{
+    if(empty($val))return 0;
+
+    $val = trim($val);
+
+    preg_match('#([0-9]+)[\s]*([a-z]+)#i', $val, $matches);
+
+    $last = '';
+    if(isset($matches[2])){
+        $last = $matches[2];
+    }
+
+    if(isset($matches[1])){
+        $val = (int) $matches[1];
+    }
+
+    switch (strtolower($last))
+    {
+        case 'g':
+        case 'gb':
+            $val *= 1024;
+        case 'm':
+        case 'mb':
+            $val *= 1024;
+        case 'k':
+        case 'kb':
+            $val *= 1024;
+    }
+
+    return (int) $val;
 }
 
 
