@@ -1202,7 +1202,7 @@
 			* Synonym auf die Template Funktion Template::assignVar().
 			*
 			* @access public
-			* @param string $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
+			* @param string|array $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
 			* @param string $value Wert der Variable
 			* @see Template::assignVar()
 			*/
