@@ -66,7 +66,7 @@ class GUI_Url extends GUI_Module
 
         $script = trim($Input -> getVar('script'));
         if ($script != '') {
-            $Url -> setScript($script);
+            $Url->setScript($script);
         }
 
         $params = trim($Input -> getVar('params'));
