@@ -262,6 +262,9 @@ if(!defined('CLASS_POOLOBJECT')) {
         */
         function raiseError($file, $line, $msg)
         {
+            if(error_reporting() == 0) {
+                return;
+            }
             $error = $msg;
             $error .= ' in ';
             if($this) {
@@ -271,7 +274,6 @@ if(!defined('CLASS_POOLOBJECT')) {
                 ', Zeile ' . $line;
 
             trigger_error($error);
-            return 0;
         }
 
         /**
