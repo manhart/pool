@@ -84,7 +84,7 @@ class GUI_Universal extends GUI_Module
     function prepare ()
     {
         #### Bindet gui_....css ein:
-        $cssfile = @$this->Weblication->findStyleSheet($this->getClassName() . '.css', $this->getClassName(), true);
+        $cssfile = @$this->Weblication->findStyleSheet($this->getClassName().'.css', $this->getClassName(), true);
         if ($cssfile) {
             /*if(version_compare(phpversion(), '5.0.0', '>=')) {
                 if ($this->Weblication->Main instanceof GUI_Module) {
