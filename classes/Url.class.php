@@ -106,22 +106,22 @@ if(!defined('CLASS_URL')) {
          * @var string hostname
          */
         private $hostname = ''; // hostname
-    
+
         /**
          * @var string Top-Level-Domain
          */
         private $topLevelDomain = '';
-    
+
         /**
          * @var string Second-Level-Domain
          */
         private $secondLevelDomain = '';
-    
+
         /**
          * @var string Third-Level-Domain
          */
         private $thirdLevelDomain = ''; // = subdomain = host
-        
+
         /**
          * Sets up the object.
          *
@@ -300,7 +300,7 @@ if(!defined('CLASS_URL')) {
 
             // 03.05.2016, AM, nur wenn ein Port existiert, ergaenzen
             $scheme = $this->scheme;
-            $port = ($this->port != URL_DEFAULT_PORT ? ':'.$this->port : '');
+            $port = $this->port ? ($this->port != URL_DEFAULT_PORT ? ':'.$this->port : '') : '';
             $path = addEndingSlash($this->path).$this->script;
             if(strlen($path) > 0 and $path[0] != '/') {
                 $path = '/'.$path;
@@ -316,7 +316,7 @@ if(!defined('CLASS_URL')) {
             $url = $scheme.'://'.$this->Host.$port.$path.(($query != '') ? '?' : '').$query.$this->Anchor;
             return $url;
         }
-    
+
         /**
          * Get Domain
          *
@@ -326,7 +326,7 @@ if(!defined('CLASS_URL')) {
         {
             return $this->Host;
         }
-    
+
         /**
          * Get hostname
          *
@@ -337,7 +337,7 @@ if(!defined('CLASS_URL')) {
             $this->resolveDomainname();
             return $this->hostname;
         }
-    
+
         /**
          * Get Top-Level Domain
          * @return string
@@ -347,7 +347,7 @@ if(!defined('CLASS_URL')) {
             $this->resolveDomainname();
             return $this->topLevelDomain;
         }
-    
+
         /**
          * Get Second-Level Domain
          * @return string
@@ -357,7 +357,7 @@ if(!defined('CLASS_URL')) {
             $this->resolveDomainname();
             return $this->secondLevelDomain;
         }
-    
+
         /**
          * Get Third-Level Domain
          * @return string
@@ -367,7 +367,7 @@ if(!defined('CLASS_URL')) {
             $this->resolveDomainname();
             return $this->thirdLevelDomain;
         }
-    
+
         /**
          * doesn't work with tlds like .co.uk!
          */
@@ -377,7 +377,7 @@ if(!defined('CLASS_URL')) {
             if(filter_var($this->Host, FILTER_VALIDATE_IP)) {
                 $this->hostname = $this->Host;
             }
-    
+
             $host = explode('.', $this->Host);
             $numHostParts = count($host);
             if($numHostParts == 1) { // mydomain, develop01
