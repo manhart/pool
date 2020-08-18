@@ -49,8 +49,6 @@ function RequestPOOL(module, method, params, async)
 		var async = false;
 	}
 
-	var parameters = '';
-
 	var RequestUrl = new Url();
 	RequestUrl.setScript(SCRIPT_NAME);
 	if(module != null) RequestUrl.setParam('module', module);
@@ -90,24 +88,27 @@ function RequestPOOL(module, method, params, async)
 		var onJavascriptFailure = RequestPOOL.arguments[9];
 	}
 
-//	jQuery.ajaxSetup({
-//		url: RequestUrl.getUrl(),
-//		type: 'GET', // jquery default
-//		contentType: 'application/x-www-form-urlencoded', // jquery default
-//		async: async
-//	});
-//	php_RESULT = null;
+    let contentType = REQUEST_CONTENTTYPE;
+	let processData = REQUEST_PROCESSDATA;
+	let dataType = REQUEST_DATATYPE;
+	let type = REQUEST_METHOD;
 
-	// log('jQuery.ajax: type='+REQUEST_METHOD+' contentType='+REQUEST_CONTENTTYPE+' processData'+REQUEST_PROCESSDATA)
-	var jqxhr = jQuery.ajax(RequestUrl.getUrl(), {
-			type: REQUEST_METHOD,
+	if(params instanceof FormData) {
+	    contentType = false;
+	    processData = false;
+	    type = 'POST';
+	    // dataType = 'json';
+    }
+
+	let jqxhr = jQuery.ajax(RequestUrl.getUrl(), {
+			type: type,
 			data: params,
 			async: async,
 			cache: false,
 			timeout: 0,
-			contentType: REQUEST_CONTENTTYPE,
-			processData: REQUEST_PROCESSDATA,
-			dataType: REQUEST_DATATYPE,
+			contentType: contentType,
+			processData: processData,
+			dataType: dataType,
 			error: function(jqXHR, textStatus, errorThrown) {
 				if(onRequestFailure != undefined) {
 					onRequestFailure(jqXHR, textStatus, errorThrown);
@@ -151,7 +152,7 @@ function RequestPOOL(module, method, params, async)
 				// log('jQuery.ajax: success');
 				// log(data);
 				// jQuery 1.7.1 u. jQuery 1.7.2 scheinen beim Abbruch eines PHP Scripts trotzdem in die success Methode zu gehen
-				
+
 				if(!data) {
 					this.error(jqXHR, 0, 'Apache/PHP Script died: unkown error');
 					return false;
@@ -221,7 +222,7 @@ function RequestPOOL(module, method, params, async)
 
 /**
  * Datei-Upload ueber Ajax
- * 
+ *
  * @param formName Formular Name (name="xyz")
  * @param guiName Name des GUI's
  * @param method Name der Methode, die im GUI aufgerufen werden soll
@@ -230,7 +231,7 @@ function RequestPOOL(module, method, params, async)
 function file_upload(formName, guiName, method, onServerResponse)
 {
 	var Form = $('form[name="'+formName+'"]');
-	
+
 	if(window.FormData != undefined) { // window.FormData != undefined
 		log('file_upload HTML 5');
 		REQUEST_METHOD = 'post';
@@ -238,7 +239,7 @@ function file_upload(formName, guiName, method, onServerResponse)
 		REQUEST_PROCESSDATA = false;
 		REQUEST_DATATYPE = 'json';
 
-		var params = new FormData(Form.get(0)); /* HTML 5 Object FormData */
+		let params = new FormData(Form.get(0)); /* HTML 5 Object FormData */
 		RequestPOOL(guiName, method, params, true, function(Result) {
 			log('file_upload result:');
 			log(Result);
@@ -246,7 +247,7 @@ function file_upload(formName, guiName, method, onServerResponse)
 				onServerResponse(Result);
 			}
 		});
-		
+
 		// reset request
 		REQUEST_METHOD = 'get';
 		REQUEST_CONTENTTYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
@@ -256,7 +257,7 @@ function file_upload(formName, guiName, method, onServerResponse)
 	else {
 		// alte Browser laden Daten ueber einen iframe hoch
 		log('file_upload IFRAME (alter Browser (IE8/9))');
-		
+
 		// [GUI_Url(params=module:GUI_Liste;method:hochladen;HTTP_X_REQUESTED_WITH:XMLHttpRequest)]
 		var FormUrl = new Url();
 		FormUrl.setScript(SCRIPT_NAME);
@@ -266,7 +267,7 @@ function file_upload(formName, guiName, method, onServerResponse)
 		Form.attr('action', FormUrl.getUrl());
 
 		var iframeId = 'uploadIframe' + (new Date().getTime());
-		
+
 		// form target auf den iframe setzen
 		Form.attr('target', iframeId);
 
