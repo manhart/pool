@@ -238,6 +238,18 @@ if(!defined('CLASS_MODULE')) {
             return $bResult;
         }
 
+
+        /**
+         * get fixed param
+         *
+         * @param $param
+         * @return mixed|null
+         */
+        public function getFixedParam($param)
+        {
+            return $this->fixedParams[$param] ?? null;
+        }
+
         /**
          * Einf�gen von Variablen, die an die Kinder-Module (Childs) weitergereicht werden.
          *
