@@ -63,9 +63,12 @@ class GUI_Schema extends GUI_Module
     function loadSchemes($schemes = Array())
     {
         $directory = './' . addEndingSlash(PWD_TILL_SCHEMES);
+
+        // fixed param "category": Divides schemas into subdirectories
         $category = $this->getFixedParam('category');
         if($category != null) $directory .= addEndingSlash($category);
 
+        // fixed param "alternate": Switch to an alternative if the schema was not found in the folder.
         $alternate = $this->getFixedParam('alternate');
 
         $numSchemes = count($schemes);
