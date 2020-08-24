@@ -691,12 +691,6 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildLimit($limit)
             );
 
-//			if(IS_TESTSERVER) {
-//				$fh = fopen(addEndingSlash(DIR_DOCUMENT_ROOT).'debug.txt', 'a');
-//				fwrite($fh, $sql.chr(10));
-//				fclose($fh);
-//			}
-
             $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
