@@ -112,30 +112,36 @@ function RequestPOOL(module, method, params, async)
 			error: function(jqXHR, textStatus, errorThrown) {
 				if(onRequestFailure != undefined) {
 					onRequestFailure(jqXHR, textStatus, errorThrown);
+					return;
 				}
-				else {
-					switch(textStatus) {
-						case 'error_message': // Fehlermeldung vom Entwickler
-							var message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status+String.fromCharCode(10)+String.fromCharCode(10);
-							break;
 
-						default:
-							var message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status+String.fromCharCode(10)+String.fromCharCode(10)+'Server-Response: '+jqXHR.responseText;
-					}
+				let message = 'Unknown Error';
+                if(jqXHR.readyState == 0) { // Network error
+                    message = 'Network unreachable.';
+                }
+                else if(jqXHR.readyState == 4) { // HTTP error
+                    switch(textStatus) {
+                        case 'error_message': // Fehlermeldung vom Entwickler
+                            message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status+String.fromCharCode(10)+String.fromCharCode(10);
+                            break;
 
-					if(typeof USE_CONSOLE != 'undefined' && USE_CONSOLE) {
-						log(message);
-					}
-					else {
-						// wenn die alert box verfuegbar ist, zeigen wir die Fehlermeldung darin an
-						if(typeof alert_box == 'function') {
-							alert_box(message);
-						}
-						else {
-							alert(message);
-						}
-					}
-				}
+                        default:
+                            message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status+String.fromCharCode(10)+String.fromCharCode(10)+'Server-Response: '+jqXHR.responseText;
+                    }
+                }
+
+                if(typeof USE_CONSOLE != 'undefined' && USE_CONSOLE) {
+                    log(message);
+                    return;
+                }
+
+                // wenn die alert box verfuegbar ist, zeigen wir die Fehlermeldung darin an
+                if(typeof alert_box == 'function') {
+                    alert_box(message);
+                }
+                else {
+                    alert(message);
+                }
 			},
 			complete: function(jqXHR, textStatus) {
 //				alert('completed - textStatus: '+textStatus);
