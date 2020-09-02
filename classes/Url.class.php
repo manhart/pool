@@ -146,7 +146,9 @@ if(!defined('CLASS_URL')) {
             $this->path = $this->ScriptPath;
             $this->script = $this->ScriptName;
 
-            $this->port = intval($_SERVER['SERVER_PORT']);
+            if(isset($_SERVER['SERVER_PORT'])) {
+                $this->port = intval($_SERVER['SERVER_PORT']);
+            }
 
             parent::__construct();
         }
