@@ -4545,3 +4545,18 @@ function base64url_decode($token)
     $token .= str_repeat('=', $numPaddingChars);
     return base64_decode($token, true);
 }
+
+/**
+ * determines http status from response headers
+ *
+ * @param string $responseLine
+ * @return int
+ */
+function getHttpStatusCode(string $responseLine): int
+{
+    $httpResponseCode = 0;
+    if (preg_match("#HTTP/[0-9\.]+\s+([0-9]+)#", $responseLine, $out)) {
+        $httpResponseCode = intval($out[1]);
+    }
+    return $httpResponseCode;
+}
