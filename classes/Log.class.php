@@ -289,7 +289,7 @@ if(!defined('CLASS_LOG')) {
             }
             $text .= $this->lineFeed;
 
-            $result = fwrite($this->fp, $text, strlen($text));
+            fwrite($this->fp, $text, strlen($text));
         }
 
         /**
