@@ -24,15 +24,9 @@
  **/
 class GUI_DHTMLDropdown extends GUI_Module
 {
-    /**
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
+    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false);
+        parent::__construct($Owner, false, $params);
     }
 
     /**

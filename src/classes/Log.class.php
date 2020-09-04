@@ -127,9 +127,13 @@ if(!defined('CLASS_LOG')) {
             $this->sid = rand(0, 9999);
         }
 
-        function activateLogRotate()
+        /**
+         * @param bool $rotateByDate
+         */
+        function activateLogRotate($rotateByDate = false)
         {
             $this->logRotate = true;
+            $this->rotateByDate = $rotateByDate;
         }
 
         /**
@@ -285,7 +289,7 @@ if(!defined('CLASS_LOG')) {
             }
             $text .= $this->lineFeed;
 
-            $result = fwrite($this->fp, $text, strlen($text));
+            fwrite($this->fp, $text, strlen($text));
         }
 
         /**

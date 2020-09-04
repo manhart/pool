@@ -11,9 +11,9 @@ class GUI_PageControl extends GUI_Module
     var $function_name = null;
     var $Url = null;
 
-    function __construct(& $Owner)
+    function __construct(& $Owner, $autoLoadFiles = true, array $params = [])
     {
-        parent::__construct($Owner, true);
+        parent::__construct($Owner, $autoLoadFiles, $params);
 
         $this->Url = new Url();
     }

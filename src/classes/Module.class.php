@@ -89,20 +89,26 @@ if(!defined('CLASS_MODULE')) {
         var $enabled = true;
 
         /**
-         * Konstruktor
-         *
+         * @var array fixed params
+         * @see Module::importParams()
+         */
+        private array $fixedParams = [];
+
+        /**
          * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
          *
          * @access public
-         * @param Component $Owner Eigent�mer dieser Instanz
-         **/
-        function __construct(&$Owner)
+         * @param Component $Owner Owner
+         * @param array $params fixed params
+         */
+        function __construct(&$Owner, array $params = [])
         {
             parent::__construct($Owner);
 
             $this->Modules = Array();
             $this->Handoff = Array();
             $this->Defaults = new Input(I_EMPTY);
+            $this->fixedParams = $params;
 
             $this->init();
         }
@@ -114,10 +120,12 @@ if(!defined('CLASS_MODULE')) {
          * @param const $superglobals Konstanten aus der Input.class.php
          * @see Input.class.php
          **/
-        function init($superglobals=I_EMPTY)
+        function init($superglobals = I_EMPTY)
         {
             $this->Input = new Input($superglobals);
             $this->mergeDefaults();
+            // assigns the module name
+            $this->importParams($this->fixedParams);
         }
 
         /**
@@ -168,21 +176,16 @@ if(!defined('CLASS_MODULE')) {
          * @access public
          * @see Component::setName()
          * @see Module::disable()
-         * @param string $params Im Format: key=value&key2=value2&
+         * @param array $params Im Format: key=value&key2=value2&
          * @return bool Erfolgsstatus
          **/
-        function importParams($params)
+        function importParams(array $params)
         {
             if (!$this->Input instanceof Input) {
                 return false;
             }
 
-            if(is_array($params)) {
-                $this->Input->setVar($params);
-            }
-            else {
-                $this->Input->setParams($params);
-            }
+            $this->Input->setVar($params);
 
             // set Component Name, if set by param.
             $ModuleName = $this->Input->getVar('ModuleName');
@@ -200,6 +203,16 @@ if(!defined('CLASS_MODULE')) {
         }
 
         /**
+         * exports fixed params as base64
+         *
+         * @return string params
+         */
+        public function exportParams(): string
+        {
+            return base64url_encode(http_build_query($this->fixedParams));
+        }
+
+        /**
          * Setzt einen Parameter in einem vorhandenen Modul. Benutzt die Weblication Funktion "findComponent" zum Ermitteln des Moduls.
          * Es werden nur Module gefunden, deren Eigent�mer Weblication zugewiesen wurde.
          *
@@ -208,6 +221,7 @@ if(!defined('CLASS_MODULE')) {
          * @param string $param Name des Parameters
          * @param string $value Zu setzender Wert
          * @return bool Erfolgsstatus
+         * @deprecated
          */
         function setParam($modulename, $param, $value=null)
         {
@@ -222,6 +236,18 @@ if(!defined('CLASS_MODULE')) {
                     sprintf('Cannot find Module "%s" (@setParam). Param "%s" not set.', $modulename, $param));
             }
             return $bResult;
+        }
+
+
+        /**
+         * get fixed param
+         *
+         * @param $param
+         * @return mixed|null
+         */
+        public function getFixedParam($param)
+        {
+            return $this->fixedParams[$param] ?? null;
         }
 
         /**
