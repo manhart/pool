@@ -37,7 +37,7 @@ if(!defined('CLASS_DAO')) {
     if(!defined('DATAINTERFACE_MSSQL')) define('DATAINTERFACE_MSSQL', 'MSSQL_Interface');
     if(!defined('DATAINTERFACE_POSQL')) define('DATAINTERFACE_POSQL',	'PostgreSQL_Interface');
     if(!defined('DATAINTERFACE_C16')) define('DATAINTERFACE_C16',			'C16_Interface');
-    
+
     /**
      * DAO
      *
@@ -55,20 +55,18 @@ if(!defined('CLASS_DAO')) {
         var $type = null;
 
         /**
-         * Spaltennamen
+         * columns of table
          *
-         * @access private
-         * @var array
+         * @var array|string[]
          */
-        var $columns = array();
+        protected array $columns = [];
 
         /**
-         * Prim�rschl�ssel
+         * primary key of table
          *
-         * @access private
-         * @var array
+         * @var array|string[]
          */
-        var $pk = array();
+        protected array $pk = [];
 
         /**
          * Spalten in detaillierter Form (siehe MySQL: SHOW COLUMNS)

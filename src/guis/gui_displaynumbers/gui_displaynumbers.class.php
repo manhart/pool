@@ -27,17 +27,9 @@ class GUI_DisplayNumbers extends GUI_Module
 {
     var $returnValue = '';
 
-    /**
-     * GUI_DisplayNumbers::GUI_DisplayNumbers()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner, $AutoLoadFiles=false)
+    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $autoLoadFiles, $params);
     }
 
     /**

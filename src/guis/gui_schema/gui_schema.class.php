@@ -32,10 +32,12 @@ class GUI_Schema extends GUI_Module
      *
      * @access public
      * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
+     * @param bool $autoLoadFiles
+     * @param array $params
+     */
+    function __construct(& $Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false);
+        parent::__construct($Owner, false, $params);
     }
 
     /**
@@ -62,28 +64,39 @@ class GUI_Schema extends GUI_Module
     {
         $directory = './' . addEndingSlash(PWD_TILL_SCHEMES);
 
+        // fixed param "category": Divides schemas into subdirectories
+        $category = $this->getFixedParam('category');
+        if($category != null) $directory .= addEndingSlash($category);
+
+        // fixed param "alternate": Switch to an alternative if the schema was not found in the folder.
+        $alternate = $this->getFixedParam('alternate');
+
         $numSchemes = count($schemes);
         if ($numSchemes > 0) {
-            $this -> SchemeHandles = Array();
+            $this->SchemeHandles = Array();
 
-            $this -> Template -> setDirectory($directory);
+            $this->Template->setDirectory($directory);
             for ($i=0; $i<$numSchemes; $i++) {
                 $bExists = file_exists($directory . $schemes[$i] . '.html');
+                if($bExists == false and $alternate != null) {
+                    $schemes[$i] = $alternate;
+                    $bExists = file_exists($directory . $schemes[$i] . '.html');
+                }
                 if ($bExists) {
                     $uniqid = 'file_'.$i; // uniqid('file_'); uniqid bremst das Laufzeitverhalten emens!
-                    $this -> Template -> setFile($uniqid, $schemes[$i] . '.html');
-                    $this -> SchemeHandles[] = $uniqid;
+                    $this->Template->setFile($uniqid, $schemes[$i] . '.html');
+                    $this->SchemeHandles[] = $uniqid;
                 }
                 else {
-                    $this -> Schema404($schemes[$i]);
+                    $this->Schema404($schemes[$i]);
                     break;
                 }
                 unset($uniqid);
             }
-            $this -> Schemes = $schemes;
+            $this->Schemes = $schemes;
         }
         else {
-            $this -> Schema404();
+            $this->Schema404();
         }
     }
 
@@ -98,14 +111,14 @@ class GUI_Schema extends GUI_Module
      **/
     function Schema404($schema = '')
     {
-        $this -> raiseError(__FILE__, __LINE__, sprintf('Schema \'%s\' doesn\'t exist', $schema . '.html'));
-        $this -> SchemeHandles = Array();
-        $this -> Template -> clear();
-        $file = $this -> Weblication -> findTemplate('schema404.html', $this -> getClassName(), true);
-        $this -> Template -> setFilePath('error404', $file);
-        $this -> Template -> setVar('SCHEMA', empty($schema) ? '(empty)' : $schema  . '.html');
-        $this -> SchemeHandles[] = 'error404';
-        $schemes = Array();
+        $schema404 = 'schema404.html';
+        $this->raiseError(__FILE__, __LINE__, sprintf('Schema \'%s\' doesn\'t exist', $schema . '.html'));
+        $this->SchemeHandles = array();
+        $this->Template->clear();
+        $file = $this->Weblication->findTemplate($schema404, $this->getClassName(), true);
+        $this->Template->setFilePath('error404', $file);
+        $this->Template->setVar('SCHEMA', empty($schema) ? '(empty)' : $schema . '.html');
+        $this->SchemeHandles[] = 'error404';
     }
 
     /**
@@ -117,12 +130,12 @@ class GUI_Schema extends GUI_Module
     function prepare()
     {
         $schemes = array();
-    
+
         $schema = $this->Input->getVar('schema');
         if($schema == '') {
             $schema = $this->Weblication->getDefaultSchema();
         }
-        
+
         if(strpos($schema, ',') !== false) {
             $schemes = explode(',', $schema);
         }

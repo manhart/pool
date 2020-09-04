@@ -295,7 +295,7 @@ if(!defined('CLASS_MYSQLDAO')) {
             }
             for($i=0; $i < $count; $i++) {
                 $column = trim($this->columns[$i]);
-                
+
                 $custom_column = $alias.$column;
 
                 if(strpos($column, ' ') !== false) { // column contains space
@@ -312,7 +312,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 }
                 //$column_list .=  /*(($this -> table) ? $this -> table . '.' : '') . */$column;
                 $column_list .= $custom_column;
-                
+
                 if ($i < ($count - 1)) {
                     $column_list .= ', ';
                 }
@@ -392,10 +392,10 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $enclosed = false;
                 $coltype_mysql = $colinfo['Type'];
                 for($i=0, $len=strlen($coltype_mysql); $i<$len; $i++) {
-                    $chr = $coltype_mysql{$i};
+                    $chr = $coltype_mysql[$i];
                     switch($chr) {
                         case $enclosure:
-                            if($enclosed && $coltype_mysql{$i+1} == $enclosure) {
+                            if($enclosed && $coltype_mysql[$i+1] == $enclosure) {
                                 $fldval .= $chr;
                                 ++$i; //skip next char
                             }
@@ -691,12 +691,6 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildLimit($limit)
             );
 
-//			if(IS_TESTSERVER) {
-//				$fh = fopen(addEndingSlash(DIR_DOCUMENT_ROOT).'debug.txt', 'a');
-//				fwrite($fh, $sql.chr(10));
-//				fclose($fh);
-//			}
-
             $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
@@ -900,7 +894,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                     else {
                         $sql .= ', ';
                     }
-                    
+
                     $sql .= $alias.$column.' '.$sort;
                 }
             }
@@ -1024,12 +1018,12 @@ class CustomMySQL_DAO extends MySQL_DAO
      * @param string $table Tabelle
      * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
      **/
-    function __construct(& $db, $dbname, $table, $autoload_fields=true)
+    public function __construct(& $db, $dbname, $table, $autoload_fields=true)
     {
         parent::__construct();
 
         if(!is_a($db, 'DataInterface')) {
-            $Xeption = new Xception('Es wurde kein DataInterface �bergeben!', 0, array('file' => __FILE__,
+            $Xeption = new Xception('No data interface was passed!', 0, array('file' => __FILE__,
                 'line' => __LINE__), null);
             $this -> throwException($Xeption);
         }
@@ -1041,6 +1035,32 @@ class CustomMySQL_DAO extends MySQL_DAO
             //$this -> column_list = '*';
             //$this -> pk = 'id';
             $this->init();
+        }
+        else {
+            // Maybe there are columns in the "columns" property
+            $this->rebuildColumnList();
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableName()
+    {
+        return $this->table;
+    }
+
+    /**
+     * rebuild column list
+     */
+    private function rebuildColumnList()
+    {
+        // Columns are predefined as property "columns".
+        if(count($this->columns) > 0) {
+            $table = '`'.$this->table.'`';
+            $glue = '`, '.$table.'.`';
+            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
+            $this->column_list = $column_list;
         }
     }
 }

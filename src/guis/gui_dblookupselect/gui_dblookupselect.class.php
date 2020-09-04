@@ -26,18 +26,6 @@
 class GUI_DBLookupSelect extends GUI_Select
 {
     /**
-     * Constructor
-     *
-     * @param object $Owner Klasse vom Typ Component (Besitzer/Owner)
-     * @see Component
-     * @access public
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
-    /**
      * Initialisiert Standardwerte:
      *
      * tabledefine 		= ''	Tabellendefinition (siehe database.inc.php)

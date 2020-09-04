@@ -36,19 +36,6 @@
 class GUI_Shadowimage extends GUI_Module
 {
     /**
-     * GUI_Shadowimage::GUI_Shadowimage()
-     *
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
-    /**
      * GUI_Shadowimage::init()
      *
      * Default Werte setzen. Input initialisieren.

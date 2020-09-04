@@ -33,17 +33,6 @@ class GUI_Splitter extends GUI_Module
     var $splitter = '';
 
     /**
-     * Konstruktor
-     *
-     * @access public
-     * @param object $Owner Besitzer vom Typ Component
-     **/
-    function __construct(& $Owner)
-    {
-        parent::__construct($Owner);
-    }
-
-    /**
      * Standardwerte:
      * type=digits|chars|page selbsterkl�rend, seitenweise ueber Seitenzahlen oder alphabetisch Trennung oder Seitennavigation
      * "digits" stellt eine Navigation mit Seitenzahlen dar (like Suchmaschinen)
@@ -216,7 +205,7 @@ class GUI_Splitter extends GUI_Module
                 $this -> splitter = $this -> getPage();
                 break;
 
-                
+
 
         }
     }
@@ -309,7 +298,7 @@ class GUI_Splitter extends GUI_Module
             }
 
                 $buf = "<select size=\"1\" name=\"selpage\" class=\"".$Input->getVar('dropdownstyleclass')."\" onchange=\"".$onchange."\">";
-    
+
             $navpage = '';
             for ($p = 0; $p < $numPages; $p++) {
                 $selected = '';
