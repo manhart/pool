@@ -33,12 +33,9 @@
 class GUI_CustomFrame extends GUI_Module
 {
     /**
-     * Header erstellt die HTML-Kopfdaten (<header></header>)
-     *
      * @var GUI_Headerdata
-     * @access public
      */
-    var $Headerdata;
+    public GUI_Headerdata $Headerdata;
 
     /**
      * ToolTip
@@ -111,12 +108,13 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @access public
      * @param object $Owner
-     * @param boolean $AutoLoadFiles
+     * @param bool $autoLoadFiles
+     * @param array $params
      * @return
      **/
-    function __construct(&$Owner, $AutoLoadFiles=true)
+    function __construct(&$Owner, $autoLoadFiles=true, array $params = [])
     {
-        parent::__construct($Owner, $AutoLoadFiles);
+        parent::__construct($Owner, $autoLoadFiles, $params);
 
         if(!$this->preventDefaultHeaderdata) {
             $this->Headerdata = new GUI_Headerdata($Owner);
@@ -337,7 +335,7 @@ class GUI_CustomFrame extends GUI_Module
         $content = str_replace('{DOKEYDOWN}', $dokeydown, $content);
         $content = str_replace('{DOKEYPRESS}', $dokeypress, $content);
 
-        
+
         if (version_compare(phpversion(), '5.0.0', '>=')) {
             if($header_name) $content = str_ireplace(array('<'.$header_name.'>'.'</'.$header_name.'>','<'.$header_name.'>', '<'.$header_name.'/>'), $content_header, $content);
             if($tooltip_name) $content = str_ireplace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);

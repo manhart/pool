@@ -35,10 +35,12 @@
 		#### Prevent multiple loading
 		define('MYSQLi_LAYER', 'mysql5');
 
-		$dbaccessfile = @constant('DBACCESSFILE');
-		if (file_exists($dbaccessfile)) {
-	    	require_once $dbaccessfile;
-		}
+		if(defined('DBACCESSFILE')) {
+            $dbaccessfile = constant('DBACCESSFILE');
+            if (file_exists($dbaccessfile)) {
+                require_once $dbaccessfile;
+            }
+        }
 
 		if(!defined('SQL_READ')) define('SQL_READ', 'READ');
 		if(!defined('SQL_WRITE')) define('SQL_WRITE', 'WRITE');
@@ -139,7 +141,7 @@
 			 * @var string
 			 */
 			var $default_charset = '';
-            
+
             /**
              * @var int Port
              */
@@ -183,7 +185,7 @@
 					return false;
 				}
 				$this->default_database = $Packet['database'];
-				
+
 				if(array_key_exists('port', $Packet)) {
 				    $this->port = $Packet['port'];
                 }
@@ -574,7 +576,7 @@
 
 					$buf = $this->sql;
 					#echo '<hr>'.$buf.'<br>';
-					if($buf{0} == '(') $buf = ltrim(substr($buf, 1));
+					if($buf[0] == '(') $buf = ltrim(substr($buf, 1));
 					$posSpace = strpos($buf, chr(32), 2);
 					$posLN = strpos($buf, chr(10), 2); // TODO MySQL Syntax DO, USE?
 					$posCR = strpos($buf, chr(13), 2);
@@ -771,7 +773,7 @@
 						$query_resource = $this->query_result;
 					}
 				}
-				
+
 
 				if($query_resource) {
 					$row = mysqli_fetch_assoc($query_resource);
@@ -850,7 +852,7 @@
 					return false;
 				}
 			}
-            
+
             /**
              * Wrapper function fuer die fruehere mysql_result
              *

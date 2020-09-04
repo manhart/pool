@@ -689,13 +689,15 @@ function isBoolean(a) {
 }
 
 function isEmpty(o) {
-    var i, v;
     if (isObject(o)) {
-        for (i in o) {
-            v = o[i];
-            if (isUndefined(v) && isFunction(v)) {
+        for (let prop in o) {
+            if(o.hasOwnProperty(prop)) {
                 return false;
             }
+            // v = o[i];
+            // if (isUndefined(v) && isFunction(v)) {
+            //     return false;
+            // }
         }
     }
     else {
@@ -931,6 +933,10 @@ function addOption(selectElement, caption, value) {
 	var optn = document.createElement('OPTION');
 	optn.text = caption;
 	optn.value = value;
+
+	if(arguments[3]) {
+	    optn.selected = arguments[3];
+    }
 
 	try {
 		selectElement.add(optn, null);
@@ -1433,10 +1439,10 @@ function getWeekNumber(day, month, year) {
 		if(order != 'asc') retval = retval * -1;
 		return retval;
 	}
-	
-	/** 
+
+	/**
 	 * Sortierfunktion Float/Waehrung
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @param order
@@ -1446,7 +1452,7 @@ function getWeekNumber(day, month, year) {
 	{
 		a = GermanValueToFloat(a);
 		b = GermanValueToFloat(b);
-		
+
 		var retval = 0;
 		if(a > b) {
 			retval = 1;
@@ -1460,7 +1466,7 @@ function getWeekNumber(day, month, year) {
 
 	/**
 	 * console.log Ersatz
-	 * 
+	 *
 	 * @param text
 	 * @returns {Boolean}
 	 */
@@ -1473,7 +1479,7 @@ function getWeekNumber(day, month, year) {
 					console.log(time + ' ' + type + ':');
 					console.log(text);
 					break;
-					
+
 				default:
 					console.log(time + ' ' + text);
 			}
@@ -1481,11 +1487,11 @@ function getWeekNumber(day, month, year) {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Vererbung von Klassen/Objekten
 	 */
-	Function.prototype.inheritsFrom = function(parentClassOrObject) 
+	Function.prototype.inheritsFrom = function(parentClassOrObject)
 	{
 		if (parentClassOrObject.constructor == Function) {
 			// Normal Inheritance
@@ -1501,7 +1507,7 @@ function getWeekNumber(day, month, year) {
 		}
 		return this;
 	}
-	
+
 	/**
 	 * Falls Object.create nicht existiert wie im IE8 (Pseudo-Funktion)
 	 */
@@ -1518,7 +1524,7 @@ function getWeekNumber(day, month, year) {
 			}
 		})()
 	}
-	
+
 	/**
 	 * Falls Object.keys nicht exisstiert wie im IE8/9
 	 */
@@ -1545,13 +1551,13 @@ function getWeekNumber(day, month, year) {
 				}
 
 				var result = [], prop, i;
-		
+
 				for (prop in obj) {
 					if (hasOwnProperty.call(obj, prop)) {
 						result.push(prop);
 					}
 				}
-		
+
 				if (hasDontEnumBug) {
 					for (i = 0; i < dontEnumsLength; i++) {
 						if (hasOwnProperty.call(obj, dontEnums[i])) {
@@ -1688,20 +1694,20 @@ function string2bool(val)
 function downloadFile(file)
 {
 	var ts = new Date().getTime(); // Timestamp
-	
+
 	var link = document.createElement('a');
 
 	link.setAttribute('id', 'tmpdownload' + ts);
 	link.setAttribute('type', 'application/octet-stream');
-	
+
 	var isIE = /*@cc_on!@*/false;
 	if(isIE) {
 		link.target = '_blank';
 		document.body.appendChild(link);
 	}
-	
+
 	link.href = file + '?' + ts;
-	
+
 	// HTML 5
 	link.download = basename(file);
 
@@ -1710,14 +1716,14 @@ function downloadFile(file)
 		// funktioniert leider nicht im Safari unter Windows
 		var clickEvent = document.createEvent('MouseEvent');
 		clickEvent.initEvent('click', true, true);
-		
+
 		link.target = '_blank';
 		link.dispatchEvent(clickEvent);
 	}
 	else if(link.click) {
 		link.click();
 	}
-	
+
 	if(isIE) {
 		document.body.removeChild(link);
 	}
@@ -1738,16 +1744,16 @@ function base64ToBlob(data, contentType)
 	else {
 		var byteChars = window.atob(data);
 	}
-	
+
 	byteNumbers = new Array(byteChars.length);
-	
+
 	for (var i = 0; i < byteChars.length; i++) {
 		byteNumbers[i] = byteChars.charCodeAt(i);
 	}
-	
+
 	// < IE 10 benoetigt typedarray.js
 	var byteArray = new Uint8Array(byteNumbers);
-	
+
 	try{
 		// < IE 10 benoetigt Blob.js
 		var blob = new Blob([byteArray], {type : contentType});
@@ -1771,13 +1777,13 @@ function base64ToBlob(data, contentType)
 			// We're screwed, blob constructor unsupported entirely
 		}
 	}
-	
+
 	return blob;
 }
 
 /*
  var blob = base64ToBlob(pdf_b64, 'application/pdf');
- 
+
  if (window.navigator && window.navigator.msSaveOrOpenBlob) {
  window.navigator.msSaveOrOpenBlob(blob); // for IE
  }
@@ -1800,11 +1806,40 @@ function getDomainFromUrl(url) {
  * Returns classname
  *
  * @param obj
- * @returns {string}
+ * @returns string
  */
 function what(obj) {
-    if(obj == null) return '';
-	return obj.toString().match(/ (\w+)/)[1];
+    /*
+     *  for browsers which have name property in the constructor
+     *  of the object,such as chrome
+     */
+    if(obj && typeof obj === 'object' && obj.constructor) {
+        if (obj.constructor.name) {
+            return obj.constructor.name;
+        }
+
+        var str = obj.constructor.toString();
+
+        /*
+         * executed if the return of object.constructor.toString() is
+         * "[object objectClass]"
+         */
+        if(str.charAt(0) == '[') {
+            var arr = str.match(/\[\w+\s*(\w+)\]/);
+        }
+        else {
+            /*
+             * executed if the return of object.constructor.toString() is
+             * "function objectClass () {}"
+             * for IE Firefox
+             */
+            var arr = str.match(/function\s*(\w+)/);
+        }
+        if (arr && arr.length == 2) {
+            return arr[1];
+        }
+    }
+    return undefined;
 }
 
 /**
@@ -1829,9 +1864,443 @@ function camelize(text) {
  */
 function decamelize(str, separator){
     separator = typeof separator === 'undefined' ? '_' : separator;
-    
+
     return str
     .replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2')
     .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
     .toLowerCase();
+}
+
+/**
+ * UnknownClassException
+ *
+ * @param message
+ * @constructor
+ */
+function UnknowClassException(message) {
+    this.message = message;
+    this.name = 'UnknownClassException';
+}
+
+/**
+ * Calls function (fn) after DOM content is loaded
+ *
+ * @param function fn
+ * @see http://youmightnotneedjquery.com/#ready
+ */
+function ready(fn) {
+    if (document.readyState === 'complete' ||
+        (document.readyState !== 'loading' && !document.documentElement.doScroll)) {
+        fn();
+    }
+    else if (document.addEventListener) {
+        // IE9+
+        document.addEventListener('DOMContentLoaded', fn);
+    }
+    else {
+        // older IE versions
+        document.attachEvent('onreadystatechange', function() {
+            if (document.readyState != 'loading') {
+                // remove the listener, to make sure it isn't fired in future
+                document.detachEvent("onreadystatechange", arguments.callee);
+                fn();
+            }
+        });
+    }
+}
+
+/**
+ * Fuelle Steuerelemente
+ */
+function fillControls(containerSelector, rowSet)
+{
+    if(!Array.isArray(rowSet) && !isObject(rowSet)) {
+        return false;
+    }
+
+    if(rowSet[0] === undefined) {
+        rowSet = [rowSet];
+    }
+
+    // Zeile fuer Zeile durch das Rowset
+    for(var r=0; r<rowSet.length; r++) {
+        var row2 = rowSet[r];
+
+        // Feld fuer Feld ermitteln wir die HTML-Elemente
+        for(var field in row2) {
+            // Felder mit dem Namen/Suffix _class dienen zur Zuweisung von Styles und sind keine Felder
+            if(field.substr(field.length-6) == '_class') continue;
+            // Felder mit dem Namen/Suffix _title dienen zur Zuweisung von Titles/ToolTips und sind keine Felder
+            if(field.substr(field.length-6) == '_title') continue;
+
+            // Wert
+            var value = row2[field];
+
+            if((typeof value) == 'string') {
+                value = value.replace(String.fromCharCode(128), String.fromCharCode(8364));
+            }
+
+            // 21.01.2013, AM, Beschleunigung der Feldersuche ueber die Ids
+            // var selector = containerSelector+' [name='+field+'], '+containerSelector+' #'+field;
+            let selectors = explode(',', containerSelector, false);
+
+            let name_selector = '', id_selector = '';
+            for(let s=0; s<selectors.length; s++) {
+                if(name_selector != '') name_selector += ',';
+                name_selector += selectors[s] +' [name='+field+']';
+                if(id_selector != '') id_selector += ',';
+                id_selector += selectors[s]+' #'+field;
+            }
+
+            //log('jFillControlls name_selector: '+name_selector);
+            //log('jFillControlls id_selector: '+id_selector);
+            jQuery(name_selector).add(id_selector).each(function() {
+                var Ctrl = jQuery(this);
+                //log('HTMLElement: '+Ctrl.attr('id')+'='+value);
+                if(row2[field+'_class']) Ctrl.addClass(row2[field+'_class']);
+                if(row2[field+'_title']) Ctrl.attr('title', row2[field+'_title']);
+
+                if(r == rowSet.length-1) {
+                    switch(Ctrl[0].tagName) {
+                        case 'TEXTAREA':
+                        case 'SPAN':
+                        case 'DIV':
+                            Ctrl.html(value);
+
+                            // Chrome Fix
+                            // CS,31.05.2015 : Auch bei anderen Browsern (IE) val() verwenden bei TEXTAREA.
+                            // Zeilenenden (\r\n) funktionieren bei html() im IE nicht.
+                            if(Ctrl[0].tagName == 'TEXTAREA') {
+                                Ctrl.val(value);
+                            }
+                            break;
+
+                        case 'IMG':
+                            if(isEmpty(value)) Ctrl.hide();
+                            else {
+                                Ctrl.attr('src', value);
+                                Ctrl.show();
+                            }
+                            break;
+
+                        case 'INPUT':
+                            var ctrlType = Ctrl.attr('type');
+
+                            // Checkbox mit 3 Statis
+                            if(Ctrl.data('tri-state-checkbox')) {
+                                // TODO implementierung in jquery
+                                var possibleValues = explode(',', Ctrl.data('possible-values'));
+                                var img = jQuery('#tri-state-checkbox-'+Ctrl.attr('id'));
+                                switch(value) {
+                                    case null:
+                                    case possibleValues[0]:
+                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-partial');
+                                        break;
+
+                                    case possibleValues[1]:
+                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-full');
+                                        break;
+
+                                    case possibleValues[2]:
+                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-none');
+                                        break;
+                                }
+                                Ctrl.val(value);
+                                break;
+                            }
+
+                            switch(ctrlType) {
+                                case 'checkbox':
+                                case 'radio':
+                                    Ctrl.prop('checked', (value == Ctrl.val()));
+                                    break;
+
+                                default:
+                                    Ctrl.val(value);
+                            }
+                            break;
+
+                        default:
+                            Ctrl.val(value);
+                            if(Ctrl.data('initialValue') == undefined) {
+                                Ctrl.data('initialValue', value);
+                            }
+                            break;
+                    }
+                }
+                else {
+                    if(value != rowSet[rowSet.length-1][field]) {
+                        // Werte werden aufaddiert; TODO String u. Int/Double Unterscheidung
+                        if(Ctrl.data('fill-sum')) {
+                            var shorten = Ctrl.data('fill-sum-shorten');
+                        }
+                        else {
+                            rowSet[rowSet.length-1][field] = null;
+                        }
+                    }
+                }
+
+                Ctrl[0].classList.remove('is-invalid');
+                Ctrl[0].classList.remove('is-valid');
+                if(Ctrl[0].closest('.needs-validation')) {
+                    Ctrl[0].closest('.needs-validation').classList.remove('was-validated');
+                }
+            });
+        }
+    }
+}
+
+/**
+ * Füllt Eingabecontrols
+ */
+// function fillControls(doc, daten, gui_error)
+// {
+//     if (is.ie) {
+//         var attrClass = 'className';
+//     }
+//     else {
+//         // firefox
+//         var attrClass = 'class';
+//     }
+//
+//     for (var feld in daten) {
+//         var controls = doc.getElementsByName(feld);
+//         //alert('Control '+feld+' not found in your browser! doc.getElementsByName(\''+feld+'\')');
+//
+//         var daten_value = daten[feld];
+//
+//         if(daten_value == null) {
+//             daten_value = ''; // TODO f. multiselect <-> null
+//         }
+//
+//         // Alex, Euro Symbol in HTML Euro Zeichen transformieren
+//         // siehe http://www.cs.tut.fi/~jkorpela/html/euro.html
+//         if(typeof daten_value == 'string') {
+//             daten_value = daten_value;
+//             daten_value = daten_value.replace(String.fromCharCode(128), String.fromCharCode(8364));
+//         }
+//
+//         if (controls && controls.length > 0) {
+//             for (var i=0; i<controls.length; i++) {
+//                 var elem = controls[i];
+//                 var tagName = elem.tagName.toUpperCase();
+//
+//                 if (tagName == 'SPAN' || tagName == 'DIV') {
+//                     elem.innerHTML = daten_value;
+//                     if(daten[feld + '_class']) {
+//                         elem.className  = unescape(daten[feld + '_class']);
+//                     }
+//                 }
+//                 else if(tagName == 'IMG') {
+//                     //alert(elem.src);
+//                     if(isEmpty(daten_value)) {
+//                         jQuery(elem).hide();
+//                     }
+//                     else {
+//                         elem.src = daten_value;
+//                         if(daten[feld + '_title']) {
+//                             elem.title = unescape(daten[feld + '_title']);
+//                         }
+//                         jQuery(elem).show();
+//                     }
+//                 }
+//                 else if(tagName == 'FONT') {
+//                     if(daten[feld + '_color']) {
+//                         elem.color  = unescape(daten[feld + '_color']);
+//                     }
+//                 }
+//                 else if(tagName == 'INPUT') {
+//                     elem.setAttribute('set_value', daten_value);
+//                     var elemType = elem.type.toUpperCase();
+//
+//                     if(elemType == 'CHECKBOX') {
+//                         var triStateCheckbox = elem.getAttribute('data-tri-state-checkbox');
+//                         if(!triStateCheckbox) {
+//                             elem.checked = (daten_value == 1) || (elem.value == daten_value);
+//                         }
+//                         else {
+//                             // TODO implement in jQuery
+//                             setTriStateCheckboxValue(elem, daten_value);
+//                         }
+//                     }
+//                     else if(elemType == 'RADIO') {
+//                         elem.checked = (elem.value == daten_value);
+//                     }
+//                     else {
+//                         elem.value = daten_value;
+//                     }
+//
+//                     if (feld == gui_error) {
+//                         elem.setAttribute('save_class', elem.getAttribute(attrClass));
+//                         elem.setAttribute(attrClass, elem.getAttribute('class_error'));
+//                     }
+//                     else {
+//                         var save_class = elem.getAttribute('save_class');
+//                         if (save_class) {
+//                             elem.setAttribute(attrClass, save_class);
+//                         }
+//                     }
+//                 }
+//                 else {
+//                     elem.setAttribute('set_value', daten_value);
+//                     elem.value = daten_value;
+//                 }
+//             }
+//         }
+//     }
+// }
+
+/**
+ * Empties the contents of the elements
+ *
+ * @param elements
+ */
+function clearControls(elements)
+{
+    for (let z=0; z<elements.length; z++) {
+        let elem = elements[z];
+
+        let tagName = elem.tagName.toUpperCase();
+        let elemType = (elem.type) ? elem.type.toUpperCase() : '';
+        if (tagName == 'SPAN') {
+            elem.innerHTML = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+        }
+        else if(elemType == 'CHECKBOX' || elemType == 'RADIO') {
+            if(elem.getAttribute('data-default-checked') != null) {
+                elem.checked = elem.getAttribute('data-default-checked');
+            }
+            else elem.checked = false;
+        }
+        else if(elemType == 'SELECT-ONE') {
+            if(elem.getAttribute('data-default-value') != null) {
+                for(var x=0; x<elem.options.length; x++) {
+                    if(elem.options[x].value == elem.getAttribute('data-default-value')) {
+                        elem.options.selectedIndex = x;
+                        break;
+                    }
+                }
+            }
+            else {
+                elem.options.selectedIndex = 0;
+            }
+        }
+        else {
+            // if(checkIsSuchfeld == 1) {
+            //     if(elem.getAttribute('isSuchfeld') == 1) {
+            //         elem.setAttribute('defaultValue', null);
+            //         continue;
+            //     }
+            // }
+            if(elem.getAttribute('data-empty-default-value')) {
+                elem.setAttribute('data-default-value', null);
+            }
+            elem.value = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+        }
+
+        elem.classList.remove('is-invalid');
+        elem.classList.remove('is-valid');
+        if(elem.closest('.needs-validation')) {
+            elem.closest('.needs-validation').classList.remove('was-validated');
+        }
+    }
+}
+
+/**
+ * Modifies the provided hidden input so value changes to trigger events.
+ *
+ * After this method is called, any changes to the 'value' property of the
+ * specified input will trigger a 'change' event, just like would happen
+ * if the input was a text field.
+ *
+ * As explained in the following SO post, hidden inputs don't normally
+ * trigger on-change events because the 'blur' event is responsible for
+ * triggering a change event, and hidden inputs aren't focusable by virtue
+ * of being hidden elements:
+ * https://stackoverflow.com/a/17695525/4342230
+ *
+ * @param {HTMLInputElement} inputElement
+ *   The DOM element for the hidden input element.
+ */
+function setupHiddenInputChangeListener(inputElement) {
+    const propertyName = 'value';
+
+    const {get: originalGetter, set: originalSetter} =
+        findPropertyDescriptor(inputElement, propertyName);
+
+    // We wrap this in a function factory to bind the getter and setter values
+    // so later callbacks refer to the correct object, in case we use this
+    // method on more than one hidden input element.
+    const newPropertyDescriptor = ((_originalGetter, _originalSetter) => {
+        return {
+            set: function(value) {
+                const currentValue = originalGetter.call(inputElement);
+
+                // Delegate the call to the original property setter
+                _originalSetter.call(inputElement, value);
+
+                // Only fire change if the value actually changed.
+                if (currentValue !== value) {
+                    inputElement.dispatchEvent(new Event('change'));
+                }
+            },
+
+            get: function() {
+                // Delegate the call to the original property getter
+                return _originalGetter.call(inputElement);
+            }
+        }
+    })(originalGetter, originalSetter);
+
+    Object.defineProperty(inputElement, propertyName, newPropertyDescriptor);
+};
+
+/**
+ * Search the inheritance tree of an object for a property descriptor.
+ *
+ * The property descriptor defined nearest in the inheritance hierarchy to
+ * the class of the given object is returned first.
+ *
+ * Credit for this approach:
+ * https://stackoverflow.com/a/38802602/4342230
+ *
+ * @param {Object} object
+ * @param {String} propertyName
+ *   The name of the property for which a descriptor is desired.
+ *
+ * @returns {PropertyDescriptor, null}
+ */
+function findPropertyDescriptor(object, propertyName) {
+    if (object === null) {
+        return null;
+    }
+
+    if (object.hasOwnProperty(propertyName)) {
+        return Object.getOwnPropertyDescriptor(object, propertyName);
+    }
+    else {
+        const parentClass = Object.getPrototypeOf(object);
+
+        return findPropertyDescriptor(parentClass, propertyName);
+    }
+}
+
+/**
+ * Trigger an event
+ *
+ * @param element Element
+ * @param type Event Type
+ */
+function triggerEvent(element, type) {
+    if ('createEvent' in document) {
+        // modern browsers, IE9+
+        let Event = document.createEvent('HTMLEvents');
+        Event.initEvent(type, false, true);
+        element.dispatchEvent(Event);
+    }
+    else {
+        // IE 8
+        let Event = document.createEventObject();
+        Event.eventType = type;
+        element.fireEvent('on'+Event.eventType, Event);
+    }
 }

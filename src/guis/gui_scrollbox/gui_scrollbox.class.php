@@ -38,12 +38,14 @@ class GUI_Scrollbox extends GUI_Module
      *
      * @access public
      * @param object $Owner Besitzer
-     **/
-    function __construct(& $Owner)
+     * @param bool $autoLoadFiles
+     * @param array $params
+     */
+    function __construct(& $Owner, $autoLoadFiles = true, array $params = [])
     {
         $this->TplSbox = new Template();
 
-        parent::__construct($Owner);
+        parent::__construct($Owner, $autoLoadFiles, $params);
 
         $file = $this->Weblication->findTemplate($this->Input->getVar('fileTemplateHTML'),
             'gui_scrollbox', true);

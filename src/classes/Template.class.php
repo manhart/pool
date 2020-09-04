@@ -746,8 +746,8 @@
                 $content = '';
 				$fp = fopen($this->getDirectory().$this->Filename, 'r');
 				if (!$fp) {
-					$this -> raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
-						$this -> Filename));
+					$this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
+                        $this->getDirectory().$this->Filename));
 				    return;
 				}
 				$size = filesize($this->Directory.$this->Filename);
@@ -788,11 +788,11 @@
 /* --------------------- */
 ######## TempSimple #######
 /* --------------------- */
-		class TempSimple extends TempFile
+		class TempSimple extends TempCoreHandle
 		{
 			function __construct($handle, $content)
 			{
-				parent::__construct('FILE', '');
+				parent::__construct('FILE', '', '');
 				$this->setHandle($handle);
 				$this->setContent($content);
 			}
@@ -1158,24 +1158,22 @@
         	 	unset($this -> ActiveBlock);
 			}
 
-			/**
-			 * Weist die Template Engine an, als n�chstes einen anderen BLOCK zu verwenden.
-			 *
-			 * @param string $blockHandle Name des Block
-			 * @return boolean Erfolgsstatus
-			 **/
+            /**
+             * Weist die Template Engine an, als nächstes einen anderen BLOCK zu verwenden.
+             *
+             * @param string $blockHandle name of block
+             * @return bool|TempBlock
+             */
 			function useBlock($blockHandle)
 			{
-				$bResult = false;
-				if ($this -> ActiveFile)
-				{
-					$ActiveBlock = &$this -> ActiveFile -> getTempBlock($blockHandle);
-					if(is_object($ActiveBlock)) {
-						$this -> ActiveBlock = &$ActiveBlock;
-						$bResult = true;
+				if ($this->ActiveFile) {
+					$ActiveBlock = &$this->ActiveFile->getTempBlock($blockHandle);
+					if($ActiveBlock != false) {
+						$this->ActiveBlock = &$ActiveBlock;
+						return $this->ActiveBlock;
 					}
 				}
-				return $bResult;
+				return false;
 			}
 
 			/**
@@ -1204,7 +1202,7 @@
 			* Synonym auf die Template Funktion Template::assignVar().
 			*
 			* @access public
-			* @param string $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
+			* @param string|array $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
 			* @param string $value Wert der Variable
 			* @see Template::assignVar()
 			*/
@@ -1262,11 +1260,10 @@
 			function parse($handle = '')
 			{
 				if ($handle != '') {
-				    $this -> useFile($handle);
+				    $this->useFile($handle);
 				}
-				if (@is_a($this->ActiveFile, 'TempFile')) {
-					$TempFile = & $this -> ActiveFile;
-					$TempFile -> parse();
+				if($this->ActiveFile) {
+                    $this->ActiveFile->parse();
 				}
 				return $this;
 			}
@@ -1280,16 +1277,14 @@
 			*/
 			function getContent($handle = '')
 			{
-        	 	$content = '';
             	if ($handle != '') {
-                	$this -> useFile($handle);
+                	$this->useFile($handle);
 	            }
 
-	            if (@is_a($this->ActiveFile, 'TempFile')) {
-    	            $TempFile = & $this -> ActiveFile;
-        	        $content = $TempFile -> getParsedContent();
+	            if ($this->ActiveFile) {
+        	        return $this->ActiveFile->getParsedContent();
             	}
-	            return $content;
+	            return '';
 			}
 
 			/**

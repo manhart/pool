@@ -30,16 +30,6 @@
 		var $sort='';
 
 		/**
-		 * Konstruktor
-		 *
-		 * @param object $Owner Klasse vom Typ Component
-		 **/
-		function __construct(& $Owner, $autoload_files=true)
-		{
-			parent::__construct($Owner, $autoload_files);
-		}
-
-		/**
 		 * Initialisiert Standardwerte.
 		 *
 		 * @access public

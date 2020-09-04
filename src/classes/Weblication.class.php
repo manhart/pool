@@ -99,7 +99,7 @@ if(!defined('CLASS_WEBLICATION')) {
          *
          * @var string
          */
-        var $skin = 'default';
+        private $skin = 'default';
 
         /**
          * Sprache der Seite
@@ -330,8 +330,8 @@ if(!defined('CLASS_WEBLICATION')) {
         function &getFrame()
         {
             if($this->Main instanceof GUI_CustomFrame) {
-            return $this -> Main;
-        }
+                return $this->Main;
+            }
             throw new Exception('No Frame there');
         }
 
@@ -513,12 +513,12 @@ if(!defined('CLASS_WEBLICATION')) {
             $gui_directories = array(
                 $folder_guis
             );
-            
+
             # Ordner Commons guis
             if(defined('DIR_COMMON_ROOT')) {
                 $gui_directories[] = addEndingSlash(DIR_COMMON_ROOT).$folder_guis;
             }
-            
+
             foreach ($gui_directories as $folder_guis) {
                 $folder_skins = $folder_guis.$skin;
                 $folder_language = $folder_skins.$language;
@@ -538,7 +538,7 @@ if(!defined('CLASS_WEBLICATION')) {
                     }
                 }
             }
-            
+
 
             # Ordner baselib
             if ($baselib) {
@@ -570,9 +570,19 @@ if(!defined('CLASS_WEBLICATION')) {
             $stylesheets = $this->cssFolder.'/';
 
             # folder: skins
-            $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
-            $folder_stylesheets = $folder_skins . $stylesheets;
-            $folder_language = $folder_skins . $language . $stylesheets;
+            $folder_skins = addEndingSlash(PWD_TILL_SKINS);
+            $folder_default = $folder_skins . 'default/'; // TODO AM, making it configurable
+            $folder_skins_stylesheets = $folder_default . $stylesheets;
+
+            if (is_dir($folder_skins_stylesheets)) { // skins - skinname - stylesheet folder
+                if (file_exists($folder_skins_stylesheets.$filename)) {
+                    return $folder_skins_stylesheets.$filename;
+                }
+            }
+
+            $folder_skin = $folder_skins . $skin;
+            $folder_skin_stylesheets = $folder_skin . $stylesheets;
+            $folder_language = $folder_skin . $language . $stylesheets;
 
             if (is_dir($folder_language)) { // skins - skinname - language - stylesheet folder
                 if (file_exists($folder_language.$filename)) {
@@ -580,24 +590,24 @@ if(!defined('CLASS_WEBLICATION')) {
                 }
             }
 
-            if (is_dir($folder_stylesheets)) { // skins - skinname - stylesheet folder
-                if (file_exists($folder_stylesheets.$filename)) {
-                    return $folder_stylesheets.$filename;
+            if (is_dir($folder_skin_stylesheets)) { // skins - skinname - stylesheet folder
+                if (file_exists($folder_skin_stylesheets.$filename)) {
+                    return $folder_skin_stylesheets.$filename;
                 }
             }
 
             # Projekt folder: guis
             $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
-            $folder_skins = $folder_guis . $skin;
-            $folder_language = $folder_skins . $language;
+            $folder_skin = $folder_guis . $skin;
+            $folder_language = $folder_skin . $language;
             if (is_dir($folder_language)) { // guis - classname - skin - language folder
                 if (file_exists($folder_language . $filename)) {
                     return $folder_language . $filename;
                 }
             }
-            if (is_dir($folder_skins)) { // guis - classname - skin folder
-                if (file_exists($folder_skins . $filename)) {
-                    return $folder_skins . $filename;
+            if (is_dir($folder_skin)) { // guis - classname - skin folder
+                if (file_exists($folder_skin . $filename)) {
+                    return $folder_skin . $filename;
                 }
             }
             if (is_dir($folder_guis)) { // guis - classname folder
@@ -651,17 +661,17 @@ if(!defined('CLASS_WEBLICATION')) {
                     return $folder.$filename;
                 }
             }
-            else {                
+            else {
                 $folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
-                
+
                 if (file_exists($folder_javascripts.$filename)) {
                     return $folder_javascripts.$filename;
                 }
-                
+
                 if(file_exists($folder_guis.$filename)) {
                     return $folder_guis.$filename;
                 }
-    
+
                 if(defined('DIR_COMMON_ROOT_REL')) {
                     $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL).addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classfolder);
                     if (file_exists($folder_common.$filename)) {
@@ -807,7 +817,7 @@ if(!defined('CLASS_WEBLICATION')) {
             $this->Settings->setVar($settings);
             return $this;
         }
-        
+
         /**
          * Starts a PHP Session via session_start()!
          * We use the standard php sessions.
@@ -831,7 +841,7 @@ if(!defined('CLASS_WEBLICATION')) {
             foreach($sessionConfig as $param => $value) {
                 ini_set('session.'.$param, $value);
             }
-    
+
             $isStatic = !(isset($this)); // TODO static calls or static AppSettings
             if($isStatic) {
                 return new ISession($autoClose);
@@ -926,8 +936,13 @@ if(!defined('CLASS_WEBLICATION')) {
         {
             // TODO Get Parameter frame
             // TODO Subcode :: createSubCode()
+            $params  = $_REQUEST['params'] ?? '';
+            if($params != '' and isAjax()) {
+                $params = base64url_decode($params);
+            }
+
             $Nil = new Nil();
-            $GUI = &GUI_Module::createGUIModule($className, $this, $Nil);
+            $GUI = &GUI_Module::createGUIModule($className, $this, $Nil, $params);
             if (isNil($GUI)) {
                 $this->raiseError(__FILE__, __LINE__, 'Klasse ' . $className .
                     ' wurde nicht gefunden oder existiert nicht. (@Weblication -> run).');
@@ -1017,7 +1032,7 @@ if(!defined('CLASS_WEBLICATION')) {
                 $this->raiseError(__FILE__, __LINE__, 'Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
             }
         }
-    
+
          /**
           * Schliesst alle Verbindungen und loescht die Interface Objekte.
           * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
@@ -1032,7 +1047,7 @@ if(!defined('CLASS_WEBLICATION')) {
                      unset($this->Interfaces[DATAINTERFACE_MYSQL]);
                  }
              }
-        
+
              if(defined('DATAINTERFACE_MYSQLI')) {
                  if (isset($this->Interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->Interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
                      $this->Interfaces[DATAINTERFACE_MYSQLI]->close();

@@ -12,9 +12,9 @@
 */
 class GUI_Comments extends GUI_Module
 {
-    function __construct(& $Owner)
+    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false);
+        parent::__construct($Owner, false, $params);
     }
 
     function init($superglobals=I_EMPTY)
