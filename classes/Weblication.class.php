@@ -491,6 +491,16 @@ if(!defined('CLASS_WEBLICATION')) {
             $language = addEndingSlash($this->language);
             $templates = 'templates/';
 
+            # folder: default
+            $folder_skins = addEndingSlash(PWD_TILL_SKINS);
+            $folder_default_templates = $folder_skins . 'default/'.$templates;// TODO AM, making it configurable
+
+            if (is_dir($folder_default_templates)) { // skins - skinname - stylesheet folder
+                if (file_exists($folder_default_templates.$filename)) {
+                    return $folder_default_templates.$filename;
+                }
+            }
+
             # Ordner skins
             $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
             $folder_templates = $folder_skins . $templates;
