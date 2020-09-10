@@ -381,7 +381,7 @@ if(!defined('CLASS_POOLOBJECT')) {
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @access public
      **/
-    class Nil
+    class Nil extends stdClass
     {
     }
 
