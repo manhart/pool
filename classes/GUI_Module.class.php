@@ -21,18 +21,18 @@
 
 define('REQUEST_PARAM_MODULENAME', 'requestModule');
 
- /**
-  * GUI_Module
-  *
-  * Basisklasse fuer alle graphischen Steuerelemente.
-  *
-  * @package rml
-  * @author Alexander Manhart <alexander.manhart@freenet.de>
-  * @version $Id: GUI_Module.class.php,v 1.7 2006/11/02 12:04:54 manhart Exp $
-  * @access public
-  **/
- class GUI_Module extends Module
- {
+/**
+ * GUI_Module
+ *
+ * Basisklasse fuer alle graphischen Steuerelemente.
+ *
+ * @package rml
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @version $Id: GUI_Module.class.php,v 1.7 2006/11/02 12:04:54 manhart Exp $
+ * @access public
+ **/
+class GUI_Module extends Module
+{
     /**
      * Rapid Template Engine
      *
@@ -67,9 +67,9 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     var $AutoLoadFiles;
 
     /**
-    * @var Template $TemplateBox Rapid Template Engine rendert eine Box (nur wenn diese ueber enableBox aktiviert wird)
-    * @access public
-    */
+     * @var Template $TemplateBox Rapid Template Engine rendert eine Box (nur wenn diese ueber enableBox aktiviert wird)
+     * @access public
+     */
     var $TemplateBox = null;
 
     /**
@@ -117,13 +117,13 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     {
         parent::__construct($Owner, $params);
 
-        if(isAjax()) {
-            if(isset($_REQUEST['module']) and strtolower($this->getClassName()) == strtolower($_REQUEST['module'])) {
+        if (isAjax()) {
+            if (isset($_REQUEST['module']) and strtolower($this->getClassName()) == strtolower($_REQUEST['module'])) {
                 $this->isMyXMLHttpRequest = true;
 
                 // eventl. genauer definiert, welches Modul, falls es mehrere des gleichen Typs/Klasse gibt
-                if(isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                    if($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
+                if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
+                    if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
                         $this->isMyXMLHttpRequest = true;
                     }
                     else {
@@ -131,23 +131,23 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
                     }
                 }
             }
-            elseif(isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                if($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
+            elseif (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
+                if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
                     $this->isMyXMLHttpRequest = true;
                 }
             }
 
-            if($this->isMyXMLHttpRequest and isset($_REQUEST['method'])) {
+            if ($this->isMyXMLHttpRequest and isset($_REQUEST['method'])) {
                 $this->XMLHttpRequestMethod = $_REQUEST['method'];
             }
         }
-/*			$this->isMyXMLHttpRequest = (isAjax() and ((isset($_REQUEST['module']) and
-            strtolower($this->getClassName()) == strtolower($_REQUEST['module'])) or
-            (isset($_REQUEST['modulename']) and $this->Name == $_REQUEST['modulename'])) and
-            isset($_REQUEST['method']));*/
+        /*			$this->isMyXMLHttpRequest = (isAjax() and ((isset($_REQUEST['module']) and
+                    strtolower($this->getClassName()) == strtolower($_REQUEST['module'])) or
+                    (isset($_REQUEST['modulename']) and $this->Name == $_REQUEST['modulename'])) and
+                    isset($_REQUEST['method']));*/
 
         if ($Owner instanceof Weblication) {
-            if(is_null($Owner->getMain())) {
+            if (is_null($Owner->getMain())) {
                 $Owner->setMain($this);
             }
         }
@@ -162,7 +162,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      * @access public
      * @param boolean $search True sucht nach weiteren GUIs
      **/
-    function autoLoadFiles($search=true)
+    function autoLoadFiles($search = true)
     {
         if ($this->AutoLoadFiles) {
             // Lade Templates
@@ -180,25 +180,25 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      * @param bool $lookInside Wenn es sich um ein verschachteltes GUI handelt, dann sollte dies auf true stehen
      * @return string
      */
-    function getTemplatePath($lookInside=false, $without_frame=true)
+    function getTemplatePath($lookInside = false, $without_frame = true)
     {
         $Parent = &$this->Parent;
         $parent_directory = '';
-        if($lookInside and $Parent != null) {
+        if ($lookInside and $Parent != null) {
             do {
-                if($Parent instanceof GUI_Schema) {
+                if ($Parent instanceof GUI_Schema) {
                     $Parent = &$Parent->getParent();
                     continue;
                 }
-                if($without_frame and $Parent instanceof GUI_CustomFrame) {
+                if ($without_frame and $Parent instanceof GUI_CustomFrame) {
                     $Parent = &$Parent->getParent();
                     continue;
                 }
-                $parent_directory = $Parent->getClassName().'/'.$parent_directory;
+                $parent_directory = $Parent->getClassName() . '/' . $parent_directory;
                 $Parent = &$Parent->getParent();
-            } while($Parent != null);
+            } while ($Parent != null);
         }
-        return $parent_directory.$this->getClassName();
+        return $parent_directory . $this->getClassName();
     }
 
     /**
@@ -213,53 +213,53 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         $GUIRootDirs = array(
             getcwd()
         );
-        if(defined('DIR_POOL_ROOT')) {
+        if (defined('DIR_POOL_ROOT')) {
             $GUIRootDirs[] = DIR_POOL_ROOT;
         }
-        if(defined('DIR_COMMON_ROOT')) {
+        if (defined('DIR_COMMON_ROOT')) {
             $GUIRootDirs[] = DIR_COMMON_ROOT;
         }
 
-            // try to load class
+        // try to load class
         foreach ($GUIRootDirs as $GUIRootDir) {
-            $GUIRootDir = addEndingSlash($GUIRootDir).addEndingSlash(PWD_TILL_GUIS);
+            $GUIRootDir = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS);
 
-            $filename = $GUIRootDir.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
+            $filename = $GUIRootDir . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
             if (file_exists($filename)) {
                 require_once $filename;
                 break;
             }
 
-            $filename = $GUIRootDir.$GUIClassName.'/'.$GUIClassName.PoolObject::CLASS_EXTENSION;
+            $filename = $GUIRootDir . $GUIClassName . '/' . $GUIClassName . PoolObject::CLASS_EXTENSION;
             if (file_exists($filename)) {
                 require_once $filename;
                 break;
             }
 
-            if($ParentGUI instanceof Module) {
+            if ($ParentGUI instanceof Module) {
                 // verschachtelte GUI's
                 $parent_directory = '';
                 $parent_directory_without_frame = '';
                 do {
-                    if($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
+                    if ($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
                         $ParentGUI = &$ParentGUI->getParent();
                         continue;
                     }
-                    if(!$ParentGUI instanceof GUI_CustomFrame) {
-                        $parent_directory_without_frame = $ParentGUI->getClassName().'/'.$parent_directory_without_frame;
+                    if (!$ParentGUI instanceof GUI_CustomFrame) {
+                        $parent_directory_without_frame = $ParentGUI->getClassName() . '/' . $parent_directory_without_frame;
                     }
-                    $parent_directory = $ParentGUI->getClassName().'/'.$parent_directory;
+                    $parent_directory = $ParentGUI->getClassName() . '/' . $parent_directory;
                     $ParentGUI = &$ParentGUI->getParent();
-                } while($ParentGUI != null);
+                } while ($ParentGUI != null);
 
-                $filename = $GUIRootDir.$parent_directory.strtolower($GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
+                $filename = $GUIRootDir . $parent_directory . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
                     break;
                 }
 
-                $filename = $GUIRootDir.strtolower($parent_directory_without_frame.$GUIClassName.'/'.$GUIClassName).PoolObject::CLASS_EXTENSION;
-                if(file_exists($filename)) {
+                $filename = $GUIRootDir . strtolower($parent_directory_without_frame . $GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
+                if (file_exists($filename)) {
                     require_once $filename;
                     break;
                 }
@@ -268,23 +268,23 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     }
 
     /**
-    * Erzeugt ein neues GUI Modul anhand des Klassennamens.
-    * Faustregel fuer Owner: als Owner sollte die Klasse Weblication uebergeben werden
-    * (damit ein Zugriff auf alle Unterobjekte gewaehrleistet werden kann).
-    *
-    * @method static
-    * @access public
-    * @param string $GUIClassName Name der GUI Klasse
-    * @param Component $Owner Besitzer dieses Objekts
-    * @param Module $ParentGUI parent module
-    * @param string $params Parameter in der Form key1=value1&key2=value2=&
-    * @return object Neues GUI_Module oder Nil
-    */
-    public static function &createGUIModule($GUIClassName, Component &$Owner, &$ParentGUI, $params='')
+     * Erzeugt ein neues GUI Modul anhand des Klassennamens.
+     * Faustregel fuer Owner: als Owner sollte die Klasse Weblication uebergeben werden
+     * (damit ein Zugriff auf alle Unterobjekte gewaehrleistet werden kann).
+     *
+     * @method static
+     * @access public
+     * @param string $GUIClassName Name der GUI Klasse
+     * @param Component $Owner Besitzer dieses Objekts
+     * @param Module $ParentGUI parent module
+     * @param string $params Parameter in der Form key1=value1&key2=value2=&
+     * @return object Neues GUI_Module oder Nil
+     */
+    public static function &createGUIModule($GUIClassName, Component &$Owner, &$ParentGUI, $params = '')
     {
         $class_exists = class_exists($GUIClassName, false);
 
-        if(!$class_exists) {
+        if (!$class_exists) {
             GUI_Module::autoloadGUIModule($GUIClassName, $ParentGUI);
 
             // retest
@@ -297,11 +297,12 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             // AM, 22.07.2020
             $Params = new Input(I_EMPTY);
             $Params->setParams($params);
-            $GUI = new $GUIClassName($Owner, true, $Params->getData()); /* @var $GUI GUI_Module */
-            if($ParentGUI instanceof Module) {
+            $GUI = new $GUIClassName($Owner, true, $Params->getData());
+            /* @var $GUI GUI_Module */
+            if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
             }
-//            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
+            //            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;
         }
@@ -319,8 +320,8 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      **/
     function searchGUIsInPreloadedContent()
     {
-        $TemplateFiles = $this -> Template -> getFiles();
-        for ($f=0, $sizeOfTemplateFiles = sizeof($TemplateFiles); $f<$sizeOfTemplateFiles; $f++) {
+        $TemplateFiles = $this->Template->getFiles();
+        for ($f = 0, $sizeOfTemplateFiles = sizeof($TemplateFiles); $f < $sizeOfTemplateFiles; $f++) {
             $TemplateFiles[$f]->setContent($this->searchGUIs($TemplateFiles[$f]->getContent()), false);
         }
     }
@@ -337,7 +338,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
         $reg = '/\[(GUI_.*)(\((.*)\)|)\]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
         if ($bResult) {
-            for ($i=0, $numMatches=count($matches); $i<$numMatches; $i++) {
+            for ($i = 0, $numMatches = count($matches); $i < $numMatches; $i++) {
                 $pattern = $matches[$i][0];
                 $guiname = $matches[$i][1];
                 $params = isset($matches[$i][3]) ? $matches[$i][3] : '';
@@ -350,11 +351,10 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
                     $this->throwException($E);
                 }
                 else {
-                    $replacement = '{'.strtoupper($new_GUI->getName()).'}';
+                    $replacement = '{' . strtoupper($new_GUI->getName()) . '}';
                     $new_GUI->setMarker($replacement);
-                    $content = preg_replace('/'.preg_quote($pattern, '/').'/mU', $replacement, $content, 1);
+                    $content = preg_replace('/' . preg_quote($pattern, '/') . '/mU', $replacement, $content, 1);
                     $this->insertModule($new_GUI);
-
                 }
                 unset($new_GUI);
             }
@@ -373,10 +373,10 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     function reviveChildGUIs($content)
     {
         //$content = $this -> FindGUIsByContent($content);
-        $content = $this -> searchGUIs($content);
-        $this -> prepareChilds();
-        $this -> finalizeChilds();
-        $content = $this -> pasteChilds($content);
+        $content = $this->searchGUIs($content);
+        $this->prepareChilds();
+        $this->finalizeChilds();
+        $content = $this->pasteChilds($content);
         return $content;
     }
 
@@ -389,7 +389,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      **/
     function setMarker($ident)
     {
-        $this -> FileIdent = $ident;
+        $this->FileIdent = $ident;
     }
 
     /**
@@ -402,7 +402,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      **/
     function getMarkerIdent()
     {
-        return $this -> FileIdent;
+        return $this->FileIdent;
     }
 
     /**
@@ -415,9 +415,9 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      * @param string $template HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html"); sucht immer im Projektverzeichnis nach der Vorlage.
      * @access public
      **/
-    function enableBox($title='', $template='tpl_box.html')
+    function enableBox($title = '', $template = 'tpl_box.html')
     {
-        $file = $this -> Weblication -> findTemplate($template, $this -> getClassName(), false);
+        $file = $this->Weblication->findTemplate($template, $this->getClassName(), false);
         if ($file) {
             $this->TemplateBox = new Template();
             $this->TemplateBox->setFilePath('stdout', $file);
@@ -436,9 +436,8 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      **/
     function disableBox()
     {
-        $this -> enabledBox = false;
+        $this->enabledBox = false;
     }
-
 
     /*
     * Laedt Templates (virtuelle Methode sollte ueberschrieben werden, falls im Konstruktor AutoLoad auf true gesetzt wird).
@@ -457,15 +456,23 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      **/
     function prepareContent()
     {
-        // echo 'prepareContent '.$this->getClassName().'<br>';
-        if($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) return true;
+        $this->provision();
+
+        if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) return true;
 
         $this->prepare();
         $this->prepareChilds();
-
-        // Ajax Call disables all Modules
-        //if(isAjax()) $this->disable();
     }
+
+    /**
+     * provision something
+     */
+    protected function provision() {}
+
+    /**
+     * run/execute the main logic and fill templates.
+     */
+    protected function prepare() {}
 
     /**
      * Bereitet alle Html Templates aller Childs auf.
@@ -474,21 +481,11 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      **/
     function prepareChilds()
     {
-        for ($m=0; $m < count($this->Modules); $m++) {
+        for ($m = 0; $m < count($this->Modules); $m++) {
             $gui = &$this->Modules[$m];
             $gui->importHandoff($this->Handoff);
             $gui->prepareContent();
         }
-    }
-
-
-    /**
-    * Bereitet die Html Templates auf. Variablen, dynamische Bloecke, etc. werden hier gesetzt.
-    *
-    * @access protected
-    */
-    function prepare()
-    {
     }
 
     /**
@@ -500,33 +497,27 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     {
         header('Content-type: application/json');
 
-/*			if(IS_TESTSERVER) {
-            $fh = fopen(DIR_DOCUMENT_ROOT.'/debug.txt', 'w');
-            fwrite($fh, print_r($GLOBALS, true)."\n");
-            fclose($fh);
-        }*/
-
         $charset = '';
-        if($this->Owner instanceof Weblication) {
+        if ($this->Owner instanceof Weblication) {
             $charset = $this->Owner->getCharset();
         }
 
         ob_start();
         $Result = false;
-        if(method_exists($this, $method)) {
-            eval('$Result = $this->'.$method.'();');
-//				 $Result = $this->$method();
+        if (method_exists($this, $method)) {
+            eval('$Result = $this->' . $method . '();');
+            //				 $Result = $this->$method();
         }
         else {
-            $Xception = new Xception('The method "'.$method.'" doesn\'t exist in the class '.$this->getClassName(), 0, array(), POOL_ERROR_DISPLAY);
+            $Xception = new Xception('The method "' . $method . '" doesn\'t exist in the class ' . $this->getClassName(), 0, array(), POOL_ERROR_DISPLAY);
             $Xception->raiseError();
         }
 
         $clientData = array();
 
-        if($charset == 'UTF-8') {
+        if ($charset == 'UTF-8') {
             // $JSON = new Services_JSON(); // unterst�tzt UTF-8 und ASCII
-            if($this->plainJSON) {
+            if ($this->plainJSON) {
                 $clientData = $Result;
             }
             else {
@@ -536,40 +527,43 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             }
             $json = json_encode($clientData);
 
-            if(version_compare(PHP_VERSION, '5.3.0') >= 0) {
+            if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
                 $json_last_error = json_last_error();
-                if($json_last_error > 0) {
-
-                    if(version_compare(PHP_VERSION, '5.5.0') >=0 ) {
+                if ($json_last_error > 0) {
+                    if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
                         $json_last_error_msg = json_last_error_msg();
                     }
                     else {
                         $json_last_error_msg = 'Unbekannter Fehler';
-                        switch($json_last_error) {
+                        switch ($json_last_error) {
                             case JSON_ERROR_DEPTH:
                                 $json_last_error_msg = 'Maximale Stacktiefe überschritten';
                                 break;
+
                             case JSON_ERROR_STATE_MISMATCH:
                                 $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
                                 break;
+
                             case JSON_ERROR_CTRL_CHAR:
                                 $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
                                 break;
+
                             case JSON_ERROR_SYNTAX:
                                 $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
                                 break;
+
                             case JSON_ERROR_UTF8:
                                 $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
                                 break;
                         }
                     }
 
-                    return $json_last_error_msg.' in '.$this->getClassName().'->'.$method.'(): '.print_r($clientData, true);
+                    return $json_last_error_msg . ' in ' . $this->getClassName() . '->' . $method . '(): ' . print_r($clientData, true);
                 }
             }
         }
         else { // fuer ISO-8859-X und windows-125X
-            if($this->plainJSON) {
+            if ($this->plainJSON) {
                 $clientData = $Result;
             }
             else {
@@ -580,9 +574,6 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
             $json = array2json($clientData);
         }
         ob_end_clean();
-
-        // @see finalizeContent
-        ///*$this->FinalContent =*/ array2json($clientData);
 
         return $json;
     }
@@ -604,29 +595,28 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     }
 
     /**
-    * Stellt den Inhalt der Html Templates fertig und sorgt dafuer, dass auch alle Childs fertig gestellt werden.
-    * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
-    *
-    * @access public
-    * @return string Content / Inhalt
-    */
+     * Stellt den Inhalt der Html Templates fertig und sorgt dafuer, dass auch alle Childs fertig gestellt werden.
+     * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
+     *
+     * @access public
+     * @return string Content / Inhalt
+     */
     function finalizeContent()
     {
         $content = '';
         $this->finalizeChilds();
         if ($this->enabled) {
-            /*echo 'finalizeContent '.$this->getClassName().'<br>';*/
-            if($this->isMyXMLHttpRequest && isset($_REQUEST['method'])) {
+            if ($this->isMyXMLHttpRequest && isset($_REQUEST['method'])) {
                 // dispatch Ajax Call only for ONE GUI -> returns JSON
                 $content = $this->finalizeMethod($_REQUEST['method']);
                 // hier wird abgebrochen, pool wurde bis zu dieser instanz durchlaufen
-                if(isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
+                if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
                     $this->takeMeAlone = true; // dieses GUI wirft ganz alleine den Inhalt von finalizeMethod zur�ck
-/*						print $content;
-                    exit(0);*/
+                    /*						print $content;
+                                        exit(0);*/
                 }
             }
-            elseif(!$this->takeMeAlone) {
+            elseif (!$this->takeMeAlone) {
                 $content = $this->finalize();
             }
             else {
@@ -642,7 +632,7 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
                 $this->TemplateBox->clear();
             }
 
-            if(!$this->takeMeAlone) {
+            if (!$this->takeMeAlone) {
                 $content = $this->pasteChilds($content);
             }
         }
@@ -658,13 +648,13 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     function finalizeChilds()
     {
         $count = count($this->Modules);
-        for ($m=0; $m < $count; $m++) {
+        for ($m = 0; $m < $count; $m++) {
             $gui = &$this->Modules[$m];
             /*echo $gui->getClassName().' '.bool2string($gui->enabled).'<br>';*/
-            if($gui->enabled) {
+            if ($gui->enabled) {
                 $gui->FinalContent = $gui->finalizeContent();
                 $this->takeMeAlone = $gui->takeMeAlone;
-                if($this->takeMeAlone) {
+                if ($this->takeMeAlone) {
                     $this->FinalContent = $gui->FinalContent;
                     break; // nachfolgende Module wuerden Fehler verursachen, da takeMeAlone reseted w�rde
                 }
@@ -682,8 +672,8 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
     function pasteChilds($content)
     {
         $count = count($this->Modules);
-        for ($m=0; $m < $count; $m++) {
-            $gui = & $this->Modules[$m];
+        for ($m = 0; $m < $count; $m++) {
+            $gui = &$this->Modules[$m];
             $content = str_replace($gui->getMarkerIdent(), $gui->FinalContent, $content);
         }
         return $content;
@@ -696,6 +686,6 @@ define('REQUEST_PARAM_MODULENAME', 'requestModule');
      **/
     protected function finalize()
     {
-        return '<font color="red">Error in GUI Module \''.$this->getClassName().'\' (@Finalize)! Please override this protected function.</font>';
+        return '<font color="red">Error in GUI Module \'' . $this->getClassName() . '\' (@Finalize)! Please override this protected function.</font>';
     }
 }
