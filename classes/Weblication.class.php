@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Translator;
+
 if(!defined('CLASS_WEBLICATION')) {
 
     define('CLASS_WEBLICATION', 1); 	// Prevent multiple loading
@@ -102,14 +104,6 @@ if(!defined('CLASS_WEBLICATION')) {
         private $skin = 'default';
 
         /**
-         * Sprache der Seite
-         *
-         * @var string
-         * @access private
-         */
-        private $language = 'de';
-
-        /**
          * Schema / Layout (index ist das Standard-Schema)
          *
          * @var string
@@ -149,6 +143,16 @@ if(!defined('CLASS_WEBLICATION')) {
          */
         private $Settings = null;
 
+         /**
+          * @var string Country code
+          */
+        private $language = 'de';
+
+         /**
+          * @var Translator
+          */
+        private Translator $Translator;
+
         /**
          * Der Konstruktor erwartet den Projektnamen, den absoluten und relativen Pfad zur Baselib.
          *
@@ -166,6 +170,7 @@ if(!defined('CLASS_WEBLICATION')) {
             $this->Settings = new Input();
             $this->PathBaselib = $PathBaselib;
             $this->RelativePathBaselib = $RelativePathBaselib;
+            $this->Translator = new Translator();
 
             $Nil = new Nil();
             parent::__construct($Nil);
@@ -201,9 +206,18 @@ if(!defined('CLASS_WEBLICATION')) {
          * @access public
          * @param string $lang Sprache (siehe Laenderkuerzel im WWW)
          **/
-        function setLanguage($lang = 'de')
+
+         /**
+          * @param string $lang Country Code
+          * @param string $resourceDir Directory with translations e.g. de.php, en.php
+          */
+        function setLanguage($lang = 'de', $resourceDir = '')
         {
             $this->language = $lang;
+
+            if($resourceDir) {
+                $this->Translator->setResourceDir($resourceDir)->setDefaultLanguage($lang);
+            }
         }
 
         /**
@@ -214,7 +228,22 @@ if(!defined('CLASS_WEBLICATION')) {
          **/
         function getLanguage()
         {
-            return $this->language;
+            return $this->language; // $this->language;
+        }
+
+         /**
+          * Get translator
+          *
+          * @param string|null $language overrides default language
+          * @return Translator
+          */
+        public function getTranslator(?string $language = null): Translator
+        {
+            $Translator = $this->Translator;
+            if($language) {
+                $Translator->changeLanguage($language);
+            }
+            return $Translator;
         }
 
         /**

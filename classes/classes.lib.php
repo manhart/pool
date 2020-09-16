@@ -24,6 +24,7 @@ require_once(PWD_TILL_CLASSES.'/GUI_Module.class.php');	// necessary
 require_once(PWD_TILL_CLASSES.'/DAO.class.php');			// necessary
 require_once(PWD_TILL_CLASSES.'/Resultset.class.php');		// necessary
 require_once(PWD_TILL_CLASSES.'/Singleton.class.php');		// necessary
+require_once(PWD_TILL_CLASSES.'/Translator.class.php');		// necessary
 //require_once(PWD_TILL_CLASSES.'/Kontocheck.class.php');
 //require_once(PWD_TILL_CLASSES.'/ActionHandler.class.php');
 //require_once(PWD_TILL_CLASSES.'/TreeStructure.class.php');
