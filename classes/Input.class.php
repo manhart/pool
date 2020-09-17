@@ -91,7 +91,7 @@ class Input extends PoolObject
         if ($superglobals == 0) {
             return;
         }
-        $this -> superglobals = $superglobals;
+        $this->superglobals = $superglobals;
 
         if ($superglobals & I_ENV) { // I_ENV
             $this->addVar($_ENV);
@@ -125,6 +125,16 @@ class Input extends PoolObject
             $this->Vars = &$_SESSION; // PHP Session Handling (see php manual)
             //$this -> addVar($_SESSION);
         }
+    }
+
+    /**
+     * get superglobals
+     *
+     * @return int
+     */
+    public function getSuperglobals()
+    {
+        return $this->superglobals;
     }
 
     /**
