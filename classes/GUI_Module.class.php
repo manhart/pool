@@ -444,9 +444,7 @@ class GUI_Module extends Module
     *
     * @access protected
     */
-    function loadFiles()
-    {
-    }
+    function loadFiles() {}
 
     /**
      * Vorbereiten der Templates und sorgt dafuer dass auch alle Childs vorbereitet werden.
