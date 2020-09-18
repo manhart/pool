@@ -47,6 +47,11 @@ class Translator extends \PoolObject
     protected array $translation = array();
 
     /**
+     * @var array
+     */
+    private array $parseErrors = array();
+
+    /**
      * sets the resources directory
      *
      * @param string $directory
@@ -76,7 +81,7 @@ class Translator extends \PoolObject
     }
 
     /**
-     * changes language
+     * change language
      *
      * @param string $language
      * @return $this
@@ -88,6 +93,8 @@ class Translator extends \PoolObject
     }
 
     /**
+     * get active language
+     *
      * @return string
      */
     private function getLanguage(): string
@@ -132,9 +139,89 @@ class Translator extends \PoolObject
         return $string;
     }
 
+    /**
+     * translation exists?
+     *
+     * @param string $key
+     * @return bool
+     * @throws \Exception
+     */
     public function exists(string $key)
     {
         return isset($this->getTranslation($this->getLanguage())[$key]);
+    }
+
+
+    /**
+     * @return array|null
+     */
+    public function getParseErrors(): ?array
+    {
+        if(count($this->parseErrors) > 0) {
+            return $this->parseErrors;
+        }
+        return null;
+    }
+
+    /**
+     * @param string $content
+     * @return string
+     */
+    public function parse(string $content): string
+    {
+        $this->parseErrors = array();
+        $symbols = 'LNG|LANG|TRANSL';
+        $reg = '/\<\!-- *(?>LNG|LANG|TRANSL) +(.+) *--\>(.*)\<\!-- *END +\1 *--\>/isUu';
+
+        preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
+
+        if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
+            $errormessage = preg_last_error_message($lastErrorCode);
+            throw new \Exception($errormessage, $lastErrorCode);
+        }
+
+        foreach ($matches as $match) {
+            $key = $match[1];
+            $translation = $this->get($key);
+
+            if ($translation == '') {
+                $this->parseErrors[] = $key;
+                $translation = $match[2]; // hold original
+            }
+
+            $content = preg_replace($reg, $translation, $content, 1);
+            if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
+                $errormessage = preg_last_error_message($lastErrorCode);
+                throw new \Exception($errormessage, $lastErrorCode);
+            }
+        }
+
+        $reg = '/(?>\{(?>LANG|TRANSL) +)(.*)\}/isUu';
+        preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
+        if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
+            $errormessage = preg_last_error_message($lastErrorCode);
+            throw new \Exception($errormessage, $lastErrorCode);
+        }
+
+        foreach($matches as $match) {
+            $key = $match[1];
+
+            $translation = $this->get($key);
+            if ($translation == '') {
+                $this->parseErrors[] = $key;
+                $translation = $match[0]; // hold original
+            }
+
+            $content = preg_replace($reg, $translation, $content, 1);
+            if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
+                $errormessage = preg_last_error_message($lastErrorCode);
+                throw new \Exception($errormessage, $lastErrorCode);
+            }
+
+        }
+
+
+        return $content;
     }
 
     /**
