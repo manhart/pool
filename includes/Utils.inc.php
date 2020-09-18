@@ -4569,3 +4569,40 @@ function getHttpStatusCode(string $responseLine): int
     }
     return $httpResponseCode;
 }
+
+/**
+ * get errormessage from
+ * @param int $lastErrorCode
+ * @return string
+ */
+function preg_last_error_message(int $lastErrorCode): string
+{
+    $errormessage = '';
+    switch($lastErrorCode) {
+        case PREG_INTERNAL_ERROR: // 1
+            $errormessage = 'Internal PCRE error';
+            break;
+
+        case PREG_BACKTRACK_LIMIT_ERROR: // 2
+            $errormessage = 'PCRE regex backtrack limit '.ini_get('pcre.backtrack_limit').' was exhausted';
+            break;
+
+        case PREG_RECURSION_LIMIT_ERROR: // 3
+            $errormessage = 'PCRE regex recursion limit '.ini_get('pcre.recursion_limit').' was exhausted';
+            break;
+
+        case PREG_BAD_UTF8_ERROR: // 4
+            $errormessage = 'PCRE regex malformed UTF-8 data';
+            break;
+
+        case PREG_BAD_UTF8_OFFSET_ERROR: // 5
+            $errormessage = 'PCRE regex the offset didn\'t correspond to the begin of a valid UTF-8 code point';
+            break;
+
+        case PREG_JIT_STACKLIMIT_ERROR: // 6
+            $errormessage = 'Last PCRE function failed due to limited JIT stack space';
+            break;
+
+    }
+    return $errormessage;
+}
