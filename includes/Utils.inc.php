@@ -3354,6 +3354,15 @@ function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPatt
 }
 
 /**
+ * @param string $path
+ * @return array|false
+ */
+function readDirs(string $path)
+{
+    return glob(addEndingSlash($path).'*', GLOB_ONLYDIR);
+}
+
+/**
  * Sortiert mehrere oder multidimensionale Arrays
  *
  * @param array $hauptArray Zu sortierendes Array
