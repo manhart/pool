@@ -187,8 +187,8 @@ class Translator extends \PoolObject
     public function parse(string $content): string
     {
         $this->parseErrors = array();
-        $symbols = 'LNG|LANG|TRANSL';
-        $reg = '/\<\!\-\- *(?>LNG|LANG|TRANSL) +(.+) *\-\-\>([\s\S]*)\<\!\-\- *END +\1 *\-\-\>/Uu';
+        $symbols = 'LANG|TRANSL';
+        $reg = '/\<\!\-\- *(?>LANG|TRANSL) +(.+) *\-\-\>([\s\S]*)\<\!\-\- *END +\1 *\-\-\>/Uu';
 
         preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 
@@ -206,6 +206,7 @@ class Translator extends \PoolObject
                 $translation = $match[2]; // hold original
             }
 
+            $reg = '/\<\!\-\- *(?>LANG|TRANSL) +'.$key.' *\-\-\>([\s\S]*)\<\!\-\- *END +'.$key.' *\-\-\>/Uu';
             $content = preg_replace($reg, $translation, $content, 1);
             if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
                 $errormessage = preg_last_error_message($lastErrorCode);
@@ -213,7 +214,7 @@ class Translator extends \PoolObject
             }
         }
 
-        $reg = '/(?>\{(?>LNG|LANG|TRANSL) +)(.*)\}/sUu';
+        $reg = '/(?>\{(?>LANG|TRANSL) +)(.*)\}/sUu';
         preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
         if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
             $errormessage = preg_last_error_message($lastErrorCode);
@@ -229,6 +230,7 @@ class Translator extends \PoolObject
                 $translation = $match[0]; // hold original
             }
 
+            $reg = '/(?>\{(?>LANG|TRANSL) +)'.$key.'\}/sUu';
             $content = preg_replace($reg, $translation, $content, 1);
             if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
                 $errormessage = preg_last_error_message($lastErrorCode);

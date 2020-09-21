@@ -173,6 +173,11 @@ if (!defined('CLASS_WEBLICATION')) {
         private Translator $Translator;
 
         /**
+         * @var string
+         */
+        private string $subdirTranslated = '';
+
+        /**
          * Der Konstruktor erwartet den Projektnamen, den absoluten und relativen Pfad zur Baselib.
          *
          * @access public
@@ -219,24 +224,22 @@ if (!defined('CLASS_WEBLICATION')) {
         }
 
         /**
-         * Aendert die Sprache der Seite.
-         * (wird derzeit fuer die Bilder und Html Templates missbraucht)
+         * Sets the language for the Page. It's used for html templates and images
          *
-         * @access public
-         * @param string $lang Sprache (siehe Laenderkuerzel im WWW)
-         **/
-
-        /**
          * @param string $lang Country Code
          * @param string $resourceDir Directory with translations e.g. de.php, en.php
+         * @param string $subdirTranslated Subdirectory for generated static translated templates during the deployment process
+         * @throws Exception
          */
-        function setLanguage($lang = 'de', $resourceDir = '')
+        function setLanguage(string $lang = 'de', string $resourceDir = '', string $subdirTranslated = '')
         {
             $this->language = $lang;
 
             if ($resourceDir) {
                 $this->Translator->setResourceDir($resourceDir)->setDefaultLanguage($lang);
             }
+
+            $this->subdirTranslated = $subdirTranslated;
         }
 
         /**
@@ -548,13 +551,13 @@ if (!defined('CLASS_WEBLICATION')) {
          */
         public function hasCommonSkinFolder(?string $subfolder = null): bool
         {
-            if(is_null($this->hasCommonSkinFolder)) {
+            if (is_null($this->hasCommonSkinFolder)) {
                 $this->hasCommonSkinFolder = [];
-                $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->commonSkinFolder);
+                $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder);
             }
-            if($subfolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
-                if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder] = null;
-                if(is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) {
+            if ($subfolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
+                if (!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder] = null;
+                if (is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) {
                     $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder] = [];
                     $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $subfolder);
                 }
@@ -568,31 +571,41 @@ if (!defined('CLASS_WEBLICATION')) {
          *
          * @param string|null $subfolder
          * @param string|null $language
+         * @param string|null $translated
          * @return bool
          */
-        public function hasSkinFolder(?string $subfolder = null, ?string $language = nulL): bool
+        public function hasSkinFolder(?string $subfolder = null, ?string $language = null, ?string $translated = null): bool
         {
-            if(!isset($this->hasSkinFolder[$this->skin])) {
+            if (!isset($this->hasSkinFolder[$this->skin])) {
                 $this->hasSkinFolder[$this->skin] = [];
-                $this->hasSkinFolder[$this->skin]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin);
+                $this->hasSkinFolder[$this->skin]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin);
             }
-            if($subfolder != null and $this->hasSkinFolder[$this->skin]['__exists']) {
-                if(!isset($this->hasSkinFolder[$this->skin][$subfolder])) $this->hasSkinFolder[$this->skin][$subfolder] = null;
-                if(is_null($this->hasSkinFolder[$this->skin][$subfolder])) {
+            if ($subfolder != null and $this->hasSkinFolder[$this->skin]['__exists']) {
+                if (!isset($this->hasSkinFolder[$this->skin][$subfolder])) {
                     $this->hasSkinFolder[$this->skin][$subfolder] = [];
                     $this->hasSkinFolder[$this->skin][$subfolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin . '/' . $subfolder);
                 }
-                if(is_null($language)) {
+                if (is_null($language) and is_null($translated)) {
                     return $this->hasSkinFolder[$this->skin][$subfolder]['__exists'];
                 }
                 else {
-                    if($this->hasSkinFolder[$this->skin][$subfolder]['__exists']) {
-                        if(!isset($this->hasSkinFolder[$this->skin][$subfolder][$language])) $this->hasSkinFolder[$this->skin][$subfolder][$language] = null;
-                        if(is_null($this->hasSkinFolder[$this->skin][$subfolder][$language])) {
+                    if ($this->hasSkinFolder[$this->skin][$subfolder]['__exists']) {
+                        if (!isset($this->hasSkinFolder[$this->skin][$subfolder][$language])) {
                             $this->hasSkinFolder[$this->skin][$subfolder][$language] = [];
-                            $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin . '/' . $subfolder.'/'.$language);
+                            $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin . '/' . $subfolder . '/' . $language);
                         }
-                        return $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'];
+                        if(is_null($translated)) {
+                            return $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'];
+                        }
+                        else {
+                            if ($this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists']) {
+                                if (!isset($this->hasSkinFolder[$this->skin][$subfolder][$language][$translated])) {
+                                    $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated] = [];
+                                    $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin . '/' . $subfolder . '/' . $language . '/' . $translated);
+                                }
+                                return $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated]['__exists'];
+                            }
+                        }
                     }
                 }
             }
@@ -619,28 +632,38 @@ if (!defined('CLASS_WEBLICATION')) {
             $language = $this->language;
             $templates = 'templates';
 
-            # folder: common
-            if($this->hasCommonSkinFolder($templates)) {
-                $folder_common_templates = PWD_TILL_SKINS . '/'. $this->commonSkinFolder . '/' . $templates;
-                if (file_exists($folder_common_templates . '/'.$filename)) {
-                    return $folder_common_templates . '/'.$filename;
-                }
-            }
-
             # Ordner skins
-            $skinFolder = PWD_TILL_SKINS.'/' . $skin;
-            $languageFolder = $skinFolder . '/'. $templates. '/'.$language;
+            $skinFolder = PWD_TILL_SKINS . '/' . $skin;
 
-            if($this->hasSkinFolder($templates, $language)) { // with language, more specific
-                if (file_exists($languageFolder . '/'.$filename)) {
-                    return $languageFolder . '/'. $filename;
+            // static translation templates have priority
+            if($this->subdirTranslated) {
+                $translatedFolder = $skinFolder . '/' . $templates . '/' . $language . '/' . $this->subdirTranslated;
+                if($this->hasSkinFolder($templates, $language, $this->subdirTranslated)) {
+                    if (file_exists($translatedFolder . '/' . $filename)) {
+                        return $translatedFolder . '/' . $filename;
+                    }
                 }
             }
 
-            if($this->hasSkinFolder($templates, null)) { // without language
-                $templatesFolder = $skinFolder.'/'.$templates;
-                if (file_exists($templatesFolder . '/'.$filename)) {
-                    return $templatesFolder . '/'.$filename;
+            # folder: common
+            if ($this->hasCommonSkinFolder($templates)) {
+                $folder_common_templates = PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $templates;
+                if (file_exists($folder_common_templates . '/' . $filename)) {
+                    return $folder_common_templates . '/' . $filename;
+                }
+            }
+
+            $languageFolder = $skinFolder . '/' . $templates . '/' . $language;
+            if ($this->hasSkinFolder($templates, $language)) { // with language, more specific
+                if (file_exists($languageFolder . '/' . $filename)) {
+                    return $languageFolder . '/' . $filename;
+                }
+            }
+
+            if ($this->hasSkinFolder($templates, null)) { // without language
+                $templatesFolder = $skinFolder . '/' . $templates;
+                if (file_exists($templatesFolder . '/' . $filename)) {
+                    return $templatesFolder . '/' . $filename;
                 }
             }
 
@@ -657,15 +680,15 @@ if (!defined('CLASS_WEBLICATION')) {
 
             foreach ($gui_directories as $folder_guis) {
                 $folder_skins = $folder_guis . $skin;
-                $folder_language = $folder_skins . '/'.$language;
+                $folder_language = $folder_skins . '/' . $language;
                 if (is_dir($folder_language)) { // Language Ordner
-                    if (file_exists($folder_language . '/'. $filename)) {
-                        return $folder_language . '/'. $filename;
+                    if (file_exists($folder_language . '/' . $filename)) {
+                        return $folder_language . '/' . $filename;
                     }
                 }
                 if (is_dir($folder_skins)) { // Skin Ordner
-                    if (file_exists($folder_skins . '/'.$filename)) {
-                        return $folder_skins . '/'.$filename;
+                    if (file_exists($folder_skins . '/' . $filename)) {
+                        return $folder_skins . '/' . $filename;
                     }
                 }
                 if (is_dir($folder_guis)) { // GUI Ordner
@@ -707,7 +730,7 @@ if (!defined('CLASS_WEBLICATION')) {
 
             # folder: skins
             $folder_skins = addEndingSlash(PWD_TILL_SKINS);
-            $folder_default = $folder_skins . $this->commonSkinFolder.'/'; // TODO AM, making it configurable
+            $folder_default = $folder_skins . $this->commonSkinFolder . '/'; // TODO AM, making it configurable
             $folder_skins_stylesheets = $folder_default . $stylesheets;
 
             if (is_dir($folder_skins_stylesheets)) { // skins - skinname - stylesheet folder
