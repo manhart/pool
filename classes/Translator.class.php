@@ -106,6 +106,14 @@ class Translator extends \PoolObject
         return $language;
     }
 
+    /**
+     * get translation
+     *
+     * @param string $key
+     * @param array|null ...$args
+     * @return mixed|string
+     * @throws \Exception
+     */
     public function get(string $key, ?array ...$args)
     {
         $translation = $this->getTranslation($this->getLanguage());
@@ -121,6 +129,15 @@ class Translator extends \PoolObject
         return $string;
     }
 
+    /**
+     * get plural translation
+     *
+     * @param string $key
+     * @param int $n
+     * @param array|null ...$args
+     * @return mixed|string
+     * @throws \Exception
+     */
     public function nget(string $key, int $n, ?array ...$args)
     {
         $language = $this->getLanguage();
@@ -171,7 +188,7 @@ class Translator extends \PoolObject
     {
         $this->parseErrors = array();
         $symbols = 'LNG|LANG|TRANSL';
-        $reg = '/\<\!-- *(?>LNG|LANG|TRANSL) +(.+) *--\>(.*)\<\!-- *END +\1 *--\>/isUu';
+        $reg = '/\<\!\-\- *(?>LNG|LANG|TRANSL) +(.+) *\-\-\>([\s\S]*)\<\!\-\- *END +\1 *\-\-\>/Uu';
 
         preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 
@@ -196,7 +213,7 @@ class Translator extends \PoolObject
             }
         }
 
-        $reg = '/(?>\{(?>LANG|TRANSL) +)(.*)\}/isUu';
+        $reg = '/(?>\{(?>LNG|LANG|TRANSL) +)(.*)\}/sUu';
         preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
         if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
             $errormessage = preg_last_error_message($lastErrorCode);
@@ -219,7 +236,6 @@ class Translator extends \PoolObject
             }
 
         }
-
 
         return $content;
     }
