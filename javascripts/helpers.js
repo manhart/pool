@@ -2304,3 +2304,24 @@ function triggerEvent(element, type) {
         element.fireEvent('on'+Event.eventType, Event);
     }
 }
+
+/**
+ * Load json file synchronously
+ *
+ * @param string url
+ * @returns {null|any}
+ */
+function loadJSON(url)
+{
+    let xhr = new XMLHttpRequest();
+    xhr.overrideMimeType('application/json');
+    xhr.open('GET', url, false);
+    xhr.send();
+    if (xhr.status == 200) {
+        return JSON.parse(xhr.responseText);
+    }
+    else {
+        return null;
+    }
+}
+
