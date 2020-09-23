@@ -104,6 +104,11 @@ if (!defined('CLASS_WEBLICATION')) {
         private $skin = 'default';
 
         /**
+         * @var array|null
+         */
+        private ?array $skins = null;
+
+        /**
          * Schema / Layout (index ist das Standard-Schema)
          *
          * @var string
@@ -509,6 +514,30 @@ if (!defined('CLASS_WEBLICATION')) {
             }
 
             return $path;
+        }
+
+        /**
+         * list skins
+         *
+         * @return array skins
+         */
+        public function getSkins(): array
+        {
+            // detect skins
+            if(!($this->skins)) {
+                $skinPath = getcwd() . '/' . PWD_TILL_SKINS;
+                $skinDirs = readDirs($skinPath);
+                $numDirs = sizeof($skinDirs);
+                $skins = [];
+                for ($i = 0; $i < $numDirs; $i++) {
+                    $skinName = basename($skinDirs[$i]);
+                    if ($skinName != $this->getCommonSkinFolder()) {
+                        $skins[] = $skinName;
+                    }
+                }
+                $this->skins = $skins;
+            }
+            return $this->skins;
         }
 
         /**
