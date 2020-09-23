@@ -686,18 +686,20 @@ class Translator extends \PoolObject
     }
 
     /**
+     * detects locale from browser
+     *
      * @param string $defaultLocale
-     * @return false|mixed|string|void
+     * @return string locale
      */
-    public static function detectLanguage(string $defaultLocale = 'en_US'): string
+    public static function detectLocale(string $defaultLocale = 'en_US'): string
     {
         $locale = false;
 
         // GeoIP
         if (function_exists('geoip_country_code_by_name') and ($clientIP = getClientIP())) {
             // for testing: $clientIP = '91.40.45.237';
-            $language = geoip_country_code_by_name($clientIP);
-            $locale = self::countryCodeToLocale($language) ?: false;
+            $countryCode = geoip_country_code_by_name($clientIP);
+            $locale = self::countryCodeToLocale($countryCode) ?: false;
         }
 
         // Try detecting locale from browser headers
@@ -723,13 +725,23 @@ class Translator extends \PoolObject
         if (!$locale) {
             $locale = $defaultLocale;
         }
+        return $locale;
+    }
 
+    /**
+     * get the primary language of the locale
+     *
+     * @param string $locale
+     * @return string language code
+     */
+    public static function getPrimaryLanguage(string $locale): string
+    {
         if(function_exists('locale_get_primary_language')) {
             $language = locale_get_primary_language($locale);
             if($locale == $language) $language == '';
         }
         else {
-            $language = self::localeToCountryCode($locale);
+            $language = self::localeToLanguageCode($locale);
         }
         return $language;
     }
@@ -738,7 +750,7 @@ class Translator extends \PoolObject
      * Get locale from country code
      *
      * @param string $countryCode
-     * @return string
+     * @return string locale
      */
     public static function countryCodeToLocale(string $countryCode): string
     {
@@ -746,14 +758,26 @@ class Translator extends \PoolObject
     }
 
     /**
-     * Get country / language code from locale
+     * Get country code from locale
      *
      * @param string $locale
-     * @return string
+     * @return string country code
      */
     public static function localeToCountryCode(string $locale): string
     {
         $key = array_search($locale, self::$LOCALES) ?: '';
         return strtolower($key);
+    }
+
+    /**
+     * Get language code from locale
+     *
+     * @param string $locale
+     * @return string language code
+     */
+    public static function localeToLanguageCode(string $locale): string
+    {
+        list($languageCode,) = explode('_', $locale);
+        return $languageCode;
     }
 }
