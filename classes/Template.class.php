@@ -485,7 +485,6 @@
 								$this -> setVar($handle, $value);
 								break;
 						}
-
 					}
 				}
 			}
