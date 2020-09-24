@@ -147,6 +147,11 @@ if (!defined('MYSQLi_LAYER')) {
         var $port = 3306;
 
         /**
+         * @var array|null
+         */
+        private ?array $onFetchingRow = null;
+
+        /**
          * Constructor
          *
          * @access public
@@ -784,6 +789,16 @@ if (!defined('MYSQLi_LAYER')) {
         }
 
         /**
+         * Event onFetchingRow
+         *
+         * @param callable $callback
+         */
+        public function onFetchingRow(callable $callback)
+        {
+            $this->onFetchingRow = $callback;
+        }
+
+        /**
          * Liefert einen Datensatz als assoziatives Array und numerisches Array
          *
          * @access public
@@ -801,6 +816,9 @@ if (!defined('MYSQLi_LAYER')) {
             $rowset = array();
             if ($query_result instanceof mysqli_result) {
                 while (($row = mysqli_fetch_assoc($query_result)) != null) {
+                    if($this->onFetchingRow)  {
+                        $row = call_user_func($this->onFetchingRow, $row);
+                    }
                     $rowset[] = $row;
                 }
             }

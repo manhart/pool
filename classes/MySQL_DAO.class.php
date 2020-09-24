@@ -150,6 +150,8 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Translator;
+
 // Reservierte Wörter kompatibel mit MySQL 5.1 (und abwärts)
 $GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'ASENSITIVE',
     'BEFORE', 'BETWEEN', 'BIGINT', 'BINARY', 'BLOB', 'BOTH', 'BY', 'CALL', 'CASCADE', 'CASE', 'CHANGE', 'CHAR',
@@ -233,15 +235,29 @@ if(!defined('CLASS_MYSQLDAO')) {
             'is' => 'is'
         );
 
+        /**
+         * columns to translate
+         *
+         * @var array
+         */
+        protected array $translate = [];
 
         /**
-         * Konstruktor
-         *
-         * @access public
-         **/
+         * @var object|Translator|null
+         */
+        private Translator $Translator;
+
+        /**
+         * MySQL_DAO constructor.
+         */
         function __construct()
         {
             parent::__construct();
+
+            // only if Translator needed
+            if($this->translate) {
+                $this->Translator = Singleton('\\pool\\classes\\Translator');
+            }
 
             $this->reserved_words = $GLOBALS['MySQL_RESERVED_WORDS'];
         }
@@ -319,6 +335,16 @@ if(!defined('CLASS_MYSQLDAO')) {
             }
 
             $this->column_list = $column_list;
+        }
+
+        /**
+         * Sets columns to be translated
+         *
+         * @param array $columns
+         */
+        public function setTranslationColumns(array $columns)
+        {
+            $this->translate = $columns;
         }
 
         /**
@@ -509,15 +535,15 @@ if(!defined('CLASS_MYSQLDAO')) {
             }
 
             if ('' == $keys) {
-                $Resultset = new Resultset();
-                $Resultset->addError('MySQL_DAO::insert failed. No fields stated!');
-                return $Resultset;
+                $ResultSet = new Resultset();
+                $ResultSet->addError('MySQL_DAO::insert failed. No fields stated!');
+                return $ResultSet;
             }
 
             $sql = sprintf('INSERT INTO `%s` (%s) VALUES (%s)', $this->table,
                 substr($keys, 0, -1), substr($values, 0, -1));
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            $MySQL_ResultSet = $this->__createMySQL_Resultset($sql);
+            return $MySQL_ResultSet;
         }
 
         /**
@@ -584,7 +610,7 @@ if(!defined('CLASS_MYSQLDAO')) {
             }
             $sql = sprintf('update `%s` set %s where %s', $this -> table, substr($update, 0, -1), $where);
             #echo "update: ".$sql."<br>";
-            $MySQL_Resultset = &$this -> __createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this -> __createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -607,7 +633,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 die($error_msg);
             }
             $sql = sprintf('delete from `%s` where %s', $this -> table, $where);
-            $MySQL_Resultset = &$this -> __createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -627,7 +653,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 //				fwrite($fh, $sql.chr(10));
 //				fclose($fh);
 
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -652,7 +678,7 @@ if(!defined('CLASS_MYSQLDAO')) {
             $sql = sprintf('select %s from `%s` where %s', $this->column_list, $this->table, $this->__buildWhere($id, $key));
             #echo "get: ".$sql."<br>";
 
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
 
             return $MySQL_Resultset;
         }
@@ -691,7 +717,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildLimit($limit)
             );
 
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -723,7 +749,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 //				fclose($fh);
 
 
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -738,20 +764,50 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
-         * MySQL_DAO::__createMySQL_Resultset()
+         * executes sql statement and returns resultset
          *
-         * @access private
-         * @param string $sql Statement
-         * @return MySQL_Resultset Ergebnismenge
-         * @see MySQL_Resultset
-         **/
-        function &__createMySQL_Resultset($sql)
+         * @param string $sql sql statement to execute
+         * @param callable|null $customCallback
+         * @return MySQL_Resultset
+         */
+        protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
         {
-            $MySQL_Resultset = new MySQL_Resultset($this->db);
-            $this->debug('MySQL_Resultset -> execute(' . $sql . ', ' . $this->dbname . ')');
-            #echo '<hr>'.$sql.'<hr>';
-            $MySQL_Resultset->execute($sql, $this->dbname);
-            return $MySQL_Resultset;
+            $MySQL_ResultSet = new MySQL_Resultset($this->db);
+            $MySQL_ResultSet->onFetchingRow($customCallback ? $customCallback : [$this, 'fetchingRow']);
+            $MySQL_ResultSet->execute($sql, $this->dbname);
+            return $MySQL_ResultSet;
+        }
+
+        /**
+         * fetching rows
+         *
+         * @param array $row
+         * @return array
+         * @throws Exception
+         */
+        public function fetchingRow(array $row): array
+        {
+            if($this->translate) {
+                return $this->translate($row);
+            }
+            return $row;
+        }
+
+        /**
+         * translate table content
+         *
+         * @param array $row
+         * @return array
+         * @throws Exception
+         */
+        protected function translate(array $row): array
+        {
+            foreach($this->translate as $key) {
+                if(isset($row[$key])) {
+                    $row[$key] = $this->Translator->get($row[$key]) ?: $row[$key];
+                }
+            }
+            return $row;
         }
 
         /**
