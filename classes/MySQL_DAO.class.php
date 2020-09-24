@@ -245,7 +245,7 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * @var object|Translator|null
          */
-        private Translator $Translator;
+        protected Translator $Translator;
 
         /**
          * MySQL_DAO constructor.
@@ -259,7 +259,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->Translator = Singleton('\\pool\\classes\\Translator');
             }
 
-            $this->reserved_words = $GLOBALS['MySQL_RESERVED_WORDS'];
+            $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
         }
 
         /**
