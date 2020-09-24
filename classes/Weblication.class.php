@@ -199,7 +199,8 @@ if (!defined('CLASS_WEBLICATION')) {
             $this->Settings = new Input();
             $this->PathBaselib = $PathBaselib;
             $this->RelativePathBaselib = $RelativePathBaselib;
-            $this->Translator = new Translator();
+
+            $this->Translator = Singleton('\\pool\\classes\\Translator');
 
             $Nil = new Nil();
             parent::__construct($Nil);
