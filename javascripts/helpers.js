@@ -2309,13 +2309,21 @@ function triggerEvent(element, type) {
  * Load json file synchronously
  *
  * @param string url
+ * @param object opts e.g. headers
  * @returns {null|any}
  */
-function loadJSON(url)
+function loadJSON(url, opts = {})
 {
     let xhr = new XMLHttpRequest();
     xhr.overrideMimeType('application/json');
     xhr.open('GET', url, false);
+
+    if(opts.headers) {
+        for(let key in opts.headers) {
+            xhr.setRequestHeader(key, opts.headers[key]);
+        }
+    }
+
     xhr.send();
     if (xhr.status == 200) {
         return JSON.parse(xhr.responseText);
