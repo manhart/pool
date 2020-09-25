@@ -6,6 +6,7 @@
  *
  * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2020, GROUP7 AG
+ * @see https://www.i18next.com/
  */
 
 namespace pool\classes;
@@ -552,6 +553,7 @@ class Translator extends \PoolObject
      * @param int $x plural variable
      *
      * @return integer index of plural form rule.
+     * @see https://github.com/delfimov/Translate/blob/master/src/Translate.php
      */
     protected function pluralRule(string $language, int $x): int
     {
