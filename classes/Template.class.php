@@ -449,10 +449,11 @@
 				  TEMP_SESSION_IDENT . ')'; // TODO REUSE
                 // AM, 24.09.20, without modificator /s,
                 // by default . doesn't match new lines - [\s\S] is a hack around that problem
-				$reg = "/ \<\!\-\- $elemsymbols (.+) \-\-\>([\s\S]*)\<\!\-\- END \\2 \-\-\>/U";
+				$reg = "/\<\!\-\- $elemsymbols (.+) \-\-\>([\s\S]*)\<\!\-\- END \\2 \-\-\>/U";
 				$bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 				if ($bResult) {
-					for ($i=0; $i<SizeOf($matches); $i++) {
+				    $numMatches = SizeOf($matches);
+					for ($i=0; $i<$numMatches; $i++) {
 
 						$kind = $matches[$i][1];
 						$handle = ($matches[$i][2]);
