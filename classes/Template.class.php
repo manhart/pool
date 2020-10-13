@@ -188,7 +188,7 @@
     	    */
         	function getParsedContent()
 	        {
-    	        return $this -> ParsedContent;
+    	        return $this->ParsedContent;
         	}
 
 	        /**
@@ -517,7 +517,11 @@
 
 				$search = array();
 				$replace = array();
-				foreach($this->BlockList as $Handle => $TempBlock) {
+				/**
+                 * @var string $Handle
+                 * @var TempBlock $TempBlock
+                 */
+                foreach($this->BlockList as $Handle => $TempBlock) {
 //				foreach($keys as $Handle) {
 //					$TempBlock = & $this->BlockList[$Handle];
 					$search[] = '{'.$Handle.'}';
