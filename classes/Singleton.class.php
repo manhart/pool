@@ -68,15 +68,8 @@ if(!defined('CLASS_SINGLETON')) {
             if(!isset($this->instances[$class]) or !is_object($this->instances[$class])) {
 
                 if (count($args) > 0) {
-                    $argumentList = '';
-                    for($i=0; $i<count($args); $i++) {
-                        if ($argumentList) {
-                            $argumentList .= ', ';
-                        }
-                        $argumentList .= '$args['.$i.']';
-                    }
                     $Refl = new ReflectionClass($class);
-                    $instance[$class] = $Refl->newInstanceArgs($argumentList);
+                    $this->instances[$class] = $Refl->newInstanceArgs($args);
                     // old method: eval("\$this->instances[\$class] = new $class($argumentlist);");
                 }
                 else {
