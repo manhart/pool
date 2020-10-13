@@ -34,19 +34,18 @@ if (!defined('CLASS_WEBLICATION')) {
     class Weblication extends Component
     {
         /**
-         * Name des Projekts (wird im Konstruktor gesetzt)
+         * name of the project
          *
-         * @var string $Project
-         * @access private
+         * @var string $project
          */
-        var $Project = 'unknown';
+        private string $project = 'unknown';
 
         /**
          * Titel der Weblication
          *
          * @var string
          */
-        private $Title = '';
+        private string $title = '';
 
         /**
          * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
@@ -186,15 +185,14 @@ if (!defined('CLASS_WEBLICATION')) {
          * Der Konstruktor erwartet den Projektnamen, den absoluten und relativen Pfad zur Baselib.
          *
          * @access public
-         * @param string $Project Name des Projekts.
+         * @param string $project name of the project
          * @param string $PathBaselib absoluter Pfad zur Baselib
          * @param string $RelativePathBaselib relativer Pfad zur Baselib
-         * @throws Exception
-         **/
-        function __construct($Project = '', $PathBaselib = '', $RelativePathBaselib = '')
+         */
+        function __construct(string $project = '', $PathBaselib = '', $RelativePathBaselib = '')
         {
-            if ($Project != '') {
-                $this->Project = $Project;
+            if ($project != '') {
+                $this->setProject($project);
             }
             $this->Settings = new Input();
             $this->PathBaselib = $PathBaselib;
@@ -288,11 +286,13 @@ if (!defined('CLASS_WEBLICATION')) {
          * Set charset for the Web Application
          *
          * @param string $charset
+         * @return Weblication
          */
-        function setCharset($charset)
+        function setCharset(string $charset)
         {
             header('content-type: text/html; charset=' . $charset);
             $this->charset = strtoupper($charset);
+            return $this;
         }
 
         /**
@@ -1077,19 +1077,20 @@ if (!defined('CLASS_WEBLICATION')) {
          */
         function getProject()
         {
-            return $this->Project;
+            return $this->project;
         }
 
         /**
-         * Definiert einen Projektnamen / App-Name
+         * defines the project name and name of the Weblication
          *
          * @param string $project
          * @return boolean
          */
-        public function setProject($project)
+        public function setProject(string $project)
         {
-            if ($this->Project == 'unknown') {
-                $this->Project = $project;
+            if ($this->project == 'unknown') {
+                $this->project = $project;
+                if(!$this->Name) $this->setName($project);
                 return true;
             }
             return false;
@@ -1102,7 +1103,8 @@ if (!defined('CLASS_WEBLICATION')) {
          */
         public function setTitle($title)
         {
-            $this->Title = $title;
+            $this->title = $title;
+            return $this;
         }
 
         /**
@@ -1112,7 +1114,23 @@ if (!defined('CLASS_WEBLICATION')) {
          */
         public function getTitle()
         {
-            return $this->Title;
+            return $this->title;
+        }
+
+        /**
+         * set locale
+         *
+         * @param int $category
+         * @param string|null
+         * @return false|string
+         */
+        public function setLocale(int $category = LC_ALL, ?string $locale = null)
+        {
+            if(is_null($locale)) {
+                $locale = Translator::detectLocale();
+            }
+            $this->locale = $locale;
+            return setlocale($category, $locale.($this->charset ? '.'.$this->charset : ''));
         }
 
         /**
@@ -1120,8 +1138,10 @@ if (!defined('CLASS_WEBLICATION')) {
          *
          * @access public
          * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
-         * @return boolean Erfolgsstatus
-         **/
+         * @return Weblication
+         *
+         * @throws Exception
+         */
         public function run($className = 'GUI_CustomFrame')
         {
             // TODO Get Parameter frame
@@ -1132,12 +1152,9 @@ if (!defined('CLASS_WEBLICATION')) {
             }
 
             $Nil = new Nil();
-            $GUI = &GUI_Module::createGUIModule($className, $this, $Nil, $params);
+            $GUI = GUI_Module::createGUIModule($className, $this, $Nil, $params);
             if (isNil($GUI)) {
-                $this->raiseError(__FILE__, __LINE__, 'Klasse ' . $className .
-                    ' wurde nicht gefunden oder existiert nicht. (@Weblication -> run).');
-                // TODO Page Error
-                return false;
+                throw new Exception('The class name '.$className.' was not found or does not exist');
             }
             else {
                 /** Hinweis: erstes GUI registriert sich selbst �ber setMain als
@@ -1147,14 +1164,14 @@ if (!defined('CLASS_WEBLICATION')) {
                     # Seitentitel (= Project)
                     $Header = &$this->Main->getHeaderdata();
                     if ($Header) {
-                        $title = $this->Title;
+                        $title = $this->title;
                         $Header->setTitle($title);
                         $Header->setLanguage($this->language);
                         if ($this->charset) $Header->setCharset($this->charset);
                     }
                 }
-                return true;
             }
+            return $this;
         }
 
         /**
