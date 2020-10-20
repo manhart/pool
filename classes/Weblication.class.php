@@ -191,17 +191,20 @@ if (!defined('CLASS_WEBLICATION')) {
          */
         function __construct(string $project = '', $PathBaselib = '', $RelativePathBaselib = '')
         {
+            $Nil = new Nil();
+            parent::__construct($Nil); // sets name
+
             if ($project != '') {
                 $this->setProject($project);
             }
+
             $this->Settings = new Input();
             $this->PathBaselib = $PathBaselib;
             $this->RelativePathBaselib = $RelativePathBaselib;
 
             $this->Translator = Singleton('\\pool\\classes\\Translator');
 
-            $Nil = new Nil();
-            parent::__construct($Nil);
+            return $this;
         }
 
         /**
@@ -1090,7 +1093,6 @@ if (!defined('CLASS_WEBLICATION')) {
         {
             if ($this->project == 'unknown') {
                 $this->project = $project;
-                if(!$this->Name) $this->setName($project);
                 return true;
             }
             return false;

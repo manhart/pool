@@ -63,22 +63,25 @@ if(!defined('CLASS_SINGLETON')) {
          *
          * @throws ReflectionException
          */
-        function instance($class, $args=array())
+        function instance($class, array $args=array())
         {
             if(!isset($this->instances[$class]) or !is_object($this->instances[$class])) {
 
                 if (count($args) > 0) {
-                    $Refl = new ReflectionClass($class);
-                    $this->instances[$class] = $Refl->newInstanceArgs($args);
-                    // old method: eval("\$this->instances[\$class] = new $class($argumentlist);");
+                    // oldest method: eval("\$this->instances[\$class] = new $class($argumentlist);");
+                    // older method:
+                    // $Refl = new ReflectionClass($class);
+                    // $instance = $Refl->newInstanceArgs($args);
+                    // j$this->instances[$class] = $instance;
+
+                    $this->instances[$class] = new $class(...$args);
                 }
                 else {
                     $this->instances[$class] = new $class();
                 }
             }
 
-            $pointer = $this->instances[$class];
-            return $pointer;
+            return $this->instances[$class];
         }
 
         /**
