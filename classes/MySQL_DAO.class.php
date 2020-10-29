@@ -243,6 +243,13 @@ if(!defined('CLASS_MYSQLDAO')) {
         protected array $translate = [];
 
         /**
+         * translates field values within filter / sorting methods
+         *
+         * @var array|string[][]
+         */
+        protected array $translateValues = [];
+
+        /**
          * @var object|Translator|null
          */
         protected Translator $Translator;
@@ -810,6 +817,19 @@ if(!defined('CLASS_MYSQLDAO')) {
             return $row;
         }
 
+        protected function translateValues(string $field): string
+        {
+            if(isset($this->translateValues[$field])) {
+                $tmp = 'case '.$field;
+                foreach($this->translateValues[$field] as $key => $transl) {
+                    $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->get($transl).'\'';
+                }
+                $tmp .= ' else '.$field.' end';
+                $field = $tmp;
+            }
+            return $field;
+        }
+
         /**
          * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
          *
@@ -834,7 +854,7 @@ if(!defined('CLASS_MYSQLDAO')) {
             if(is_array($filter_rules)) {
                 foreach($filter_rules as $record) {
                     $z++;
-                    if(!is_array($record)) {
+                    if(!is_array($record)) { // operator or something manual
                         // where 1 xxx fehlendes and
                         if($z==0 and strtolower($record) != 'or') {
                             $query .= ' and ';
@@ -851,7 +871,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                         $query .= ' ' . $operator . ' ';
                     }
 
-                    if(is_array($record[0])) {
+                    if(is_array($record[0])) { // nesting
                         $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
                         continue;
                     }
@@ -862,6 +882,10 @@ if(!defined('CLASS_MYSQLDAO')) {
                     if(isset($record[3])) { // Optionen
                         $noQuotes = ($record[3] & DAO_NO_QUOTES);
                         $noEscape = ($record[3] & DAO_NO_ESCAPE);
+                    }
+
+                    if($this->translateValues) {
+                        $record[0] = $this->translateValues($record[0]);
                     }
 
                     // Sonderregel "in", "not in"
@@ -951,7 +975,11 @@ if(!defined('CLASS_MYSQLDAO')) {
                         $sql .= ', ';
                     }
 
-                    $sql .= $alias.$column.' '.$sort;
+                    $column = $alias.$column;
+                    if($this->translateValues) {
+                        $column = $this->translateValues($column);
+                    }
+                    $sql .= $column.' '.$sort;
                 }
             }
             return $sql;
