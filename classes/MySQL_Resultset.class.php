@@ -95,7 +95,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
                 if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
                     ACTIVATE_RESULTSET_SQL_LOG == 1) {
                     // Zeitmessung starten
-                    $Stopwatch = &Singleton('Stopwatch');
+                    $Stopwatch = Singleton('Stopwatch');
                     $Stopwatch->start('SQLQUERY');
                 }
                 $result = $this->db->query($sql, $dbname);
@@ -150,7 +150,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
                 $Stopwatch->stop('SQLQUERY');
                 $timespent = $Stopwatch->getDiff('SQLQUERY');
 
-                $Log = &Singleton('Log');
+                $Log = Singleton('Log');
                 if($Log->isLogging()) {
                     $Log->addLine('SQL ON DB '.$dbname.': "'.$sql.'" in '.$timespent.' sec.');
                     if(!$bResult) $Log->addlIne('SQL-ERROR ON DB '.$dbname.': '.$this->db->getErrormsg());
