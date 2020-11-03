@@ -30,6 +30,10 @@ if(!defined('CLASS_DAO')) {
     define('DAO_NO_QUOTES', 1);
     define('DAO_NO_ESCAPE', 2);
 
+    define('PWD_TILL_DAOS_MYSQL', 'mysql');
+    define('PWD_TILL_DAOS_CISAM', 'cisam');
+    define('PWD_TILL_DAOS_POSTGRESQL', 'postgresql');
+
     #### Datainterface Types:
     if(!defined('DATAINTERFACE_MYSQL')) define('DATAINTERFACE_MYSQL', 'MySQL_Interface');
     if(!defined('DATAINTERFACE_MYSQLI')) define('DATAINTERFACE_MYSQLI', 'MySQLi_Interface');
@@ -413,7 +417,7 @@ if(!defined('CLASS_DAO')) {
             switch($type) {
                 case DATAINTERFACE_MYSQL:
                 case DATAINTERFACE_MYSQLI:
-                    $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_MYSQL).$dbname.'/'.utf8_encode($table).'.class.php';
+                    $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_MYSQL).'/'.$dbname.'/'.utf8_encode($table).'.class.php';
                     $file_exists = file_exists($include);
                     if (!class_exists($table, false) and $file_exists) {
                         require_once $include;
@@ -429,7 +433,7 @@ if(!defined('CLASS_DAO')) {
                     break;
 
                 case DATAINTERFACE_CISAM:
-                    $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_CISAM).utf8_encode($table).'.class.php';
+                    $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_CISAM).'/'.utf8_encode($table).'.class.php';
                     $file_exists = file_exists($include);
                     if (!class_exists($table, false) and $file_exists) {
                         require_once $include;

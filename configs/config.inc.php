@@ -39,7 +39,7 @@ $loc = setlocale(LC_CTYPE, 'de_DE.UTF-8'); // charset must be installed on syste
 
 /* check Servername und stelle die Weichen */
 switch($_SERVER['SERVER_NAME']) {
-    case 'develop.localhost':   
+    case 'develop.localhost':
     # VM develop.manhart.xx
     case 'develop.manhart.xx':
         define('DIR_DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']);
@@ -80,13 +80,13 @@ define('DIR_COMMON_ROOT_REL', '../common');
 //define('DIR_DATA_ROOT', DIR_DOCUMENT_ROOT . 'data');
 //define('DIR_RELATIVE_DATA_ROOT', DIR_RELATIVE_DOCUMENT_ROOT . 'data');
 //define('DIR_PROJECT_TO_DATA_ROOT', '../../data');
-	
+
 define('DIR_DAOS_ROOT', DIR_DOCUMENT_ROOT.'/pool/examples/daos');
 // define('DIR_RELATIVE_DAOS_ROOT', DIR_RELATIVE_LIB_ROOT . '/examples/daos'); wird nie benötigt
-	
+
 define('DIR_SUBCODES_ROOT', DIR_DOCUMENT_ROOT.'/pool/examples/subcodes');
 //	define('DIR_RELATIVE_SUBCODES_ROOT', DIR_RELATIVE_LIB_ROOT . '/subcodes');
-	
+
 //define('DIR_BASELIB_ROOT', DIR_LIB_ROOT);
 //define('DIR_RELATIVE_BASELIB_ROOT', DIR_RELATIVE_LIB_ROOT);
 
@@ -94,9 +94,3 @@ define('DIR_SUBCODES_ROOT', DIR_DOCUMENT_ROOT.'/pool/examples/subcodes');
 //define('DIR_RELATIVE_PUBLIC_ROOT', DIR_RELATIVE_DOCUMENT_ROOT . 'public/');
 
 define('DIR_RELATIVE_3RDPARTY_ROOT', '../3rdParty');
-
-# DAO paths
-define('PWD_TILL_DAOS_MYSQL', 'mysql/');
-define('PWD_TILL_DAOS_MSSQL', 'mssql/');
-define('PWD_TILL_DAOS_POSTGRESQL', 'postgresql/');
-define('PWD_TILL_DAOS_CISAM', 'cisam/');
