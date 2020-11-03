@@ -655,11 +655,6 @@ if(!defined('CLASS_MYSQLDAO')) {
         function deleteMultiple($filter_rules=array())
         {
             $sql = sprintf('DELETE FROM `%s` WHERE %s', $this->table, $this->__buildFilter($filter_rules, 'and', true));
-
-//				$fh = fopen(addEndingSlash(DIR_DOCUMENT_ROOT).'debug.txt', 'a');
-//				fwrite($fh, $sql.chr(10));
-//				fclose($fh);
-
             $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
@@ -748,13 +743,6 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildWhere($id, $key),
                 $this->__buildFilter($filter_rules)
             );
-
-            #echo "getCount: ".$sql."<hr>";
-
-//				$fh = fopen(addEndingSlash(DIR_DOCUMENT_ROOT).'debug.txt', 'w');
-//				fwrite($fh, $sql.chr(10));
-//				fclose($fh);
-
 
             $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
