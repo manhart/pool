@@ -398,7 +398,7 @@ if(!defined('CLASS_DAO')) {
          * @param boolean $autoload_fields Automatisch Lesen der Spaltendefinitionen
          * @return MySQL_DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
          **/
-        public static function &createDAO(& $interfaces, $tabledefine, $autoload_fields=true)
+        public static function &createDAO($interfaces, $tabledefine, $autoload_fields=true)
         {
             $varname = $tabledefine;
             global $$tabledefine;
@@ -409,10 +409,10 @@ if(!defined('CLASS_DAO')) {
 
             // Interface Objekt
             if (is_array($interfaces)) {
-                $interface = & $interfaces[$type];
+                $interface = $interfaces[$type];
             }
             else {
-                $interface = & $interfaces;
+                $interface = $interfaces;
             }
             switch($type) {
                 case DATAINTERFACE_MYSQL:

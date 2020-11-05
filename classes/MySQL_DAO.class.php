@@ -263,7 +263,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 
             // only if Translator needed
             if($this->translate) {
-                $this->Translator = Singleton('\\pool\\classes\\Translator');
+                $this->Translator = Translator::getInstance();
             }
 
             $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
