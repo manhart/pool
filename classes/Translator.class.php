@@ -12,7 +12,7 @@
 namespace pool\classes;
 
 
-class Translator extends \PoolObject
+final class Translator extends \PoolObject
 {
     /**
      * @var string
@@ -303,6 +303,31 @@ class Translator extends \PoolObject
         'ZM' => 'en_ZM',
         'ZW' => 'sn_ZW'
     ];
+
+    /**
+     * @var Translator|null
+     */
+    private static ?Translator $Instance = null;
+
+    /**
+     * is not allowed to call from outside to prevent from creating multiple instances,
+     * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
+     */
+    private function __construct()
+    {
+    }
+
+    /**
+     * gets the instance via lazy initialization (created on first usage)
+     */
+    public static function getInstance(): Translator
+    {
+        if (static::$Instance === null) {
+            static::$Instance = new static();
+        }
+
+        return static::$Instance;
+    }
 
     /**
      * sets the resources directory
