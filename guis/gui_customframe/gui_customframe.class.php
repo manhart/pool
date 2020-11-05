@@ -138,7 +138,6 @@ class GUI_CustomFrame extends GUI_Module
         }
 
         //$this -> Headerdata -> addJavaScript($this -> Weblication -> findJavaScript('dyntooltip.js', $this -> getClassName(), true));
-        //$this -> Headerdata -> addJavaScript($this -> Weblication -> getRelativePathBaselib(PWD_TILL_JAVASCRIPTS . 'windowmanager.js'));
     }
 
     /**

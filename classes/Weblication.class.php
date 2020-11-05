@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  *        -==|| Rapid Module Library (RML) ||==-
  *
@@ -72,6 +72,11 @@ if (!defined('CLASS_WEBLICATION')) {
         var $Session = null;
 
         /**
+         * @var Weblication|null
+         */
+        private static ?Weblication $Instance = null;
+
+        /**
          * Benutzer Klasse (nicht realisiert)
          *
          * @var User
@@ -80,20 +85,12 @@ if (!defined('CLASS_WEBLICATION')) {
         var $User = null;
 
         /**
-         * Root Verzeichnis der Hauptbibliothek
-         *
-         * @var string
-         * @access private
-         */
-        var $PathBaselib = '';
-
-        /**
          * Relativer Pfad zur Hauptbibliothek
          *
          * @var string
          * @access private
          */
-        var $RelativePathBaselib = '';
+        private string $relativePathBaselib = '';
 
         /**
          * Skin / Theme (Designvorlage bzw. Bilderordner)
@@ -172,50 +169,56 @@ if (!defined('CLASS_WEBLICATION')) {
         private $language = 'de';
 
         /**
-         * @var Translator
-         */
-        private Translator $Translator;
-
-        /**
          * @var string
          */
         private string $subdirTranslated = '';
 
         /**
-         * Der Konstruktor erwartet den Projektnamen, den absoluten und relativen Pfad zur Baselib.
-         *
-         * @access public
-         * @param string $project name of the project
-         * @param string $PathBaselib absoluter Pfad zur Baselib
-         * @param string $RelativePathBaselib relativer Pfad zur Baselib
+         * is not allowed to call from outside to prevent from creating multiple instances,
+         * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
          */
-        function __construct(string $project = '', $PathBaselib = '', $RelativePathBaselib = '')
+        private function __construct()
         {
             $Nil = new Nil();
-            parent::__construct($Nil); // sets name
-
-            if ($project != '') {
-                $this->setProject($project);
-            }
+            parent::__construct($Nil);
 
             $this->Settings = new Input();
-            $this->PathBaselib = $PathBaselib;
-            $this->RelativePathBaselib = $RelativePathBaselib;
-
-            $this->Translator = Singleton('\\pool\\classes\\Translator');
-
             return $this;
         }
+
+        /**
+         * gets the instance via lazy initialization (created on first usage)
+         */
+        public static function getInstance(): Weblication
+        {
+            if (static::$Instance === null) {
+                static::$Instance = new static();
+            }
+
+            return static::$Instance;
+        }
+
+        /**
+         * prevent the instance from being cloned (which would create a second instance of it)
+         */
+        private function __clone() {}
+
+        /**
+         * prevent from being unserialized (which would create a second instance of it)
+         */
+        private function __wakeup() {}
 
         /**
          * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
          *
          * @access public
          * @param string $skin Ordner fuer die Designvorlagen (Html Templates) und Bilder. (Standardwert: default)
-         **/
+         * @return Weblication
+         */
         function setSkin($skin = 'default')
         {
             $this->skin = $skin;
+            return $this;
         }
 
         /**
@@ -236,6 +239,7 @@ if (!defined('CLASS_WEBLICATION')) {
          * @param string $lang Country Code
          * @param string $resourceDir Directory with translations e.g. de.php, en.php
          * @param string $subdirTranslated Subdirectory for generated static translated templates during the deployment process
+         * @return Weblication
          * @throws Exception
          */
         function setLanguage(string $lang = 'de', string $resourceDir = '', string $subdirTranslated = '')
@@ -243,10 +247,11 @@ if (!defined('CLASS_WEBLICATION')) {
             $this->language = $lang;
 
             if ($resourceDir) {
-                $this->Translator->setResourceDir($resourceDir)->setDefaultLanguage($lang);
+                Translator::getInstance()->setResourceDir($resourceDir)->setDefaultLanguage($lang);
             }
 
             $this->subdirTranslated = $subdirTranslated;
+            return $this;
         }
 
         /**
@@ -268,7 +273,7 @@ if (!defined('CLASS_WEBLICATION')) {
          */
         public function getTranslator(?string $language = null): Translator
         {
-            $Translator = $this->Translator;
+            $Translator = Translator::getInstance();
             if ($language) {
                 $Translator->changeLanguage($language);
             }
@@ -334,10 +339,12 @@ if (!defined('CLASS_WEBLICATION')) {
          * set default schema/layout, if none is loaded by request
          *
          * @param string $default
+         * @return Weblication
          */
         public function setDefaultSchema($default = 'index')
         {
             $this->schema = trim($default);
+            return $this;
         }
 
         /**
@@ -734,7 +741,7 @@ if (!defined('CLASS_WEBLICATION')) {
 
             # Ordner baselib
             if ($baselib) {
-                $folder = addEndingSlash($this->PathBaselib) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
+                $folder = __DIR__.'/../'.PWD_TILL_GUIS.'/' . addEndingSlash($classfolder);
                 if (is_dir($folder)) {
                     if (file_exists($folder . $filename)) {
                         return $folder . $filename;
@@ -810,10 +817,11 @@ if (!defined('CLASS_WEBLICATION')) {
 
             # Ordner baselib
             if ($baselib) {
-                $folder = addEndingSlash($this->RelativePathBaselib) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
+                $folder = $this->getRelativePathBaselib(PWD_TILL_GUIS.'/'.strtolower($classfolder));
                 if (is_dir($folder)) {
-                    if (file_exists($folder . $filename)) {
-                        return $folder . $filename;
+                    $file = $folder . '/'. $filename;
+                    if (file_exists($file)) {
+                        return $file;
                     }
                 }
             }
@@ -848,9 +856,9 @@ if (!defined('CLASS_WEBLICATION')) {
 
             # Ordner baselib
             if ($baselib) {
-                $folder = addEndingSlash($this->RelativePathBaselib) . $javascripts;
-                if (file_exists($folder . $filename)) {
-                    return $folder . $filename;
+                $folder = $this->getRelativePathBaselib($javascripts);
+                if (file_exists($folder . '/' . $filename)) {
+                    return $folder . '/'. $filename;
                 }
             }
             else {
@@ -877,43 +885,23 @@ if (!defined('CLASS_WEBLICATION')) {
         }
 
         /**
-         * Setzte Pfad zum POOL
-         *
-         * @param $path
+         * @param string $path
          */
-        function setPathBaselib($path)
+        function setRelativePathBaselib(string $path)
         {
-            $this->PathBaselib = $path;
-        }
-
-        /**
-         * Pfad zum Rootverzeichnis der Baselib
-         *
-         * @access public
-         * @return string Pfad zur Base-Lib
-         **/
-        function getPathBaselib($path = '')
-        {
-            return $this->PathBaselib . $path;
-        }
-
-        /**
-         * @param $path
-         */
-        function setRelativePathBaselib($path)
-        {
-            $this->RelativePathBaselib = $path;
+            $this->relativePathBaselib = $path;
         }
 
         /**
          * Relativer Pfad zum Rootverzeichnis der Baselib
          *
          * @access public
-         * @return string Relativer Pfad zur Baselib
-         **/
-        function getRelativePathBaselib($path = '')
+         * @param string $subdir
+         * @return string path from project to library pool
+         */
+        function getRelativePathBaselib(string $subdir = '')
         {
-            return $this->RelativePathBaselib . $path;
+            return $this->relativePathBaselib . '/' . $subdir;
         }
 
         /**
@@ -993,7 +981,7 @@ if (!defined('CLASS_WEBLICATION')) {
          * @return array Interface Objekte
          * @see DAO::createDAO()
          **/
-        public function &getInterfaces()
+        public function getInterfaces()
         {
             return $this->Interfaces;
         }
@@ -1005,7 +993,7 @@ if (!defined('CLASS_WEBLICATION')) {
          *                        sessionClassName - overrides default session class
          * @return Weblication
          */
-        public function &setup(array $settings)
+        public function setup(array $settings)
         {
             $this->Settings->setVar($settings);
             return $this;
@@ -1023,7 +1011,7 @@ if (!defined('CLASS_WEBLICATION')) {
          * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
          * @return ISession
          **/
-        public function &startPHPSession($session_name = 'PHPSESSID', $use_trans_sid = 0, $use_cookies = 1, $use_only_cookies = 0, $autoClose = true)
+        public function startPHPSession($session_name = 'PHPSESSID', $use_trans_sid = 0, $use_cookies = 1, $use_only_cookies = 0, $autoClose = true)
         {
             $sessionConfig = array(
                 'name' => $session_name,
@@ -1032,7 +1020,7 @@ if (!defined('CLASS_WEBLICATION')) {
                 'use_only_cookies' => $use_only_cookies
             );
             foreach ($sessionConfig as $param => $value) {
-                ini_set('session.' . $param, $value);
+                ini_set('session.' . $param, (string)$value);
             }
 
             $isStatic = !(isset($this)); // TODO static calls or static AppSettings
@@ -1074,36 +1062,12 @@ if (!defined('CLASS_WEBLICATION')) {
         }
 
         /**
-         * Projektname auslesen
-         *
-         * @return string
-         */
-        function getProject()
-        {
-            return $this->project;
-        }
-
-        /**
-         * defines the project name and name of the Weblication
-         *
-         * @param string $project
-         * @return boolean
-         */
-        public function setProject(string $project)
-        {
-            if ($this->project == 'unknown') {
-                $this->project = $project;
-                return true;
-            }
-            return false;
-        }
-
-        /**
          * Seitentitel setzen
          *
          * @param string $title
+         * @return Weblication
          */
-        public function setTitle($title)
+        public function setTitle(string $title)
         {
             $this->title = $title;
             return $this;
@@ -1114,7 +1078,7 @@ if (!defined('CLASS_WEBLICATION')) {
          *
          * @return string
          */
-        public function getTitle()
+        public function getTitle(): string
         {
             return $this->title;
         }
