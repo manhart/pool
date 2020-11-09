@@ -170,6 +170,11 @@ class Weblication extends Component
     private string $subdirTranslated = '';
 
     /**
+     * @var string version of the application
+     */
+    private string $version = '';
+
+    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -362,6 +367,24 @@ class Weblication extends Component
     public function getSchema()
     {
         return (isset($_REQUEST['schema']) and $_REQUEST['schema'] != '') ? $_REQUEST['schema'] : $this->getDefaultSchema();
+    }
+
+    /**
+     * @param string $version application version
+     * @return Weblication
+     */
+    public function setVersion(string $version)
+    {
+        $this->version = $version;
+        return $this;
+    }
+
+    /**
+     * @return string returns application version
+     */
+    public function getVersion()
+    {
+        return $this->version;
     }
 
     /**
