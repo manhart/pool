@@ -389,11 +389,11 @@ final class Translator extends \PoolObject
      * get translation
      *
      * @param string $key
-     * @param array|null ...$args
+     * @param mixed|null ...$args
      * @return mixed|string
      * @throws \Exception
      */
-    public function get(string $key, ?array ...$args)
+    public function get(string $key, ...$args)
     {
         $translation = $this->getTranslation($this->getLanguage());
 
@@ -413,11 +413,11 @@ final class Translator extends \PoolObject
      *
      * @param string $key
      * @param int $n
-     * @param array|null ...$args
+     * @param mixed|null ...$args
      * @return mixed|string
      * @throws \Exception
      */
-    public function nget(string $key, int $n, ?array ...$args)
+    public function nget(string $key, int $n, ...$args)
     {
         $language = $this->getLanguage();
         $translation = $this->getTranslation($language);
