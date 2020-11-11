@@ -1471,9 +1471,9 @@ function getWeekNumber(day, month, year) {
 	 * @returns {Boolean}
 	 */
 	function log(text) {
-		if(window.console && (location.host == 'develop1' || location.host == 'develop01')) {
-			var time = new Date().strftime('%H:%M:%S ');
-			var type = typeof text;
+		if(window.console) {
+			let time = new Date().strftime('%H:%M:%S ');
+			let type = typeof text;
 			switch(type) {
 				case 'object':
 					console.log(time + ' ' + type + ':');
