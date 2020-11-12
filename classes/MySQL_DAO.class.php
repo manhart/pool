@@ -536,6 +536,9 @@ if(!defined('CLASS_MYSQLDAO')) {
                 elseif(is_integer($value) or (is_float($value))) {
                     $values .= (string)$value.',';
                 }
+                elseif(is_bool($value)) {
+                    $values .= (int)$value.',';
+                }
                 else {
                     $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
                 }
