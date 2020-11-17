@@ -537,7 +537,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                     $values .= (string)$value.',';
                 }
                 elseif(is_bool($value)) {
-                    $values .= $value.',';
+                    $values .= bool2string($value).',';
                 }
                 else {
                     $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));

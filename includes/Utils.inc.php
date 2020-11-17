@@ -1224,13 +1224,13 @@ if (!function_exists('is_a')) {
 }
 
 /**
- * Erstellt Verzeichnisse z.b. Uebergabe /var/log/prog/main/ups.log (prog und main werden angelegt)
+ * Creates directories recursively e.g. /var/log/prog/main/ups.log if prog and main don't exist, they are created.
  *
  * @param string $strPath
  * @param integer $mode
- * @return boolean Erfolgsstatus
+ * @return boolean success
  **/
-function mkdirs($strPath, $mode = 0777)
+function mkdirs(string $strPath, $mode = 0777)
 {
     if (@is_dir($strPath)) {
         return true;
