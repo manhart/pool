@@ -682,11 +682,8 @@ class Weblication extends Component
      * @param boolean $baselib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden Templates. Im Fehlerfall ''.
      **/
-    function findTemplate($filename, $classfolder = '', $baselib = false)
+    function findTemplate(string $filename, string $classfolder = '', bool $baselib = false)
     {
-        $classfolder = strtolower($classfolder); // 29.05.2007, Workaround for PHP 5
-        // PHP > 5.x/7 liefert mit get_class() pl�tzlich richtig geschriebene Klassennamen in Gro�buchstaben
-
         $skin = $this->skin;
         $language = $this->language;
         $templates = 'templates';
@@ -712,6 +709,7 @@ class Weblication extends Component
             }
         }
 
+        # folder: templates
         $languageFolder = $skinFolder . '/' . $templates . '/' . $language;
         if ($this->hasSkinFolder($templates, $language)) { // with language, more specific
             if (file_exists($languageFolder . '/' . $filename)) {
@@ -727,18 +725,19 @@ class Weblication extends Component
         }
 
         # Ordner Projekt guis
-        $folder_guis = PWD_TILL_GUIS . '/' . $classfolder . '/';
-        $gui_directories = array(
-            $folder_guis
-        );
+        $gui_directories = [];
+        if($classfolder) {
+            $folder_guis = PWD_TILL_GUIS . '/' . $classfolder;
+            $gui_directories[] = $folder_guis;
 
-        # Ordner Commons guis
-        if (defined('DIR_COMMON_ROOT')) {
-            $gui_directories[] = addEndingSlash(DIR_COMMON_ROOT) . $folder_guis;
+            # Ordner Commons guis
+            if (defined('DIR_COMMON_ROOT')) {
+                $gui_directories[] = addEndingSlash(DIR_COMMON_ROOT) . $folder_guis;
+            }
         }
 
         foreach ($gui_directories as $folder_guis) {
-            $folder_skins = $folder_guis . $skin;
+            $folder_skins = $folder_guis . '/'.$skin;
             $folder_language = $folder_skins . '/' . $language;
             if (is_dir($folder_language)) { // Language Ordner
                 if (file_exists($folder_language . '/' . $filename)) {
@@ -751,8 +750,8 @@ class Weblication extends Component
                 }
             }
             if (is_dir($folder_guis)) { // GUI Ordner
-                if (file_exists($folder_guis . $filename)) {
-                    return $folder_guis . $filename;
+                if (file_exists($folder_guis . '/'.$filename)) {
+                    return $folder_guis . '/'.$filename;
                 }
             }
         }
@@ -768,6 +767,16 @@ class Weblication extends Component
             }
         }
 
+        // Lowercase Workaround @deprecated
+        if (preg_match('/[A-Z]/', $filename . $classfolder)) {
+            // try lower case
+            // todo log buggy code
+            if(defined('IS_DEVELOP') and IS_DEVELOP) {
+                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
+            }
+            return $this->findTemplate(strtolower($filename), strtolower($classfolder), $baselib);
+        }
+
         $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
         return '';
     }
@@ -781,62 +790,74 @@ class Weblication extends Component
      * @param boolean $baselib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
-    function findStyleSheet($filename, $classfolder = '', $baselib = false)
+    function findStyleSheet(string $filename, string $classfolder = '', bool $baselib = false)
     {
         $skin = addEndingSlash($this->skin);
         $language = addEndingSlash($this->language);
         $stylesheets = $this->cssFolder . '/';
 
-        # folder: skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS);
-        $folder_default = $folder_skins . $this->commonSkinFolder . '/'; // TODO AM, making it configurable
-        $folder_skins_stylesheets = $folder_default . $stylesheets;
+        # Ordner skins
+        $skinFolder = PWD_TILL_SKINS . '/' . $skin;
 
-        if (is_dir($folder_skins_stylesheets)) { // skins - skinname - stylesheet folder
-            if (file_exists($folder_skins_stylesheets . $filename)) {
-                return $folder_skins_stylesheets . $filename;
+        # folder: common
+        if ($this->hasCommonSkinFolder($this->cssFolder)) {
+            $folder_common_styles = PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $this->cssFolder;
+            if (file_exists($folder_common_styles . '/' . $filename)) {
+                return $folder_common_styles . '/' . $filename;
             }
         }
 
-        $folder_skin = $folder_skins . $skin;
-        $folder_skin_stylesheets = $folder_skin . $stylesheets;
-        $folder_language = $folder_skin . $language . $stylesheets;
-
-        if (is_dir($folder_language)) { // skins - skinname - language - stylesheet folder
-            if (file_exists($folder_language . $filename)) {
-                return $folder_language . $filename;
+        // folder: skins
+        $languageFolder = $skinFolder . '/' . $stylesheets . '/' . $language;
+        if ($this->hasSkinFolder($this->cssFolder, $language)) { // with language, more specific
+            if (file_exists($languageFolder . '/' . $filename)) {
+                return $languageFolder . '/' . $filename;
             }
         }
 
-        if (is_dir($folder_skin_stylesheets)) { // skins - skinname - stylesheet folder
-            if (file_exists($folder_skin_stylesheets . $filename)) {
-                return $folder_skin_stylesheets . $filename;
+        if ($this->hasSkinFolder($stylesheets, null)) { // without language
+            $stylesheetsFolder = $skinFolder . '/' . $stylesheets;
+            if (file_exists($stylesheetsFolder . '/' . $filename)) {
+                return $stylesheetsFolder . '/' . $filename;
             }
         }
 
-        # Projekt folder: guis
-        $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
-        $folder_skin = $folder_guis . $skin;
-        $folder_language = $folder_skin . $language;
-        if (is_dir($folder_language)) { // guis - classname - skin - language folder
-            if (file_exists($folder_language . $filename)) {
-                return $folder_language . $filename;
+
+        $gui_directories = [];
+        if($classfolder) {
+            $folder_guis = PWD_TILL_GUIS . '/' . $classfolder;
+            $gui_directories[] = $folder_guis;
+
+            # Ordner Commons guis
+            if (defined('DIR_COMMON_ROOT_REL')) { // addEndingSlash(DIR_COMMON_ROOT_REL)
+                $gui_directories[] = addEndingSlash(DIR_COMMON_ROOT_REL) . $folder_guis;
             }
         }
-        if (is_dir($folder_skin)) { // guis - classname - skin folder
-            if (file_exists($folder_skin . $filename)) {
-                return $folder_skin . $filename;
+
+        foreach ($gui_directories as $folder_guis) {
+            # Projekt folder: guis
+            $folder_skin = $folder_guis . '/' . $skin;
+            $folder_language = $folder_skin . '/'. $language;
+            if (is_dir($folder_language)) { // guis - classname - skin - language folder
+                if (file_exists($folder_language . '/' . $filename)) {
+                    return $folder_language . '/' . $filename;
+                }
             }
-        }
-        if (is_dir($folder_guis)) { // guis - classname folder
-            if (file_exists($folder_guis . $filename)) {
-                return $folder_guis . $filename;
+            if (is_dir($folder_skin)) { // guis - classname - skin folder
+                if (file_exists($folder_skin . '/' . $filename)) {
+                    return $folder_skin . '/' . $filename;
+                }
+            }
+            if (is_dir($folder_guis)) { // guis - classname folder
+                if (file_exists($folder_guis . '/' . $filename)) {
+                    return $folder_guis . '/' . $filename;
+                }
             }
         }
 
         # Ordner baselib
         if ($baselib) {
-            $folder = $this->getRelativePathBaselib(PWD_TILL_GUIS.'/'.strtolower($classfolder));
+            $folder = $this->getRelativePathBaselib(PWD_TILL_GUIS.'/'.$classfolder);
             if (is_dir($folder)) {
                 $file = $folder . '/'. $filename;
                 if (file_exists($file)) {
@@ -845,8 +866,13 @@ class Weblication extends Component
             }
         }
 
-        // PHP 4 Workaround:
+        // Lowercase Workaround:
         if (preg_match('/[A-Z]/', $filename . $classfolder)) {
+            // try lower case
+            // todo log buggy code
+            if(defined('IS_DEVELOP') and IS_DEVELOP) {
+                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
+            }
             return $this->findStyleSheet(strtolower($filename), strtolower($classfolder), $baselib);
         }
         else {
@@ -866,7 +892,7 @@ class Weblication extends Component
      * @param string $classfolder Unterordner (guis/*) zur Klasse
      * @return string Bei Erfolg Pfad und Dateiname des gefunden JavaScripts. Im Fehlerfall ''.
      **/
-    function findJavaScript($filename, $classfolder = '', $baselib = false)
+    function findJavaScript(string $filename, string $classfolder = '', bool $baselib = false)
     {
         $javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
 
@@ -899,7 +925,18 @@ class Weblication extends Component
             }
         }
 
-        $this->raiseError(__FILE__, __LINE__, sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
+        // Lowercase Workaround:
+        if (preg_match('/[A-Z]/', $filename . $classfolder)) {
+            // try lower case
+            // todo log buggy code
+            if(defined('IS_DEVELOP') and IS_DEVELOP) {
+                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
+            }
+            return $this->findJavaScript(strtolower($filename), strtolower($classfolder), $baselib);
+        }
+        else {
+            $this->raiseError(__FILE__, __LINE__, sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
+        }
         return '';
     }
 
