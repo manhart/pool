@@ -88,12 +88,24 @@ class Toast {
         return TOAST_WARNING;
     }
 
+    /**
+     * Controlls autohide
+     *
+     * @param autohide
+     * @returns {Toast}
+     */
     setAutohide(autohide = true)
     {
         this.autohide = autohide
         return this;
     }
 
+    /**
+     * Set delay for autohide. Activates  autonomously autohide, if delay is present!
+     *
+     * @param delay
+     * @returns {Toast}
+     */
     setDelay(delay = Toast.DEFAULT_DELAY)
     {
         this.delay = delay;
@@ -101,12 +113,32 @@ class Toast {
         return this;
     }
 
+    /**
+     * Set position of the toasts. See style classes.
+     *
+     * @param position
+     * @returns Toast
+     */
     setPosition(position = 'bottom-right')
     {
         this.position = position;
         return this;
     }
 
+    /**
+     * Creates toast html element and adds it to the toast-container
+     *
+     * @param style
+     * @param name
+     * @param title
+     * @param subtitle
+     * @param message
+     * @param autohide
+     * @param delay
+     * @param position
+     * @static
+     * @returns string id of the toast
+     */
     static create(style, name, title, subtitle, message, autohide, delay, position)
     {
         this.count = ++this.count || 1;
@@ -135,6 +167,14 @@ class Toast {
         return id;
     }
 
+    /**
+     * Show toast notification
+     *
+     * @param type
+     * @param title
+     * @param message
+     * @returns Toast
+     */
     show = (type, title, message) =>
     {
         let id = Toast.create(type, Toast.name, title, 'just now', message, (this.pauseOnHover ? false : this.autohide), this.delay, this.position);
@@ -175,6 +215,7 @@ class Toast {
                 this.Toast.toast('hide');
             }
         })
+        return this;
     }
 
     /**
@@ -231,15 +272,10 @@ class Toast {
     }
 }
 
-
+/**
+ * Example e.g. for testing:
+ *
 ready(function () {
-
-    // $('.toast').click(function(e) {
-    //     console.debug('toast clicked');
-    //     $(this).toast({autohide: false})
-    //     $(this).toast('show');
-    // })
-
     Toast.showWarning('Speichern', 'Du hast erfolgreich gespeichert', 0);
 
     window.setTimeout(function () {
@@ -271,3 +307,4 @@ ready(function () {
     // });
     // $('.toast').toast('show');
 });
+ */
