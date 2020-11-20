@@ -794,7 +794,6 @@ class Weblication extends Component
     {
         $skin = addEndingSlash($this->skin);
         $language = addEndingSlash($this->language);
-        $stylesheets = $this->cssFolder . '/';
 
         # Ordner skins
         $skinFolder = PWD_TILL_SKINS . '/' . $skin;
@@ -808,15 +807,15 @@ class Weblication extends Component
         }
 
         // folder: skins
-        $languageFolder = $skinFolder . '/' . $stylesheets . '/' . $language;
+        $languageFolder = $skinFolder . '/' . $this->cssFolder . '/' . $language;
         if ($this->hasSkinFolder($this->cssFolder, $language)) { // with language, more specific
             if (file_exists($languageFolder . '/' . $filename)) {
                 return $languageFolder . '/' . $filename;
             }
         }
 
-        if ($this->hasSkinFolder($stylesheets, null)) { // without language
-            $stylesheetsFolder = $skinFolder . '/' . $stylesheets;
+        if ($this->hasSkinFolder($this->cssFolder, null)) { // without language
+            $stylesheetsFolder = $skinFolder . '/' . $this->cssFolder;
             if (file_exists($stylesheetsFolder . '/' . $filename)) {
                 return $stylesheetsFolder . '/' . $filename;
             }
@@ -904,6 +903,11 @@ class Weblication extends Component
             $folder = $this->getRelativePathBaselib($javascripts);
             if (file_exists($folder . '/' . $filename)) {
                 return $folder . '/'. $filename;
+            }
+
+            $folder_guis = $this->getRelativePathBaselib(PWD_TILL_GUIS).'/'.$classfolder;
+            if (file_exists($folder_guis.'/'.$filename)) {
+                return $folder_guis . '/'.$filename;
             }
         }
         else {
