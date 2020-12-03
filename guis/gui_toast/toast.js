@@ -40,7 +40,7 @@ class Toast {
     }
 
     static get DEFAULT_DELAY() {
-        return 3000;
+        return 5000;
     }
 
     /**
@@ -86,6 +86,36 @@ class Toast {
      */
     static get TOAST_WARNING() {
         return TOAST_WARNING;
+    }
+
+    static setGetTextCallback(callback) {
+        Toast.gettext = callback;
+    }
+
+    /**
+     * overwrite for translation
+     *
+     * @param key
+     * @param n
+     * @returns {*}
+     */
+    gettext(key, n)
+    {
+        if(n > 1) {
+            return {
+                'secondsBehind': n+' seconds ago',
+                'minutesBehind': n+' minutes ago',
+                'hoursBehind': n+' hours ago'
+            }[key];
+        }
+        else {
+            return {
+                'justNow': 'just now',
+                'secondsBehind': n+' second ago',
+                'minutesBehind': n+' minute ago',
+                'hoursBehind': n+' hours ago',
+            }[key];
+        }
     }
 
     /**
@@ -144,8 +174,10 @@ class Toast {
         this.count = ++this.count || 1;
         let id = name + this.count;
         let hideAfter = Math.floor(Date.now() / 1000) + (delay / 1000);
+        let now = Date.now();
 
-        let toast = `<div id="${id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide=${autohide} data-delay="${delay}" data-hide-after="${hideAfter}">
+        let toast = `<div id="${id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide=${autohide}
+data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             <div class="toast-header">
                 <svg class="bd-placeholder-img rounded mr-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img">
                     <rect width="100%" height="100%" class="${style}"></rect>
@@ -173,15 +205,41 @@ class Toast {
      * @param type
      * @param title
      * @param message
+     * @param subtitle
      * @returns Toast
      */
-    show = (type, title, message) =>
+    show = (type, title, message, subtitle = null) =>
     {
-        let id = Toast.create(type, Toast.name, title, 'just now', message, (this.pauseOnHover ? false : this.autohide), this.delay, this.position);
+        let id = Toast.create(type, Toast.name, title, (subtitle) ? subtitle : this.gettext('justNow'),
+            message, (this.pauseOnHover ? false : this.autohide), this.delay, this.position);
         this.Toast = $('#'+id);
 
-        this.Toast.on('hidden.bs.toast', function () {
+        let dateUpdateHandler = null;
+        if(!subtitle) {
+            dateUpdateHandler = setInterval(() => {
+                let secondsbehind, minutesbehind = null;
+
+                let created = parseInt(this.Toast.data('created'), 10);
+                secondsbehind = Math.round((Date.now() - created) / 1000);
+
+                if(secondsbehind > 59) {
+                    minutesbehind = Math.round(secondsbehind / 60);
+                }
+
+                let subtitle = (minutesbehind ?
+                    this.gettext('minutesBehind', minutesbehind) :
+                    this.gettext('secondsBehind', secondsbehind)
+                );
+                document.querySelector('#'+id+' .toast-header .text-muted').innerHTML = subtitle;
+            }, 1000);
+        }
+
+        this.Toast.on('hidden.bs.toast', () => {
             $(this).remove();
+            if(dateUpdateHandler) {
+                clearInterval(dateUpdateHandler);
+            }
+
         });
 
         this.Toast.toast('show');
@@ -308,3 +366,4 @@ ready(function () {
     // $('.toast').toast('show');
 });
  */
+console.debug('toast.js loaded');
