@@ -129,7 +129,7 @@ class Translator {
 
         let index = this.pluralRule(language, n);
 
-        let str = translation[key][index];
+        let str = key in translation ? translation[key][index] : '';
         params.unshift(n);
         params.forEach(function (param, i) {
             let searchValue = null;
