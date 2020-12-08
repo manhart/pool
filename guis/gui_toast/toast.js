@@ -88,10 +88,6 @@ class Toast {
         return TOAST_WARNING;
     }
 
-    static setGetTextCallback(callback) {
-        Toast.gettext = callback;
-    }
-
     /**
      * overwrite for translation
      *
@@ -183,7 +179,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
                     <rect width="100%" height="100%" class="${style}"></rect>
                 </svg>
                 <strong class="mr-auto">${title}</strong>
-                <small class="text-muted">${subtitle}</small>
+                <small class="text-muted text-nowrap ml-1">${subtitle}</small>
                 <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -333,9 +329,17 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
 /**
  * Example e.g. for testing:
  *
+ * */
 ready(function () {
-    Toast.showWarning('Speichern', 'Du hast erfolgreich gespeichert', 0);
+    // Toast.showSuccess('Speichern', 'Die Daten wurden erfolgreich gespeichert', 3000);
+    // Toast.showInfo('Info', 'Sie haben eine neue Benachrichtigung', 2000);
+    // Toast.showError('Fehler', 'Es ist ein schwerwiegender Fehler aufgetreten!', 0);
+    // Toast.showWarning('Warnung', 'Sie werden in 5 Minuten automatisch ausgeloggt.', 0);
 
+    // let $Toast = new Toast().setDelay(0).setPosition('bottom-center');
+    // $Toast.show(Toast.TOAST_INFO, 'Message', 'Welcome message');
+
+/*
     window.setTimeout(function () {
         for(let i=0; i<6; i++) {
             switch(i%3) {
@@ -359,11 +363,12 @@ ready(function () {
             }
         }
     }, 200)
+    */
 
     // $('body').on('hidden.bs.toast', '.toast', function () {
     //     $(this).remove();
     // });
     // $('.toast').toast('show');
 });
- */
+
 console.debug('toast.js loaded');
