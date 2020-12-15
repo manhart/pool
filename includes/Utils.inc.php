@@ -2645,8 +2645,7 @@ function sanitizeFilename(string $filename): string
 {
     // lowercase for windows/unix interoperability http://support.microsoft.com/kb/100625
     $filename = mb_strtolower($filename, mb_detect_encoding($filename));
-
-    // reduce consecutive characters
+    $filename = preg_replace( '/[^a-z0-9\-\. _]+/', '-', $filename);
     $filename = preg_replace(
         array(
             // "file   name.zip" becomes "file-name.zip"
@@ -2656,8 +2655,7 @@ function sanitizeFilename(string $filename): string
             // "file---name.zip" becomes "file-name.zip"
             '/-+/'
         ), '-', $filename);
-
-    return preg_replace( '/[^a-z0-9\-\.]+/', '-', $filename);
+    return $filename;
 }
 
 /**
