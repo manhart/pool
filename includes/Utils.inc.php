@@ -2171,6 +2171,18 @@ function br2nl($subject)
 }
 
 /**
+ * replaces all linebreaks to <br />
+ *
+ * @param $string
+ * @return string|string[]
+ */
+function nl2br2(string $string): string
+{
+    $string = str_replace(array("\r\n", "\r", "\n"), '<br>', $string);
+    return $string;
+}
+
+/**
  * strips body from html page.
  * html, head and body tags will be dropped.
  *
@@ -2771,9 +2783,9 @@ function bool2string($bool)
  * @param string $string Boolean als String
  * @return bool booleschen Ausdruck
  */
-function string2bool($string)
+function string2bool(string $string): bool
 {
-    return ($string == 'true') ? true : false;
+    return ($string === '1' or $string === 'true');
 }
 
 /**
