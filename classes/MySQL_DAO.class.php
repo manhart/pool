@@ -355,6 +355,33 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
+         * enables auto translation of the columns defined in the property $translate
+         *
+         * @return $this
+         */
+        public function enableTranslation()
+        {
+            $this->translateValues = $this->cache['translatedValues'] ?: $this->translateValues;
+            $this->translate = $this->cache['translate'] ?: $this->translate;
+            return $this;
+        }
+
+        /**
+         * disables auto translation of the columns defined in the property $translate
+         *
+         * @return $this
+         */
+        public function disableTranslation()
+        {
+            $this->cache['translate'] = $this->translate;
+            $this->cache['translatedValues'] = $this->translateValues;
+
+            $this->translate = [];
+            $this->translateValues = [];
+            return $this;
+        }
+
+        /**
          * Liefert alle Felder der Tabelle.
          *
          * @access public
