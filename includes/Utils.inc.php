@@ -2667,6 +2667,13 @@ function sanitizeFilename(string $filename): string
             // "file---name.zip" becomes "file-name.zip"
             '/-+/'
         ), '-', $filename);
+    $filename = preg_replace(array(
+        // "file--.--.-.--name.zip" becomes "file.name.zip"
+        '/-*\.-*/',
+        // "file...name..zip" becomes "file.name.zip"
+        '/\.{2,}/'
+    ), '.', $filename);
+    $filename = trim($filename, '.-');
     return $filename;
 }
 
