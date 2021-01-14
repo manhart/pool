@@ -112,6 +112,7 @@ if(!defined('CLASS_POOLOBJECT')) {
          */
         function __construct()
         {
+            return $this;
         }
 
         /**
