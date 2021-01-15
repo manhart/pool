@@ -1090,16 +1090,20 @@
 				$files = Array();
 
 				$keys = array_keys($this->FileList);
-				for ($i=0; $i < SizeOf($keys); $i++) {
-					$TempFile = & $this->FileList[$keys[$i]];
-					$files[] = &$TempFile;
+				$numFiles = sizeof($keys);
+				for ($i=0; $i < $numFiles; $i++) {
+					$TempFile = &$this->FileList[$keys[$i]];
+                    if($TempFile instanceof TempSimple) {
+                        continue;
+                    }
+                    $files[] = &$TempFile;
 
-					// Suche innerhalb des TempFile's nach weiteren TemplateFiles
-			    	$more_files = &$TempFile->getFiles();
-					if (count($more_files) > 0) {
-					    $files = array_merge($files, $more_files);
-					}
-					unset($more_files);
+                    // Suche innerhalb des TempFile's nach weiteren TemplateFiles
+                    $more_files = &$TempFile->getFiles();
+                    if (count($more_files) > 0) {
+                        $files = array_merge($files, $more_files);
+                    }
+                    unset($more_files);
 				}
 
 				return $files;
