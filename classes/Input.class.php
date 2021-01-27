@@ -767,7 +767,7 @@ class ICookie extends Input
     * @param integer $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
     * @return boolean Erfolgsstatus
     */
-    function setPersistentCookie($cookiename, $value = '', $expire, $path = '/', $domain = '', $secure = 0)
+    function setPersistentCookie($cookiename, $value, $expire, $path = '/', $domain = '', $secure = 0)
     {
         $this -> setVar($cookiename, $value);
         return setcookie($cookiename, $value, time()+$expire, $path, $domain, $secure);

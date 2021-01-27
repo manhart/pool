@@ -144,7 +144,7 @@ if(!defined('CLASS_EXCEPTION')) {
                 array_shift($backtrace);
                 $this->backtrace = $backtrace;
             }*/
-            $this->construct($message, $code, $magicInfo, $mode);
+            $this->construct($message, (int)$code, $magicInfo, $mode);
         }
 
         /**
@@ -152,7 +152,7 @@ if(!defined('CLASS_EXCEPTION')) {
          *
          * @access private
          */
-        function construct($message=null, $code=0, $magicInfo=array(), $mode)
+        function construct(string $message, int $code, array $magicInfo, $mode)
         {
             if (version_compare(phpversion(), '4.3.0', '>=')) {
                 // you're on 4.3.0 or later
