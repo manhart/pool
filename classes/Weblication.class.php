@@ -207,7 +207,7 @@ class Weblication extends Component
     /**
      * prevent from being unserialized (which would create a second instance of it)
      */
-    private function __wakeup() {}
+    public function __wakeup() {}
 
     /**
      * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
