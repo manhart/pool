@@ -973,7 +973,6 @@ if (!defined('MYSQLi_LAYER')) {
                         if ($row['Key'] == 'PRI') {
                             $pk[] = $row['Field'];
                         }
-                        $arr[$i]++;
                     }
                 }
                 $this->freeresult($result);
