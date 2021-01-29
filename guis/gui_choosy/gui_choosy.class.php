@@ -26,25 +26,25 @@
  *
  * <code>
  * // DAO fuer eine beliebige Tabelle:
- * $DAO_lager = &DAO::createDAO($interfaces, 'sinnic_tbl_lager');
+ * $DAO = &DAO::createDAO($interfaces, 'xxxx');
  *
  * //
- * $DAO_lager->setColumns('idtbl_lager', 'lagername');
- * $Resultset_lager = $DAO_lager->getMultiple(null, null, array(array('idtbl_firma', 'equal', $idtbl_firma)));
- * $Resultset_Choosy = &$DAO_Choosy->insertRowset($name_set, $Resultset_lager -> getRowset(), '');
+ * $DAO->setColumns('id', 'lagername');
+ * $Set = $DAO->getMultiple(null, null, array(array('id', 'equal', $id)));
+ * $ChoosySet = &$DAO_Choosy->insertRowset($name_set, $Set->getRowset(), '');
  *
- * $idchoosy = $Resultset_Choosy->getValue('idtbl_choosy');
+ * $idChoosy = $ChoosySet->getValue('idChoosy');
 *
 * $Url = new Url();
 * $Url->modifyParam(
 *   array(
 *     'module' => 'GUI_Choosy',
 *     'transfer' => constant('CHOOSY_TRANSFER_DBCHOOSY'),
-*     'tabledefine' => 'Intranet_tbl_Choosy',
+*     'tabledefine' => 'xxxChoosyTable',
 *     'tableid' => $idchoosy,
-*     'primarykeys' => 'idtbl_lager',
+*     'primarykeys' => 'id',
 *
-*     'displayfields' => 'idtbl_lager;lagername',
+*     'displayfields' => 'id;lagername',
 *     'shortenlength' => '0;25',
 *
 *     'enableSearchbar' => 1,
