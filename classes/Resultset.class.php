@@ -86,10 +86,7 @@ if(!defined('CLASS_RESULTSET')) {
             if (count($this -> rowset)) {
                 if (!is_array($column)) {
 
-                    $sortarr = array();
-                    foreach ($this->rowset as $row) {
-                        $sortarr[] = $row[$column];
-                    }
+                    $sortarr = array_column($this->rowset, $column);
                     if ($sorttype == SORT_STRING) {
                         $sortarr = array_map('strtolower', $sortarr);
                     }
@@ -864,7 +861,7 @@ if(!defined('CLASS_RESULTSET')) {
                     if($with_headline) {
                         $csv .= implode($separator, array_keys($this->rowset[$this->index])).$line_break;
                     }
-                    
+
                     $values = array_values($this->getRow());
                     $i = 0;
                     foreach($values as $val) {
@@ -877,7 +874,7 @@ if(!defined('CLASS_RESULTSET')) {
             }
             return $csv;
         }
-    
+
         /**
          * Maskiere Text CSV Konform
          *
