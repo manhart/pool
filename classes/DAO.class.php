@@ -312,7 +312,7 @@ if(!defined('CLASS_DAO')) {
          **/
         function isType($type)
         {
-            return $this -> type == strtolower($type);
+            return $this->type == strtolower($type);
         }
 
         /**
@@ -322,7 +322,7 @@ if(!defined('CLASS_DAO')) {
          */
         function getInterfaceType()
         {
-            return $this -> interfaceType;
+            return $this->interfaceType;
         }
 
         /**
@@ -332,52 +332,24 @@ if(!defined('CLASS_DAO')) {
          */
         function setInterfaceType($interfaceType)
         {
-            $this -> interfaceType = $interfaceType;
+            $this->interfaceType = $interfaceType;
         }
 
         /**
-         * Liefert den Tabellennamen aus der globalen Tabellendefinitions-Variable von database.inc.php
+         * extract definitions of the table variable
          *
-         * @static
-         * @access public
-         * @param string $tabledefine Name der Tabellendefinition
-         * @return string Tabellenname
-         **/
-        function extractTable($tabledefine)
-        {
-            global $$tabledefine;
-            $tabledefine = $$tabledefine;
-            return $tabledefine[2];
-        }
-
-        /**
-         * Liefert den Datenbanknamen aus der globalen Tabellendefinitions-Variable von database.inc.php
-         *
-         * @static
-         * @access public
-         * @param string $tabledefine Name der Tabellendefinition
-         * @return string Datenbankname
+         * @param string $tabledefine
+         * @param string $interfaceType
+         * @param string $dbname
+         * @param string $table
          */
-        function extractDatabase($tabledefine)
+        static function extractTabledefine(string $tabledefine, string &$interfaceType, string &$dbname, string &$table): void
         {
             global $$tabledefine;
             $tabledefine = $$tabledefine;
-            return $tabledefine[1];
-        }
-
-        /**
-         * Liefert das Interface aus der globalen Tabellendefinitions-Variable von database.inc.php
-         *
-         * @static
-         * @access public
-         * @param string $tabledefine Name der Tabellendefinition
-         * @return string Datenbankname
-         */
-        function extractInterface($tabledefine)
-        {
-            global $$tabledefine;
-            $tabledefine = $$tabledefine;
-            return $tabledefine[0];
+            $interfaceType = $tabledefine[0];
+            $dbname = $tabledefine[1];
+            $table = $tabledefine[2];
         }
 
         /**
@@ -394,18 +366,14 @@ if(!defined('CLASS_DAO')) {
          * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
          *
          * @param array|DataInterface $interfaces Schnittstellen zu den Speichermedien (es kann auch ein objekt uebergeben werden, falls man sich sicher ist, dass nur eine Schnittstelle benoetigt wird)
-         * @param array $tabledefine Tabellendefinition (siehe database.inc.php)
+         * @param string $tabledefine Tabellendefinition (siehe database.inc.php)
          * @param boolean $autoload_fields Automatisch Lesen der Spaltendefinitionen
          * @return MySQL_DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
          **/
-        public static function &createDAO($interfaces, $tabledefine, $autoload_fields=true)
+        public static function &createDAO($interfaces, string $tabledefine, $autoload_fields=true)
         {
-            $varname = $tabledefine;
-            global $$tabledefine;
-            $tabledefine = $$tabledefine;
-            $type = $tabledefine[0];
-            $dbname = $tabledefine[1];
-            $table = $tabledefine[2];
+            $type = $dbname = $table = '';
+            self::extractTabledefine($tabledefine, $type, $dbname, $table);
 
             // Interface Objekt
             if (is_array($interfaces)) {
@@ -414,6 +382,7 @@ if(!defined('CLASS_DAO')) {
             else {
                 $interface = $interfaces;
             }
+
             switch($type) {
                 case DATAINTERFACE_MYSQL:
                 case DATAINTERFACE_MYSQLI:
@@ -468,7 +437,7 @@ if(!defined('CLASS_DAO')) {
                 default:
                     $dao = null;
                     if (count($tabledefine) == 0) {
-                        $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $varname);
+                        $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $tabledefine);
                     }
                     else {
                         $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type, $varname);
