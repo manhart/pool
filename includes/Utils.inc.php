@@ -4654,3 +4654,14 @@ function preg_last_error_message(int $lastErrorCode): string
     }
     return $errormessage;
 }
+
+/**
+ * Simple test if string is HTML
+ *
+ * @param $string
+ * @return bool
+ */
+function isHTML($string): bool
+{
+    return $string != strip_tags($string);
+}
