@@ -694,13 +694,14 @@ if(!defined('CLASS_EXCEPTION')) {
 
             /* @var $ErroLog MySQL_DAO */
 
-            $databaseName = DAO::extractDatabase($this -> tabledefine);
+            $interfaceType = $databaseName = $table = '';
+            DAO::extractTabledefine($this->tabledefine, $interfaceType, $databaseName, $table);
             //$interfaceName = DAO::extractInterface($this -> tabledefine);
             //echo $interfaceName;
             //$Db = &$this -> interfaces[$interfaceName];
             /* @var $ MySQL_Interface */
 
-            $bResult = ($ErroLog -> db -> isConnected($databaseName));
+            $bResult = ($ErroLog->db->isConnected($databaseName));
 
             if($bResult) {
                 $Input = new Input(0);
