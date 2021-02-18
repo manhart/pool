@@ -342,14 +342,16 @@ if(!defined('CLASS_DAO')) {
          * @param string $interfaceType
          * @param string $dbname
          * @param string $table
+         * @return string name of tabledefine
          */
-        static function extractTabledefine(string $tabledefine, string &$interfaceType, string &$dbname, string &$table): void
+        static function extractTabledefine(string $tabledefine, string &$interfaceType, string &$dbname, string &$table): string
         {
             global $$tabledefine;
             $tabledefine = $$tabledefine;
             $interfaceType = $tabledefine[0];
             $dbname = $tabledefine[1];
             $table = $tabledefine[2];
+            return $tabledefine;
         }
 
         /**
@@ -373,7 +375,7 @@ if(!defined('CLASS_DAO')) {
         public static function &createDAO($interfaces, string $tabledefine, $autoload_fields=true)
         {
             $type = $dbname = $table = '';
-            self::extractTabledefine($tabledefine, $type, $dbname, $table);
+            $nameOfTabledefine = self::extractTabledefine($tabledefine, $type, $dbname, $table);
 
             // Interface Objekt
             if (is_array($interfaces)) {
@@ -440,7 +442,7 @@ if(!defined('CLASS_DAO')) {
                         $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $tabledefine);
                     }
                     else {
-                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type, $varname);
+                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type, $nameOfTabledefine);
                     }
 
                     $Xception = new Xception($msg, E_ERROR, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__),
