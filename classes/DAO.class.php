@@ -374,7 +374,7 @@ if(!defined('CLASS_DAO')) {
         public static function &createDAO($interfaces, string $tabledefine, $autoload_fields=true)
         {
             $type = $dbname = $table = '';
-            $nameOfTabledefine = self::extractTabledefine($tabledefine, $type, $dbname, $table);
+            self::extractTabledefine($tabledefine, $type, $dbname, $table);
 
             // Interface Objekt
             if (is_array($interfaces)) {
@@ -441,7 +441,7 @@ if(!defined('CLASS_DAO')) {
                         $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $tabledefine);
                     }
                     else {
-                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type);
+                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type, $tabledefine);
                     }
 
                     $Xception = new Xception($msg, E_ERROR, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__),
