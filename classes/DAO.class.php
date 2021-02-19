@@ -344,14 +344,13 @@ if(!defined('CLASS_DAO')) {
          * @param string $table
          * @return string name of tabledefine
          */
-        static function extractTabledefine(string $tabledefine, string &$interfaceType, string &$dbname, string &$table): string
+        static function extractTabledefine(string $tabledefine, string &$interfaceType, string &$dbname, string &$table): void
         {
             global $$tabledefine;
             $tabledefine = $$tabledefine;
             $interfaceType = $tabledefine[0];
             $dbname = $tabledefine[1];
             $table = $tabledefine[2];
-            return $tabledefine;
         }
 
         /**
@@ -442,7 +441,7 @@ if(!defined('CLASS_DAO')) {
                         $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $tabledefine);
                     }
                     else {
-                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type, $nameOfTabledefine);
+                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type);
                     }
 
                     $Xception = new Xception($msg, E_ERROR, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__),
