@@ -875,7 +875,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                     if(!is_array($record)) { // operator or something manual
                         // where 1 xxx fehlendes and
                         if($z==0 and strtolower($record) != 'or') {
-                            $query .= ' and ';
+                            $query .= ' and';
                         }
                         // Verknuepfungen or, and
                         $query .= ' ' . $record . ' ';
@@ -966,8 +966,9 @@ if(!defined('CLASS_MYSQLDAO')) {
          */
         function __buildHaving($filter_rules)
         {
-            $query = $this->__buildFilter($filter_rules, 'AND', true);
-            if($query != '') $query = ' HAVING '.$query;
+            $query = ltrim($this->__buildFilter($filter_rules, 'and', true));
+            $beginningAnd = (substr($query, 0, 3) == 'and');
+            if($query != '') $query = ' HAVING '.($beginningAnd ? '1 ' : '').$query;
             return $query;
         }
 
