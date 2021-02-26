@@ -2790,7 +2790,7 @@ function bool2string($bool)
  * @param string $string Boolean als String
  * @return bool booleschen Ausdruck
  */
-function string2bool(string $string): bool
+function string2bool(?string $string): bool
 {
     return ($string === '1' or $string === 'true');
 }
