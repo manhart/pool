@@ -600,22 +600,22 @@ if(!defined('CLASS_MYSQLDAO')) {
          **/
         function &update($data)
         {
-            $sizeof = sizeof($this -> pk); //$this->pk=array('idKunde')
+            $sizeof = sizeof($this->pk);
             for ($i=0; $i<$sizeof; $i++) {
-                if(!isset($data[$this -> pk[$i]])) {
-                    $Resultset = new Resultset();
-                    $Resultset->addError('Update is wrong. No primary key found.');
-                    return $Resultset;
+                if(!isset($data[$this->pk[$i]])) {
+                    $ResultSet = new Resultset();
+                    $ResultSet->addError('Update is wrong. No primary key found.');
+                    return $ResultSet;
                 }
                 else {
-                    $pkValue = $data[$this -> pk[$i]];
-                    if(!is_array($pkValue)) {
-                        $pk[] = $pkValue;
-                        unset($data[$this -> pk[$i]]);
-                    }
-                    elseif(is_array($pkValue)) {
+                    $pkValue = $data[$this->pk[$i]];
+                    if(is_array($pkValue)) {
                         $pk[] = $pkValue[0];
-                        $data[$this -> pk[$i]] = $pkValue[1];
+                        $data[$this->pk[$i]] = $pkValue[1];
+                    }
+                    else {
+                        $pk[] = $pkValue;
+                        unset($data[$this->pk[$i]]);
                     }
                 }
             }
@@ -623,32 +623,36 @@ if(!defined('CLASS_MYSQLDAO')) {
             $update = '';
             foreach ($data as $field => $value) {
                 if (is_null($value)) {
-                    $update .= sprintf('`%s`=NULL,', $field);
-                    continue;
+                    $value = 'NULL';
                 }
-                $format = '`%s`=\'%s\',';
-                // reservierte Wörter
-                if(in_array(strtoupper($value) , array('NOW()', 'CURRENT_DATE()', 'CURRENT_TIMESTAMP()'))) {
-                    $format = '`%s`=%s,';
+                elseif(is_integer($value) or (is_float($value))) {
+                    $value = (string)$value;
                 }
-                $update .= sprintf($format, $field, $this->db->escapestring($value, $this->dbname));
+                elseif(is_bool($value)) {
+                    $value = bool2string($value);
+                }
+                elseif(in_array(strtoupper($value) , array('NOW()', 'CURRENT_DATE()', 'CURRENT_TIMESTAMP()'))) {
+                    // reserved keywords don't need to be masked
+                }
+                else {
+                    $value = '\''.$this->db->escapestring($value, $this->dbname).'\'';
+                }
+                $update .= '`'.$field.'`='.$value.',';
             }
 
             if (!$update) {
-                $MySQL_Resultset = new MySQL_Resultset($this -> db);
-                return $MySQL_Resultset;
+                return new MySQL_Resultset($this->db);
             }
 
-            $where = $this -> __buildWhere($pk, $this -> pk);
+            $where = $this->__buildWhere($pk, $this->pk);
             if ($where == '1') {
                 $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this -> table;
                 $this -> raiseError(__FILE__, __LINE__, $error_msg);
                 die($error_msg);
             }
             $sql = sprintf('update `%s` set %s where %s', $this -> table, substr($update, 0, -1), $where);
-            #echo "update: ".$sql."<br>";
-            $MySQL_Resultset = $this -> __createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            $MySQL_ResultSet = $this->__createMySQL_Resultset($sql);
+            return $MySQL_ResultSet;
         }
 
         /**
