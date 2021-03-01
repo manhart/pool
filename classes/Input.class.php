@@ -439,10 +439,9 @@ class Input extends PoolObject
     /**
      * Setzt die Daten f�r Input.
      *
-     * @access public
      * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
      **/
-    function setData($data)
+    public function setData(array $data)
     {
         $this->Vars = $data;
     }
@@ -452,7 +451,7 @@ class Input extends PoolObject
      *
      * @return array Daten
      **/
-    function getData()
+    public function getData(): array
     {
         return $this->Vars;
     }
