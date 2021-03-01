@@ -715,7 +715,6 @@ if(!defined('CLASS_MYSQLDAO')) {
             #echo "get: ".$sql."<br>";
 
             $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
-
             return $MySQL_Resultset;
         }
 

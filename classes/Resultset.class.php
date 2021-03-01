@@ -359,32 +359,76 @@ if(!defined('CLASS_RESULTSET')) {
          */
         function bof()
         {
-            return ($this -> index == 0);
+            return ($this->index == 0);
         }
 
         /**
-         * Gibt einen Wert eines Feldes des aktuellen Datensatzes zurueck
+         * Returns a value of a field of the current record
          *
-         * @access public
-         * @param string $key Spaltenname (Feldname)
-         * @return string Wert des Feldes
-         **/
-        function getValue($key)
+         * @param string $key name of column (fieldname)
+         * @param mixed $default
+         * @return mixed value
+         */
+        public function getValue(string $key, $default='')
         {
-            if(isset($this -> rowset[$this -> index][$key])) {
-                return $this -> rowset[$this -> index][$key];
+            if(isset($this->rowset[$this->index][$key])) {
+                return $this->rowset[$this->index][$key];
             }
-            else return '';
+            return $default;
+        }
+
+        /**
+         * Returns a value of a field of the current record as a string
+         *
+         * @param string $key
+         * @param string $default
+         * @return string
+         */
+        public function getValueAsString(string $key, $default=''): string
+        {
+            return (string)$this->getValue($key, $default);
+        }
+
+        /**
+         * Returns a value of a field of the current record as an integer
+         *
+         * @param string $key
+         * @param int $default
+         * @return int
+         */
+        public function getValueAsInt(string $key, $default=0): int
+        {
+            return (int)$this->getValue($key, $default);
+        }
+
+        /**
+         * Returns a value of a field of the current record as DateTime object
+         *
+         * @param string $key
+         * @param null $default
+         * @param DateTimeZone|null $timezone
+         * @return DateTime|null
+         * @throws Exception
+         */
+        public function getValueAsDateTime(string $key, $default=null, ?DateTimeZone $timezone=null): ?DateTime
+        {
+            $value = $this->getValue($key, $default);
+            if(is_null($value) == false) {
+                if(strpos($value, '-') === false) {
+                    $value = '@'.$value; // should be an unix timestamp (integer)
+                }
+                return new \DateTime($value, $timezone);
+            }
+            return null;
         }
 
         /**
         * Setzt einen neuen/Uberschreibt einen Wert eines Feldes in der Ergebnismenge.
         *
-        * @access public
         * @param string $key Schluessel (bzw. Name des Feldes)
-        * @param string $value Wert der Variable
+        * @param mixed $value Wert der Variable
         */
-        function setValue($key, $value = '')
+        function setValue(string $key, $value = '')
         {
             if($this->count() == 0) {
                 $this->addValue($key, $value);
