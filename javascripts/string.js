@@ -28,5 +28,6 @@ String.prototype.interpolate = function(params)
  */
 String.prototype.replaceholder = function(params)
 {
-    return this.replace(/{\w+}/g, placeholder => params[placeholder.substring(1, placeholder.length - 1)] || placeholder);
+    return this.replace(/{(\w+)}/g, (placeholderWithBraces, placeholder) =>
+        params.hasOwnProperty(placeholder) ? params[placeholder] : placeholderWithBraces);
 }
