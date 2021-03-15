@@ -935,7 +935,8 @@ if(!defined('CLASS_MYSQLDAO')) {
                             $query .= ' NULL';
                         }
                         else {
-                            if(is_integer($record[2]) or is_float($record[2]) or is_subquery($record[1], $record[2])) {
+                            if(is_integer($record[2]) or is_float($record[2]) or is_bool($record[2]) or
+                                    is_subquery($record[1], $record[2])) {
                                 $query .= ' ' . $record[2];
                             }
                             else {
