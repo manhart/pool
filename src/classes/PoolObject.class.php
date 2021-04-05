@@ -112,6 +112,7 @@ if(!defined('CLASS_POOLOBJECT')) {
          */
         function __construct()
         {
+            return $this;
         }
 
         /**
@@ -381,7 +382,7 @@ if(!defined('CLASS_POOLOBJECT')) {
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @access public
      **/
-    class Nil
+    class Nil extends stdClass
     {
     }
 

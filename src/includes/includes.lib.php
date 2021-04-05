@@ -12,8 +12,4 @@
  * @link https://alexander-manhart.de
  */
 
-if (!defined('PWD_TILL_INCLUDES')) {
-    define('PWD_TILL_INCLUDES', '.');
-}
-
-require_once(PWD_TILL_INCLUDES . '/Utils.inc.php');
+require_once __DIR__ . '/Utils.inc.php';

@@ -188,7 +188,7 @@
     	    */
         	function getParsedContent()
 	        {
-    	        return $this -> ParsedContent;
+    	        return $this->ParsedContent;
         	}
 
 	        /**
@@ -447,16 +447,19 @@
 			{
 				$elemsymbols = '('.TEMP_DYNBLOCK_IDENT.'|'.TEMP_INCLUDE_IDENT.'|'.TEMP_INCLUDESCRIPT_IDENT.'|' .
 				  TEMP_SESSION_IDENT . ')'; // TODO REUSE
-				$reg = "/<!-- $elemsymbols (.*) -->(.*)<!-- END \\2 -->/ismSU";
+                // AM, 24.09.20, without modificator /s,
+                // by default . doesn't match new lines - [\s\S] is a hack around that problem
+				$reg = "/\<\!\-\- $elemsymbols (.+) \-\-\>([\s\S]*)\<\!\-\- END \\2 \-\-\>/U";
 				$bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 				if ($bResult) {
-					for ($i=0; $i<SizeOf($matches); $i++) {
+				    $numMatches = SizeOf($matches);
+					for ($i=0; $i<$numMatches; $i++) {
 
 						$kind = $matches[$i][1];
 						$handle = ($matches[$i][2]);
 						$content = ($matches[$i][3]);
 
-				    	$reg = "/<!-- $elemsymbols $handle -->(.*)<!-- END $handle -->/ismSU";
+				    	$reg = "/\<\!\-\- $elemsymbols $handle \-\-\>([\s\S]*)\<\!\-\- END $handle \-\-\>/U";
 		    			$this -> Content = preg_replace($reg, '{' . $handle . '}', $this -> Content);
 
 						switch($kind) {
@@ -515,7 +518,11 @@
 
 				$search = array();
 				$replace = array();
-				foreach($this->BlockList as $Handle => $TempBlock) {
+				/**
+                 * @var string $Handle
+                 * @var TempBlock $TempBlock
+                 */
+                foreach($this->BlockList as $Handle => $TempBlock) {
 //				foreach($keys as $Handle) {
 //					$TempBlock = & $this->BlockList[$Handle];
 					$search[] = '{'.$Handle.'}';
@@ -529,7 +536,7 @@
            	    	}
 	    	        else {
 //		                $content = str_replace('{'.$Handle.'}', '', $content);
-						$replace[] = '';
+						$replace[] = $TempBlock->getParsedContent();
       		        }
 
             	    unset($TempBlock);
@@ -669,11 +676,11 @@
     	    function parse($returncontent=false, $clearparsedcontent=true)
         	{
             	$content = parent::parse($this->AllowParse, $clearparsedcontent);
-            	if(!$returncontent) {
-	            	$this->addParsedContent($content);
+            	if($returncontent) {
+                    return $content;
             	}
             	else {
-            		 return $content;
+                    $this->addParsedContent($content);
             	}
     	    }
 
@@ -1084,16 +1091,20 @@
 				$files = Array();
 
 				$keys = array_keys($this->FileList);
-				for ($i=0; $i < SizeOf($keys); $i++) {
-					$TempFile = & $this->FileList[$keys[$i]];
-					$files[] = &$TempFile;
+				$numFiles = sizeof($keys);
+				for ($i=0; $i < $numFiles; $i++) {
+					$TempFile = &$this->FileList[$keys[$i]];
+                    if($TempFile instanceof TempSimple) {
+                        continue;
+                    }
+                    $files[] = &$TempFile;
 
-					// Suche innerhalb des TempFile's nach weiteren TemplateFiles
-			    	$more_files = &$TempFile->getFiles();
-					if (count($more_files) > 0) {
-					    $files = array_merge($files, $more_files);
-					}
-					unset($more_files);
+                    // Suche innerhalb des TempFile's nach weiteren TemplateFiles
+                    $more_files = &$TempFile->getFiles();
+                    if (count($more_files) > 0) {
+                        $files = array_merge($files, $more_files);
+                    }
+                    unset($more_files);
 				}
 
 				return $files;

@@ -150,6 +150,8 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Translator;
+
 // Reservierte Wörter kompatibel mit MySQL 5.1 (und abwärts)
 $GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'ASENSITIVE',
     'BEFORE', 'BETWEEN', 'BIGINT', 'BINARY', 'BLOB', 'BOTH', 'BY', 'CALL', 'CASCADE', 'CASE', 'CHANGE', 'CHAR',
@@ -233,17 +235,38 @@ if(!defined('CLASS_MYSQLDAO')) {
             'is' => 'is'
         );
 
+        /**
+         * columns to translate
+         *
+         * @var array
+         */
+        protected array $translate = [];
 
         /**
-         * Konstruktor
+         * translates field values within filter / sorting methods
          *
-         * @access public
-         **/
+         * @var array|string[][]
+         */
+        protected array $translateValues = [];
+
+        /**
+         * @var object|Translator|null
+         */
+        protected Translator $Translator;
+
+        /**
+         * MySQL_DAO constructor.
+         */
         function __construct()
         {
             parent::__construct();
 
-            $this->reserved_words = $GLOBALS['MySQL_RESERVED_WORDS'];
+            // only if Translator needed
+            if($this->translate) {
+                $this->Translator = Translator::getInstance();
+            }
+
+            $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
         }
 
         /**
@@ -319,6 +342,43 @@ if(!defined('CLASS_MYSQLDAO')) {
             }
 
             $this->column_list = $column_list;
+        }
+
+        /**
+         * Sets columns to be translated
+         *
+         * @param array $columns
+         */
+        public function setTranslationColumns(array $columns)
+        {
+            $this->translate = $columns;
+        }
+
+        /**
+         * enables auto translation of the columns defined in the property $translate
+         *
+         * @return $this
+         */
+        public function enableTranslation()
+        {
+            $this->translateValues = $this->cache['translatedValues'] ?: $this->translateValues;
+            $this->translate = $this->cache['translate'] ?: $this->translate;
+            return $this;
+        }
+
+        /**
+         * disables auto translation of the columns defined in the property $translate
+         *
+         * @return $this
+         */
+        public function disableTranslation()
+        {
+            $this->cache['translate'] = $this->translate;
+            $this->cache['translatedValues'] = $this->translateValues;
+
+            $this->translate = [];
+            $this->translateValues = [];
+            return $this;
         }
 
         /**
@@ -503,21 +563,24 @@ if(!defined('CLASS_MYSQLDAO')) {
                 elseif(is_integer($value) or (is_float($value))) {
                     $values .= (string)$value.',';
                 }
+                elseif(is_bool($value)) {
+                    $values .= bool2string($value).',';
+                }
                 else {
                     $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
                 }
             }
 
             if ('' == $keys) {
-                $Resultset = new Resultset();
-                $Resultset->addError('MySQL_DAO::insert failed. No fields stated!');
-                return $Resultset;
+                $ResultSet = new Resultset();
+                $ResultSet->addError('MySQL_DAO::insert failed. No fields stated!');
+                return $ResultSet;
             }
 
             $sql = sprintf('INSERT INTO `%s` (%s) VALUES (%s)', $this->table,
                 substr($keys, 0, -1), substr($values, 0, -1));
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            $MySQL_ResultSet = $this->__createMySQL_Resultset($sql);
+            return $MySQL_ResultSet;
         }
 
         /**
@@ -537,22 +600,22 @@ if(!defined('CLASS_MYSQLDAO')) {
          **/
         function &update($data)
         {
-            $sizeof = sizeof($this -> pk); //$this->pk=array('idKunde')
+            $sizeof = sizeof($this->pk);
             for ($i=0; $i<$sizeof; $i++) {
-                if(!isset($data[$this -> pk[$i]])) {
-                    $Resultset = new Resultset();
-                    $Resultset->addError('Update is wrong. No primary key found.');
-                    return $Resultset;
+                if(!isset($data[$this->pk[$i]])) {
+                    $ResultSet = new Resultset();
+                    $ResultSet->addError('Update is wrong. No primary key found.');
+                    return $ResultSet;
                 }
                 else {
-                    $pkValue = $data[$this -> pk[$i]];
-                    if(!is_array($pkValue)) {
-                        $pk[] = $pkValue;
-                        unset($data[$this -> pk[$i]]);
-                    }
-                    elseif(is_array($pkValue)) {
+                    $pkValue = $data[$this->pk[$i]];
+                    if(is_array($pkValue)) {
                         $pk[] = $pkValue[0];
-                        $data[$this -> pk[$i]] = $pkValue[1];
+                        $data[$this->pk[$i]] = $pkValue[1];
+                    }
+                    else {
+                        $pk[] = $pkValue;
+                        unset($data[$this->pk[$i]]);
                     }
                 }
             }
@@ -560,32 +623,36 @@ if(!defined('CLASS_MYSQLDAO')) {
             $update = '';
             foreach ($data as $field => $value) {
                 if (is_null($value)) {
-                    $update .= sprintf('`%s`=NULL,', $field);
-                    continue;
+                    $value = 'NULL';
                 }
-                $format = '`%s`=\'%s\',';
-                // reservierte Wörter
-                if(in_array(strtoupper($value) , array('NOW()', 'CURRENT_DATE()', 'CURRENT_TIMESTAMP()'))) {
-                    $format = '`%s`=%s,';
+                elseif(is_integer($value) or (is_float($value))) {
+                    $value = (string)$value;
                 }
-                $update .= sprintf($format, $field, $this->db->escapestring($value, $this->dbname));
+                elseif(is_bool($value)) {
+                    $value = bool2string($value);
+                }
+                elseif(in_array(strtoupper($value) , array('NOW()', 'CURRENT_DATE()', 'CURRENT_TIMESTAMP()'))) {
+                    // reserved keywords don't need to be masked
+                }
+                else {
+                    $value = '\''.$this->db->escapestring($value, $this->dbname).'\'';
+                }
+                $update .= '`'.$field.'`='.$value.',';
             }
 
             if (!$update) {
-                $MySQL_Resultset = new MySQL_Resultset($this -> db);
-                return $MySQL_Resultset;
+                return new MySQL_Resultset($this->db);
             }
 
-            $where = $this -> __buildWhere($pk, $this -> pk);
+            $where = $this->__buildWhere($pk, $this->pk);
             if ($where == '1') {
                 $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this -> table;
                 $this -> raiseError(__FILE__, __LINE__, $error_msg);
                 die($error_msg);
             }
             $sql = sprintf('update `%s` set %s where %s', $this -> table, substr($update, 0, -1), $where);
-            #echo "update: ".$sql."<br>";
-            $MySQL_Resultset = &$this -> __createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            $MySQL_ResultSet = $this->__createMySQL_Resultset($sql);
+            return $MySQL_ResultSet;
         }
 
         /**
@@ -607,7 +674,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 die($error_msg);
             }
             $sql = sprintf('delete from `%s` where %s', $this -> table, $where);
-            $MySQL_Resultset = &$this -> __createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -622,12 +689,7 @@ if(!defined('CLASS_MYSQLDAO')) {
         function deleteMultiple($filter_rules=array())
         {
             $sql = sprintf('DELETE FROM `%s` WHERE %s', $this->table, $this->__buildFilter($filter_rules, 'and', true));
-
-//				$fh = fopen(addEndingSlash(DIR_DOCUMENT_ROOT).'debug.txt', 'a');
-//				fwrite($fh, $sql.chr(10));
-//				fclose($fh);
-
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -652,8 +714,7 @@ if(!defined('CLASS_MYSQLDAO')) {
             $sql = sprintf('select %s from `%s` where %s', $this->column_list, $this->table, $this->__buildWhere($id, $key));
             #echo "get: ".$sql."<br>";
 
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
-
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -691,7 +752,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildLimit($limit)
             );
 
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -716,14 +777,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildFilter($filter_rules)
             );
 
-            #echo "getCount: ".$sql."<hr>";
-
-//				$fh = fopen(addEndingSlash(DIR_DOCUMENT_ROOT).'debug.txt', 'w');
-//				fwrite($fh, $sql.chr(10));
-//				fclose($fh);
-
-
-            $MySQL_Resultset = &$this->__createMySQL_Resultset($sql);
+            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
             return $MySQL_Resultset;
         }
 
@@ -738,20 +792,63 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
-         * MySQL_DAO::__createMySQL_Resultset()
+         * executes sql statement and returns resultset
          *
-         * @access private
-         * @param string $sql Statement
-         * @return MySQL_Resultset Ergebnismenge
-         * @see MySQL_Resultset
-         **/
-        function &__createMySQL_Resultset($sql)
+         * @param string $sql sql statement to execute
+         * @param callable|null $customCallback
+         * @return MySQL_Resultset
+         */
+        protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
         {
-            $MySQL_Resultset = new MySQL_Resultset($this->db);
-            $this->debug('MySQL_Resultset -> execute(' . $sql . ', ' . $this->dbname . ')');
-            #echo '<hr>'.$sql.'<hr>';
-            $MySQL_Resultset->execute($sql, $this->dbname);
-            return $MySQL_Resultset;
+            $MySQL_ResultSet = new MySQL_Resultset($this->db);
+            $MySQL_ResultSet->onFetchingRow($customCallback ? $customCallback : [$this, 'fetchingRow']);
+            $MySQL_ResultSet->execute($sql, $this->dbname);
+            return $MySQL_ResultSet;
+        }
+
+        /**
+         * fetching rows
+         *
+         * @param array $row
+         * @return array
+         * @throws Exception
+         */
+        public function fetchingRow(array $row): array
+        {
+            if($this->translate) {
+                return $this->translate($row);
+            }
+            return $row;
+        }
+
+        /**
+         * translate table content
+         *
+         * @param array $row
+         * @return array
+         * @throws Exception
+         */
+        protected function translate(array $row): array
+        {
+            foreach($this->translate as $key) {
+                if(isset($row[$key])) {
+                    $row[$key] = $this->Translator->get($row[$key]) ?: $row[$key];
+                }
+            }
+            return $row;
+        }
+
+        protected function translateValues(string $field): string
+        {
+            if(isset($this->translateValues[$field])) {
+                $tmp = 'case '.$field;
+                foreach($this->translateValues[$field] as $key => $transl) {
+                    $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->get($transl).'\'';
+                }
+                $tmp .= ' else '.$field.' end';
+                $field = $tmp;
+            }
+            return $field;
         }
 
         /**
@@ -778,10 +875,10 @@ if(!defined('CLASS_MYSQLDAO')) {
             if(is_array($filter_rules)) {
                 foreach($filter_rules as $record) {
                     $z++;
-                    if(!is_array($record)) {
+                    if(!is_array($record)) { // operator or something manual
                         // where 1 xxx fehlendes and
                         if($z==0 and strtolower($record) != 'or') {
-                            $query .= ' and ';
+                            $query .= ' and';
                         }
                         // Verknuepfungen or, and
                         $query .= ' ' . $record . ' ';
@@ -795,7 +892,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                         $query .= ' ' . $operator . ' ';
                     }
 
-                    if(is_array($record[0])) {
+                    if(is_array($record[0])) { // nesting
                         $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
                         continue;
                     }
@@ -806,6 +903,10 @@ if(!defined('CLASS_MYSQLDAO')) {
                     if(isset($record[3])) { // Optionen
                         $noQuotes = ($record[3] & DAO_NO_QUOTES);
                         $noEscape = ($record[3] & DAO_NO_ESCAPE);
+                    }
+
+                    if($this->translateValues) {
+                        $record[0] = $this->translateValues($record[0]);
                     }
 
                     // Sonderregel "in", "not in"
@@ -834,7 +935,8 @@ if(!defined('CLASS_MYSQLDAO')) {
                             $query .= ' NULL';
                         }
                         else {
-                            if(is_integer($record[2]) or is_float($record[2]) or is_subquery($record[1], $record[2])) {
+                            if(is_integer($record[2]) or is_float($record[2]) or is_bool($record[2]) or
+                                    is_subquery($record[1], $record[2])) {
                                 $query .= ' ' . $record[2];
                             }
                             else {
@@ -868,8 +970,9 @@ if(!defined('CLASS_MYSQLDAO')) {
          */
         function __buildHaving($filter_rules)
         {
-            $query = $this->__buildFilter($filter_rules, 'AND', true);
-            if($query != '') $query = ' HAVING '.$query;
+            $query = ltrim($this->__buildFilter($filter_rules, 'and', true));
+            $beginningAnd = (substr($query, 0, 3) == 'and');
+            if($query != '') $query = ' HAVING '.($beginningAnd ? '1 ' : '').$query;
             return $query;
         }
 
@@ -895,7 +998,11 @@ if(!defined('CLASS_MYSQLDAO')) {
                         $sql .= ', ';
                     }
 
-                    $sql .= $alias.$column.' '.$sort;
+                    $column = $alias.$column;
+                    if($this->translateValues) {
+                        $column = $this->translateValues($column);
+                    }
+                    $sql .= $column.' '.$sort;
                 }
             }
             return $sql;

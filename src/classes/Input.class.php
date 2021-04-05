@@ -91,7 +91,7 @@ class Input extends PoolObject
         if ($superglobals == 0) {
             return;
         }
-        $this -> superglobals = $superglobals;
+        $this->superglobals = $superglobals;
 
         if ($superglobals & I_ENV) { // I_ENV
             $this->addVar($_ENV);
@@ -125,6 +125,16 @@ class Input extends PoolObject
             $this->Vars = &$_SESSION; // PHP Session Handling (see php manual)
             //$this -> addVar($_SESSION);
         }
+    }
+
+    /**
+     * get superglobals
+     *
+     * @return int
+     */
+    public function getSuperglobals()
+    {
+        return $this->superglobals;
     }
 
     /**
@@ -429,10 +439,9 @@ class Input extends PoolObject
     /**
      * Setzt die Daten f�r Input.
      *
-     * @access public
      * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
      **/
-    function setData($data)
+    public function setData(array $data)
     {
         $this->Vars = $data;
     }
@@ -442,7 +451,7 @@ class Input extends PoolObject
      *
      * @return array Daten
      **/
-    function getData()
+    public function getData(): array
     {
         return $this->Vars;
     }
@@ -757,7 +766,7 @@ class ICookie extends Input
     * @param integer $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
     * @return boolean Erfolgsstatus
     */
-    function setPersistentCookie($cookiename, $value = '', $expire, $path = '/', $domain = '', $secure = 0)
+    function setPersistentCookie($cookiename, $value, $expire, $path = '/', $domain = '', $secure = 0)
     {
         $this -> setVar($cookiename, $value);
         return setcookie($cookiename, $value, time()+$expire, $path, $domain, $secure);
@@ -1093,7 +1102,9 @@ class ISession extends Input
     function destroy()
     {
         $this->start();
-        session_destroy();
+        if(session_status() == PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
     }
 }
 

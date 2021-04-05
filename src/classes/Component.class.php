@@ -150,23 +150,22 @@
 				return $new_name;
 			}
 
-			/**
-			 * Setzt den Namen der Komponente.
-			 *
-			 * Vor dem Setzen wird der Name noch validiert.
-			 * Existiert der Name bereits, wird false zurueck gegeben.
-			 *
-			 * @access public
-			 * @param string $new_name Neuer Name f�r die Komponente
-			 * @return bool Erfolgsstatus
-			 */
-			function setName($new_name)
+            /**
+             * Setzt den Namen der Komponente.
+             *
+             * Vor dem Setzen wird der Name noch validiert.
+             * Existiert der Name bereits, wird false zurueck gegeben.
+             *
+             * @access public
+             * @param string $new_name Neuer Name f�r die Komponente
+             * @return Component
+             */
+            function setName($new_name)
 			{
 				if ($this->validateName($new_name)) {
 				    $this->Name = $new_name;
-					return true;
 				}
-				return false;
+				return $this;
 			}
 
 			/**

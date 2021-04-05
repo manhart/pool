@@ -1471,9 +1471,9 @@ function getWeekNumber(day, month, year) {
 	 * @returns {Boolean}
 	 */
 	function log(text) {
-		if(window.console && (location.host == 'develop1' || location.host == 'develop01')) {
-			var time = new Date().strftime('%H:%M:%S ');
-			var type = typeof text;
+		if(window.console) {
+			let time = new Date().strftime('%H:%M:%S ');
+			let type = typeof text;
 			switch(type) {
 				case 'object':
 					console.log(time + ' ' + type + ':');
@@ -2304,3 +2304,32 @@ function triggerEvent(element, type) {
         element.fireEvent('on'+Event.eventType, Event);
     }
 }
+
+/**
+ * Load json file synchronously
+ *
+ * @param string url
+ * @param object opts e.g. headers
+ * @returns {null|any}
+ */
+function loadJSON(url, opts = {})
+{
+    let xhr = new XMLHttpRequest();
+    xhr.overrideMimeType('application/json');
+    xhr.open('GET', url, false);
+
+    if(opts.headers) {
+        for(let key in opts.headers) {
+            xhr.setRequestHeader(key, opts.headers[key]);
+        }
+    }
+
+    xhr.send();
+    if (xhr.status == 200) {
+        return JSON.parse(xhr.responseText);
+    }
+    else {
+        return null;
+    }
+}
+
