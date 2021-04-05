@@ -40,11 +40,11 @@ class GUI_Url extends GUI_Module
      **/
     function init($superglobals=0)
     {
-        $this->Defaults -> addVar('script', '');
-        $this->Defaults -> addVar('params', '');
-        $this->Defaults -> addVar('passthrough', '');
-        $this->Defaults -> addVar('eliminate', '');
-        $this->Defaults -> addVar('empty', 0);
+        $this->Defaults->addVar('script', '');
+        $this->Defaults->addVar('params', '');
+        $this->Defaults->addVar('passthrough', '');
+        $this->Defaults->addVar('eliminate', '');
+        $this->Defaults->addVar('empty', 0);
         parent::init($superglobals);
     }
 
@@ -55,21 +55,14 @@ class GUI_Url extends GUI_Module
      **/
     function prepare()
     {
-        $Input = & $this -> Input;
+        $Url = new Url($this->Input->getVar('empty') ? I_GET : 0);
 
-        if ($Input -> getVar('empty')) {
-            $Url = new Url(0);
-        }
-        else {
-            $Url = new Url();
-        }
-
-        $script = trim($Input -> getVar('script'));
+        $script = trim($this->Input->getVar('script'));
         if ($script != '') {
             $Url->setScript($script);
         }
 
-        $params = trim($Input -> getVar('params'));
+        $params = trim($this->Input->getVar('params'));
 
         if ($params != '') {
             $pieces = explode(';', $params);
@@ -81,7 +74,7 @@ class GUI_Url extends GUI_Module
             }
         }
 
-        $passthrough = trim($Input -> getVar('passthrough'));
+        $passthrough = trim($this->Input->getVar('passthrough'));
         if ($passthrough != '') {
             $IGet = new Input(I_GET);
             $passthrough = explode(';', $passthrough);
@@ -90,15 +83,14 @@ class GUI_Url extends GUI_Module
             }
             unset($IGet);
         }
-        $eliminate = trim($Input -> getVar('eliminate'));
+        $eliminate = trim($this->Input->getVar('eliminate'));
         if ($eliminate != '') {
             $eliminate = explode(';', $eliminate);
             foreach ($eliminate as $param) {
                 $Url -> modifyParam($param, NULL);
             }
         }
-        #echo $Url -> getUrl()."<br>";
-        $this -> returnValue = $Url -> getUrl();
+        $this->returnValue = $Url -> getUrl();
     }
 
     /**

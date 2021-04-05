@@ -1224,13 +1224,13 @@ if (!function_exists('is_a')) {
 }
 
 /**
- * Erstellt Verzeichnisse z.b. Uebergabe /var/log/prog/main/ups.log (prog und main werden angelegt)
+ * Creates directories recursively e.g. /var/log/prog/main/ups.log if prog and main don't exist, they are created.
  *
  * @param string $strPath
  * @param integer $mode
- * @return boolean Erfolgsstatus
+ * @return boolean success
  **/
-function mkdirs($strPath, $mode = 0777)
+function mkdirs(string $strPath, $mode = 0777)
 {
     if (@is_dir($strPath)) {
         return true;
@@ -2171,6 +2171,18 @@ function br2nl($subject)
 }
 
 /**
+ * replaces all linebreaks to <br />
+ *
+ * @param $string
+ * @return string|string[]
+ */
+function nl2br2(string $string): string
+{
+    $string = str_replace(array("\r\n", "\r", "\n"), '<br>', $string);
+    return $string;
+}
+
+/**
  * strips body from html page.
  * html, head and body tags will be dropped.
  *
@@ -2616,102 +2628,38 @@ function emptyString()
 }
 
 /**
- * Ersetzt Deutsche Umlaute z.B. � => ae (+ Sonderzeichen) - ISO-8859-1
+ * Simple Filename Sanitizer
  *
- * @param string $subject Text (muss ISO-8859-X sein)
+ * strtolower() guarantees the filename is lowercase (since case does not matter inside the URL, but in the NTFS filename)
+ * [^a-z0-9]+ will ensure, the filename only keeps letters and numbers
+ * Substitute invalid characters with '-' keeps the filename readable
+ *
+ * @see https://stackoverflow.com/questions/2021624/string-sanitizer-for-filename
+ * @param string $filename $file without path
  * @return string
  */
-function replaceUmlauts($subject)
+function sanitizeFilename(string $filename): string
 {
-    $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü', chr(196), chr(228), chr(214), chr(246), chr(220), chr(252), chr(223), ' ', '\'', '`', '´', '/');
-    $replace = array('ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue', 'Ae', 'ae', 'Oe', 'oe', 'Ue', 'ue', 'ss', '_', '', '', '', '_');
-
-    return str_replace($pattern, $replace, $subject);
-}
-
-/**
- * Ersetzt Sonderzeichen eines Dateinames
- *
- * @param string $filename
- * @param string $replace
- * @return string
- */
-function formatFilename($filename, $replace = '')
-{
-    $filename = replaceUmlauts($filename);
-    $pattern = array('|', '*', ':', '<', '>', '"', '?');
-
-    return str_replace($pattern, $replace, $filename);
-}
-
-/**
- * Wandelt deutsche Umlaute in HTML Zeichen um.
- *
- * @param string $subject Text
- * @return string
- */
-function umlauts2html($subject)
-{
-    $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-    $replace = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;');
-
-    return str_replace($pattern, $replace, $subject);
-}
-
-/**
- * Wandelt HTML Zeichen in deutsche Umlaute um.
- *
- * @param string $subject Text
- * @return string
- */
-function html2umlauts($subject)
-{
-    $pattern = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;');
-    $replace = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-
-    return str_replace($pattern, $replace, $subject);
-}
-
-/**
- * Wandelt HTML Zeichen in  ASCII-Zeichen f�r Mailto um.
- *
- * @param string $subject Text
- * @return string
- */
-function sonderzeichen2Mailtozeichen($subject)
-{
-    $pattern = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;', '�', '�', '�', '�', '�', '�', '�', 'ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-    $replace = array('%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC', '%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC', '%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC');
-
-    return str_replace($pattern, $replace, $subject);
-}
-
-/**
- * Wandelt sonder-Zeichen in deutsche Umlaute um.
- *
- * @param string $subject Text
- * @return string
- */
-function sonder2umlauts($subject)
-{
-    $pattern = array('%C3%A4', '%C3%B6', '%C3%BC', '%C3%9F', '%C3%84', '%C3%96', '%C3%9C', '%20', '%26', '%2C', '%2F', '%2B');
-    $replace = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü', ' ', '&', ',', '/', '+');
-
-    return str_replace($pattern, $replace, $subject);
-}
-
-/**
- * Wandelt deutsche Umlaute in HTML Zeichen um.
- *
- * @param string $subject Text
- * @return string
- */
-function umlauts2htmlv2($subject)
-{
-    $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-    $replace = array('&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';');
-
-    return str_replace($pattern, $replace, $subject);
+    // lowercase for windows/unix interoperability http://support.microsoft.com/kb/100625
+    $filename = mb_strtolower($filename, mb_detect_encoding($filename));
+    $filename = preg_replace( '/[^a-z0-9\-\. _]+/', '-', $filename);
+    $filename = preg_replace(
+        array(
+            // "file   name.zip" becomes "file-name.zip"
+            '/ +/',
+            // "file___name.zip" becomes "file-name.zip"
+            '/_+/',
+            // "file---name.zip" becomes "file-name.zip"
+            '/-+/'
+        ), '-', $filename);
+    $filename = preg_replace(array(
+        // "file--.--.-.--name.zip" becomes "file.name.zip"
+        '/-*\.-*/',
+        // "file...name..zip" becomes "file.name.zip"
+        '/\.{2,}/'
+    ), '.', $filename);
+    $filename = trim($filename, '.-');
+    return $filename;
 }
 
 /**
@@ -2742,9 +2690,9 @@ function bool2string($bool)
  * @param string $string Boolean als String
  * @return bool booleschen Ausdruck
  */
-function string2bool($string)
+function string2bool(?string $string): bool
 {
-    return ($string == 'true') ? true : false;
+    return ($string === '1' or $string === 'true');
 }
 
 /**
@@ -3351,6 +3299,15 @@ function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPatt
     closedir($res);
 
     return $files;
+}
+
+/**
+ * @param string $path
+ * @return array|false
+ */
+function readDirs(string $path)
+{
+    return glob(addEndingSlash($path).'*', GLOB_ONLYDIR);
 }
 
 /**
@@ -4559,4 +4516,52 @@ function getHttpStatusCode(string $responseLine): int
         $httpResponseCode = intval($out[1]);
     }
     return $httpResponseCode;
+}
+
+/**
+ * get errormessage from
+ * @param int $lastErrorCode
+ * @return string
+ */
+function preg_last_error_message(int $lastErrorCode): string
+{
+    $errormessage = '';
+    switch($lastErrorCode) {
+        case PREG_INTERNAL_ERROR: // 1
+            $errormessage = 'Internal PCRE error';
+            break;
+
+        case PREG_BACKTRACK_LIMIT_ERROR: // 2
+            $errormessage = 'PCRE regex backtrack limit '.ini_get('pcre.backtrack_limit').' was exhausted';
+            break;
+
+        case PREG_RECURSION_LIMIT_ERROR: // 3
+            $errormessage = 'PCRE regex recursion limit '.ini_get('pcre.recursion_limit').' was exhausted';
+            break;
+
+        case PREG_BAD_UTF8_ERROR: // 4
+            $errormessage = 'PCRE regex malformed UTF-8 data';
+            break;
+
+        case PREG_BAD_UTF8_OFFSET_ERROR: // 5
+            $errormessage = 'PCRE regex the offset didn\'t correspond to the begin of a valid UTF-8 code point';
+            break;
+
+        case PREG_JIT_STACKLIMIT_ERROR: // 6
+            $errormessage = 'Last PCRE function failed due to limited JIT stack space';
+            break;
+
+    }
+    return $errormessage;
+}
+
+/**
+ * Simple test if string is HTML
+ *
+ * @param $string
+ * @return bool
+ */
+function isHTML($string): bool
+{
+    return $string != strip_tags($string);
 }

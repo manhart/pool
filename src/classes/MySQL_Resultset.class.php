@@ -82,20 +82,20 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
          * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
          * @see Resultset::getLastError()
          **/
-        function execute($sql, $dbname='')
+        function execute(string $sql, string $dbname='')
         {
             $bResult = false;
             $this->rowset = array();
 
             $result = false;
-            if (!is_a($this->db, 'DataInterface')) {
+            if (!$this->db instanceof DataInterface) {
                 $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
             }
             else {
                 if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
                     ACTIVATE_RESULTSET_SQL_LOG == 1) {
                     // Zeitmessung starten
-                    $Stopwatch = &Singleton('Stopwatch');
+                    $Stopwatch = Singleton('Stopwatch');
                     $Stopwatch->start('SQLQUERY');
                 }
                 $result = $this->db->query($sql, $dbname);
@@ -104,7 +104,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
             if (!$result) {
                 $error_msg = $this->db->getErrormsg().' SQL Statement failed: '.$sql;
                 $this->raiseError(__FILE__, __LINE__, $error_msg);
-                $error = $this -> db -> getError();
+                $error = $this->db->getError();
                 $error['sql'] = $sql;
                 $this -> errorStack[] = $error;
             }
@@ -129,7 +129,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
                             'affected_rows' => $affected_rows
                         )
                     );
-                    $this -> reset();
+                    $this->reset();
                 }
                 elseif ($cmd == 'UPDATE' or $cmd == 'DELETE') {
                     $affected_rows = $this->db->affectedrows();
@@ -139,7 +139,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
                             'affected_rows' => $affected_rows
                         )
                     );
-                    $this -> reset();
+                    $this->reset();
                 }
                 $bResult = true;
             }
@@ -150,13 +150,23 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
                 $Stopwatch->stop('SQLQUERY');
                 $timespent = $Stopwatch->getDiff('SQLQUERY');
 
-                $Log = &Singleton('Log');
+                $Log = Singleton('Log');
                 if($Log->isLogging()) {
                     $Log->addLine('SQL ON DB '.$dbname.': "'.$sql.'" in '.$timespent.' sec.');
                     if(!$bResult) $Log->addlIne('SQL-ERROR ON DB '.$dbname.': '.$this->db->getErrormsg());
                 }
             }
             return $bResult;
+        }
+
+        /**
+         * define callback for event onFetchingRow
+         *
+         * @param callable $callback
+         */
+        public function onFetchingRow(callable $callback)
+        {
+            $this->db->onFetchingRow($callback);
         }
 
         /**
