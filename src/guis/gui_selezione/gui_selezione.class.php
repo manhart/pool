@@ -279,7 +279,7 @@ class GUI_Selezione extends GUI_Module
             #$BlockSelectionRow->setVar(utf8_decode(urldecode($row)));
             #$BlockSelectionRow->setVar(str_replace('%20', ' ', $row));
 
-            $BlockSelectionRow->setVar(sonder2umlauts($row));
+            $BlockSelectionRow->setVar(/*sonder2umlauts*/($row));
 
             $BlockSelectionRow->setVar('NAME', $this->Name);
         }

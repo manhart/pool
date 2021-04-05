@@ -53,15 +53,7 @@ if(!defined('CLASS_SINGLETON')) {
         var $instances = array();
 
         /**
-         * Constructor
-         *
-         * @access public
-         **/
-        function __construct()
-        {
-        }
 
-        /**
          * Die Funktion "instance" legt eine Instanz einer Klasse an.
          * Dabei koennen dem Konstruktor der Klasse noch Argumente uebergeben werden.
          *
@@ -69,28 +61,27 @@ if(!defined('CLASS_SINGLETON')) {
          * @param string $class Klasse, die instanziert werden soll
          * @param array $args Argumentliste, wird beim Erzeugen der Instanz uebergeben
          * @return object Referenz auf die Instanz
-         **/
-        function &instance($class, $args=array())
+         *
+         * @throws ReflectionException
+         */
+        function instance($class, array $args=array())
         {
             if(!isset($this->instances[$class]) or !is_object($this->instances[$class])) {
 
                 if (count($args) > 0) {
-                    $argumentlist = '';
-                    for($i=0; $i<count($args); $i++) {
-                        if ($argumentlist) {
-                            $argumentlist .= ', ';
-                        }
-                        $argumentlist .= '$args['.$i.']';
-                    }
-                    eval("\$this -> instances[\$class] = new $class($argumentlist);");
+                    // oldest method: eval("\$this->instances[\$class] = new $class($argumentlist);");
+                    // older method:
+                    // $Refl = new ReflectionClass($class);
+                    // $instance = $Refl->newInstanceArgs($args);
+                    // j$this->instances[$class] = $instance;
+                    $this->instances[$class] = new $class(...$args);
                 }
                 else {
                     $this->instances[$class] = new $class();
                 }
             }
 
-            $pointer = &$this->instances[$class];
-            return $pointer;
+            return $this->instances[$class];
         }
 
         /**
@@ -100,11 +91,11 @@ if(!defined('CLASS_SINGLETON')) {
          * @param string $class Klasse
          * @return object Referenz der Instanz
          **/
-        function & getInstance($class)
+        function getInstance($class)
         {
             $pointer = null;
-            if(isset($this -> instances[$class])) {
-                $pointer = &$this -> instances[$class];
+            if(isset($this->instances[$class])) {
+                $pointer = $this->instances[$class];
             }
             return $pointer;
         }
@@ -120,7 +111,7 @@ if(!defined('CLASS_SINGLETON')) {
      * @param string $class Klasse der Instanz
      * @return object Referenz auf die Instanz
      **/
-    function &Singleton($class)
+    function Singleton($class)
     {
         global $debug;
         static $Singleton = null;
@@ -130,7 +121,7 @@ if(!defined('CLASS_SINGLETON')) {
             $Singleton = new Singleton();
         }
 
-        $Instance = &$Singleton->getInstance($class);
+        $Instance = $Singleton->getInstance($class);
         if(is_null($Instance)) {
             $args = array();
             if (func_num_args() > 1) {
@@ -138,7 +129,7 @@ if(!defined('CLASS_SINGLETON')) {
                 array_shift($args);
             }
 
-            $Instance = &$Singleton->instance($class, $args);
+            $Instance = $Singleton->instance($class, $args);
         }
         return $Instance;
     }

@@ -36,7 +36,7 @@ if(!defined('MYSQL_LAYER'))
 
     $dbaccessfile = @constant('DBACCESSFILE');
     if (file_exists($dbaccessfile)) {
-        require_once ($dbaccessfile);
+        require_once $dbaccessfile;
     }
 
     define('SQL_READ', 'READ');
@@ -409,7 +409,7 @@ if(!defined('MYSQL_LAYER'))
                     // SQL Statement Logging:
                     if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
                         if(ACTIVATE_INTERFACE_SQL_LOG >= 1) {
-                            $Log = &Singleton('Log');
+                            $Log = Singleton('Log');
                             $mode_txt = $mode;
                             if($Log->isLogging()) {
                                 $Log->addLine('CONNECTED TO '.$this->host[$mode].' MODE: '.$mode_txt.' DB: '.$database.' (conid: '.$conid.')');

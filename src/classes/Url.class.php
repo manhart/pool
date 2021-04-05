@@ -599,5 +599,29 @@ if(!defined('CLASS_URL')) {
                 $this -> Anchor = $value;
             }
         }
+
+        /**
+         * set scheme (~ protocol) - type of URIs
+         *
+         * @param string $scheme
+         * @return Url
+         */
+        public function setScheme(string $scheme): Url
+        {
+            $this->scheme =  $scheme;
+            return $this;
+        }
+
+        /**
+         * set host (~ authority without port)
+         *
+         * @param string $host www.domain.com
+         * @return Url
+         */
+        public function setDomain(string $host): Url
+        {
+            $this->Host = $host;
+            return $this;
+        }
     }
 }
