@@ -23,6 +23,7 @@ String.prototype.interpolate = function(params)
 /**
  * replace default placeholders e.g. {placeholder}
  *
+ * @see https://stackoverflow.com/questions/7975005/format-a-javascript-string-using-placeholders-and-an-object-of-substitutions
  * @param array params
  * @returns {*}
  */
