@@ -2628,21 +2628,6 @@ function emptyString()
 }
 
 /**
- * Ersetzt Deutsche Umlaute z.B. � => ae (+ Sonderzeichen) - ISO-8859-1
- *
- * @param string $subject Text (muss ISO-8859-X sein)
- * @return string
- * @deprecated
- */
-//function replaceUmlauts($subject)
-//{
-//    $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü', chr(196), chr(228), chr(214), chr(246), chr(220), chr(252), chr(223), ' ', '\'', '`', '´', '/');
-//    $replace = array('ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue', 'Ae', 'ae', 'Oe', 'oe', 'Ue', 'ue', 'ss', '_', '', '', '', '_');
-//
-//    return str_replace($pattern, $replace, $subject);
-//}
-
-/**
  * Simple Filename Sanitizer
  *
  * strtolower() guarantees the filename is lowercase (since case does not matter inside the URL, but in the NTFS filename)
@@ -2676,91 +2661,6 @@ function sanitizeFilename(string $filename): string
     $filename = trim($filename, '.-');
     return $filename;
 }
-
-/**
- * Ersetzt Sonderzeichen eines Dateinames
- *
- * @param string $filename
- * @param string $replace
- * @return string
- */
-//function formatFilename($filename, $replace = '')
-//{
-//    $filename = replaceUmlauts($filename);
-//    $pattern = array('|', '*', ':', '<', '>', '"', '?');
-//
-//    return str_replace($pattern, $replace, $filename);
-//}
-
-/**
- * Wandelt deutsche Umlaute in HTML Zeichen um.
- *
- * @param string $subject Text
- * @return string
- */
-//function umlauts2html($subject)
-//{
-//    $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-//    $replace = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;');
-//
-//    return str_replace($pattern, $replace, $subject);
-//}
-
-/**
- * Wandelt HTML Zeichen in deutsche Umlaute um.
- *
- * @param string $subject Text
- * @return string
- */
-//function html2umlauts($subject)
-//{
-//    $pattern = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;');
-//    $replace = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-//
-//    return str_replace($pattern, $replace, $subject);
-//}
-
-/**
- * Wandelt HTML Zeichen in  ASCII-Zeichen f�r Mailto um.
- *
- * @param string $subject Text
- * @return string
- */
-//function sonderzeichen2Mailtozeichen($subject)
-//{
-//    $pattern = array('&auml;', '&ouml;', '&uuml;', '&szlig;', '&Auml;', '&Ouml;', '&Uuml;', '�', '�', '�', '�', '�', '�', '�', 'ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-//    $replace = array('%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC', '%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC', '%E4', '%F6', '%FC', '%DF', '%C4', '%D6', '%DC');
-//
-//    return str_replace($pattern, $replace, $subject);
-//}
-
-/**
- * Wandelt sonder-Zeichen in deutsche Umlaute um.
- *
- * @param string $subject Text
- * @return string
- */
-//function sonder2umlauts($subject)
-//{
-//    $pattern = array('%C3%A4', '%C3%B6', '%C3%BC', '%C3%9F', '%C3%84', '%C3%96', '%C3%9C', '%20', '%26', '%2C', '%2F', '%2B');
-//    $replace = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü', ' ', '&', ',', '/', '+');
-//
-//    return str_replace($pattern, $replace, $subject);
-//}
-
-/**
- * Wandelt deutsche Umlaute in HTML Zeichen um.
- *
- * @param string $subject Text
- * @return string
- */
-//function umlauts2htmlv2($subject)
-//{
-//    $pattern = array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü');
-//    $replace = array('&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';', '&#'.ord('�').';');
-//
-//    return str_replace($pattern, $replace, $subject);
-//}
 
 /**
  * Umwandlung booleschen Ausdruck in Integer (0, 1)
