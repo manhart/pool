@@ -491,30 +491,25 @@
 				}
 			}
 
-			/**
-			* Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
-			*
-			* @access public
-			* @param boolean $returncontent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
-			* @return string Geparster Inhalt
-			*/
+            /**
+             * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
+             *
+             * @access public
+             * @param boolean $returncontent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
+             * @param bool $clearparsedcontent
+             * @return string Geparster Inhalt
+             */
 			function parse($returncontent=false, $clearparsedcontent=true)
 			{
-				$varStart = $this -> varStart;
-				$varEnd = $this -> varEnd;
+				$varStart = $this->varStart;
+				$varEnd = $this->varEnd;
 
-				$content = $this -> Content;
+				$content = $this->Content;
 				### TODO Pool 5, bei setVar {} adden oder read write properties...
 				#$content = str_replace(array_keys($this -> VarList), array_values($this -> VarList), $content);
-				foreach($this -> VarList as $Key => $Value) {
+				foreach($this->VarList as $Key => $Value) {
 					$content = str_replace($varStart.$Key.$varEnd, $Value, $content);
 				}
-				//	$Keys = array_keys($this -> VarList);
-				//	$Values = array_values($this -> VarList);
-				//	$content = str_replace($Keys, $Values, $content);
-
-			    //$BlockList = & $this -> BlockList -> GetArray();
-//				$keys = array_keys($this->BlockList);
 
 				$search = array();
 				$replace = array();
@@ -523,13 +518,10 @@
                  * @var TempBlock $TempBlock
                  */
                 foreach($this->BlockList as $Handle => $TempBlock) {
-//				foreach($keys as $Handle) {
-//					$TempBlock = & $this->BlockList[$Handle];
 					$search[] = '{'.$Handle.'}';
 
            	    	if ($TempBlock->allowParse()) {
     	            	$TempBlock->parse();
-//					    $content = str_replace('{'.$Handle.'}', $TempBlock->getParsedContent(), $content);
 						$replace[] = $TempBlock->getParsedContent();
     	   	            if($clearparsedcontent) $TempBlock->clearParsedContent();
            			    $TempBlock->setAllowParse(false);
@@ -542,12 +534,8 @@
             	    unset($TempBlock);
 				}
 
-//				$keys = array_keys($this->FileList);
-//				foreach($keys as $Handle) {
 				foreach($this->FileList as $Handle => $TempFile) {
-//					$TempFile = & $this->FileList[$Handle];
 					$TempFile->parse();
-//					$content = str_replace('{'.$Handle.'}', $TempFile->getParsedContent(), $content);
 					$search[] = '{'.$Handle.'}';
 					$replace[] = $TempFile->getParsedContent();
 					if($clearparsedcontent) $TempFile->clearParsedContent();
