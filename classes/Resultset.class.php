@@ -320,9 +320,9 @@ if(!defined('CLASS_RESULTSET')) {
          **/
         function prev()
         {
-            if ($this -> index > 0) {
-                $this -> index--;
-                return $this -> getRow();
+            if ($this->index > 0) {
+                $this->index--;
+                return $this->getRow();
             }
             else {
                 return false;
@@ -347,7 +347,7 @@ if(!defined('CLASS_RESULTSET')) {
          */
         function eof()
         {
-            return ($this -> index == ($this -> count() - 1));
+            return ($this->index == ($this->count() - 1));
         }
 
         /**
@@ -369,12 +369,11 @@ if(!defined('CLASS_RESULTSET')) {
          * @param mixed $default
          * @return mixed value
          */
-        public function getValue(string $key, $default='')
+        public function getValue(string $key, $default=null)
         {
-            if(isset($this->rowset[$this->index][$key])) {
-                return $this->rowset[$this->index][$key];
-            }
-            return $default;
+            if(!isset($this->rowset[$this->index])) return $default;
+            if(!array_key_exists($key, $this->rowset[$this->index])) return $default;
+            return $this->rowset[$this->index][$key];
         }
 
         /**
@@ -399,6 +398,18 @@ if(!defined('CLASS_RESULTSET')) {
         public function getValueAsInt(string $key, $default=0): int
         {
             return (int)$this->getValue($key, $default);
+        }
+
+        /**
+         * Returns a value of a field of the current record as a boolean
+         *
+         * @param string $key
+         * @param bool $default
+         * @return bool
+         */
+        public function getValueAsBool(string $key, $default=false): bool
+        {
+            return boolval($this->getValue($key, $default));
         }
 
         /**
