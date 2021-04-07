@@ -535,7 +535,7 @@
            	    	}
 	    	        else {
 //		                $content = str_replace('{'.$Handle.'}', '', $content);
-						$replace[] = '';
+						$replace[] = $TempBlock->getParsedContent();
       		        }
 
             	    unset($TempBlock);
@@ -675,11 +675,11 @@
     	    function parse($returncontent=false, $clearparsedcontent=true)
         	{
             	$content = parent::parse($this->AllowParse, $clearparsedcontent);
-            	if(!$returncontent) {
-	            	$this->addParsedContent($content);
+            	if($returncontent) {
+                    return $content;
             	}
             	else {
-            		 return $content;
+                    $this->addParsedContent($content);
             	}
     	    }
 
