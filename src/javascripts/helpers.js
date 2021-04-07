@@ -1681,11 +1681,11 @@ function getWeekNumber(day, month, year) {
     }
 
 /**
- * Umwandlung von String zum Datentyp Boolean
+ * Converts string literal true and 1 to boolean true. Everything else becomes false
  */
 function string2bool(val)
 {
-	return (val == '0') ? false : true;
+	return (String(val) === 'true' || val === '1');
 }
 
 /**
@@ -2167,13 +2167,13 @@ function clearControls(elements)
         }
         else if(elemType == 'CHECKBOX' || elemType == 'RADIO') {
             if(elem.getAttribute('data-default-checked') != null) {
-                elem.checked = elem.getAttribute('data-default-checked');
+                elem.checked = string2bool(elem.dataset.defaultChecked);
             }
             else elem.checked = false;
         }
         else if(elemType == 'SELECT-ONE') {
             if(elem.getAttribute('data-default-value') != null) {
-                for(var x=0; x<elem.options.length; x++) {
+                for(let x=0; x<elem.options.length; x++) {
                     if(elem.options[x].value == elem.getAttribute('data-default-value')) {
                         elem.options.selectedIndex = x;
                         break;
