@@ -4424,6 +4424,9 @@ function createPathFromLastChars($chars, $numberOfDirectories=4)
  *
  */
 function nextFreeFilename($dir, $filename, $delimiter='-') {
+    if($filename == '') {
+        return '';
+    }
 	$filepath = addEndingSlash($dir) . $filename;
 	if (file_exists($filepath)) {
 
