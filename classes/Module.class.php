@@ -52,9 +52,8 @@ if(!defined('CLASS_MODULE')) {
          * Modul-Container enth�lt alle Kinder-Objekte (Childs)->welche Module sitzen auf mir?
          *
          * @var array $Modules
-         * @access private
          */
-        var $Modules=array();
+        protected array $Modules = [];
 
         /**
          * Standardwerte sollten gew�hrleisten, dass das Modul auch ohne Parametrisierung l�uft. Die Standardwerte werden in der Funktion "init" festgelegt und bestimmen das normale Verhalten des Moduls.
@@ -362,7 +361,8 @@ if(!defined('CLASS_MODULE')) {
             $new_Modules = Array();
 
             // Rebuild Modules
-            for ($i = 0; $i < count($this->Modules); $i++) {
+            $max = count($this->Modules);
+            for ($i = 0; $i < $max; $i++) {
                 if ($Module != $this->Modules[$i]) {
                     $new_Modules[] = &$this->Modules[$i];
                 }
@@ -377,10 +377,10 @@ if(!defined('CLASS_MODULE')) {
          * @param string $moduleName name of module
          * @return Module|null module
          */
-        function findChild(string $moduleName): ?Module
+        public function findChild(string $moduleName): ?Module
         {
             $result = null;
-            if($moduleName == '') return $result;
+            if($moduleName == '') return null;
 
             $max = count($this->Modules);
             for ($i = 0; $i < $max; $i++){
