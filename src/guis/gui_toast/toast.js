@@ -1,10 +1,9 @@
 /*
- * g7system.local
+ * POOL
  *
  * toast.js created at 18.11.20, 19:13
  *
- * @author A.Manhart <A.Manhart@group-7.de>
- * @copyright Copyright (c) 2020, GROUP7 AG
+ * @author Alexander Manhart <alexander@manhart-it.de>
  */
 'use strict';
 

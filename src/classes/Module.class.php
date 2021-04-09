@@ -52,9 +52,8 @@ if(!defined('CLASS_MODULE')) {
          * Modul-Container enth�lt alle Kinder-Objekte (Childs)->welche Module sitzen auf mir?
          *
          * @var array $Modules
-         * @access private
          */
-        var $Modules=array();
+        protected array $Modules = [];
 
         /**
          * Standardwerte sollten gew�hrleisten, dass das Modul auch ohne Parametrisierung l�uft. Die Standardwerte werden in der Funktion "init" festgelegt und bestimmen das normale Verhalten des Moduls.
@@ -188,12 +187,15 @@ if(!defined('CLASS_MODULE')) {
             $this->Input->setVar($params);
 
             // set Component Name, if set by param.
-            $ModuleName = $this->Input->getVar('ModuleName');
-            if ($ModuleName == null) {
-                $ModuleName = $this->Input->getVar('modulename');
+            $moduleName = $this->Input->getVar('moduleName');
+            if ($moduleName == null) {
+                $moduleName = $this->Input->getVar('modulename');
+                if($moduleName == null) {
+                    $moduleName = $this->Input->getVar('ModuleName');
+                }
             }
-            if ($ModuleName != null) {
-                $this->setName($ModuleName);
+            if ($moduleName != null) {
+                $this->setName($moduleName);
             }
             $disabled = $this->Input->getVar('ModuleDisabled');
             if ($disabled == 1) {
@@ -359,13 +361,35 @@ if(!defined('CLASS_MODULE')) {
             $new_Modules = Array();
 
             // Rebuild Modules
-            for ($i = 0; $i < count($this->Modules); $i++) {
+            $max = count($this->Modules);
+            for ($i = 0; $i < $max; $i++) {
                 if ($Module != $this->Modules[$i]) {
                     $new_Modules[] = &$this->Modules[$i];
                 }
             }
 
             $this->Modules = $new_Modules;
+        }
+
+        /**
+         * Search for a child module.
+         *
+         * @param string $moduleName name of module
+         * @return Module|null module
+         */
+        public function findChild(string $moduleName): ?Module
+        {
+            $result = null;
+            if($moduleName == '') return null;
+
+            $max = count($this->Modules);
+            for ($i = 0; $i < $max; $i++){
+                if (strcasecmp($this->Modules[$i]->Name, $moduleName) == 0) {
+                    $result = $this->Modules[$i];
+                    break;
+                }
+            }
+            return $result;
         }
 
         /**

@@ -973,6 +973,18 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
+         * Creates data format for the bootstrap table
+         */
+        public function getRowSetAsBSTable(int $total): array
+        {
+            $return = [];
+            $return['total'] = $total;
+//            $return['totalNotFiltered'] = $total;
+            $return['rows'] = $this->rowset;
+            return $return;
+        }
+
+        /**
          * Liefert alle Daten im XML Format fuer die JS Komponente DHtmlXGrid
          *
          * @param array $pk

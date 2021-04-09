@@ -104,7 +104,7 @@ class GUI_Module extends Module
     /**
      * Reiche Ergebnis als JSON durch
      */
-    var $plainJSON = false;
+    protected bool $plainJSON = false;
 
     /**
      * Konstruktor

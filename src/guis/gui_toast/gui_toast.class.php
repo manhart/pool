@@ -1,11 +1,10 @@
 <?php
 /*
- * g7system.local
+ * POOL
  *
  * gui_toast.class.php created at 18.11.20, 19:12
  *
- * @author A.Manhart <A.Manhart@group-7.de>
- * @copyright Copyright (c) 2020, GROUP7 AG
+ * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
 class GUI_Toast extends GUI_Module
