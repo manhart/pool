@@ -1,32 +1,10 @@
+<div class="{moduleName}_toolbar"></div>
 <table id="{moduleName}"
-       {data-toolbar}
-       {data-cache}
-       {data-url}
-       {data-ajax}
-       {data-ajax-options}
-       {data-height}
-       {data-pagination}
-       {data-side-pagination}
-       {data-search}
-       {data-show-columns}
-       {data-show-refresh}
-       {data-show-columns-toggle-all}
-       {data-show-pagination-switch}
-       {data-show-toggle}
-       {data-show-fullscreen}
-       {data-buttons-align}
-       {data-buttons}
-       {data-buttons-toolbar}
-       {data-detail-view}
-       {data-card-view}
-       {data-checkbox-header}
-       {data-virtual-scroll}
-       {data-click-to-select}
-       {data-flat}
-       data-toggle="">
-    <!-- BLOCK thead --><thead>
-    <tr>
-        <th {data-field} {data-valign} {data-formatter} {data-events} {data-sortable}>{caption}</th>
-    </tr>
-    </thead><!-- END thead -->
+    <!-- BLOCK tableAttributes --><!-- BLOCK tableAttribute -->{data-name}="{data-value}"<!-- END tableAttribute --><!-- END tableAttributes -->
+    data-toggle="table">
+    <thead>
+    <!-- BLOCK row --><tr>
+        <!-- BLOCK column --><th <!-- BLOCK columnAttribute -->{data-name}="{data-value}"<!-- END columnAttribute -->>{caption}</th><!-- END column -->
+    </tr><!-- END row -->
+    </thead>
 </table>
