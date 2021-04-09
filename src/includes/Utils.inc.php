@@ -2663,23 +2663,23 @@ function sanitizeFilename(string $filename): string
 }
 
 /**
- * Umwandlung booleschen Ausdruck in Integer (0, 1)
+ * Convert boolean expression to integer (0, 1)
  *
- * @param bool $bool Boolean
- * @return int 0 oder 1
+ * @param bool $bool boolean value
+ * @return int 0 or 1
  */
-function bool2int($bool)
+function bool2int(bool $bool): int
 {
-    return $bool ? 1 : 0; # weitere M�glichkeit: (int)$bool;
+    return $bool ? 1 : 0; # other: (int)$bool;
 }
 
 /**
- * Umwandlung booleschen Ausdruck in String ('true', 'false')
+ * Convert boolean expression to string ("true" or "false")
  *
- * @param bool $bool Boolean
- * @return string 'false' oder 'true'
+ * @param bool $bool boolean value
+ * @return string 'false' or 'true'
  */
-function bool2string($bool)
+function bool2string(bool $bool): string
 {
     return $bool ? 'true' : 'false';
 }
@@ -4424,6 +4424,9 @@ function createPathFromLastChars($chars, $numberOfDirectories=4)
  *
  */
 function nextFreeFilename($dir, $filename, $delimiter='-') {
+    if($filename == '') {
+        return '';
+    }
 	$filepath = addEndingSlash($dir) . $filename;
 	if (file_exists($filepath)) {
 
@@ -4558,10 +4561,43 @@ function preg_last_error_message(int $lastErrorCode): string
 /**
  * Simple test if string is HTML
  *
- * @param $string
+ * @param string $string
  * @return bool
  */
-function isHTML($string): bool
+function isHTML(string $string): bool
 {
     return $string != strip_tags($string);
+}
+
+/**
+ * Simple test if string is JSON
+ *
+ * @param string $string
+ * @return bool
+ */
+function isJSON(string $string): bool
+{
+    $literal = substr($string, 0, 1);
+    if($literal != '{' and $literal != '[') {
+        return false;
+    }
+    json_decode($string);
+    return json_last_error() == JSON_ERROR_NONE;
+}
+
+/**
+ * convert dash style (or another separator) into camelCase style
+ *
+ * @param string $string text
+ * @param bool $capitalizeFirstCharacter default false
+ * @param string $separator default dash
+ * @return string
+ */
+function camelize(string $string, $capitalizeFirstCharacter = false, $separator = '-'): string
+{
+    $result = str_replace($separator, '', ucwords($string, $separator));
+    if($capitalizeFirstCharacter == false) {
+        $result = lcfirst($result);
+    }
+    return $result;
 }
