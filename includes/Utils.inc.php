@@ -4561,10 +4561,26 @@ function preg_last_error_message(int $lastErrorCode): string
 /**
  * Simple test if string is HTML
  *
- * @param $string
+ * @param string $string
  * @return bool
  */
-function isHTML($string): bool
+function isHTML(string $string): bool
 {
     return $string != strip_tags($string);
+}
+
+/**
+ * Simple test if string is JSON
+ *
+ * @param string $string
+ * @return bool
+ */
+function isJSON(string $string): bool
+{
+    $literal = substr($string, 0, 1);
+    if($literal != '{' and $literal != '[') {
+        return false;
+    }
+    json_decode($string);
+    return json_last_error() == JSON_ERROR_NONE;
 }
