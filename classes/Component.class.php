@@ -227,18 +227,18 @@
 			/**
 			 * Sucht in der eigenen Komponentenliste nach einer Komponente mit dem als Parameter uebergebenen Namen.
 			 *
-			 * @param string $varName Zu suchender Name
-			 * @return Component|null Komponente
+			 * @param string $name Search for a Component with name
+			 * @return Component|null Component
 			 */
-			function &findComponent(string $varName): ?Component
+			function findComponent(string $name): ?Component
             {
 				$result = null;
-				if($varName == '') return $result;
+				if($name == '') return null;
 
                 $max = count($this->Components);
                 for ($i = 0; $i < $max; $i++){
-                    if (strcasecmp($this->Components[$i]->Name, $varName) == 0) {
-                        $result = &$this->Components[$i];
+                    if (strcasecmp($this->Components[$i]->Name, $name) == 0) {
+                        $result = $this->Components[$i];
                         break;
                     }
                 }
