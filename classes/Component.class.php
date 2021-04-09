@@ -227,21 +227,21 @@
 			/**
 			 * Sucht in der eigenen Komponentenliste nach einer Komponente mit dem als Parameter uebergebenen Namen.
 			 *
-			 * @access public
 			 * @param string $varName Zu suchender Name
 			 * @return Component|null Komponente
 			 */
-			function &findComponent($varName)
-			{
-				$result = false;
-				if ($varName != ''){
-					for ($i = 0; $i < count($this->Components); $i++){
-						if (strcasecmp($this->Components[$i]->Name, $varName) == 0) {
-							$result = &$this->Components[$i];
-							break;
-						}
-					}
-				}
+			function &findComponent(string $varName): ?Component
+            {
+				$result = null;
+				if($varName == '') return $result;
+
+                $max = count($this->Components);
+                for ($i = 0; $i < $max; $i++){
+                    if (strcasecmp($this->Components[$i]->Name, $varName) == 0) {
+                        $result = &$this->Components[$i];
+                        break;
+                    }
+                }
 	         	return $result;
 			}
 
@@ -251,7 +251,7 @@
 			 * @access public
 			 * @return integer Anzahl der Komponenten
 			 */
-			function getComponentCount()
+			function getComponentCount(): int
 			{
 			    return count($this->Components);
 			}
