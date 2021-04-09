@@ -372,6 +372,27 @@ if(!defined('CLASS_MODULE')) {
         }
 
         /**
+         * Search for a child module.
+         *
+         * @param string $moduleName name of module
+         * @return Module|null module
+         */
+        function findChild(string $moduleName): ?Module
+        {
+            $result = null;
+            if($moduleName == '') return $result;
+
+            $max = count($this->Modules);
+            for ($i = 0; $i < $max; $i++){
+                if (strcasecmp($this->Modules[$i]->Name, $moduleName) == 0) {
+                    $result = $this->Modules[$i];
+                    break;
+                }
+            }
+            return $result;
+        }
+
+        /**
          * Modul wird deaktiviert.
          *
          * @access public
