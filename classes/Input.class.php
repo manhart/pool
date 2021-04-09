@@ -30,16 +30,16 @@
 */
 
 // define PHP Superglobals
-define ('I_EMPTY', 0);
-define ('I_COOKIE', 1);
-define ('I_GET', 2);
-define ('I_POST', 4);
-define ('I_FILES', 8);
-define ('I_ENV', 16);
-define ('I_SERVER', 32);
-define ('I_SESSION', 64);
-define ('I_REQUEST', 128);
-define ('I_ALL', 255);
+const I_EMPTY = 0;
+const I_COOKIE = 1;
+const I_GET = 2;
+const I_POST = 4;
+const I_FILES = 8;
+const I_ENV = 16;
+const I_SERVER = 32;
+const I_SESSION = 64;
+const I_REQUEST = 128;
+const I_ALL = 255;
 
 
 /**
@@ -234,7 +234,7 @@ class Input extends PoolObject
     */
     function getVar($key, $default=null)
     {
-        return isset($this->Vars[$key]) ? $this->Vars[$key] : $default;
+        return $this->Vars[$key] ?? $default;
     }
 
     /**
@@ -298,7 +298,7 @@ class Input extends PoolObject
     function addVar($key, $value = '')
     {
         if (!is_array($key)) {
-            if (!isset($this -> Vars[$key])) {
+            if (!isset($this->Vars[$key])) {
                 $this->Vars[$key] = $value;
             }
         }
