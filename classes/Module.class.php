@@ -188,12 +188,15 @@ if(!defined('CLASS_MODULE')) {
             $this->Input->setVar($params);
 
             // set Component Name, if set by param.
-            $ModuleName = $this->Input->getVar('ModuleName');
-            if ($ModuleName == null) {
-                $ModuleName = $this->Input->getVar('modulename');
+            $moduleName = $this->Input->getVar('moduleName');
+            if ($moduleName == null) {
+                $moduleName = $this->Input->getVar('modulename');
+                if($moduleName == null) {
+                    $moduleName = $this->Input->getVar('ModuleName');
+                }
             }
-            if ($ModuleName != null) {
-                $this->setName($ModuleName);
+            if ($moduleName != null) {
+                $this->setName($moduleName);
             }
             $disabled = $this->Input->getVar('ModuleDisabled');
             if ($disabled == 1) {
