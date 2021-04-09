@@ -978,8 +978,8 @@ if(!defined('CLASS_RESULTSET')) {
         public function getRowSetAsBSTable(int $total): array
         {
             $return = [];
-            $return['total'] = $this->count();
-            $return['totalNotFiltered'] = $total;
+            $return['total'] = $total;
+//            $return['totalNotFiltered'] = $total;
             $return['rows'] = $this->rowset;
             return $return;
         }
