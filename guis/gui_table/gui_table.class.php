@@ -29,8 +29,7 @@ class GUI_Table extends GUI_Module
         'data-side-pagination' => 'client'
     ];
 
-    protected array $columns = [
-    ];
+    protected array $columns = [];
 
     /**
      * @param const|int $superglobals
@@ -61,6 +60,24 @@ class GUI_Table extends GUI_Module
         }
     }
 
+    public function setOptions(array $options)
+    {
+        $this->options = array_merge($this->options, $options);
+    }
+
+    public function provision()
+    {
+        if($this->Input->getVar('columns') != null) {
+            $columns = $this->Input->getVar('columns');
+            switch (gettype($columns)) {
+                case 'string':
+                    if(isJSON($columns)) {
+                        $this->columns = json_decode($columns, true);
+                    }
+            }
+        }
+    }
+
     /**
      * prepare content
      */
@@ -70,7 +87,7 @@ class GUI_Table extends GUI_Module
 
         $this->Template->newBlock('tableAttributes');
         foreach($this->options as $attrName => $attrValue) {
-            $inpValue = $this->getVar($attrName);
+            $inpValue = $this->Input->getVar($attrName);
             $attrValue = $inpValue ?? $attrValue;
 
             if(is_bool($attrValue)) {
@@ -85,15 +102,6 @@ class GUI_Table extends GUI_Module
             );
         }
 
-        if($this->Input->getVar('columns') != null) {
-            $columns = $this->Input->getVar('columns');
-            switch (gettype($columns)) {
-                case 'string':
-                    if(isJSON($columns)) {
-                        $this->columns = json_decode($columns, true);
-                    }
-            }
-        }
         $this->Template->newBlock('row');
         foreach($this->columns as $column) {
             $ColumnBlock = $this->Template->newBlock('column');
@@ -108,6 +116,18 @@ class GUI_Table extends GUI_Module
             }
         }
         parent::prepare();
+    }
+
+    /**
+     * Creates data format for the bootstrap table
+     */
+    static function getRowSetAsArray(Resultset $ResultSet, int $total): array
+    {
+        $return = [];
+        $return['total'] = $total;
+        //            $return['totalNotFiltered'] = $total;
+        $return['rows'] = $ResultSet->getRowset();
+        return $return;
     }
 
     /**
