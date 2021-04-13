@@ -4611,6 +4611,6 @@ function camelize(string $string, $capitalizeFirstCharacter = false, $separator 
  */
 function decamelize(string $string, $separator = '-'): string
 {
-    return ltrim(strtolower(preg_replace('/[A-Z]/', $separator.'$0', $string)), $separator);
+    return preg_replace('/\B([A-Z])/', $separator.'$0', $string);
     // alternate (todo: test speed) return strtolower(preg_replace(['/([a-z\d])([A-Z])/', '/([^_])([A-Z][a-z])/'], '$1'.$separator.'$2', $string));
 }
