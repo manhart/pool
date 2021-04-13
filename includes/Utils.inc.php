@@ -4601,3 +4601,16 @@ function camelize(string $string, $capitalizeFirstCharacter = false, $separator 
     }
     return $result;
 }
+
+/**
+ * convert camelCase style into dash style (or another separator)
+ *
+ * @param string $string
+ * @param string $separator
+ * @return string
+ */
+function decamelize(string $string, $separator = '-'): string
+{
+    return ltrim(strtolower(preg_replace('/[A-Z]/', $separator.'$0', $string)), $separator);
+    // alternate (todo: test speed) return strtolower(preg_replace(['/([a-z\d])([A-Z])/', '/([^_])([A-Z][a-z])/'], '$1'.$separator.'$2', $string));
+}
