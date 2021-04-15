@@ -175,6 +175,18 @@ class Weblication extends Component
     private string $version = '';
 
     /**
+     * @var array all possible default formats
+     */
+    private array $formats = [
+        'time.format' => 'H:i',
+        'date.format' => 'd.m.Y',
+        'datetime.format' => 'd.m.Y H:i',
+        'time.strftime' => '%H:%M',
+        'date.strftime' => '%d.%m.%Y',
+        'datetime.strftime' => '%d.%m.%Y %H:%M',
+    ];
+
+    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -297,11 +309,34 @@ class Weblication extends Component
      * @param string $charset
      * @return Weblication
      */
-    function setCharset(string $charset)
+    function setCharset(string $charset): Weblication
     {
         header('content-type: text/html; charset=' . $charset);
         $this->charset = strtoupper($charset);
         return $this;
+    }
+
+    /**
+     * all kinds of formats.There are predefined ones: datetime, date and time
+     *
+     * @param array $formats
+     * @return $this
+     */
+    public function setDefaultFormats(array $formats): Weblication
+    {
+        $this->formats = array_merge($this->formats, $formats);
+        return $this;
+    }
+
+    /**
+     * reads the saved format
+     *
+     * @param string $key
+     * @return string|null
+     */
+    public function getDefaultFormat(string $key): string
+    {
+        return $this->formats[$key] ?? '';
     }
 
     /**
