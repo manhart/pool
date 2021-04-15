@@ -121,6 +121,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
     ];
 
     protected array $options = [];
+    protected array $poolOptions = [];
+
+    protected array $columns = [];
 
     /**
      * @var array options for the table
@@ -168,17 +171,17 @@ class GUI_Table extends GUI_Module implements JsonConfig
         'data-detail-formatter' => 'function(index, row, element) { return \'\' }',*/
     ];
 
-    protected array $columns = [];
-
     /**
      * @param const|int $superglobals
      */
     public function init($superglobals = I_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
+        $this->Defaults->addVar('render', true);
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
         parent::init($superglobals);
+
     }
 
     /**
@@ -207,6 +210,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
                     $this->options[$key] = $value;
                 }
             }
+            else {
+                $this->poolOptions[$key] = $value;
+            }
         }
 
         return $this;
@@ -215,11 +221,26 @@ class GUI_Table extends GUI_Module implements JsonConfig
     public function setColumns(array $columns): GUI_Table
     {
         foreach($columns as $z => $column) {
+            $field = $column['field'] ?? $z;
             foreach($column as $key => $value)
                 if(isset($this->defaultColumnOptions[$key])) {
                     if($this->defaultColumnOptions[$key]['value'] != $value) {
                         $this->columns[$z][$key] = $value;
                     }
+                }
+                else {
+                    $this->poolOptions['poolColumnOptions'][$field][$key] = $value;
+//                    if($key == 'dataType') {
+//                        switch ($value) {
+//                            case 'datetime':
+//                            case 'date':
+//                            case 'time':
+//                                if(isset($column['formatter']) == false) {
+//                                    $this->columns[$z]['formatter'] = '(value, row, index, field) => { return {modulename}.strftime(value, row, index, field)}';
+//                                }
+//                                break;
+//                        }
+//                    }
                 }
         }
 
@@ -264,10 +285,16 @@ class GUI_Table extends GUI_Module implements JsonConfig
             $data['moduleName'],
             $data['ModuleName'],
             $data['modulename'],
-            $data['framework']
+            $data['framework'],
+            $data['render']
         );
 
         $this->setOptions($data);
+
+        // default time formats
+        $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('time.strftime');
+        $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('date.strftime');
+        $this->poolOptions['datetime.strftime'] = $this->poolOptions['datetime.strftime'] ?? $this->Weblication->getDefaultFormat('datetime.strftime');
 
         if($this->Input->getVar('columns') != null) {
             $columns = $this->Input->getVar('columns');
@@ -285,9 +312,12 @@ class GUI_Table extends GUI_Module implements JsonConfig
      */
     public function prepare()
     {
+        $this->poolOptions['moduleName'] = $this->getName();
+
         $this->Template->setVar([
             'moduleName' => $this->getName(),
-            'className' => $this->getClassName()
+            'className' => $this->getClassName(),
+            'options' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
         ]);
 
 
@@ -353,6 +383,13 @@ class GUI_Table extends GUI_Module implements JsonConfig
                 ]);
             }
         }
+
+        $this->Template->leaveBlock();
+        $js_render = '';
+        if($this->getVar('render')) {
+            $js_render = '.render()';
+        }
+        $this->Template->setVar('render', $js_render);
         parent::prepare();
     }
 
