@@ -8,7 +8,8 @@
 
 'use strict';
 
-// $.BootstrapTable = class extends $.BootstrapTable {}
+// $.BootstrapTable = class extends $.BootstrapTable {
+// }
 class GUI_Table {
     /* > ES7
     static const STYLE_DEFAULT = 'toast';
@@ -45,6 +46,7 @@ class GUI_Table {
             delete settings['moduleName'];
         }
 
+        // automation
         if('poolColumnOptions' in settings) {
             this.poolColumnOptions = settings['poolColumnOptions'];
             delete settings['poolColumnOptions'];
@@ -53,6 +55,7 @@ class GUI_Table {
         this.formats['time'] = settings['time.strftime'];
         this.formats['date'] = settings['date.strftime'];
         this.formats['datetime'] = settings['datetime.strftime'];
+        this.formats['number'] = settings['number'];
 
         this.table = $('#'+this.moduleName)
 
@@ -88,27 +91,39 @@ class GUI_Table {
                 return;
             }
 
-            // automation for special dataType's
-            let dataType = '';
-            if('dataType' in this.poolColumnOptions[field]) {
-                dataType = this.poolColumnOptions[field]['dataType'];
+            // automation for special poolType's
+            let poolType = '';
+            if('poolType' in this.poolColumnOptions[field]) {
+                poolType = this.poolColumnOptions[field]['poolType'];
             }
-            let dataFormat = '';
-            if('dataFormat' in this.poolColumnOptions[field]) {
-                dataFormat = this.poolColumnOptions[field]['dataFormat']
+            let poolFormat = '';
+            if('poolFormat' in this.poolColumnOptions[field]) {
+                poolFormat = this.poolColumnOptions[field]['poolFormat']
             }
 
-            switch(dataType) {
+            let format = poolFormat ? poolFormat : this.formats[poolType];
+
+            // if('formatter' in column) {
+            //     column['formatter'] =
+            // }
+            switch(poolType) {
                 case 'datetime':
                 case 'date':
                 case 'time':
-                    let format = dataFormat ? dataFormat : this.formats[dataType];
+
                     if(!('formatter' in column)) {
                         column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format);
                     }
                     break;
+
+                case 'number':
+
+                    if(!('formatter' in column)) {
+                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format);
+                    }
+                    break;
             }
-        })
+        });
         this.columns = columns;
         return this;
     }
@@ -127,6 +142,24 @@ class GUI_Table {
         if (new Date(a) > new Date(b)) return 1;
         if (new Date(a) < new Date(b)) return -1;
         return 0;
+    }
+
+    money_format(value, row, index, field, format)
+    {
+        // todo
+    }
+
+    number_format(value, row, index, field, format)
+    {
+        return number_format(value, format['decimals'], format['decimal_separator'], format['thousands_separator'])
+    }
+
+    sprintf(value, row, index, field, format)
+    {
+        if(format) {
+            return sprintf(format, value);
+        }
+        return value;
     }
 
     strftime(value, row, index, field, format)
