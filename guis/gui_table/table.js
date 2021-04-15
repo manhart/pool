@@ -23,21 +23,36 @@ class GUI_Table {
 
     moduleName = 'GUI_Table';
 
-    dateTimeFormat = '%Y-%m-%d %H:%M';
+    formats = [];
 
-    options = [];
+    options = {};
+    columns = [];
+
+    poolColumnOptions = {}; // poolOptions
 
     /**
      * Defaults
      *
      * @constructor
      */
-    constructor(options = {})
+    constructor(settings = {})
     {
-        this.moduleName = options['moduleName'];
-        delete options['moduleName'];
-        this.options = options;
-        // this.columns = options['columns'];
+        if(!('moduleName' in settings)) {
+            console.error('Missing moduleName in settings of GUI_Table');
+        }
+        else {
+            this.moduleName = settings['moduleName'];
+            delete settings['moduleName'];
+        }
+
+        if('poolColumnOptions' in settings) {
+            this.poolColumnOptions = settings['poolColumnOptions'];
+            delete settings['poolColumnOptions'];
+        }
+
+        this.formats['time'] = settings['time.strftime'];
+        this.formats['date'] = settings['date.strftime'];
+        this.formats['datetime'] = settings['datetime.strftime'];
 
         this.table = $('#'+this.moduleName)
 
@@ -59,15 +74,48 @@ class GUI_Table {
         //this.table.bootstrapTable('refreshOptions', options);
     }
 
+    setOptions(options = {})
+    {
+        this.options = options;
+        return this;
+    }
+
     setColumns(columns = [])
     {
+        columns.forEach((column, z) => {
+            let field = ('field' in column) ? column['field'] : z;
+            if(!(field in this.poolColumnOptions)) {
+                return;
+            }
+
+            // automation for special dataType's
+            let dataType = '';
+            if('dataType' in this.poolColumnOptions[field]) {
+                dataType = this.poolColumnOptions[field]['dataType'];
+            }
+            let dataFormat = '';
+            if('dataFormat' in this.poolColumnOptions[field]) {
+                dataFormat = this.poolColumnOptions[field]['dataFormat']
+            }
+
+            switch(dataType) {
+                case 'datetime':
+                case 'date':
+                case 'time':
+                    let format = dataFormat ? dataFormat : this.formats[dataType];
+                    if(!('formatter' in column)) {
+                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format);
+                    }
+                    break;
+            }
+        })
         this.columns = columns;
-        this.options['columns'] = this.columns;
         return this;
     }
 
     render()
     {
+        this.options['columns'] = this.columns;
         this.table.bootstrapTable(
             this.options
         );
@@ -81,13 +129,12 @@ class GUI_Table {
         return 0;
     }
 
-    formatDateTime(value, row, index, field)
+    strftime(value, row, index, field, format)
     {
-        let format = '%Y-%m-%d %H:%M';
-        // console.debug('format: '+format);
-        // console.debug(this);
-        // console.debug('dateTimeFOrmat:',this.dateTimeFormat);
-        return new Date(value).strftime(format);
+        if(format) {
+            return new Date(value).strftime(format);
+        }
+        return value;
     }
 }
 
