@@ -178,12 +178,17 @@ class Weblication extends Component
      * @var array all possible default formats
      */
     private array $formats = [
-        'time.format' => 'H:i',
-        'date.format' => 'd.m.Y',
-        'datetime.format' => 'd.m.Y H:i',
+        'time' => 'H:i',
+        'date' => 'd.m.Y',
+        'datetime' => 'd.m.Y H:i',
         'time.strftime' => '%H:%M',
         'date.strftime' => '%d.%m.%Y',
         'datetime.strftime' => '%d.%m.%Y %H:%M',
+        'number' => [
+            'decimals' => 2,
+            'decimal_separator' => ',',
+            'thousands_separator' => '.'
+        ]
     ];
 
     /**
@@ -332,9 +337,9 @@ class Weblication extends Component
      * reads the saved format
      *
      * @param string $key
-     * @return string|null
+     * @return string|array|null
      */
-    public function getDefaultFormat(string $key): string
+    public function getDefaultFormat(string $key)
     {
         return $this->formats[$key] ?? '';
     }
