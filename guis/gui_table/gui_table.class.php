@@ -78,7 +78,7 @@ class GUI_Table extends GUI_Module implements JsonConfig
         'sortable' => [
             'attribute' => 'data-sortable',
             'type' => 'boolean',
-            'value' => false
+            'value' => true
         ]
     ];
 
@@ -121,9 +121,11 @@ class GUI_Table extends GUI_Module implements JsonConfig
     ];
 
     protected array $options = [];
+    protected array $columns = [];
+
     protected array $poolOptions = [];
 
-    protected array $columns = [];
+
 
     /**
      * @var array options for the table
@@ -205,6 +207,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
     public function setOptions(array $options): GUI_Table
     {
         foreach($options as $key => $value) {
+            if($value === 'true' or $value === 'false') {
+                $value = string2bool($value);
+            }
             if(isset($this->defaultOptions[$key])) {
                 if($this->defaultOptions[$key]['value'] != $value) {
                     $this->options[$key] = $value;
@@ -295,6 +300,7 @@ class GUI_Table extends GUI_Module implements JsonConfig
         $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('time.strftime');
         $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('date.strftime');
         $this->poolOptions['datetime.strftime'] = $this->poolOptions['datetime.strftime'] ?? $this->Weblication->getDefaultFormat('datetime.strftime');
+        $this->poolOptions['number'] = $this->poolOptions['number'] ?? $this->Weblication->getDefaultFormat('number');
 
         if($this->Input->getVar('columns') != null) {
             $columns = $this->Input->getVar('columns');
