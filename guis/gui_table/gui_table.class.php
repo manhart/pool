@@ -229,7 +229,17 @@ class GUI_Table extends GUI_Module implements JsonConfig
             $field = $column['field'] ?? $z;
             foreach($column as $key => $value)
                 if(isset($this->defaultColumnOptions[$key])) {
+                    $type = $this->defaultColumnOptions[$key]['type'] ?? '';
+                    switch($type) {
+                        case 'boolean':
+                            if(is_string($value)) {
+                                $value = string2bool($value);
+                            }
+                            break;
+                    }
+
                     if($this->defaultColumnOptions[$key]['value'] != $value) {
+//                        $this->defaultColumnOptions[$key]['type']
                         $this->columns[$z][$key] = $value;
                     }
                 }
@@ -307,8 +317,46 @@ class GUI_Table extends GUI_Module implements JsonConfig
             switch (gettype($columns)) {
                 case 'string':
                     if(isJSON($columns)) {
-                        $this->columns = json_decode($columns, true);
+                        $columns = json_decode($columns, true);
                     }
+                    else {
+                        $columnsArray = explode(';', $columns);
+
+                        $columns = [];
+                        foreach($columnsArray as $column) {
+                            $columnAttr = explode('|', $column);
+                            $column = [];
+                            $i = 0;
+                            foreach($columnAttr as $attr) {
+                                $attrValue = trim($attr);
+                                if(strpos($attrValue, '=') !== false) {
+                                    $attr = explode('=', $attrValue);
+                                    $key = $attr[0];
+                                    $val = $attr[1];
+                                    if($key == 'field') $field = $val;
+                                    $column[$key] = $val;
+                                }
+                                elseif($i == 0) {
+                                    $field = trim($columnAttr[$i]) ?? '';
+                                    if($field == '') continue;
+                                    $column['field'] = $field;
+                                    if(count($columnAttr) == 1) { // no title given
+                                        $title = $columnAttr[$i] ?? $field;
+                                        $column['title'] = $title;
+                                    }
+                                }
+                                elseif($i == 1 and isset($field)) {
+                                    $title = $columnAttr[$i] ?? $field;
+                                    $column['title'] = $title;
+                                }
+
+                                $i++;
+                            }
+
+                            $columns[] = $column;
+                        }
+                    }
+                    $this->setColumns($columns);
             }
         }
     }
