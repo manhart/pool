@@ -4601,3 +4601,32 @@ function camelize(string $string, $capitalizeFirstCharacter = false, $separator 
     }
     return $result;
 }
+
+/**
+ * convert camelCase style into dash style (or another separator)
+ *
+ * @param string $string
+ * @param string $separator
+ * @return string
+ */
+function decamelize(string $string, $separator = '-'): string
+{
+    return preg_replace('/\B([A-Z])/', $separator.'$0', $string);
+    // alternate (todo: test speed) return strtolower(preg_replace(['/([a-z\d])([A-Z])/', '/([^_])([A-Z][a-z])/'], '$1'.$separator.'$2', $string));
+}
+
+/**
+ * array to html attributes
+ *
+ * @param array $attributes
+ * @return string
+ */
+function htmlAttributes(array $attributes): string
+{
+    $attributes = implode(' ', array_map(function ($k, $v) {
+        if(is_array($v)) $v = implode(' ', $v);
+        return ((is_int($k)) ? $v : $k .'="'. htmlspecialchars($v) .'"');
+    }, array_keys($attributes), $attributes));
+    if($attributes) $attributes = ' '.$attributes;
+    return $attributes;
+}

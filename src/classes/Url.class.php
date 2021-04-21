@@ -563,25 +563,25 @@ if(!defined('CLASS_URL')) {
         /**
          * Synonym auf Url::modifyQuery()
          *
-         * @access public
          * @param string $key Schluessel / Parameterbezeichnung
          * @param string $value Wert des Parameters
          **/
-        function setParam($key, $value='')
+        function setParam(string $key, $value=''): Url
         {
             $this->InpGet->setVar($key, $value);
+            return $this;
         }
 
         /**
          * Synonym auf Url::modifyQuery()
          *
-         * @access public
          * @param string $key Schluessel / Parameterbezeichnung
          * @param string $value Wert des Parameters
-         **/
-        function modifyParam($key, $value='')
+         * @deprecated
+         */
+        function modifyParam(string $key, $value=''): Url
         {
-            $this->InpGet->setVar($key, $value);
+            return $this->setParam($key, $value);
         }
 
         /**

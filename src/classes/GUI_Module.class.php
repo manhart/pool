@@ -449,8 +449,7 @@ class GUI_Module extends Module
     function loadFiles() {}
 
     /**
-     * Vorbereiten der Templates und sorgt dafuer dass auch alle Childs vorbereitet werden.
-     * Rekursiv von Aussen nach Innen.
+     * Provisioning data before preparing module and there children.
      *
      * @access public
      **/

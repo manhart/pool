@@ -228,7 +228,7 @@ if(!defined('CLASS_MODULE')) {
         function setParam($modulename, $param, $value=null)
         {
             $bResult = false;
-            $Module = &$this->Weblication->findComponent($modulename);
+            $Module = $this->Weblication->findComponent($modulename);
             if ($Module instanceof Module) {
                 $Module->Input->setVar($param, $value);
                 $bResult = true;
