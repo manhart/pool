@@ -1,10 +1,23 @@
 <div class="{moduleName}_toolbar"></div>
 <table id="{moduleName}"
     <!-- BLOCK tableAttributes --><!-- BLOCK tableAttribute -->{data-name}="{data-value}"<!-- END tableAttribute --><!-- END tableAttributes -->
-    data-toggle="table">
+    >
     <thead>
     <!-- BLOCK row --><tr>
         <!-- BLOCK column --><th <!-- BLOCK columnAttribute -->{data-name}="{data-value}"<!-- END columnAttribute -->>{caption}</th><!-- END column -->
     </tr><!-- END row -->
     </thead>
 </table>
+<script>
+    options = {options};
+    {moduleName} = new {className}(options);
+    // console.debug('function?', typeof {moduleName}.formatDateTime);
+
+    columns = [];
+    <!-- BLOCK js_row --><!-- BLOCK js_column -->columns.push({
+    <!-- BLOCK js_columnOption -->{key}: {value},
+    <!-- END js_columnOption -->}
+    );
+    <!-- END js_column --><!-- END js_row -->
+    {moduleName}.setColumns(columns){render};
+</script>
