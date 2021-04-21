@@ -284,29 +284,27 @@
         }
     }
 
-    /**
-     * Add a javascript file to the page
-     *
-     * @access public
-     * @param string $file file
-     * @param string $type (optional) type
-     * @param array $dataset
-     **/
-    function addJavaScript($file, $type='', $dataset=[])
+     /**
+      * Add a javascript file to the page
+      *
+      * @access public
+      * @param string $file file
+      * @param array $attributes (optional)
+      * @return GUI_Headerdata
+      */
+    public function addJavaScript(string $file, array $attributes = []): GUI_Headerdata
     {
         if (!in_array($file, $this->javaScriptFiles)) {
             $js = array(
                 'file' => $file
             );
-            if($type != '') {
-                $js['type'] = $type;
-            }
-            if($dataset) {
-                $js['dataset'] = $dataset;
+            if($attributes) {
+                $js['attributes'] = $attributes;
             }
             $this->javaScripts[] = $js;
             $this->javaScriptFiles[] = $file;
         }
+        return $this;
     }
 
     function setBaseTarget($target='_top')
@@ -387,11 +385,11 @@
             foreach($this->javaScripts as $js) {
                 $this->Template->newBlock('JAVASCRIPT');
                 $this->Template->setVar('FILENAME', $js['file']);
-                $type = '';
-                if(isset($js['type'])) {
-                    $type = ' type="'.$js['type'].'"';
+                $attributes = '';
+                if(isset($js['attributes'])) {
+                    $attributes = htmlAttributes($js['attributes']);
                 }
-                $this->Template->setVar('TYPE', $type);
+                $this->Template->setVar('attributes', $attributes);
             }
         }
 
@@ -408,7 +406,7 @@
      **/
     function finalize()
     {
-        $this -> Template -> parse();
-        return $this -> Template -> getContent();
+        $this->Template->parse();
+        return $this->Template->getContent();
     }
  }
