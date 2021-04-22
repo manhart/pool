@@ -46,7 +46,7 @@ sprintf = function()
     // improved by: Allidylls
     //    input by: Paulo Freitas
     //    input by: Brett Zamir (https://brett-zamir.me)
-    // improved by: Rafał Kukawski (https://kukawski.pl)
+    // improved by: Rafal Kukawski (https://kukawski.pl)
     //   example 1: sprintf("%01.2f", 123.1)
     //   returns 1: '123.10'
     //   example 2: sprintf("[%10s]", 'monkey')
