@@ -70,6 +70,11 @@ class GUI_Table extends GUI_Module implements JsonConfig
             'type' => 'boolean',
             'value' => false,
         ],
+        'showPrint' => [
+            'attribute' => 'data-show-print',
+            'type' => 'boolean',
+            'value' => false
+        ],
         'showToggle' => [
             'attribute' => 'data-show-toggle',
             'type' => 'boolean',
