@@ -93,15 +93,110 @@ class GUI_Table extends GUI_Module implements JsonConfig
             'type' => 'string',
             'value' => null
         ],
+        'cardVisible' => [
+            'attribute' => 'data-card-visible',
+            'type' => 'boolean',
+            'value' => true,
+        ],
+        'cellStyle' => [
+            'attribute' => 'data-cell-style',
+            'type' => 'function',
+            'value' => null
+        ],
+        'checkbox' => [
+            'attribute' => 'data-checkbox',
+            'type' => 'boolean',
+            'value' => false
+        ],
+        'checkboxEnabled' => [
+            'attribute' => 'data-checkbox-enabled',
+            'type' => 'boolean',
+            'value' => true,
+        ],
+        'class' => [
+            'attribute' => 'data-class',
+            'type' => 'string',
+            'value' => null,
+        ],
+        'clickToSelect' => [
+            'attribute' => 'data-click-to-select',
+            'type' => 'boolean',
+            'value' => false,
+        ],
+        'colspan' => [
+            'attribute' => 'data-colspan',
+            'type' => 'number',
+            'value' => null,
+        ],
+        'detailFormatter' => [
+            'attribute' => 'data-detail-formatter',
+            'type' => 'function',
+            'value' => 'function(index, row, $element) { return \'\' }',
+        ],
+        'escape' => [
+            'attribute' => 'data-escape',
+            'type' => 'boolean',
+            'value' => false,
+        ],
+        'falign' => [
+            'attribute' => 'data-falign',
+            'type' => 'string',
+            'value' => null,
+        ],
         'field' => [
             'attribute' => 'data-field',
             'type' => 'string',
             'value' => null
         ],
+        'footerFormatter' => [
+            'attribute' => 'data-footer-formatter',
+            'type' => 'function',
+            'value' => null,
+        ],
         'formatter' => [
             'attribute' => 'data-formatter',
             'type' => 'function',
             'value' => null
+        ],
+        'halign' => [
+            'attribute' => 'data-halign',
+            'type' => 'string',
+            'value' => null,
+        ],
+        'order' => [
+            'attribute' => 'data-order',
+            'type' => 'string',
+            'value' => 'asc',
+        ],
+        'radio' => [
+            'attribute' => 'data-radio',
+            'type' => 'boolean',
+            'value' => false
+        ],
+        'rowspan' => [
+            'attribute' => 'data-rowspan',
+            'type' => 'number',
+            'value' => null,
+        ],
+        'searchable' => [
+            'attribute' => 'data-searchable',
+            'type' => 'boolean',
+            'value' => true,
+        ],
+        'searchFormatter' => [
+            'attribute' => 'data-search-formatter',
+            'type' => 'boolean',
+            'value' => true,
+        ],
+        'searchHighlightFormatter' => [
+            'attribute' => 'data-search-highlight-formatter',
+            'type' => 'boolean', // could also be |function
+            'value' => true,
+        ],
+        'showSelectTitle' => [
+            'attribute' => 'data-show-select-title',
+            'type' => 'boolean',
+            'value' => false
         ],
         'sortable' => [
             'attribute' => 'data-sortable',
@@ -113,16 +208,46 @@ class GUI_Table extends GUI_Module implements JsonConfig
             'type' => 'function',
             'value' => null
         ],
+        'sortName' => [
+            'attribute' => 'data-sort-name',
+            'type' => 'string',
+            'value' => null,
+        ],
+        'switchable' => [
+            'attribute' => 'data-switchable',
+            'type' => 'boolean',
+            'value' => true,
+        ],
         'title' => [
             'attribute' => 'data-title',
             'type' => 'string',
             'value' => null
+        ],
+        'titleTooltip' => [
+            'attribute' => 'data-title-tooltip',
+            'type' => 'string',
+            'value' => null,
+        ],
+        'valign' => [
+            'attribute' => 'data-valign',
+            'type' => 'string',
+            'value' => null,
         ],
         'visible' => [
             'attribute' => 'data-visible',
             'type' => 'boolean',
             'value' => true
         ],
+        'width' => [
+            'attribute' => 'data-with',
+            'type' => 'number',
+            'value' => null,
+        ],
+        'widthUnit' => [
+            'attribute' => 'data-with-unit',
+            'type' => 'string',
+            'value' => 'px'
+        ]
     ];
 
     protected array $options = [];
@@ -212,6 +337,11 @@ class GUI_Table extends GUI_Module implements JsonConfig
     public function setOptions(array $options): GUI_Table
     {
         foreach($options as $key => $value) {
+            if($key == 'columns' and is_array($value)) {
+                $this->setColumns($value);
+                continue;
+            }
+
             if($value === 'true' or $value === 'false') {
                 $value = string2bool($value);
             }
@@ -279,8 +409,8 @@ class GUI_Table extends GUI_Module implements JsonConfig
             $this->options = $data['options'];
             $result = true;
         }
-        if(isset($data['columns'])) {
-            $this->columns = $data['columns'];
+        if(isset($this->options['columns'])) {
+            $this->columns = $this->options['columns'];
             $result = true;
         }
         return $result;
@@ -288,9 +418,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
 
     public function getConfig(): string
     {
+        $options = $this->options + ['columns' => $this->columns];
         $data = [
-            'options' => $this->options,
-            'columns' => $this->columns
+            'options' => $options,
         ];
         return json_encode($data);
     }
@@ -422,7 +552,10 @@ class GUI_Table extends GUI_Module implements JsonConfig
         foreach($this->columns as $column) {
             $ColumnBlock = $this->Template->newBlock('js_column');
             foreach($column as $optName => $attrValue) {
-                $type = $this->defaultColumnOptions[$optName]['type'];
+                $type = '';
+                if(isset($this->defaultColumnOptions[$optName])) {
+                    $type = $this->defaultColumnOptions[$optName]['type'];
+                }
 
                 switch($type) {
                     case 'boolean':
