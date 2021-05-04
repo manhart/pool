@@ -55,10 +55,15 @@ class GUI_Table extends GUI_Module implements JsonConfig
             'type' => 'boolean',
             'value' => false
         ],
-        'showFullscreen' => [
-            'attribute' => 'data-show-fullscreen',
+        'showExport' => [
+            'attribute' => 'data-show-export',
             'type' => 'boolean',
             'value' => false,
+        ],
+        'exportDataType' => [
+            'attribute' => 'data-export-data-type',
+            'type' => 'string',
+            'value' => 'basic',
         ],
         'showFullscreen' => [
             'attribute' => 'data-show-fullscreen',
