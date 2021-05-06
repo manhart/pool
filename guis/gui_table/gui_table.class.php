@@ -10,10 +10,21 @@
 class GUI_Table extends GUI_Module implements JsonConfig
 {
     protected array $defaultOptions = [
+        'moduleName' => [ // pool
+            'pool' => true,
+            'caption' => 'ModuleName',
+            'type' => 'string',
+            'value' => '',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
         'url' => [
             'attribute' => 'data-url',
             'type' => 'string',
-            'value' => null // undefined
+            'value' => null, // undefined
+            'element' => 'input',
+            'inputType' => 'text',
+            'caption' => 'Data Url'
         ],
         'classes' => [
             'attribute' => 'data-classes',
@@ -38,7 +49,10 @@ class GUI_Table extends GUI_Module implements JsonConfig
         'pagination' => [
             'attribute' => 'data-pagination',
             'type' => 'boolean',
-            'value' => false
+            'value' => false,
+            'caption' => 'Pagination',
+            'element' => 'input',
+            'inputType' => 'checkbox'
         ],
         'resizable' => [
             'attribute' => 'data-resizable',
@@ -48,7 +62,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
         'search' => [
             'attribute' => 'data-search',
             'type' => 'boolean',
-            'value' => false
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
         ],
         'showColumns' => [
             'attribute' => 'data-show-columns',
@@ -88,7 +104,10 @@ class GUI_Table extends GUI_Module implements JsonConfig
         'sortable' => [
             'attribute' => 'data-sortable',
             'type' => 'boolean',
-            'value' => true
+            'value' => true,
+            'caption' => 'Sortable',
+            'element' => 'input',
+            'inputType' => 'checkbox',
         ]
     ];
 
@@ -363,6 +382,27 @@ class GUI_Table extends GUI_Module implements JsonConfig
         return $this;
     }
 
+//    public function getDefaultOptions(): array
+//    {
+//        return $this->defaultOptions;
+//    }
+
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
+    public function getFullOptions(): array
+    {
+        $result = $this->defaultOptions;
+        $defaultColumnOptions = $this->defaultColumnOptions;
+        foreach($this->options as $key => $value) {
+            $result[$key]['value'] = $value;
+        }
+        return $result;
+    }
+
+
     public function setColumns(array $columns): GUI_Table
     {
         foreach($columns as $z => $column) {
@@ -417,6 +457,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
         if(isset($this->options['columns'])) {
             $this->columns = $this->options['columns'];
             $result = true;
+        }
+        if(isset($this->options['moduleName'])) {
+            $this->setName($this->options['moduleName']);
         }
         return $result;
     }
@@ -519,7 +562,8 @@ class GUI_Table extends GUI_Module implements JsonConfig
         foreach($this->options as $optName => $attrValue) {
 //            $inpValue = $this->Input->getVar($attrName);
 //            $attrValue = $inpValue ?? $attrValue;
-            $attrName = $this->defaultOptions[$optName]['attribute'];
+            $attrName = $this->defaultOptions[$optName]['attribute'] ?? null;
+            if($attrName == null) continue; // no data-attribute
             $attrType = $this->defaultOptions[$optName]['type'];
 
             if(is_bool($attrValue)) {
