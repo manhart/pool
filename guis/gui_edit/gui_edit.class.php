@@ -31,6 +31,7 @@
  **/
 class GUI_Edit extends GUI_InputElement
 {
+
     /**
      * Initialisiert Standardwerte:
      *

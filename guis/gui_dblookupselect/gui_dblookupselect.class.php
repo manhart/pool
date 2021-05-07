@@ -63,7 +63,7 @@ class GUI_DBLookupSelect extends GUI_Select
      **/
     function prepare ()
     {
-        $interfaces = & $this -> Weblication -> getInterfaces();
+        $interfaces = $this->Weblication->getInterfaces();
         $Input = & $this -> Input;
 
         $utf8 = $Input->getVar('utf8');
