@@ -1258,10 +1258,11 @@ class Weblication extends Component
     /**
      * Passt die Verzeichnisse der Bilder auf den Skin und/oder die Sprache an.
      *
+     * @deprecated don't use it anymore
      * @param string $content Inhalt eines Templates
      * @return string
      */
-    function adjustImageDir($content)
+    function adjustImageDir(string $content): string
     {
         $folderImages = 'skins/' . $this->skin;
         if (is_dir($folderImages . '/' . $this->language)) {
@@ -1276,19 +1277,20 @@ class Weblication extends Component
     }
 
     /**
-     * Fertigen Content (Inhalt) ausgeben.
+     * return finished HTML content
      *
      * @access public
      * @param boolean $print True gibt den Inhalt sofort auf den Bildschirm aus. False liefert den Inhalt zurueck
      * @param bool $minify simple minifier
-     * @return string Inhalt der Webseite
+     * @return string website content
      **/
-    public function finalizeContent($print = true, $minify = false)
+    public function finalizeContent(bool $print = true, bool $minify = false): string
     {
         if ($this->Main instanceof GUI_Module) {
             $content = $this->Main->finalizeContent();
 
-            $content = $this->adjustImageDir($content);
+            // AM, 04.05.2021, that's not the right way
+            // $content = $this->adjustImageDir($content);
 
             if ($minify) {
                 $content = $this->minify($content);
@@ -1304,6 +1306,7 @@ class Weblication extends Component
         else {
             $this->raiseError(__FILE__, __LINE__, 'Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
         }
+        return '';
     }
 
     /**

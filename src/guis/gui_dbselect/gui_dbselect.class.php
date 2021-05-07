@@ -62,7 +62,6 @@ class GUI_DBSelect extends GUI_Select
      **/
     function prepare ()
     {
-        $interfaces = & $this -> Weblication -> getInterfaces();
         $Input = & $this -> Input;
         $Subcode = Subcode::createSubcode('DataRecordSubcode', $this -> Owner);
         $Subcode -> import($Input);
