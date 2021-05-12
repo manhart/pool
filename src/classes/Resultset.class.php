@@ -395,7 +395,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param int $default
          * @return int
          */
-        public function getValueAsInt(string $key, $default=0): int
+        public function getValueAsInt(string $key, int $default=0): int
         {
             return (int)$this->getValue($key, $default);
         }
@@ -431,6 +431,59 @@ if(!defined('CLASS_RESULTSET')) {
                 return new \DateTime($value, $timezone);
             }
             return null;
+        }
+
+        /**
+         * Returns a value of a field of the current record as formatted date string
+         *
+         * @param string $key
+         * @param null $default
+         * @return string|null
+         * @throws Exception
+         */
+        public function getValueAsFormattedDate(string $key, $default=null): ?string
+        {
+            $DateTime = $this->getValueAsDateTime($key, $default);
+            if(is_null($DateTime)) return null;
+            $format = Weblication::getInstance()->getDefaultFormat('php.date');
+            return $DateTime->format($format);
+        }
+
+        /**
+         * Returns a value of a field of the current record as formatted date.time string
+         *
+         * @param string $key
+         * @param null $default
+         * @param bool $seconds
+         * @return string|null
+         * @throws Exception
+         */
+        public function getValueAsFormattedDateTime(string $key, $default=null, bool $seconds=true): ?string
+        {
+            $DateTime = $this->getValueAsDateTime($key, $default);
+            if(is_null($DateTime)) return null;
+            $format = Weblication::getInstance()->getDefaultFormat('php.date.time'.($seconds ? '.sec' : ''));
+            return $DateTime->format($format);
+        }
+
+        /**
+         * Returns a value of a field of the current record as formatted number
+         *
+         * @param string $key
+         * @param null $default
+         * @param null $decimals
+         * @see Weblication::setDefaultFormats()
+         * @return mixed|string
+         */
+        public function getValueAsNumber(string $key, $default=null, $decimals=null): ?string
+        {
+            $value = $this->getValue($key, $default);
+            if(is_null($value) == false) {
+                $number = Weblication::getInstance()->getDefaultFormat('number');
+                $value = number_format($value, $decimals ?? $number['decimals'], $number['decimal_separator'],
+                    $number['thousands_separator']);
+            }
+            return $value;
         }
 
         /**

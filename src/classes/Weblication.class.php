@@ -178,12 +178,18 @@ class Weblication extends Component
      * @var array all possible default formats
      */
     private array $formats = [
-        'time' => 'H:i',
-        'date' => 'd.m.Y',
-        'datetime' => 'd.m.Y H:i',
-        'time.strftime' => '%H:%M',
-        'date.strftime' => '%d.%m.%Y',
-        'datetime.strftime' => '%d.%m.%Y %H:%M',
+        'php.time' => 'H:i',
+        'php.date' => 'd.m.Y',
+        'php.sec' => 's',
+        'php.date.time' => 'd.m.Y H:i',
+        'php.date.time.sec' => 'd.m.Y H:i:s',
+        'strftime.time' => '%H:%M',
+        'strftime.date' => '%d.%m.%Y',
+        'strftime.date.time' => '%d.%m.%Y %H:%M',
+        'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S',
+        'moment.date' => 'DD.MM.YYYY',
+        'moment.date.time' => 'DD.MM.YYYY HH:mm',
+        'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss',
         'number' => [
             'decimals' => 2,
             'decimal_separator' => ',',
