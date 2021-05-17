@@ -54,7 +54,7 @@ class GUI_Table {
 
         this.formats['time'] = settings['time.strftime'];
         this.formats['date'] = settings['date.strftime'];
-        this.formats['datetime'] = settings['datetime.strftime'];
+        this.formats['date.time'] = settings['date.time.strftime'];
         this.formats['number'] = settings['number'];
 
         this.table = $('#'+this.moduleName)
@@ -107,7 +107,7 @@ class GUI_Table {
             //     column['formatter'] =
             // }
             switch(poolType) {
-                case 'datetime':
+                case 'date.time':
                 case 'date':
                 case 'time':
 
