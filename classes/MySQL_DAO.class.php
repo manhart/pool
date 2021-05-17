@@ -650,7 +650,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this -> raiseError(__FILE__, __LINE__, $error_msg);
                 die($error_msg);
             }
-            $sql = sprintf('update `%s` set %s where %s', $this -> table, substr($update, 0, -1), $where);
+            $sql = sprintf('update `%s` set %s where %s', $this->table, substr($update, 0, -1), $where);
             $MySQL_ResultSet = $this->__createMySQL_Resultset($sql);
             return $MySQL_ResultSet;
         }
