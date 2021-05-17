@@ -445,7 +445,7 @@ if(!defined('CLASS_RESULTSET')) {
         {
             $DateTime = $this->getValueAsDateTime($key, $default);
             if(is_null($DateTime)) return null;
-            $format = Weblication::getInstance()->getDefaultFormat('date');
+            $format = Weblication::getInstance()->getDefaultFormat('php.date');
             return $DateTime->format($format);
         }
 
@@ -462,7 +462,7 @@ if(!defined('CLASS_RESULTSET')) {
         {
             $DateTime = $this->getValueAsDateTime($key, $default);
             if(is_null($DateTime)) return null;
-            $format = Weblication::getInstance()->getDefaultFormat('date.time'.($seconds ? '.sec' : ''));
+            $format = Weblication::getInstance()->getDefaultFormat('php.date.time'.($seconds ? '.sec' : ''));
             return $DateTime->format($format);
         }
 
