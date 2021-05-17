@@ -152,7 +152,7 @@ class GUI_Table extends GUI_Module implements JsonConfig
                     'type' =>  'string',
                     'element' => 'select',
                     'value' => '',
-                    'options' => ['', 'datetime', 'number'],
+                    'options' => ['', 'date', 'time', 'date.time', 'number'],
                     'pool' => true,
                 ],
                 'radio' => [
@@ -533,9 +533,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
         $this->setOptions($data);
 
         // default time formats
-        $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('time.strftime');
-        $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('date.strftime');
-        $this->poolOptions['datetime.strftime'] = $this->poolOptions['datetime.strftime'] ?? $this->Weblication->getDefaultFormat('datetime.strftime');
+        $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.time');
+        $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date');
+        $this->poolOptions['date.time.strftime'] = $this->poolOptions['date.time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date.time');
         $this->poolOptions['number'] = $this->poolOptions['number'] ?? $this->Weblication->getDefaultFormat('number');
 
         if($this->Input->getVar('columns') != null) {
