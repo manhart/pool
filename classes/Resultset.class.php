@@ -424,10 +424,7 @@ if(!defined('CLASS_RESULTSET')) {
         public function getValueAsDateTime(string $key, $default=null, ?DateTimeZone $timezone=null): ?DateTime
         {
             $value = $this->getValue($key, $default);
-            if($value === '' or $value === '0000-00-00' or $value === '0000-00-00 00:00:00') {
-                return null;
-            }
-            if(is_null($value) == false) {
+            if(is_null($value) == false and $value !== '' and $value !== '0000-00-00' and $value !== '0000-00-00 00:00:00') {
                 if(strpos($value, '-') === false) {
                     $value = '@'.$value; // should be an unix timestamp (integer)
                 }
