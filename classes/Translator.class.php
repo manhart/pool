@@ -386,6 +386,30 @@ final class Translator extends \PoolObject
     }
 
     /**
+     * gets the weekday expression according to the weekday number (strftime('%w'))
+     *
+     * @param int $weekday 0-6 = Sunday - Saturday
+     * @return string
+     */
+    public function getWeekday(int $weekday): string
+    {
+        $translationKeys = [
+              0 => 'global.Sunday',
+              1 => 'global.Monday',
+              2 => 'global.Tuesday',
+              3 => 'global.Wednesday',
+              4 => 'global.Thursday',
+              5 => 'global.Friday',
+              6 => 'global.Saturday'
+        ];
+
+        if (isset($translationKeys[$weekday])) {
+            return $this->get($translationKeys[$weekday]);
+        }
+        return '';
+    }
+
+    /**
      * get translation
      *
      * @param string $key
