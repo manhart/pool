@@ -19,14 +19,16 @@
  * @link https://alexander-manhart.de
  */
 
-define('REQUEST_PARAM_MODULENAME', 'requestModule');
+const REQUEST_PARAM_MODULENAME = 'requestModule';
+const REQUEST_PARAM_MODULE = 'module';
+const REQUEST_PARAM_METHOD = 'method';
 
 /**
  * GUI_Module
  *
  * Basisklasse fuer alle graphischen Steuerelemente.
  *
- * @package rml
+ * @package pool
  * @author Alexander Manhart <alexander.manhart@freenet.de>
  * @version $Id: GUI_Module.class.php,v 1.7 2006/11/02 12:04:54 manhart Exp $
  * @access public
@@ -40,7 +42,7 @@ class GUI_Module extends Module
      * @access public
      * @see Template
      */
-    var $Template = null;
+    public Template $Template;
 
     /**
      * Merkt sich mit dieser Variable das eigene Muster im Template (dient der Identifikation)
@@ -107,18 +109,35 @@ class GUI_Module extends Module
     protected bool $plainJSON = false;
 
     /**
+     * Options for the module-inspector
+     *
+     * @var array|array[]
+     */
+    private array $defaultOptions = [
+        'moduleName' => [ // pool
+            'pool' => true,
+            'caption' => 'ModuleName',
+            'type' => 'string',
+            'value' => '',
+            'element' => 'input',
+            'inputType' => 'text'
+        ]
+    ];
+
+    /**
      * Konstruktor
      *
      * @param Component $Owner Besitzer vom Typ Component
      * @param boolean $autoLoadFiles Laedt automatisch Templates und sucht darin GUIs
      * @param array $params additional parameters
+     * @throws ReflectionException
      */
-    function __construct(&$Owner, $autoLoadFiles = true, array $params = [])
+    function __construct(&$Owner, bool $autoLoadFiles = true, array $params = [])
     {
         parent::__construct($Owner, $params);
 
         if (isAjax()) {
-            if (isset($_REQUEST['module']) and strtolower($this->getClassName()) == strtolower($_REQUEST['module'])) {
+            if (isset($_REQUEST[REQUEST_PARAM_MODULE]) and $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE]) {
                 $this->isMyXMLHttpRequest = true;
 
                 // eventl. genauer definiert, welches Modul, falls es mehrere des gleichen Typs/Klasse gibt
@@ -137,8 +156,8 @@ class GUI_Module extends Module
                 }
             }
 
-            if ($this->isMyXMLHttpRequest and isset($_REQUEST['method'])) {
-                $this->XMLHttpRequestMethod = $_REQUEST['method'];
+            if ($this->isMyXMLHttpRequest and isset($_REQUEST[REQUEST_PARAM_METHOD])) {
+                $this->XMLHttpRequestMethod = $_REQUEST[REQUEST_PARAM_METHOD];
             }
         }
         /*			$this->isMyXMLHttpRequest = (isAjax() and ((isset($_REQUEST['module']) and
@@ -162,7 +181,7 @@ class GUI_Module extends Module
      * @access public
      * @param boolean $search True sucht nach weiteren GUIs
      **/
-    function autoLoadFiles($search = true)
+    function autoLoadFiles(bool $search = true)
     {
         if ($this->AutoLoadFiles) {
             // Lade Templates
@@ -603,9 +622,9 @@ class GUI_Module extends Module
         $content = '';
         $this->finalizeChilds();
         if ($this->enabled) {
-            if ($this->isMyXMLHttpRequest && isset($_REQUEST['method'])) {
+            if ($this->isMyXMLHttpRequest && isset($_REQUEST[REQUEST_PARAM_METHOD])) {
                 // dispatch Ajax Call only for ONE GUI -> returns JSON
-                $content = $this->finalizeMethod($_REQUEST['method']);
+                $content = $this->finalizeMethod($_REQUEST[REQUEST_PARAM_METHOD]);
                 // hier wird abgebrochen, pool wurde bis zu dieser instanz durchlaufen
                 if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
                     $this->takeMeAlone = true; // dieses GUI wirft ganz alleine den Inhalt von finalizeMethod zur�ck
