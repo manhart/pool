@@ -113,7 +113,7 @@ class GUI_Module extends Module
      *
      * @var array|array[]
      */
-    private array $defaultOptions = [
+    private array $inspectorProperties = [
         'moduleName' => [ // pool
             'pool' => true,
             'caption' => 'ModuleName',
@@ -123,6 +123,8 @@ class GUI_Module extends Module
             'inputType' => 'text'
         ]
     ];
+
+    protected array $configuration = [];
 
     /**
      * Konstruktor
@@ -135,6 +137,9 @@ class GUI_Module extends Module
     function __construct(&$Owner, bool $autoLoadFiles = true, array $params = [])
     {
         parent::__construct($Owner, $params);
+
+        // set default moduleName
+        $this->inspectorProperties['moduleName']['value'] = $this->getName();
 
         if (isAjax()) {
             if (isset($_REQUEST[REQUEST_PARAM_MODULE]) and $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE]) {
@@ -174,6 +179,44 @@ class GUI_Module extends Module
         $this->Template = new Template();
         $this->AutoLoadFiles = $autoLoadFiles;
     }
+
+    /**
+     * provides all properties for the Inspector module
+     *
+     * @return array|array[]
+     */
+    public function getInspectorProperties(): array
+    {
+        return $this->inspectorProperties;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfiguration(): array
+    {
+        return $this->configuration;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfigurationAsJSON(): string
+    {
+        return json_encode($this->configuration);
+    }
+
+    /**
+     * @return array|array[]
+     */
+//    public function getInspectorValues(): array
+//    {
+//        $result = $this->getInspectorProperties();
+//        foreach($this->options as $key => $value) {
+//            $result[$key]['value'] = $value;
+//        }
+//        return $result;
+//    }
 
     /**
      * Das Template Objekt laedt HTML Vorlagen.
