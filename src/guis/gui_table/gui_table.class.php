@@ -10,14 +10,14 @@
 class GUI_Table extends GUI_Module implements JsonConfig
 {
     private array $defaultOptions = [
-        'moduleName' => [ // pool
-            'pool' => true,
-            'caption' => 'ModuleName',
-            'type' => 'string',
-            'value' => '',
-            'element' => 'input',
-            'inputType' => 'text'
-        ],
+//        'moduleName' => [ // pool
+//            'pool' => true,
+//            'caption' => 'ModuleName',
+//            'type' => 'string',
+//            'value' => '',
+//            'element' => 'input',
+//            'inputType' => 'text'
+//        ],
         'url' => [
             'attribute' => 'data-url',
             'type' => 'string',
@@ -152,7 +152,7 @@ class GUI_Table extends GUI_Module implements JsonConfig
                     'type' =>  'string',
                     'element' => 'select',
                     'value' => '',
-                    'options' => ['', 'datetime', 'number'],
+                    'options' => ['', 'date', 'time', 'date.time', 'number'],
                     'pool' => true,
                 ],
                 'radio' => [
@@ -372,6 +372,8 @@ class GUI_Table extends GUI_Module implements JsonConfig
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
         parent::init($superglobals);
+
+//        $this->defaultOptions['moduleName']['value'] = $this->getName();
     }
 
     /**
@@ -418,7 +420,7 @@ class GUI_Table extends GUI_Module implements JsonConfig
 
     public function getDefaultOptions(): array
     {
-        return $this->defaultOptions;
+        return $this->defaultOptions + parent::getDefaultOptions();
     }
 
     public function getDefaultColumnOptions(): array
@@ -505,7 +507,7 @@ class GUI_Table extends GUI_Module implements JsonConfig
         return $result;
     }
 
-    public function getConfig(): string
+    public function getConfigurationAsJSON(): string
     {
         $options = $this->options + ['columns' => $this->columns];
         $data = [
@@ -531,9 +533,9 @@ class GUI_Table extends GUI_Module implements JsonConfig
         $this->setOptions($data);
 
         // default time formats
-        $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('time.strftime');
-        $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('date.strftime');
-        $this->poolOptions['datetime.strftime'] = $this->poolOptions['datetime.strftime'] ?? $this->Weblication->getDefaultFormat('datetime.strftime');
+        $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.time');
+        $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date');
+        $this->poolOptions['date.time.strftime'] = $this->poolOptions['date.time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date.time');
         $this->poolOptions['number'] = $this->poolOptions['number'] ?? $this->Weblication->getDefaultFormat('number');
 
         if($this->Input->getVar('columns') != null) {
@@ -590,6 +592,11 @@ class GUI_Table extends GUI_Module implements JsonConfig
      */
     public function prepare()
     {
+        $file = $this->getFixedParam('loadConfigFromJSON');
+        if($file) {
+            $this->loadConfigFromJSON($file);
+        }
+
         $this->poolOptions['moduleName'] = $this->getName();
 
         $this->Template->setVar([
@@ -672,6 +679,12 @@ class GUI_Table extends GUI_Module implements JsonConfig
         }
         $this->Template->setVar('render', $js_render);
         parent::prepare();
+    }
+
+    public function loadConfigFromJSON($file)
+    {
+        $json = file_get_contents($file);
+        $this->loadConfig($json);
     }
 
     /**

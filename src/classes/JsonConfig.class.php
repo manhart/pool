@@ -9,5 +9,5 @@
 
 interface JsonConfig {
     public function loadConfig(string $json): bool;
-    public function getConfig(): string;
+    public function getConfigurationAsJSON(): string;
 }
