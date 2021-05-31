@@ -147,9 +147,9 @@ if (!defined('MYSQLi_LAYER')) {
         var $port = 3306;
 
         /**
-         * @var array|null
+         * @var array|callable|null
          */
-        private ?array $onFetchingRow = null;
+        private $onFetchingRow = null;
 
         /**
          * Constructor
