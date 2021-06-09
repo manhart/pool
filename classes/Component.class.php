@@ -156,15 +156,16 @@
              * Vor dem Setzen wird der Name noch validiert.
              * Existiert der Name bereits, wird false zurueck gegeben.
              *
-             * @access public
-             * @param string $new_name Neuer Name f�r die Komponente
+             * @param string $new_name new name for component
              * @return Component
              */
-            function setName($new_name)
-			{
-				if ($this->validateName($new_name)) {
-				    $this->Name = $new_name;
-				}
+            public function setName(string $new_name): Component
+            {
+			    if($this->Name != $new_name) {
+                    if ($this->validateName($new_name)) {
+                        $this->Name = $new_name;
+                    }
+                }
 				return $this;
 			}
 
@@ -174,8 +175,8 @@
 			 * @access public
 			 * @return string Name der Komponente
 			 */
-			function getName()
-			{
+			public function getName(): string
+            {
 				return $this->Name;
 			}
 
