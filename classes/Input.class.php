@@ -242,7 +242,7 @@ class Input extends PoolObject
     * @param mixed|null $default return default value, if key is not set
     * @return string Wert der Variable oder NULL, wenn die Variable nicht existiert
     */
-    function getVar($key, $default=null)
+    function getVar(string $key, $default=null)
     {
         return $this->Vars[$key] ?? $default;
     }
