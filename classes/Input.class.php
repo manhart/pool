@@ -138,6 +138,16 @@ class Input extends PoolObject
     }
 
     /**
+     * returns number of variables
+     *
+     * @return int
+     */
+    public function count(): int
+    {
+        return count($this->Vars);
+    }
+
+    /**
     * Enternt das Escape Zeichen \ (Backslash).
     *
     * @access public
@@ -461,6 +471,7 @@ class Input extends PoolObject
      *
      * @param string $delimiter Trenner
      * @return string
+     * @deprecated
      */
     function getValuesAsString($delimiter)
     {
@@ -608,7 +619,7 @@ class Input extends PoolObject
     * @param string $params Siehe oben Beschreibung
     * @param boolean $translate_specialchars Konvertiert HTML-Code (besondere Zeichen) in standardmaessigen Zeichensatz.
     */
-    function setParams($params, $translate_specialchars = true)
+    function setParams(string $params, bool $translate_specialchars = true)
     {
         $params = ltrim($params);
         if (strlen($params) > 0) {
@@ -657,30 +668,28 @@ class Input extends PoolObject
     }
 
     /**
-     * Fuehrt die Variablen Container von zwei Input Objekten zusammen, ueberspringt dabei aber leere und nicht gesetzte Variablen (unset)!
+     * Merges variables into their own container (Vars). But only if they are not yet set.
      *
-     * @access public
-     * @param object $inp Erwartet ein Objekt vom Typ Input
-     **/
-    function mergeVarsSkipEmpty($inp)
+     * @param Input $Input
+     */
+    public function mergeVarsIfNotSet(Input $Input): void
     {
-        $keys = array_keys($inp->Vars);
+        if($Input->count() == 0) return;
+        $keys = array_keys($Input->Vars);
         $c = count($keys);
         for($i=0; $i < $c; $i++) {
-            if (!isset($this->Vars[$keys[$i]]) /*or is_null($this -> Vars[$keys[$i]])*/) {
-                $this->setVar($keys[$i], $inp->Vars[$keys[$i]]);
+            if (!isset($this->Vars[$keys[$i]])) {
+                $this->setVar($keys[$i], $Input->Vars[$keys[$i]]);
             }
         }
     }
 
     /**
-    * Loescht den kompletten internen Variablen Container.
-    *
-    * @access public
+    * resets the variable container
     */
-    function clear()
+    public function clear()
     {
-        $this->Vars = Array();
+        $this->Vars = [];
     }
 
     /**
