@@ -61,7 +61,7 @@ if(!defined('CLASS_MODULE')) {
          * @var Input $Defaults
          * @access public
          */
-        var $Defaults=null;
+        protected Input $Defaults;
 
         /**
          * Superglobals. Alle Parameter-/Variablen�bergaben, sei es �ber Url (Get) oder Formular (Post) werden im Objekt Input festgehalten. Fehlen wichtige Parameter�bergaben, werden diese durch vorhandene Standardwerte ausgeglichen.
@@ -128,21 +128,21 @@ if(!defined('CLASS_MODULE')) {
         }
 
         /**
-         * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
+         * provides the Input Container for the Defaults
          *
-         * @access public
-         **/
-        function mergeDefaults()
+         * @return Input
+         */
+        public function getDefaults(): Input
         {
-            if ($this->Input instanceof Input) {
-                if (count($this->Defaults->Vars) > 0) {
-                    return $this->Input->mergeVarsSkipEmpty($this->Defaults);
-                }
-            }
-            else {
-                // ERROR init wurde nicht aufgerufen
-            }
-            return false;
+            return $this->Defaults;
+        }
+
+        /**
+         * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
+         **/
+        private function mergeDefaults(): void
+        {
+            $this->Input->mergeVarsIfNotSet($this->getDefaults());
         }
 
         /**
@@ -178,7 +178,7 @@ if(!defined('CLASS_MODULE')) {
          * @param array $params Im Format: key=value&key2=value2&
          * @return bool Erfolgsstatus
          **/
-        function importParams(array $params)
+        function importParams(array $params): bool
         {
             if (!$this->Input instanceof Input) {
                 return false;
@@ -197,10 +197,12 @@ if(!defined('CLASS_MODULE')) {
             if ($moduleName != null) {
                 $this->setName($moduleName);
             }
-            $disabled = $this->Input->getVar('ModuleDisabled');
-            if ($disabled == 1) {
-                $this->disable();
-            }
+
+            // @deprecated
+            // $disabled = $this->Input->getVar('ModuleDisabled');
+            // if ($disabled == 1) {
+            //   $this->disable();
+            // }
             return true;
         }
 
