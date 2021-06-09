@@ -186,14 +186,15 @@ if(!defined('CLASS_MODULE')) {
 
             $this->Input->setVar($params);
 
-            // set Component Name, if set by param.
+
+            // set Component Name, if set by param
             $moduleName = $this->Input->getVar('moduleName');
-            if ($moduleName == null) {
-                $moduleName = $this->Input->getVar('modulename');
-                if($moduleName == null) {
-                    $moduleName = $this->Input->getVar('ModuleName');
-                }
+
+            // old crime / delict. Should be removed! @deprecated
+            if(($otherFixedName = $this->getFixedParam('modulename')) != null) {
+                $moduleName = $otherFixedName;
             }
+
             if ($moduleName != null) {
                 $this->setName($moduleName);
             }
