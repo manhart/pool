@@ -29,7 +29,7 @@ class GUI_Table {
     options = {};
     columns = [];
 
-    poolColumnOptions = {}; // poolOptions
+    // poolColumnOptions = {}; // poolOptions
 
     /**
      * Defaults
@@ -47,10 +47,10 @@ class GUI_Table {
         }
 
         // automation
-        if('poolColumnOptions' in settings) {
-            this.poolColumnOptions = settings['poolColumnOptions'];
-            delete settings['poolColumnOptions'];
-        }
+        // if('poolColumnOptions' in settings) {
+        //     this.poolColumnOptions = settings['poolColumnOptions'];
+        //     delete settings['poolColumnOptions'];
+        // }
 
         this.formats['time'] = settings['time.strftime'];
         this.formats['date'] = settings['date.strftime'];
@@ -87,21 +87,35 @@ class GUI_Table {
     {
         columns.forEach((column, z) => {
             let field = ('field' in column) ? column['field'] : z;
-            if(!(field in this.poolColumnOptions)) {
+            // if(!(field in this.poolColumnOptions)) {
+            //     return;
+            // }
+
+            if(!('poolType' in column)) {
                 return;
             }
 
             // automation for special poolType's
-            let poolType = '';
-            if('poolType' in this.poolColumnOptions[field]) {
-                poolType = this.poolColumnOptions[field]['poolType'];
-            }
+            // let poolType = '';
+            // if('poolType' in this.poolColumnOptions[field]) {
+            //     poolType = this.poolColumnOptions[field]['poolType'];
+            // }
+            // let poolFormat = '';
+            // if('poolFormat' in this.poolColumnOptions[field]) {
+            //     poolFormat = this.poolColumnOptions[field]['poolFormat']
+            // }
+            let poolType = column['poolType'];
+            // if('poolType' in column) {
+            //     poolType = column['poolType'];
+            // }
+
             let poolFormat = '';
-            if('poolFormat' in this.poolColumnOptions[field]) {
-                poolFormat = this.poolColumnOptions[field]['poolFormat']
+            if('poolFormat' in column) {
+                poolFormat = column['poolFormat']
             }
 
             let format = poolFormat ? poolFormat : this.formats[poolType];
+            console.debug(field, poolType, format);
 
             // if('formatter' in column) {
             //     column['formatter'] =
