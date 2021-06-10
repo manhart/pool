@@ -172,19 +172,18 @@ if(!defined('CLASS_MODULE')) {
          * - ModuleName: setzt den Komponentennamen
          * - ModuleDisabled: deaktiviert das Modul
          *
-         * @access public
          * @see Component::setName()
          * @see Module::disable()
          * @param array $params Im Format: key=value&key2=value2&
          * @return bool Erfolgsstatus
          **/
-        function importParams(array $params): bool
+        public function importParams(array $params): bool
         {
             if (!$this->Input instanceof Input) {
                 return false;
             }
 
-            $this->Input->setVar($params);
+            $this->setVar($params);
 
 
             // set Component Name, if set by param
@@ -288,12 +287,12 @@ if(!defined('CLASS_MODULE')) {
         }
 
         /**
-         * Setzt eine Variable in den Container Input
+         * puts variables into the Input container
          *
-         * @param string $key
+         * @param string|array $key
          * @param mixed $value
          */
-        function setVar($key, $value='')
+        public function setVar($key, $value='')
         {
             $this->Input->setVar($key, $value);
         }
@@ -304,7 +303,7 @@ if(!defined('CLASS_MODULE')) {
          * @param string $key
          * @return mixed
          */
-        function getVar($key)
+        public function getVar(string $key)
         {
             return $this->Input->getVar($key);
         }
