@@ -199,55 +199,59 @@ class GUI_Module extends Module
     }
 
     /**
+     * @param array $configuration
+     * @param array $properties
+     * @return array
+     */
+    public function optimizeConfiguration(array $configuration, array $properties): array
+    {
+        $config = [];
+        foreach($configuration as $key => $value) {
+            if(isset($properties[$key])) {
+                $property = $properties[$key];
+                $type = $property['type'] ?? '';
+                switch($type) {
+                    case 'boolean':
+                        if(is_string($value)) {
+                            $value = string2bool($value);
+                        }
+                        break;
+                }
+
+                //                $isPoolOption = $this->getInspectorProperties()[$key]['pool'] ?? false; // serverside only
+                $defaultValue = $property['value'] ?? '';
+                if($defaultValue != $value) {
+                    $config[$key] = $value;
+                }
+
+                if(isset($property['properties']) and is_array($property['properties']) and is_array($configuration[$key])) {
+                    foreach($configuration[$key] as $z => $sub_configuration) {
+                        $config[$key][$z] = $this->optimizeConfiguration($sub_configuration, $property['properties']);
+                    }
+                }
+
+            }
+            //            else {
+            //                $this->poolOptions[$key] = $value;
+            //            }
+        }
+        return $config;
+    }
+
+    /**
      * set configuration for module (it only takes different values)
      *
      * @param array $configuration
      */
     public function setConfiguration(array $configuration)
     {
-        $inspectorProperties = $this->getInspectorProperties();
-
-        $takeDifferentParams = function ($properties, $configuration) use (&$takeDifferentParams) {
-            $config = [];
-            foreach($configuration as $key => $value) {
-                if(isset($properties[$key])) {
-                    $property = $properties[$key];
-                    $type = $property['type'] ?? '';
-                    switch($type) {
-                        case 'boolean':
-                            if(is_string($value)) {
-                                $value = string2bool($value);
-                            }
-                            break;
-                    }
-
-                    //                $isPoolOption = $this->getInspectorProperties()[$key]['pool'] ?? false; // serverside only
-                    $defaultValue = $property['value'] ?? '';
-                    if($defaultValue != $value) {
-                        $config[$key] = $value;
-                    }
-
-                    if(isset($property['properties']) and is_array($property['properties']) and is_array($configuration[$key])) {
-                        //                    $this->setConfiguration()
-                        foreach($configuration[$key] as $z => $attributes) {
-                            $config[$key][$z] = $takeDifferentParams($property['properties'], $attributes);
-                        }
-                    }
-
-                }
-                //            else {
-                //                $this->poolOptions[$key] = $value;
-                //            }
-            }
-            return $config;
-        };
-        $this->configuration = $takeDifferentParams($inspectorProperties, $configuration);
+        $this->configuration = $this->optimizeConfiguration($configuration, $this->getInspectorProperties());
 
         if(isset($this->configuration['moduleName'])) {
             $this->setName($this->configuration['moduleName']);
         }
 
-        $this->setVar($this->configuration);
+        $this->Input->setVar($this->configuration);
     }
 
     /**
