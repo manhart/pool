@@ -100,6 +100,9 @@ class GUI_CustomFrame extends GUI_Module
      */
     var $preventDefaultHeaderdata = false;
 
+    private array $scriptAtTheEnd = [];
+    private array $scriptWhenReady = [];
+
     /**
      * Konstruktor: erzeugt das GUI_Headerdata Object
      *
@@ -171,7 +174,7 @@ class GUI_CustomFrame extends GUI_Module
     function addBodyLoad($func)
     {
         if (!in_array($func, $this -> DoLoad)) {
-            $this -> DoLoad[] = $func;
+            $this->DoLoad[] = $func;
         }
     }
 
@@ -282,6 +285,16 @@ class GUI_CustomFrame extends GUI_Module
         }
     }
 
+    public function addScriptAtTheEnd(string $function)
+    {
+        $this->scriptAtTheEnd[] = $function;
+    }
+
+    public function addScriptWhenReady(string $function)
+    {
+        $this->scriptWhenReady[] = $function;
+    }
+
     /**
      * Laden der Default Einstellungen.
      *
@@ -314,8 +327,8 @@ class GUI_CustomFrame extends GUI_Module
             $header_name = $this->Headerdata->getName();
         }
 
-        $doload = (count($this -> DoLoad) > 0 and is_array($this -> DoLoad)) ? implode(';', $this -> DoLoad) : '';
-        $dounload = (count($this -> DoUnload) > 0 and is_array($this -> DoUnload)) ? implode(';', $this -> DoUnload) : '';
+        $onLoad = count($this->DoLoad) ? implode(';', $this->DoLoad) : '';
+        $onUnload = count($this->DoUnload) ? implode(';', $this -> DoUnload) : '';
         $domouseover = (count($this -> DoMouseover) > 0 and is_array($this -> DoMouseover)) ? implode(';', $this -> DoMouseover) : '';
         $domousemove = (count($this -> DoMousemove) > 0 and is_array($this -> DoMousemove)) ? implode(';', $this -> DoMousemove) : '';
         $domouseout = (count($this -> DoMouseout) > 0 and is_array($this -> DoMouseout)) ? implode(';', $this -> DoMouseout) : '';
@@ -323,9 +336,14 @@ class GUI_CustomFrame extends GUI_Module
         $domouseup = (count($this -> DoMouseup) > 0 and is_array($this -> DoMouseup)) ? implode(';', $this -> DoMouseup) : '';
         $dokeydown = (count($this->DoKeydown) > 0) ? implode(';', $this -> DoKeydown) : '';
         $dokeypress = (count($this->DoKeypress) > 0) ? implode(';', $this->DoKeypress) : '';
+        $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
+        $scriptWhenReady = count($this->scriptWhenReady) ? implode(';', $this->scriptWhenReady) : '';
 
-        $content = str_replace('{DOLOAD}', $doload, $content);
-        $content = str_replace('{DOUNLOAD}', $dounload, $content);
+        $content = str_replace(
+            ['{DOLOAD}', '{DOUNLOAD}', '{ScriptWhenReady}', '{ScriptAtTheEnd}'],
+            [$onLoad, $onUnload, $scriptWhenReady, $scriptAtTheEnd],
+            $content
+        );
         $content = str_replace('{DOMOUSEOVER}', $domouseover, $content);
         $content = str_replace('{DOMOUSEMOVE}', $domousemove, $content);
         $content = str_replace('{DOMOUSEOUT}', $domouseout, $content);
