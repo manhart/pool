@@ -270,9 +270,9 @@ class Input extends PoolObject
     *
     * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $value Wert der Variable
+    * @param mixed $value Wert der Variable
     */
-    function setVar($key, $value = '')
+    public function setVar($key, $value = '')
     {
 //			if (!is_array($key)) {
         if((array)$key !== $key) { // 20.05.2015, AM, is_array ist langsamer als den Datentyp zu casten und auf exakte Gleichheit zu ueberpruefen
@@ -400,7 +400,7 @@ class Input extends PoolObject
     function getDecryptedVar($name, $securekey)
     {
         // Call Xor Algo.
-        $decoded_data = base64_decode($this -> getVar($name));
+        $decoded_data = base64_decode($this->getVar($name));
         $decrypted_data = $this -> xorEnDecryption($decoded_data, $securekey);
         return $decrypted_data;
     }
@@ -600,7 +600,7 @@ class Input extends PoolObject
     {
         $output = '';
         if (!empty($key)) {
-            $output = pray ($this -> getVar($key));
+            $output = pray ($this->getVar($key));
         }
         else {
             $output = pray($this -> Vars);
@@ -632,7 +632,8 @@ class Input extends PoolObject
 
             $arrParams = preg_split('/(?<!\\\)&/', $params);
             //$arrParams = explode('&', $params);
-            for ($i=0; $i < count($arrParams); $i++) {
+            $numParams = count($arrParams);
+            for ($i=0; $i < $numParams; $i++) {
                 $arrParams[$i] = str_replace('\&', '&', $arrParams[$i]);
                 $param = preg_split('/(?<!\\\)=/', $arrParams[$i]); // explode('=', $arrParams[$i]);
                 $param = str_replace('\=', '=', $param);
@@ -991,9 +992,9 @@ class ISession extends Input
     *
     * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
-    * @param mixed $value Wert der Variable
+    * @param string $value Wert der Variable
     */
-    function setVar($key, $value=0)
+    public function setVar($key, $value = '')
     {
         $this->start();
         parent::setVar($key, $value);
