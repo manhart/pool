@@ -734,6 +734,7 @@ class GUI_Table extends GUI_Module
      */
     public function provision()
     {
+        parent::provision();
 //        $data = $this->Input->getData();
 //        unset(
 //            $data['moduleName'],
@@ -813,6 +814,13 @@ class GUI_Table extends GUI_Module
                         $type = $this->getColumnsProperties()[$optName]['type'];
                     }
 
+                    // translate title
+                    if($optName == 'title') {
+                        if(strpos($attrValue, '.') !== false) {
+                            $attrValue = $this->Weblication->getTranslator()->get($attrValue) ?: $attrValue;
+                        }
+                    }
+
                     switch ($type) {
                         case 'boolean':
                             $attrValue = bool2string($attrValue);
@@ -824,6 +832,8 @@ class GUI_Table extends GUI_Module
                         default:
                             $attrValue = '\'' . $attrValue . '\'';
                     }
+
+
                     $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
                     $ColumnAttributeBlock->setVar([
                         'key' => $optName,
