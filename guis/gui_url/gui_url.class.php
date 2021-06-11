@@ -16,16 +16,15 @@
 /**
  * GUI_Url
  *
- * Klasse zum Erstellen von graphischen Boxen (z.B. News-Boxen, Bl�cke, Container).
+ * Fast way to render a URL in.
  *
- * @package rml
- * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @package pool
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @version $Id: gui_url.class.php,v 1.4 2007/05/31 14:34:40 manhart Exp $
- * @access public
  **/
 class GUI_Url extends GUI_Module
 {
-    var $returnValue = '';
+    private string $returnValue = '';
 
     public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
@@ -55,7 +54,8 @@ class GUI_Url extends GUI_Module
      **/
     function prepare()
     {
-        $Url = new Url($this->Input->getVar('empty') ? I_GET : 0);
+        $empty = (int)$this->Input->getVar('empty');
+        $Url = new Url($empty ? I_EMPTY : I_GET);
 
         $script = trim($this->Input->getVar('script'));
         if ($script != '') {
@@ -68,8 +68,8 @@ class GUI_Url extends GUI_Module
             foreach ($pieces as $piece) {
                 $param = explode(':', $piece);
                 $key = $param[0];
-                $value = isset($param[1]) ? $param[1] : null;
-                $Url -> modifyParam($key, $value);
+                $value = $param[1] ?? null;
+                $Url->setParam($key, $value);
             }
         }
 
@@ -78,7 +78,7 @@ class GUI_Url extends GUI_Module
             $IGet = new Input(I_GET);
             $passthrough = explode(';', $passthrough);
             foreach($passthrough as $param) {
-                $Url -> modifyParam($param, $IGet -> getVar($param));
+                $Url->setParam($param, $IGet -> getVar($param));
             }
             unset($IGet);
         }
@@ -86,11 +86,11 @@ class GUI_Url extends GUI_Module
         if ($eliminate != '') {
             $eliminate = explode(';', $eliminate);
             foreach ($eliminate as $param) {
-                $Url -> modifyParam($param, NULL);
+                $Url->setParam($param, NULL);
             }
         }
 
-        $this->returnValue = $Url -> getUrl();
+        $this->returnValue = $Url->getUrl();
     }
 
     /**
