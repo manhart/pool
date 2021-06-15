@@ -365,8 +365,6 @@ if(!defined('CLASS_POOLOBJECT')) {
          */
         function destroy()
         {
-            unset($this->new_line);
-            unset($this->isDebugMode);
         }
     }
 
