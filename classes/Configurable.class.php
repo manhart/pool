@@ -12,6 +12,7 @@ namespace pool\classes;
 
 trait Configurable {
     protected array $configurationKeys = [];
+    protected string $storageEngine = '';
     public function getStorageEngine(): string
     {
         return $this->storageEngine;
