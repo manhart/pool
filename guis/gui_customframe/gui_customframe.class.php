@@ -101,6 +101,7 @@ class GUI_CustomFrame extends GUI_Module
     var $preventDefaultHeaderdata = false;
 
     private array $scriptAtTheEnd = [];
+    private array $scriptFilesAtTheEnd = [];
     private array $scriptWhenReady = [];
 
     /**
@@ -285,14 +286,35 @@ class GUI_CustomFrame extends GUI_Module
         }
     }
 
-    public function addScriptAtTheEnd(string $function)
+    /**
+     * Add a javascript file at the end of the body
+     *
+     * @param string $jsFile
+     * @param null $position (not yet implemented, should control position)
+     */
+    public function addScriptFileAtTheEnd(string $jsFile, $position=null)
     {
-        $this->scriptAtTheEnd[] = $function;
+        array_unshift($this->scriptFilesAtTheEnd, $jsFile);
     }
 
+    /**
+     * Add javascript or a javascript function at the end of the body
+     *
+     * @param string $function
+     */
+    public function addScriptAtTheEnd(string $function)
+    {
+        array_unshift($this->scriptAtTheEnd, $function);
+    }
+
+    /**
+     * Add javascript or a javascript function at the end of the body and call it when DOM is loaded/ready
+     *
+     * @param string $function
+     */
     public function addScriptWhenReady(string $function)
     {
-        $this->scriptWhenReady[] = $function;
+        array_unshift($this->scriptWhenReady, $function);
     }
 
     /**
@@ -337,11 +359,17 @@ class GUI_CustomFrame extends GUI_Module
         $dokeydown = (count($this->DoKeydown) > 0) ? implode(';', $this -> DoKeydown) : '';
         $dokeypress = (count($this->DoKeypress) > 0) ? implode(';', $this->DoKeypress) : '';
         $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
+        $scriptFilesAtTheEnd = '';
+        if(count($this->scriptFilesAtTheEnd)) {
+            foreach($this->scriptFilesAtTheEnd as $scriptFile) {
+                $scriptFilesAtTheEnd .= '<script src="' . $scriptFile . '"></script>'.chr(10);
+            }
+        }
         $scriptWhenReady = count($this->scriptWhenReady) ? implode(';', $this->scriptWhenReady) : '';
 
         $content = str_replace(
-            ['{DOLOAD}', '{DOUNLOAD}', '{ScriptWhenReady}', '{ScriptAtTheEnd}'],
-            [$onLoad, $onUnload, $scriptWhenReady, $scriptAtTheEnd],
+            ['{DOLOAD}', '{DOUNLOAD}', '{ScriptWhenReady}', '{ScriptAtTheEnd}', '{ScriptFilesAtTheEnd}'],
+            [$onLoad, $onUnload, $scriptWhenReady, $scriptAtTheEnd, $scriptFilesAtTheEnd],
             $content
         );
         $content = str_replace('{DOMOUSEOVER}', $domouseover, $content);
