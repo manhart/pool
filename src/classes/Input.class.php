@@ -138,6 +138,15 @@ class Input extends PoolObject
     }
 
     /**
+     * returns number of variables
+     *
+     * @return int
+     */
+    public function count(): int
+    {
+        return count($this->Vars);
+    }
+    /**
     * Enternt das Escape Zeichen \ (Backslash).
     *
     * @access public
@@ -232,7 +241,7 @@ class Input extends PoolObject
     * @param mixed|null $default return default value, if key is not set
     * @return string Wert der Variable oder NULL, wenn die Variable nicht existiert
     */
-    function getVar($key, $default=null)
+    function getVar(string $key, $default=null)
     {
         return $this->Vars[$key] ?? $default;
     }
@@ -260,9 +269,9 @@ class Input extends PoolObject
     *
     * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $value Wert der Variable
+    * @param mixed $value Wert der Variable
     */
-    function setVar($key, $value = '')
+    public function setVar($key, $value = '')
     {
 //			if (!is_array($key)) {
         if((array)$key !== $key) { // 20.05.2015, AM, is_array ist langsamer als den Datentyp zu casten und auf exakte Gleichheit zu ueberpruefen
@@ -390,7 +399,7 @@ class Input extends PoolObject
     function getDecryptedVar($name, $securekey)
     {
         // Call Xor Algo.
-        $decoded_data = base64_decode($this -> getVar($name));
+        $decoded_data = base64_decode($this->getVar($name));
         $decrypted_data = $this -> xorEnDecryption($decoded_data, $securekey);
         return $decrypted_data;
     }
@@ -461,6 +470,7 @@ class Input extends PoolObject
      *
      * @param string $delimiter Trenner
      * @return string
+     * @deprecated
      */
     function getValuesAsString($delimiter)
     {
@@ -589,7 +599,7 @@ class Input extends PoolObject
     {
         $output = '';
         if (!empty($key)) {
-            $output = pray ($this -> getVar($key));
+            $output = pray ($this->getVar($key));
         }
         else {
             $output = pray($this -> Vars);
@@ -608,7 +618,7 @@ class Input extends PoolObject
     * @param string $params Siehe oben Beschreibung
     * @param boolean $translate_specialchars Konvertiert HTML-Code (besondere Zeichen) in standardmaessigen Zeichensatz.
     */
-    function setParams($params, $translate_specialchars = true)
+    function setParams(string $params, bool $translate_specialchars = true)
     {
         $params = ltrim($params);
         if (strlen($params) > 0) {
@@ -621,7 +631,8 @@ class Input extends PoolObject
 
             $arrParams = preg_split('/(?<!\\\)&/', $params);
             //$arrParams = explode('&', $params);
-            for ($i=0; $i < count($arrParams); $i++) {
+            $numParams = count($arrParams);
+            for ($i=0; $i < $numParams; $i++) {
                 $arrParams[$i] = str_replace('\&', '&', $arrParams[$i]);
                 $param = preg_split('/(?<!\\\)=/', $arrParams[$i]); // explode('=', $arrParams[$i]);
                 $param = str_replace('\=', '=', $param);
@@ -657,30 +668,28 @@ class Input extends PoolObject
     }
 
     /**
-     * Fuehrt die Variablen Container von zwei Input Objekten zusammen, ueberspringt dabei aber leere und nicht gesetzte Variablen (unset)!
+     * Merges variables into their own container (Vars). But only if they are not yet set.
      *
-     * @access public
-     * @param object $inp Erwartet ein Objekt vom Typ Input
-     **/
-    function mergeVarsSkipEmpty($inp)
+     * @param Input $Input
+     */
+    public function mergeVarsIfNotSet(Input $Input): void
     {
-        $keys = array_keys($inp->Vars);
+        if($Input->count() == 0) return;
+        $keys = array_keys($Input->Vars);
         $c = count($keys);
         for($i=0; $i < $c; $i++) {
-            if (!isset($this->Vars[$keys[$i]]) /*or is_null($this -> Vars[$keys[$i]])*/) {
-                $this->setVar($keys[$i], $inp->Vars[$keys[$i]]);
+            if (!isset($this->Vars[$keys[$i]])) {
+                $this->setVar($keys[$i], $Input->Vars[$keys[$i]]);
             }
         }
     }
 
     /**
-    * Loescht den kompletten internen Variablen Container.
-    *
-    * @access public
+    * resets the variable container
     */
-    function clear()
+    public function clear()
     {
-        $this->Vars = Array();
+        $this->Vars = [];
     }
 
     /**
@@ -693,9 +702,9 @@ class Input extends PoolObject
     */
     function destroy()
     {
-        unset($this->Vars);
+        $this->clear();
+        parent::destroy();
 
-        parent :: destroy();
     }
 }
 
@@ -982,9 +991,9 @@ class ISession extends Input
     *
     * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
-    * @param mixed $value Wert der Variable
+    * @param string $value Wert der Variable
     */
-    function setVar($key, $value=0)
+    public function setVar($key, $value = '')
     {
         $this->start();
         parent::setVar($key, $value);
@@ -1102,6 +1111,7 @@ class ISession extends Input
     function destroy()
     {
         $this->start();
+        parent::destroy();
         if(session_status() == PHP_SESSION_ACTIVE) {
             session_destroy();
         }

@@ -61,7 +61,7 @@ if(!defined('CLASS_MODULE')) {
          * @var Input $Defaults
          * @access public
          */
-        var $Defaults=null;
+        protected Input $Defaults;
 
         /**
          * Superglobals. Alle Parameter-/Variablen�bergaben, sei es �ber Url (Get) oder Formular (Post) werden im Objekt Input festgehalten. Fehlen wichtige Parameter�bergaben, werden diese durch vorhandene Standardwerte ausgeglichen.
@@ -128,21 +128,21 @@ if(!defined('CLASS_MODULE')) {
         }
 
         /**
-         * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
+         * provides the Input Container for the Defaults
          *
-         * @access public
-         **/
-        function mergeDefaults()
+         * @return Input
+         */
+        public function getDefaults(): Input
         {
-            if ($this->Input instanceof Input) {
-                if (count($this->Defaults->Vars) > 0) {
-                    return $this->Input->mergeVarsSkipEmpty($this->Defaults);
-                }
-            }
-            else {
-                // ERROR init wurde nicht aufgerufen
-            }
-            return false;
+            return $this->Defaults;
+        }
+
+        /**
+         * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
+         **/
+        private function mergeDefaults(): void
+        {
+            $this->Input->mergeVarsIfNotSet($this->getDefaults());
         }
 
         /**
@@ -172,35 +172,36 @@ if(!defined('CLASS_MODULE')) {
          * - ModuleName: setzt den Komponentennamen
          * - ModuleDisabled: deaktiviert das Modul
          *
-         * @access public
          * @see Component::setName()
          * @see Module::disable()
          * @param array $params Im Format: key=value&key2=value2&
          * @return bool Erfolgsstatus
          **/
-        function importParams(array $params)
+        public function importParams(array $params): bool
         {
             if (!$this->Input instanceof Input) {
                 return false;
             }
 
-            $this->Input->setVar($params);
+            $this->setVar($params);
 
-            // set Component Name, if set by param.
+
+            // set Component Name, if set by param
             $moduleName = $this->Input->getVar('moduleName');
-            if ($moduleName == null) {
-                $moduleName = $this->Input->getVar('modulename');
-                if($moduleName == null) {
-                    $moduleName = $this->Input->getVar('ModuleName');
-                }
+
+            // old crime / delict. Should be removed! @deprecated
+            if(($otherFixedName = $this->getFixedParam('modulename')) != null) {
+                $moduleName = $otherFixedName;
             }
             if ($moduleName != null) {
                 $this->setName($moduleName);
             }
-            $disabled = $this->Input->getVar('ModuleDisabled');
-            if ($disabled == 1) {
-                $this->disable();
-            }
+
+            // @deprecated
+            // $disabled = $this->Input->getVar('ModuleDisabled');
+            // if ($disabled == 1) {
+            //   $this->disable();
+            // }
             return true;
         }
 
@@ -285,12 +286,12 @@ if(!defined('CLASS_MODULE')) {
         }
 
         /**
-         * Setzt eine Variable in den Container Input
+         * puts variables into the Input container
          *
-         * @param string $key
+         * @param string|array $key
          * @param mixed $value
          */
-        function setVar($key, $value='')
+        public function setVar($key, $value='')
         {
             $this->Input->setVar($key, $value);
         }
@@ -301,7 +302,7 @@ if(!defined('CLASS_MODULE')) {
          * @param string $key
          * @return mixed
          */
-        function getVar($key)
+        public function getVar(string $key)
         {
             return $this->Input->getVar($key);
         }
