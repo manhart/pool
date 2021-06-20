@@ -22,6 +22,7 @@
 const REQUEST_PARAM_MODULENAME = 'requestModule';
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
+// const FIXED_PARAM_CONFIG = 'config';
 
 /**
  * GUI_Module
@@ -138,9 +139,6 @@ class GUI_Module extends Module
     {
         parent::__construct($Owner, $params);
 
-        // set default moduleName
-        $this->inspectorProperties['moduleName']['value'] = $this->getName();
-
         if (isAjax()) {
             if (isset($_REQUEST[REQUEST_PARAM_MODULE]) and $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE]) {
                 $this->isMyXMLHttpRequest = true;
@@ -165,10 +163,6 @@ class GUI_Module extends Module
                 $this->XMLHttpRequestMethod = $_REQUEST[REQUEST_PARAM_METHOD];
             }
         }
-        /*			$this->isMyXMLHttpRequest = (isAjax() and ((isset($_REQUEST['module']) and
-                    strtolower($this->getClassName()) == strtolower($_REQUEST['module'])) or
-                    (isset($_REQUEST['modulename']) and $this->Name == $_REQUEST['modulename'])) and
-                    isset($_REQUEST['method']));*/
 
         if ($Owner instanceof Weblication) {
             if (is_null($Owner->getMain())) {
@@ -178,6 +172,20 @@ class GUI_Module extends Module
 
         $this->Template = new Template();
         $this->AutoLoadFiles = $autoLoadFiles;
+    }
+
+    /**
+     * @return Input
+     */
+    public function getDefaults(): Input
+    {
+        // set default moduleName
+        $this->inspectorProperties['moduleName']['value'] = $this->getName();
+
+        foreach($this->getInspectorProperties() as $key => $property) {
+            $this->Defaults->setVar($key, $property['value']);
+        }
+        return $this->Defaults;
     }
 
     /**
@@ -191,6 +199,64 @@ class GUI_Module extends Module
     }
 
     /**
+     * @param array $configuration
+     * @param array $properties
+     * @return array
+     */
+    public function optimizeConfiguration(array $configuration, array $properties): array
+    {
+        $config = [];
+        foreach($configuration as $key => $value) {
+            if(isset($properties[$key])) {
+                $property = $properties[$key];
+                $type = $property['type'] ?? '';
+                switch($type) {
+                    case 'boolean':
+                        if(is_string($value)) {
+                            $value = string2bool($value);
+                        }
+                        break;
+                }
+
+                //                $isPoolOption = $this->getInspectorProperties()[$key]['pool'] ?? false; // serverside only
+                $defaultValue = $property['value'] ?? '';
+                if($defaultValue != $value) {
+                    $config[$key] = $value;
+                }
+
+                if(isset($property['properties']) and is_array($property['properties']) and is_array($configuration[$key])) {
+                    foreach($configuration[$key] as $z => $sub_configuration) {
+                        $config[$key][$z] = $this->optimizeConfiguration($sub_configuration, $property['properties']);
+                    }
+                }
+
+            }
+            //            else {
+            //                $this->poolOptions[$key] = $value;
+            //            }
+        }
+        return $config;
+    }
+
+    /**
+     * set configuration for module (it only takes different values)
+     *
+     * @param array $configuration
+     */
+    public function setConfiguration(array $configuration)
+    {
+        $this->configuration = $this->optimizeConfiguration($configuration, $this->getInspectorProperties());
+
+        if(isset($this->configuration['moduleName'])) {
+            $this->setName($this->configuration['moduleName']);
+        }
+
+        $this->Input->setVar($this->configuration);
+    }
+
+    /**
+     * returns the configuration
+     *
      * @return array
      */
     public function getConfiguration(): array
@@ -199,11 +265,23 @@ class GUI_Module extends Module
     }
 
     /**
+     * returns the configuration as json
+     *
      * @return string
      */
     public function getConfigurationAsJSON(): string
     {
-        return json_encode($this->configuration);
+        return json_encode($this->getConfiguration());
+    }
+
+    /**
+     * returns the configuration as yaml
+     *
+     * @return string
+     */
+    public function getConfigurationAsYAML(): string
+    {
+        return yaml_emit($this->getConfiguration());
     }
 
     /**
@@ -270,7 +348,7 @@ class GUI_Module extends Module
      * @param GUI_Module|null $ParentGUI
      * @throws ReflectionException
      */
-    public static function autoloadGUIModule($GUIClassName, $ParentGUI = null)
+    public static function autoloadGUIModule(string $GUIClassName, $ParentGUI = null)
     {
         $GUIRootDirs = array(
             getcwd()
@@ -369,8 +447,7 @@ class GUI_Module extends Module
             return $GUI;
         }
         else {
-            $Nil = new Nil();
-            return $Nil;
+            return new Nil();
         }
     }
 
