@@ -254,7 +254,7 @@
      **/
     function setLanguage($lang)
     {
-        $this -> ContentLanguage = $lang;
+        $this->ContentLanguage = $lang;
     }
 
     /**
