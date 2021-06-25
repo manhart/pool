@@ -17,8 +17,9 @@ require_once __DIR__.'/PoolObject.class.php';		// necessary
 require_once __DIR__.'/Component.class.php';		// necessary
 require_once __DIR__.'/Module.class.php';		// necessary
 require_once __DIR__.'/GUI_Module.class.php';	// necessary
+//require_once __DIR__.'/ConfigurationLoader.class.php';	// necessary
 require_once __DIR__.'/Configurable.trait.php';	// necessary
-require_once __DIR__.'/GUI_ConfigurableModule.class.php';	// necessary
+//require_once __DIR__.'/GUI_ModuleConfigurable.class.php';	// necessary
 require_once __DIR__.'/DAO.class.php';			// necessary
 require_once __DIR__.'/Resultset.class.php';		// necessary
 require_once __DIR__.'/Singleton.class.php';		// necessary
