@@ -85,6 +85,8 @@
 			 */
 			var $Session=null;
 
+			private string $classDirectory;
+
 			/**
 			 * Der Konstruktor erhaelt als Parameter den Eigentuemer dieses Objekts. Der Eigent�mer muss vom Typ Component abgeleitet sein.
 			 *
@@ -179,6 +181,26 @@
             {
 				return $this->Name;
 			}
+
+            /**
+             * @return string name of class using the trait
+             */
+            public static function theClass(): string
+            {
+                return static::class;
+            }
+
+            /**
+             * @return string directory of the class
+             * @throws ReflectionException
+             */
+			public function getClassDirectory(): string
+            {
+                if(!isset($this->classDirectory)) {
+                    $this->classDirectory = dirname((new ReflectionClass(self::theClass()))->getFileName());
+                }
+                return $this->classDirectory;
+            }
 
 			/**
 			 * Gibt den Eigentuemer der Komponente zur�ck.
