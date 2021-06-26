@@ -7,11 +7,19 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-class GUI_Table extends GUI_Module
+class GUI_TableConfigurable extends GUI_Table
 {
     use Configurable;
 
     private array $inspectorProperties = [
+        'moduleName' => [ // pool
+            'pool' => true,
+            'caption' => 'ModuleName',
+            'type' => 'string',
+            'value' => '',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
         'url' => [
             'attribute' => 'data-url',
             'type' => 'string',
@@ -339,7 +347,7 @@ class GUI_Table extends GUI_Module
                 ],
                 'poolFormat' => [
                     'attribute' => 'data-pool-format',
-                    'type' => 'auto',
+                    'type' => 'string',
                     'element' => 'input',
                     'inputType' => 'text',
                     'value' => '',
@@ -563,6 +571,7 @@ class GUI_Table extends GUI_Module
         ]
     ];
 
+
     protected array $options = [];
     protected array $columns = [];
 
@@ -572,48 +581,33 @@ class GUI_Table extends GUI_Module
     /**
      * @param const|int $superglobals
      */
-    public function init($superglobals = I_EMPTY)
-    {
-        $this->Defaults->addVar('framework', 'bs4');
-        $this->Defaults->addVar('render', true);
-        $this->Defaults->addVar('url', null);
-        $this->Defaults->addVar('columns', null);
-        parent::init($superglobals);
-
-//        $this->defaultOptions['moduleName']['value'] = $this->getName();
-        // default time formats
-        $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.time');
-        $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date');
-        $this->poolOptions['date.time.strftime'] = $this->poolOptions['date.time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date.time');
-        $this->poolOptions['number'] = $this->poolOptions['number'] ?? $this->Weblication->getDefaultFormat('number');
-
-        if($this->Input->getVar('columns') != null) {
-            $columns = $this->Input->getVar('columns');
-            switch (gettype($columns)) {
-                case 'string':
-                    $this->Input->setVar('columns', $this->parseColumns($columns));
-                //                    $this->setColumns($columns);
-            }
-        }
-    }
+//    public function init($superglobals = I_EMPTY)
+//    {
+//        $this->Defaults->addVar('framework', 'bs4');
+//        $this->Defaults->addVar('render', true);
+//        $this->Defaults->addVar('url', null);
+//        $this->Defaults->addVar('columns', null);
+//        parent::init($superglobals);
+//
+//    }
 
     /**
      * Load files
      *
      * @throws ReflectionException|Exception
      */
-    public function loadFiles()
-    {
-        $className = strtolower(__CLASS__);
-        $fw = $this->getVar('framework');
-        $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', $className, true);
-        $this->Template->setFilePath('stdout', $tpl);
-
-        if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
-            //$this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
-        }
-    }
+//    public function loadFiles()
+//    {
+//        $className = strtolower(__CLASS__);
+//        $fw = $this->getVar('framework');
+//        $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', $className, true);
+//        $this->Template->setFilePath('stdout', $tpl);
+//
+//        if($this->Weblication->hasFrame()) {
+//            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
+//            //$this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
+//        }
+//    }
 
     public function setOptions(array $options): GUI_Table
     {
@@ -639,19 +633,29 @@ class GUI_Table extends GUI_Module
         return $this;
     }
 
-//    public function getInspectorProperties(): array
-//    {
-//        return $this->inspectorProperties + parent::getInspectorProperties();
-//    }
     public function getInspectorProperties(): array
     {
-        return $this->inspectorProperties + $this->getDefaultInspectorProperties();
+        return $this->inspectorProperties + parent::getInspectorProperties();
     }
 
     public function getColumnsProperties(): array
     {
         return $this->getInspectorProperties()['columns']['properties'];
     }
+
+//    public function getOptions(): array
+//    {
+//        return $this->options;
+//    }
+
+//    public function getFullOptions(): array
+//    {
+//        $result = $this->getDefaultOptions();
+//        foreach($this->options as $key => $value) {
+//            $result[$key]['value'] = $value;
+//        }
+//        return $result;
+//    }
 
     public function setColumns(array $columns): GUI_Table
     {
@@ -717,13 +721,21 @@ class GUI_Table extends GUI_Module
 //        return $result;
 //    }
 
+//    public function getConfigurationAsJSON(): string
+//    {
+//        $options = $this->options + ['columns' => $this->columns];
+//        $data = [
+//            'options' => $options,
+//        ];
+//        return json_encode($data);
+//    }
 
     /**
      * Provisioning data before preparing module and there children.
      */
-//    public function provision()
-//    {
-//        parent::provision();
+    public function provision()
+    {
+        parent::provision();
 //        $data = $this->Input->getData();
 //        unset(
 //            $data['moduleName'],
@@ -735,7 +747,23 @@ class GUI_Table extends GUI_Module
 //
 //        $this->setOptions($data);
 
-//    }
+        // default time formats
+        $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.time');
+        $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date');
+        $this->poolOptions['date.time.strftime'] = $this->poolOptions['date.time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date.time');
+        $this->poolOptions['number'] = $this->poolOptions['number'] ?? $this->Weblication->getDefaultFormat('number');
+
+
+
+        if($this->Input->getVar('columns') != null) {
+            $columns = $this->Input->getVar('columns');
+            switch (gettype($columns)) {
+                case 'string':
+                    $this->Input->setVar('columns', $this->parseColumns($columns));
+//                    $this->setColumns($columns);
+            }
+        }
+    }
 
     /**
      * prepare content
@@ -802,12 +830,6 @@ class GUI_Table extends GUI_Module
                         case 'function':
                             break;
 
-                        case 'auto':
-                            if(is_array($attrValue)) {
-                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
-                                break;
-                            }
-
                         default:
                             $attrValue = '\'' . $attrValue . '\'';
                     }
@@ -859,7 +881,6 @@ class GUI_Table extends GUI_Module
 //                ]);
 //            }
 //        }
-
 
         $this->Template->leaveBlock();
         $js_render = '';
@@ -921,6 +942,11 @@ class GUI_Table extends GUI_Module
         return $columns;
     }
 
+//    public function loadConfigFromJSON($file)
+//    {
+//        $json = file_get_contents($file);
+//        $this->loadConfig($json);
+//    }
 
     /**
      * Creates data format for the bootstrap table
