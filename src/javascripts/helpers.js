@@ -1922,57 +1922,53 @@ function fillControls(containerSelector, rowSet)
         rowSet = [rowSet];
     }
 
+    let selectors = explode(',', containerSelector, false);
+
+    let row, field, value;
+
     // Zeile fuer Zeile durch das Rowset
-    for(var r=0; r<rowSet.length; r++) {
-        var row2 = rowSet[r];
+    for(let r=0; r<rowSet.length; r++) {
+        row = rowSet[r];
 
         // Feld fuer Feld ermitteln wir die HTML-Elemente
-        for(var field in row2) {
+        for(field in row) {
+
             // Felder mit dem Namen/Suffix _class dienen zur Zuweisung von Styles und sind keine Felder
             if(field.substr(field.length-6) == '_class') continue;
             // Felder mit dem Namen/Suffix _title dienen zur Zuweisung von Titles/ToolTips und sind keine Felder
             if(field.substr(field.length-6) == '_title') continue;
 
             // Wert
-            var value = row2[field];
-
-            if((typeof value) == 'string') {
-                value = value.replace(String.fromCharCode(128), String.fromCharCode(8364));
-            }
+            value = row[field];
 
             // 21.01.2013, AM, Beschleunigung der Feldersuche ueber die Ids
-            // var selector = containerSelector+' [name='+field+'], '+containerSelector+' #'+field;
-            let selectors = explode(',', containerSelector, false);
-
-            let name_selector = '', id_selector = '';
+            // 07.07.2021, AM, Group-Selector added
+            let name_selector = '', id_selector = '', group_selector = '';
             for(let s=0; s<selectors.length; s++) {
                 if(name_selector != '') name_selector += ',';
-                name_selector += selectors[s] +' [name='+field+']';
+                name_selector += selectors[s] + ' [name='+field+']';
                 if(id_selector != '') id_selector += ',';
-                id_selector += selectors[s]+' #'+field;
+                id_selector += selectors[s] + ' #'+field;
+                if(group_selector != '') group_selector += ',';
+                group_selector += selectors[s] + ' [name="'+field+'[]"][value="'+value+'"]';
             }
 
-            //log('jFillControlls name_selector: '+name_selector);
-            //log('jFillControlls id_selector: '+id_selector);
-            jQuery(name_selector).add(id_selector).each(function() {
-                var Ctrl = jQuery(this);
+            jQuery(name_selector).add(group_selector).add(id_selector).each(function() {
+                let Ctrl = jQuery(this);
+
                 //log('HTMLElement: '+Ctrl.attr('id')+'='+value);
-                if(row2[field+'_class']) Ctrl.addClass(row2[field+'_class']);
-                if(row2[field+'_title']) Ctrl.attr('title', row2[field+'_title']);
+                if(row[field+'_class']) Ctrl.addClass(row[field+'_class']);
+                if(row[field+'_title']) Ctrl.attr('title', row[field+'_title']);
 
                 if(r == rowSet.length-1) {
                     switch(Ctrl[0].tagName) {
                         case 'TEXTAREA':
+                            Ctrl.val(value);
+                            break;
+
                         case 'SPAN':
                         case 'DIV':
                             Ctrl.html(value);
-
-                            // Chrome Fix
-                            // CS,31.05.2015 : Auch bei anderen Browsern (IE) val() verwenden bei TEXTAREA.
-                            // Zeilenenden (\r\n) funktionieren bei html() im IE nicht.
-                            if(Ctrl[0].tagName == 'TEXTAREA') {
-                                Ctrl.val(value);
-                            }
                             break;
 
                         case 'IMG':
@@ -1984,8 +1980,6 @@ function fillControls(containerSelector, rowSet)
                             break;
 
                         case 'INPUT':
-                            var ctrlType = Ctrl.attr('type');
-
                             // Checkbox mit 3 Statis
                             if(Ctrl.data('tri-state-checkbox')) {
                                 // TODO implementierung in jquery
@@ -2009,7 +2003,7 @@ function fillControls(containerSelector, rowSet)
                                 break;
                             }
 
-                            switch(ctrlType) {
+                            switch(Ctrl.attr('type')) {
                                 case 'checkbox':
                                 case 'radio':
                                     Ctrl.prop('checked', (value == Ctrl.val()));
@@ -2028,17 +2022,17 @@ function fillControls(containerSelector, rowSet)
                             break;
                     }
                 }
-                else {
-                    if(value != rowSet[rowSet.length-1][field]) {
-                        // Werte werden aufaddiert; TODO String u. Int/Double Unterscheidung
-                        if(Ctrl.data('fill-sum')) {
-                            var shorten = Ctrl.data('fill-sum-shorten');
-                        }
-                        else {
-                            rowSet[rowSet.length-1][field] = null;
-                        }
-                    }
-                }
+                // else {
+                    // if(value != rowSet[rowSet.length-1][field]) {
+                    //     // Werte werden aufaddiert; TODO String u. Int/Double Unterscheidung
+                    //     if(Ctrl.data('fill-sum')) {
+                    //         var shorten = Ctrl.data('fill-sum-shorten');
+                    //     }
+                    //     else {
+                    //         rowSet[rowSet.length-1][field] = null;
+                    //     }
+                    // }
+                // }
 
                 Ctrl[0].classList.remove('is-invalid');
                 Ctrl[0].classList.remove('is-valid');
@@ -2046,109 +2040,19 @@ function fillControls(containerSelector, rowSet)
                     Ctrl[0].closest('.needs-validation').classList.remove('was-validated');
                 }
             });
+            // could be a checkbox group
+            // if(found == false) {
+            //     document.querySelectorAll(group_selector).forEach((ctrl) => {
+            //         if(ctrl.value === value) {
+            //             console.debug('check field: '+field+' with value '+ctrl.value);
+            //             ctrl.checked = true;
+            //         }
+            //     });
+            // }
         }
     }
 }
 
-/**
- * Füllt Eingabecontrols
- */
-// function fillControls(doc, daten, gui_error)
-// {
-//     if (is.ie) {
-//         var attrClass = 'className';
-//     }
-//     else {
-//         // firefox
-//         var attrClass = 'class';
-//     }
-//
-//     for (var feld in daten) {
-//         var controls = doc.getElementsByName(feld);
-//         //alert('Control '+feld+' not found in your browser! doc.getElementsByName(\''+feld+'\')');
-//
-//         var daten_value = daten[feld];
-//
-//         if(daten_value == null) {
-//             daten_value = ''; // TODO f. multiselect <-> null
-//         }
-//
-//         // Alex, Euro Symbol in HTML Euro Zeichen transformieren
-//         // siehe http://www.cs.tut.fi/~jkorpela/html/euro.html
-//         if(typeof daten_value == 'string') {
-//             daten_value = daten_value;
-//             daten_value = daten_value.replace(String.fromCharCode(128), String.fromCharCode(8364));
-//         }
-//
-//         if (controls && controls.length > 0) {
-//             for (var i=0; i<controls.length; i++) {
-//                 var elem = controls[i];
-//                 var tagName = elem.tagName.toUpperCase();
-//
-//                 if (tagName == 'SPAN' || tagName == 'DIV') {
-//                     elem.innerHTML = daten_value;
-//                     if(daten[feld + '_class']) {
-//                         elem.className  = unescape(daten[feld + '_class']);
-//                     }
-//                 }
-//                 else if(tagName == 'IMG') {
-//                     //alert(elem.src);
-//                     if(isEmpty(daten_value)) {
-//                         jQuery(elem).hide();
-//                     }
-//                     else {
-//                         elem.src = daten_value;
-//                         if(daten[feld + '_title']) {
-//                             elem.title = unescape(daten[feld + '_title']);
-//                         }
-//                         jQuery(elem).show();
-//                     }
-//                 }
-//                 else if(tagName == 'FONT') {
-//                     if(daten[feld + '_color']) {
-//                         elem.color  = unescape(daten[feld + '_color']);
-//                     }
-//                 }
-//                 else if(tagName == 'INPUT') {
-//                     elem.setAttribute('set_value', daten_value);
-//                     var elemType = elem.type.toUpperCase();
-//
-//                     if(elemType == 'CHECKBOX') {
-//                         var triStateCheckbox = elem.getAttribute('data-tri-state-checkbox');
-//                         if(!triStateCheckbox) {
-//                             elem.checked = (daten_value == 1) || (elem.value == daten_value);
-//                         }
-//                         else {
-//                             // TODO implement in jQuery
-//                             setTriStateCheckboxValue(elem, daten_value);
-//                         }
-//                     }
-//                     else if(elemType == 'RADIO') {
-//                         elem.checked = (elem.value == daten_value);
-//                     }
-//                     else {
-//                         elem.value = daten_value;
-//                     }
-//
-//                     if (feld == gui_error) {
-//                         elem.setAttribute('save_class', elem.getAttribute(attrClass));
-//                         elem.setAttribute(attrClass, elem.getAttribute('class_error'));
-//                     }
-//                     else {
-//                         var save_class = elem.getAttribute('save_class');
-//                         if (save_class) {
-//                             elem.setAttribute(attrClass, save_class);
-//                         }
-//                     }
-//                 }
-//                 else {
-//                     elem.setAttribute('set_value', daten_value);
-//                     elem.value = daten_value;
-//                 }
-//             }
-//         }
-//     }
-// }
 
 /**
  * Empties the contents of the elements

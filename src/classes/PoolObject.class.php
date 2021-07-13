@@ -171,8 +171,9 @@ if(!defined('CLASS_POOLOBJECT')) {
          * Autoloader for POOL Classes
          *
          * @param string $className Klasse
+         * @return bool
          */
-        public static function autoloadClass($className)
+        public static function autoloadClass(string $className): bool
         {
             $classRootDirs = array(
                 getcwd()
@@ -190,9 +191,10 @@ if(!defined('CLASS_POOLOBJECT')) {
                 $filename = $classRootDir.$className.PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
-                    break;
+                    return true;
                 }
             }
+            return false;
         }
 
         /**
