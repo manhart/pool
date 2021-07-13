@@ -346,9 +346,10 @@ class GUI_Module extends Module
      *
      * @param string $GUIClassName
      * @param GUI_Module|null $ParentGUI
+     * @return bool
      * @throws ReflectionException
      */
-    public static function autoloadGUIModule(string $GUIClassName, $ParentGUI = null)
+    public static function autoloadGUIModule(string $GUIClassName, $ParentGUI = null): bool
     {
         $GUIRootDirs = array(
             getcwd()
@@ -367,13 +368,13 @@ class GUI_Module extends Module
             $filename = $GUIRootDir . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
             if (file_exists($filename)) {
                 require_once $filename;
-                break;
+                return true;
             }
 
             $filename = $GUIRootDir . $GUIClassName . '/' . $GUIClassName . PoolObject::CLASS_EXTENSION;
             if (file_exists($filename)) {
                 require_once $filename;
-                break;
+                return true;
             }
 
             if ($ParentGUI instanceof Module) {
@@ -395,16 +396,17 @@ class GUI_Module extends Module
                 $filename = $GUIRootDir . $parent_directory . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
-                    break;
+                    return true;
                 }
 
                 $filename = $GUIRootDir . strtolower($parent_directory_without_frame . $GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
-                    break;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     /**
