@@ -422,7 +422,7 @@ class GUI_Module extends Module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
      * @return object Neues GUI_Module oder Nil
      */
-    public static function &createGUIModule($GUIClassName, Component &$Owner, &$ParentGUI, $params = '')
+    public static function createGUIModule($GUIClassName, Component &$Owner, &$ParentGUI, $params = '')
     {
         $class_exists = class_exists($GUIClassName, false);
 
@@ -483,7 +483,7 @@ class GUI_Module extends Module
                 $pattern = $matches[$i][0];
                 $guiname = $matches[$i][1];
                 $params = isset($matches[$i][3]) ? $matches[$i][3] : '';
-                $new_GUI = &$this->createGUIModule($guiname, $this->Owner, $this, $params);
+                $new_GUI = $this->createGUIModule($guiname, $this->Owner, $this, $params);
 
                 if (isNil($new_GUI)) {
                     $message = 'Fehler beim Erzeugen der Klasse "{guiname}"';
