@@ -182,7 +182,7 @@ class GUI_Splitter extends GUI_Module
                 //echo $numPages;
                 if (($activePage >= $numPages or $activePage<0) and ($activePage!=0 and $numPages!=0)) {
                     $Url=new Url();
-                    $Url->modifyParam($urlParam, ($numPages > 0) ? ($activePage==$numPages?0:($numPages * $maxRecordsPerPage)-$maxRecordsPerPage) : 0);
+                    $Url->setParam($urlParam, ($numPages > 0) ? ($activePage==$numPages?0:($numPages * $maxRecordsPerPage)-$maxRecordsPerPage) : 0);
                     $Url->restartUrl();
                 }
 
@@ -199,7 +199,7 @@ class GUI_Splitter extends GUI_Module
                 $splitterPos = (int)$Input -> getVar($urlParam);
                 if($splitterPos > $numRecords) {
                     $Url = new Url();
-                    $Url -> modifyParam($urlParam, ($numPages > 0) ? (($numPages * $maxRecordsPerPage)-$maxRecordsPerPage) : 0);
+                    $Url -> setParam($urlParam, ($numPages > 0) ? (($numPages * $maxRecordsPerPage)-$maxRecordsPerPage) : 0);
                     $Url -> restartUrl();
                 }
                 $this -> splitter = $this -> getPage();
@@ -231,7 +231,7 @@ class GUI_Splitter extends GUI_Module
         $jsClick = $this->Input->getVar('jsClick');
 
         $url = new Url();
-        $url -> modifyParam($urlParam, null);
+        $url -> setParam($urlParam, null);
 
         // Default Page Settings
         $firstpage = $Input->getVar('digits_first');
@@ -257,7 +257,7 @@ class GUI_Splitter extends GUI_Module
             $query = explode('&', $query);
             for ($i = 0; $i < SizeOf($query); $i++) {
                 $arr = explode('=', $query[$i]);
-                $url->modifyParam($arr[0], $arr[1]);
+                $url->setParam($arr[0], $arr[1]);
             }
         }
 
@@ -282,7 +282,7 @@ class GUI_Splitter extends GUI_Module
 
 
         if ($hasDropDown) {
-            $url->modifyParam($urlParam, null);
+            $url->setParam($urlParam, null);
             $href = $url->getUrl();
             $token = '?';
             if(strrpos($href, 'php') != strlen($href)-1) {
@@ -341,7 +341,7 @@ class GUI_Splitter extends GUI_Module
             if($show_prior) {
                 $Template->newBlock('prior');
                 $pos = ($pageNr - 1) * $maxRecordsPerPage;
-                $url->modifyParam($urlParam, $pos);
+                $url->setParam($urlParam, $pos);
                 if ($pageNr <= 0) {
                     $prior_href = '';
                     $prior_url = '';
@@ -376,7 +376,7 @@ class GUI_Splitter extends GUI_Module
             if($show_next) {
                 $Template->newBlock('next');
                 $pos = $pageNr * $maxRecordsPerPage;
-                $url->modifyParam($urlParam, $pos);
+                $url->setParam($urlParam, $pos);
                 if ($pageNr >= $numPages) {
                     $next_href = ''; $next_url = '';
                 }
@@ -404,7 +404,7 @@ class GUI_Splitter extends GUI_Module
         if(!$showAllPages) {
             $ppp = '';
             if ($plusmax < $activePage - 1) {
-                $url -> modifyParam($urlParam, 0);
+                $url -> setParam($urlParam, 0);
                 if($jsClick) {
                     $firstpage = '<span onclick="'.$jsClick.'(0)" class="cursor">'.$parenthesis_opened.$space.$firstpage.$space.$parenthesis_closed.'</span>';
                 }
@@ -424,7 +424,7 @@ class GUI_Splitter extends GUI_Module
             $ppp = '';
             if ($activePage < $numPages - $plusmax) {
                 $lastpageNr = ($numPages - 1) * $maxRecordsPerPage;
-                $url->modifyParam($urlParam, $lastpageNr);
+                $url->setParam($urlParam, $lastpageNr);
                 if($jsClick) {
                     $lastpage = '<span onclick="'.$jsClick.'('.$lastpageNr.')" class="cursor">'.$parenthesis_opened.$space.$lastpage.$space.$parenthesis_closed.'</span>';
                 }
@@ -488,7 +488,7 @@ class GUI_Splitter extends GUI_Module
             $query = explode('&', $query);
             for ($i = 0; $i < SizeOf($query); $i++) {
                 $arr = explode('=', $query[$i]);
-                $url -> modifyParam($arr[0], $arr[1]);
+                $url -> setParam($arr[0], $arr[1]);
             }
         }
 
@@ -511,7 +511,7 @@ class GUI_Splitter extends GUI_Module
                 $splitter .= '<span class="'.$stylesplitter.'">'.$splitterArr[$i].'</span>';
             }
             else {
-                $url -> modifyParam($Input -> getVar('chars.url.param'), $splitter_transArr[$i]);
+                $url -> setParam($Input -> getVar('chars.url.param'), $splitter_transArr[$i]);
                 $splitter .= $url -> getHref('<span class="'.$stylesplitter.'">'.$splitterArr[$i].'</span>');
             }
 
@@ -562,13 +562,13 @@ class GUI_Splitter extends GUI_Module
             $query = explode('&', $query);
             for ($i = 0; $i < SizeOf($query); $i++) {
                 $arr = explode('=', $query[$i]);
-                $Url -> modifyParam($arr[0], $arr[1]);
+                $Url -> setParam($arr[0], $arr[1]);
             }
         }
 
 
         #### first page
-        $Url -> modifyParam($page_urlParam, 0);
+        $Url -> setParam($page_urlParam, 0);
         if ($splitterPos != 0) {
             $page_first_href = $Input -> getVar('page_first_href');
             if ($page_first_href) {
@@ -594,7 +594,7 @@ class GUI_Splitter extends GUI_Module
                     $page_prior . '</a>'; //$page_prior_href;
             }
             else {
-                $Url -> modifyParam($page_urlParam, $splitterPos - $maxRecordsPerPage);
+                $Url -> setParam($page_urlParam, $splitterPos - $maxRecordsPerPage);
                 $priorpage = $Url -> getHref($page_prior);
             }
         }
@@ -611,7 +611,7 @@ class GUI_Splitter extends GUI_Module
                     $page_next . '</a>';
             }
             else {
-                $Url -> modifyParam($page_urlParam, $splitterPos + $maxRecordsPerPage);
+                $Url -> setParam($page_urlParam, $splitterPos + $maxRecordsPerPage);
                 $nextpage = $Url -> getHref($page_next);
             }
         }
@@ -633,7 +633,7 @@ class GUI_Splitter extends GUI_Module
                     $page_last . '</a>';
             }
             else {
-                $Url -> modifyParam($page_urlParam, $lastPos);
+                $Url -> setParam($page_urlParam, $lastPos);
                 $lastpage = $Url -> getHref($page_last);
             }
         }

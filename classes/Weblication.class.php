@@ -203,8 +203,7 @@ class Weblication extends Component
      */
     private function __construct()
     {
-        $Nil = new Nil();
-        parent::__construct($Nil);
+        parent::__construct(null);
 
         $this->Settings = new Input();
         return $this;
@@ -1223,9 +1222,8 @@ class Weblication extends Component
             $params = base64url_decode($params);
         }
 
-        $Nil = new Nil();
-        $GUI = GUI_Module::createGUIModule($className, $this, $Nil, $params);
-        if (isNil($GUI)) {
+        $GUI = GUI_Module::createGUIModule($className, $this, null, $params);
+        if (is_null($GUI)) {
             throw new Exception('The class name '.$className.' was not found or does not exist');
         }
         else {
@@ -1248,8 +1246,6 @@ class Weblication extends Component
 
     /**
      * Einleitung zur Aufbereitung des Contents (der Inhalte) der Webseite.
-     *
-     * @access public
      **/
     public function prepareContent()
     {

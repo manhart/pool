@@ -56,9 +56,8 @@ class Input extends PoolObject
      * Variablen Container
      *
      * @var array
-     * @access public
      */
-    var $Vars = array();
+    protected array $Vars = [];
 
     /**
      * @var int Superglobals
@@ -68,13 +67,13 @@ class Input extends PoolObject
 
     /**
      * Input constructor. Initialization of the superglobals.
+     *
      * @param int $superglobals Select a predefined constant: INPUT_GET, INPUT_POST, INPUT_REQUEST, INPUT_SERVER, INPUT_FILES, INPUT_COOKIE
      * @see https://www.php.net/manual/de/language.variables.superglobals.php
      */
-    public function __construct($superglobals = I_EMPTY)
+    public function __construct(int $superglobals = I_EMPTY)
     {
-        $this->Vars = Array();
-
+        $this->Vars = [];
         $this->init($superglobals);
     }
 
@@ -83,10 +82,9 @@ class Input extends PoolObject
     * Falls Magic Quotes eingestellt sind, werden bei den $_GET und $_POST Superglobals alle Escape Zeichen entfernt.
     * Aussnahme: Session! Die Superglobale Variable $_SESSION wird zum internen Container referenziert!
     *
-    * @access public
     * @param integer $superglobals Einzulesende Superglobals (siehe Konstanten)
     */
-    function init($superglobals = I_EMPTY)
+    protected function init(int $superglobals = I_EMPTY)
     {
         if ($superglobals == 0) {
             return;
@@ -203,11 +201,10 @@ class Input extends PoolObject
      * Prueft, ob eine Variable einen Wert enthaelt.
      * Diese Funktion liefert TRUE, wenn eine Variable nicht definiert, leer oder gleich 0 ist, ansonsten FALSE
      *
-     * @access public
      * @param string $key Name der Variable
      * @return boolean True=ja; False=nein
      **/
-    function emptyVar($key)
+    public function emptyVar(string $key): bool
     {
         if(is_array($key)) {
             if(sizeof($key) == 0) return true;
@@ -1111,7 +1108,6 @@ class ISession extends Input
     function destroy()
     {
         $this->start();
-        parent::destroy();
         if(session_status() == PHP_SESSION_ACTIVE) {
             session_destroy();
         }
