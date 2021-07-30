@@ -2,8 +2,6 @@
 /**
  * POOL (PHP Object Oriented Library): die Datei PoolObject.class.php enthaelt die Grundklasse, der Uhrahn aller Objekte.
  *
- * Die Klasse Nil ist ein NULL Objekt und hat keine Bedeutung (wie in Pascal/Delphi).<br>
- *
  * Vermerk Author:<br>
  * Ich will an diesem System nichts verkomplizieren, keep it simple stupid.
  *
@@ -44,17 +42,17 @@ if(!defined('CLASS_POOLOBJECT')) {
     /**
      * Konstante sagt aus, ob PHP unter Windows laeuft
      */
-    define('OS_WINDOWS',			$os_windows);
+    define('OS_WINDOWS', $os_windows);
 
     /**
      * Konstante sagt aus, ob PHP unter Linux laeuft
      */
-    define('OS_UNIX',				!$os_windows);
+    define('OS_UNIX', !$os_windows);
 
     /**
      * Konstante enthaelt Name des Betriebssystems
      */
-    define('OS_POOL_NAME',			($os_windows) ? 'Windows' : 'Linux');
+    define('OS_POOL_NAME', ($os_windows) ? 'Windows' : 'Linux');
 
     /**
      * Die Grundklasse, der Uhrahn aller Objekte.
@@ -68,8 +66,7 @@ if(!defined('CLASS_POOLOBJECT')) {
      *
      * Object wird nie direkt instantiiert. Obwohl keine Programmiersprachenelemente zum Verhindern der Instantiierung verwendet werden, ist Object eine abstrakte Klasse.
      *
-     * @access public
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
+     * @author Alexander Manhart <alexander@manhart-it.de>
      * @package pool
      */
     class PoolObject extends stdClass
@@ -78,13 +75,13 @@ if(!defined('CLASS_POOLOBJECT')) {
          * Debug-Modus (Default: false)
          *
          * @var bool $debug
-         * @access public
          */
-        var $isDebugMode=false;
+        private bool $isDebugMode=false;
 
         /**
          * Zeilenumbruch (fuer HTML/Konsolen Ausgaben)
          *
+         * @todo autodetect
          * @var string $new_line
          * @access private
          */
@@ -107,8 +104,6 @@ if(!defined('CLASS_POOLOBJECT')) {
 
         /**
          * Konstruktor
-         *
-         * @access public
          */
         function __construct()
         {
@@ -116,24 +111,11 @@ if(!defined('CLASS_POOLOBJECT')) {
         }
 
         /**
-         * Erzeugt eine neue Instanz der Klasse.
-         *
-         * @access public
-         * @return PoolObject
-         */
-        function &createNew()
-        {
-            $ClassName = $this->getClassName();
-            $new_obj = new $ClassName();
-            return $new_obj;
-        }
-
-        /**
          * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
          *
          * @return string name of the class
          */
-        public function getClass()
+        public function getClass(): string
         {
             if($this->class == '') {
                 $this->class = get_class($this);
@@ -146,9 +128,8 @@ if(!defined('CLASS_POOLOBJECT')) {
          * Determines the short name of the class of the object, stores it temporarily and returns it.
          *
          * @return bool|string
-         * @throws ReflectionException
          */
-        function getClassName()
+        public function getClassName(): string
         {
             if($this->className == '') {
                 $this->className = (new \ReflectionClass($this))->getShortName();
@@ -159,10 +140,9 @@ if(!defined('CLASS_POOLOBJECT')) {
         /**
          * Gibt den Namen der Elternklasse (von dem das Objekt abgeleitet wurde) zurueck.
          *
-         * @access public
          * @return string Name der Elternklasse
          */
-        function getParentClass()
+        public function getParentClass(): string
         {
             return get_parent_class($this);
         }
@@ -198,46 +178,21 @@ if(!defined('CLASS_POOLOBJECT')) {
         }
 
         /**
-        * Die Methode assignObject kopiert alle Eigenschaften eines Objektes gleichen Typs auf sich selbst.
-        *
-        * @access public
-        * @param PoolObject $object Objekt, von dem Eigenschaften uebernommen werden sollen
-        * @return bool Erfolgsstatus
-        */
-        function assignObject($object)
-        {
-            if (is_a($object, $this->getClassName())) {
-                $vars = get_object_vars($object); reset($vars);
-                while(list($key, $value) = each($vars)) {
-                    $this->$key = $value;
-                }
-                return true;
-            }
-            else {
-                $this->raiseError(__FILE__, __LINE__,
-                    'Eigenschaften unterschiedlicher Klassen koennen nicht zugewiesen werden (@assignObject).');
-                return false;
-            }
-        }
-
-        /**
          * Aktiviere Fehlersuche und -behebung.
-         *
-         * @access public
          **/
-        function enableDebugging()
+        public function enableDebugging(): PoolObject
         {
             $this->isDebugMode = true;
+            return $this;
         }
 
         /**
          * Deaktiviere Fehlersuche und - behebung.
-         *
-         * @access public
          **/
-        function disableDebugging()
+        public function disableDebugging(): PoolObject
         {
             $this->isDebugMode = false;
+            return $this;
         }
 
         /**
@@ -247,7 +202,7 @@ if(!defined('CLASS_POOLOBJECT')) {
          * @param string $text Text
          * @see PoolObject::$new_line
          */
-        function debug($text)
+        function debug(string $text)
         {
             if ($this->isDebugMode == true) {
                 print($text.$this->new_line);
@@ -260,21 +215,16 @@ if(!defined('CLASS_POOLOBJECT')) {
         * Die Funktion raiseError arbeitet mit der PHP Funktion trigger_error(). Wird der PHP Error Handler ueberschrieben, koennen individuelle Fehlerprotokolle erstellt werden.
         *
         * @param string $file Datei (in der, der Fehler aufgetreten ist)
-        * @param string $line Zeilennummer
+        * @param int $line Zeilennummer
         * @param string $msg Fehlermeldung (Setzt sich zusammen aus: Fehler in der Klasse -Platzhalter-, Datei -Platzhalter-, Zeile -Platzhalter- Meldung: -Fehlermeldung-
         */
-        function raiseError($file, $line, $msg)
+        public function raiseError(string $file, int $line, string $msg)
         {
             if(error_reporting() == 0) {
                 return;
             }
             $error = $msg;
-            $error .= ' in ';
-            if($this) {
-                $error .= 'der Klasse ' . $this->getClassName() . ', ';
-            }
-            $error .= 'Datei ' . $file .
-                ', Zeile ' . $line;
+            $error .= ' in class '.$this->getClassName() . ', file '.$file.', line '.$line;
 
             trigger_error($error);
         }
@@ -285,9 +235,8 @@ if(!defined('CLASS_POOLOBJECT')) {
          * Wohin die Xception Ihre Fehlermeldung sendet (Bildschirm, Logfile, Mail), wird in der Xception Klasse festgelegt.
          *
          * @param Xception $Xception Die Xception oder null, falls es sich bei diesem Objekt selbst um eine Xception handelt.
-         * @access public
          **/
-        function throwException($Xception=null)
+        public function throwException($Xception=null)
         {
             if(is_null($Xception) and $this instanceof Xception) {
                 $Xception = &$this;
@@ -305,12 +254,11 @@ if(!defined('CLASS_POOLOBJECT')) {
         /**
          * Ueberprueft Parameter $data, ob es sich um eine Xception handelt.
          *
-         * @access  public
          * @param Xception $data Wert, der ueberprueft wird, ob es sich um eine Xception handelt.
          * @param int $code Wenn $data eine Xception ist, wird true zurueckgeben; aber wenn der Parameter $code ein String ist und $obj->getMessage() == $code oder $code ist ein integer und $obj->getCode() == $code
          * @return bool true wenn es sich bei dem Parameter um eine Xception handelt.
          **/
-        function isError($data, $code=null)
+        public function isError($data, $code=null): bool
         {
             if($data instanceof Xception) {
                 if (is_null($code)) {
@@ -333,7 +281,7 @@ if(!defined('CLASS_POOLOBJECT')) {
          * @param string $ext The extension name
          * @return bool Success or not on the dl() call
          */
-        function loadExtension($ext)
+        function loadExtension($ext): bool
         {
             if (!extension_loaded($ext)) {
                 // if either returns true dl() will produce a FATAL error, stop that
@@ -359,45 +307,5 @@ if(!defined('CLASS_POOLOBJECT')) {
             }
             return true;
         }
-
-        /**
-         * Destruktor
-         *
-         * @access protected
-         */
-        function destroy()
-        {
-        }
-    }
-
-/* --------------------- */
-######### Nil     #########
-/* --------------------- */
-
-
-    /**
-     * Nil ist ein NULL Objekt. Ueber die Funktion isNil kann ein NULL Objekt ueberprueft werden.
-     *
-     * @package pool
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @access public
-     **/
-    class Nil extends stdClass
-    {
-    }
-
-    /**
-     * Ueberprueft Parameter $instance, ob es sich um das Objekt Nil handelt. Nil ist ein NULL Objekt.
-     *
-     * @access public
-     * @param object $instance Zu untersuchende Objekt-Instanz
-     * @return bool Objekt-Instanz ist ein NULL Objekt (true), Objekt-Instanz ist kein NULL Objekt (false)
-     **/
-    function isNil($instance)
-    {
-        if ($instance instanceof Nil) {
-            return true;
-        }
-        return false;
     }
 }

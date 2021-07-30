@@ -288,8 +288,8 @@ class GUI_Choosy extends GUI_Module
         }
 
         #### Instanziere GUI_Shorten (kuerzt Textausgaben)
-        $GUI_Shorten = new GUI_Shorten($this -> Owner);
-        $GUI_Shorten -> autoLoadFiles();
+        $GUI_Shorten = new GUI_Shorten($this->getOwner());
+        $GUI_Shorten->autoLoadFiles();
 
         #### Hauptargumente
         $transfer			= $Input -> getVar('transfer');
@@ -336,9 +336,9 @@ class GUI_Choosy extends GUI_Module
         #### Suche
         if($Input -> getVar('submitsearch') == 1) {
             $Url = new Url();
-            $Url -> modifyParam('splitterPos', 0);
-            $Url -> modifyParam('suchbegriff', $Input -> getVar('suchbegriff'));
-            $Url -> restartUrl();
+            $Url->setParam('splitterPos', 0);
+            $Url->setParam('suchbegriff', $Input -> getVar('suchbegriff'));
+            $Url->restartUrl();
         }
 
         #### enable Searchbar
@@ -550,9 +550,9 @@ class GUI_Choosy extends GUI_Module
             }
 
             $Url = new Url();
-            $Url -> modifyParam('splitterPos', $Input -> getVar('splitterPos'));
-            $Url -> modifyParam('saved', $Input -> getVar('submitok'));
-            $Url -> restartUrl();
+            $Url->setParam('splitterPos', $Input -> getVar('splitterPos'));
+            $Url->setParam('saved', $Input -> getVar('submitok'));
+            $Url->restartUrl();
         }
 
         #### Anzuzeigende Felder (*=alle):
@@ -844,7 +844,7 @@ class GUI_Choosy extends GUI_Module
 
         $enableScrollbox = $this -> Input -> getVar('enableScrollbox');
         if($enableScrollbox==1) {
-            $Scrollbox = new GUI_Scrollbox($this -> Owner);
+            $Scrollbox = new GUI_Scrollbox($this->getOwner());
             $Scrollbox -> Input -> setVar(
                 array(
                     'boxwidth' => $this -> Input -> getVar('scrollBoxwidth'),

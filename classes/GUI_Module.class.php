@@ -30,9 +30,8 @@ const REQUEST_PARAM_METHOD = 'method';
  * Basisklasse fuer alle graphischen Steuerelemente.
  *
  * @package pool
- * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @version $Id: GUI_Module.class.php,v 1.7 2006/11/02 12:04:54 manhart Exp $
- * @access public
  **/
 class GUI_Module extends Module
 {
@@ -135,7 +134,7 @@ class GUI_Module extends Module
      * @param array $params additional parameters
      * @throws ReflectionException
      */
-    function __construct(&$Owner, bool $autoLoadFiles = true, array $params = [])
+    function __construct(?Component $Owner, bool $autoLoadFiles = true, array $params = [])
     {
         parent::__construct($Owner, $params);
 
@@ -322,20 +321,20 @@ class GUI_Module extends Module
      */
     function getTemplatePath($lookInside = false, $without_frame = true)
     {
-        $Parent = &$this->Parent;
+        $Parent = $this->Parent;
         $parent_directory = '';
         if ($lookInside and $Parent != null) {
             do {
                 if ($Parent instanceof GUI_Schema) {
-                    $Parent = &$Parent->getParent();
+                    $Parent = $Parent->getParent();
                     continue;
                 }
                 if ($without_frame and $Parent instanceof GUI_CustomFrame) {
-                    $Parent = &$Parent->getParent();
+                    $Parent = $Parent->getParent();
                     continue;
                 }
                 $parent_directory = $Parent->getClassName() . '/' . $parent_directory;
-                $Parent = &$Parent->getParent();
+                $Parent = $Parent->getParent();
             } while ($Parent != null);
         }
         return $parent_directory . $this->getClassName();
@@ -345,11 +344,10 @@ class GUI_Module extends Module
      * Autoloader for GUIModules
      *
      * @param string $GUIClassName
-     * @param GUI_Module|null $ParentGUI
+     * @param Module|null $ParentGUI
      * @return bool
-     * @throws ReflectionException
      */
-    public static function autoloadGUIModule(string $GUIClassName, $ParentGUI = null): bool
+    public static function autoloadGUIModule(string $GUIClassName, ?Module $ParentGUI = null): bool
     {
         $GUIRootDirs = array(
             getcwd()
@@ -383,14 +381,14 @@ class GUI_Module extends Module
                 $parent_directory_without_frame = '';
                 do {
                     if ($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
-                        $ParentGUI = &$ParentGUI->getParent();
+                        $ParentGUI = $ParentGUI->getParent();
                         continue;
                     }
                     if (!$ParentGUI instanceof GUI_CustomFrame) {
                         $parent_directory_without_frame = $ParentGUI->getClassName() . '/' . $parent_directory_without_frame;
                     }
                     $parent_directory = $ParentGUI->getClassName() . '/' . $parent_directory;
-                    $ParentGUI = &$ParentGUI->getParent();
+                    $ParentGUI = $ParentGUI->getParent();
                 } while ($ParentGUI != null);
 
                 $filename = $GUIRootDir . $parent_directory . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
@@ -417,12 +415,12 @@ class GUI_Module extends Module
      * @method static
      * @access public
      * @param string $GUIClassName Name der GUI Klasse
-     * @param Component $Owner Besitzer dieses Objekts
-     * @param Module $ParentGUI parent module
+     * @param Component|null $Owner Besitzer dieses Objekts
+     * @param Module|null $ParentGUI parent module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
-     * @return object Neues GUI_Module oder Nil
+     * @return Module|null Neues GUI_Module
      */
-    public static function createGUIModule($GUIClassName, Component &$Owner, &$ParentGUI, $params = '')
+    public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = ''): ?Module
     {
         $class_exists = class_exists($GUIClassName, false);
 
@@ -449,7 +447,7 @@ class GUI_Module extends Module
             return $GUI;
         }
         else {
-            return new Nil();
+            return null;
         }
     }
 
@@ -470,11 +468,12 @@ class GUI_Module extends Module
     /**
      * Durchsucht den Inhalt nach GUIs.
      *
-     * @access public
      * @param string $content Zu durchsuchender Inhalt
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
-     **/
-    function searchGUIs($content)
+     *
+     * @throws ReflectionException
+     */
+    public function searchGUIs(string $content): string
     {
         $reg = '/\[(GUI_.*)(\((.*)\)|)\]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
@@ -483,9 +482,9 @@ class GUI_Module extends Module
                 $pattern = $matches[$i][0];
                 $guiname = $matches[$i][1];
                 $params = isset($matches[$i][3]) ? $matches[$i][3] : '';
-                $new_GUI = $this->createGUIModule($guiname, $this->Owner, $this, $params);
+                $new_GUI = $this->createGUIModule($guiname, $this->getOwner(), $this, $params);
 
-                if (isNil($new_GUI)) {
+                if (is_null($new_GUI)) {
                     $message = 'Fehler beim Erzeugen der Klasse "{guiname}"';
                     $E = new Xception($message, 0, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__,
                         compact('guiname')), null);
@@ -510,15 +509,16 @@ class GUI_Module extends Module
      * @access public
      * @param string $content Content / Inhalt
      * @return string Content / Inhalt aller Childs
-     **/
-    function reviveChildGUIs($content)
+     *
+     * @throws ReflectionException
+     */
+    public function reviveChildGUIs(string $content): string
     {
         //$content = $this -> FindGUIsByContent($content);
         $content = $this->searchGUIs($content);
         $this->prepareChilds();
         $this->finalizeChilds();
-        $content = $this->pasteChilds($content);
-        return $content;
+        return $this->pasteChilds($content);
     }
 
     /**
@@ -614,13 +614,12 @@ class GUI_Module extends Module
 
     /**
      * Bereitet alle Html Templates aller Childs auf.
-     *
-     * @access private
      **/
-    function prepareChilds()
+    private function prepareChilds()
     {
-        for ($m = 0; $m < count($this->Modules); $m++) {
-            $gui = &$this->Modules[$m];
+        $max = count($this->Modules);
+        for ($m = 0; $m < $max; $m++) {
+            $gui = $this->Modules[$m];
             $gui->importHandoff($this->Handoff);
             $gui->prepareContent();
         }
@@ -779,15 +778,12 @@ class GUI_Module extends Module
 
     /**
      * Fertigt alle Html Templates der Childs an.
-     *
-     * @access private
-     * @return string Content / Inhalt aller Childs
      **/
-    function finalizeChilds()
+    private function finalizeChilds()
     {
         $count = count($this->Modules);
         for ($m = 0; $m < $count; $m++) {
-            $gui = &$this->Modules[$m];
+            $gui = $this->Modules[$m];
             /*echo $gui->getClassName().' '.bool2string($gui->enabled).'<br>';*/
             if ($gui->enabled) {
                 $gui->FinalContent = $gui->finalizeContent();
@@ -801,17 +797,16 @@ class GUI_Module extends Module
     }
 
     /**
-     * GUI_Module::pasteChilds()
+     * adopts the content of the children
      *
-     * @access private
      * @param string $content Eigener Content
      * @return string Eigener Content samt dem Content der Child GUIs
      **/
-    function pasteChilds($content)
+    private function pasteChilds(string $content): string
     {
         $count = count($this->Modules);
         for ($m = 0; $m < $count; $m++) {
-            $gui = &$this->Modules[$m];
+            $gui = $this->Modules[$m];
             $content = str_replace($gui->getMarkerIdent(), $gui->FinalContent, $content);
         }
         return $content;
