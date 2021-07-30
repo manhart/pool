@@ -34,9 +34,8 @@ if(!defined('CLASS_URL')) {
      * URI Verwaltung (liest alle $_GET Variablen ein).
      *
      * @package rml
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
+     * @author Alexander Manhart <alexander@manhart-it.de>
      * @version $Id: Url.class.php,v 1.10 2007/05/31 14:39:34 manhart Exp $
-     * @access public
      **/
     class Url extends PoolObject
     {
@@ -48,17 +47,11 @@ if(!defined('CLASS_URL')) {
          */
         var $InpGet = null;
 
-        //@var string Schluesselparameter (-wort)
-        //@access private
-        var $KeyWord = '';
-
         //@var string Scriptname
-        //@access private
-        var $ScriptName = '';
+        private string $ScriptName = '';
 
         //@var string Scriptpfad (relativer Pfad)
-        //@access private
-        var $ScriptPath = '';
+        private string $ScriptPath = '';
 
         /**
          * @var int Port der Anfrage (Standard 80)
@@ -126,11 +119,10 @@ if(!defined('CLASS_URL')) {
          * Sets up the object.
          *
          * @access public
-         * @param mixed $superglobal Superglobals (siehe Input.class.php)
-         * @param string $KeyWord not yet implemented
-         * @see Input.class.php
+         * @param int $superglobal Superglobals (siehe Input.class.php)
+         * @see Input::__construct
          **/
-        function __construct($superglobal=I_GET, $KeyWord='')
+        function __construct(int $superglobal=I_GET)
         {
             $this->InpGet = new IGet($superglobal);
             $this->Host = $_SERVER['SERVER_NAME'];
@@ -573,24 +565,11 @@ if(!defined('CLASS_URL')) {
         }
 
         /**
-         * Synonym auf Url::modifyQuery()
-         *
-         * @param string $key Schluessel / Parameterbezeichnung
-         * @param string $value Wert des Parameters
-         * @deprecated
-         */
-        function modifyParam(string $key, $value=''): Url
-        {
-            return $this->setParam($key, $value);
-        }
-
-        /**
          * Setzt einen Anker (Anchor) fuer die aktuelle Url.
          *
-         * @access public
          * @param string $value Name des Ankers / Fragments
          **/
-        function setAnchor($value = '#')
+        public function setAnchor(string $value = '#')
         {
             if (strlen($value) > 0) {
                 if ($value[0] != '#') {

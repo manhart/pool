@@ -737,7 +737,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @see MySQL_DAO::__buildLimit
          * @see MySQL_DAO::__buildGroupby
          **/
-        public function &getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array(),
+        public function getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array(),
             $groupby=array(), $having=array(), $options=array())
         {
             $sql = sprintf('SELECT %s %s FROM `%s` WHERE %s %s%s%s%s%s',
