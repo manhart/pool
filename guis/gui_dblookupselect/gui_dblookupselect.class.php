@@ -112,7 +112,7 @@ class GUI_DBLookupSelect extends GUI_Select
             $DAO->setColumnsAsString($listfield);
         }
 
-        $Resultset = & $DAO -> getMultiple(null, null, $filter, $sorting);
+        $Resultset = $DAO->getMultiple(null, null, $filter, $sorting);
         #echo pray($Resultset);
         $rowset = $Resultset -> getRowset();
 
