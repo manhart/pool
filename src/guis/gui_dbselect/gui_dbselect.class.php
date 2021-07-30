@@ -62,17 +62,16 @@ class GUI_DBSelect extends GUI_Select
      **/
     function prepare ()
     {
-        $Input = & $this -> Input;
-        $Subcode = Subcode::createSubcode('DataRecordSubcode', $this -> Owner);
-        $Subcode -> import($Input);
+        $Subcode = Subcode::createSubcode('DataRecordSubcode', $this->getOwner());
+        $Subcode -> import($this->Input);
         $SubcodeResult = $Subcode->execute();
         if ($SubcodeResult -> isOk()) {
             $resultlist = $SubcodeResult -> getResultList();
-            $name = $Input -> getVar('name');
-            if ($Input -> getVar('field') != '') {
-                $name = $Input -> getVar('field');
+            $name = $this->Input -> getVar('name');
+            if ($this->Input -> getVar('field') != '') {
+                $name = $this->Input -> getVar('field');
             }
-            if(isset($resultlist[0])) $Input->setVar('selected', $resultlist[0][$name]);
+            if(isset($resultlist[0])) $this->Input->setVar('selected', $resultlist[0][$name]);
         }
         else {
             // $result -> getErrorList();

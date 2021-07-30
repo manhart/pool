@@ -34,8 +34,7 @@ if(!defined('CLASS_MODULE')) {
     /**
      * Module sind baukastenartige Klassen (Features: Parametrisierung, Handoffs, Defaults, Enable/Disable).
      *
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @access public
+     * @author Alexander Manhart <alexander@manhart-it.de>
      * @package pool
      **/
     class Module extends Component
@@ -100,7 +99,7 @@ if(!defined('CLASS_MODULE')) {
          * @param Component $Owner Owner
          * @param array $params fixed params
          */
-        function __construct(&$Owner, array $params = [])
+        function __construct(?Component $Owner, array $params = [])
         {
             parent::__construct($Owner);
 
@@ -322,11 +321,11 @@ if(!defined('CLASS_MODULE')) {
          * Setzt das Eltern-Modul (Parent = wem gehoere ich?)
          *
          * @access public
-         * @param Module $Parent Klasse vom Typ Module
+         * @param Module|null $Parent Klasse vom Typ Module
          */
-        function setParent(Module &$Parent)
+        function setParent(?Module $Parent)
         {
-            $this->Parent = &$Parent;
+            $this->Parent = $Parent;
         }
 
         /**
@@ -335,7 +334,7 @@ if(!defined('CLASS_MODULE')) {
          * @access public
          * @return Module Ergebnis vom Typ Module
          */
-        function &getParent()
+        public function getParent(): ?Module
         {
             return $this->Parent;
         }
@@ -343,21 +342,19 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Fuegt ein Modul in den internen Modul-Container ein.
          *
-         * @access public
-         * @param object $Module
-         **/
-        function insertModule(& $Module)
+         * @param Module $Module
+         */
+        public function insertModule(Module $Module)
         {
-            $this->Modules[] = &$Module;
+            $this->Modules[] = $Module;
         }
 
         /**
          * Entfernt ein Modul
          *
-         * @access public
-         * @param object $Module
-         **/
-        function removeModule(& $Module)
+         * @param Module $Module
+         */
+        public function removeModule(Module $Module)
         {
             $new_Modules = Array();
 
@@ -365,7 +362,7 @@ if(!defined('CLASS_MODULE')) {
             $max = count($this->Modules);
             for ($i = 0; $i < $max; $i++) {
                 if ($Module != $this->Modules[$i]) {
-                    $new_Modules[] = &$this->Modules[$i];
+                    $new_Modules[] = $this->Modules[$i];
                 }
             }
 
@@ -411,20 +408,6 @@ if(!defined('CLASS_MODULE')) {
         function enable()
         {
             $this->enabled = true;
-        }
-
-        /**
-         * Destruktor
-         *
-         * Objekte, Arrays und Variablen werden freigegeben.
-         *
-         * @access public
-         **/
-        function destroy()
-        {
-            parent::destroy();
-
-            unset($this->Modules);
         }
     }
 }

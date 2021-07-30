@@ -67,17 +67,15 @@ class GUI_Record extends GUI_Module
      **/
     function prepare ()
     {
-        $Input = & $this -> Input;
-
         $output = '';
-        $Subcode = Subcode::createSubcode('DataRecordSubcode', $this -> Owner);
-        $Subcode -> import($Input);
-        $SubcodeResult = & $Subcode -> execute();
+        $Subcode = Subcode::createSubcode('DataRecordSubcode', $this->getOwner());
+        $Subcode -> import($this->Input);
+        $SubcodeResult = $Subcode->execute();
         if ($SubcodeResult -> isOk()) {
             $resultlist = $SubcodeResult -> getResultList();
 
             foreach($resultlist as $record) {
-                if($output == '' and $Input -> getVar('header')==1)
+                if($output == '' and $this->Input -> getVar('header')==1)
                     $output = implode(';', array_keys($record)) . "\n";
                 $output .= implode(';', array_values($record));
             }
@@ -87,12 +85,11 @@ class GUI_Record extends GUI_Module
             // $result -> getErrorList();
         }
         $this -> output = $output;
-
-        parent :: prepare();
+        parent::prepare();
     }
 
     function finalize()
     {
-        return $this -> output;
+        return $this->output;
     }
 }

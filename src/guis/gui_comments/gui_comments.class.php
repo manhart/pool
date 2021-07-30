@@ -95,7 +95,7 @@ class GUI_Comments extends GUI_Module
                         'tablename' => $tablename, 'tableid' => $tableid, 'createdate' => time()));
                     if ($result_comments -> getValue('last_insert_id') > 0) {
 
-                        $url -> modifyParam('schema', 'comments');
+                        $url->setParam('schema', 'comments');
                         $forwardUrl = $Input -> getVar('forwardUrl');
                         $url -> InpGet -> setParams($forwardUrl);
 
@@ -112,10 +112,10 @@ class GUI_Comments extends GUI_Module
                 $boxTitle = 'Antworten';
                 $Template -> useFile('answer');
                 $Template -> setVar('TEXT', $text);
-                $url -> modifyParam('action', null);
+                $url->setParam('action', null);
                 $Template -> setVar('URL_SELF', $url -> getUrl());
 
-                $url -> modifyParam('schema', 'comments');
+                $url->setParam('schema', 'comments');
                 $Template -> setVar('URL_BACK', $url -> getUrl());
                 $Input -> setVar('tplhandle', 'answer');
                 break;
@@ -128,9 +128,9 @@ class GUI_Comments extends GUI_Module
                 //echo "UPDATE : idComment = $idComment ; text = $text<br>";
 
                 $url = new Url();
-                $url -> modifyParam('action', 'update');
-                $url -> modifyParam('schema', 'comments');
-                $url -> modifyParam('idComment',$idComment);
+                $url->setParam('action', 'update');
+                $url->setParam('schema', 'comments');
+                $url->setParam('idComment',$idComment);
 
                 // neu speichern
                 if( !empty($text) && !empty($idComment) ) {
@@ -160,7 +160,7 @@ class GUI_Comments extends GUI_Module
                 }
 
                 $url = new Url();
-                $url -> modifyParam('schema', 'comments');
+                $url->setParam('schema', 'comments');
                 $forwardUrl = $Input -> getVar('forwardUrl');
                 if(!empty($forwardUrl))
                     $url -> InpGet -> setParams($forwardUrl);
@@ -212,7 +212,7 @@ class GUI_Comments extends GUI_Module
                 }
 
                 $this -> Template -> newBlock('ButtonAnswer');
-                $url -> modifyParam('schema', 'answer');
+                $url->setParam('schema', 'answer');
                 $this -> Template -> setVar('URL_ANSWER', $url -> getUrl());
                 $Input -> setVar('tplhandle', 'comments');
                 $this -> Template -> leaveBlock();

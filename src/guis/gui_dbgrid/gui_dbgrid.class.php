@@ -570,8 +570,8 @@ class GUI_DBGrid extends GUI_Module
         $classInactiveSortLink = $Input->getVar('classInactiveSortLink');
 
         $Url = new Url();
-        $Url -> modifyParam('sortField'.$sortSuffix, addslashes($fieldname));
-        $Url -> modifyParam('sortOrder'.$sortSuffix, ($sortField == $fieldname and $sortOrder == 'ASC') ? 'DESC' : 'ASC');
+        $Url->setParam('sortField'.$sortSuffix, addslashes($fieldname));
+        $Url->setParam('sortOrder'.$sortSuffix, ($sortField == $fieldname and $sortOrder == 'ASC') ? 'DESC' : 'ASC');
         $Template->setVar('URL_Sort', $Url -> getUrl());
         $css = ($fieldname == $sortField) ? $classActiveSortLink : $classInactiveSortLink;
         $Template->setVar('classSortLink', $css);
