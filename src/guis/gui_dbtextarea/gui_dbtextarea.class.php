@@ -67,20 +67,19 @@ class GUI_DBTextarea extends GUI_Textarea
      **/
     function prepare ()
     {
-        $Input = & $this -> Input;
 
-        $Subcode = Subcode::createSubcode('DataRecordSubcode', $this -> Owner);
-        $Subcode -> import($Input);
-        $SubcodeResult = & $Subcode -> execute();
+        $Subcode = Subcode::createSubcode('DataRecordSubcode', $this->getOwner());
+        $Subcode -> import($this->Input);
+        $SubcodeResult = $Subcode->execute();
         if ($SubcodeResult -> isOk()) {
             $resultlist = $SubcodeResult -> getResultList();
-            $name = $Input -> getVar('name');
-            $Input -> setVar('value', $resultlist[0][$name]);
+            $name = $this->Input -> getVar('name');
+            $this->Input -> setVar('value', $resultlist[0][$name]);
         }
         else {
             // $result -> getErrorList();
         }
 
-        parent :: prepare();
+        parent::prepare();
     }
 }

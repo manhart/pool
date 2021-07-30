@@ -63,14 +63,13 @@ if(!defined('CLASS_SUBCODE'))
          * @method static
          * @access public
          * @param string $class_name Name der Klasse
-         * @param object $Owner Besitzer
-         * @return object Instanz
-         **/
-        static function &createSubcode($class_name, &$Owner)
+         * @param Component|null $Owner Besitzer
+         * @return Subcode Instanz
+         */
+        static function createSubcode(string $class_name, ?Component $Owner): Subcode
         {
             if (class_exists($class_name)) {
-                $Subcode = new $class_name($Owner);
-                return $Subcode;
+                return new $class_name($Owner);
             }
             else{
                 die($class_name.' does not exist!');
@@ -110,23 +109,20 @@ if(!defined('CLASS_SUBCODE'))
          * (muss ueberschrieben werden)
          *
          * @method virtual
-         * @access protected
          * @return object SubcodeResult
          **/
-        function &execute()
+        public function execute()
         {
             return $this->getResult();
         }
 
         /**
-         * Subcode::getResult()
-         *
          * Ergebnis des Subcodes.
          *
-         * @return object SubcodeResult
+         * @return SubcodeResult|null SubcodeResult
          * @see SubcodeResult
          **/
-        function &getResult()
+        public function getResult(): ?SubcodeResult
         {
             return $this->SubcodeResult;
         }

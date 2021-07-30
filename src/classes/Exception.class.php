@@ -2,7 +2,6 @@
 /**
 * POOL (PHP Object Oriented Library): die Datei Object.class.php enthaelt die Grundklasse, der Uhrahn aller Objekte.
 *
-* Die Klasse Nil ist ein NULL Objekt und hat keine Bedeutung (wie in Pascal/Delphi).<br>
 * Die Klasse Xception integriert eine Fehlerbehandlung.
 *
 * Vermerk Author:<br>

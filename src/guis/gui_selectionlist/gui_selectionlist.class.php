@@ -71,10 +71,10 @@ class GUI_Selectionlist extends GUI_Module
     {
         $this -> loadFiles();
 
-        $Template = & $this -> Template;
-        $Input = & $this -> Input;
-        $interfaces = & $this -> Weblication -> getInterfaces();
-        $Frame = & $this -> Weblication -> getFrame();
+        $Template = $this -> Template;
+        $Input = $this -> Input;
+        $interfaces = $this->Weblication->getInterfaces();
+        $Frame = $this -> Weblication->getFrame();
         $Frame -> Headerdata -> setTitle('Auswahlliste Zwangskombinationen');
 
         if ($Input -> getVar('primarykeys') == '') {
@@ -83,8 +83,8 @@ class GUI_Selectionlist extends GUI_Module
         }
 
 
-        $GUI_Shorten = new GUI_Shorten($this -> Owner);
-        $GUI_Shorten -> autoLoadFiles();
+        $GUI_Shorten = new GUI_Shorten($this->getOwner());
+        $GUI_Shorten->autoLoadFiles();
 
         $inputfile = $Input -> getVar('inputfile');
         $selectionfile = $Input -> getVar('selectionfile');
@@ -95,8 +95,8 @@ class GUI_Selectionlist extends GUI_Module
         #### suche
         if($Input -> getVar('submitsearch') == 1) {
             $Url = new Url();
-            $Url -> modifyParam('splitterPos', 0);
-            $Url -> modifyParam('suchbegriff', $Input -> getVar('suchbegriff'));
+            $Url -> setParam('splitterPos', 0);
+            $Url -> setParam('suchbegriff', $Input -> getVar('suchbegriff'));
             $Url -> restartUrl();
         }
 
@@ -222,8 +222,8 @@ class GUI_Selectionlist extends GUI_Module
             //}
 
             $Url = new Url();
-            $Url -> modifyParam('splitterPos', $Input -> getVar('splitterPos'));
-            $Url -> modifyParam('saved', $Input -> getVar('submitok'));
+            $Url -> setParam('splitterPos', $Input -> getVar('splitterPos'));
+            $Url -> setParam('saved', $Input -> getVar('submitok'));
             $Url -> restartUrl();
         }
 
