@@ -78,7 +78,7 @@ class GUI_PageControl extends GUI_Module
             if (is_array($params)) {
                 foreach($params as $param) {
                     list($paramname, $paramvalue) = explode(':', $param);
-                    $Url -> modifyParam($paramname, $paramvalue);
+                    $Url -> setParam($paramname, $paramvalue);
                 }
             }
         }
@@ -149,7 +149,7 @@ class GUI_PageControl extends GUI_Module
                     $Template -> setVar('pagename', $pagename);
                 }
 
-                $Url -> modifyParam($activePageUrlParam, $pagename);
+                $Url->setParam($activePageUrlParam, $pagename);
                 $Template -> setVar('pageurl', $Url -> getUrl());
 
                 $Template -> newBlock($prefix . 'page_' . $state . '_edge_' . $edge);
@@ -157,7 +157,7 @@ class GUI_PageControl extends GUI_Module
 
                 if ($state == 'active' and is_array($pageguis) and count($pageguis) > 0) {
                     if ($pageguis[$i]) {
-                        $GUI = & GUI_Module::createGUIModule($pageguis[$i], $this->Owner, $this);
+                        $GUI = GUI_Module::createGUIModule($pageguis[$i], $this->getOwner(), $this);
                         if (is_a($GUI, 'GUI_Module')) {
                             $GUI -> importHandoff($this -> Handoff);
                             $GUI -> prepareContent();
@@ -171,7 +171,7 @@ class GUI_PageControl extends GUI_Module
 
                 if ($state == 'active' and is_array($pageschemes) and count($pageschemes) > 0) {
                     if ($pageschemes[$i]) {
-                        $GUI = & GUI_Module::createGUIModule('GUI_Schema', $this->Owner, $this);
+                        $GUI = GUI_Module::createGUIModule('GUI_Schema', $this->getOwner(), $this);
                         if (is_a($GUI, 'GUI_Schema')) {
                             $GUI -> Input -> setVar('schema', $pageschemes[$i]);
                             $GUI -> importHandoff($this -> Handoff);
@@ -191,7 +191,7 @@ class GUI_PageControl extends GUI_Module
 
     /**
      * Ruft die benutzerdefinierte Funktion fuer jede Page auf. Z.B. k�nnte hier die URL fuer jeden Reiter geaendert werden.
-     * $GUI_PageControl -> Url -> modifyParam('mode', 'liste');
+     * $GUI_PageControl -> Url -> setParam('mode', 'liste');
      *
      * @param unknown_type $function_name
      */

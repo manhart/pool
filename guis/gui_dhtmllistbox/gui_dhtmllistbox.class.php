@@ -151,7 +151,7 @@ class GUI_DHTMLListbox extends GUI_Module
         }
 
         #### Scrollbox
-        $GUI_Scrollbox = new GUI_Scrollbox($this -> Owner);
+        $GUI_Scrollbox = new GUI_Scrollbox($this->getOwner());
         $GUI_Scrollbox->Input->setVar(
             array(
                 'boxheight' => ($caption_align == 'top') ? ($Input -> getVar('height') - 20) : $Input -> getVar('height'), // Hoehe der ersten Zeile

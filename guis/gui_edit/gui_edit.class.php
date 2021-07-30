@@ -31,6 +31,24 @@
  **/
 class GUI_Edit extends GUI_InputElement
 {
+    use Configurable;
+
+//    protected string $storageType = 'JSON';
+//
+//    use \pool\classes\Configurable;
+//
+    private array $inspectorProperties = [
+        'placeholder' => [
+            'attribute' => 'placeholder',
+            'type' => 'string',
+            'value' => 'placeholder',
+            'element' => 'input',
+            'inputType' => 'text',
+            'caption' => 'Platzhalter'
+        ]
+    ];
+//
+//    private array $poolOptions = [];
 
     /**
      * Initialisiert Standardwerte:
@@ -45,6 +63,7 @@ class GUI_Edit extends GUI_InputElement
      **/
     function init($superglobals=I_EMPTY)
     {
+        // $this->Defaults->addVar('placeholder', 'hirsch');
         $this->Defaults->addVar(
             array(
                 'type'			=> 'text',
@@ -54,6 +73,21 @@ class GUI_Edit extends GUI_InputElement
 
         parent::init(I_GET|I_POST);
     }
+
+//    public function hasConfiguration()
+//    {
+//        // TODO: Implement hasConfiguration() method.
+//    }
+//
+//    public function saveConfiguration()
+//    {
+//        // TODO: Implement saveConfiguration() method.
+//    }
+//
+//    public function loadConfiguration()
+//    {
+//        // TODO: Implement loadConfiguration() method.
+//    }
 
     /**
      * Laedt Template "tpl_edit.html". Ist im projekteigenen Skinordner ueberschreibbar!
@@ -65,6 +99,72 @@ class GUI_Edit extends GUI_InputElement
         $file = $this->Weblication->findTemplate('tpl_edit.html', 'gui_edit', true);
         $this->Template->setFilePath('stdout', $file);
     }
+    /**
+     * Provisioning data before preparing module and there children.
+     */
+//    public function provision()
+//    {
+//        $data = $this->Input->getData();
+//        unset(
+//            $data['moduleName'],
+//            $data['ModuleName'],
+//            $data['modulename'],
+//            $data['framework'],
+//            $data['render']
+//        );
+//
+//        $this->setConfiguration($data);
+
+//        $config = [];
+//        $fileName = $this->getFixedParam('loadConfigFromJSON');
+//        if($fileName) {
+//            $config = $this->loadConfigFromJSON($fileName);
+//        }
+//        $this->setConfiguration($config);
+//    }
+
+//    public function loadConfigFromJSON($fileName)
+//    {
+//        $file = DIR_DATA_ROOT.'/ModuleConfiguratorTemp/'.$fileName;
+//        $json = file_get_contents($file);
+//
+//        $config = json_decode($json, JSON_OBJECT_AS_ARRAY);
+//        if(json_last_error() != JSON_ERROR_NONE) {
+//            return [];
+//        }
+//        return $config;
+//    }
+
+    public function prepare()
+    {
+//        echo 'placeholder: '.$this->getVar('placeholder');
+//        $this->setVar($this->options);
+        parent::prepare();
+    }
+
+    public function getInspectorProperties(): array
+    {
+        $tmp = $this->inspectorProperties + $this->getDefaultInspectorProperties();
+        return $tmp;
+    }
+
+//    public function setOptions(array $options)
+//    {
+//        foreach($options as $key => $value) {
+//            if($value === 'true' or $value === 'false') {
+//                $value = string2bool($value);
+//            }
+//            if(isset($this->getInspectorProperties()[$key])) {
+//                if($this->getInspectorProperties()[$key]['value'] != $value) {
+//                    $this->configuration[$key] = $value;
+//                }
+//            }
+//            else {
+//                $this->poolOptions[$key] = $value;
+//            }
+//        }
+//        $this->setVar($this->configuration);
+//    }
 
     /**
      * Verarbeitet Template (Platzhalter, Bloecke, etc.) und generiert HTML Output.
@@ -77,4 +177,5 @@ class GUI_Edit extends GUI_InputElement
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');
     }
+
 }

@@ -128,11 +128,11 @@
 				foreach ($ayColtitles as $title) {
 					$activeColumn = $ayColumns[$i];
 					$Url_asc = new Url();
-					$Url_asc -> modifyParam('sortfield', $ayColumns[$i]);
-					$Url_asc -> modifyParam('order_' . $ayColumns[$i], 'ASC');
+					$Url_asc -> setParam('sortfield', $ayColumns[$i]);
+					$Url_asc -> setParam('order_' . $ayColumns[$i], 'ASC');
 					if ($Input -> getVar('sortfield') == $ayColumns[$i]) {
 					    if ($Input -> getVar('order_' . $ayColumns[$i]) == 'ASC') {
-					    	$Url_asc -> modifyParam('order_' . $ayColumns[$i], 'DESC');
+					    	$Url_asc -> setParam('order_' . $ayColumns[$i], 'DESC');
 					    }
 					}
 
@@ -179,7 +179,7 @@
 				usort($list, array($this, 'sort'));
 				$Input -> setVar('list', $list);
 			}
-			$GUI_Shorten = new GUI_Shorten($this -> Owner);
+			$GUI_Shorten = new GUI_Shorten($this->getOwner());
 			if (is_array($list) and count($list) > 0) {
 				for ($r = $Input -> getVar('fromrow'); $r < count($list); $r++) {
 					$Template->newBlock('row');

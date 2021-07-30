@@ -41,7 +41,7 @@ class GUI_Scrollbox extends GUI_Module
      * @param bool $autoLoadFiles
      * @param array $params
      */
-    function __construct(& $Owner, $autoLoadFiles = true, array $params = [])
+    function __construct($Owner, $autoLoadFiles = true, array $params = [])
     {
         $this->TplSbox = new Template();
 
