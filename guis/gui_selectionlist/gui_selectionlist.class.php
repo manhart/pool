@@ -156,7 +156,7 @@ class GUI_Selectionlist extends GUI_Module
             $sorting = ($Input -> getVar('defaultSortfield')) ? array($Input -> getVar('defaultSortfield') => $Input -> getVar('defaultSortorder')) : array();
             $limit = array($Input -> getVar('splitterPos'), $Input -> getVar('maxRecordsPerPage'));
 
-            $DAO = & DAO::createDAO($interfaces, $tabledefine);
+            $DAO = DAO::createDAO($interfaces, $tabledefine);
             //$DAO -> setColumnsAsString($Input -> getVar('searchfields'), ';');
             $Resultset = & $DAO -> getMultiple(null, null, $filter, $sorting, $limit);
             $list = $Resultset -> getRowset();

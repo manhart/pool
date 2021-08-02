@@ -26,7 +26,7 @@
  *
  * <code>
  * // DAO fuer eine beliebige Tabelle:
- * $DAO = &DAO::createDAO($interfaces, 'xxxx');
+ * $DAO = DAO::createDAO($interfaces, 'xxxx');
  *
  * //
  * $DAO->setColumns('id', 'lagername');
@@ -364,7 +364,7 @@ class GUI_Choosy extends GUI_Module
                     $sorting = ($Input -> getVar('defaultSortfield')) ? array($Input -> getVar('defaultSortfield') => $Input -> getVar('defaultSortorder')) : array();
                     $limit = array($splitterPos, $maxRecordsPerPage);
 
-                    $DAO = & DAO::createDAO($interfaces, $tabledefine);
+                    $DAO = DAO::createDAO($interfaces, $tabledefine);
                     // $DAO -> enableDebugging();
                     // $DAO -> setColumnsAsString($Input -> getVar('searchfields'), ';');
                     if($user_function != false) {
@@ -407,7 +407,7 @@ class GUI_Choosy extends GUI_Module
             case CHOOSY_TRANSFER_DBCHOOSY:
                 $tableid = $Input -> getVar('tableid');
                 if($tableid=='') die('no tableid!!');
-                $DAO_Choosy = &DAO::createDAO($interfaces, $tabledefine);
+                $DAO_Choosy = DAO::createDAO($interfaces, $tabledefine);
                 $Resultset_Choosy = $DAO_Choosy -> get($tableid);
 
                 $input_as_sql = $Resultset_Choosy -> getValue('input_as_sql');
@@ -541,7 +541,7 @@ class GUI_Choosy extends GUI_Module
 
                 case CHOOSY_TRANSFER_DBCHOOSY:
                     $tableid = $Input -> getVar('tableid');
-                    $DAO_Choosy = &DAO::createDAO($interfaces, $tabledefine);
+                    $DAO_Choosy = DAO::createDAO($interfaces, $tabledefine);
                     $DAO_Choosy -> update(array('idtbl_choosy' => $tableid,
                         'output' => trim(implode("\n", $selectionlines)),
                         'ready' => 1));

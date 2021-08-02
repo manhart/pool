@@ -110,7 +110,7 @@ if(!defined('CLASS_SESSIONHANDLER')) {
             $this -> Input = & new Input(I_REQUEST|I_SERVER);
 
             if ($this -> db -> connect($this -> dbname)) {
-                $this -> dao = & DAO::createDAO($this -> db, $this -> tabledefine, false);
+                $this -> dao = DAO::createDAO($this -> db, $this -> tabledefine, false);
 
                 $this -> ip = substr($this->db->escapestring($this->Input->getVar('REMOTE_ADDR')), 0, 15);
                 $this -> browser = substr($this->db->escapestring($this -> Input -> getVar('HTTP_USER_AGENT')), 0, 96);

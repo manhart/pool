@@ -41,16 +41,15 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
      * @package pool
      * @author Alexander Manhart <alexander.manhart@gmx.de>
      * @version $Id: MySQL_Resultset.class.php,v 1.13 2007/03/29 09:20:18 manhart Exp $
-     * @access public
      **/
     class MySQL_Resultset extends Resultset
     {
         /**
          * Database Interface for MySQL
          *
-         * @var MySQLi_Interface
+         * @var DataInterface|null
          */
-        var $db = null;
+        private ?DataInterface $db = null;
 
         /**
          * Erwartet Datenbank Layer als Parameter.
@@ -58,13 +57,12 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
          * Die MySQL_db Klasse uebt die eigentlichen datenbankspezfischen
          * Operationen (z.B. mysql_connect, mysql_query) aus.
          *
-         * @access public
-         * @param MySQLi_Interface $db database layer
+         * @param DataInterface $db database layer
          * @see MySQL_db
          **/
-        function __construct(&$db)
+        public function __construct(DataInterface $db)
         {
-            $this->db = &$db;
+            $this->db = $db;
             return $this;
         }
 
@@ -82,7 +80,7 @@ if(!defined('CLASS_MYSQL_RESULTSET')) {
          * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
          * @see Resultset::getLastError()
          **/
-        function execute(string $sql, string $dbname='')
+        public function execute(string $sql, string $dbname=''): bool
         {
             $bResult = false;
             $this->rowset = array();
