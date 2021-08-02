@@ -39,13 +39,13 @@ class GUI_Emoticons extends GUI_Module
 
     function prepare ()
     {
-        $interfaces = & $this -> Weblication -> getInterfaces();
+        $interfaces = $this -> Weblication -> getInterfaces();
 
         if (method_exists($this -> Weblication -> Main, 'setActiveMenueItem')) {
             $this -> Weblication -> Main -> setActiveMenueItem('News');
         }
 
-        $dao_emoticons = & DAO::createDAO($interfaces, $this -> Input -> getVar('tabledefine'));
+        $dao_emoticons = DAO::createDAO($interfaces, $this -> Input -> getVar('tabledefine'));
         $result_emoticons = $dao_emoticons -> getMultiple(null, null, null, array('sort' => 'ASC'));
 
         $maxcols = (int)$this -> Input -> getVar('maxcols');

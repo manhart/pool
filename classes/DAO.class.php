@@ -371,7 +371,7 @@ if(!defined('CLASS_DAO')) {
          * @param boolean $autoload_fields Automatisch Lesen der Spaltendefinitionen
          * @return MySQL_DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
          **/
-        public static function &createDAO($interfaces, string $tabledefine, $autoload_fields=true)
+        public static function createDAO($interfaces, string $tabledefine, $autoload_fields=true)
         {
             $type = $dbname = $table = '';
             self::extractTabledefine($tabledefine, $type, $dbname, $table);

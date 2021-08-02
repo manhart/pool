@@ -200,8 +200,8 @@
 		 **/
 		function initialize($tabledefine='')
 		{
-			$interfaces = & $this -> Weblication -> getInterfaces();
-			$this->DAO = & DAO::createDAO($interfaces, (($tabledefine == '') ? $this -> tabledefine : $tabledefine), true);
+			$interfaces = $this -> Weblication -> getInterfaces();
+			$this->DAO = DAO::createDAO($interfaces, (($tabledefine == '') ? $this -> tabledefine : $tabledefine), true);
 		}
 
 		/**
@@ -248,7 +248,7 @@
 		{
 			return 'tpl_' . $namespace . '_' . $this -> type . '.html';
 		}
-		
+
 		/**
 		 * Liefert alle oder nur bestimmte Einstellungen.
 		 *
@@ -377,7 +377,7 @@
 				// Error oder nichts gefunden $Resultset -> getLastError
 				$this->buffer['id'] = null;
 				$this->buffer['record'] = null;
-				$this->addError('Keinen Datensatz mit Primärschlüssel ('.
+				$this->addError('Keinen Datensatz mit Primï¿½rschlï¿½ssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
 					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
 				return false;
@@ -577,7 +577,7 @@
 		 **/
 		function actionDrucken()
 		{
-			
+
 			#echo 'hier';
 			#exit();
 		}
@@ -660,10 +660,10 @@
 						$this->addError($error_message['message'], $error_message['code']);
 						return 0;
 					}
-                    
+
                     $ah_status = $Resultset->getValue('ah_status');
-					
-					
+
+
                     #### Datensatz aus dem Buffer entfernen
                     for ($i = 0; $i < $count; $i++) {
                         $l_id = array();
@@ -679,9 +679,9 @@
                     }
                     $list = array_values($list);
                     $numRecords = count($list);
-                    
-                    
-                    
+
+
+
                     if ($numRecords == 1) {
                         $select_nr = 0;
 						$Resultset = new Resultset();
@@ -705,7 +705,7 @@
 						$record = null;
 						$id = null;
 					}
-                    
+
                     $this->buffer['id'] = $id;
                     $this->buffer['record'] = $record;
                     $this->buffer['list'] = $list;
