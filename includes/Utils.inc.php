@@ -2701,9 +2701,11 @@ function string2bool(?string $string): bool
  * @param $obj
  * @return bool
  */
-function isEmptyObject($obj)
+function isEmptyObject($obj): bool
 {
-    foreach ($obj as $xyz) return false;
+    foreach($obj as $prop) {
+        return false;
+    }
 
     return true;
 }
