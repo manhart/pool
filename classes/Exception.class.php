@@ -214,7 +214,7 @@ if(!defined('CLASS_EXCEPTION')) {
          */
         function getMessage()
         {
-            return $this -> parseMessage($this -> message);
+            return $this->parseMessage($this->message);
         }
 
         /**
@@ -228,27 +228,36 @@ if(!defined('CLASS_EXCEPTION')) {
          */
         function parseMessage($message, $html=true, $self=false)
         {
-            $ayBacktrace = $this -> getBacktrace();
-            // Args werden aus dem Backtrace gelöscht:
-            // ab und zu kam es vor, dass der Backtrace die Max Memory Size von PHP überstieg!
-            // aber erst beim Uwandeln von dem Array in HTML mit array2html (print_r)
-            for($i=0; $i<count($ayBacktrace); $i++) {
-                unset($ayBacktrace[$i]['args']);
+            $backtrace = '';
+            $hasBacktrace = strpos('{BACKTRACE}', $message) !== false;
+            if($hasBacktrace) {
+                $ayBacktrace = $this->getBacktrace();
+                // Args werden aus dem Backtrace gelöscht:
+                // ab und zu kam es vor, dass der Backtrace die Max Memory Size von PHP überstieg!
+                // aber erst beim Uwandeln von dem Array in HTML mit array2html (print_r)
+                for ($i = 0; $i < count($ayBacktrace); $i++) {
+                    unset($ayBacktrace[$i]['args']);
+                }
+
+                if ($html) {
+                    $backtrace = pray($ayBacktrace);
+                }
+                else {
+                    $backtrace = print_r($ayBacktrace, true);
+                }
+                if (strlen($backtrace) > $this->maxBacktraceSize) {
+                    $backtrace = substr($backtrace, 0, $this->maxBacktraceSize);
+                }
+                unset($ayBacktrace);
             }
-            $ayOther = $this -> getOther();
-            if($html==true) {
-                $backtrace = pray($ayBacktrace);
+
+            $ayOther = $this->getOther();
+            if ($html) {
                 $other = pray($ayOther);
             }
             else {
-                $backtrace = print_r($ayBacktrace, true);
                 $other = print_r($ayOther, true);
             }
-            if(strlen($backtrace) > $this -> maxBacktraceSize) {
-                $backtrace = substr($backtrace, 0, $this -> maxBacktraceSize);
-            }
-            unset($ayBacktrace);
-
 
             $search = array('{CODE}', '{DATETIME}', '{TIMESTAMP}', '{FILE}', '{LINE}', '{CLASS}', '{FUNCTION}', '{BACKTRACE}', '{OTHER}', '{LAST_INSERT_ID}');
             $replace = array($this -> getCode(), $this -> getDateTime(), $this -> getTimestamp(), $this -> getFile(), $this -> getLine(),
