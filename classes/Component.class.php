@@ -69,10 +69,9 @@ if(!defined('CLASS_COMPONENT')) {
         /**
          * Webanwendung
          *
-         * @var Weblication $Weblication
-         * @access public
+         * @var Weblication|null $Weblication
          */
-        var $Weblication=null;
+        public ?Weblication $Weblication = null;
 
         /**
          * Session
