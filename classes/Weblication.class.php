@@ -162,7 +162,12 @@ class Weblication extends Component
     /**
      * @var string Country code
      */
-    private $language = 'de';
+    private string $language = 'de';
+
+    /**
+     * @var string
+     */
+    private string $locale = '';
 
     /**
      * @var string
@@ -1205,6 +1210,14 @@ class Weblication extends Component
     }
 
     /**
+     * @return string
+     */
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    /**
      * Erzeugt das erste GUI_Module in der Kette (Momentan wird hier der Seitentitel mit dem Projektnamen gefuellt).
      *
      * @access public
@@ -1232,7 +1245,7 @@ class Weblication extends Component
 
             if ($this->Main instanceof GUI_CustomFrame) {
                 # Seitentitel (= Project)
-                $Header = &$this->Main->getHeaderdata();
+                $Header = $this->Main->getHeaderdata();
                 if ($Header) {
                     $title = $this->title;
                     $Header->setTitle($title);
