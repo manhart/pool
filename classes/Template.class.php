@@ -1182,31 +1182,29 @@
 			*/
 			function assignVar($varname, $value = '')
 			{
-        	 	if (isset($this->ActiveBlock)) {
-            	    $ActiveBlock = &$this->ActiveBlock;
-                	$ActiveBlock->setVar($varname, $value);
-	            }
-    	        elseif (isset($this->ActiveFile)) {
-        	        $ActiveFile = &$this->ActiveFile;
-		    	    $ActiveFile->setVar($varname, $value);
-	            }
-    	        else {
-        	         $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $varname . '\'');
-            	}
+			    $this->setVar($varname, $value);
 			}
 
-			/**
-			* Synonym auf die Template Funktion Template::assignVar().
-			*
-			* @access public
-			* @param string|array $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
-			* @param string $value Wert der Variable
-			* @see Template::assignVar()
-			*/
-			function setVar($varname, $value = '')
+            /**
+             * Synonym auf die Template Funktion Template::assignVar().
+             *
+             * @param string|array $name name of placeholder
+             * @param string $value value for placeholder
+             */
+			function setVar($name, $value = '')
 			{
-				$this->assignVar($varname, $value);
-			}
+                if (isset($this->ActiveBlock)) {
+                    $ActiveBlock = $this->ActiveBlock;
+                    $ActiveBlock->setVar($name, $value);
+                }
+                elseif (isset($this->ActiveFile)) {
+                    $ActiveFile = $this->ActiveFile;
+                    $ActiveFile->setVar($name, $value);
+                }
+                else {
+                    $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $name . '\'');
+                }
+            }
 
 			/**
 			* Erstellt automatisch dynamische Bloecke mit den uebergebenen Datensaetzen.
