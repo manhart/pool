@@ -114,11 +114,10 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Festlegen von Standardwerten und initialisierung der Superglobals (im Input Objekt).
          *
-         * @access public
          * @param const $superglobals Konstanten aus der Input.class.php
          * @see Input.class.php
          **/
-        function init($superglobals = I_EMPTY)
+        public function init($superglobals = I_EMPTY)
         {
             $this->Input = new Input($superglobals);
             $this->mergeDefaults();
