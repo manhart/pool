@@ -2051,7 +2051,6 @@ function formatDateTime($datetime, $format)
 function formatDEDateToEN($strDate, $delimiter = '.')
 {
     $arrDate = explode($delimiter, $strDate);
-
     return strftime("%Y-%m-%d", strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0]));
 }
 
