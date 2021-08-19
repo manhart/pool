@@ -266,18 +266,18 @@
      **/
     function setMetaRefresh($seconds, $url)
     {
-        $this -> MetaRefresh['seconds'] = $seconds;
-        $this -> MetaRefresh['url'] = $url;
+        $this->MetaRefresh['seconds'] = $seconds;
+        $this->MetaRefresh['url'] = $url;
     }
 
     /**
      * Fuegt der Seite eine StyleSheet Datei (.css) hinzu.
      *
-     * @access public
      * @param string $filename
      **/
-    function addStyleSheet($filename, $media=null)
+    public function addStyleSheet(string $filename, $media=null)
     {
+        if($filename == '') return false;
         if (!in_array($filename, $this->StyleSheets)) {
             $this->StyleSheets[] = $filename;
             $this->StyleSheetsMedia[count($this->StyleSheets)-1] = $media;
@@ -287,7 +287,6 @@
      /**
       * Add a javascript file to the page
       *
-      * @access public
       * @param string $file file
       * @param array $attributes (optional)
       * @return GUI_Headerdata
