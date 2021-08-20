@@ -688,7 +688,7 @@ if(!defined('CLASS_RESULTSET')) {
                 return $this->rowset[$this->index];
             }
             else {
-                return false;
+                return [];
             }
         }
 
