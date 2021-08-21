@@ -38,16 +38,16 @@ class GUI_InputElement extends GUI_Universal
      **/
     function init($superglobals=I_EMPTY)
     {
-        $this -> Defaults -> addVar(
+        $this->Defaults->addVar(
             array(
-                'name'			=> $this -> getName(),
+                'name'			=> $this->getName(),
 
                 'type'			=> '',
                 'value'			=> '',
                 'defaultvalue'	=> '',
                 'save'			=> '',
                 'use_session'	=> 0,
-                'session_var' 	=> $this -> getName(),
+                'session_var' 	=> $this->getName(),
 
                 'accept'		=> null,
                 'accesskey'		=> null,

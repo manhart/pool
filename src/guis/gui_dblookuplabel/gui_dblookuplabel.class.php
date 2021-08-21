@@ -63,13 +63,13 @@ class GUI_DBLookupLabel extends GUI_Label
      **/
     function prepare ()
     {
-        $interfaces = & $this -> Weblication -> getInterfaces();
+        $interfaces = $this -> Weblication -> getInterfaces();
         $Input = & $this -> Input;
 
 
         if ($Input -> getVar('keyvalue') != '') {
             if ($Input -> getVar('tabledefine')) {
-                $DAO = & DAO::createDAO($interfaces, $Input -> getVar('tabledefine'));
+                $DAO = DAO::createDAO($interfaces, $Input -> getVar('tabledefine'));
                 $Resultset = & $DAO -> get($Input -> getVar('keyvalue'), $Input -> getVar('keyfield'));
                 if ($Resultset -> count() == 1) {
                     $datavalue = $Resultset -> getValue($Input -> getVar('datafield'));

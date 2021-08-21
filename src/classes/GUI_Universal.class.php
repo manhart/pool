@@ -43,14 +43,14 @@ class GUI_Universal extends GUI_Module
      **/
     function init($superglobals=I_EMPTY)
     {
-        $this -> Defaults -> addVar(
+        $this->Defaults->addVar(
             array(
                 /* Allgemeine Universalattribute */
-                'id' 			=> $this -> getName(),
+                'id' 			=> $this->getName(),
                 'title'			=> '',
                 'style'			=> null,
-                'class'			=> $this -> getClassName(),
-                'class_error'	=> $this -> getClassName() . '_error',
+                'class'			=> $this->getClassName(),
+                'class_error'	=> $this->getClassName() . '_error',
                 'attributes'	=> '',
 
                 /* Universalattribute zur Internationalisierung */
