@@ -550,7 +550,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @return MySQL_Resultset
          * @see MySQL_Resultset
          **/
-        function &insert($data)
+        function insert($data)
         {
             $keys = '';
             $values = '';
@@ -598,7 +598,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @return MySQL_Resultset
          * @see MySQL_Resultset
          **/
-        function &update($data)
+        function update($data)
         {
             $sizeof = sizeof($this->pk);
             for ($i=0; $i<$sizeof; $i++) {
@@ -651,8 +651,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 die($error_msg);
             }
             $sql = sprintf('update `%s` set %s where %s', $this->table, substr($update, 0, -1), $where);
-            $MySQL_ResultSet = $this->__createMySQL_Resultset($sql);
-            return $MySQL_ResultSet;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
@@ -664,7 +663,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @return object MySQL_Resultset
          * @see MySQL_Resultset
          **/
-        function &delete($id)
+        function delete($id)
         {
             // $query = sprintf('update %s set _removed=1, _modified=now() where %s="%s"', $this -> table, $this -> pk, addslashes($id));
             $where = $this -> __buildWhere($id, $this -> pk);
@@ -674,8 +673,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 die($error_msg);
             }
             $sql = sprintf('delete from `%s` where %s', $this -> table, $where);
-            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
@@ -705,7 +703,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @return MySQL_Resultset Ergebnismenge
          * @see MySQL_Resultset
          **/
-        function &get($id, $key=NULL)
+        function get($id, $key=NULL)
         {
             // Bugfix Alexander M.; ^^ansonsten liefert __buildWhere alle Datens�tze like getMultiple
             if(is_null($id)) $id = 0;
@@ -767,7 +765,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @see MySQL_Resultset
          * @see MySQL_DAO::__buildFilter
          **/
-        function &getCount($id=NULL, $key=NULL, $filter_rules=array())
+        function getCount($id=NULL, $key=NULL, $filter_rules=array())
         {
             $sql = sprintf('SELECT COUNT(%s) AS `count` FROM `%s`%s WHERE %s %s',
                 '*',
@@ -1125,7 +1123,7 @@ class CustomMySQL_DAO extends MySQL_DAO
      * @param string $table Tabelle
      * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
      **/
-    public function __construct(& $db, $dbname, $table, $autoload_fields=true)
+    public function __construct($db, $dbname, $table, $autoload_fields=true)
     {
         parent::__construct();
 
@@ -1134,7 +1132,7 @@ class CustomMySQL_DAO extends MySQL_DAO
                 'line' => __LINE__), null);
             $this -> throwException($Xeption);
         }
-        $this->db = & $db;
+        $this->db = $db;
         $this->dbname = $dbname;
         $this->table = $table;
 

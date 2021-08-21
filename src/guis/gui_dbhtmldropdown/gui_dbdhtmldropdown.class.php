@@ -53,10 +53,10 @@ class GUI_DBDHTMLDropdown extends GUI_DHTMLDropdown
      **/
     function prepare()
     {
-        $interfaces = & $this -> Weblication -> getInterfaces();
-        $Input = & $this -> Input;
+        $interfaces = $this -> Weblication -> getInterfaces();
+        $Input = $this -> Input;
 
-        $DAO = & DAO::createDAO($interfaces, $Input -> getVar('tabledefine'));
+        $DAO = DAO::createDAO($interfaces, $Input -> getVar('tabledefine'));
         $filter = array();
         $sorting = null;
         if ($sortfield = $Input -> getVar('sortfield')) {

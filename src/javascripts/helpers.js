@@ -1941,7 +1941,7 @@ function fillControls(containerSelector, rowSet)
             // Wert
             value = row[field];
 
-            // 21.01.2013, AM, Beschleunigung der Feldersuche ueber die Ids
+            // 21.01.2013, AM, Acceleration of the selection via unique IDs (ID-Selector)
             // 07.07.2021, AM, Group-Selector added
             let name_selector = '', id_selector = '', group_selector = '';
             for(let s=0; s<selectors.length; s++) {
@@ -1950,7 +1950,7 @@ function fillControls(containerSelector, rowSet)
                 if(id_selector != '') id_selector += ',';
                 id_selector += selectors[s] + ' #'+field;
                 if(group_selector != '') group_selector += ',';
-                group_selector += selectors[s] + ' [name="'+field+'[]"][value="'+value+'"]';
+                group_selector += selectors[s] + ' [name="'+field+'[]"][value="'+escape(value)+'"]';
             }
 
             jQuery(name_selector).add(group_selector).add(id_selector).each(function() {
