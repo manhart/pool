@@ -932,15 +932,17 @@ if(!defined('CLASS_MYSQLDAO')) {
                         if (is_null($record[2])) {
                             $query .= ' NULL';
                         }
+                        elseif(is_bool($record[2])) {
+                            $query .= ' ' . bool2string($record[2]);
+                        }
+                        elseif(is_integer($record[2]) or is_float($record[2]) or
+                                is_subquery($record[1], $record[2])) {
+                            $query .= ' ' . $record[2];
+                        }
                         else {
-                            if(is_integer($record[2]) or is_float($record[2]) or is_bool($record[2]) or
-                                    is_subquery($record[1], $record[2])) {
-                                $query .= ' ' . $record[2];
-                            }
-                            else {
-                                $value = $record[2];
-                                if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
-                                if($noQuotes == false) $value = '\''.$value.'\'';
+                            $value = $record[2];
+                            if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
+                            if($noQuotes == false) $value = '\''.$value.'\'';
 
 //									if(mb_detect_encoding($value, array('UTF-8', 'ISO-8859-1'), true) == 'ISO-8859-1') {
 //										if(strpos($value, '_latin1') === false) {
@@ -948,8 +950,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 //										}
 //									}
 
-                                $query .= ' '.$value;
-                            }
+                            $query .= ' '.$value;
                         }
                     }
                 }
