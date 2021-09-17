@@ -502,6 +502,44 @@ class Weblication extends Component
     }
 
     /**
+     * @param string $additionalDir
+     * @param bool $absolute
+     * @return string
+     */
+    public function getCommonSkinPath(string $additionalDir = '', bool $absolute = true): string
+    {
+        $path = '';
+
+        # Ordner Skins
+        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $this->getCommonSkinFolder();
+        if ($absolute) {
+            $folder_skins = addEndingSlash(getcwd()) . $folder_skins;
+        }
+        $folder_language = $folder_skins . addEndingSlash($this->language);;
+        if ($additionalDir != '') {
+            $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
+            $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
+        }
+        else {
+            $folder_skin_dir = $folder_skins;
+            $folder_language_dir = $folder_language;
+        }
+
+        if (is_dir($folder_language_dir)) {
+            $path = $folder_language_dir;
+        }
+        elseif (is_dir($folder_skin_dir)) {
+            $path = $folder_skin_dir;
+        }
+        else {
+            $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' and \'%s\' not found (@getCommonSkinPath)!',
+                $folder_skin_dir, $folder_language_dir));
+        }
+
+        return $path;
+    }
+
+    /**
      * Liefert den Pfad zu den Templates (abh�ngig vom Skin-Ordner und der gew�hlten Sprache).
      *
      * @access public
