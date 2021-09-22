@@ -195,6 +195,9 @@ class Weblication extends Component
         'moment.date' => 'DD.MM.YYYY',
         'moment.date.time' => 'DD.MM.YYYY HH:mm',
         'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss',
+        'mysql.date_format.date' => '%d.%m%.%Y',
+        'mysql.date_format.date.time' => '%d.%m%.%Y %H:%i',
+        'mysql.date_format.date.time.sec' => '%d.%m%.%Y %T',
         'number' => [
             'decimals' => 2,
             'decimal_separator' => ',',
