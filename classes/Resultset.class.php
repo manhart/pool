@@ -401,6 +401,18 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
+         * Returns a value of a field of the current record as a float
+         *
+         * @param string $key
+         * @param float $default
+         * @return float
+         */
+        public function getValueAsFloat(string $key, float $default=0.00): float
+        {
+            return (float)$this->getValue($key, $default);
+        }
+
+        /**
          * Returns a value of a field of the current record as a boolean
          *
          * @param string $key
