@@ -2236,3 +2236,15 @@ function loadJSON(url, opts = {})
         return null;
     }
 }
+
+/**
+ * remove an item (e.g. object) from array
+ *
+ * @param items
+ * @param rejectedItem
+ * @returns {*[]}
+ */
+function without(items = [], rejectedItem)
+{
+    return items.filter(function(item) { return item !== rejectedItem; }).map(function(item) { return item; });
+}
