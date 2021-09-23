@@ -466,7 +466,7 @@ class Weblication extends Component
      * @return GUI_CustomFrame
      * @throws Exception
      **/
-    function &getFrame()
+    function getFrame()
     {
         if ($this->Main instanceof GUI_CustomFrame) {
             return $this->Main;
