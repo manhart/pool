@@ -92,19 +92,13 @@ function submitOnEnterkeyByForm(formname, e)
 	}
 }
 
-function cancelEvent(e)
+function cancelEvent(evt)
 {
-	var e = e || window.event;
-	if (is.ie) {
-		e.cancelBubble = true;
-        e.returnValue = false;
-	}
-	else {
-        e.preventDefault();
-        if(e.stopPropagation) {
-            e.stopPropagation();
-        }
-	}
+    if(!evt instanceof Event) {
+        return false;
+    }
+    evt.preventDefault();
+    evt.stopPropagation();
 }
 
 function submitForm(formname)
