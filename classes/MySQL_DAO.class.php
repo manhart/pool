@@ -719,7 +719,6 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Liefert mehrere Datensaetze anhand uebergebener ID's, Filter-Regeln.
          *
-         * @access public
          * @param mixed $id ID's (array oder integer)
          * @param mixed $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
          * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
@@ -750,8 +749,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildLimit($limit)
             );
 
-            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
