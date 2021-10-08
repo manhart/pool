@@ -823,7 +823,6 @@ if(!defined('CLASS_RESULTSET')) {
                         }
                     }
                 }
-
             }
             return $arrResult;
         }
