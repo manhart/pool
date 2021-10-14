@@ -838,7 +838,6 @@ class IGet extends Input
     /**
     * Die Funktion liefert eine Url-konforme Parameter Liste (auch query genannt). In der Standardeinstellung werden Objekte und Arrays uebersprungen.
     *
-    * @access public
     * @return string Query (Url-konforme Parameter Liste)
     */
     function getQuery($query='', $ampersand='&')
