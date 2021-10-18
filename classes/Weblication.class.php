@@ -106,7 +106,7 @@ class Weblication extends Component
      * @var string
      * @access private
      */
-    private $schema = 'index';
+    private string $schema = 'index';
 
     /**
      * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
@@ -381,12 +381,11 @@ class Weblication extends Component
      * Setzt das Standard Schema, welches geladen wird, wenn kein Schema uebergeben wurde.
      *
      * @param string $default Standard Schema
-     **@deprecated
-     * @access public
+     * @deprecated
      */
-    function setSchema($default = 'index')
+    function setSchema(string $default = 'index')
     {
-        $this->schema = trim($default);
+        $this->schema = $default;
     }
 
     /**
@@ -395,9 +394,9 @@ class Weblication extends Component
      * @param string $default
      * @return Weblication
      */
-    public function setDefaultSchema($default = 'index')
+    public function setDefaultSchema(string $default = 'index'): Weblication
     {
-        $this->schema = trim($default);
+        $this->schema = $default;
         return $this;
     }
 
