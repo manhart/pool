@@ -116,7 +116,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param array $params
      * @return
      **/
-    function __construct(&$Owner, $autoLoadFiles=true, array $params = [])
+    function __construct($Owner, $autoLoadFiles=true, array $params = [])
     {
         parent::__construct($Owner, $autoLoadFiles, $params);
 
