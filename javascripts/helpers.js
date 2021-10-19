@@ -548,16 +548,16 @@ function findPosY(obj)
 
 function prepareUrl(url)
 {
-	if (url.substr(url.length-1, 1) == '?' || url.substr(url.length-1, 1) == '&') {
-	}
-	else {
-		if (url.search(/\?/) != -1) {
-			url = url + '&';
-		}
-		else {
-			url = url + '?';
-		}
-	}
+    let end = url.substr(url.length-1, 1);
+    if(end == '&') return url;
+    if(end == '?') return url;
+
+    if (url.search(/\?/) != -1) {
+        url = url + '&';
+    }
+    else {
+        url = url + '?';
+    }
 	return url;
 }
 
