@@ -76,10 +76,9 @@ if(!defined('CLASS_COMPONENT')) {
         /**
          * Session
          *
-         * @var ISession $Session
-         * @access public
+         * @var ISession|null $Session
          */
-        var $Session=null;
+        public ?ISession $Session = null;
 
         private string $classDirectory;
 
