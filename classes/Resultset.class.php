@@ -835,7 +835,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param bool $begin True=beginnt mit der Suche ab ersten Datensatz, False=beginnt mit der Suche ab dem aktuellen Datensatz
          * @return int|bool Index oder False
          */
-        function find($fieldname, $value, $begin=true)
+        function find(string $fieldname, $value, $begin=true)
         {
             if($fieldname == '') return false;
 
@@ -853,13 +853,13 @@ if(!defined('CLASS_RESULTSET')) {
                 do {
                     $found = false;
                     for($i=0; $i<=$len; $i++) {
-                        $found = ($this -> getValue($fieldname[$i]) == $value[$i]);
+                        $found = ($this->getValue($fieldname[$i]) == $value[$i]);
                         if(!$found) break;
                     }
                     if($found) {
-                        return $this -> index;
+                        return $this->index;
                     }
-                } while($this -> next());
+                } while($this->next());
             }
             // Eine Spalte überprüfen
             else {
