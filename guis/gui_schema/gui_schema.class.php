@@ -158,14 +158,6 @@ class GUI_Schema extends GUI_Module
         else {
             $schemes[] = $schema;
         }
-//        $schemes = trim($this -> Input -> getVar('schema'));
-//        if (strlen($schemes) > 0) {
-//
-//        }
-//        else {
-//            $schemes = Array();
-//            $schemes[] = $this->Weblication->getSchema();
-//        }
 
         $this->loadSchemes($schemes);
         $this->searchGUIsInPreloadedContent();
