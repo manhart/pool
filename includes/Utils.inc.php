@@ -3353,7 +3353,7 @@ function float_de2php($float)
  *
  * @return boolean
  */
-function isAjax()
+function isAjax(): bool
 {
     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
            || (isset($_REQUEST['HTTP_X_REQUESTED_WITH']) && $_REQUEST['HTTP_X_REQUESTED_WITH']);
@@ -4630,4 +4630,11 @@ function htmlAttributes(array $attributes): string
     }, array_keys($attributes), $attributes));
     if($attributes) $attributes = ' '.$attributes;
     return $attributes;
+}
+
+function pdfunite(array $pdfFiles, string $pdfOut): bool
+{
+    $cmd = 'pdfunite '.implode(' ', $pdfFiles).' '.$pdfOut;
+    passthru($cmd);
+    return file_exists($pdfOut);
 }
