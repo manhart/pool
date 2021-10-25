@@ -464,6 +464,11 @@ class Weblication extends Component
      **/
     function getFrame(): ?GUI_CustomFrame
     {
+        if(!$this->Frame) {
+            if($this->hasFrame()) {
+                $this->Frame = $this->Main;
+            }
+        }
         return $this->Frame;
     }
 
@@ -1286,10 +1291,9 @@ class Weblication extends Component
             /** Hinweis: erstes GUI registriert sich selbst �ber setMain als
              * Haupt-GUI im GUI_Module Konstruktor **/
 
-            if ($this->Main instanceof GUI_CustomFrame) {
-                $this->Frame = $this->Main;
+            if ($this->hasFrame()) {
                 # Seitentitel (= Project)
-                $Header = $this->Frame->getHeaderdata();
+                $Header = $this->getFrame()->getHeaderdata();
                 if ($Header) {
                     $title = $this->title;
                     $Header->setTitle($title);
