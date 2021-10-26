@@ -1346,30 +1346,26 @@ function deleteDir($dir, $rmSelf = true)
 }
 
 /**
- * file_extension()
- * Gibt die Endung der uebergebenen Datei zurueck, z.B. irgendwas hinter dem Punkt.
- * siehe auch PHP Funktion pathinfo ab Version 4.0.3
+ * determines the extension of the file without the dot
+ * see also PHP function pathinfo since version 4.0.3
  *
- * @access public
- * @param string $file Datei
- * @return string Dateiendung
+ * @param string $file filename
+ * @return string file extension
  **/
-function file_extension($file = "")
+function file_extension(string $file = ""): string
 {
     return substr($file, (strrpos($file, ".") ? strrpos($file, ".") + 1 : strlen($file)), strlen($file));
 }
 
 /**
- * remove_extension()
- * Entfernt die Endung einer Datei und gibt sie zurueck.
+ * removes the extension from the file name
  *
- * @access public
- * @param string $file Datei
- * @return string Neuer Dateiname
+ * @param string $file filename
+ * @return string filename without extension
  **/
-function remove_extension($file = "")
+function remove_extension(string $file = ''): string
 {
-    return substr($file, 0, (strrpos($file, ".") ? strrpos($file, ".") : strlen($file)));
+    return substr($file, 0, (strrpos($file, '.') ? strrpos($file, '.') : strlen($file)));
 }
 
 /**
