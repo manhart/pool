@@ -701,7 +701,6 @@ class Input extends PoolObject
     function destroy()
     {
         $this->clear();
-        parent::destroy();
     }
 }
 
@@ -1106,6 +1105,7 @@ class ISession extends Input
      */
     function destroy()
     {
+        parent::destroy();
         $this->start();
         if(session_status() == PHP_SESSION_ACTIVE) {
             session_destroy();
