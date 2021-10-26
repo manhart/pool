@@ -147,10 +147,9 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * Liefert das GUI_Headerdata Object zum Aendern der Html Kopfdaten.
      *
-     * @access public
-     * @return object GUI_Headerdata
+     * @return GUI_Headerdata GUI_Headerdata
      **/
-    function &getHeaderdata()
+    public function getHeaderdata(): GUI_Headerdata
     {
         return $this->Headerdata;
     }
@@ -158,10 +157,9 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * Liefert das GUI_DynToolTip Objekt fuer ToolTip Texte.
      *
-     * @access public
-     * @return object GUI_DynToolTip
+     * @return GUI_DynToolTip
      **/
-    function &getDynToolTip()
+    function getDynToolTip(): GUI_DynToolTip
     {
         return $this->DynToolTip;
     }
