@@ -788,12 +788,12 @@ class ICookie extends Input
     * @param integer $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
     * @return boolean Erfolgsstatus
     */
-    function delCookie($cookiename, $path = '/', $domain = '', $secure = 0)
+    function delCookie(string $cookiename, string $path = '/', string $domain = '', $secure = 0): bool
     {
         if (isset($this -> Vars[$cookiename])) {
             $this -> delVar($cookiename);
         }
-        return setcookie ($cookiename, '', time() - 3600, $path, $domain, $secure);
+        return setcookie($cookiename, '', time() - 3600, $path, $domain, $secure);
     }
 }
 
