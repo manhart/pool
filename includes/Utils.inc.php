@@ -4628,6 +4628,13 @@ function htmlAttributes(array $attributes): string
     return $attributes;
 }
 
+/**
+ * calls the system command pdfunite
+ *
+ * @param array $pdfFiles
+ * @param string $pdfOut
+ * @return bool
+ */
 function pdfunite(array $pdfFiles, string $pdfOut): bool
 {
     $cmd = 'pdfunite '.implode(' ', $pdfFiles).' '.$pdfOut;
