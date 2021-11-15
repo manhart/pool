@@ -730,7 +730,6 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Liefert die komplette Ergebnismenge als indiziertes Array (enthaelt je Satz ein assoziatives Array mit Feldnamen) zurueck.
          *
-         * @access public
          * @return array Recordset
          **/
         function getRowset()
@@ -925,7 +924,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $line = '';
                     $values = array_values($row);
                     foreach($values as $val) {
-                        $val = $this->_maskTextCSVcompliant($val, $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
                         $line .= ($line != '') ? ($separator.$val) : (''.$val);
                     }
                     $csv .= $line.$line_break;
@@ -969,7 +968,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $row = '';
                     foreach ($this->fields as $key) {
                         if($row != '') $row .= $separator;
-                        $val = $this->_maskTextCSVcompliant($this->rowset[$this->index][$key], $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant($this->rowset[$this->index][$key], $separator, $text_clinch);
                         $row .= $val;
                     }
                     $row .= $line_break;
@@ -984,7 +983,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $values = array_values($this->getRow());
                     $i = 0;
                     foreach($values as $val) {
-                        $val = $this->_maskTextCSVcompliant($val, $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
                         $csv .= ($i == 0) ? ''.$val : $separator.$val;
                         $i++;
                     }
@@ -1002,7 +1001,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param string $text_clinch Zeichen für Textklammer
          * @return string
          */
-        private function _maskTextCSVcompliant($val, $separator=';', $text_clinch='"')
+        static function maskTextCSVcompliant($val, $separator=';', $text_clinch='"')
         {
             $hasTextClinch = false;
             if($text_clinch != '') {
