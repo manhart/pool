@@ -52,7 +52,6 @@ if (!defined('MYSQLi_LAYER')) {
      * @package pool
      * @author Alexander Manhart <alexander@manhart.bayern>
      * @version $Id: MySQLi_Interface.class.php 38690 2019-09-03 15:08:59Z manhart $
-     * @access public
      **/
     class MySQLi_Interface extends DataInterface
     {
@@ -152,9 +151,16 @@ if (!defined('MYSQLi_LAYER')) {
         private $onFetchingRow = null;
 
         /**
+         * class constants
+         */
+        const ZERO_DATE = '0000-00-00';
+        const ZERO_TIME = '00:00:00';
+        const ZERO_DATETIME = '0000-00-00 00:00:00';
+        const MAX_DATE = '9999-12-31';
+        const MAX_DATETIME = '9999-12-31 23:59:59';
+
+        /**
          * Constructor
-         *
-         * @access public
          */
         function __construct()
         {
