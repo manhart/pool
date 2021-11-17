@@ -232,6 +232,14 @@ class Weblication extends Component
     }
 
     /**
+     * @return bool
+     */
+    public static function hasInstance(): bool
+    {
+        return (static::$Instance !== null);
+    }
+
+    /**
      * prevent the instance from being cloned (which would create a second instance of it)
      */
     private function __clone() {}
