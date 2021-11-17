@@ -260,8 +260,9 @@
 			* @param string $type Handle-Typ set of (BLOCK, FILE)
 			* @param string $directory Verzeichnis zum Template
 			*/
-			function __construct($type, $directory)
+			function __construct($type, $directory, $charset = 'UTF-8')
 			{
+                $this->charset = $charset;
 				parent::__construct($type);
 
 				$this->setDirectory($directory);
@@ -315,10 +316,10 @@
 			* @return object TempScript
 			* @see TempScript
 			*/
-			function createScript($handle, $dir, $filename)
+			function createScript($handle, $dir, $filename, $charset = 'UTF-8')
 			{
-				$obj = new TempScript($handle, $dir, $filename);
-				$this->FileList[$handle] = &$obj;
+				$obj = new TempScript($handle, $dir, $filename, $charset);
+				$this->FileList[$handle] = $obj;
 				return $obj;
 			}
 
@@ -622,9 +623,9 @@
 			* @param string $directory Verzeichnis zum Template
 			* @param string $content Inhalt des Blocks
 			*/
-			function __construct($handle, $directory, $content)
+			function __construct($handle, $directory, $content, $charset = 'UTF-8')
 			{
-				parent::__construct('BLOCK', $directory);
+				parent::__construct('BLOCK', $directory, $charset);
 
 				$this->SetHandle($handle);
     	        $this->AllowParse = false;
@@ -727,9 +728,8 @@
 			*/
 			function __construct($handle, $directory, $filename, $charset = 'UTF-8')
 			{
-				parent::__construct('FILE', $directory);
+				parent::__construct('FILE', $directory, $charset);
 
-                $this->charset = $charset;
 				$this->setHandle($handle);
 				$this->Filename = $filename;
 				$this->loadFile();
@@ -791,9 +791,9 @@
 /* --------------------- */
 		class TempSimple extends TempCoreHandle
 		{
-			function __construct($handle, $content)
+			function __construct($handle, $content, $charset = 'UTF-8')
 			{
-				parent::__construct('FILE', '', '');
+				parent::__construct('FILE', '', $charset);
 				$this->setHandle($handle);
 				$this->setContent($content);
 			}
@@ -829,19 +829,17 @@
 			* @param string $directory Verzeichnis zur Datei
 			* @param string $filename Dateiname
 			*/
-			function __construct($handle, $directory, $filename)
+			function __construct($handle, $directory, $filename, $charset = 'UTF-8')
 			{
-				parent::__construct($handle, $directory, $filename);
+				parent::__construct($handle, $directory, $filename, $charset);
 			}
 
 			/**
 			* TempScript::parse()
 			*
 			* Parst das Script. Dabei wird enthaltener PHP Code ausgefuehrt.
-			*
-			* @access public
 			*/
-			function parse($returncontent=false, $clearparsedcontent=true)
+			public function parse(bool $returncontent=false, bool $clearparsedcontent=true)
 			{
 				parent::parse($returncontent, $clearparsedcontent);
 
@@ -1005,8 +1003,8 @@
 
 			function setContent($handle, $content)
 			{
-				$TempSimple = new TempSimple($handle, $content);
-				$this -> FileList[$handle] = &$TempSimple;
+				$TempSimple = new TempSimple($handle, $content, $this->charset);
+				$this->FileList[$handle] = $TempSimple;
 
 				if ($this -> ActiveHandle == '') {
 				    $this -> useFile($handle);
@@ -1034,7 +1032,7 @@
 			function addFile($handle, $file)
 			{
 				$TempFile = new TempFile($handle, $this->getDirectory(), $file, $this->charset);
-				$this->FileList[$handle] = &$TempFile;
+				$this->FileList[$handle] = $TempFile;
 
 				if($TempFile) {
 					// added 02.05.2006 Alex M.
