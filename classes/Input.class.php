@@ -66,6 +66,11 @@ class Input extends PoolObject
     private int $superglobals = I_EMPTY;
 
     /**
+     * @var array
+     */
+    private array $filterRules = [];
+
+    /**
      * Input constructor. Initialization of the superglobals.
      *
      * @param int $superglobals Select a predefined constant: INPUT_GET, INPUT_POST, INPUT_REQUEST, INPUT_SERVER, INPUT_FILES, INPUT_COOKIE
@@ -223,18 +228,39 @@ class Input extends PoolObject
     /**
      * Liefert einen Boolean zurück, ob alle Daten innerhalb des Inputs leer sind
      *
-     * @access public
      * @return boolean
      */
-    function emptyVars()
+    function emptyVars(): bool
     {
         return $this->emptyVar(array_keys($this->Vars));
     }
 
     /**
+     * filter a variable
+     *
+     * @param string $key
+     * @return void
+     */
+    private function filterVar(string $key): void
+    {
+        if(isset($this->filterRules[$key])) {
+            $this->Vars[$key] = filter_var($this->Vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+        }
+    }
+
+    /**
+     * returns filter rules for filtering incoming variables
+     *
+     * @return array
+     */
+    public function getFilterRules(): array
+    {
+        return $this->filterRules;
+    }
+
+    /**
     * Liefert den Wert fuer den uebergebenen Schluessel.
     *
-    * @access public
     * @param string $key Name der Variable
     * @param mixed|null $default return default value, if key is not set
     * @return string Wert der Variable oder NULL, wenn die Variable nicht existiert
@@ -294,25 +320,29 @@ class Input extends PoolObject
     }
 
     /**
-    * Setzt eine Variable im internen Container.
-    * Im Unterschied zu Input::setVar ueberschreibt Input::addVar keine bereits vorhanden Variablen.
-    *
-    * @access public
-    * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $value Wert der Variable
-    * @return boolean Erfolgsstatus
-    */
-    function addVar($key, $value = '')
+     * adds a default value for a variable that has not been set (via POST|GET etc.). Adds a filter on an incoming variable.
+     * At the moment filtering does not work with array passes on the key!
+     *
+     * @param string|array $key Schluessel (bzw. Name der Variable)
+     * @param mixed $value Wert der Variable
+     * @param int $filter
+     * @param mixed $filterOptions
+     * @return Input
+     */
+    public function addVar($key, $value = '', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
     {
         if (!is_array($key)) {
             if (!isset($this->Vars[$key])) {
                 $this->Vars[$key] = $value;
             }
+            if($filter) {
+                $this->filterRules[$key] = [$filter, $filterOptions];
+            }
         }
         else {
             $this->Vars = $this->Vars + $key;
         }
-        return true;
+        return $this;
     }
 
     /**
@@ -672,13 +702,20 @@ class Input extends PoolObject
      */
     public function mergeVarsIfNotSet(Input $Input): void
     {
-        if($Input->count() == 0) return;
+        if($Input->count() == 0) {
+            return;
+        }
+        $this->filterRules = $Input->getFilterRules();
+
         $keys = array_keys($Input->Vars);
         $c = count($keys);
         for($i=0; $i < $c; $i++) {
-            if (!isset($this->Vars[$keys[$i]])) {
-                $this->setVar($keys[$i], $Input->Vars[$keys[$i]]);
+            $key = $keys[$i];
+            if (!isset($this->Vars[$key])) {
+                $this->setVar($key, $Input->Vars[$key]);
             }
+
+            $this->filterVar($key);
         }
     }
 
@@ -996,19 +1033,21 @@ class ISession extends Input
     }
 
     /**
-    * Setzt eine Variable im internen Container.
-    * Im Unterschied zu Input::setVar ueberschreibt Input::addVar keine bereits vorhanden Variablen.
-    *
-    * @access public
-    * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $value Wert der Variable
-    * @return boolean Erfolgsstatus
-    */
-    function addVar($key, $value='')
+     * Setzt eine Variable im internen Container.
+     * Im Unterschied zu Input::setVar ueberschreibt Input::addVar keine bereits vorhanden Variablen.
+     *
+     * @param string $key Schluessel (bzw. Name der Variable)
+     * @param mixed $value Wert der Variable
+     * @param int $filter
+     * @param mixed $filterOptions
+     * @return Input Erfolgsstatus
+     */
+    public function addVar($key, $value='', int $filter = FILTER_DEFAULT, $filterOptions = 0): Input
     {
         $this->start();
         parent::addVar($key, $value);
         $this->write_close();
+        return $this;
     }
 
     /**
