@@ -506,7 +506,7 @@
              * @param bool $clearparsedcontent
              * @return string Geparster Inhalt
              */
-			function parse($returncontent=false, $clearparsedcontent=true)
+			public function parse(bool $returncontent=false, bool $clearparsedcontent=true)
 			{
 				$varStart = $this->varStart;
 				$varEnd = $this->varEnd;
