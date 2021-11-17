@@ -259,15 +259,15 @@ class GUI_InputElement extends GUI_Universal
             $value = $Session->getVar($session_variable);
         }
         else {
-            $value = $Input -> getVar('value') != ''  ? $Input -> getVar('value') : $valueByName;
+            $value = $Input->getVar('value') != ''  ? $Input -> getVar('value') : $valueByName;
             if ($value == '{' . $name . '}') {
                 $value = '';
-            };
+            }
         }
         if ($value=='' or is_null($value)) {//  or (($Input -> getVar('value') == '') and $name == $Input -> getVar($name)) // fix
             $value = $Input -> getVar('defaultvalue');
         }
 
-        $Template -> setVar('VALUE', $value);
+        $Template->setVar('VALUE', $value, Template::ENCODE_HTMLSPECIALCHARS);
     }
 }
