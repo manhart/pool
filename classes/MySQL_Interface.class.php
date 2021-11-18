@@ -946,6 +946,7 @@ if(!defined('MYSQL_LAYER'))
             return $arr;
         }
 
+
         /**
          * Gibt belegten Speicher wieder frei
          *
