@@ -848,6 +848,11 @@ if(!defined('CLASS_MYSQLDAO')) {
             return $row;
         }
 
+        /**
+         * @param string $field
+         * @return string
+         * @throws Exception
+         */
         protected function translateValues(string $field): string
         {
             if(isset($this->translateValues[$field])) {
