@@ -435,6 +435,22 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
+         * get enumerable values from field
+         *
+         * @param string $fieldName
+         * @return array|false|string[]
+         */
+        public function getFieldEnumValues(string $fieldName)
+        {
+            $fieldInfo = $this->db->listfield($this->dbname, $this->table, $fieldName);
+            if(!isset($fieldInfo['Type'])) return [];
+            $type = substr($fieldInfo['Type'], 0, 4);
+            if($type != 'enum') return [];
+            $buf = substr($fieldInfo['Type'], 5, -1);
+            return explode('\',\'', substr($buf, 1, -1));
+        }
+
+        /**
          * Formatiert eingehende Benutzerdaten �ber ein Formular oder sogar MySQL Ergebnisse einheitlich um. Praktisch im Einsatz mit array_diff_assoc
          *
          * @param array $data Daten z.B. aus Input, Resultset, etc.
