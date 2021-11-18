@@ -501,7 +501,6 @@
             /**
              * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
              *
-             * @access public
              * @param boolean $returncontent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
              * @param bool $clearparsedcontent
              * @return string Geparster Inhalt
@@ -1210,9 +1209,9 @@
              * Synonym auf die Template Funktion Template::assignVar().
              *
              * @param string|array $name name of placeholder
-             * @param string $value value for placeholder
+             * @param mixed $value value for placeholder
              */
-			function setVar($name, $value = '', int $encoding = self::ENCODE_NONE)
+			function setVar($name, $value = '', int $encoding = Template::ENCODE_NONE)
 			{
                 if (isset($this->ActiveBlock)) {
                     $ActiveBlock = $this->ActiveBlock;
