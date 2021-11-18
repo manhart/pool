@@ -988,6 +988,26 @@ if (!defined('MYSQLi_LAYER')) {
         }
 
         /**
+         * get information about one column
+         *
+         * @param string $database
+         * @param string $table
+         * @param string $field
+         * @return array
+         */
+        public function listfield(string $database, string $table, string $field): array
+        {
+            $row = [];
+            $result = mysqli_query($this->__get_db_conid($database, SQL_READ),
+                'SHOW COLUMNS FROM `' . $table . '` like \''.$field.'\'', MYSQLI_STORE_RESULT);
+            if(mysqli_num_rows($result) > 0) {
+                $row = mysqli_fetch_assoc($result);
+            }
+            $this->freeresult($result);
+            return $row;
+        }
+
+        /**
          * Gibt belegten Speicher wieder frei
          *
          * Die Funktion muss nur dann aufgerufen werden, wenn Sie sich bei Anfragen, die grosse Ergebnismengen liefern, Sorgen
