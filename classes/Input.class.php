@@ -71,6 +71,12 @@ class Input extends PoolObject
     private array $filterRules = [];
 
     /**
+     * you ain't gonna need it
+     */
+    // const FILTER_SANITIZE_STRIP_TAGS = 1;
+
+
+    /**
      * Input constructor. Initialization of the superglobals.
      *
      * @param int $superglobals Select a predefined constant: INPUT_GET, INPUT_POST, INPUT_REQUEST, INPUT_SERVER, INPUT_FILES, INPUT_COOKIE
@@ -244,7 +250,18 @@ class Input extends PoolObject
     private function filterVar(string $key): void
     {
         if(isset($this->filterRules[$key])) {
-            $this->Vars[$key] = filter_var($this->Vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+//            $filter = $this->filterRules[$key][0];
+
+//            switch($filter) {
+//                case Input::FILTER_SANITIZE_STRIP_TAGS:
+//                    $val = strip_tags($this->Vars[$key], ($this->filterRules[$key][1] ?: null));
+//                    break;
+//
+//                default:
+//                    $val = filter_var($this->Vars[$key], $filter, $this->filterRules[$key][1]);
+//            }
+
+            $this->Vars[$key] = filter_var($this->Vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);;
         }
     }
 
@@ -1042,7 +1059,7 @@ class ISession extends Input
      * @param mixed $filterOptions
      * @return Input Erfolgsstatus
      */
-    public function addVar($key, $value='', int $filter = FILTER_DEFAULT, $filterOptions = 0): Input
+    public function addVar($key, $value='', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
     {
         $this->start();
         parent::addVar($key, $value);
