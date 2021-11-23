@@ -95,7 +95,6 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
          *
-         * @access public
          * @param Component $Owner Owner
          * @param array $params fixed params
          */
