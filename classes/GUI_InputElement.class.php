@@ -26,8 +26,6 @@
 class GUI_InputElement extends GUI_Universal
 {
     /**
-     * GUI_InputElement::init()
-     *
      * Initialisiert Standardwerte:
      *
      * TODO Parameter
@@ -90,12 +88,13 @@ class GUI_InputElement extends GUI_Universal
         if ($id != $this -> Defaults -> getVar('name') and $name == $this -> getName()) {
             $name = $id;
         }
-        $this -> Input -> setVar(array('name' => $name, 'id' => $id));
+        $this->Input->setVars(array(
+            'name' => $name,
+            'id' => $id)
+        );
     }
 
     /**
-     * GUI_InputElement::prepare()
-     *
      * @return
      **/
     function prepare ()
