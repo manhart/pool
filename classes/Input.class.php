@@ -231,7 +231,7 @@ class Input extends PoolObject
             // todo filter_var returns also false, if there is an error
             $filteredVar = filter_var($this->Vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
             if($filteredVar === false) {
-                throw new Exception($key.' is invalid');
+                throw new Exception('Incoming data with the key '.$key.' did not pass the filter.');
             }
             $this->Vars[$key] = $filteredVar;
         }
