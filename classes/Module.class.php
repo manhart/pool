@@ -146,7 +146,6 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Importiert Variablen vom Elternmodul (durchschleifen von Variablen).
          *
-         * @access public
          * @param array $Handoff Liste bestehend aus Variablen
          * @return bool Erfolgsstatus
          **/
@@ -158,7 +157,7 @@ if(!defined('CLASS_MODULE')) {
 
             if (count($Handoff) > 0) {
                 $this->addHandoffVar($Handoff);
-                $this->Input->setVar($Handoff);
+                $this->Input->setVars($Handoff);
             }
             return true;
         }
@@ -292,7 +291,12 @@ if(!defined('CLASS_MODULE')) {
          */
         public function setVar($key, $value='')
         {
-            $this->Input->setVar($key, $value);
+            if(is_array($key)) {
+                $this->Input->setVars($key);
+            }
+            else {
+                $this->Input->setVar($key, $value);
+            }
         }
 
         /**

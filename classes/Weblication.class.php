@@ -1149,7 +1149,7 @@ class Weblication extends Component
      */
     public function setup(array $settings = []): Weblication
     {
-        $this->Settings->setVar($settings);
+        $this->Settings->setVars($settings);
         return $this;
     }
 

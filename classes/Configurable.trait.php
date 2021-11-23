@@ -167,7 +167,7 @@ trait Configurable
             $this->setName($this->configuration['moduleName']);
         }
 
-        $this->Input->setVar($this->configuration);
+        $this->Input->setVars($this->configuration);
     }
 
     /**
