@@ -343,8 +343,7 @@
                     }
                 };
 
-                // 20.05.2015, AM, is_array ist langsamer als den Datentyp zu casten
-				if((array)$name !== $name) {
+				if(!is_array($name)) {
 					$this->VarList[$name] = $encode($value);
 				}
 				else {
