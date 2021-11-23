@@ -715,7 +715,7 @@ if(!defined('CLASS_EXCEPTION')) {
                 $Input = new Input(0);
                 $Input -> setData($E -> getData());
                 $Input -> setVar('backtrace', substr(print_r($Input -> getVar('backtrace'), true), 0, $E -> maxBacktraceSize));
-                $Input = $Input -> filter($ErroLog -> getFieldlist());
+                $Input = $Input->filter($ErroLog -> getFieldlist());
 
                 $type = $ErroLog -> getFieldType('timestamp');
 

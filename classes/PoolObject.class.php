@@ -103,9 +103,9 @@ if(!defined('CLASS_POOLOBJECT')) {
         private string $className = '';
 
         /**
-         * Konstruktor
+         * @return PoolObject
          */
-        function __construct()
+        public function __construct()
         {
             return $this;
         }
