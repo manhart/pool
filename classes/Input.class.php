@@ -31,25 +31,19 @@
 
 // define PHP Superglobals
 const I_EMPTY = 0;
-const I_COOKIE = 1;
-const I_GET = 2;
-const I_POST = 4;
+const I_COOKIE = 1; // php equivalent INPUT_COOKIE 2
+const I_GET = 2; // php equivalent INPUT_GET 1
+const I_POST = 4; // php equivalent INPUT_POST 0
 const I_FILES = 8;
-const I_ENV = 16;
-const I_SERVER = 32;
-const I_SESSION = 64;
-const I_REQUEST = 128;
+const I_ENV = 16; // php equivalent INPUT_ENV 4
+const I_SERVER = 32; // php equivalent INPUT_SERVER 5
+const I_SESSION = 64; // php equivalent INPUT_SESSION 6
+const I_REQUEST = 128; // php equivalent INPUT_REQUEST 99
 const I_ALL = 255;
 
-
 /**
- * Basisklasse fuer alle Inputs. Input kapselt den Zugriff auf die PHP Superglobals wie $_GET, $_POST etc.
- *
- * @package rml
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: Input.class.php,v 1.14 2007/08/06 12:18:23 manhart Exp $
- * @access public
- **/
+ * base class for incoming data at the server
+ */
 class Input extends PoolObject
 {
     /**
@@ -86,6 +80,7 @@ class Input extends PoolObject
     {
         $this->Vars = [];
         $this->init($superglobals);
+        return parent::__construct();
     }
 
     /**
@@ -141,7 +136,7 @@ class Input extends PoolObject
      *
      * @return int
      */
-    public function getSuperglobals()
+    public function getSuperglobals(): int
     {
         return $this->superglobals;
     }
@@ -154,35 +149,6 @@ class Input extends PoolObject
     public function count(): int
     {
         return count($this->Vars);
-    }
-
-    /**
-    * Enternt das Escape Zeichen \ (Backslash).
-    *
-    * @access public
-    * @param string $value Wert
-    * @return string Wert ohne Escape Zeichen
-    */
-    function stripSlashes($value)
-    {
-        if (is_array($value)) {
-            $buf = array();
-
-            reset($value);
-            while(list($key, $val) = each($value)) {
-                if (is_array($val)) {
-                    $buf[$key] = $this -> stripSlashes($val);
-                }
-                else {
-                    $buf[$key] = stripslashes($val);
-                }
-            }
-
-            return $buf;
-        }
-        else {
-            return stripslashes($value);
-        }
     }
 
     /**
@@ -203,7 +169,7 @@ class Input extends PoolObject
      * @param string $key Name der Variable
      * @return boolean True=ja; False=nein
      **/
-    function exists($key)
+    public function exists(string $key): bool
     {
         return array_key_exists($key, $this->Vars);
     }
@@ -212,15 +178,15 @@ class Input extends PoolObject
      * Prueft, ob eine Variable einen Wert enthaelt.
      * Diese Funktion liefert TRUE, wenn eine Variable nicht definiert, leer oder gleich 0 ist, ansonsten FALSE
      *
-     * @param string $key Name der Variable
+     * @param mixed $key Name der Variable
      * @return boolean True=ja; False=nein
      **/
-    public function emptyVar(string $key): bool
+    public function emptyVar($key): bool
     {
         if(is_array($key)) {
             if(sizeof($key) == 0) return true;
             foreach ($key as $k => $v) {
-                if(empty($key[$k])) {
+                if(empty($v)) {
                     return true;
                 }
             }
@@ -236,7 +202,7 @@ class Input extends PoolObject
      *
      * @return boolean
      */
-    function emptyVars(): bool
+    function isEmpty(): bool
     {
         return $this->emptyVar(array_keys($this->Vars));
     }
@@ -246,6 +212,7 @@ class Input extends PoolObject
      *
      * @param string $key
      * @return void
+     * @throws Exception
      */
     private function filterVar(string $key): void
     {
@@ -261,7 +228,12 @@ class Input extends PoolObject
 //                    $val = filter_var($this->Vars[$key], $filter, $this->filterRules[$key][1]);
 //            }
 
-            $this->Vars[$key] = filter_var($this->Vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);;
+            // todo filter_var returns also false, if there is an error
+            $filteredVar = filter_var($this->Vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+            if($filteredVar === false) {
+                throw new Exception($key.' is invalid');
+            }
+            $this->Vars[$key] = $filteredVar;
         }
     }
 
@@ -280,9 +252,9 @@ class Input extends PoolObject
     *
     * @param string $key Name der Variable
     * @param mixed|null $default return default value, if key is not set
-    * @return string Wert der Variable oder NULL, wenn die Variable nicht existiert
+    * @return mixed Wert der Variable oder NULL, wenn die Variable nicht existiert
     */
-    function getVar(string $key, $default=null)
+    public function getVar(string $key, $default=null)
     {
         return $this->Vars[$key] ?? $default;
     }
@@ -293,51 +265,60 @@ class Input extends PoolObject
     * @access public
     * @param string $key Name der Variable
     * @param mixed|null $default return default value, if key is not set
-    * @return object Referenz auf das Objekt oder NULL, wenn das Objekt nicht existiert
+    * @return mixed Referenz auf das Objekt oder NULL, wenn das Objekt nicht existiert
     */
-    function &getRef($key, $default=null)
+    public function &getRef(string $key, $default=null)
     {
         $ref = $default;
-        if(isset($this -> Vars[$key])) {
-            $ref = &$this -> Vars[$key];
+        if(isset($this->Vars[$key])) {
+            $ref = &$this->Vars[$key];
         }
         return $ref;
     }
 
     /**
-    * Setzt eine Variable im internen Container.
-    * Im Unterschied zu Input::addVar ueberschreibt Input::setVar alle Variablen.
-    *
-    * @access public
-    * @param string $key Schluessel (bzw. Name der Variable)
-    * @param mixed $value Wert der Variable
-    */
-    public function setVar($key, $value = '')
+     * assign data to a variable
+     *
+     * @param string $key variable name
+     * @param mixed $value value
+     * @return Input
+     */
+    public function setVar(string $key, $value = ''): Input
     {
-//			if (!is_array($key)) {
-        if((array)$key !== $key) { // 20.05.2015, AM, is_array ist langsamer als den Datentyp zu casten und auf exakte Gleichheit zu ueberpruefen
+//        if(is_array($key)) {
+//            $this->setVars($key);
+//        }
+//        else {
             $this->Vars[$key] = $value;
-        }
-        else {
-            //$this -> Varsarray_merge($key, $this -> Vars);
-            $this->Vars = $key + $this->Vars;
-        }
+//        }
+        return $this;
+    }
+
+    /**
+     * assign data as array
+     *
+     * @param array $assoc
+     * @return Input
+     */
+    public function setVars(array $assoc): Input
+    {
+        $this->Vars = $assoc + $this->Vars;
+        return $this;
     }
 
     /**
     * Legt eine Referenz eines Objekts im internen Container ab.
     *
-    * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $value Referenz auf die Variable (oder Objekt)
+    * @param mixed $value Referenz auf die Variable (oder Objekt)
     */
-    function setRef($key, & $value)
+    function setRef(string $key, &$value)
     {
         $this->Vars[$key] = &$value;
     }
 
     /**
-     * adds a default value for a variable that has not been set (via POST|GET etc.). Adds a filter on an incoming variable.
+     * adds a default value/data to a variable if it does not exist. We can also add a filter on an incoming variable.
      * At the moment filtering does not work with array passes on the key!
      *
      * @param string|array $key Schluessel (bzw. Name der Variable)
@@ -365,11 +346,10 @@ class Input extends PoolObject
     /**
     * Setzt eine Variable im internen Container. Symlink auf Input::setRef().
     *
-    * @access public
     * @param string $key Schluessel (bzw. Name der Variable/Objekt)
-    * @param string $value Referenz auf die Variable (oder Objekt)
+    * @param mixed $value Referenz auf die Variable (oder Objekt)
     */
-    function addRef($key, & $value)
+    function addRef(string $key, &$value)
     {
         $this->setRef($key, $value);
     }
@@ -377,7 +357,6 @@ class Input extends PoolObject
     /**
     * Loescht eine Variable aus dem internen Container.
     *
-    * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
     */
     function delVar($key)
@@ -386,16 +365,25 @@ class Input extends PoolObject
             unset($this->Vars[$key]);
         }
         else {
-            foreach($key as $kname) {
-                unset($this->Vars[$kname]);
-            }
+            $this->delVars($key);
         }
+    }
+
+    /**
+     * @param array $assoc
+     * @return $this
+     */
+    public function delVars(array $assoc): Input
+    {
+        foreach($assoc as $key) {
+            unset($this->Vars[$key]);
+        }
+        return $this;
     }
 
     /**
     * Loescht eine Referenz aus dem internen Container. SymLink auf Input::delVar().
     *
-    * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
     */
     function delRef($key)
@@ -406,28 +394,25 @@ class Input extends PoolObject
     /**
     * Diese Funktion lieferten den Typ der Variablen mit dem uebergebenen Schluesselnamen $key.
     *
-    * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
     * @return string Typen (set of "integer", "double", "string", "array", "object", "unknown type") oder false, wenn die Variable nicht gesetzt ist.
     */
-    function getType($key)
+    public function getType(string $key): string
     {
-        return isset($this -> Vars[$key]) ? gettype($this -> Vars[$key]) : false;
+        return isset($this->Vars[$key]) ? gettype($this->Vars[$key]) : '';
     }
 
     /**
-    * Aendert den Typ einer Variable im internen Container.
+    * sets the data type of variable
     *
-    * @access public
-    * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $type Datentyp (siehe getType)
+    * @param string $key variable name
+    * @param string $type data type
     * @see Input::getType()
-    * @return boolean Erfolgsstatus
     */
-    function setType($key, $type)
+    public function setType(string $key, string $type): bool
     {
         $result = false;
-        if (isset($this -> Vars[$key])) {
+        if (isset($this->Vars[$key])) {
             $result = settype($this->Vars[$key], $type);
         }
         return $result;
@@ -437,16 +422,14 @@ class Input extends PoolObject
     * Liefert eine verschluesselte Variable entschluesselt zurueck.
     * Dekodiert vor der Entschluesslung den Wert (MIME base64).
     *
-    * @param string Name der Variable
-    * @param string $name Schluessel
+    * @param string $name variable name
     * @return string $securekey Wert der Variable (entschluesselt)
     */
     function getDecryptedVar($name, $securekey)
     {
         // Call Xor Algo.
         $decoded_data = base64_decode($this->getVar($name));
-        $decrypted_data = $this -> xorEnDecryption($decoded_data, $securekey);
-        return $decrypted_data;
+        return $this->xorEnDecryption($decoded_data, $securekey);
     }
 
     /**
@@ -475,25 +458,23 @@ class Input extends PoolObject
      * @param boolean $removePrefix removes prefix
      * @return Input Neues Objekt vom Typ Input (enthaelt die gefilterten Daten)
      **/
-    function &filter($keys_must_exists, $prefix='', $removePrefix=false): Input
+    public function filter(array $keys_must_exists, string $prefix='', bool $removePrefix=false): Input
     {
         $Input = new Input(I_EMPTY);
-        if (is_array($keys_must_exists)) {
-            $new_prefix = ($removePrefix) ? '' : $prefix;
-            foreach($keys_must_exists as $key) {
-                // AM, 22.04.09, modified (isset nimmt kein NULL)
-                if(array_key_exists($prefix.$key, $this->Vars)) {
-                    $Input->setVar($new_prefix.$key, $this->Vars[$prefix.$key]);
-                }
+        $new_prefix = ($removePrefix) ? '' : $prefix;
+        foreach($keys_must_exists as $key) {
+            // AM, 22.04.09, modified (isset nimmt kein NULL)
+            if(array_key_exists($prefix.$key, $this->Vars)) {
+                $Input->setVar($new_prefix.$key, $this->Vars[$prefix.$key]);
             }
         }
         return $Input;
     }
 
     /**
-     * Setzt die Daten f�r Input.
+     * Overrides variables
      *
-     * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
+     * @param array $data associative array
      **/
     public function setData(array $data)
     {
@@ -559,7 +540,7 @@ class Input extends PoolObject
      * @param array $array
      * @return array
      */
-    function diff($array)
+    public function diff(array $array): array
     {
         return array_diff($this->Vars, $array);
     }
@@ -567,10 +548,10 @@ class Input extends PoolObject
     /**
      * Berechnet den Unterschied zwischen Arrays mit zus�tzlicher Indexpr�fung
      *
-     * @param unknown_type $array
-     * @return unknown
+     * @param array $array
+     * @return array
      */
-    function diff_assoc($array)
+    public function diff_assoc(array $array): array
     {
         return array_diff_assoc($this->Vars, $array);
     }
@@ -620,14 +601,14 @@ class Input extends PoolObject
     }
 
     /**
-    * Importiert einen Byte-Stream im internen Container.
-    *
-    * @access public
-    * @return boolean Ergebnis
-    */
-    function setByteStream($bytestream)
+     * Importiert einen Byte-Stream im internen Container.
+     *
+     * @param string $data
+     * @return Input
+     */
+    function setByteStream(string $data): Input
     {
-        $buf = unserialize($bytestream);
+        $buf = unserialize($data);
         return $this->addVar($buf);
     }
 
@@ -642,12 +623,11 @@ class Input extends PoolObject
     */
     function dumpVars($print = true, $key = '')
     {
-        $output = '';
         if (!empty($key)) {
-            $output = pray ($this->getVar($key));
+            $output = pray($this->getVar($key));
         }
         else {
-            $output = pray($this -> Vars);
+            $output = pray($this->Vars);
         }
 
         if ($print) {
@@ -692,24 +672,18 @@ class Input extends PoolObject
     /**
      * Vereinigt die Variablen Container von zwei Input Objekten. Vorhandene Keys werden nicht ueberschrieben.
      *
-     * @access public
-     * @param object $Input Objekt vom Typ Input
+     * @param Input $Input Objekt vom Typ Input
      * @param boolean $flip Fuegt die Daten in umgekehrter Reihenfolge zusammen (true), Standard ist false (Parameter nicht erforderlich)
-     * @return bool Erfolgsstatus
      **/
-    function mergeVars($Input, $flip = false)
+    public function mergeVars(Input $Input, bool $flip = false): Input
     {
-        $bResult=false;
-        if (is_a($Input, 'Input')) {
-            if ($flip) {
-                $this->Vars = array_merge($Input->Vars, $this->Vars);
-            }
-            else {
-                $this->Vars = array_merge($this->Vars, $Input->Vars);
-            }
-            $bResult = true;
+        if ($flip) {
+            $this->Vars = array_merge($Input->Vars, $this->Vars);
         }
-        return $bResult;
+        else {
+            $this->Vars = array_merge($this->Vars, $Input->Vars);
+        }
+        return $this;
     }
 
     /**
@@ -797,7 +771,6 @@ class ICookie extends Input
     * Setzt ein fluechtiges Cookie, dass nur solange wie die Session existiert (d.h. verfaellt nach Schliessen des Browsers).
     * Hinweis: der Wertebereich des Cookies wird automatisch URL-konform codiert (urlencoded) und beim Lesen automatisch URL-konform decodiert.
     *
-    * @access public
     * @param string $cookiename Name des Cookies
     * @param string $value Wert des Cookies
     * @param string $path Der Pfad zu dem Server, auf welchem das Cookie verfuegbar sein wird
@@ -805,10 +778,10 @@ class ICookie extends Input
     * @param integer $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
     * @return boolean Erfolgsstatus
     */
-    function setTransientCookie($cookiename, $value = '', $path = '/', $domain = '', $secure = 0)
+    public function setTransientCookie($cookiename, $value = '', $path = '/', $domain = '', $secure = 0): bool
     {
         // verf�llt nach Schlie�en des Browsers
-        $this -> setVar($cookiename, $value);
+        $this->setVar($cookiename, $value);
         return setcookie($cookiename, $value, null, $path, $domain, $secure);
     }
 
@@ -816,7 +789,6 @@ class ICookie extends Input
     * Setzt ein langlebiges Cookie, dass solange, bis die gesetze Zeit abgelaufen ist, existiert.
     * Hinweis: der Wertebereich des Cookies automatisch URL-konform codiert (urlencoded) und beim Lesen automatisch URL-konform decodiert.
     *
-    * @access public
     * @param string $cookiename Name des Cookies
     * @param string $value Wert des Cookies
     * @param integer $expire Lebenszeit des Cookies in Sekunden
@@ -825,9 +797,9 @@ class ICookie extends Input
     * @param integer $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
     * @return boolean Erfolgsstatus
     */
-    function setPersistentCookie($cookiename, $value, $expire, $path = '/', $domain = '', $secure = 0)
+    public function setPersistentCookie($cookiename, $value, $expire, $path = '/', $domain = '', $secure = 0): bool
     {
-        $this -> setVar($cookiename, $value);
+        $this->setVar($cookiename, $value);
         return setcookie($cookiename, $value, time()+$expire, $path, $domain, $secure);
     }
 
@@ -842,7 +814,7 @@ class ICookie extends Input
     * @param integer $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
     * @return boolean Erfolgsstatus
     */
-    function delCookie(string $cookiename, string $path = '/', string $domain = '', $secure = 0): bool
+    public function delCookie(string $cookiename, string $path = '/', string $domain = '', $secure = 0): bool
     {
         if (isset($this -> Vars[$cookiename])) {
             $this -> delVar($cookiename);
@@ -941,7 +913,6 @@ class IPost extends Input
 }
 
 
-
 /* --------------------- */
 ######### IFiles  #########
 /* --------------------- */
@@ -983,7 +954,6 @@ class IServer extends Input
 }
 
 
-
 /* --------------------- */
 ######### ISession ########
 /* --------------------- */
@@ -991,17 +961,14 @@ class IServer extends Input
 class ISession extends Input
 {
     /**
-     * Flag, ob Session initiiert wurde.
-     *
-     * @var boolean
-     * @access private
+     * @var boolean Flag, ob Session initiiert wurde.
      */
-    var $session_started = false;
+    private bool $session_started = false;
 
     /**
      * @var bool Schreibe u. entsperre Session
      */
-    var $autoClose = true;
+    private bool $autoClose = true;
 
     function __construct($autoClose=true)
     {
@@ -1038,15 +1005,29 @@ class ISession extends Input
     * Setzt eine Variable im internen Container.
     * Im Unterschied zu Input::addVar ueberschreibt Input::setVar alle Variablen.
     *
-    * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $value Wert der Variable
+    * @param mixed $value Wert der Variable
     */
-    public function setVar($key, $value = '')
+    public function setVar($key, $value = ''): Input
     {
         $this->start();
         parent::setVar($key, $value);
         $this->write_close();
+        return $this;
+    }
+
+    /**
+     * assign data as array
+     *
+     * @param array $assoc
+     * @return Input
+     */
+    public function setVars(array $assoc): Input
+    {
+        $this->start();
+        parent::setVars($assoc);
+        $this->write_close();
+        return $this;
     }
 
     /**
@@ -1070,10 +1051,9 @@ class ISession extends Input
     /**
     * Loescht eine Variable aus dem internen Container.
     *
-    * @access public
     * @param string $key Schluessel (bzw. Name der Variable)
     */
-    function delVar($key)
+    public function delVar($key)
     {
         $this->start();
         parent::delVar($key);
@@ -1083,10 +1063,9 @@ class ISession extends Input
     /**
     * Setzt die Daten f�r Input.
     *
-    * @access public
     * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
     */
-    function setData($data)
+    public function setData(array $data)
     {
         $this->start();
         parent::setData($data);
@@ -1096,32 +1075,32 @@ class ISession extends Input
     /**
      * Vereinigt die Variablen Container von zwei Input Objekten. Vorhandene Keys werden nicht ueberschrieben.
      *
-     * @access public
-     * @param object $Input Objekt vom Typ Input
+     * @param Input $Input Objekt vom Typ Input
      * @param boolean $flip Fuegt die Daten in umgekehrter Reihenfolge zusammen (true), Standard ist false (Parameter nicht erforderlich)
-     * @return bool Erfolgsstatus
      **/
-    function mergeVars($Input, $flip = false)
+    public function mergeVars(Input $Input, bool $flip = false): Input
     {
         $this->start();
         parent::mergeVars($Input, $flip);
         $this->write_close();
+        return $this;
     }
 
     /**
-    * Aendert den Typ einer Variable im internen Container.
+    * sets the data type of variable
     *
-    * @access public
-    * @param string $key Schluessel (bzw. Name der Variable)
-    * @param string $type Datentyp (siehe getType)
+    * @param string $key variable name
+    * @param string $type data type
     * @see Input::getType()
-    * @return boolean Erfolgsstatus
     */
-    function setType($key, $type)
+    public function setType(string $key, string $type): bool
     {
         $this->start();
-        parent::setType($key, $type);
-        $this->write_close();
+        $result = parent::setType($key, $type);
+        if($result) {
+            $this->write_close();
+        }
+        return $result;
     }
 
     /**
@@ -1129,9 +1108,9 @@ class ISession extends Input
      *
      * @return int Maximale Lebenszeit in Sekunden
      */
-    function getMaxLifetime()
+    function getMaxLifetime(): int
     {
-        return get_cfg_var('session.gc_maxlifetime');
+        return (int)get_cfg_var('session.gc_maxlifetime');
     }
 
     /**
@@ -1139,25 +1118,26 @@ class ISession extends Input
      *
      * @return string
      */
-    public function getSID()
+    public function getSID(): string
     {
         return session_id();
     }
 
     /**
-     * Schliesst Session. Zu empfehlen bei lang laufenden Programmen, damit andere Scripte nicht gesperrt werden
+     * write session and close it. Zu empfehlen bei lang laufenden Programmen, damit andere Scripte nicht gesperrt werden
      *
      */
-    function write_close()
+    function write_close(): bool
     {
         if($this->autoClose) {
-            session_write_close();
+            return session_write_close();
         }
+        return false;
         //$this->session_started = 0;
     }
 
     /**
-     * Loescht die Session
+     * destroy the session
      */
     function destroy()
     {
