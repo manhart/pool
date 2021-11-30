@@ -994,6 +994,18 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
+         * returns rowset as json
+         *
+         * @param int $flags
+         * @param int $depth
+         * @return string
+         */
+        public function getRowSetAsJSON(int $flags, int $depth = 512): string
+        {
+            return json_encode($this->rowset, $flags, $depth);
+        }
+
+        /**
          * Maskiere Text CSV Konform
          *
          * @param string $val Wert
