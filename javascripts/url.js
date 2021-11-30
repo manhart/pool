@@ -12,6 +12,7 @@ function Url() {
 }
 Url.prototype.setScript = function(script) {
 	this.init(script);
+    return this;
 }
 Url.prototype.init = function(u) {
 	if (typeof(u) == 'object') {
