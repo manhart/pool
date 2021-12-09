@@ -190,12 +190,9 @@ if(!defined('CLASS_MYSQLDAO')) {
     /**
      * MySQL_DAO
      *
-     * Siehe Datei fuer ausfuehrliche Beschreibung!
-     *
      * @package pool
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
+     * @author Alexander Manhart <alexander@manhart-it.de>
      * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
-     * @access public
      **/
     class MySQL_DAO extends DAO
     {
@@ -995,11 +992,11 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Erstellung einer Sortierung fuer ein SQL Statement
          *
-         * @access private
-         * @param array $sorting Array im Format $array('feldname' => 'ASC', 'feldname' => 'DESC')
+         * @param array|null $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
          * @return string ORDER eines SQL Statements
-         **/
-        function __buildSorting($sorting)
+         * @throws Exception
+         */
+        protected function __buildSorting(?array $sorting): string
         {
             $sql = '';
             if (is_array($sorting) and count($sorting)) {
