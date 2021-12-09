@@ -31,7 +31,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'click to select'
+            'caption' => 'Click to Select'
         ],
         'columns' => [
             'attribute' => '',
@@ -314,6 +314,27 @@ class GUI_Table extends GUI_Module
                     'required' => true, // tableEditor
                     'showColumn' => 0 // tableEditor order
                 ],
+                'filterControl' => [
+                    'attribute' => 'data-filter-control',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'select',
+                    'options' => [null, 'input', 'select', 'datepicker']
+                ],
+                'filterControlPlaceholder' => [
+                    'attribute' => 'data-filter-control-placeholder',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                ],
+                'filterDatepickerOptions' => [
+                    'attribute' => 'data-filter-datepicker-options',
+                    'type' => 'json', // should be object json todo json editor
+                    'value' => null, // overridden in @see GUI_Table::init
+                    'element' => 'input',
+                    'inputType' => 'text',
+                ],
                 'footerFormatter' => [
                     'attribute' => 'data-footer-formatter',
                     'type' => 'function',
@@ -454,11 +475,35 @@ class GUI_Table extends GUI_Module
             'type' => 'function',
             'value' => null // undefined
         ],
+        'filterControl' => [
+            'attribute' => 'data-filter-control',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Filter Control'
+        ],
+        'maintainMetaData' => [
+            'attribute' => 'data-maintain-meta-data',
+            'type' => 'boolean',
+            'value' => false,
+            'caption' => 'Maintain Metadata',
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
         'pagination' => [
             'attribute' => 'data-pagination',
             'type' => 'boolean',
             'value' => false,
             'caption' => 'Pagination',
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'paginationLoop' => [
+            'attribute' => 'data-pagination-loop',
+            'type' => 'boolean',
+            'value' => true,
+            'caption' => 'Pagination Loop',
             'element' => 'input',
             'inputType' => 'checkbox'
         ],
@@ -476,12 +521,29 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
         ],
+        'searchAlign' => [
+            'attribute' => 'data-search-align',
+            'type' => 'string',
+            'value' => 'right',
+            'element' => 'select',
+            'options' => ['left', 'right'],
+            'caption' => 'Search Align'
+        ],
         'searchHighlight' => [
             'attribute' => 'data-search-highlight',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
+            'caption' => 'Search Highlight'
+        ],
+        'smartDisplay' => [
+            'attribute' => 'data-smart-display',
+            'type' => 'boolean',
+            'value' => true,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Smart Display'
         ],
         'showColumns' => [
             'attribute' => 'data-show-columns',
@@ -498,6 +560,14 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
             'caption' => 'Export'
+        ],
+        'showFilterControlSwitch' => [
+            'attribute' => 'data-show-filter-control-switch',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Show Filter Control Switch'
         ],
         'exportDataType' => [
             'attribute' => 'data-export-data-type',
@@ -544,7 +614,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'single select'
+            'caption' => 'Single Select'
         ],
         'sortable' => [
             'attribute' => 'data-sortable',
@@ -559,7 +629,8 @@ class GUI_Table extends GUI_Module
             'type' => 'string',
             'value' => 'client',
             'element' => 'select',
-            'options' => ['client', 'server']
+            'options' => ['client', 'server'],
+            'caption' => 'Side Pagination'
         ]
     ];
 
@@ -579,6 +650,12 @@ class GUI_Table extends GUI_Module
         $this->Defaults->addVar('render', true);
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
+
+        // 09.12.21, AM, override default filterDatepickerOptions
+        // @used-by table.js
+        $this->inspectorProperties['columns']['properties']['filterDatepickerOptions']['value'] =
+            '{"autoclose":true, "clearBtn":true, "todayHighlight":true, "language":"'.$this->Weblication->getLanguage().'"}';
+
         parent::init($superglobals);
 
 //        $this->defaultOptions['moduleName']['value'] = $this->getName();
@@ -802,6 +879,7 @@ class GUI_Table extends GUI_Module
                             break;
 
                         case 'function':
+                        case 'json':
                             break;
 
                         case 'auto':
@@ -945,5 +1023,4 @@ class GUI_Table extends GUI_Module
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');
     }
-
 }
