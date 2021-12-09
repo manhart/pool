@@ -48,9 +48,7 @@ if(!defined('CLASS_MODULE')) {
         var $Parent=null;
 
         /**
-         * Modul-Container enth�lt alle Kinder-Objekte (Childs)->welche Module sitzen auf mir?
-         *
-         * @var array $Modules is of type array{Module}
+         * @var array{Module} $Modules contains all children modules
          */
         protected array $Modules = [];
 
@@ -66,9 +64,8 @@ if(!defined('CLASS_MODULE')) {
          * Superglobals. Alle Parameter-/Variablen�bergaben, sei es �ber Url (Get) oder Formular (Post) werden im Objekt Input festgehalten. Fehlen wichtige Parameter�bergaben, werden diese durch vorhandene Standardwerte ausgeglichen.
          *
          * @var Input $Input
-         * @access public
          */
-        var $Input = null;
+        public Input $Input;
 
         /**
          * Variablen/Parameter, die an die Kinder-Module (Childs) weitergereicht werden sollen.
@@ -95,8 +92,9 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
          *
-         * @param Component $Owner Owner
+         * @param Component|null $Owner Owner
          * @param array $params fixed params
+         * @throws ReflectionException
          */
         function __construct(?Component $Owner, array $params = [])
         {
