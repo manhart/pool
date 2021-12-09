@@ -25,17 +25,15 @@ if(!defined('CLASS_SUBCODE'))
      * Ein Subcode erledigt eine bestimmte Aufgabe und liefert ein Ergebnis.
      *
      * @package pool
-     * @author manhart <alexander.manhart@freenet.de>
+     * @author manhart <alexander@manhart-it.de>
      * @version $Id: Subcode.class.php,v 1.5 2006/10/20 08:44:20 manhart Exp $
-     * @access public
      **/
     class Subcode extends Module
     {
         /**
          * @var Input $Input
-         * @access private
          **/
-        var $Input = null;
+        public Input $Input;
 
         /**
          * @var SubcodeResult $SubcodeResult
