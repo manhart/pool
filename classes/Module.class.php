@@ -50,7 +50,7 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Modul-Container enth�lt alle Kinder-Objekte (Childs)->welche Module sitzen auf mir?
          *
-         * @var array $Modules
+         * @var array $Modules is of type array{Module}
          */
         protected array $Modules = [];
 
@@ -385,7 +385,7 @@ if(!defined('CLASS_MODULE')) {
 
             $max = count($this->Modules);
             for ($i = 0; $i < $max; $i++){
-                if (strcasecmp($this->Modules[$i]->Name, $moduleName) == 0) {
+                if (strcasecmp($this->Modules[$i]->getName(), $moduleName) == 0) {
                     $result = $this->Modules[$i];
                     break;
                 }
