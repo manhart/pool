@@ -8,6 +8,14 @@
 
 'use strict';
 
+// 09.12.2021, AM, override default filterDatepickerOptions, because the default is undefined
+jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
+    'autclose': true,
+    'clearBtn': true,
+    'todayHighlight': true,
+    'language': document.documentElement.lang
+}
+
 // $.BootstrapTable = class extends $.BootstrapTable {
 // }
 class GUI_Table {
@@ -145,6 +153,7 @@ class GUI_Table {
     render()
     {
         this.options['columns'] = this.columns;
+        console.debug(this.moduleName, this.options);
         this.table.bootstrapTable(
             this.options
         );
@@ -178,7 +187,12 @@ class GUI_Table {
 
     strftime(value, row, index, field, format)
     {
-        if(format) {
+        // 09.12.21, AM, fallback: handle empty english database format (should be handled server-side!!)
+        if(value == '0000-00-00 00:00:00') {
+            value = '';
+        }
+
+        if(format && value) {
             return new Date(value).strftime(format);
         }
         return value;
