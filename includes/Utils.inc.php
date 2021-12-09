@@ -2682,7 +2682,7 @@ function bool2string(bool $bool): string
 /**
  * Umwandlung string Ausdruck ('true', 'false') in booleschen Ausdruck
  *
- * @param string $string Boolean als String
+ * @param string|null $string $string Boolean als String
  * @return bool booleschen Ausdruck
  */
 function string2bool(?string $string): bool
