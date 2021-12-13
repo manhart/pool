@@ -331,7 +331,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param string $content
      * @return string Inhalt (Content)
      **/
-    function finalize($content='')
+    public function finalize($content='')
     {
         $tooltip_name = '';
         if(!$this->preventDefaultDynToolTip) {

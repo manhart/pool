@@ -11,8 +11,8 @@
  * @version
  *
  * @since 2009-07-15
- * @author Alexander Manhart <alexander.manhart@wochenblatt.de>
- * @link http://www.softidea.de
+ * @author Alexander Manhart <alexander.manhart@gmx.de>
+ * @link
  */
 
 var php_RESULT = null;
