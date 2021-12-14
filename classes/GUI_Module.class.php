@@ -600,7 +600,7 @@ class GUI_Module extends Module
 
         $className = $this->getClassName();
         $Header = $this->Weblication->getFrame()->getHeaderdata();
-        $jsFile = @$this->Weblication->findJavaScript($className.'.js', strtolower($className), $this->isBasicLibrary());
+        $jsFile = $this->Weblication->findJavaScript($className.'.js', strtolower($className), $this->isBasicLibrary(), false);
         if(!$jsFile) {
             return false;
         }
