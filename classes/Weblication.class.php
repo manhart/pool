@@ -985,10 +985,10 @@ class Weblication extends Component
      * JavaScripts aus der Hauptbibliothek koennen nicht ueberschrieben werden (macht auch keinen Sinn).
      *
      * @param string $filename JavaScript Dateiname
-     * @param string $classfolder Unterordner (guis/*) zur Klasse
-     * @return string Bei Erfolg Pfad und Dateiname des gefunden JavaScripts. Im Fehlerfall ''.
+     * @param string $classFolder Unterordner (guis/*) zur Klasse
+     * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      **/
-    function findJavaScript(string $filename, string $classfolder = '', bool $baselib = false)
+    function findJavaScript(string $filename, string $classFolder = '', bool $baselib = false, bool $raiseError = true): string
     {
         $javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
 
@@ -1002,13 +1002,13 @@ class Weblication extends Component
                 return $folder . '/'. $filename;
             }
 
-            $folder_guis = $this->getRelativePathBaselib(PWD_TILL_GUIS).'/'.$classfolder;
+            $folder_guis = $this->getRelativePathBaselib(PWD_TILL_GUIS).'/'.$classFolder;
             if (file_exists($folder_guis.'/'.$filename)) {
                 return $folder_guis . '/'.$filename;
             }
         }
         else {
-            $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
+            $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
 
             if (file_exists($folder_javascripts . $filename)) {
                 return $folder_javascripts . $filename;
@@ -1019,25 +1019,28 @@ class Weblication extends Component
             }
 
             if (defined('DIR_COMMON_ROOT_REL')) {
-                $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
+                $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
                 if (file_exists($folder_common . $filename)) {
                     return $folder_common . $filename;
                 }
             }
         }
 
+        // 14.12.21, AM, old workaround disabled
         // Lowercase Workaround:
-        if (preg_match('/[A-Z]/', $filename . $classfolder)) {
-            // try lower case
-            // todo log buggy code
-            if(defined('IS_DEVELOP') and IS_DEVELOP) {
-                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
-            }
-            return $this->findJavaScript(strtolower($filename), strtolower($classfolder), $baselib);
-        }
-        else {
+//        if (preg_match('/[A-Z]/', $filename . $classfolder)) {
+//            // try lower case
+//            // todo log buggy code
+//            if(defined('IS_DEVELOP') and IS_DEVELOP) {
+//                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
+//            }
+//            return $this->findJavaScript(strtolower($filename), strtolower($classfolder), $baselib);
+//        }
+//        else {
+        if($raiseError) {
             $this->raiseError(__FILE__, __LINE__, sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
         }
+//        }
         return '';
     }
 
