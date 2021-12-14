@@ -43,6 +43,8 @@ class GUI_Table extends GUI_Module {
     rendered = false;
     inside_render = false;
 
+    refreshOptions = false;
+
     // poolColumnOptions = {}; // poolOptions
 
     /**
@@ -137,7 +139,7 @@ class GUI_Table extends GUI_Module {
             }
 
             let format = poolFormat ? poolFormat : this.formats[poolType];
-            console.debug(field, poolType, format);
+            // console.debug(field, poolType, format);
 
             // if('formatter' in column) {
             //     column['formatter'] =
@@ -171,14 +173,16 @@ class GUI_Table extends GUI_Module {
 
     setColumnOptions(field, options = [])
     {
+        this.refreshOptions = true;
+
         let result = false;
         if(isEmpty(options)) return result;
 
-        console.debug('setColumnOptions', field, options);
+        // console.debug('setColumnOptions', field, options);
         for(let c = 0; c<this.columns.length; c++) {
-            console.debug(c);
+            // console.debug(c);
             if (this.columns[c].field == field) {
-                console.debug('treffer');
+                // console.debug('treffer');
                 this.columns[c] = Object.assign({}, this.columns[c], options);
                 result = true;
                 break;
@@ -233,12 +237,13 @@ class GUI_Table extends GUI_Module {
 
     refresh(options = {})
     {
-        console.debug(this.getName()+'.refresh', options);
-        if(!isEmpty(options)) {
+        if(!isEmpty(options) || this.refreshOptions) {
+            console.debug(this.getName()+'.refreshOptions', options);
             this.options = Object.assign({}, this.options, options);
-            this.getTable().bootstrapTable('refreshOptions', options);
+            this.getTable().bootstrapTable('refreshOptions', this.options);
         }
         else {
+            console.debug(this.getName()+'.refresh', options);
             this.getTable().bootstrapTable('refresh');
         }
         return this;
