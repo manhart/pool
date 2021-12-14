@@ -20,6 +20,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'caption' => 'Data Url'
         ],
+        'buttons' => [
+            'attribute' => 'data-buttons',
+            'type' => 'function', // todo ModuleConfigurator functions - here buttons
+            'value' => '{}',
+            'element' => 'input',
+            'inputType' => 'text',
+            'caption' => 'Buttons'
+        ],
         'classes' => [
             'attribute' => 'data-classes',
             'type' => 'string',
@@ -280,7 +288,7 @@ class GUI_Table extends GUI_Module
                 'clickToSelect' => [
                     'attribute' => 'data-click-to-select',
                     'type' => 'boolean',
-                    'value' => false,
+                    'value' => true,
                 ],
                 'colspan' => [
                     'attribute' => 'data-colspan',
@@ -298,6 +306,12 @@ class GUI_Table extends GUI_Module
                     'value' => false,
                     'element' => 'input', // tableEditor
                     'inputType' => 'checkbox', // tableEditor
+                ],
+                'events' => [
+                    'attribute' => 'data-events',
+                    'type' => 'function',
+                    'value' => null,
+                    'element' => 'textarea'
                 ],
                 'falign' => [
                     'attribute' => 'data-falign',
@@ -631,6 +645,13 @@ class GUI_Table extends GUI_Module
             'element' => 'select',
             'options' => ['client', 'server'],
             'caption' => 'Side Pagination'
+        ],
+        'toolbar' => [
+            'attribute' => 'data-toolbar',
+            'type' => 'string',
+            'value' => null,
+            'element' => 'input',
+            'inputType' => 'text'
         ]
     ];
 
@@ -640,6 +661,9 @@ class GUI_Table extends GUI_Module
 
     protected array $poolOptions = [];
 
+    const RENDER_NONE = 0;
+    const RENDER_IMMEDIATELY = 1;
+    const RENDER_ONDOMLOADED = 2;
 
     /**
      * @param const|int $superglobals
@@ -647,7 +671,7 @@ class GUI_Table extends GUI_Module
     public function init($superglobals = I_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
-        $this->Defaults->addVar('render', true);
+        $this->Defaults->addVar('render', self::RENDER_ONDOMLOADED);
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
 
@@ -688,10 +712,7 @@ class GUI_Table extends GUI_Module
         $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', $className, true);
         $this->Template->setFilePath('stdout', $tpl);
 
-        if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
-            //$this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
-        }
+        $this->loadJavaScriptGUI();
     }
 
     public function setOptions(array $options): GUI_Table
@@ -826,7 +847,7 @@ class GUI_Table extends GUI_Module
         $this->Template->setVar([
             'moduleName' => $this->getName(),
             'className' => $this->getClassName(),
-            'options' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
+            'poolOptions' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
         ]);
 
 
@@ -941,11 +962,18 @@ class GUI_Table extends GUI_Module
 //        }
 
         $this->Template->leaveBlock();
-        $js_render = '';
-        if($this->getVar('render')) {
-            $js_render = '.render()';
+
+        $render_immediately = $render_ondomloaded = '';
+        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
+            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
         }
-        $this->Template->setVar('render', $js_render);
+        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
+            $render_immediately = '.render()';
+        }
+        $this->Template->setVar([
+            'RENDER_IMMEDIATELY' => $render_immediately,
+            'RENDER_ONDOMLOADED' => $render_ondomloaded
+        ]);
         parent::prepare();
     }
 
