@@ -1,13 +1,4 @@
 /*
- * g7system.local
- *
- * GUI_Module.class.js created at 13.12.21, 15:51
- *
- * @author a.manhart <a.manhart@group-7.de>
- * @copyright Copyright (c) 2021, GROUP7 AG
- */
-
-/*
  * POOL
  *
  * Module.class.js created at 10.12.21, 12:29
