@@ -18,7 +18,7 @@ jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
 
 // $.BootstrapTable = class extends $.BootstrapTable {
 // }
-class GUI_Table {
+class GUI_Table extends GUI_Module {
     /* > ES7
     static const STYLE_DEFAULT = 'toast';
     static const STYLE_ERROR = 'error';
@@ -30,12 +30,18 @@ class GUI_Table {
 
     table = null;
 
-    moduleName = 'GUI_Table';
+    // name = 'GUI_Table';
 
     formats = [];
 
     options = {};
+
     columns = [];
+
+    selections = [];
+
+    rendered = false;
+    inside_render = false;
 
     // poolColumnOptions = {}; // poolOptions
 
@@ -44,28 +50,10 @@ class GUI_Table {
      *
      * @constructor
      */
-    constructor(settings = {})
+    constructor(name)
     {
-        if(!('moduleName' in settings)) {
-            console.error('Missing moduleName in settings of GUI_Table');
-        }
-        else {
-            this.moduleName = settings['moduleName'];
-            delete settings['moduleName'];
-        }
-
-        // automation
-        // if('poolColumnOptions' in settings) {
-        //     this.poolColumnOptions = settings['poolColumnOptions'];
-        //     delete settings['poolColumnOptions'];
-        // }
-
-        this.formats['time'] = settings['time.strftime'];
-        this.formats['date'] = settings['date.strftime'];
-        this.formats['date.time'] = settings['date.time.strftime'];
-        this.formats['number'] = settings['number'];
-
-        this.table = $('#'+this.moduleName)
+        super(name);
+        this.options.responseHandler = this.responseHandler
 
         // let columns = {
         //     columns: [{
@@ -83,6 +71,32 @@ class GUI_Table {
         // this.table.bootstrapTable(columns);
 
         //this.table.bootstrapTable('refreshOptions', options);
+        return this;
+    }
+
+    /**
+     *
+     * @param settings
+     * @returns {GUI_Table}
+     */
+    setConfiguration(settings)
+    {
+        if(('moduleName' in settings)) {
+            delete settings['moduleName'];
+        }
+
+
+        // automation
+        // if('poolColumnOptions' in settings) {
+        //     this.poolColumnOptions = settings['poolColumnOptions'];
+        //     delete settings['poolColumnOptions'];
+        // }
+
+        this.formats['time'] = settings['time.strftime'];
+        this.formats['date'] = settings['date.strftime'];
+        this.formats['date.time'] = settings['date.time.strftime'];
+        this.formats['number'] = settings['number'];
+        return this;
     }
 
     setOptions(options = {})
@@ -150,14 +164,118 @@ class GUI_Table {
         return this;
     }
 
-    render()
+    getColumns()
     {
+        return this.columns;
+    }
+
+    setColumnOptions(field, options = [])
+    {
+        let result = false;
+        if(isEmpty(options)) return result;
+
+        console.debug('setColumnOptions', field, options);
+        for(let c = 0; c<this.columns.length; c++) {
+            console.debug(c);
+            if (this.columns[c].field == field) {
+                console.debug('treffer');
+                this.columns[c] = Object.assign({}, this.columns[c], options);
+                result = true;
+                break;
+            }
+        }
+        console.debug('Result of setColumnOptions', this.columns);
+        return result;
+    }
+
+    getTable()
+    {
+        if(!this.table) {
+            // warning if the developer uses a wrong order
+            if(!this.inside_render && !this.rendered) {
+                console.warn(this.getName()+'.getTable() is called before '+this.getName()+'.render()! Not all table options ' +
+                    'were passed. Please check the order of the method calls.');
+            }
+            this.table = $('#' + this.getName()).on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows);
+        }
+        return this.table;
+    }
+
+    /**
+     * renders bootstrap-table. should only be called once! use method refresh instead
+     *
+     * @param options
+     * @returns {GUI_Table}
+     */
+    render(options = {})
+    {
+        this.inside_render = true;
         this.options['columns'] = this.columns;
-        console.debug(this.moduleName, this.options);
-        this.table.bootstrapTable(
-            this.options
-        );
+        if(!isEmpty(options)) {
+            this.options = Object.assign({}, this.options, options);
+        }
+
+        console.debug(this.getName()+'.render', this.options, options, window['mod_ManageUser'] ? mod_ManageUser : '');
+
+        if(!this.rendered) {
+            this.getTable().bootstrapTable(
+                this.options
+            );
+        }
+        else {
+            console.info(this.getName()+'.render has already been called once.')
+            this.refresh(options);
+        }
+        this.inside_render = false;
+        this.rendered = true;
         return this;
+    }
+
+    refresh(options = {})
+    {
+        console.debug(this.getName()+'.refresh', options);
+        if(!isEmpty(options)) {
+            this.options = Object.assign({}, this.options, options);
+            this.getTable().bootstrapTable('refreshOptions', options);
+        }
+        else {
+            this.getTable().bootstrapTable('refresh');
+        }
+        return this;
+    }
+
+    onCheckUncheckRows = (evt, rowsAfter, rowsBefore) =>
+    {
+        let rows = rowsAfter;
+
+        if(evt.type === 'uncheck-all') {
+            rows = rowsBefore;
+        }
+
+        let ids = $.map(!$.isArray(rows) ? [rows] : rows, function(row) {
+            return row.idUser;
+        })
+
+        console.debug(evt.type, rows, ids);
+
+        if(this.getTable().bootstrapTable('getOptions').singleSelect) {
+            this.selections = [];
+        }
+
+        let fnString = ['check', 'check-all'].indexOf(evt.type) > -1 ? 'array_union' : 'array_difference'
+        let fn = window[fnString];
+        this.selections = fn(this.selections, ids);
+        // this.selections = ids;
+    }
+
+    responseHandler = (res) =>
+    {
+        console.debug(this.getName()+'.responseHandler', res);
+
+        res.forEach(row => {
+            row.state = this.selections.indexOf(row.idUser) !== -1
+        })
+        return res;
     }
 
     sortDateTime(a, b)
