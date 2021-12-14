@@ -104,7 +104,12 @@
      *
      * @var string $charset Zeichensatz
      */
-    var $charset = 'ISO-8859-1';
+    private string $charset = 'UTF-8';
+
+     /**
+      * @var array JavaScript Code
+      */
+    private array $scriptCode = [];
 
      /**
       * GUI_Headerdata::GUI_Headerdata()
@@ -135,8 +140,8 @@
      **/
     function loadFiles()
     {
-        $file = $this -> Weblication -> findTemplate('tpl_headerdata.html', 'gui_headerdata', true);
-        $this -> Template -> setFilePath('headerdata', $file);
+        $file = $this->Weblication->findTemplate('tpl_headerdata.html', 'gui_headerdata', true);
+        $this->Template->setFilePath('headerdata', $file);
     }
 
     /**
@@ -199,9 +204,9 @@
      *
      * @param string $charset Zeichensatz
      */
-    function setCharset($charset='ISO-8859-1')
+    function setCharset(string $charset)
     {
-        $this -> charset = $charset;
+        $this->charset = $charset;
     }
 
     /**
@@ -306,6 +311,17 @@
         return $this;
     }
 
+     /**
+      * adds JavaScript to the head
+      *
+      * @param string $name with a unique name, it is possible to overwrite code
+      * @param string $code javaScript source code
+      */
+    public function addScriptCode(string $name, string $code)
+    {
+        $this->scriptCode[$name] = $code;
+    }
+
     function setBaseTarget($target='_top')
     {
         $this -> Base_Target = $target;
@@ -339,7 +355,7 @@
                 'DESCRIPTION' => $this -> Description,
                 'ROBOTS' => $this -> Robots,
                 'BASE_TARGET' => $this -> Base_Target,
-                'CHARSET' => $this -> charset,
+                'CHARSET' => $this->charset,
                 'SCRIPT' => $Url->getUrl()
             )
         );
@@ -392,18 +408,27 @@
             }
         }
 
-        if(file_exists('favicon.ico')) $this->Template->newBlock('favicon');
+        if(count($this->scriptCode) > 0) {
+            foreach($this->scriptCode as $name => $code) {
+                $ScriptBlock = $this->Template->newBlock('SCRIPT_CODE');
+                $ScriptBlock->setVar('NAME', $name);
+                $ScriptBlock->setVar('CODE', $code);
+            }
+        }
+
+        if(file_exists('favicon.ico')) {
+            $this->Template->newBlock('favicon');
+        }
+
+        $this->Template->leaveBlock();
     }
 
     /**
-     * GUI_Headerdata::finalize()
-     *
      * Gibt die fertigen Html Kopfdaten zurueck.
      *
-     * @access public
      * @return string Content (Kopfdaten)
      **/
-    function finalize()
+    public function finalize(): string
     {
         $this->Template->parse();
         return $this->Template->getContent();
