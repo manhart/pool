@@ -145,6 +145,15 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
+     * load default Weblication.class.js and GUI_Module.class.js
+     */
+    public function loadFiles()
+    {
+        $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
+        $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
+    }
+
+    /**
      * Liefert das GUI_Headerdata Object zum Aendern der Html Kopfdaten.
      *
      * @return GUI_Headerdata GUI_Headerdata
