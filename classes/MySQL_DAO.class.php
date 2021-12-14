@@ -748,7 +748,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @see MySQL_DAO::__buildGroupby
          **/
         public function getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array(),
-            $groupby=array(), $having=array(), $options=array())
+            $groupBy=array(), $having=array(), $options=array())
         {
             $sql = sprintf('SELECT %s %s FROM `%s` WHERE %s %s%s%s%s%s',
                 implode(' ', $options),
@@ -756,7 +756,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->table,
                 $this->__buildWhere($id, $key),
                 $this->__buildFilter($filter_rules),
-                $this->__buildGroupby($groupby),
+                $this->__buildGroupby($groupBy),
                 $this->__buildHaving($having),
                 $this->__buildSorting($sorting),
                 $this->__buildLimit($limit)
