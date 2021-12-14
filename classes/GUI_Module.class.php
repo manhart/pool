@@ -585,14 +585,40 @@ class GUI_Module extends Module
     *
     * @access protected
     */
-    function loadFiles() {}
+    protected function loadFiles() {}
+
+    /**
+     * load, create and register JavaScript GUI
+     *
+     * @param bool $global makes Module global in window scope
+     */
+    public function loadJavaScriptGUI(bool $global = true): bool
+    {
+        if(!$this->Weblication->hasFrame()) {
+            return false;
+        }
+
+        $className = $this->getClassName();
+        $Header = $this->Weblication->getFrame()->getHeaderdata();
+        $jsFile = @$this->Weblication->findJavaScript($className.'.js', strtolower($className), $this->isBasicLibrary());
+        if(!$jsFile) {
+            return false;
+        }
+        $Header->addJavaScript($jsFile);
+
+        $windowCode = '';
+        if($global) {
+            $windowCode = 'window[\'$'.$this->getName().'\'] = ';
+        }
+        $Header->addScriptCode($this->getName(),
+            $windowCode.'GUI_Module.createGUIModule('.$className.', \''.$this->getName().'\');');
+        return true;
+    }
 
     /**
      * Provisioning data before preparing module and there children.
-     *
-     * @access public
      **/
-    function prepareContent()
+    public function prepareContent()
     {
         $this->provision();
 
