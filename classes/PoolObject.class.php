@@ -103,6 +103,16 @@ if(!defined('CLASS_POOLOBJECT')) {
         private string $className = '';
 
         /**
+         * @var string the filename of the the file in which the class has been defined
+         */
+        private string $classFilename = '';
+
+        /**
+         * @var bool|null determines whether the class is the POOL base library
+         */
+        private ?bool $isBasicLibrary = null;
+
+        /**
          * @return PoolObject
          */
         public function __construct()
@@ -127,7 +137,7 @@ if(!defined('CLASS_POOLOBJECT')) {
         /**
          * Determines the short name of the class of the object, stores it temporarily and returns it.
          *
-         * @return bool|string
+         * @return string
          */
         public function getClassName(): string
         {
@@ -135,6 +145,32 @@ if(!defined('CLASS_POOLOBJECT')) {
                 $this->className = (new \ReflectionClass($this))->getShortName();
             }
             return $this->className;
+        }
+
+        /**
+         * Gets the filename of the file in which the class has been defined
+         *
+         * @return string
+         */
+        public function getClassFilename(): string
+        {
+            if($this->classFilename == '') {
+                $this->classFilename = (new \ReflectionClass($this))->getFileName();
+            }
+            return $this->classFilename;
+        }
+
+        /**
+         * determines whether the class is inside the POOL (base library)
+         *
+         * @return bool
+         */
+        public function isBasicLibrary(): bool
+        {
+            if(is_null($this->isBasicLibrary)) {
+                $this->isBasicLibrary = substr_compare($this->getClassFilename(), DIR_POOL_ROOT, 0, strlen(DIR_POOL_ROOT)) === 0;
+            }
+            return $this->isBasicLibrary;
         }
 
         /**
