@@ -37,13 +37,14 @@ class GUI_Table extends GUI_Module {
     options = {};
 
     columns = [];
+    columnNames = [];
 
     selections = [];
 
     rendered = false;
     inside_render = false;
 
-    refreshOptions = false;
+    forceRefreshOptions = false;
 
     // poolColumnOptions = {}; // poolOptions
 
@@ -95,6 +96,7 @@ class GUI_Table extends GUI_Module {
         // }
 
         this.formats['time'] = settings['time.strftime'];
+        delete settings['time.strftime'];
         this.formats['date'] = settings['date.strftime'];
         this.formats['date.time'] = settings['date.time.strftime'];
         this.formats['number'] = settings['number'];
@@ -111,6 +113,7 @@ class GUI_Table extends GUI_Module {
     {
         columns.forEach((column, z) => {
             let field = ('field' in column) ? column['field'] : z;
+            this.columnNames[field] = z;
             // if(!(field in this.poolColumnOptions)) {
             //     return;
             // }
@@ -173,21 +176,24 @@ class GUI_Table extends GUI_Module {
 
     setColumnOptions(field, options = [])
     {
-        this.refreshOptions = true;
-
         let result = false;
         if(isEmpty(options)) return result;
 
         // console.debug('setColumnOptions', field, options);
-        for(let c = 0; c<this.columns.length; c++) {
-            // console.debug(c);
-            if (this.columns[c].field == field) {
-                // console.debug('treffer');
-                this.columns[c] = Object.assign({}, this.columns[c], options);
-                result = true;
-                break;
-            }
+        if(field in this.columnNames) {
+            this.columns[this.columnNames[field]] = Object.assign({}, this.columns[this.columnNames[field]], options);
+            this.forceRefreshOptions = true;
+            result = true;
         }
+        // for(let c = 0; c<this.columns.length; c++) {
+        //     // console.debug(c);
+        //     if (this.columns[c].field == field) {
+        //         // console.debug('treffer');
+        //         this.columns[c] = Object.assign({}, this.columns[c], options);
+        //         result = true;
+        //         break;
+        //     }
+        // }
         console.debug('Result of setColumnOptions', this.columns);
         return result;
     }
@@ -237,7 +243,7 @@ class GUI_Table extends GUI_Module {
 
     refresh(options = {})
     {
-        if(!isEmpty(options) || this.refreshOptions) {
+        if(!isEmpty(options) || this.forceRefreshOptions) {
             console.debug(this.getName()+'.refreshOptions', options);
             this.options = Object.assign({}, this.options, options);
             this.getTable().bootstrapTable('refreshOptions', this.options);
