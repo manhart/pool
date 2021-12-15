@@ -1,6 +1,7 @@
 /**
  * Url-Klasse
- * @author christian Schmidseder
+ *
+ * @author Christian Schmidseder, Alexander Manhart
  */
 function Url() {
 	this.params = new Object();
@@ -11,6 +12,7 @@ function Url() {
 }
 Url.prototype.setScript = function(script) {
 	this.init(script);
+    return this;
 }
 Url.prototype.init = function(u) {
 	if (typeof(u) == 'object') {
@@ -35,18 +37,16 @@ Url.prototype.init = function(u) {
     }
 }
 Url.prototype.getUrl = function() {
-        var u = this.path;
-        u += '?';
-        for (k in this.params) {
-           if (k != 'clone') {
-           		u = prepareUrl(u);
-	       		u += k + '=' + this.params[k];
-           }
-        }
-        return u;
+    let u = this.path;
+
+    for (let k in this.params) {
+        u = prepareUrl(u);
+        u += k + '=' + this.params[k];
+    }
+    return u;
 }
 Url.prototype.getParam = function(key) {
-        return this.params[key];
+    return this.params[key];
 }
 /**
  * Setzt die URL-Parameter

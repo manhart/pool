@@ -48,9 +48,7 @@ if(!defined('CLASS_MODULE')) {
         var $Parent=null;
 
         /**
-         * Modul-Container enth�lt alle Kinder-Objekte (Childs)->welche Module sitzen auf mir?
-         *
-         * @var array $Modules
+         * @var array{Module} $Modules contains all children modules
          */
         protected array $Modules = [];
 
@@ -66,9 +64,8 @@ if(!defined('CLASS_MODULE')) {
          * Superglobals. Alle Parameter-/Variablen�bergaben, sei es �ber Url (Get) oder Formular (Post) werden im Objekt Input festgehalten. Fehlen wichtige Parameter�bergaben, werden diese durch vorhandene Standardwerte ausgeglichen.
          *
          * @var Input $Input
-         * @access public
          */
-        var $Input = null;
+        public Input $Input;
 
         /**
          * Variablen/Parameter, die an die Kinder-Module (Childs) weitergereicht werden sollen.
@@ -95,9 +92,9 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
          *
-         * @access public
-         * @param Component $Owner Owner
+         * @param Component|null $Owner Owner
          * @param array $params fixed params
+         * @throws ReflectionException
          */
         function __construct(?Component $Owner, array $params = [])
         {
@@ -146,7 +143,6 @@ if(!defined('CLASS_MODULE')) {
         /**
          * Importiert Variablen vom Elternmodul (durchschleifen von Variablen).
          *
-         * @access public
          * @param array $Handoff Liste bestehend aus Variablen
          * @return bool Erfolgsstatus
          **/
@@ -158,7 +154,7 @@ if(!defined('CLASS_MODULE')) {
 
             if (count($Handoff) > 0) {
                 $this->addHandoffVar($Handoff);
-                $this->Input->setVar($Handoff);
+                $this->Input->setVars($Handoff);
             }
             return true;
         }
@@ -291,7 +287,12 @@ if(!defined('CLASS_MODULE')) {
          */
         public function setVar($key, $value='')
         {
-            $this->Input->setVar($key, $value);
+            if(is_array($key)) {
+                $this->Input->setVars($key);
+            }
+            else {
+                $this->Input->setVar($key, $value);
+            }
         }
 
         /**
@@ -381,7 +382,7 @@ if(!defined('CLASS_MODULE')) {
 
             $max = count($this->Modules);
             for ($i = 0; $i < $max; $i++){
-                if (strcasecmp($this->Modules[$i]->Name, $moduleName) == 0) {
+                if (strcasecmp($this->Modules[$i]->getName(), $moduleName) == 0) {
                     $result = $this->Modules[$i];
                     break;
                 }

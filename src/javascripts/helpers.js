@@ -92,19 +92,13 @@ function submitOnEnterkeyByForm(formname, e)
 	}
 }
 
-function cancelEvent(e)
+function cancelEvent(evt)
 {
-	var e = e || window.event;
-	if (is.ie) {
-		e.cancelBubble = true;
-        e.returnValue = false;
-	}
-	else {
-        e.preventDefault();
-        if(e.stopPropagation) {
-            e.stopPropagation();
-        }
-	}
+    if(!evt instanceof Event) {
+        return false;
+    }
+    evt.preventDefault();
+    evt.stopPropagation();
 }
 
 function submitForm(formname)
@@ -554,16 +548,16 @@ function findPosY(obj)
 
 function prepareUrl(url)
 {
-	if (url.substr(url.length-1, 1) == '?' || url.substr(url.length-1, 1) == '&') {
-	}
-	else {
-		if (url.search(/\?/) != -1) {
-			url = url + '&';
-		}
-		else {
-			url = url + '?';
-		}
-	}
+    let end = url.substr(url.length-1, 1);
+    if(end == '&') return url;
+    if(end == '?') return url;
+
+    if (url.search(/\?/) != -1) {
+        url = url + '&';
+    }
+    else {
+        url = url + '?';
+    }
 	return url;
 }
 
@@ -2235,4 +2229,133 @@ function loadJSON(url, opts = {})
     else {
         return null;
     }
+}
+
+/**
+ * remove an item (e.g. object) from array
+ *
+ * @param items
+ * @param rejectedItem
+ * @returns {*[]}
+ */
+function without(items = [], rejectedItem)
+{
+    return items.filter(function(item) { return item !== rejectedItem; }).map(function(item) { return item; });
+}
+
+/**
+ * Equivalent to PHP's htmlspecialchars_decode
+ *
+ * @see https://locutus.io/php/htmlspecialchars_decode/
+ * @param string
+ * @param quoteStyle
+ * @returns {string}
+ */
+function htmlspecialchars_decode(string, quoteStyle)
+{
+    let optTemp = 0
+    let i = 0
+    let noquotes = false
+    if (typeof quoteStyle === 'undefined') {
+        quoteStyle = 2
+    }
+    string = string.toString()
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+    const OPTS = {
+        ENT_NOQUOTES: 0,
+        ENT_HTML_QUOTE_SINGLE: 1,
+        ENT_HTML_QUOTE_DOUBLE: 2,
+        ENT_COMPAT: 2,
+        ENT_QUOTES: 3,
+        ENT_IGNORE: 4
+    }
+    if (quoteStyle === 0) {
+        noquotes = true
+    }
+    if (typeof quoteStyle !== 'number') {
+        // Allow for a single string or an array of string flags
+        quoteStyle = [].concat(quoteStyle)
+        for (i = 0; i < quoteStyle.length; i++) {
+            // Resolve string input to bitwise e.g. 'PATHINFO_EXTENSION' becomes 4
+            if (OPTS[quoteStyle[i]] === 0) {
+                noquotes = true
+            } else if (OPTS[quoteStyle[i]]) {
+                optTemp = optTemp | OPTS[quoteStyle[i]]
+            }
+        }
+        quoteStyle = optTemp
+    }
+    if (quoteStyle & OPTS.ENT_HTML_QUOTE_SINGLE) {
+        // PHP doesn't currently escape if more than one 0, but it should:
+        string = string.replace(/&#0*39;/g, "'")
+        // This would also be useful here, but not a part of PHP:
+        // string = string.replace(/&apos;|&#x0*27;/g, "'");
+    }
+    if (!noquotes) {
+        string = string.replace(/&quot;/g, '"')
+    }
+    // Put this in last place to avoid escape being double-decoded
+    string = string.replace(/&amp;/g, '&')
+    return string
+}
+
+/**
+ * Equivalent to PHP's htmlspecialchars
+ *
+ * @see https://locutus.io/php/htmlspecialchars/
+ * @param string
+ * @param quoteStyle
+ * @param charset
+ * @param doubleEncode
+ * @returns {string}
+ */
+function htmlspecialchars(string, quoteStyle, charset, doubleEncode)
+{
+    let optTemp = 0
+    let i = 0
+    let noquotes = false
+    if (typeof quoteStyle === 'undefined' || quoteStyle === null) {
+        quoteStyle = 2
+    }
+    string = string || ''
+    string = string.toString()
+    if (doubleEncode !== false) {
+        // Put this first to avoid double-encoding
+        string = string.replace(/&/g, '&amp;')
+    }
+    string = string
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+    const OPTS = {
+        ENT_NOQUOTES: 0,
+        ENT_HTML_QUOTE_SINGLE: 1,
+        ENT_HTML_QUOTE_DOUBLE: 2,
+        ENT_COMPAT: 2,
+        ENT_QUOTES: 3,
+        ENT_IGNORE: 4
+    }
+    if (quoteStyle === 0) {
+        noquotes = true
+    }
+    if (typeof quoteStyle !== 'number') {
+        // Allow for a single string or an array of string flags
+        quoteStyle = [].concat(quoteStyle)
+        for (i = 0; i < quoteStyle.length; i++) {
+            // Resolve string input to bitwise e.g. 'ENT_IGNORE' becomes 4
+            if (OPTS[quoteStyle[i]] === 0) {
+                noquotes = true
+            } else if (OPTS[quoteStyle[i]]) {
+                optTemp = optTemp | OPTS[quoteStyle[i]]
+            }
+        }
+        quoteStyle = optTemp
+    }
+    if (quoteStyle & OPTS.ENT_HTML_QUOTE_SINGLE) {
+        string = string.replace(/'/g, '&#039;')
+    }
+    if (!noquotes) {
+        string = string.replace(/"/g, '&quot;')
+    }
+    return string
 }

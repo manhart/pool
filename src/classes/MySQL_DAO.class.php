@@ -190,12 +190,9 @@ if(!defined('CLASS_MYSQLDAO')) {
     /**
      * MySQL_DAO
      *
-     * Siehe Datei fuer ausfuehrliche Beschreibung!
-     *
      * @package pool
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
+     * @author Alexander Manhart <alexander@manhart-it.de>
      * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
-     * @access public
      **/
     class MySQL_DAO extends DAO
     {
@@ -432,6 +429,22 @@ if(!defined('CLASS_MYSQLDAO')) {
                 }
             }
             return false;
+        }
+
+        /**
+         * get enumerable values from field
+         *
+         * @param string $fieldName
+         * @return array|false|string[]
+         */
+        public function getFieldEnumValues(string $fieldName)
+        {
+            $fieldInfo = $this->db->listfield($this->dbname, $this->table, $fieldName);
+            if(!isset($fieldInfo['Type'])) return [];
+            $type = substr($fieldInfo['Type'], 0, 4);
+            if($type != 'enum') return [];
+            $buf = substr($fieldInfo['Type'], 5, -1);
+            return explode('\',\'', substr($buf, 1, -1));
         }
 
         /**
@@ -719,7 +732,6 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Liefert mehrere Datensaetze anhand uebergebener ID's, Filter-Regeln.
          *
-         * @access public
          * @param mixed $id ID's (array oder integer)
          * @param mixed $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
          * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
@@ -736,7 +748,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @see MySQL_DAO::__buildGroupby
          **/
         public function getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array(),
-            $groupby=array(), $having=array(), $options=array())
+            $groupBy=array(), $having=array(), $options=array())
         {
             $sql = sprintf('SELECT %s %s FROM `%s` WHERE %s %s%s%s%s%s',
                 implode(' ', $options),
@@ -744,20 +756,18 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->table,
                 $this->__buildWhere($id, $key),
                 $this->__buildFilter($filter_rules),
-                $this->__buildGroupby($groupby),
+                $this->__buildGroupby($groupBy),
                 $this->__buildHaving($having),
                 $this->__buildSorting($sorting),
                 $this->__buildLimit($limit)
             );
 
-            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
          * Liefert die Anzahl getroffener Datensaetze
          *
-         * @access public
          * @param unknown $id ID's (array oder integer)
          * @param unknown $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
          * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
@@ -765,7 +775,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @see MySQL_Resultset
          * @see MySQL_DAO::__buildFilter
          **/
-        function getCount($id=NULL, $key=NULL, $filter_rules=array())
+        function getCount($id=NULL, $key=NULL, $filter_rules=array()): MySQL_Resultset
         {
             $sql = sprintf('SELECT COUNT(%s) AS `count` FROM `%s`%s WHERE %s %s',
                 '*',
@@ -775,8 +785,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $this->__buildFilter($filter_rules)
             );
 
-            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
@@ -836,6 +845,11 @@ if(!defined('CLASS_MYSQLDAO')) {
             return $row;
         }
 
+        /**
+         * @param string $field
+         * @return string
+         * @throws Exception
+         */
         protected function translateValues(string $field): string
         {
             if(isset($this->translateValues[$field])) {
@@ -932,15 +946,17 @@ if(!defined('CLASS_MYSQLDAO')) {
                         if (is_null($record[2])) {
                             $query .= ' NULL';
                         }
+                        elseif(is_bool($record[2])) {
+                            $query .= ' ' . bool2string($record[2]);
+                        }
+                        elseif(is_integer($record[2]) or is_float($record[2]) or
+                                is_subquery($record[1], $record[2])) {
+                            $query .= ' ' . $record[2];
+                        }
                         else {
-                            if(is_integer($record[2]) or is_float($record[2]) or is_bool($record[2]) or
-                                    is_subquery($record[1], $record[2])) {
-                                $query .= ' ' . $record[2];
-                            }
-                            else {
-                                $value = $record[2];
-                                if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
-                                if($noQuotes == false) $value = '\''.$value.'\'';
+                            $value = $record[2];
+                            if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
+                            if($noQuotes == false) $value = '\''.$value.'\'';
 
 //									if(mb_detect_encoding($value, array('UTF-8', 'ISO-8859-1'), true) == 'ISO-8859-1') {
 //										if(strpos($value, '_latin1') === false) {
@@ -948,8 +964,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 //										}
 //									}
 
-                                $query .= ' '.$value;
-                            }
+                            $query .= ' '.$value;
                         }
                     }
                 }
@@ -977,11 +992,11 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Erstellung einer Sortierung fuer ein SQL Statement
          *
-         * @access private
-         * @param array $sorting Array im Format $array('feldname' => 'ASC', 'feldname' => 'DESC')
+         * @param array|null $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
          * @return string ORDER eines SQL Statements
-         **/
-        function __buildSorting($sorting)
+         * @throws Exception
+         */
+        protected function __buildSorting(?array $sorting): string
         {
             $sql = '';
             if (is_array($sorting) and count($sorting)) {

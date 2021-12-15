@@ -20,6 +20,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'caption' => 'Data Url'
         ],
+        'buttons' => [
+            'attribute' => 'data-buttons',
+            'type' => 'function', // todo ModuleConfigurator functions - here buttons
+            'value' => '{}',
+            'element' => 'input',
+            'inputType' => 'text',
+            'caption' => 'Buttons'
+        ],
         'classes' => [
             'attribute' => 'data-classes',
             'type' => 'string',
@@ -31,7 +39,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'click to select'
+            'caption' => 'Click to Select'
         ],
         'columns' => [
             'attribute' => '',
@@ -280,7 +288,7 @@ class GUI_Table extends GUI_Module
                 'clickToSelect' => [
                     'attribute' => 'data-click-to-select',
                     'type' => 'boolean',
-                    'value' => false,
+                    'value' => true,
                 ],
                 'colspan' => [
                     'attribute' => 'data-colspan',
@@ -299,6 +307,12 @@ class GUI_Table extends GUI_Module
                     'element' => 'input', // tableEditor
                     'inputType' => 'checkbox', // tableEditor
                 ],
+                'events' => [
+                    'attribute' => 'data-events',
+                    'type' => 'function',
+                    'value' => null,
+                    'element' => 'textarea'
+                ],
                 'falign' => [
                     'attribute' => 'data-falign',
                     'type' => 'string',
@@ -313,6 +327,27 @@ class GUI_Table extends GUI_Module
                     'unique' => true, // tableEditor
                     'required' => true, // tableEditor
                     'showColumn' => 0 // tableEditor order
+                ],
+                'filterControl' => [
+                    'attribute' => 'data-filter-control',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'select',
+                    'options' => [null, 'input', 'select', 'datepicker']
+                ],
+                'filterControlPlaceholder' => [
+                    'attribute' => 'data-filter-control-placeholder',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                ],
+                'filterDatepickerOptions' => [
+                    'attribute' => 'data-filter-datepicker-options',
+                    'type' => 'json', // should be object json todo json editor
+                    'value' => null, // overridden in @see GUI_Table::init
+                    'element' => 'input',
+                    'inputType' => 'text',
                 ],
                 'footerFormatter' => [
                     'attribute' => 'data-footer-formatter',
@@ -454,6 +489,22 @@ class GUI_Table extends GUI_Module
             'type' => 'function',
             'value' => null // undefined
         ],
+        'filterControl' => [
+            'attribute' => 'data-filter-control',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Filter Control'
+        ],
+        'maintainMetaData' => [
+            'attribute' => 'data-maintain-meta-data',
+            'type' => 'boolean',
+            'value' => false,
+            'caption' => 'Maintain Metadata',
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
         'pagination' => [
             'attribute' => 'data-pagination',
             'type' => 'boolean',
@@ -461,6 +512,21 @@ class GUI_Table extends GUI_Module
             'caption' => 'Pagination',
             'element' => 'input',
             'inputType' => 'checkbox'
+        ],
+        'paginationLoop' => [
+            'attribute' => 'data-pagination-loop',
+            'type' => 'boolean',
+            'value' => true,
+            'caption' => 'Pagination Loop',
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'uniqueId' => [
+            'attribute' => 'data-unique-id',
+            'type'  => 'string',
+            'element'   => 'input',
+            'inputType' => 'text',
+            'value' => null // undefined
         ],
         'resizable' => [
             'attribute' => 'data-resizable',
@@ -476,12 +542,29 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
         ],
+        'searchAlign' => [
+            'attribute' => 'data-search-align',
+            'type' => 'string',
+            'value' => 'right',
+            'element' => 'select',
+            'options' => ['left', 'right'],
+            'caption' => 'Search Align'
+        ],
         'searchHighlight' => [
             'attribute' => 'data-search-highlight',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
+            'caption' => 'Search Highlight'
+        ],
+        'smartDisplay' => [
+            'attribute' => 'data-smart-display',
+            'type' => 'boolean',
+            'value' => true,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Smart Display'
         ],
         'showColumns' => [
             'attribute' => 'data-show-columns',
@@ -498,6 +581,14 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
             'caption' => 'Export'
+        ],
+        'showFilterControlSwitch' => [
+            'attribute' => 'data-show-filter-control-switch',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Show Filter Control Switch'
         ],
         'exportDataType' => [
             'attribute' => 'data-export-data-type',
@@ -544,7 +635,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'single select'
+            'caption' => 'Single Select'
         ],
         'sortable' => [
             'attribute' => 'data-sortable',
@@ -559,7 +650,15 @@ class GUI_Table extends GUI_Module
             'type' => 'string',
             'value' => 'client',
             'element' => 'select',
-            'options' => ['client', 'server']
+            'options' => ['client', 'server'],
+            'caption' => 'Side Pagination'
+        ],
+        'toolbar' => [
+            'attribute' => 'data-toolbar',
+            'type' => 'string',
+            'value' => null,
+            'element' => 'input',
+            'inputType' => 'text'
         ]
     ];
 
@@ -568,6 +667,9 @@ class GUI_Table extends GUI_Module
 
     protected array $poolOptions = [];
 
+    const RENDER_NONE = 0;
+    const RENDER_IMMEDIATELY = 1;
+    const RENDER_ONDOMLOADED = 2;
 
     /**
      * @param const|int $superglobals
@@ -575,9 +677,15 @@ class GUI_Table extends GUI_Module
     public function init($superglobals = I_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
-        $this->Defaults->addVar('render', true);
+        $this->Defaults->addVar('render', self::RENDER_ONDOMLOADED);
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
+
+        // 09.12.21, AM, override default filterDatepickerOptions
+        // @used-by table.js
+        $this->inspectorProperties['columns']['properties']['filterDatepickerOptions']['value'] =
+            '{"autoclose":true, "clearBtn":true, "todayHighlight":true, "language":"'.$this->Weblication->getLanguage().'"}';
+
         parent::init($superglobals);
 
 //        $this->defaultOptions['moduleName']['value'] = $this->getName();
@@ -609,10 +717,7 @@ class GUI_Table extends GUI_Module
         $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', $className, true);
         $this->Template->setFilePath('stdout', $tpl);
 
-        if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
-            //$this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
-        }
+        $this->loadJavaScriptGUI();
     }
 
     public function setOptions(array $options): GUI_Table
@@ -747,7 +852,7 @@ class GUI_Table extends GUI_Module
         $this->Template->setVar([
             'moduleName' => $this->getName(),
             'className' => $this->getClassName(),
-            'options' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
+            'poolOptions' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
         ]);
 
 
@@ -800,6 +905,7 @@ class GUI_Table extends GUI_Module
                             break;
 
                         case 'function':
+                        case 'json':
                             break;
 
                         case 'auto':
@@ -862,11 +968,18 @@ class GUI_Table extends GUI_Module
 
 
         $this->Template->leaveBlock();
-        $js_render = '';
-        if($this->getVar('render')) {
-            $js_render = '.render()';
+
+        $render_immediately = $render_ondomloaded = '';
+        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
+            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
         }
-        $this->Template->setVar('render', $js_render);
+        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
+            $render_immediately = '.render()';
+        }
+        $this->Template->setVar([
+            'RENDER_IMMEDIATELY' => $render_immediately,
+            'RENDER_ONDOMLOADED' => $render_ondomloaded
+        ]);
         parent::prepare();
     }
 
