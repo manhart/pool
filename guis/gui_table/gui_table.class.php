@@ -521,6 +521,13 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox'
         ],
+        'uniqueId' => [
+            'attribute' => 'data-unique-id',
+            'type'  => 'string',
+            'element'   => 'input',
+            'inputType' => 'text',
+            'value' => null // undefined
+        ],
         'resizable' => [
             'attribute' => 'data-resizable',
             'type' => 'boolean',
