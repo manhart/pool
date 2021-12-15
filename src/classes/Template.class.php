@@ -98,7 +98,6 @@
 			/**
 			* Setzt eindeutigen Handle.
 			*
-			* @access public
 			* @param string $handle Eindeutiger Name fuer Handle
 			*/
 			function setHandle($handle)
@@ -251,6 +250,8 @@
 
 			var $varEnd=TEMP_VAR_END;
 
+            public $charset = 'UTF-8';
+
 			/**
 			* Konstruktor: benoetigt Handle-Typ und Verzeichnis zum Template.
 			* Array fuer Variablen Container und Block Container werden angelegt.
@@ -259,8 +260,9 @@
 			* @param string $type Handle-Typ set of (BLOCK, FILE)
 			* @param string $directory Verzeichnis zum Template
 			*/
-			function __construct($type, $directory)
+			function __construct($type, $directory, $charset = 'UTF-8')
 			{
+                $this->charset = $charset;
 				parent::__construct($type);
 
 				$this->setDirectory($directory);
@@ -279,10 +281,10 @@
 			* @return object TempBlock
 			* @see TempBlock
 			*/
-	        function &createBlock($handle, $dir, $content)
+	        function createBlock($handle, $dir, $content, $charset = 'UTF-8')
     	    {
-        	    $obj = new TempBlock($handle, $dir, $content);
-				$this->BlockList[$handle] = & $obj;
+        	    $obj = new TempBlock($handle, $dir, $content, $charset);
+				$this->BlockList[$handle] = $obj;
 	            return $obj;
     	    }
 
@@ -296,10 +298,10 @@
 	        * @return object TempFile
     	    * @see TempFile
         	*/
-			function &createFile($handle, $dir, $filename)
+			function createFile($handle, $dir, $filename, $charset = 'UTF-8')
 			{
-				$obj = new TempFile($handle, $dir, $filename);
-				$this->FileList[$handle] = &$obj;
+				$obj = new TempFile($handle, $dir, $filename, $charset);
+				$this->FileList[$handle] = $obj;
 				return $obj;
 			}
 
@@ -314,30 +316,39 @@
 			* @return object TempScript
 			* @see TempScript
 			*/
-			function &createScript($handle, $dir, $filename)
+			function createScript($handle, $dir, $filename, $charset = 'UTF-8')
 			{
-				$obj = new TempScript($handle, $dir, $filename);
-				$this->FileList[$handle] = &$obj;
+				$obj = new TempScript($handle, $dir, $filename, $charset);
+				$this->FileList[$handle] = $obj;
 				return $obj;
 			}
 
 			/**
 			* Diese Prozedur fuegt eine Variable zum Variablen Container hinzu.
 			*
-			* @access public
-			* @param string|array $varname Schluessel der Variable (= Name im Template)
-			* @param string $value (zuzuweisender) Wert der Variable
+			* @param string|array $name name of the variable (placeholder in the template)
+			* @param mixed $value (zuzuweisender) Wert der Variable
 			*/
-			function setVar($varname, $value = '')
+			function setVar($name, $value = '', int $encode = Template::ENCODE_NONE)
 			{
-				if((array)$varname !== $varname) {
-//				if (!is_array($varname)) { // 20.05.2015, AM, is_array ist langsamer als den Datentyp zu casten
-					$this->VarList[$varname] = $value;
+                $encode = function($value) use ($encode) {
+                    if($encode == Template::ENCODE_NONE) {
+                        return $value;
+                    }
+                    if($encode == Template::ENCODE_HTMLSPECIALCHARS) {
+                        return htmlspecialchars($value, ENT_QUOTES, $this->charset);
+                    }
+                    if($encode == Template::ENCODE_HTMLENTITIES) {
+                        return htmlentities($value, ENT_QUOTES, $this->charset);
+                    }
+                };
+
+				if(!is_array($name)) {
+					$this->VarList[$name] = $encode($value);
 				}
 				else {
-//					if(!is_array($value)) {
 					if((array)$value !== $value) {
-						foreach ($varname as $key => $value) {
+						foreach ($name as $key => $value) {
 							switch (gettype($value)) {
 								case 'array':
 									$this->VarList[$key] = 'array';
@@ -348,15 +359,15 @@
 									break;
 
 								default:
-									$this->VarList[$key] = $value;
+									$this->VarList[$key] = $encode($value);
 									break;
 							}
 						}
 
 					}
 					else {
-						foreach ($varname as $key => $value) {
-							$this->VarList[$key] = $value;
+						foreach ($name as $key => $value) {
+							$this->VarList[$key] = $encode($value);
 						}
 					}
 				}
@@ -365,21 +376,18 @@
 			/**
 			* Beim Setzen des Inhalts fuer einen Handle, wird dieser Inhalt automatisch nach Bloecken, Includes (Files) untersucht.
 			*
-			* @access public
 			* @param string $content Inhalt/Content
 			*/
         	function setContent($content, $scan=true)
 	        {
-    	     	parent :: setContent($content);
+    	     	parent::setContent($content);
 
 				if ($scan) {
-				    $this->FindPattern($this->Content);
+				    $this->findPattern($this->Content);
 				}
     	    }
 
 	        /**
-    	    * TempCoreHandle::setDirectory()
-        	*
 	        * Weist der Eigenschaft Directory ein Verzeichnis zu.
     	    * Das Verzeichnis muss durch alle Handles gereicht werden,
         	* damit in jedem Handle die File Includes auf die richtigen Quellen zeigen.
@@ -464,11 +472,11 @@
 
 						switch($kind) {
 							case TEMP_DYNBLOCK_IDENT:
-								$this->createBlock($handle, $this->getDirectory(), $content);
+								$this->createBlock($handle, $this->getDirectory(), $content, $this->charset);
 								break;
 
 							case TEMP_INCLUDE_IDENT:
-								$this->createFile($handle, $this->getDirectory(), $content);
+								$this->createFile($handle, $this->getDirectory(), $content, $this->charset);
 								break;
 
 							case TEMP_INCLUDESCRIPT_IDENT:
@@ -478,12 +486,12 @@
 									$content = basename($content);
 								} else $directory = $this -> Directory;
 								*/
-								$this->createScript($handle, $this->getDirectory(), $content);
+								$this->createScript($handle, $this->getDirectory(), $content, $this->charset);
 								break;
 
 							case TEMP_SESSION_IDENT:
 								$value = isset($_SESSION[$content]) ? urldecode($_SESSION[$content]) : '';
-								$this -> setVar($handle, $value);
+								$this->setVar($handle, $value);
 								break;
 						}
 
@@ -494,12 +502,11 @@
             /**
              * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
              *
-             * @access public
              * @param boolean $returncontent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
              * @param bool $clearparsedcontent
              * @return string Geparster Inhalt
              */
-			function parse($returncontent=false, $clearparsedcontent=true)
+			public function parse(bool $returncontent=false, bool $clearparsedcontent=true)
 			{
 				$varStart = $this->varStart;
 				$varEnd = $this->varEnd;
@@ -617,9 +624,9 @@
 			* @param string $directory Verzeichnis zum Template
 			* @param string $content Inhalt des Blocks
 			*/
-			function __construct($handle, $directory, $content)
+			function __construct($handle, $directory, $content, $charset = 'UTF-8')
 			{
-				parent::__construct('BLOCK', $directory);
+				parent::__construct('BLOCK', $directory, $charset);
 
 				$this->SetHandle($handle);
     	        $this->AllowParse = false;
@@ -720,9 +727,9 @@
 			* @param string $directory Verzeichnis zur Datei
 			* @param string $filename Dateiname
 			*/
-			function __construct($handle, $directory, $filename)
+			function __construct($handle, $directory, $filename, $charset = 'UTF-8')
 			{
-				parent::__construct('FILE', $directory);
+				parent::__construct('FILE', $directory, $charset);
 
 				$this->setHandle($handle);
 				$this->Filename = $filename;
@@ -751,7 +758,7 @@
                 }
 				fclose($fp);
 
-				$this -> setContent($content);
+				$this->setContent($content);
 			}
 
 			/**
@@ -785,9 +792,9 @@
 /* --------------------- */
 		class TempSimple extends TempCoreHandle
 		{
-			function __construct($handle, $content)
+			function __construct($handle, $content, $charset = 'UTF-8')
 			{
-				parent::__construct('FILE', '', '');
+				parent::__construct('FILE', '', $charset);
 				$this->setHandle($handle);
 				$this->setContent($content);
 			}
@@ -823,19 +830,17 @@
 			* @param string $directory Verzeichnis zur Datei
 			* @param string $filename Dateiname
 			*/
-			function __construct($handle, $directory, $filename)
+			function __construct($handle, $directory, $filename, $charset = 'UTF-8')
 			{
-				parent::__construct($handle, $directory, $filename);
+				parent::__construct($handle, $directory, $filename, $charset);
 			}
 
 			/**
 			* TempScript::parse()
 			*
 			* Parst das Script. Dabei wird enthaltener PHP Code ausgefuehrt.
-			*
-			* @access public
 			*/
-			function parse($returncontent=false, $clearparsedcontent=true)
+			public function parse(bool $returncontent=false, bool $clearparsedcontent=true)
 			{
 				parent::parse($returncontent, $clearparsedcontent);
 
@@ -899,22 +904,39 @@
 
 			var $varEnd = TEMP_VAR_END;
 
+            const ENCODE_NONE = 0;
+
+            const ENCODE_HTMLSPECIALCHARS = 1;
+
+            const ENCODE_HTMLENTITIES = 2;
+
+            /**
+             * @var string
+             */
+            private string $charset = 'UTF-8';
+
 			/**
 			* Konstruktor
 			*
-			* @access public
 			* @param string $dir Verzeichnis zu den Templates (Standardwert ./)
 			*/
 			function __construct($dir = './')
 			{
 				$this->FileList = Array();
 				$this->setDirectory($dir);
-			}
+            }
+
+            /**
+             * @param string $charset
+             */
+            public function setCharset(string $charset = 'UTF-8')
+            {
+                $this->charset = $charset;
+            }
 
 			/**
 			* aendert das Verzeichnis worin die Templates liegen.
 			*
-			* @access public
 			* @param string $dir Verzeichnis zu den Templates
 			*/
 			function setDirectory($dir)
@@ -944,7 +966,6 @@
 			/**
 			* Setzt die Templates. Der Handle-Name dient der Identifikation der Datei.
 			*
-			* @access public
 			* @param string $handle Handle-Name; es kann auch ein Array mit Schluesselname und Wert (= Dateinamen) uebergeben werden.
 			* @param string $filename Dateiname
 			*/
@@ -983,8 +1004,8 @@
 
 			function setContent($handle, $content)
 			{
-				$TempSimple = new TempSimple($handle, $content);
-				$this -> FileList[$handle] = &$TempSimple;
+				$TempSimple = new TempSimple($handle, $content, $this->charset);
+				$this->FileList[$handle] = $TempSimple;
 
 				if ($this -> ActiveHandle == '') {
 				    $this -> useFile($handle);
@@ -1011,8 +1032,8 @@
 			*/
 			function addFile($handle, $file)
 			{
-				$TempFile = new TempFile($handle, $this->getDirectory(), $file);
-				$this->FileList[$handle] = &$TempFile;
+				$TempFile = new TempFile($handle, $this->getDirectory(), $file, $this->charset);
+				$this->FileList[$handle] = $TempFile;
 
 				if($TempFile) {
 					// added 02.05.2006 Alex M.
@@ -1028,7 +1049,6 @@
 			/**
 			* Die Funktion sagt der Template Engine, dass die nachfolgenden Variablenzuweisungen auf ein anderes Html Template fallen.
 			*
-			* @access public
 			* @param string $handle Name des (File-) Handles
 			*/
 			function useFile($handle)
@@ -1191,17 +1211,17 @@
              * Synonym auf die Template Funktion Template::assignVar().
              *
              * @param string|array $name name of placeholder
-             * @param string $value value for placeholder
+             * @param mixed $value value for placeholder
              */
-			function setVar($name, $value = '')
+			function setVar($name, $value = '', int $encoding = Template::ENCODE_NONE)
 			{
                 if (isset($this->ActiveBlock)) {
                     $ActiveBlock = $this->ActiveBlock;
-                    $ActiveBlock->setVar($name, $value);
+                    $ActiveBlock->setVar($name, $value, $encoding);
                 }
                 elseif (isset($this->ActiveFile)) {
                     $ActiveFile = $this->ActiveFile;
-                    $ActiveFile->setVar($name, $value);
+                    $ActiveFile->setVar($name, $value, $encoding);
                 }
                 else {
                     $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $name . '\'');

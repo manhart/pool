@@ -1346,30 +1346,26 @@ function deleteDir($dir, $rmSelf = true)
 }
 
 /**
- * file_extension()
- * Gibt die Endung der uebergebenen Datei zurueck, z.B. irgendwas hinter dem Punkt.
- * siehe auch PHP Funktion pathinfo ab Version 4.0.3
+ * determines the extension of the file without the dot
+ * see also PHP function pathinfo since version 4.0.3
  *
- * @access public
- * @param string $file Datei
- * @return string Dateiendung
+ * @param string $file filename
+ * @return string file extension
  **/
-function file_extension($file = "")
+function file_extension(string $file = ""): string
 {
     return substr($file, (strrpos($file, ".") ? strrpos($file, ".") + 1 : strlen($file)), strlen($file));
 }
 
 /**
- * remove_extension()
- * Entfernt die Endung einer Datei und gibt sie zurueck.
+ * removes the extension from the file name
  *
- * @access public
- * @param string $file Datei
- * @return string Neuer Dateiname
+ * @param string $file filename
+ * @return string filename without extension
  **/
-function remove_extension($file = "")
+function remove_extension(string $file = ''): string
 {
-    return substr($file, 0, (strrpos($file, ".") ? strrpos($file, ".") : strlen($file)));
+    return substr($file, 0, (strrpos($file, '.') ? strrpos($file, '.') : strlen($file)));
 }
 
 /**
@@ -2687,7 +2683,7 @@ function bool2string(bool $bool): string
 /**
  * Umwandlung string Ausdruck ('true', 'false') in booleschen Ausdruck
  *
- * @param string $string Boolean als String
+ * @param string|null $string $string Boolean als String
  * @return bool booleschen Ausdruck
  */
 function string2bool(?string $string): bool
@@ -3354,7 +3350,7 @@ function float_de2php($float)
  *
  * @return boolean
  */
-function isAjax()
+function isAjax(): bool
 {
     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
            || (isset($_REQUEST['HTTP_X_REQUESTED_WITH']) && $_REQUEST['HTTP_X_REQUESTED_WITH']);
@@ -4631,4 +4627,17 @@ function htmlAttributes(array $attributes): string
     }, array_keys($attributes), $attributes));
     if($attributes) $attributes = ' '.$attributes;
     return $attributes;
+}
+/**
+ * calls the system command pdfunite
+ *
+ * @param array $pdfFiles
+ * @param string $pdfOut
+ * @return bool
+ */
+function pdfunite(array $pdfFiles, string $pdfOut): bool
+{
+    $cmd = 'pdfunite '.implode(' ', $pdfFiles).' '.$pdfOut;
+    passthru($cmd);
+    return file_exists($pdfOut);
 }

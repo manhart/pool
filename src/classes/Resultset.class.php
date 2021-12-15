@@ -401,6 +401,18 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
+         * Returns a value of a field of the current record as a float
+         *
+         * @param string $key
+         * @param float $default
+         * @return float
+         */
+        public function getValueAsFloat(string $key, float $default=0.00): float
+        {
+            return (float)$this->getValue($key, $default);
+        }
+
+        /**
          * Returns a value of a field of the current record as a boolean
          *
          * @param string $key
@@ -718,7 +730,6 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Liefert die komplette Ergebnismenge als indiziertes Array (enthaelt je Satz ein assoziatives Array mit Feldnamen) zurueck.
          *
-         * @access public
          * @return array Recordset
          **/
         function getRowset()
@@ -824,7 +835,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param bool $begin True=beginnt mit der Suche ab ersten Datensatz, False=beginnt mit der Suche ab dem aktuellen Datensatz
          * @return int|bool Index oder False
          */
-        function find($fieldname, $value, $begin=true)
+        function find(string $fieldname, $value, $begin=true)
         {
             if($fieldname == '') return false;
 
@@ -842,13 +853,13 @@ if(!defined('CLASS_RESULTSET')) {
                 do {
                     $found = false;
                     for($i=0; $i<=$len; $i++) {
-                        $found = ($this -> getValue($fieldname[$i]) == $value[$i]);
+                        $found = ($this->getValue($fieldname[$i]) == $value[$i]);
                         if(!$found) break;
                     }
                     if($found) {
-                        return $this -> index;
+                        return $this->index;
                     }
-                } while($this -> next());
+                } while($this->next());
             }
             // Eine Spalte überprüfen
             else {
@@ -914,7 +925,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $line = '';
                     $values = array_values($row);
                     foreach($values as $val) {
-                        $val = $this->_maskTextCSVcompliant($val, $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
                         $line .= ($line != '') ? ($separator.$val) : (''.$val);
                     }
                     $csv .= $line.$line_break;
@@ -958,7 +969,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $row = '';
                     foreach ($this->fields as $key) {
                         if($row != '') $row .= $separator;
-                        $val = $this->_maskTextCSVcompliant($this->rowset[$this->index][$key], $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant($this->rowset[$this->index][$key], $separator, $text_clinch);
                         $row .= $val;
                     }
                     $row .= $line_break;
@@ -973,7 +984,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $values = array_values($this->getRow());
                     $i = 0;
                     foreach($values as $val) {
-                        $val = $this->_maskTextCSVcompliant($val, $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
                         $csv .= ($i == 0) ? ''.$val : $separator.$val;
                         $i++;
                     }
@@ -984,6 +995,17 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
+         * returns rowset as json
+         *
+         * @param int $flags
+         * @param int $depth
+         * @return string
+         */
+        public function getRowSetAsJSON(int $flags, int $depth = 512): string
+        {
+            return json_encode($this->rowset, $flags, $depth);
+        }
+        /**
          * Maskiere Text CSV Konform
          *
          * @param string $val Wert
@@ -991,7 +1013,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param string $text_clinch Zeichen für Textklammer
          * @return string
          */
-        private function _maskTextCSVcompliant($val, $separator=';', $text_clinch='"')
+        static function maskTextCSVcompliant($val, $separator=';', $text_clinch='"')
         {
             $hasTextClinch = false;
             if($text_clinch != '') {
