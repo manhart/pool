@@ -76,10 +76,9 @@ if(!defined('CLASS_COMPONENT')) {
         /**
          * Session
          *
-         * @var ISession $Session
-         * @access public
+         * @var ISession|null $Session
          */
-        var $Session=null;
+        public ?ISession $Session = null;
 
         private string $classDirectory;
 
@@ -240,7 +239,7 @@ if(!defined('CLASS_COMPONENT')) {
 
             $max = count($this->Components);
             for ($i = 0; $i < $max; $i++){
-                if (strcasecmp($this->Components[$i]->name, $name) == 0) {
+                if (strcasecmp($this->Components[$i]->getName(), $name) == 0) {
                     $result = $this->Components[$i];
                     break;
                 }

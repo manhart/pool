@@ -39,19 +39,12 @@ if(!defined('CLASS_DAO')) {
     if(!defined('DATAINTERFACE_MYSQLI')) define('DATAINTERFACE_MYSQLI', 'MySQLi_Interface');
     if(!defined('DATAINTERFACE_CISAM')) define('DATAINTERFACE_CISAM', 'CISAM_Interface');
     if(!defined('DATAINTERFACE_MSSQL')) define('DATAINTERFACE_MSSQL', 'MSSQL_Interface');
-    if(!defined('DATAINTERFACE_POSQL')) define('DATAINTERFACE_POSQL',	'PostgreSQL_Interface');
-    if(!defined('DATAINTERFACE_C16')) define('DATAINTERFACE_C16',			'C16_Interface');
+    if(!defined('DATAINTERFACE_POSQL')) define('DATAINTERFACE_POSQL', 'PostgreSQL_Interface');
+    if(!defined('DATAINTERFACE_C16')) define('DATAINTERFACE_C16', 'C16_Interface');
 
     /**
-     * DAO
-     *
-     * Abstract Data Access Object (siehe Dateibeschreibung fuer mehr Informationen).
-     *
-     * @package rml
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @version $Id: DAO.class.php,v 1.12 2007/05/07 11:15:01 manhart Exp $
-     * @access public
-     **/
+     * abstract Data Access Object
+     */
     class DAO extends PoolObject
     {
         //@var string DAO Type
@@ -284,10 +277,9 @@ if(!defined('CLASS_DAO')) {
         /**
          * Gibt den Typ des Speichermediums zurueck (z.B. dao_mysql, dao_cisam, ...).
          *
-         * @access public
          * @return string Typ des Speichermediums
          **/
-        function getType()
+        public function getType(): string
         {
             return $this->type;
         }
@@ -295,10 +287,9 @@ if(!defined('CLASS_DAO')) {
         /**
          * Setzt den Typ des Speichermediums.
          *
-         * @access private
          * @param string $type Typ des Speichermediums
          **/
-        function setType($type)
+        private function setType(string $type): void
         {
             $this->type = $type;
         }
@@ -306,13 +297,12 @@ if(!defined('CLASS_DAO')) {
         /**
          * Fraegt den Typ eines Speichermediums beim Objekt ab.
          *
-         * @access public
          * @param string $type Typ
          * @return boolean true bei Erfolg, false wenn das Speichermedium nicht mit dem Typ uebereinstimmt.
          **/
-        function isType($type)
+        public function isType(string $type): bool
         {
-            return $this->type == strtolower($type);
+            return $this->getType() == $type;
         }
 
         /**
@@ -338,20 +328,19 @@ if(!defined('CLASS_DAO')) {
         /**
          * extract definitions of the table variable
          *
-         * @param string $tabledefine
+         * @param string $tableDefine
          * @param string $interfaceType
          * @param string $dbname
          * @param string $table
-         * @return string name of tabledefine
          */
-        static function extractTabledefine(string $tabledefine, string &$interfaceType, string &$dbname, string &$table): void
+        static function extractTabledefine(string $tableDefine, string &$interfaceType, string &$dbname, string &$table): void
         {
-            global $$tabledefine;
-            $tabledefine = $$tabledefine;
-            $interfaceType = $tabledefine[0];
+            global $$tableDefine;
+            $tableDefine = $$tableDefine;
+            $interfaceType = $tableDefine[0];
+            $dbname = $tableDefine[1];
+            $table = $tableDefine[2];
 
-            $dbname = $tabledefine[1];
-            $table = $tabledefine[2];
         }
 
         /**

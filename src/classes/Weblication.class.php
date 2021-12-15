@@ -46,26 +46,22 @@ class Weblication extends Component
     /**
      * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
      *
-     * @var GUI_Frame $Frame
-     * @access private
-     */
-    var $Frame = null;
-
-    /**
-     * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
-     *
      * @var GUI_Module $Main
      * @access private
      */
     var $Main = null;
 
     /**
+     * @var GUI_CustomFrame|null
+     */
+    private ?GUI_CustomFrame $Frame = null;
+
+    /**
      * PHP Session gekapselt in ISession
      *
-     * @var ISession $Session
-     * @access public
+     * @var ISession|null $Session
      */
-    var $Session = null;
+    public ?ISession $Session = null;
 
     /**
      * @var Weblication|null
@@ -104,9 +100,8 @@ class Weblication extends Component
      * Schema / Layout (index ist das Standard-Schema)
      *
      * @var string
-     * @access private
      */
-    private $schema = 'index';
+    protected string $schema = 'index';
 
     /**
      * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
@@ -138,7 +133,7 @@ class Weblication extends Component
     /**
      * @var Input App Settings
      */
-    private $Settings = null;
+    protected Input $Settings;
 
     /**
      * @var string
@@ -180,6 +175,13 @@ class Weblication extends Component
     private string $version = '';
 
     /**
+     * Cookie for the application
+     *
+     * @var ICookie|null
+     */
+    private ?ICookie $Cookie = null;
+
+    /**
      * @var array all possible default formats
      */
     private array $formats = [
@@ -195,6 +197,9 @@ class Weblication extends Component
         'moment.date' => 'DD.MM.YYYY',
         'moment.date.time' => 'DD.MM.YYYY HH:mm',
         'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss',
+        'mysql.date_format.date' => '%d.%m%.%Y',
+        'mysql.date_format.date.time' => '%d.%m%.%Y %H:%i',
+        'mysql.date_format.date.time.sec' => '%d.%m%.%Y %T',
         'number' => [
             'decimals' => 2,
             'decimal_separator' => ',',
@@ -227,6 +232,14 @@ class Weblication extends Component
     }
 
     /**
+     * @return bool
+     */
+    public static function hasInstance(): bool
+    {
+        return (static::$Instance !== null);
+    }
+
+    /**
      * prevent the instance from being cloned (which would create a second instance of it)
      */
     private function __clone() {}
@@ -239,11 +252,10 @@ class Weblication extends Component
     /**
      * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
      *
-     * @access public
      * @param string $skin Ordner fuer die Designvorlagen (Html Templates) und Bilder. (Standardwert: default)
      * @return Weblication
      */
-    function setSkin($skin = 'default')
+    function setSkin(string $skin = 'default'): Weblication
     {
         $this->skin = $skin;
         return $this;
@@ -253,10 +265,9 @@ class Weblication extends Component
      * Liefert den Ordner (Namen) der aktuellen Designvorlagen und Bilder zurueck.
      * (wird derzeit fuer die Bilder und Html Templates missbraucht)
      *
-     * @access public
      * @return string Name des Designs (Skin)
      **/
-    function getSkin()
+    function getSkin(): string
     {
         return $this->skin;
     }
@@ -270,7 +281,7 @@ class Weblication extends Component
      * @return Weblication
      * @throws Exception
      */
-    function setLanguage(string $lang = 'de', string $resourceDir = '', string $subdirTranslated = '')
+    function setLanguage(string $lang = 'de', string $resourceDir = '', string $subdirTranslated = ''): Weblication
     {
         $this->language = $lang;
 
@@ -285,10 +296,9 @@ class Weblication extends Component
     /**
      * Liefert die Sprache der Seite.
      *
-     * @access public
      * @return string Sprache der Webseite
      **/
-    function getLanguage()
+    public function getLanguage(): string
     {
         return $this->language; // $this->language;
     }
@@ -378,12 +388,11 @@ class Weblication extends Component
      * Setzt das Standard Schema, welches geladen wird, wenn kein Schema uebergeben wurde.
      *
      * @param string $default Standard Schema
-     **@deprecated
-     * @access public
+     * @deprecated
      */
-    function setSchema($default = 'index')
+    function setSchema(string $default = 'index')
     {
-        $this->schema = trim($default);
+        $this->schema = $default;
     }
 
     /**
@@ -392,19 +401,18 @@ class Weblication extends Component
      * @param string $default
      * @return Weblication
      */
-    public function setDefaultSchema($default = 'index')
+    public function setDefaultSchema(string $default = 'index'): Weblication
     {
-        $this->schema = trim($default);
+        $this->schema = $default;
         return $this;
     }
 
     /**
      * returns the default scheme
      *
-     * @access public
      * @return string default schema
      **/
-    public function getDefaultSchema()
+    public function getDefaultSchema(): string
     {
         return $this->schema;
     }
@@ -414,7 +422,7 @@ class Weblication extends Component
      *
      * @return string
      */
-    public function getSchema()
+    public function getSchema(): string
     {
         return (isset($_REQUEST['schema']) and $_REQUEST['schema'] != '') ? $_REQUEST['schema'] : $this->getDefaultSchema();
     }
@@ -442,17 +450,17 @@ class Weblication extends Component
      *
      * @param GUI_Module $GUI_Module
      */
-    function setMain(&$GUI_Module)
+    function setMain(GUI_Module $GUI_Module)
     {
-        $this->Main = &$GUI_Module;
+        $this->Main = $GUI_Module;
     }
 
     /**
      * Liefert das Haupt-GUI (meistens erstes GUI, das im Startscript �bergeben wurde).
      *
-     * @return GUI_Module
+     * @return GUI_Module|null
      */
-    function &getMain()
+    function getMain(): ?GUI_Module
     {
         return $this->Main;
     }
@@ -460,15 +468,16 @@ class Weblication extends Component
     /**
      * returns the main frame
      *
-     * @return GUI_CustomFrame
-     * @throws Exception
+     * @return GUI_CustomFrame|null
      **/
-    function &getFrame()
+    function getFrame(): ?GUI_CustomFrame
     {
-        if ($this->Main instanceof GUI_CustomFrame) {
-            return $this->Main;
+        if(!$this->Frame) {
+            if($this->hasFrame()) {
+                $this->Frame = $this->Main;
+            }
         }
-        throw new Exception('No Frame there');
+        return $this->Frame;
     }
 
     /**
@@ -476,7 +485,7 @@ class Weblication extends Component
      *
      * @return bool has GUI_CustomFrame
      */
-    function hasFrame()
+    function hasFrame(): bool
     {
         return ($this->Main instanceof GUI_CustomFrame);
     }
@@ -499,6 +508,44 @@ class Weblication extends Component
     public function getCommonSkinFolder(): string
     {
         return $this->commonSkinFolder;
+    }
+
+    /**
+     * @param string $additionalDir
+     * @param bool $absolute
+     * @return string
+     */
+    public function getCommonSkinPath(string $additionalDir = '', bool $absolute = true): string
+    {
+        $path = '';
+
+        # Ordner Skins
+        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $this->getCommonSkinFolder();
+        if ($absolute) {
+            $folder_skins = addEndingSlash(getcwd()) . $folder_skins;
+        }
+        $folder_language = $folder_skins . addEndingSlash($this->language);;
+        if ($additionalDir != '') {
+            $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
+            $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
+        }
+        else {
+            $folder_skin_dir = $folder_skins;
+            $folder_language_dir = $folder_language;
+        }
+
+        if (is_dir($folder_language_dir)) {
+            $path = $folder_language_dir;
+        }
+        elseif (is_dir($folder_skin_dir)) {
+            $path = $folder_skin_dir;
+        }
+        else {
+            $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' and \'%s\' not found (@getCommonSkinPath)!',
+                $folder_skin_dir, $folder_language_dir));
+        }
+
+        return $path;
     }
 
     /**
@@ -938,10 +985,10 @@ class Weblication extends Component
      * JavaScripts aus der Hauptbibliothek koennen nicht ueberschrieben werden (macht auch keinen Sinn).
      *
      * @param string $filename JavaScript Dateiname
-     * @param string $classfolder Unterordner (guis/*) zur Klasse
-     * @return string Bei Erfolg Pfad und Dateiname des gefunden JavaScripts. Im Fehlerfall ''.
+     * @param string $classFolder Unterordner (guis/*) zur Klasse
+     * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      **/
-    function findJavaScript(string $filename, string $classfolder = '', bool $baselib = false)
+    function findJavaScript(string $filename, string $classFolder = '', bool $baselib = false, bool $raiseError = true): string
     {
         $javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
 
@@ -955,13 +1002,13 @@ class Weblication extends Component
                 return $folder . '/'. $filename;
             }
 
-            $folder_guis = $this->getRelativePathBaselib(PWD_TILL_GUIS).'/'.$classfolder;
+            $folder_guis = $this->getRelativePathBaselib(PWD_TILL_GUIS).'/'.$classFolder;
             if (file_exists($folder_guis.'/'.$filename)) {
                 return $folder_guis . '/'.$filename;
             }
         }
         else {
-            $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
+            $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
 
             if (file_exists($folder_javascripts . $filename)) {
                 return $folder_javascripts . $filename;
@@ -972,25 +1019,28 @@ class Weblication extends Component
             }
 
             if (defined('DIR_COMMON_ROOT_REL')) {
-                $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classfolder);
+                $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
                 if (file_exists($folder_common . $filename)) {
                     return $folder_common . $filename;
                 }
             }
         }
 
+        // 14.12.21, AM, old workaround disabled
         // Lowercase Workaround:
-        if (preg_match('/[A-Z]/', $filename . $classfolder)) {
-            // try lower case
-            // todo log buggy code
-            if(defined('IS_DEVELOP') and IS_DEVELOP) {
-                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
-            }
-            return $this->findJavaScript(strtolower($filename), strtolower($classfolder), $baselib);
-        }
-        else {
+//        if (preg_match('/[A-Z]/', $filename . $classfolder)) {
+//            // try lower case
+//            // todo log buggy code
+//            if(defined('IS_DEVELOP') and IS_DEVELOP) {
+//                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
+//            }
+//            return $this->findJavaScript(strtolower($filename), strtolower($classfolder), $baselib);
+//        }
+//        else {
+        if($raiseError) {
             $this->raiseError(__FILE__, __LINE__, sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
         }
+//        }
         return '';
     }
 
@@ -1025,7 +1075,7 @@ class Weblication extends Component
      **@deprecated
      * @access public
      */
-    function &createMySQL($host, $dbname, $name_of_auth_array = 'mysql_auth', $persistent = false)
+    function createMySQL($host, $dbname, $name_of_auth_array = 'mysql_auth', $persistent = false)
     {
         $Packet = array(
             'host' => $host,
@@ -1035,8 +1085,7 @@ class Weblication extends Component
         );
         $MySQLInterface = &DataInterface::createDataInterface(DATAINTERFACE_MYSQL, $Packet);
 
-        $DI = &$this->addDataInterface($MySQLInterface);
-        return $DI;
+        return $this->addDataInterface($MySQLInterface);
     }
 
     /**
@@ -1047,7 +1096,7 @@ class Weblication extends Component
      * @access public
      **@deprecated
      */
-    function & createCISAM($host, $class_path)
+    function createCISAM($host, $class_path)
     {
         $Packet = array(
             'host' => $host,
@@ -1063,23 +1112,22 @@ class Weblication extends Component
      * fuer die DAO Geschichte verwendet werden.
      *
      * @access public
-     * @param object $DataInterface Einzufuegendes DataInterface
-     * @return object Eingefuegtes DataInterface
+     * @param DataInterface $DataInterface Einzufuegendes DataInterface
+     * @return DataInterface Eingefuegtes DataInterface
      **/
-    function &addDataInterface(&$DataInterface)
+    function addDataInterface($DataInterface): DataInterface
     {
-        $interfaces = $this->Interfaces[$DataInterface->getInterfaceType()] = &$DataInterface;
-        return $interfaces;
+        $this->Interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
+        return $DataInterface;
     }
 
     /**
      * Liefert ein Interface Objekt.
      *
-     * @access public
      * @param string $interface_name
      * @return DataInterface Interface Objekt
      **/
-    function &getInterface($interface_name)
+    function getInterface(string $interface_name): DataInterface
     {
         return $this->Interfaces[$interface_name];
     }
@@ -1087,11 +1135,10 @@ class Weblication extends Component
     /**
      * Liefert alle Interface Objekte.
      *
-     * @access public
      * @return array Interface Objekte
      * @see DAO::createDAO()
      **/
-    public function getInterfaces()
+    public function getInterfaces(): array
     {
         return $this->Interfaces;
     }
@@ -1103,9 +1150,9 @@ class Weblication extends Component
      *                        sessionClassName - overrides default session class
      * @return Weblication
      */
-    public function setup(array $settings)
+    public function setup(array $settings = []): Weblication
     {
-        $this->Settings->setVar($settings);
+        $this->Settings->setVars($settings);
         return $this;
     }
 
@@ -1218,15 +1265,27 @@ class Weblication extends Component
     }
 
     /**
+     * returns cookie for this application
+     *
+     * @return ICookie
+     */
+    public function getCookie(): ICookie
+    {
+        if(!$this->Cookie) {
+            $this->Cookie = new ICookie();
+        }
+        return $this->Cookie;
+    }
+
+    /**
      * Erzeugt das erste GUI_Module in der Kette (Momentan wird hier der Seitentitel mit dem Projektnamen gefuellt).
      *
-     * @access public
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
      * @return Weblication
      *
      * @throws Exception
      */
-    public function run($className = 'GUI_CustomFrame')
+    public function run(string $className = 'GUI_CustomFrame')
     {
         // TODO Get Parameter frame
         // TODO Subcode :: createSubCode()
@@ -1243,9 +1302,9 @@ class Weblication extends Component
             /** Hinweis: erstes GUI registriert sich selbst �ber setMain als
              * Haupt-GUI im GUI_Module Konstruktor **/
 
-            if ($this->Main instanceof GUI_CustomFrame) {
+            if ($this->hasFrame()) {
                 # Seitentitel (= Project)
-                $Header = $this->Main->getHeaderdata();
+                $Header = $this->getFrame()->getHeaderdata();
                 if ($Header) {
                     $title = $this->title;
                     $Header->setTitle($title);

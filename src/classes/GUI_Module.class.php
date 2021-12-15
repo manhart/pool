@@ -587,14 +587,40 @@ class GUI_Module extends Module
     *
     * @access protected
     */
-    function loadFiles() {}
+    protected function loadFiles() {}
+
+    /**
+     * load, create and register JavaScript GUI
+     *
+     * @param bool $global makes Module global in window scope
+     */
+    public function loadJavaScriptGUI(bool $global = true): bool
+    {
+        if(!$this->Weblication->hasFrame()) {
+            return false;
+        }
+
+        $className = $this->getClassName();
+        $Header = $this->Weblication->getFrame()->getHeaderdata();
+        $jsFile = $this->Weblication->findJavaScript($className.'.js', strtolower($className), $this->isBasicLibrary(), false);
+        if(!$jsFile) {
+            return false;
+        }
+        $Header->addJavaScript($jsFile);
+
+        $windowCode = '';
+        if($global) {
+            $windowCode = 'window[\'$'.$this->getName().'\'] = ';
+        }
+        $Header->addScriptCode($this->getName(),
+            $windowCode.'GUI_Module.createGUIModule('.$className.', \''.$this->getName().'\');');
+        return true;
+    }
 
     /**
      * Provisioning data before preparing module and there children.
-     *
-     * @access public
      **/
-    function prepareContent()
+    public function prepareContent()
     {
         $this->provision();
 
@@ -629,73 +655,122 @@ class GUI_Module extends Module
 
     /**
      * Vollende mit dem Aufruf einer Methode (Verwendungszweck Ajax)
-     *
-     * @access public
      */
-    function finalizeMethod($method)
+    private function finalizeMethod($method)
     {
         header('Content-type: application/json');
 
-        $charset = '';
-        if ($this->Owner instanceof Weblication) {
-            $charset = $this->Owner->getCharset();
-        }
+        $Result = false;
+
+//        $charset = '';
+//        if ($this->Owner instanceof Weblication) {
+//            $charset = $this->Owner->getCharset();
+//        }
 
         ob_start();
-        $Result = false;
-        if (method_exists($this, $method)) {
-            eval('$Result = $this->' . $method . '();');
-            //				 $Result = $this->$method();
-        }
-        else {
-            $Xception = new Xception('The method "' . $method . '" doesn\'t exist in the class ' . $this->getClassName(), 0, array(), POOL_ERROR_DISPLAY);
+
+
+        // 09.12.21, AM, reworked
+        if(!is_callable([$this, $method])) {
+            $Xception = new Xception('The method "' . $method . '" in the class ' . $this->getClassName().' is not callable', 0, array(), POOL_ERROR_DISPLAY);
             $Xception->raiseError();
+            return;
         }
 
-        $clientData = array();
+        // if (method_exists($this, $method)) {
+        // eval('$Result = $this->' . $method . '();');
 
-        if ($charset == 'UTF-8') {
-            // $JSON = new Services_JSON(); // unterst�tzt UTF-8 und ASCII
-            if ($this->plainJSON) {
-                $clientData = $Result;
-            }
-            else {
-                $clientData['Result'] = $Result;
-                $output = ob_get_contents();
-                $clientData['Error'] = ((strlen($output) > 0) ? $output : '');
-            }
-            $json = json_encode($clientData);
+        // todo validate parameters
 
-            if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-                $json_last_error = json_last_error();
-                if ($json_last_error > 0) {
-                    if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-                        $json_last_error_msg = json_last_error_msg();
+        try {
+            $ReflectionMethod = new ReflectionMethod($this, $method);
+            $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
+        }
+        catch(\ReflectionException $e) {
+            $Xception = new Xception('Error calling method '.$method.' on '.$this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
+            $Xception->raiseError();
+            return;
+        }
+
+        $args = [];
+        if($numberOfParameters) {
+            $parameters = $ReflectionMethod->getParameters();
+            foreach($parameters as $Parameter) {
+                if($this->Input->exists($Parameter->getName())) {
+                    $value = $this->Input->getVar($Parameter->getName());
+                    switch($Parameter->getType()->getName()) {
+                        case 'float':
+                            $value = (float)$value;
+                            break;
+
+                        case 'int':
+                            $value = (int)$value;
+                            break;
+
+                        case 'bool':
+                            $value = string2bool($value);
+                            break;
                     }
-                    else {
-                        $json_last_error_msg = 'Unbekannter Fehler';
-                        switch ($json_last_error) {
-                            case JSON_ERROR_DEPTH:
-                                $json_last_error_msg = 'Maximale Stacktiefe überschritten';
-                                break;
-                            case JSON_ERROR_STATE_MISMATCH:
-                                $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
-                                break;
-                            case JSON_ERROR_CTRL_CHAR:
-                                $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
-                                break;
-                            case JSON_ERROR_SYNTAX:
-                                $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
-                                break;
-                            case JSON_ERROR_UTF8:
-                                $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
-                                break;
-                        }
-                    }
-
-                    return $json_last_error_msg . ' in ' . $this->getClassName() . '->' . $method . '(): ' . print_r($clientData, true);
+                    $args[] = $value;
                 }
             }
+        }
+        try {
+            $Result = $ReflectionMethod->invokeArgs($this, $args);
+        }
+        catch(\ReflectionException $e) {
+            echo $e->getMessage();
+        }
+
+
+        $clientData = [];
+
+        // if ($charset == 'UTF-8') {
+        if ($this->plainJSON) {
+            $clientData = $Result;
+        }
+        else {
+            $clientData['Result'] = $Result;
+            $output = ob_get_contents();
+            $clientData['Error'] = (strlen($output) > 0) ? $output : '';
+        }
+        $json = json_encode($clientData);
+
+        if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
+            $json_last_error = json_last_error();
+            if ($json_last_error > 0) {
+                if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+                    $json_last_error_msg = json_last_error_msg();
+                }
+                else {
+                    $json_last_error_msg = 'Unbekannter Fehler';
+                    switch ($json_last_error) {
+                        case JSON_ERROR_DEPTH:
+                            $json_last_error_msg = 'Maximale Stacktiefe überschritten';
+                            break;
+
+                        case JSON_ERROR_STATE_MISMATCH:
+                            $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
+                            break;
+
+                        case JSON_ERROR_CTRL_CHAR:
+                            $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
+                            break;
+
+                        case JSON_ERROR_SYNTAX:
+                            $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
+                            break;
+
+                        case JSON_ERROR_UTF8:
+                            $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
+                            break;
+                    }
+                }
+
+                return $json_last_error_msg . ' in ' . $this->getClassName() . '->' . $method . '(): ' . print_r($clientData, true);
+            }
+        }
+        /*
         }
         else { // fuer ISO-8859-X und windows-125X
             if ($this->plainJSON) {
@@ -708,6 +783,7 @@ class GUI_Module extends Module
             }
             $json = array2json($clientData);
         }
+        */
         ob_end_clean();
 
         return $json;

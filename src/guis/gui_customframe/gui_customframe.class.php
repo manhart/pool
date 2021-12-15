@@ -116,7 +116,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param array $params
      * @return
      **/
-    function __construct(&$Owner, $autoLoadFiles=true, array $params = [])
+    function __construct($Owner, $autoLoadFiles=true, array $params = [])
     {
         parent::__construct($Owner, $autoLoadFiles, $params);
 
@@ -145,12 +145,20 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
+     * load default Weblication.class.js and GUI_Module.class.js
+     */
+    public function loadFiles()
+    {
+        $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
+        $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
+    }
+
+    /**
      * Liefert das GUI_Headerdata Object zum Aendern der Html Kopfdaten.
      *
-     * @access public
-     * @return object GUI_Headerdata
+     * @return GUI_Headerdata GUI_Headerdata
      **/
-    function &getHeaderdata()
+    public function getHeaderdata(): GUI_Headerdata
     {
         return $this->Headerdata;
     }
@@ -158,10 +166,9 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * Liefert das GUI_DynToolTip Objekt fuer ToolTip Texte.
      *
-     * @access public
-     * @return object GUI_DynToolTip
+     * @return GUI_DynToolTip
      **/
-    function &getDynToolTip()
+    function getDynToolTip(): GUI_DynToolTip
     {
         return $this->DynToolTip;
     }
@@ -333,7 +340,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param string $content
      * @return string Inhalt (Content)
      **/
-    function finalize($content='')
+    public function finalize($content='')
     {
         $tooltip_name = '';
         if(!$this->preventDefaultDynToolTip) {

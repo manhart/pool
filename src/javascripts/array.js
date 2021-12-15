@@ -213,6 +213,32 @@ if (!Array.prototype.remove) {
     }
 }
 
+/**
+ * uniquely combines two arrays
+ *
+ * @param a
+ * @param b
+ * @returns {*[]}
+ */
+function array_union(a, b)
+{
+    return Array.from(new Set([...a, ...b]));
+}
+
+/**
+ * removes the differences between 2 arrays
+ *
+ * @param a
+ * @param b
+ * @returns {*}
+ */
+function array_difference(a, b)
+{
+    return a.filter(function(i) {
+        return b.indexOf(i) < 0;
+    });
+}
+
 // 	array_unique:	Entfernt doppelte Werte aus einem Array
 /* todo
 function array_unique(inputUnique) {
