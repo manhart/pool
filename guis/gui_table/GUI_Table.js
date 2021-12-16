@@ -102,7 +102,7 @@ class GUI_Table extends GUI_Module
             this.formats['date'] = poolOptions['date.strftime'];
         }
         this.formats['date.time'] = '%Y-%m-%d %H:%M';
-        if('date.time' in poolOptions) {
+        if('date.time.strftime' in poolOptions) {
             this.formats['date.time'] = poolOptions['date.time.strftime'];
         }
         this.formats['number'] = {
