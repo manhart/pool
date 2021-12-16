@@ -78,33 +78,55 @@ class GUI_Table extends GUI_Module {
     }
 
     /**
-     *
-     * @param settings
+     * @param options
      * @returns {GUI_Table}
      */
-    setConfiguration(settings)
+    setConfiguration(options)
     {
-        if(('moduleName' in settings)) {
-            delete settings['moduleName'];
+        console.debug(this.getName()+'.setConfiguration', options['poolOptions']);
+        let poolOptions = {};
+        if('poolOptions' in options) {
+            poolOptions = options['poolOptions'];
+            delete options['poolOptions'];
         }
 
+        this.formats['time'] = '%H:%M';
+        if('time.strftime' in poolOptions) {
+            this.formats['time'] = poolOptions['time.strftime'];
+        }
+        this.formats['date'] = '%Y-%m-%d';
+        if('date.strftime' in poolOptions) {
+            this.formats['date'] = poolOptions['date.strftime'];
+        }
+        this.formats['date.time'] = '%Y-%m-%d %H:%M';
+        if('date.time' in poolOptions) {
+            this.formats['date.time'] = poolOptions['date.time.strftime'];
+        }
+        this.formats['number'] = {
+            decimal_separator: '.',
+            decimals: 2,
+            thousands_separator: ','
+        }
+        if('number' in poolOptions) {
+            this.formats['number'] = poolOptions['number'];
+        }
+
+        if(!isEmpty(options)) {
+            this.setOptions(options);
+        }
 
         // automation
-        // if('poolColumnOptions' in settings) {
-        //     this.poolColumnOptions = settings['poolColumnOptions'];
-        //     delete settings['poolColumnOptions'];
+        // if('poolColumnOptions' in poolOptions) {
+        //     this.poolColumnOptions = poolOptions['poolColumnOptions'];
+        //     delete poolOptions['poolColumnOptions'];
         // }
 
-        this.formats['time'] = settings['time.strftime'];
-        delete settings['time.strftime'];
-        this.formats['date'] = settings['date.strftime'];
-        this.formats['date.time'] = settings['date.time.strftime'];
-        this.formats['number'] = settings['number'];
         return this;
     }
 
     setOptions(options = {})
     {
+        console.debug(this.getName()+'.setOptions', options);
         this.options = options;
         return this;
     }
@@ -206,7 +228,11 @@ class GUI_Table extends GUI_Module {
                 console.warn(this.getName()+'.getTable() is called before '+this.getName()+'.render()! Not all table options ' +
                     'were passed. Please check the order of the method calls.');
             }
-            this.table = $('#' + this.getName()).on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows);
+            this.table = $('#' + this.getName())
+                .on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows)
+                .on('refresh-options.bs.table', this.onRefreshOptions)
+            ;
+
         }
         return this.table;
     }
@@ -238,6 +264,7 @@ class GUI_Table extends GUI_Module {
         }
         this.inside_render = false;
         this.rendered = true;
+        console.debug('getUniqueId', this.getUniqueId());
         return this;
     }
 
@@ -253,6 +280,21 @@ class GUI_Table extends GUI_Module {
             this.getTable().bootstrapTable('refresh');
         }
         return this;
+    }
+
+    getUniqueId()
+    {
+        return this.getOption('uniqueId');
+    }
+
+    getOption(option)
+    {
+        return this.getTable().bootstrapTable('getOptions')[option];
+    }
+
+
+    onRefreshOptions = (options) =>
+    {
     }
 
     onCheckUncheckRows = (evt, rowsAfter, rowsBefore) =>
