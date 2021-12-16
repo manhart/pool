@@ -270,7 +270,7 @@ class GUI_Table extends GUI_Module
         //         break;
         //     }
         // }
-        console.debug('Result of setColumnOptions', this.columns);
+        // console.debug('Result of setColumnOptions', this.columns);
         return result;
     }
 
@@ -335,6 +335,7 @@ class GUI_Table extends GUI_Module
 
     refresh(options = {})
     {
+        // todo stelle Seite wieder her
         if(!isEmpty(options) || this.forceRefreshOptions) {
             console.debug(this.getName() + '.refreshOptions', options);
             this.options = Object.assign({}, this.options, options);
@@ -357,6 +358,12 @@ class GUI_Table extends GUI_Module
         return this.getOption('uniqueId');
     }
 
+    /**
+     * get bootstrap option
+     *
+     * @param option
+     * @returns {*}
+     */
     getOption(option)
     {
         return this.getTable().bootstrapTable('getOptions')[option];
