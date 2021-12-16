@@ -513,6 +513,48 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox'
         ],
+        'poolFillControls' => [
+            'attribute' => 'data-pool-fill-controls',
+            'type' => 'boolean',
+            'value' => false,
+            'caption' => 'Fill Controls',
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'pool' => true,
+        ],
+        'poolFillControlsContainer' => [
+            'attribute' => 'data-pool-fill-controls-container',
+            'type' => 'string',
+            'value' => '',
+            'caption' => 'Fill Controls Container',
+            'element' => 'input',
+            'inputType' => 'text',
+            'pool' => true,
+        ],
+        'poolOnCheck' => [
+            'attribute' => 'data-pool-on-check',
+            'type' => 'function',
+            'value' => null,
+            'caption' => 'onCheck',
+            'poolEvent' => true,
+            'element' => 'textarea'
+        ],
+        'poolOnClickRow' => [
+            'attribute' => 'data-pool-on-click-row',
+            'type' => 'function',
+            'value' => null,
+            'caption' => 'onClickRow',
+            'poolEvent' => true,
+            'element' => 'textarea'
+        ],
+        'poolOnUnCheck' => [
+            'attribute' => 'data-pool-on-check',
+            'type' => 'function',
+            'value' => null,
+            'caption' => 'onCheck',
+            'poolEvent' => true,
+            'element' => 'textarea'
+        ],
         'pagination' => [
             'attribute' => 'data-pagination',
             'type' => 'boolean',
@@ -758,6 +800,10 @@ class GUI_Table extends GUI_Module
 //    {
 //        return $this->inspectorProperties + parent::getInspectorProperties();
 //    }
+
+    /**
+     * @return array
+     */
     public function getInspectorProperties(): array
     {
         return $this->inspectorProperties + $this->getDefaultInspectorProperties();
@@ -768,6 +814,10 @@ class GUI_Table extends GUI_Module
         return $this->getInspectorProperties()['columns']['properties'];
     }
 
+    /**
+     * @param array $columns
+     * @return $this
+     */
     public function setColumns(array $columns): GUI_Table
     {
         $defaultColumnOptions = $this->getColumnsProperties();
@@ -978,6 +1028,7 @@ class GUI_Table extends GUI_Module
 
         $this->Template->leaveBlock();
 
+        // render table
         $render_immediately = $render_ondomloaded = '';
         if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
             $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';

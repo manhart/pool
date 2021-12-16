@@ -2055,6 +2055,10 @@ function fillControls(containerSelector, rowSet)
  */
 function clearControls(elements)
 {
+    // todo
+    // if(typeof elements === 'string') {
+    //     elements = document.querySelectorAll(elements);
+    // }
     for (let z=0; z<elements.length; z++) {
         let elem = elements[z];
 
@@ -2366,18 +2370,18 @@ function htmlspecialchars(string, quoteStyle, charset, doubleEncode)
  * @param obj
  * @returns {string}
  */
-function _typeof(obj)
-{
-    if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
-        _typeof = function (obj) {
-            return typeof obj;
-        };
-    }
-    else {
-        _typeof = function (obj) {
-            return obj && typeof Symbol === 'function' && obj.constructor === Symbol && obj !== Symbol.prototype ? 'symbol' : typeof obj;
-        };
-    }
-
-    return _typeof(obj);
-}
+// function _typeof(obj)
+// {
+//     if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
+//         _typeof = function (obj) {
+//             return typeof obj;
+//         };
+//     }
+//     else {
+//         _typeof = function (obj) {
+//             return obj && typeof Symbol === 'function' && obj.constructor === Symbol && obj !== Symbol.prototype ? 'symbol' : typeof obj;
+//         };
+//     }
+//
+//     return _typeof(obj);
+// }
