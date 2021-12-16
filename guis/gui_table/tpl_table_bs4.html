@@ -18,6 +18,6 @@
     <!-- END js_column --><!-- END js_row -->
     // console.debug('{moduleName}.setColumns', columns);
     // (${moduleName} =
-    $Weblication.getModule('{moduleName}').setConfiguration({poolOptions}).setColumns(columns){RENDER_IMMEDIATELY}
+    $Weblication.getModule('{moduleName}').setConfiguration({'poolOptions': {poolOptions}}).setColumns(columns){RENDER_IMMEDIATELY}
     {RENDER_ONDOMLOADED}
 </script>

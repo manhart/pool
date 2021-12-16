@@ -489,6 +489,14 @@ class GUI_Table extends GUI_Module
             'type' => 'function',
             'value' => null // undefined
         ],
+        'method' => [
+            'attribute' => 'data-method',
+            'type' => 'string',
+            'value' => 'get',
+            'element' => 'select',
+            'options' => ['get', 'post'],
+            'caption' => 'Method',
+        ],
         'filterControl' => [
             'attribute' => 'data-filter-control',
             'type' => 'boolean',
