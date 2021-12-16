@@ -41,12 +41,27 @@ class GUI_Table extends GUI_Module
     columns = [];
     columnNames = [];
 
+    /**
+     * unique ids of one page
+     *
+     * @private
+     * @type {[]}
+     */
+    pageIds = [];
+
+    /**
+     * selections
+     *
+     * @private
+     * @type {[]}
+     */
     selections = [];
 
     rendered = false;
     inside_render = false;
 
     forceRefreshOptions = false;
+
 
     // poolColumnOptions = {}; // poolOptions
 
@@ -60,6 +75,7 @@ class GUI_Table extends GUI_Module
         super(name);
 
         this.options.responseHandler = this.responseHandler
+
 
         // let columns = {
         //     columns: [{
@@ -161,13 +177,17 @@ class GUI_Table extends GUI_Module
 
         this.options = options;
 
+        if(options.responseHandler) {
+            // todo save responseHandler
+        }
+        this.options.responseHandler = this.responseHandler
+
         return this;
     }
 
     setColumns(columns = [])
     {
-        columns.forEach((column, z) =>
-        {
+        columns.forEach((column, z) => {
             let field = ('field' in column) ? column['field'] : z;
             this.columnNames[field] = z;
             // if(!(field in this.poolColumnOptions)) {
@@ -250,7 +270,7 @@ class GUI_Table extends GUI_Module
         //         break;
         //     }
         // }
-        console.debug('Result of setColumnOptions', this.columns);
+        // console.debug('Result of setColumnOptions', this.columns);
         return result;
     }
 
@@ -315,6 +335,7 @@ class GUI_Table extends GUI_Module
 
     refresh(options = {})
     {
+        // todo stelle Seite wieder her
         if(!isEmpty(options) || this.forceRefreshOptions) {
             console.debug(this.getName() + '.refreshOptions', options);
             this.options = Object.assign({}, this.options, options);
@@ -327,19 +348,29 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
+    /**
+     * get unique id
+     *
+     * @returns string
+     */
     getUniqueId()
     {
         return this.getOption('uniqueId');
     }
 
+    /**
+     * get bootstrap option
+     *
+     * @param option
+     * @returns {*}
+     */
     getOption(option)
     {
         return this.getTable().bootstrapTable('getOptions')[option];
     }
 
 
-    onClickRow = (evt, row, $element, field) =>
-    {
+    onClickRow = (evt, row, $element, field) => {
         // console.debug(this.getName() + '.onClickRow', row, $element, field);
 
         if(this.options.poolOnClickRow) {
@@ -348,65 +379,115 @@ class GUI_Table extends GUI_Module
     }
 
 
-    onRefreshOptions = (options) =>
-    {
+    onRefreshOptions = (options) => {
     }
 
-    onCheck = (evt, row, $element) =>
-    {
-        if(this.options.poolFillControls && this.options.poolFillControlsContainer) {
-            fillControls(this.options.poolFillControlsContainer, row);
+    /**
+     * onCheck event
+     *
+     * @param evt
+     * @param row
+     * @param $element
+     */
+    onCheck = (evt, row, $element) => {
+        if(this.getOption('poolFillControls') && this.getOption('poolFillControlsContainer')) {
+            fillControls(this.getOption('poolFillControlsContainer'), row);
         }
 
-        if(this.options.poolOnCheck) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.options.poolOnCheck, [evt, row, $element], null)
-        }
-    }
-
-    onUnCheck = (evt, row, $element) =>
-    {
-        if(this.options.poolClearControls && this.options.poolClearControlsContainer) {
-            clearControls(this.options.poolClearControlsContainer);
-        }
-
-        if(this.options.poolOnUnCheck) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.options.poolOnUnCheck, [evt, row, $element], null)
+        if(this.getOption('poolOnCheck')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnCheck'), [evt, row, $element], null)
         }
     }
 
-    onCheckUncheckRows = (evt, rowsAfter, rowsBefore) =>
+    /**
+     * onUncheck event
+     *
+     * @param evt
+     * @param row
+     * @param $element
+     */
+    onUnCheck = (evt, row, $element) => {
+        if(this.getOption('poolClearControls') && this.getOption('poolClearControlsContainer')) {
+            clearControls(this.getOption('poolClearControlsContainer'));
+        }
+
+        if(this.getOption('poolOnUnCheck')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnUnCheck'), [evt, row, $element], null)
+        }
+    }
+
+    /**
+     * get selected rows
+     *
+     * @returns {*}
+     */
+    getSelections()
     {
-        let rows = rowsAfter;
+        return this.getTable().bootstrapTable('getSelections');
+    }
 
-        if(evt.type === 'uncheck-all') {
-            rows = rowsBefore;
+    /**
+     * save selections
+     */
+    onCheckUncheckRows = () => {
+        let uniqueId = this.getUniqueId()
+        if(!uniqueId) {
+            return;
         }
 
-        let ids = $.map(!$.isArray(rows) ? [rows] : rows, function(row)
-        {
-            return row.idUser;
-        })
+        let ids = this.getSelections().map(function(row) {
+            return row[uniqueId];
+        });
 
-        console.debug(evt.type, rows, ids);
+        this.selections = array_difference(this.selections, this.pageIds);
+        this.selections = array_union(this.selections, ids);
 
-        if(this.getTable().bootstrapTable('getOptions').singleSelect) {
-            this.selections = [];
-        }
+        // console.debug(this.getName()+'.onCheckUncheckRows', ids, this.pageIds);
 
-        let fnString = ['check', 'check-all'].indexOf(evt.type) > -1 ? 'array_union' : 'array_difference'
-        let fn = window[fnString];
-        this.selections = fn(this.selections, ids);
+        // let rows = rowsAfter;
+
+        // if(evt.type === 'uncheck-all') {
+        //     rows = rowsBefore;
+        // }
+
+        // let ids = $.map(!$.isArray(rows) ? [rows] : rows, function(row) {
+        //     return row.idUser;
+        // })
+
+        // console.debug(evt.type, rows, ids);
+
+        // if(this.getTable().bootstrapTable('getOptions').singleSelect) {
+        //     this.selections = [];
+        // }
+
+        // let fnString = ['check', 'check-all'].indexOf(evt.type) > -1 ? 'array_union' : 'array_difference'
+        // let fn = window[fnString];
+        // this.selections = fn(this.selections, ids);
         // this.selections = ids;
     }
 
-    responseHandler = (res) =>
-    {
-        console.debug(this.getName() + '.responseHandler', res);
+    /**
+     * Ajax's response handler: restores selected records
+     *
+     * @param res
+     * @returns {*}
+     */
+    responseHandler = (res) => {
+        let uniqueId = this.getUniqueId();
+        if(!uniqueId) {
+            return res;
+        }
+        // console.debug(this.getName() + '.responseHandler', res);
 
-        res.forEach(row =>
-        {
-            row.state = this.selections.indexOf(row.idUser) !== -1
-        })
+        let rows = (res.rows) ? res.rows : res;
+
+        this.pageIds = rows.map(function(row) {
+            return row[uniqueId];
+        });
+
+        rows.forEach(row => {
+            row.state = this.selections.indexOf(row[uniqueId]) !== -1
+        });
         return res;
     }
 
@@ -447,159 +528,6 @@ class GUI_Table extends GUI_Module
         }
         return value;
     }
-
-    // calculateObjectValue(self, name, args, defaultValue)
-    // {
-    //     var func = name;
-    //
-    //     if(typeof name === 'string') {
-    //         // support obj.func1.func2
-    //         var names = name.split('.');
-    //
-    //         if(names.length > 1) {
-    //             func = window;
-    //
-    //             var _iterator6 = this._createForOfIteratorHelper(names),
-    //                 _step6;
-    //
-    //             try {
-    //                 for(_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-    //                     var f = _step6.value;
-    //                     func = func[f];
-    //                 }
-    //             }
-    //             catch(err) {
-    //                 _iterator6.e(err);
-    //             }
-    //             finally {
-    //                 _iterator6.f();
-    //             }
-    //         }
-    //         else {
-    //             func = window[name];
-    //         }
-    //     }
-    //
-    //     if(func !== null && _typeof(func) === 'object') {
-    //         return func;
-    //     }
-    //
-    //     if(typeof func === 'function') {
-    //         return func.apply(self, args || []);
-    //     }
-    //
-    //     if(!func && typeof name === 'string' && this.sprintf.apply(this, [name].concat(_toConsumableArray(args)))) {
-    //         return this.sprintf.apply(this, [name].concat(_toConsumableArray(args)));
-    //     }
-    //
-    //     return defaultValue;
-    // }
-    //
-    // _arrayLikeToArray(arr, len)
-    // {
-    //     if(len == null || len > arr.length) len = arr.length;
-    //
-    //     for(var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-    //
-    //     return arr2;
-    // }
-    //
-    // _unsupportedIterableToArray(o, minLen)
-    // {
-    //     if(!o) return;
-    //     if(typeof o === "string") return this._arrayLikeToArray(o, minLen);
-    //     var n = Object.prototype.toString.call(o).slice(8, -1);
-    //     if(n === "Object" && o.constructor) n = o.constructor.name;
-    //     if(n === "Map" || n === "Set") return Array.from(o);
-    //     if(n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return this._arrayLikeToArray(o, minLen);
-    // }
-    //
-    // _createForOfIteratorHelper(o, allowArrayLike)
-    // {
-    //     var it;
-    //
-    //     if(typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-    //         if(Array.isArray(o) || (it = this._unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-    //             if(it) o = it;
-    //             var i = 0;
-    //
-    //             var F = function()
-    //             {
-    //             };
-    //
-    //             return {
-    //                 s: F,
-    //                 n: function()
-    //                 {
-    //                     if(i >= o.length) return {
-    //                         done: true
-    //                     };
-    //                     return {
-    //                         done: false,
-    //                         value: o[i++]
-    //                     };
-    //                 },
-    //                 e: function(e)
-    //                 {
-    //                     throw e;
-    //                 },
-    //                 f: F
-    //             };
-    //         }
-    //
-    //         throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    //     }
-    //
-    //     var normalCompletion = true,
-    //         didErr = false,
-    //         err;
-    //     return {
-    //         s: function()
-    //         {
-    //             it = o[Symbol.iterator]();
-    //         },
-    //         n: function()
-    //         {
-    //             var step = it.next();
-    //             normalCompletion = step.done;
-    //             return step;
-    //         },
-    //         e: function(e)
-    //         {
-    //             didErr = true;
-    //             err = e;
-    //         },
-    //         f: function()
-    //         {
-    //             try {
-    //                 if(!normalCompletion && it.return != null) it.return();
-    //             }
-    //             finally {
-    //                 if(didErr) throw err;
-    //             }
-    //         }
-    //     };
-    // }
-    //
-    // _toConsumableArray(arr)
-    // {
-    //     return this._arrayWithoutHoles(arr) || this._iterableToArray(arr) || this._unsupportedIterableToArray(arr) || this._nonIterableSpread();
-    // }
-    //
-    // _arrayWithoutHoles(arr)
-    // {
-    //     if(Array.isArray(arr)) return this._arrayLikeToArray(arr);
-    // }
-    //
-    // _iterableToArray(iter)
-    // {
-    //     if(typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
-    // }
-    //
-    // _nonIterableSpread()
-    // {
-    //     throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    // }
 }
 
 /*
@@ -608,12 +536,4 @@ $.extend($.fn.bootstrapTable.defaults.icons, {
 });
 */
 
-
-/**
- * Example e.g. for testing:
- *
- * */
-// ready(function () {
-// });
-
-console.debug('table.js loaded');
+console.debug('GUI_Table.js loaded');
