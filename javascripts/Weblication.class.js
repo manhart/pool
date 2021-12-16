@@ -20,6 +20,7 @@ class Weblication
     }
 
     /**
+     * return instance of Weblication (Singleton)
      *
      * @returns {Weblication}
      */
@@ -31,14 +32,24 @@ class Weblication
         return Weblication._instance;
     }
 
+    /**
+     * register class
+     *
+     * @param className
+     * @param Class
+     * @returns {Weblication}
+     */
     static registerClass(className, Class)
     {
         Weblication.classesMapping[className] = Class;
+        return this;
     }
 
     /**
+     * register module
      *
      * @param GUI_Module Module
+     * @returns {Weblication}
      */
     registerModule(Module)
     {
@@ -47,6 +58,7 @@ class Weblication
             throw new Error('Module with Name ' + moduleName + ' already exists. Registration not possible!');
         }
         this.modules[moduleName] = Module;
+        return this;
     }
 
     /**
