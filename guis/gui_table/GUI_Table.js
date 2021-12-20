@@ -553,7 +553,7 @@ class GUI_Table extends GUI_Module
         this.selections = array_difference(this.selections, this.pageIds);
         this.selections = array_union(this.selections, ids);
 
-        console.debug(this.getName()+'.onCheckUncheckRows', this.selections);
+        // console.debug(this.getName()+'.onCheckUncheckRows', this.selections);
 
         // let rows = rowsAfter;
 
