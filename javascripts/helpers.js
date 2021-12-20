@@ -1904,24 +1904,46 @@ function ready(fn) {
 }
 
 /**
- * fill controls with content
+ * fill controls (input fields) with content
+ *
+ * @param {string|object|array} containerSelector
+ * @param {array|object} rowSet record which should be filled into controls
+ * @param {boolean} autoSearchControlsWithinContainer should be set to true, if only a container is passed
+ * @returns {array}
  */
-function fillControls(containerSelector, rowSet)
+function fillControls(containerSelector, rowSet, autoSearchControlsWithinContainer = true)
 {
     if(!Array.isArray(rowSet) && !isObject(rowSet)) {
-        return false;
+        return [];
     }
 
     if(rowSet[0] === undefined) {
         rowSet = [rowSet];
     }
 
-    let selectors = explode(',', containerSelector, false);
+    let selectors;
+    let controls = [];
+    let hasControls = false;
+    if(isString(containerSelector)) {
+        if(autoSearchControlsWithinContainer) {
+            // automatically search controls within container and rowset fields (very old method)
+            selectors = explode(',', containerSelector, false);
+        }
+        else {
+            // controls selector
+            controls = jQuery(containerSelector);
+        }
+    }
+    else if(Array.isArray(containerSelector) || isObject(containerSelector)) {
+        controls = jQuery(containerSelector);
+        hasControls = true;
+    }
 
     let row, field, value;
+    let r = 0;
 
     // Zeile fuer Zeile durch das Rowset
-    for(let r=0; r<rowSet.length; r++) {
+    for(r=0; r<rowSet.length; r++) {
         row = rowSet[r];
 
         // Feld fuer Feld ermitteln wir die HTML-Elemente
@@ -1937,18 +1959,27 @@ function fillControls(containerSelector, rowSet)
 
             // 21.01.2013, AM, Acceleration of the selection via unique IDs (ID-Selector)
             // 07.07.2021, AM, Group-Selector added
-            let name_selector = '', id_selector = '', group_selector = '';
-            for(let s=0; s<selectors.length; s++) {
-                if(name_selector != '') name_selector += ',';
-                name_selector += selectors[s] + ' [name='+field+']';
-                if(id_selector != '') id_selector += ',';
-                id_selector += selectors[s] + ' #'+field;
-                if(group_selector != '') group_selector += ',';
-                group_selector += selectors[s] + ' [name="'+field+'[]"][value="'+escape(value)+'"]';
+            if(autoSearchControlsWithinContainer) {
+                let name_selector = '', id_selector = '', group_selector = '';
+                for(let s = 0; s < selectors.length; s++) {
+                    if(name_selector != '') name_selector += ',';
+                    name_selector += selectors[s] + ' [name=' + field + ']';
+                    if(id_selector != '') id_selector += ',';
+                    id_selector += selectors[s] + ' #' + field;
+                    if(group_selector != '') group_selector += ',';
+                    group_selector += selectors[s] + ' [name="' + field + '[]"][value="' + escape(value) + '"]';
+                }
+
+                controls = jQuery(name_selector).add(group_selector).add(id_selector);
             }
 
-            jQuery(name_selector).add(group_selector).add(id_selector).each(function() {
+            controls.each(function() {
                 let Ctrl = jQuery(this);
+
+                // todo 20.12.21, AM, rework fillControls, first loop over controls!
+                if(autoSearchControlsWithinContainer == false || hasControls) {
+                    if(Ctrl.attr('name') != field && Ctrl.id != field && !(Ctrl.attr('name') == field+'[]' && Ctrl.val() == value)) return;
+                }
 
                 //log('HTMLElement: '+Ctrl.attr('id')+'='+value);
                 if(row[field+'_class']) Ctrl.addClass(row[field+'_class']);
@@ -1966,7 +1997,9 @@ function fillControls(containerSelector, rowSet)
                             break;
 
                         case 'IMG':
-                            if(isEmpty(value)) Ctrl.hide();
+                            if(isEmpty(value)) {
+                                Ctrl.hide();
+                            }
                             else {
                                 Ctrl.attr('src', value);
                                 Ctrl.show();
@@ -2039,31 +2072,23 @@ function fillControls(containerSelector, rowSet)
                     Ctrl[0].closest('.needs-validation').classList.remove('was-validated');
                 }
             });
-
-            // could be a checkbox group
-            // if(found == false) {
-            //     document.querySelectorAll(group_selector).forEach((ctrl) => {
-            //         if(ctrl.value === value) {
-            //             console.debug('check field: '+field+' with value '+ctrl.value);
-            //             ctrl.checked = true;
-            //         }
-            //     });
-            // }
         }
     }
+    return controls;
 }
 
 /**
  * Empties the contents of the elements
  *
- * @param elements
+ * @param {array|object|string} array of elements (input fields) or a selector
  */
 function clearControls(elements)
 {
-    // todo
-    // if(typeof elements === 'string') {
-    //     elements = document.querySelectorAll(elements);
-    // }
+    if(isString(elements)) {
+        elements = explode(',', elements, false);
+        elements = document.querySelectorAll(elements);
+    }
+
     for (let z=0; z<elements.length; z++) {
         let elem = elements[z];
 
@@ -2092,12 +2117,6 @@ function clearControls(elements)
             }
         }
         else {
-            // if(checkIsSuchfeld == 1) {
-            //     if(elem.getAttribute('isSuchfeld') == 1) {
-            //         elem.setAttribute('defaultValue', null);
-            //         continue;
-            //     }
-            // }
             if(elem.getAttribute('data-empty-default-value')) {
                 elem.setAttribute('data-default-value', null);
             }
