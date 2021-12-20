@@ -245,21 +245,32 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
+    /**
+     *
+     * @returns {*[]}
+     */
     getColumns()
     {
         return this.columns;
     }
 
+    /**
+     * set column option
+     *
+     * @param field
+     * @param options
+     * @returns {GUI_Table}
+     */
     setColumnOptions(field, options = [])
     {
-        let result = false;
-        if(isEmpty(options)) return result;
+        if(isEmpty(options)) {
+            return this;
+        }
 
         // console.debug('setColumnOptions', field, options);
         if(field in this.columnNames) {
             this.columns[this.columnNames[field]] = Object.assign({}, this.columns[this.columnNames[field]], options);
             this.forceRefreshOptions = true;
-            result = true;
         }
         // for(let c = 0; c<this.columns.length; c++) {
         //     // console.debug(c);
@@ -271,7 +282,7 @@ class GUI_Table extends GUI_Module
         //     }
         // }
         // console.debug('Result of setColumnOptions', this.columns);
-        return result;
+        return this;
     }
 
     getTable()
@@ -289,7 +300,6 @@ class GUI_Table extends GUI_Module
             .on('check.bs.table', this.onCheck)
             .on('uncheck.bs.table', this.onUnCheck)
             ;
-
         }
         return this.$table;
     }
@@ -316,12 +326,11 @@ class GUI_Table extends GUI_Module
             this.options = Object.assign({}, this.options, options);
         }
 
-        console.debug(this.getName() + '.render', this.options, options, window['mod_ManageUser'] ? mod_ManageUser : '');
-
         if(!this.rendered) {
             this.getTable().bootstrapTable(
                 this.options
             );
+            console.debug(this.getName() + '.rendered');
         }
         else {
             console.info(this.getName() + '.render has already been called once.')
@@ -329,21 +338,22 @@ class GUI_Table extends GUI_Module
         }
         this.inside_render = false;
         this.rendered = true;
-        console.debug('getUniqueId', this.getUniqueId());
         return this;
     }
 
-    refresh(options = {})
+    refresh(options = {}, silent = false)
     {
         // todo stelle Seite wieder her
         if(!isEmpty(options) || this.forceRefreshOptions) {
-            console.debug(this.getName() + '.refreshOptions', options);
             this.options = Object.assign({}, this.options, options);
+            console.debug(this.getName() + '.refreshOptions', this.options);
             this.getTable().bootstrapTable('refreshOptions', this.options);
         }
         else {
-            console.debug(this.getName() + '.refresh', options);
-            this.getTable().bootstrapTable('refresh');
+            let params = {};
+            if(silent) params.silent = true;
+            this.getTable().bootstrapTable('refresh', params);
+            console.debug(this.getName() + '.refreshed');
         }
         return this;
     }
@@ -373,8 +383,8 @@ class GUI_Table extends GUI_Module
     onClickRow = (evt, row, $element, field) => {
         // console.debug(this.getName() + '.onClickRow', row, $element, field);
 
-        if(this.options.poolOnClickRow) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.options.poolOnClickRow, [evt, row, $element, field], null)
+        if(this.getOption('poolOnClickRow')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnClickRow'), [evt, row, $element, field], null)
         }
     }
 
@@ -427,22 +437,123 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * get selected unique ids
+     */
+    getSelectedUniqueIds()
+    {
+        let uniqueId = this.getUniqueId()
+        if(!uniqueId) {
+            return [];
+        }
+
+        return this.getSelections().map(function(row) {
+            return row[uniqueId]
+        })
+    }
+
+    /**
+     * check a row
+     *
+     * @param index
+     */
+    check(index = 0)
+    {
+        this.getTable().bootstrapTable('check', index);
+    }
+
+    /**
+     * uncheck all current page rows
+     */
+    uncheckAll()
+    {
+        this.getTable().bootstrapTable('uncheckAll');
+    }
+
+    /**
+     * insert row and check row
+     *
+     * @param index
+     * @param row
+     * @param check (optional)
+     */
+    insertRow(index, row, check = true)
+    {
+        this.getTable().bootstrapTable('insertRow', {
+            index: index,
+            row: row
+        });
+        this.check(index);
+    }
+
+    /**
+     * update the specified row(s)
+     *
+     * @param id id where the id should be the uniqueId field assigned to the table
+     * @param row the new row data
+     * @param replace (optional) set to true, to replace the row instead of extending
+     */
+    updateByUniqueId(id, row, replace = false)
+    {
+        let params = {
+            id: parseInt(id, 10),
+            row: row,
+            replace: replace
+        }
+        console.debug('updateByUniqueId', params);
+        this.getTable().bootstrapTable('updateByUniqueId', params);
+    }
+
+    /**
+     * remove rows
+     *
+     * @param params
+     * @returns {GUI_Table}
+     */
+    remove(params)
+    {
+        this.getTable().bootstrapTable('remove', params);
+        return this;
+    }
+
+    /**
+     * remove rows by unique id
+     *
+     * @param uniqueId
+     * @returns {GUI_Table}
+     */
+    removeByUniqueId(uniqueId)
+    {
+        this.getTable().bootstrapTable('removeByUniqueId', uniqueId);
+        return this;
+    }
+
+    /**
+     * remove selected rows
+     *
+     * @returns {GUI_Table}
+     */
+    removeSelectedRows()
+    {
+        let uniqueId = this.getUniqueId();
+        if(!uniqueId) {
+            return this;
+        }
+        this.getTable().bootstrapTable('remove', {
+            field: uniqueId,
+            values: this.getSelectedUniqueIds()
+        })
+    }
+
+    /**
      * save selections
      */
     onCheckUncheckRows = () => {
-        let uniqueId = this.getUniqueId()
-        if(!uniqueId) {
-            return;
-        }
 
-        let ids = this.getSelections().map(function(row) {
-            return row[uniqueId];
-        });
-
+        let ids = this.getSelectedUniqueIds();
         this.selections = array_difference(this.selections, this.pageIds);
         this.selections = array_union(this.selections, ids);
 
-        // console.debug(this.getName()+'.onCheckUncheckRows', ids, this.pageIds);
+        console.debug(this.getName()+'.onCheckUncheckRows', this.selections);
 
         // let rows = rowsAfter;
 
