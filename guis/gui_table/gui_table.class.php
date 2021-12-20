@@ -521,6 +521,24 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox'
         ],
+        'poolClearControls' => [
+            'attribute' => 'data-pool-clear-controls',
+            'type' => 'boolean',
+            'value' => false,
+            'caption' => 'Clear Controls',
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'pool' => true,
+        ],
+        'poolClearControlsSelector' => [
+            'attribute' => 'data-pool-clear-controls-selector',
+            'type' => 'string',
+            'value' => '',
+            'caption' => 'Clear Controls Selector',
+            'element' => 'input',
+            'inputType' => 'text',
+            'pool' => true,
+        ],
         'poolFillControls' => [
             'attribute' => 'data-pool-fill-controls',
             'type' => 'boolean',
@@ -539,27 +557,36 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'pool' => true,
         ],
-        'poolOnCheck' => [
-            'attribute' => 'data-pool-on-check',
+        'poolFillControlsSelector' => [
+            'attribute' => 'data-pool-fill-controls-selector',
+            'type' => 'string',
+            'value' => '',
+            'caption' => 'Fill Controls Selector',
+            'element' => 'input',
+            'inputType' => 'text',
+            'pool' => true,
+        ],
+        'onCheck' => [
+            'attribute' => 'data-on-check',
             'type' => 'function',
             'value' => null,
             'caption' => 'onCheck',
             'poolEvent' => true,
             'element' => 'textarea'
         ],
-        'poolOnClickRow' => [
-            'attribute' => 'data-pool-on-click-row',
+        'onClickRow' => [
+            'attribute' => 'data-on-click-row',
             'type' => 'function',
             'value' => null,
             'caption' => 'onClickRow',
             'poolEvent' => true,
             'element' => 'textarea'
         ],
-        'poolOnUnCheck' => [
-            'attribute' => 'data-pool-on-check',
+        'onUncheck' => [
+            'attribute' => 'data-on-uncheck',
             'type' => 'function',
             'value' => null,
-            'caption' => 'onCheck',
+            'caption' => 'onUncheck',
             'poolEvent' => true,
             'element' => 'textarea'
         ],
