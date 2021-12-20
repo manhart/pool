@@ -1904,7 +1904,7 @@ function ready(fn) {
 }
 
 /**
- * Fuelle Steuerelemente
+ * fill controls with content
  */
 function fillControls(containerSelector, rowSet)
 {
@@ -2009,9 +2009,14 @@ function fillControls(containerSelector, rowSet)
                             break;
 
                         default:
+
                             Ctrl.val(value);
                             if(Ctrl.data('initialValue') == undefined) {
                                 Ctrl.data('initialValue', value);
+                            }
+                            // bootstrap-select support
+                            if(Ctrl.hasClass('selectpicker')) {
+                                Ctrl.selectpicker('refresh');
                             }
                             break;
                     }
