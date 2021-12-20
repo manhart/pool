@@ -1165,13 +1165,11 @@
 
 			/**
 			 * Verlaesst einen Block (einleitend mit der Funktion Template::newBlock(), anschliessend Template::leaveBlock())
-			 *
-			 * @access public
 			 **/
-			function leaveBlock()
+			public function leaveBlock()
 			{
     	     	// Referenz zum aktiven Block aufheben
-        	 	unset($this -> ActiveBlock);
+        	 	unset($this->ActiveBlock);
 			}
 
             /**
@@ -1225,31 +1223,30 @@
                 }
             }
 
-			/**
-			* Erstellt automatisch dynamische Bloecke mit den uebergebenen Datensaetzen.
-			* Das Array muss wie folgt aufgebaut werden: $array[$laufender_record_index][$varname] = $value !
-			*
-			* @access public
-			* @param string $blockhandle Handle-Name des Blocks
-			* @param array $redordset Datens�tze (z.B. aus einem MySQL Ergebnis)
-			*/
-			function assignRecordset($blockhandle, $recordset = Array())
+            /**
+             * Erstellt automatisch dynamische Bloecke mit den uebergebenen Datensaetzen.
+             * Das Array muss wie folgt aufgebaut werden: $array[$laufender_record_index][$varname] = $value !
+             *
+             * @param string $blockHandle Handle-Name des Blocks
+             * @param array $recordset
+             * @return false
+             */
+			public function assignRecordset(string $blockHandle, array $recordset = [])
 			{
-				if (is_array($recordset) and count($recordset) > 0) {
-					$ActiveFile = &$this->ActiveFile;
-					$ActiveBlock = &$this->ActiveBlock;
+                $count = count($recordset);
+                if($count == 0) {
+                    return false;
+                }
 
-					$count = count($recordset);
-					for ($i=0; $i<$count; $i++) {
-						$record = $recordset[$i];
+                for ($i=0; $i<$count; $i++) {
+                    $record = $recordset[$i];
 
-					    if($this->newBlock($blockhandle)) {
-							$this->assignVar($record);
-						}
-					}
-					$this->ActiveFile = & $ActiveFile;
-					$this->ActiveBlock = & $ActiveBlock;
-				}
+                    if($this->newBlock($blockHandle)) {
+                        $this->assignVar($record);
+                    }
+                }
+                $this->leaveBlock();
+                return true;
 			}
 
 			/**
