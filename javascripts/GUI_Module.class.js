@@ -11,6 +11,7 @@
 class GUI_Module
 {
     name = '';
+    className = what(this);
 
     /**
      * @param string name of module
@@ -18,6 +19,7 @@ class GUI_Module
     constructor(name)
     {
         this.name = name;
+        this.className = what(this);
         Weblication.getInstance().registerModule(this);
     }
 
@@ -29,6 +31,16 @@ class GUI_Module
     getName()
     {
         return this.name;
+    }
+
+    /**
+     * returns the className of the module
+     *
+     * @returns {string}
+     */
+    getClassName()
+    {
+        return this.className;
     }
 
     /**
