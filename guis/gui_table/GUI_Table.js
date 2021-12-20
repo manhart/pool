@@ -499,7 +499,7 @@ class GUI_Table extends GUI_Module
             row: row,
             replace: replace
         }
-        console.debug('updateByUniqueId', params);
+        // console.debug('updateByUniqueId', params);
         this.getTable().bootstrapTable('updateByUniqueId', params);
     }
 
