@@ -131,19 +131,19 @@ class GUI_Table extends GUI_Module
         }
 
         // check supported events
-        if(!this.options.poolOnCheck) {
-            if(this._getTable().dataset.poolOnCheck) {
-                options.poolOnCheck = this._getTable().dataset.poolOnCheck;
+        if(!this.options.onCheck) {
+            if(this._getTable().dataset.onCheck) {
+                options.onCheck = this._getTable().dataset.onCheck;
             }
         }
-        if(!this.options.poolOnClickRow) {
-            if(this._getTable().dataset.poolOnClickRow) {
-                options.poolOnClickRow = this._getTable().dataset.poolOnClickRow;
+        if(!this.options.onClickRow) {
+            if(this._getTable().dataset.onClickRow) {
+                options.onClickRow = this._getTable().dataset.onClickRow;
             }
         }
-        if(!this.options.poolOnUnCheck) {
-            if(this._getTable().dataset.poolOnUnCheck) {
-                options.poolOnUnCheck = this._getTable().dataset.poolOnUnCheck;
+        if(!this.options.onUnCheck) {
+            if(this._getTable().dataset.onUnCheck) {
+                options.onUnCheck = this._getTable().dataset.onUnCheck;
             }
         }
 
@@ -152,9 +152,25 @@ class GUI_Table extends GUI_Module
                 options.poolFillControls = this._getTable().dataset.poolFillControls;
             }
         }
-        if(!this.options.poolFillControlsContainer) {
+        if(!this.options.poolFillControlsContainer) { // @deprecated
             if(this._getTable().dataset.poolFillControlsContainer) {
                 options.poolFillControlsContainer = this._getTable().dataset.poolFillControlsContainer;
+            }
+        }
+        if(!this.options.poolFillControlsSelector) {
+            if(this._getTable().dataset.poolFillControlsSelector) {
+                options.poolFillControlsSelector = this._getTable().dataset.poolFillControlsSelector;
+            }
+        }
+
+        if(!this.options.poolClearControls) {
+            if(this._getTable().dataset.poolFillControls) {
+                options.poolClearControls = this._getTable().dataset.poolClearControls;
+            }
+        }
+        if(!this.options.poolClearControlsSelector) {
+            if(this._getTable().dataset.poolClearControlsSelector) {
+                options.poolClearControlsSelector = this._getTable().dataset.poolClearControlsSelector;
             }
         }
 
@@ -298,7 +314,8 @@ class GUI_Table extends GUI_Module
             .on('refresh-options.bs.table', this.onRefreshOptions)
             .on('click-row.bs.table', this.onClickRow)
             .on('check.bs.table', this.onCheck)
-            .on('uncheck.bs.table', this.onUnCheck)
+            .on('uncheck.bs.table', this.onUncheck)
+            .on('uncheck-all.bs.table', this.onUncheckAll)
             ;
         }
         return this.$table;
@@ -383,8 +400,8 @@ class GUI_Table extends GUI_Module
     onClickRow = (evt, row, $element, field) => {
         // console.debug(this.getName() + '.onClickRow', row, $element, field);
 
-        if(this.getOption('poolOnClickRow')) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnClickRow'), [evt, row, $element, field], null)
+        if(this.getOption('onClickRow')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onClickRow'), [evt, row, $element, field], null)
         }
     }
 
@@ -399,13 +416,20 @@ class GUI_Table extends GUI_Module
      * @param row
      * @param $element
      */
-    onCheck = (evt, row, $element) => {
-        if(this.getOption('poolFillControls') && this.getOption('poolFillControlsContainer')) {
-            fillControls(this.getOption('poolFillControlsContainer'), row);
+    onCheck = (evt, row, $element) =>
+    {
+        // console.debug('onCheck');
+        if(this.getOption('poolFillControls')) {
+            if(this.getOption('poolFillControlsContainer')) {
+                fillControls(this.getOption('poolFillControlsContainer'), row, true);
+            }
+            if(this.getOption('poolFillControlsSelector')) {
+                fillControls(this.getOption('poolFillControlsSelector'), row, false);
+            }
         }
 
-        if(this.getOption('poolOnCheck')) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnCheck'), [evt, row, $element], null)
+        if(this.getOption('onCheck')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onCheck'), [evt, row, $element], null)
         }
     }
 
@@ -416,13 +440,29 @@ class GUI_Table extends GUI_Module
      * @param row
      * @param $element
      */
-    onUnCheck = (evt, row, $element) => {
-        if(this.getOption('poolClearControls') && this.getOption('poolClearControlsContainer')) {
-            clearControls(this.getOption('poolClearControlsContainer'));
+    onUncheck = (evt, row, $element) => {
+        // console.debug('onUncheck');
+        if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
+            clearControls(this.getOption('poolClearControlsSelector'));
         }
 
-        if(this.getOption('poolOnUnCheck')) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnUnCheck'), [evt, row, $element], null)
+        if(this.getOption('onUncheck')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onUncheck'), [evt, row, $element], null)
+        }
+    }
+
+    /**
+     * onUncheckAll event
+     *
+     * @param evt
+     * @param rowsAfter
+     * @param rowsBefore
+     */
+    onUncheckAll = (evt, rowsAfter, rowsBefore) =>
+    {
+        // console.debug('onUncheckAll');
+        if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
+            clearControls(this.getOption('poolClearControlsSelector'));
         }
     }
 
