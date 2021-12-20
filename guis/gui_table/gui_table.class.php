@@ -295,6 +295,14 @@ class GUI_Table extends GUI_Module
                     'type' => 'number',
                     'value' => null,
                 ],
+                'dbColumn' => [
+                    'attribute' => '',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                    'pool' => true,
+                ],
                 'detailFormatter' => [
                     'attribute' => 'data-detail-formatter',
                     'type' => 'function',
