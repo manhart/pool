@@ -28,6 +28,13 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'caption' => 'Buttons'
         ],
+        'checkOnInit' => [ // extension: mobile
+            'attribute' => 'data-check-on-init',
+            'type' => 'boolean',
+            'value' => true,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+        ],
         'classes' => [
             'attribute' => 'data-classes',
             'type' => 'string',
@@ -362,6 +369,20 @@ class GUI_Table extends GUI_Module
                     'type' => 'function',
                     'value' => null,
                 ],
+                'forceExport' => [
+                    'attribute' => 'data-force-export',
+                    'type' => 'boolean',
+                    'value' => false,
+                    'element' => 'input',
+                    'inputType' => 'checkbox'
+                ],
+                'forceHide' => [
+                    'attribute' => 'data-force-hide',
+                    'type' => 'boolean',
+                    'value' => false,
+                    'element' => 'input',
+                    'inputType' => 'checkbox'
+                ],
                 'formatter' => [
                     'attribute' => 'data-formatter',
                     'type' => 'function',
@@ -505,7 +526,28 @@ class GUI_Table extends GUI_Module
             'options' => ['get', 'post'],
             'caption' => 'Method',
         ],
-        'filterControl' => [
+        'minHeight' => [ // extension: mobile
+            'attribute' => 'data-min-height',
+            'type' => 'integer',
+            'value' => null,
+            'element' => 'input',
+            'inputType' => 'number'
+        ],
+        'minWidth' => [ // extension: mobile
+            'attribute' => 'data-min-width',
+            'type' => 'integer',
+            'value' => null,
+            'element' => 'input',
+            'inputType' => 'number'
+        ],
+        'mobileResponsive' => [ // extension: mobile
+            'attribute' => 'data-mobile-responsive',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+        ],
+        'filterControl' => [ // extension: filter-control
             'attribute' => 'data-filter-control',
             'type' => 'boolean',
             'value' => false,
