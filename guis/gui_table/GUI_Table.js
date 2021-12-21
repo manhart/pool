@@ -131,21 +131,21 @@ class GUI_Table extends GUI_Module
         }
 
         // check supported events
-        // if(!this.options.onCheck) {
-        //     if(this._getTable().dataset.onCheck) {
-        //         options.onCheck = this._getTable().dataset.onCheck;
-        //     }
-        // }
-        // if(!this.options.onClickRow) {
-        //     if(this._getTable().dataset.onClickRow) {
-        //         options.onClickRow = this._getTable().dataset.onClickRow;
-        //     }
-        // }
-        // if(!this.options.onUnCheck) {
-        //     if(this._getTable().dataset.onUnCheck) {
-        //         options.onUnCheck = this._getTable().dataset.onUnCheck;
-        //     }
-        // }
+        if(!this.options.onCheck) {
+            if(this._getTable().dataset.onCheck) {
+                options.onCheck = this._getTable().dataset.onCheck;
+            }
+        }
+        if(!this.options.onClickRow) {
+            if(this._getTable().dataset.onClickRow) {
+                options.onClickRow = this._getTable().dataset.onClickRow;
+            }
+        }
+        if(!this.options.onUnCheck) {
+            if(this._getTable().dataset.onUnCheck) {
+                options.onUnCheck = this._getTable().dataset.onUnCheck;
+            }
+        }
 
         if(!this.options.poolFillControls) {
             if(this._getTable().dataset.poolFillControls) {
