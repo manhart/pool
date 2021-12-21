@@ -39,15 +39,26 @@ if(!String.prototype.parseFunction) {
      *
      * @returns {Function}
      */
-    String.prototype.parseFunction = function() {
-        let funcReg = /function *\(([^()]*)\)[ \n\t]*{(.*)}/gmi;
-        let match = funcReg.exec(this.replace(/\n/g, ' '));
+    String.prototype.parseFunction = function(scope = window) {
+        if(this.indexOf('function') !== -1) {
+            let funcReg = /function *\(([^()]*)\)[ \n\t]*{(.*)}/gmi;
+            let match = funcReg.exec(this.replace(/\n/g, ' '));
 
-        if(match) {
-            return new Function(match[1].split(','), match[2]);
+            if(match) {
+                return new Function(match[1].split(','), match[2]);
+            }
+            return;
         }
 
-        return;
+        let parts = this.split('.');
+        let i;
+        for (i = 0; i < parts.length - 1; i++) {
+            scope = scope[parts[i]];
+            if (scope == undefined) return;
+        }
+
+        return scope[parts[parts.length - 1]];
+
     };
 }
 
