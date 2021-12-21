@@ -2409,3 +2409,21 @@ function htmlspecialchars(string, quoteStyle, charset, doubleEncode)
 //
 //     return _typeof(obj);
 // }
+
+/**
+ * get global function from string
+ *
+ * @param string
+ * @returns {function}
+ */
+function getFunctionFromString(string, scope = window)
+{
+    let parts = string.split('.');
+    let i;
+    for (i = 0; i < parts.length - 1; i++) {
+        scope = scope[parts[i]];
+        if (scope == undefined) return;
+    }
+
+    return scope[parts[parts.length - 1]];
+}
