@@ -682,6 +682,11 @@ class GUI_Table extends GUI_Module
             'element' => 'select',
             'options' => ['basic', 'all', 'selected']
         ],
+        'exportTypes' => [
+            'attribute' => 'data-export-types',
+            'type' => 'array', // todo module configurator
+            'value' => ['json', 'xml', 'csv', 'txt', 'sql', 'excel'],
+        ],
         'showFullscreen' => [
             'attribute' => 'data-show-fullscreen',
             'type' => 'boolean',
@@ -967,6 +972,10 @@ class GUI_Table extends GUI_Module
                 $value = bool2string($value);
             }
 
+            $type = $property['type'] ?? null;
+            if($type == 'array') {
+                $value = htmlspecialchars(json_encode($value, JSON_OBJECT_AS_ARRAY), ENT_COMPAT);
+            }
 //            echo $name.'='.$value.'<br>';
 
             $TableAttributeBlock = $this->Template->newBlock('tableAttribute');
