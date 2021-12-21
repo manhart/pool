@@ -536,7 +536,7 @@ class GUI_Table extends GUI_Module
         'minWidth' => [ // extension: mobile
             'attribute' => 'data-min-width',
             'type' => 'integer',
-            'value' => null,
+            'value' => 562,
             'element' => 'input',
             'inputType' => 'number'
         ],
