@@ -33,6 +33,24 @@ String.prototype.replaceholder = function(params)
         params.hasOwnProperty(placeholder) ? params[placeholder] : placeholderWithBraces);
 }
 
+if(!String.prototype.parseFunction) {
+    /**
+     * parse function
+     *
+     * @returns {Function}
+     */
+    String.prototype.parseFunction = function() {
+        let funcReg = /function *\(([^()]*)\)[ \n\t]*{(.*)}/gmi;
+        let match = funcReg.exec(this.replace(/\n/g, ' '));
+
+        if(match) {
+            return new Function(match[1].split(','), match[2]);
+        }
+
+        return;
+    };
+}
+
 sprintf = function()
 {
     //  discuss at: https://locutus.io/php/sprintf/
