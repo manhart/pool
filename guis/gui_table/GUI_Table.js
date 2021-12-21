@@ -130,20 +130,20 @@ class GUI_Table extends GUI_Module
             this.formats['number'] = poolOptions['number'];
         }
 
-        // check supported events
+        // check unsupported data-attributes for events and parse the strings to a function
         if(!this.options.onCheck) {
             if(this._getTable().dataset.onCheck) {
-                options.onCheck = this._getTable().dataset.onCheck;
+                options.onCheck = this._getTable().dataset.onCheck.parseFunction();
             }
         }
         if(!this.options.onClickRow) {
             if(this._getTable().dataset.onClickRow) {
-                options.onClickRow = this._getTable().dataset.onClickRow;
+                options.onClickRow = this._getTable().dataset.onClickRow.parseFunction();
             }
         }
-        if(!this.options.onUnCheck) {
-            if(this._getTable().dataset.onUnCheck) {
-                options.onUnCheck = this._getTable().dataset.onUnCheck;
+        if(!this.options.onUncheck) {
+            if(this._getTable().dataset.onUncheck) {
+                options.onUncheck = this._getTable().dataset.onUncheck.parseFunction();
             }
         }
 
