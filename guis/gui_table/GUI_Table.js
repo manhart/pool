@@ -428,9 +428,9 @@ class GUI_Table extends GUI_Module
             }
         }
 
-        if(this.getOption('onCheck')) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onCheck'), [evt, row, $element], null)
-        }
+        // if(this.getOption('onCheck')) {
+        //     jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onCheck'), [evt, row, $element], null)
+        // }
     }
 
     /**
@@ -446,9 +446,9 @@ class GUI_Table extends GUI_Module
             clearControls(this.getOption('poolClearControlsSelector'));
         }
 
-        if(this.getOption('onUncheck')) {
-            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onUncheck'), [evt, row, $element], null)
-        }
+        // if(this.getOption('onUncheck')) {
+        //     jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onUncheck'), [evt, row, $element], null)
+        // }
     }
 
     /**
