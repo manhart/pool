@@ -454,10 +454,8 @@ class GUI_Module extends Module
     /**
      * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.
      * Ruft die Funktion GUI_Module::searchGUIs() auf.
-     *
-     * @access public
      **/
-    function searchGUIsInPreloadedContent()
+    protected function searchGUIsInPreloadedContent()
     {
         $TemplateFiles = $this->Template->getFiles();
         for ($f = 0, $sizeOfTemplateFiles = sizeof($TemplateFiles); $f < $sizeOfTemplateFiles; $f++) {
@@ -621,9 +619,12 @@ class GUI_Module extends Module
     public function prepareContent()
     {
         // todo before_provision or before_parents, after_provision or after_parents ?
-        $this->provision(); // provision children
+//        $this->provision(); // 23.12.21, AM, moved to Weblication::prepareContent!!
 
-        if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) return true;
+//        echo 'prepare: '.$this->getName().'<br>';
+        if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) {
+            return true;
+        }
 
         $this->prepare();
         $this->prepareChilds();
@@ -632,8 +633,9 @@ class GUI_Module extends Module
     /**
      * provision something
      */
-    protected function provision()
+    public function provision()
     {
+        // echo $this->getName().'<br>';
         $max = count($this->Modules);
         for ($m = 0; $m < $max; $m++) {
             $this->Modules[$m]->provision();
