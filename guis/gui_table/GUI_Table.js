@@ -131,19 +131,19 @@ class GUI_Table extends GUI_Module
         }
 
         // check unsupported data-attributes for events and parse the strings to a function
-        if(!this.options.onCheck) {
-            if(this._getTable().dataset.onCheck) {
-                options.onCheck = this._getTable().dataset.onCheck.parseFunction();
+        if(!this.options.poolOnCheck) {
+            if(this._getTable().dataset.poolOnCheck) {
+                options.poolOnCheck = this._getTable().dataset.poolOnCheck;
             }
         }
-        if(!this.options.onClickRow) {
-            if(this._getTable().dataset.onClickRow) {
-                options.onClickRow = this._getTable().dataset.onClickRow.parseFunction();
+        if(!this.options.poolOnClickRow) {
+            if(this._getTable().dataset.poolOnClickRow) {
+                options.poolOnClickRow = this._getTable().dataset.poolOnClickRow;
             }
         }
-        if(!this.options.onUncheck) {
-            if(this._getTable().dataset.onUncheck) {
-                options.onUncheck = this._getTable().dataset.onUncheck.parseFunction();
+        if(!this.options.poolOnUncheck) {
+            if(this._getTable().dataset.poolOnUncheck) {
+                options.poolOnUncheck = this._getTable().dataset.poolOnUncheck;
             }
         }
 
@@ -397,13 +397,13 @@ class GUI_Table extends GUI_Module
     }
 
 
-    // onClickRow = (evt, row, $element, field) => {
+    onClickRow = (evt, row, $element, field) => {
         // console.debug(this.getName() + '.onClickRow', row, $element, field);
 
-        // if(this.getOption('onClickRow')) {
-        //     jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onClickRow'), [evt, row, $element, field], null)
-        // }
-    // }
+        if(this.getOption('poolOnClickRow')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnClickRow'), [row, $element, field], null)
+        }
+    }
 
 
     onRefreshOptions = (options) => {
@@ -428,9 +428,9 @@ class GUI_Table extends GUI_Module
             }
         }
 
-        // if(this.getOption('onCheck')) {
-        //     jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onCheck'), [evt, row, $element], null)
-        // }
+        if(this.getOption('poolOnCheck')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnCheck'), [row, $element], null)
+        }
     }
 
     /**
@@ -446,9 +446,9 @@ class GUI_Table extends GUI_Module
             clearControls(this.getOption('poolClearControlsSelector'));
         }
 
-        // if(this.getOption('onUncheck')) {
-        //     jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('onUncheck'), [evt, row, $element], null)
-        // }
+        if(this.getOption('poolOnUncheck')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnUncheck'), [row, $element], null)
+        }
     }
 
     /**
