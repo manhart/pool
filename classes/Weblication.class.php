@@ -1191,10 +1191,9 @@ class Weblication extends Component
     /**
      * Erzeugt eine Instanz vom eigenen Session Handler. Ansprechbar ueber Weblication::Session.
      *
-     * @access public
      * @param string $tabledefine DAO Tabellendefinition.
      **/
-    function createSessionHandler($tabledefine)
+    public function createSessionHandler($tabledefine)
     {
         $this->SessionHandler = new SessionHandler($this->Interfaces, $tabledefine);
         $this->Session = new ISession();
@@ -1203,7 +1202,6 @@ class Weblication extends Component
     /**
      * Komprimiert Html Ausgaben (Entfernt Kommentare, Leerzeichen, Zeilenvorschuebe)
      *
-     * @access public
      * @param string $html Content
      * @return string Komprimierter Content
      **/
@@ -1213,8 +1211,7 @@ class Weblication extends Component
         //$html = str_replace("\n\r", '', $html);
         $html = str_replace(array("\n", "\r"), '', $html);
         $space_str = '   ';
-        $html = str_replace($space_str, '', $html);
-        return $html;
+        return str_replace($space_str, '', $html);
     }
 
     /**
@@ -1284,7 +1281,7 @@ class Weblication extends Component
      *
      * @throws Exception
      */
-    public function run(string $className = 'GUI_CustomFrame')
+    public function run(string $className = 'GUI_CustomFrame'): Weblication
     {
         // TODO Get Parameter frame
         // TODO Subcode :: createSubCode()
@@ -1304,19 +1301,17 @@ class Weblication extends Component
             if ($this->hasFrame()) {
                 # Seitentitel (= Project)
                 $Header = $this->getFrame()->getHeaderdata();
-                if ($Header) {
-                    $title = $this->title;
-                    $Header->setTitle($title);
-                    $Header->setLanguage($this->language);
-                    if ($this->charset) $Header->setCharset($this->charset);
-                }
+
+                $Header->setTitle($this->title);
+                $Header->setLanguage($this->language);
+                if ($this->charset) $Header->setCharset($this->charset);
             }
         }
         return $this;
     }
 
     /**
-     * Einleitung zur Aufbereitung des Contents (der Inhalte) der Webseite.
+     * main logic of the front controller
      **/
     public function prepareContent()
     {
@@ -1386,10 +1381,8 @@ class Weblication extends Component
     /**
      * Schliesst alle Verbindungen und loescht die Interface Objekte.
      * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
-     *
-     * @access public
      **/
-    function destroy()
+    public function destroy()
     {
         if (defined('DATAINTERFACE_MYSQL')) {
             if (isset($this->Interfaces[DATAINTERFACE_MYSQL]) and is_a($this->Interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
