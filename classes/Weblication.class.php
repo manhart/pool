@@ -47,9 +47,8 @@ class Weblication extends Component
      * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
      *
      * @var GUI_Module $Main
-     * @access private
      */
-    var $Main = null;
+    private $Main = null;
 
     /**
      * @var GUI_CustomFrame|null
@@ -1322,6 +1321,7 @@ class Weblication extends Component
     public function prepareContent()
     {
         if ($this->Main instanceof GUI_Module) {
+            $this->Main->provision();
             $this->Main->prepareContent();
         }
         else {
