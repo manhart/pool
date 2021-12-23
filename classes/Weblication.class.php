@@ -1,6 +1,8 @@
 <?php declare(strict_types=1);
 /**
- *        -==|| Rapid Module Library (RML) ||==-
+ * POOL
+ *
+ * [P]HP [O]bject-[O]riented [L]ibrary
  *
  * Weblication.class.php
  *
@@ -11,22 +13,12 @@
  * @version
  *
  * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart.bayern>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
 
 use pool\classes\Translator;
 
-/**
- * Weblication
- *
- * Klasse fuer eine Webanwendung.
- *
- * @package rml
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: Weblication.class.php,v 1.16 2007/05/31 14:36:23 manhart Exp $
- * @access public
- **/
 class Weblication extends Component
 {
     /**
@@ -46,9 +38,9 @@ class Weblication extends Component
     /**
      * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
      *
-     * @var GUI_Module $Main
+     * @var GUI_Module|null $Main
      */
-    private $Main = null;
+    private ?GUI_Module $Main = null;
 
     /**
      * @var GUI_CustomFrame|null
@@ -73,13 +65,12 @@ class Weblication extends Component
      * @var User
      * @access private
      */
-    var $User = null;
+    // var $User = null;
 
     /**
      * Relativer Pfad zur Hauptbibliothek
      *
      * @var string
-     * @access private
      */
     private string $relativePathBaselib = '';
 
@@ -106,28 +97,27 @@ class Weblication extends Component
      * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
      *
      * @var array
-     * @access private
      */
-    var $Interfaces = array();
+    private array $Interfaces = [];
 
     /**
      * Zeichensatz
      *
      * @var string
      */
-    private $charset = '';
+    private string $charset = '';
 
     /**
      * Programm ID
      *
      * @var int
      */
-    var $progId = null;
+    private int $progId = 0;
 
     /**
      * @var string
      */
-    private $cssFolder = 'css';
+    private string $cssFolder = 'css';
 
     /**
      * @var Input App Settings
@@ -209,6 +199,8 @@ class Weblication extends Component
     /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
+     *
+     * @throws ReflectionException
      */
     private function __construct()
     {
@@ -254,7 +246,7 @@ class Weblication extends Component
      * @param string $skin Ordner fuer die Designvorlagen (Html Templates) und Bilder. (Standardwert: default)
      * @return Weblication
      */
-    function setSkin(string $skin = 'default'): Weblication
+    public function setSkin(string $skin = 'default'): Weblication
     {
         $this->skin = $skin;
         return $this;
@@ -266,7 +258,7 @@ class Weblication extends Component
      *
      * @return string Name des Designs (Skin)
      **/
-    function getSkin(): string
+    public function getSkin(): string
     {
         return $this->skin;
     }
@@ -280,7 +272,7 @@ class Weblication extends Component
      * @return Weblication
      * @throws Exception
      */
-    function setLanguage(string $lang = 'de', string $resourceDir = '', string $subdirTranslated = ''): Weblication
+    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subdirTranslated = ''): Weblication
     {
         $this->language = $lang;
 
@@ -322,7 +314,7 @@ class Weblication extends Component
      *
      * @return string
      */
-    function getCharset()
+    public function getCharset(): string
     {
         return $this->charset;
     }
@@ -333,7 +325,7 @@ class Weblication extends Component
      * @param string $charset
      * @return Weblication
      */
-    function setCharset(string $charset): Weblication
+    public function setCharset(string $charset): Weblication
     {
         header('content-type: text/html; charset=' . $charset);
         $this->charset = strtoupper($charset);
@@ -367,10 +359,12 @@ class Weblication extends Component
      * Setzt die Programm ID
      *
      * @param int $progId
+     * @return Weblication
      */
-    function setProgId($progId)
+    function setProgId(int $progId): Weblication
     {
         $this->progId = $progId;
+        return $this;
     }
 
     /**
@@ -378,7 +372,7 @@ class Weblication extends Component
      *
      * @return int|null
      */
-    function getProgId()
+    function getProgId(): ?int
     {
         return $this->progId;
     }
@@ -389,10 +383,10 @@ class Weblication extends Component
      * @param string $default Standard Schema
      * @deprecated
      */
-    function setSchema(string $default = 'index')
-    {
-        $this->schema = $default;
-    }
+//    function setSchema(string $default = 'index')
+//    {
+//        $this->schema = $default;
+//    }
 
     /**
      * set default schema/layout, if none is loaded by request
@@ -430,7 +424,7 @@ class Weblication extends Component
      * @param string $version application version
      * @return Weblication
      */
-    public function setVersion(string $version)
+    public function setVersion(string $version): Weblication
     {
         $this->version = $version;
         return $this;
@@ -439,7 +433,7 @@ class Weblication extends Component
     /**
      * @return string returns application version
      */
-    public function getVersion()
+    public function getVersion(): string
     {
         return $this->version;
     }
@@ -449,7 +443,7 @@ class Weblication extends Component
      *
      * @param GUI_Module $GUI_Module
      */
-    function setMain(GUI_Module $GUI_Module)
+    public function setMain(GUI_Module $GUI_Module)
     {
         $this->Main = $GUI_Module;
     }
@@ -459,7 +453,7 @@ class Weblication extends Component
      *
      * @return GUI_Module|null
      */
-    function getMain(): ?GUI_Module
+    public function getMain(): ?GUI_Module
     {
         return $this->Main;
     }
@@ -469,7 +463,7 @@ class Weblication extends Component
      *
      * @return GUI_CustomFrame|null
      **/
-    function getFrame(): ?GUI_CustomFrame
+    public function getFrame(): ?GUI_CustomFrame
     {
         if(!$this->Frame) {
             if($this->hasFrame()) {
@@ -484,7 +478,7 @@ class Weblication extends Component
      *
      * @return bool has GUI_CustomFrame
      */
-    function hasFrame(): bool
+    public function hasFrame(): bool
     {
         return ($this->Main instanceof GUI_CustomFrame);
     }
@@ -495,7 +489,7 @@ class Weblication extends Component
      * @param string $skinName
      * @return Weblication
      */
-    public function setCommonSkinFolder(string $skinName)
+    public function setCommonSkinFolder(string $skinName): Weblication
     {
         $this->commonSkinFolder = $skinName;
         return $this;
@@ -550,11 +544,10 @@ class Weblication extends Component
     /**
      * Liefert den Pfad zu den Templates (abh�ngig vom Skin-Ordner und der gew�hlten Sprache).
      *
-     * @access public
      * @param string $additionalDir Ordner werden an ermittelten Template Pfad geh�ngt
      * @return string Pfad
      */
-    function getTemplatePath($additionalDir = ''/*, $baselib=false*/)
+    public function getTemplatePath($additionalDir = ''/*, $baselib=false*/): string
     {
         $skin = addEndingSlash($this->skin);
         $language = addEndingSlash($this->language);
@@ -594,7 +587,7 @@ class Weblication extends Component
      * @param string $skin
      * @return bool
      */
-    function skin_exists($skin = '')
+    function skin_exists(string $skin = ''): bool
     {
         $skin = addEndingSlash(($skin ? $skin : $this->skin));
         $pathSkin = addEndingSlash(getcwd()) . addEndingSlash(PWD_TILL_SKINS) . $skin;
@@ -605,9 +598,10 @@ class Weblication extends Component
      * Liefert einen Pfad zum Skin-Verzeichnis zurück. Wenn der Parameter $additionalDir gef�llt wird, wird er an das Skin-Verzeichnis dran geh�ngt.
      *
      * @param string $additionalDir Unterverzeichnis vom Skin-Verzeichnis
+     * @param bool $absolute
      * @return string
      */
-    function getSkinPath($additionalDir = '', $absolute = true)
+    function getSkinPath(string $additionalDir = '', bool $absolute = true): string
     {
         $path = '';
         $skin = addEndingSlash($this->skin);
@@ -672,7 +666,7 @@ class Weblication extends Component
      * @param string $filename Image Dateiname
      * @return string Bei Erfolg Pfad und Dateiname des gefunden Templates. Im Fehlerfall ''.
      **/
-    function findImage($filename)
+    function findImage(string $filename): string
     {
         $skin = addEndingSlash($this->skin);
         $language = addEndingSlash($this->language);
@@ -778,7 +772,7 @@ class Weblication extends Component
      * @param boolean $baselib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden Templates. Im Fehlerfall ''.
      **/
-    function findTemplate(string $filename, string $classfolder = '', bool $baselib = false)
+    public function findTemplate(string $filename, string $classfolder = '', bool $baselib = false): string
     {
         $skin = $this->skin;
         $language = $this->language;
@@ -886,7 +880,7 @@ class Weblication extends Component
      * @param boolean $baselib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
-    function findStyleSheet(string $filename, string $classfolder = '', bool $baselib = false)
+    public function findStyleSheet(string $filename, string $classfolder = '', bool $baselib = false): string
     {
         $skin = addEndingSlash($this->skin);
         $language = addEndingSlash($this->language);
@@ -1046,7 +1040,7 @@ class Weblication extends Component
     /**
      * @param string $path
      */
-    function setRelativePathBaselib(string $path)
+    public function setRelativePathBaselib(string $path)
     {
         $this->relativePathBaselib = $path;
     }
@@ -1054,11 +1048,10 @@ class Weblication extends Component
     /**
      * Relativer Pfad zum Rootverzeichnis der Baselib
      *
-     * @access public
      * @param string $subdir
      * @return string path from project to library pool
      */
-    function getRelativePathBaselib(string $subdir = '')
+    public function getRelativePathBaselib(string $subdir = '')
     {
         return $this->relativePathBaselib . '/' . $subdir;
     }
@@ -1071,7 +1064,7 @@ class Weblication extends Component
      * @param string $name_of_auth_array Name des Authentifizierungsarrays
      * @param boolean $persistent
      * @return object MySQL_db
-     **@deprecated
+     * @deprecated
      * @access public
      */
     function createMySQL($host, $dbname, $name_of_auth_array = 'mysql_auth', $persistent = false)
@@ -1093,7 +1086,7 @@ class Weblication extends Component
      * @param string $host Hostname des Java Servers
      * @param string $class_path Java Klassenpfad
      * @access public
-     **@deprecated
+     * @deprecated
      */
     function createCISAM($host, $class_path)
     {
@@ -1110,11 +1103,10 @@ class Weblication extends Component
      * DataInterface in die Anwendung einfuegen. Somit ist es ueberall bekannt und kann
      * fuer die DAO Geschichte verwendet werden.
      *
-     * @access public
      * @param DataInterface $DataInterface Einzufuegendes DataInterface
      * @return DataInterface Eingefuegtes DataInterface
      **/
-    function addDataInterface($DataInterface): DataInterface
+    public function addDataInterface(DataInterface $DataInterface): DataInterface
     {
         $this->Interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
         return $DataInterface;
@@ -1126,7 +1118,7 @@ class Weblication extends Component
      * @param string $interface_name
      * @return DataInterface Interface Objekt
      **/
-    function getInterface(string $interface_name): DataInterface
+    public function getInterface(string $interface_name): DataInterface
     {
         return $this->Interfaces[$interface_name];
     }
@@ -1166,7 +1158,8 @@ class Weblication extends Component
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
      * @return ISession
      **/
-    public function startPHPSession($session_name = 'PHPSESSID', $use_trans_sid = 0, $use_cookies = 1, $use_only_cookies = 0, $autoClose = true): ?ISession
+    public function startPHPSession(string $session_name = 'PHPSESSID', int $use_trans_sid = 0, int $use_cookies = 1,
+                                    int $use_only_cookies = 0, bool $autoClose = true): ?ISession
     {
         $sessionConfig = array(
             'name' => $session_name,
@@ -1199,27 +1192,12 @@ class Weblication extends Component
     }
 
     /**
-     * Komprimiert Html Ausgaben (Entfernt Kommentare, Leerzeichen, Zeilenvorschuebe)
-     *
-     * @param string $html Content
-     * @return string Komprimierter Content
-     **/
-    private function minify($html)
-    {
-        //$html = ereg_replace("<!--.*-->", "", $html);
-        //$html = str_replace("\n\r", '', $html);
-        $html = str_replace(array("\n", "\r"), '', $html);
-        $space_str = '   ';
-        return str_replace($space_str, '', $html);
-    }
-
-    /**
      * Seitentitel setzen
      *
      * @param string $title
      * @return Weblication
      */
-    public function setTitle(string $title)
+    public function setTitle(string $title): Weblication
     {
         $this->title = $title;
         return $this;
@@ -1312,7 +1290,7 @@ class Weblication extends Component
     /**
      * main logic of the front controller
      **/
-    public function prepareContent()
+    public function prepareContent(): void
     {
         if ($this->Main instanceof GUI_Module) {
             $this->Main->provision();
@@ -1324,45 +1302,15 @@ class Weblication extends Component
     }
 
     /**
-     * Passt die Verzeichnisse der Bilder auf den Skin und/oder die Sprache an.
-     *
-     * @deprecated don't use it anymore
-     * @param string $content Inhalt eines Templates
-     * @return string
-     */
-    function adjustImageDir(string $content): string
-    {
-        $folderImages = 'skins/' . $this->skin;
-        if (is_dir($folderImages . '/' . $this->language)) {
-            $folderImages .= '/' . $this->language;
-        }
-        $folderImages .= '/images/';
-
-        $content = str_replace($folderImages, 'images/', $content);
-        $content = str_replace('images/', $folderImages, $content);
-
-        return $content;
-    }
-
-    /**
      * return finished HTML content
      *
-     * @access public
      * @param boolean $print True gibt den Inhalt sofort auf den Bildschirm aus. False liefert den Inhalt zurueck
-     * @param bool $minify simple minifier
      * @return string website content
      **/
-    public function finalizeContent(bool $print = true, bool $minify = false): string
+    public function finalizeContent(bool $print = true): string
     {
         if ($this->Main instanceof GUI_Module) {
             $content = $this->Main->finalizeContent();
-
-            // AM, 04.05.2021, that's not the right way
-            // $content = $this->adjustImageDir($content);
-
-            if ($minify) {
-                $content = $this->minify($content);
-            }
 
             if ($print) {
                 print $content;
