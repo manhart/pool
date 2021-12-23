@@ -11,6 +11,11 @@ class GUI_Table extends GUI_Module
 {
     use Configurable;
 
+    /**
+     * @var array caches dbColumns
+     */
+    private $dbColumns = [];
+
     private array $inspectorProperties = [
         'url' => [
             'attribute' => 'data-url',
@@ -261,19 +266,22 @@ class GUI_Table extends GUI_Module
                 'align' => [
                     'attribute' => 'data-align',
                     'type' => 'string',
-                    'value' => null,
-                    'element' => 'select', //
-                    'options' => ['', 'left', 'right', 'center']
+                    'value' => null, // default value, see bootstrap-table documentation
+                    'element' => 'select', // html element for module configurator
+                    'options' => ['', 'left', 'right', 'center'], // html element options for module configurator
+                    'clientside' => true, // variable is provided on the client side (js/html)
                 ],
                 'cardVisible' => [
                     'attribute' => 'data-card-visible',
                     'type' => 'boolean',
                     'value' => true,
+                    'clientside' => true,
                 ],
                 'cellStyle' => [
                     'attribute' => 'data-cell-style',
                     'type' => 'function',
-                    'value' => null
+                    'value' => null,
+                    'clientside' => true,
                 ],
                 'checkbox' => [
                     'attribute' => 'data-checkbox',
@@ -281,26 +289,31 @@ class GUI_Table extends GUI_Module
                     'value' => false,
                     'element' => 'input',
                     'inputType' => 'checkbox',
+                    'clientside' => true,
                 ],
                 'checkboxEnabled' => [
                     'attribute' => 'data-checkbox-enabled',
                     'type' => 'boolean',
                     'value' => true,
+                    'clientside' => true,
                 ],
                 'class' => [
                     'attribute' => 'data-class',
                     'type' => 'string',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'clickToSelect' => [
                     'attribute' => 'data-click-to-select',
                     'type' => 'boolean',
                     'value' => true,
+                    'clientside' => true,
                 ],
                 'colspan' => [
                     'attribute' => 'data-colspan',
                     'type' => 'number',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'dbColumn' => [
                     'attribute' => '',
@@ -309,11 +322,13 @@ class GUI_Table extends GUI_Module
                     'element' => 'input',
                     'inputType' => 'text',
                     'pool' => true,
+                    'clientside' => false
                 ],
                 'detailFormatter' => [
                     'attribute' => 'data-detail-formatter',
                     'type' => 'function',
                     'value' => 'function(index, row, $element) { return \'\' }',
+                    'clientside' => true,
                 ],
                 'escape' => [
                     'attribute' => 'data-escape',
@@ -321,17 +336,20 @@ class GUI_Table extends GUI_Module
                     'value' => false,
                     'element' => 'input', // tableEditor
                     'inputType' => 'checkbox', // tableEditor
+                    'clientside' => true,
                 ],
                 'events' => [
                     'attribute' => 'data-events',
                     'type' => 'function',
                     'value' => null,
-                    'element' => 'textarea'
+                    'element' => 'textarea',
+                    'clientside' => true,
                 ],
                 'falign' => [
                     'attribute' => 'data-falign',
                     'type' => 'string',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'field' => [
                     'attribute' => 'data-field',
@@ -341,14 +359,16 @@ class GUI_Table extends GUI_Module
                     'inputType' => 'text', // tableEditor
                     'unique' => true, // tableEditor
                     'required' => true, // tableEditor
-                    'showColumn' => 0 // tableEditor order
+                    'showColumn' => 0, // tableEditor order
+                    'clientside' => true,
                 ],
                 'filterControl' => [
                     'attribute' => 'data-filter-control',
                     'type' => 'string',
                     'value' => null,
                     'element' => 'select',
-                    'options' => [null, 'input', 'select', 'datepicker']
+                    'options' => [null, 'input', 'select', 'datepicker'],
+                    'clientside' => true,
                 ],
                 'filterControlPlaceholder' => [
                     'attribute' => 'data-filter-control-placeholder',
@@ -356,6 +376,7 @@ class GUI_Table extends GUI_Module
                     'value' => null,
                     'element' => 'input',
                     'inputType' => 'text',
+                    'clientside' => true,
                 ],
                 'filterDatepickerOptions' => [
                     'attribute' => 'data-filter-datepicker-options',
@@ -363,43 +384,50 @@ class GUI_Table extends GUI_Module
                     'value' => null, // overridden in @see GUI_Table::init
                     'element' => 'input',
                     'inputType' => 'text',
+                    'clientside' => true,
                 ],
                 'footerFormatter' => [
                     'attribute' => 'data-footer-formatter',
                     'type' => 'function',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'forceExport' => [
                     'attribute' => 'data-force-export',
                     'type' => 'boolean',
                     'value' => false,
                     'element' => 'input',
-                    'inputType' => 'checkbox'
+                    'inputType' => 'checkbox',
+                    'clientside' => true,
                 ],
                 'forceHide' => [
                     'attribute' => 'data-force-hide',
                     'type' => 'boolean',
                     'value' => false,
                     'element' => 'input',
-                    'inputType' => 'checkbox'
+                    'inputType' => 'checkbox',
+                    'clientside' => true,
                 ],
                 'formatter' => [
                     'attribute' => 'data-formatter',
                     'type' => 'function',
                     'value' => null,
                     'element' => 'textarea',
+                    'clientside' => true,
                 ],
                 'halign' => [
                     'attribute' => 'data-halign',
                     'type' => 'string',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'order' => [
                     'attribute' => 'data-order',
                     'type' => 'string',
                     'value' => 'asc',
                     'element' => 'select',
-                    'options' => ['asc', 'desc']
+                    'options' => ['asc', 'desc'],
+                    'clientside' => true,
                 ],
                 'poolFormat' => [
                     'attribute' => 'data-pool-format',
@@ -408,6 +436,7 @@ class GUI_Table extends GUI_Module
                     'inputType' => 'text',
                     'value' => '',
                     'pool' => true,
+                    'clientside' => true,
                 ],
                 'poolType' => [
                     'attribute' => 'data-pool-type',
@@ -416,16 +445,19 @@ class GUI_Table extends GUI_Module
                     'value' => '',
                     'options' => ['', 'date', 'time', 'date.time', 'number'],
                     'pool' => true,
+                    'clientside' => true,
                 ],
                 'radio' => [
                     'attribute' => 'data-radio',
                     'type' => 'boolean',
-                    'value' => false
+                    'value' => false,
+                    'clientside' => true,
                 ],
                 'rowspan' => [
                     'attribute' => 'data-rowspan',
                     'type' => 'number',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'searchable' => [
                     'attribute' => 'data-searchable',
@@ -433,24 +465,28 @@ class GUI_Table extends GUI_Module
                     'value' => true,
                     'element' => 'input', // tableEditor
                     'inputType' => 'checkbox',
-                    'showColumn' => 3
+                    'showColumn' => 3,
+                    'clientside' => true,
                 ],
                 'searchFormatter' => [
                     'attribute' => 'data-search-formatter',
                     'type' => 'boolean',
                     'value' => true,
+                    'clientside' => true,
                 ],
                 'searchHighlightFormatter' => [
                     'attribute' => 'data-search-highlight-formatter',
                     'type' => 'boolean', // could also be |function
                     'value' => true,
                     'element' => 'input',
-                    'inputType' => 'checkbox'
+                    'inputType' => 'checkbox',
+                    'clientside' => true,
                 ],
                 'showSelectTitle' => [
                     'attribute' => 'data-show-select-title',
                     'type' => 'boolean',
-                    'value' => false
+                    'value' => false,
+                    'clientside' => true,
                 ],
                 'sortable' => [
                     'attribute' => 'data-sortable',
@@ -458,21 +494,25 @@ class GUI_Table extends GUI_Module
                     'value' => false,
                     'element' => 'input', // tableEditor
                     'inputType' => 'checkbox',
+                    'clientside' => true,
                 ],
                 'sorter' => [
                     'attribute' => 'data-sorter',
                     'type' => 'function',
-                    'value' => null
+                    'value' => null,
+                    'clientside' => true,
                 ],
                 'sortName' => [
                     'attribute' => 'data-sort-name',
                     'type' => 'string',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'switchable' => [
                     'attribute' => 'data-switchable',
                     'type' => 'boolean',
                     'value' => true,
+                    'clientside' => true,
                 ],
                 'title' => [
                     'attribute' => 'data-title',
@@ -482,16 +522,19 @@ class GUI_Table extends GUI_Module
                     'inputType' => 'text', // tableEditor
                     'showColumn' => 1, // tableEditor
                     'required' => true, // tableEditor mandatory field
+                    'clientside' => true,
                 ],
                 'titleTooltip' => [
                     'attribute' => 'data-title-tooltip',
                     'type' => 'string',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'valign' => [
                     'attribute' => 'data-valign',
                     'type' => 'string',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'visible' => [
                     'attribute' => 'data-visible',
@@ -499,17 +542,20 @@ class GUI_Table extends GUI_Module
                     'value' => true,
                     'element' => 'input', // tableEditor
                     'inputType' => 'checkbox', // tableEditor
-                    'showColumn' => 2 // tableEditor
+                    'showColumn' => 2, // tableEditor
+                    'clientside' => true,
                 ],
                 'width' => [
                     'attribute' => 'data-with',
                     'type' => 'number',
                     'value' => null,
+                    'clientside' => true,
                 ],
                 'widthUnit' => [
                     'attribute' => 'data-with-unit',
                     'type' => 'string',
-                    'value' => 'px'
+                    'value' => 'px',
+                    'clientside' => true,
                 ]
             ]
         ],
@@ -717,6 +763,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'caption' => 'Show Filter Control Switch'
         ],
+        'showSearchClearButton' => [
+            'attribute' => 'data-show-search-clear-button',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Show Search Clear Button'
+        ],
         'exportDataType' => [
             'attribute' => 'data-export-data-type',
             'type' => 'string',
@@ -854,29 +908,29 @@ class GUI_Table extends GUI_Module
         $this->loadJavaScriptGUI();
     }
 
-    public function setOptions(array $options): GUI_Table
-    {
-        foreach($options as $key => $value) {
-            if($key == 'columns' and is_array($value)) {
-                $this->setColumns($value);
-                continue;
-            }
-
-            if($value === 'true' or $value === 'false') {
-                $value = string2bool($value);
-            }
-            if(isset($this->getInspectorProperties()[$key])) {
-                if($this->getInspectorProperties()[$key]['value'] != $value) {
-                    $this->options[$key] = $value;
-                }
-            }
-            else {
-                $this->poolOptions[$key] = $value;
-            }
-        }
-
-        return $this;
-    }
+//    public function setOptions(array $options): GUI_Table
+//    {
+//        foreach($options as $key => $value) {
+//            if($key == 'columns' and is_array($value)) {
+//                $this->setColumns($value);
+//                continue;
+//            }
+//
+//            if($value === 'true' or $value === 'false') {
+//                $value = string2bool($value);
+//            }
+//            if(isset($this->getInspectorProperties()[$key])) {
+//                if($this->getInspectorProperties()[$key]['value'] != $value) {
+//                    $this->options[$key] = $value;
+//                }
+//            }
+//            else {
+//                $this->poolOptions[$key] = $value;
+//            }
+//        }
+//
+//        return $this;
+//    }
 
 //    public function getInspectorProperties(): array
 //    {
@@ -943,6 +997,37 @@ class GUI_Table extends GUI_Module
         return $this;
     }
 
+    /**
+     * @return array all columns
+     */
+    public function getColumns()
+    {
+        return $this->Input->getVar('columns');
+    }
+
+    /**
+     * @param bool $alias
+     * @return array only columns for database and sql statement passing
+     */
+    public function getDBColumns(bool $alias = true): array
+    {
+        // todo if columns change / new configuration, reread with loop
+        if($this->dbColumns) {
+            return $this->dbColumns;
+        }
+
+        $this->dbColumns = [];
+        $columns = $this->Input->getVar('columns');
+        foreach($columns as $column) {
+            if(!isset($column['dbColumn'])) continue;
+            $dbColumn = $column['dbColumn'];
+            if($alias) $dbColumn = '('.$dbColumn.')`'.$column['field'].'`';
+            $this->dbColumns[] = $dbColumn;
+            // $type = $this->getColumnsProperties()[$column]['dbColumn'];
+        }
+        return $this->dbColumns;
+    }
+
 //    public function loadConfig(string $json): bool
 //    {
 //        $result = false;
@@ -971,6 +1056,7 @@ class GUI_Table extends GUI_Module
 //    public function provision()
 //    {
 //        parent::provision();
+//    }
 //        $data = $this->Input->getData();
 //        unset(
 //            $data['moduleName'],
@@ -1034,8 +1120,14 @@ class GUI_Table extends GUI_Module
                 $ColumnBlock = $this->Template->newBlock('js_column');
                 foreach ($column as $optName => $attrValue) {
                     $type = '';
+                    $clientside = false;
                     if (isset($this->getColumnsProperties()[$optName])) {
                         $type = $this->getColumnsProperties()[$optName]['type'];
+                        $clientside = $this->getColumnsProperties()[$optName]['clientside'] ?? false;
+                    }
+
+                    if(!$clientside) {
+                        continue;
                     }
 
                     // translate title
@@ -1180,9 +1272,8 @@ class GUI_Table extends GUI_Module
         return $columns;
     }
 
-
     /**
-     * Creates data format for the bootstrap table
+     * Creates data format for the bootstrap table (clientside transfer format)
      */
     static function getRowSetAsArray(Resultset $ResultSet, int $total): array
     {
