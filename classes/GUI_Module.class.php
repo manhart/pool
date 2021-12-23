@@ -620,7 +620,8 @@ class GUI_Module extends Module
      **/
     public function prepareContent()
     {
-        $this->provision();
+        // todo before_provision or before_parents, after_provision or after_parents ?
+        $this->provision(); // provision children
 
         if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) return true;
 
@@ -631,7 +632,13 @@ class GUI_Module extends Module
     /**
      * provision something
      */
-    protected function provision() {}
+    protected function provision()
+    {
+        $max = count($this->Modules);
+        for ($m = 0; $m < $max; $m++) {
+            $this->Modules[$m]->provision();
+        }
+    }
 
     /**
      * run/execute the main logic and fill templates.
