@@ -608,24 +608,24 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'pool' => true,
         ],
-        'onCheck' => [
-            'attribute' => 'data-on-check',
+        'poolOnCheck' => [
+            'attribute' => 'data-pool-on-check',
             'type' => 'function',
             'value' => null,
             'caption' => 'onCheck',
             'poolEvent' => true,
             'element' => 'textarea'
         ],
-        'onClickRow' => [
-            'attribute' => 'data-on-click-row',
+        'poolOnClickRow' => [
+            'attribute' => 'data-pool-on-click-row',
             'type' => 'function',
             'value' => null,
             'caption' => 'onClickRow',
             'poolEvent' => true,
             'element' => 'textarea'
         ],
-        'onUncheck' => [
-            'attribute' => 'data-on-uncheck',
+        'poolOnUncheck' => [
+            'attribute' => 'data-pool-on-uncheck',
             'type' => 'function',
             'value' => null,
             'caption' => 'onUncheck',
