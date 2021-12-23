@@ -19,23 +19,25 @@
 
 class GUI_Schema extends GUI_Module
 {
-    //@var array Hier sind alle uebergebenen Schemas enthalten.
-    //@access private
-    var $Schemes = Array();
+    /**
+     * @var array list of schemes
+     */
+    private array $Schemes = [];
 
-    //@var array Behaelt Indexierung von $this -> Schemes bei. Das Array enthaelt jedoch die Template Handles fuer das jeweilige Scheme (um es eindeutig zuordnen zu koennen)
-    //@access private
-    var $SchemeHandles = Array();
+    /**
+     * @var array list of indexed schemes
+     */
+    private array $SchemeHandles = [];
 
     /**
      * Konstruktor
      *
-     * @access public
-     * @param object $Owner Besitzer
+     * @param Component|null $Owner Besitzer
      * @param bool $autoLoadFiles
      * @param array $params
+     * @throws ReflectionException
      */
-    function __construct(& $Owner, $autoLoadFiles = false, array $params = [])
+    function __construct(Component $Owner, bool $autoLoadFiles = false, array $params = [])
     {
         parent::__construct($Owner, false, $params);
     }
@@ -44,9 +46,8 @@ class GUI_Schema extends GUI_Module
      * Initialisierung der Standard Werte und Superglobals.
      *
      * @param int $superglobals
-     * @access public
      **/
-    function init($superglobals=I_REQUEST)
+    public function init($superglobals=I_REQUEST)
     {
         $this->Defaults->addVar('schema', '');
         parent::init($superglobals);
@@ -65,7 +66,7 @@ class GUI_Schema extends GUI_Module
      *
      * @param array $schemes
      **/
-    function loadSchemes(array $schemes = [])
+    private function loadSchemes(array $schemes = [])
     {
         $directory = $this->getFixedParam('directory');
         if($directory != null) {
@@ -122,10 +123,9 @@ class GUI_Schema extends GUI_Module
      * Raise an Error 404: Schema not found.
      * Loads schema404.html from templates!
      *
-     * @access private
      * @param string $schema None existing Schema
      **/
-    function Schema404($schema = '')
+    private function Schema404($schema = '')
     {
         $schema404 = 'schema404.html';
         $this->raiseError(__FILE__, __LINE__, sprintf('Schema \'%s\' doesn\'t exist', $schema . '.html'));
@@ -140,10 +140,8 @@ class GUI_Schema extends GUI_Module
     /**
      * Liest die _GET Variable "schema" ein, laedt Schemas und sucht nach den darin befindlichen GUIs.
      * Wurde kein Schema angegeben, wird versucht von der Weblication ein Default Schema reinzuladen.
-     *
-     * @access public
      **/
-    function prepare()
+    public function provision()
     {
         $schemes = array();
 
@@ -161,25 +159,24 @@ class GUI_Schema extends GUI_Module
 
         $this->loadSchemes($schemes);
         $this->searchGUIsInPreloadedContent();
+
+        parent::provision();
     }
 
     /**
-     * GUI_Schema::finalize()
-     *
      * Analysiert jedes Html Template. Dabei werden Bloecke und Variablen zugewiesen.
      * Alle fertigen Html Templates werden zu einem Inhalt zusammen gefuehrt.
      * Der gesamte Inhalt wird zurueck gegeben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    public function finalize(): string
     {
         $content = '';
         $numSchemes = sizeof($this->SchemeHandles);
         for ($i=0; $i<$numSchemes; $i++) {
-            $this -> Template -> parse($this -> SchemeHandles[$i]);
-            $content .= $this -> Template -> getContent($this -> SchemeHandles[$i]);
+            $this->Template->parse($this->SchemeHandles[$i]);
+            $content .= $this->Template->getContent($this->SchemeHandles[$i]);
         }
         return $content;
     }
