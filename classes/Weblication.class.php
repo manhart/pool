@@ -1159,7 +1159,6 @@ class Weblication extends Component
      * Starts a PHP Session via session_start()!
      * We use the standard php sessions.
      *
-     * @access public|static
      * @param string $session_name Name der Session (Default: sid)
      * @param integer $use_trans_sid Transparente Session ID (Default: 0)
      * @param integer $use_cookies Verwende Cookies (Default: 1)
@@ -1167,7 +1166,7 @@ class Weblication extends Component
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
      * @return ISession
      **/
-    public function startPHPSession($session_name = 'PHPSESSID', $use_trans_sid = 0, $use_cookies = 1, $use_only_cookies = 0, $autoClose = true)
+    public function startPHPSession($session_name = 'PHPSESSID', $use_trans_sid = 0, $use_cookies = 1, $use_only_cookies = 0, $autoClose = true): ?ISession
     {
         $sessionConfig = array(
             'name' => $session_name,
