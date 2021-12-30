@@ -411,8 +411,10 @@
         if(count($this->scriptCode) > 0) {
             foreach($this->scriptCode as $name => $code) {
                 $ScriptBlock = $this->Template->newBlock('SCRIPT_CODE');
-                $ScriptBlock->setVar('NAME', $name);
-                $ScriptBlock->setVar('CODE', $code);
+                if($ScriptBlock) {
+                    $ScriptBlock->setVar('NAME', $name);
+                    $ScriptBlock->setVar('CODE', $code);
+                }
             }
         }
 
