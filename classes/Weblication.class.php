@@ -125,6 +125,11 @@ class Weblication extends Component
     protected Input $Settings;
 
     /**
+     * @var bool|null xdebug enabled
+     */
+    private ?bool $xdebug = null;
+
+    /**
      * @var string
      */
     private string $commonSkinFolder = 'common';
@@ -1306,11 +1311,23 @@ class Weblication extends Component
      *
      * @param boolean $print True gibt den Inhalt sofort auf den Bildschirm aus. False liefert den Inhalt zurueck
      * @return string website content
-     **/
+     *
+     * @throws Exception
+     */
     public function finalizeContent(bool $print = true): string
     {
         if ($this->Main instanceof GUI_Module) {
             $content = $this->Main->finalizeContent();
+
+            // Odd, there were outputs written?
+            if(headers_sent()) {
+                $error = error_get_last();
+                // error was triggered (old method)
+                if($this->isXdebugEnabled()) {
+                    // we suppress the output of the application @todo redirect to an error page?
+                    if($error) return '';
+                }
+            }
 
             if ($print) {
                 print $content;
@@ -1320,7 +1337,7 @@ class Weblication extends Component
             }
         }
         else {
-            $this->raiseError(__FILE__, __LINE__, 'Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
+            throw new Exception('Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
         }
         return '';
     }
@@ -1330,7 +1347,7 @@ class Weblication extends Component
      */
     public function isXdebugEnabled(): bool
     {
-        if(is_null($this->xdebug)) {
+        if($this->xdebug === null) {
             $this->xdebug = extension_loaded('xdebug');
         }
         return $this->xdebug;
