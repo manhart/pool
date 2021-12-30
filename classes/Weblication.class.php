@@ -768,11 +768,11 @@ class Weblication extends Component
      * wird abschliessend noch in der baselib gesucht.
      *
      * @param string $filename Template Dateiname
-     * @param string $classfolder Unterordner (guis/*) zur Klasse
+     * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param boolean $baselib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden Templates. Im Fehlerfall ''.
      **/
-    public function findTemplate(string $filename, string $classfolder = '', bool $baselib = false): string
+    public function findTemplate(string $filename, string $classFolder = '', bool $baselib = false): string
     {
         $skin = $this->skin;
         $language = $this->language;
@@ -816,8 +816,8 @@ class Weblication extends Component
 
         # Ordner Projekt guis
         $gui_directories = [];
-        if($classfolder) {
-            $folder_guis = PWD_TILL_GUIS . '/' . $classfolder;
+        if($classFolder) {
+            $folder_guis = PWD_TILL_GUIS . '/' . $classFolder;
             $gui_directories[] = $folder_guis;
 
             # Ordner Commons guis
@@ -849,7 +849,7 @@ class Weblication extends Component
 
         # Ordner baselib
         if ($baselib) {
-            $folder = __DIR__.'/../'.PWD_TILL_GUIS.'/' . addEndingSlash($classfolder);
+            $folder = __DIR__.'/../'.PWD_TILL_GUIS.'/' . addEndingSlash($classFolder);
             if (is_dir($folder)) {
                 if (file_exists($folder . $filename)) {
                     return $folder . $filename;
@@ -858,13 +858,13 @@ class Weblication extends Component
         }
 
         // Lowercase Workaround @deprecated
-        if (preg_match('/[A-Z]/', $filename . $classfolder)) {
+        if (preg_match('/[A-Z]/', $filename . $classFolder)) {
             // try lower case
             // todo log buggy code
             if(defined('IS_DEVELOP') and IS_DEVELOP) {
-                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classfolder);
+                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find '.$filename.' in '.$classFolder);
             }
-            return $this->findTemplate(strtolower($filename), strtolower($classfolder), $baselib);
+            return $this->findTemplate(strtolower($filename), strtolower($classFolder), $baselib);
         }
 
         $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
@@ -1323,6 +1323,17 @@ class Weblication extends Component
             $this->raiseError(__FILE__, __LINE__, 'Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
         }
         return '';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isXdebugEnabled(): bool
+    {
+        if(is_null($this->xdebug)) {
+            $this->xdebug = extension_loaded('xdebug');
+        }
+        return $this->xdebug;
     }
 
     /**
