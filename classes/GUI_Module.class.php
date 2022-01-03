@@ -590,27 +590,64 @@ class GUI_Module extends Module
      *
      * @param bool $global makes Module global in window scope
      */
-    public function loadJavaScriptGUI(bool $global = true): bool
+    public function loadJavaScriptFiles(bool $global = true): bool
     {
         if(!$this->Weblication->hasFrame()) {
             return false;
         }
 
-        $className = $this->getClassName();
+        $className = '';
+        $myself_already_loaded = false;
+        $something_loaded = false;
         $Header = $this->Weblication->getFrame()->getHeaderdata();
-        $jsFile = $this->Weblication->findJavaScript($className.'.js', strtolower($className), $this->isBasicLibrary(), false);
-        if(!$jsFile) {
-            return false;
+        foreach($this->getJavaScriptFiles() as $jsFile) {
+            $jsFile = $this->Weblication->findJavaScript($jsFile[0], $className = $jsFile[1], $jsFile[2] ?? false, false);
+            $myself_already_loaded = ($className == $this->getClassName());
+            if($jsFile) {
+                $Header->addJavaScript($jsFile);
+                $something_loaded = true;
+            }
         }
-        $Header->addJavaScript($jsFile);
 
+        if(!$myself_already_loaded) { // look for js file
+            $jsFile = $this->Weblication->findJavaScript($this->getClassName().'.js', $this->getClassName(), $this->isBasicLibrary(), false);
+            if(!$jsFile) {
+                return false;
+            }
+            $className = $this->getClassName();
+            $Header->addJavaScript($jsFile);
+            $something_loaded = true;
+        }
+
+        if($something_loaded) {
+            $this->js_createGUIModule($className, $global);
+        }
+        return true;
+    }
+
+    /**
+     * @param string $className
+     * @param bool $global
+     * @return void
+     */
+    protected function js_createGUIModule(string $className = '', bool $global = true): void
+    {
+        if(!$this->Weblication->hasFrame()) {
+            return;
+        }
+        $className = $className ?: $this->getClassName();
         $windowCode = '';
         if($global) {
             $windowCode = 'window[\'$'.$this->getName().'\'] = ';
         }
-        $Header->addScriptCode($this->getName(),
+        $this->Weblication->getFrame()->getHeaderdata()->addScriptCode($this->getName(),
             $windowCode.'GUI_Module.createGUIModule('.$className.', \''.$this->getName().'\');');
-        return true;
+
+    }
+
+    protected function getJavaScriptFiles(): array
+    {
+        return [];
     }
 
     /**
@@ -643,7 +680,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * run/execute the main logic and fill templates.
+     * frontend control: run/execute the main logic and fill templates.
      */
     protected function prepare() {}
 
