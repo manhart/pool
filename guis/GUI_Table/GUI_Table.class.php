@@ -564,6 +564,46 @@ class GUI_Table extends GUI_Module
             'type' => 'function',
             'value' => null // undefined
         ],
+        'exportDataType' => [
+            'attribute' => 'data-export-data-type',
+            'type' => 'string',
+            'value' => 'basic',
+            'element' => 'select',
+            'options' => ['basic', 'all', 'selected']
+        ],
+        'exportTypes' => [
+            'attribute' => 'data-export-types',
+            'type' => 'array', // todo module configurator
+            'value' => ['json', 'xml', 'csv', 'txt', 'sql', 'excel'],
+        ],
+        'height' => [
+            'attribute' => 'data-height',
+            'type' => 'integer',
+            'value' => null,
+            'element' => 'input',
+            'inputType' => 'number',
+        ],
+        'iconSize' => [
+            'attribute' => 'data-icon-size',
+            'type' => 'string',
+            'value' => null, // undefined
+            'element' => 'select',
+            'options' => [null, 'lg', 'sm'],
+        ],
+        'iconsPrefix' => [
+            'attribute' => 'data-icons-prefix',
+            'type' => 'string',
+            'value' => 'fa',
+            'element' => 'input',
+            'inputType' => 'text',
+        ],
+        'idField' => [
+            'attribute' => 'data-icons-id-field',
+            'type' => 'string',
+            'value' => null,
+            'element' => 'input',
+            'inputType' => 'text',
+        ],
         'method' => [
             'attribute' => 'data-method',
             'type' => 'string',
@@ -731,6 +771,21 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'caption' => 'Search Highlight'
         ],
+        'searchTimeOut' => [
+            'attribute' => 'data-search-time-out',
+            'type' => 'integer',
+            'value' => 500,
+            'element' => 'input',
+            'inputType' => 'number',
+            'caption' => 'Search TimeOut'
+        ],
+        'selectItemName' => [
+            'attribute' => 'data-select-item-name',
+            'type' => 'string',
+            'value' => 'btSelectItem',
+            'element' => 'input',
+            'inputType' => 'text',
+        ],
         'smartDisplay' => [
             'attribute' => 'data-smart-display',
             'type' => 'boolean',
@@ -770,18 +825,6 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
             'caption' => 'Show Search Clear Button'
-        ],
-        'exportDataType' => [
-            'attribute' => 'data-export-data-type',
-            'type' => 'string',
-            'value' => 'basic',
-            'element' => 'select',
-            'options' => ['basic', 'all', 'selected']
-        ],
-        'exportTypes' => [
-            'attribute' => 'data-export-types',
-            'type' => 'array', // todo module configurator
-            'value' => ['json', 'xml', 'csv', 'txt', 'sql', 'excel'],
         ],
         'showFullscreen' => [
             'attribute' => 'data-show-fullscreen',
@@ -823,6 +866,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'caption' => 'Single Select'
         ],
+        'sortReset' => [
+            'attribute' => 'data-sort-reset',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+
+        ],
         'sortable' => [
             'attribute' => 'data-sortable',
             'type' => 'boolean',
@@ -839,12 +890,33 @@ class GUI_Table extends GUI_Module
             'options' => ['client', 'server'],
             'caption' => 'Side Pagination'
         ],
+        'theadClasses' => [
+            'attribute' => 'data-thead-classes',
+            'type' => 'string',
+            'value' => '',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
         'toolbar' => [
             'attribute' => 'data-toolbar',
             'type' => 'string',
             'value' => null,
             'element' => 'input',
             'inputType' => 'text'
+        ],
+        'virtualScrollItemHeight' => [
+            'attribute' => 'data-virtual-scroll-item-height',
+            'type' => 'integer',
+            'value' => null,
+            'element' => 'input',
+            'inputType' => 'number'
+        ],
+        'visibleSearch' => [
+            'attribute' => 'data-visible-search',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
         ]
     ];
 
@@ -900,15 +972,31 @@ class GUI_Table extends GUI_Module
      */
     public function loadFiles()
     {
-        $className = strtolower(__CLASS__);
+        $className = __CLASS__;
         $fw = $this->getVar('framework');
         $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', $className, true);
         $this->Template->setFilePath('stdout', $tpl);
 
-        $this->loadJavaScriptGUI();
+        if(!$this->Weblication->hasFrame()) {
+            return false;
+        }
+
+        $Frame = $this->Weblication->getFrame();
+        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', $className, true);
+        $Frame->getHeaderdata()->addJavaScript($jsFile);
+
+        $this->js_createGUIModule($className);
     }
 
-//    public function setOptions(array $options): GUI_Table
+    /**
+     * @return array[]
+     */
+//    public function getJavaScriptFiles(): array
+//    {
+//        return [['GUI_Table.js', __CLASS__, true]] + parent::getJavaScriptFiles();
+//    }
+
+    //    public function setOptions(array $options): GUI_Table
 //    {
 //        foreach($options as $key => $value) {
 //            if($key == 'columns' and is_array($value)) {

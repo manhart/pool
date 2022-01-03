@@ -62,6 +62,9 @@ class GUI_Table extends GUI_Module
 
     forceRefreshOptions = false;
 
+    scrollPosition;
+
+
 
     // poolColumnOptions = {}; // poolOptions
 
@@ -364,6 +367,7 @@ class GUI_Table extends GUI_Module
         if(!isEmpty(options) || this.forceRefreshOptions) {
             this.options = Object.assign({}, this.options, options);
             console.debug(this.getName() + '.refreshOptions', this.options);
+            this.scrollPosition = this.getScrollPosition();
             this.getTable().bootstrapTable('refreshOptions', this.options);
         }
         else {
@@ -373,6 +377,15 @@ class GUI_Table extends GUI_Module
             console.debug(this.getName() + '.refreshed');
         }
         return this;
+    }
+
+    /**
+     *
+     * @returns {integer}
+     */
+    getScrollPosition()
+    {
+        return this.getTable().bootstrapTable('getScrollPosition');
     }
 
     /**
