@@ -415,6 +415,11 @@
                     $ScriptBlock->setVar('NAME', $name);
                     $ScriptBlock->setVar('CODE', $code);
                 }
+                else {
+                    if($this->Weblication->isXdebugEnabled()) {
+                        xdebug_print_function_stack('SCRIPT_CODE is missing in tpl_headerdata.html');
+                    }
+                }
             }
         }
 
