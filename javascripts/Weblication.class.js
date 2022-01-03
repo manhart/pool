@@ -58,6 +58,7 @@ class Weblication
             throw new Error('Module with Name ' + moduleName + ' already exists. Registration not possible!');
         }
         this.modules[moduleName] = Module;
+        // console.debug('Weblication has Module "' + moduleName + '" registered');
         return this;
     }
 
