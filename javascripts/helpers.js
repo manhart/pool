@@ -2106,19 +2106,22 @@ function clearControls(elements)
         }
         else if(elemType == 'SELECT-ONE') {
 
-            if(elem.hasAttribute('date-default-value')) {
+            if(elem.hasAttribute('data-default-value')) {
+                // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute#non-existing_attributes
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
                 defaultValue = elem.getAttribute('data-default-value') ?? '';
                 for(let x=0; x<elem.options.length; x++) {
-                    console.debug(elem.options[x].value);
+                    // console.debug(elem.options[x].value);
                     if(elem.options[x].value == defaultValue) {
                         elem.options.selectedIndex = x;
                         break;
                     }
                 }
+                // 04.01.22, AM, selectpicker support
                 if(elem.classList.contains('selectpicker')) {
                     jQuery(elem).selectpicker('refresh');
                 }
+
             }
             else {
                 elem.options.selectedIndex = 0;
