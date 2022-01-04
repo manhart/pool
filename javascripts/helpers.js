@@ -2089,6 +2089,7 @@ function clearControls(elements)
         elements = document.querySelectorAll(elements);
     }
 
+    let defaultValue;
     for (let z=0; z<elements.length; z++) {
         let elem = elements[z];
 
@@ -2104,12 +2105,19 @@ function clearControls(elements)
             else elem.checked = false;
         }
         else if(elemType == 'SELECT-ONE') {
-            if(elem.getAttribute('data-default-value') != null) {
+
+            if(elem.hasAttribute('date-default-value')) {
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
+                defaultValue = elem.getAttribute('data-default-value') ?? '';
                 for(let x=0; x<elem.options.length; x++) {
-                    if(elem.options[x].value == elem.getAttribute('data-default-value')) {
+                    console.debug(elem.options[x].value);
+                    if(elem.options[x].value == defaultValue) {
                         elem.options.selectedIndex = x;
                         break;
                     }
+                }
+                if(elem.classList.contains('selectpicker')) {
+                    jQuery(elem).selectpicker('refresh');
                 }
             }
             else {
