@@ -1049,12 +1049,17 @@ if(!defined('CLASS_RESULTSET')) {
 
         /**
          * Creates data format for the bootstrap table
+         *
+         * @param int $total
+         * @param int|null $totalNotFiltered (optional) Use totalNotFilteredField parameter to set the field from the json response which will used for showExtendedPagination
+         * @return array
          */
-        public function getRowSetAsBSTable(int $total): array
+        public function getRowSetAsBSTable(int $total, int $totalNotFiltered = null): array
         {
+            // todo move into GUI_Table and get Keys from Configuration e.g. https://bootstrap-table.com/docs/api/table-options/#datafield
             $return = [];
             $return['total'] = $total;
-//            $return['totalNotFiltered'] = $total;
+            $return['totalNotFiltered'] = $totalNotFiltered ?? $total;
             $return['rows'] = $this->rowset;
             return $return;
         }
