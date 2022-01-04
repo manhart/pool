@@ -260,12 +260,11 @@ if(!defined('CLASS_DAO')) {
         }
 
         /**
-         * Liefert den Prim�rschl�ssel als Array
+         * returns primary key
          *
-         * @access public
-         * @return array Primaer Schluessel
+         * @return array primary key
          **/
-        function getPrimaryKey()
+        public function getPrimaryKey(): array
         {
             return $this->pk;
         }
