@@ -99,6 +99,11 @@ class GUI_Module extends Module
     protected bool $plainJSON = false;
 
     /**
+     * @var bool automatically create GUI_Module in JS
+     */
+    protected bool $js_createGUIModule = true;
+
+    /**
      * Options for the module-inspector
      *
      * @var array|array[]
@@ -493,6 +498,9 @@ class GUI_Module extends Module
      */
     protected function js_createGUIModule(string $className = '', bool $global = true): void
     {
+        if(!$this->js_createGUIModule) {
+            return;
+        }
         if(!$this->Weblication->hasFrame()) {
             return;
         }
