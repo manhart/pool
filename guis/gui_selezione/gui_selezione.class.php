@@ -331,7 +331,7 @@ class GUI_Selezione extends GUI_Module
         $BlockJSRow->setVar(
             array(
                 'PK' => $PK,
-                'JSONOBJ' => str_replace(array(chr(13), chr(10)), array('\\r', '\\n'), array2json($row)),
+                'JSONOBJ' => json_encode($row),
                 'NAME' => (isAjax() ? $this->Name : 'this')
             )
         );
