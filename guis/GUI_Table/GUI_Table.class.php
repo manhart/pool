@@ -33,6 +33,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'caption' => 'Buttons'
         ],
+        'cache' => [
+            'attribute' => 'data-cache',
+            'type' => 'boolean',
+            'value' => true,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Cache AJAX'
+        ],
         'checkOnInit' => [ // extension: mobile
             'attribute' => 'data-check-on-init',
             'type' => 'boolean',
@@ -1317,7 +1325,7 @@ class GUI_Table extends GUI_Module
      */
     public function parseColumns(string $columns): array
     {
-        if(isJSON($columns)) {
+        if(isValidJSON($columns)) {
             $columns = json_decode($columns, true);
         }
         else {
