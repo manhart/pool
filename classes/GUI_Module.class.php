@@ -605,18 +605,20 @@ class GUI_Module extends Module
             foreach($parameters as $Parameter) {
                 if($this->Input->exists($Parameter->getName())) {
                     $value = $this->Input->getVar($Parameter->getName());
-                    switch($Parameter->getType()->getName()) {
-                        case 'float':
-                            $value = (float)$value;
-                            break;
+                    if(is_string($value)) {
+                        switch($Parameter->getType()->getName()) {
+                            case 'float':
+                                $value = (float)$value;
+                                break;
 
-                        case 'int':
-                            $value = (int)$value;
-                            break;
+                            case 'int':
+                                $value = (int)$value;
+                                break;
 
-                        case 'bool':
-                            $value = string2bool($value);
-                            break;
+                            case 'bool':
+                                $value = string2bool($value);
+                                break;
+                        }
                     }
                     $args[] = $value;
                 }
