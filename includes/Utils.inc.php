@@ -2899,108 +2899,6 @@ function magicInfo($file, $line, $function, $class, $specific = array())
     ), $specific);
 }
 
-/**
- * Simple Array 2 Html (empfehle eher pray)
- *
- * @param array $array
- * @return string HTML
- */
-function array2html($array)
-{
-    return '<p>'.nl2br(str_replace(' ', '&nbsp;', print_r($array, true))).'</p>';
-}
-
-/**
- * Umwandlung eines Array in JSON (ALEX: diese Funktion muss ueberarbeitet werden!!! Schrott)
- *
- * @param array $arr
- * @return string JSON
- * @deprecated Verwende json_encode!
- */
-function array2json($arr)
-{
-    if (!is_array($arr)) {
-        return json_encode($arr);
-    }
-
-    $parts = array();
-    $is_list = false;
-
-    // Ermitteln ob es sich bei dem Uebergabe-Array um ein numerisches/indexiertes Array handelt
-    $keys = array_keys($arr);
-    $max_length = count($arr) - 1;
-    // falls der erste Schl�ssel 0 ist und der letzte Schluessel Laenge - 1, handelt es sich um ein numerisches Array
-    if ((isset($keys[0]) and $keys[0] == '0') and ($keys[$max_length] == $max_length)) {
-        $is_list = true;
-        for ($i = 0; $i < count($keys); $i++) { // ueberpruefe jeden Schluessel, ob er zur Position korespondiert
-            if ($i != $keys[$i]) { // Positionscheck schl�gt fehl
-                $is_list = false; // Es handelt sich um ein assoziatives Array
-                break;
-            }
-        }
-    }
-
-    foreach ($arr as $key => $value) {
-        if (is_array($value)) { // Spezial Behandlung fuer Arrays
-            if ($is_list) {
-                $parts[] = array2json($value); /* :RECURSION: */
-            }
-            else {
-                $parts[] = '"'.$key.'":'.array2json($value); /* :RECURSION: */
-            }
-        }
-        else {
-            $str = '';
-            if (!$is_list) $str = '"'.$key.'":';
-
-            // Spezial Behandlungen fuer mehrere Datentypen
-            if (is_numeric($value)) {
-                $str .= $value;
-            } //Numbers
-            elseif ($value === false) $str .= 'false'; //booleans
-            elseif ($value === true) $str .= 'true';
-            else $str .= '"'.addslashes($value).'"'; // alles andere
-            // :TODO: Andere Datentypen (Objekt?)
-
-            $parts[] = $str;
-        }
-    }
-    $json = implode(',', $parts);
-
-    if ($is_list) return '['.$json.']';//Rueckgabe: indexiertes JSON
-
-    return '{'.$json.'}';//Rueckgabe assoziatives JSON
-}
-
-/**
- * Kodiert alle String Werte eines Arrays (rekursiv) nach RFC1738
- *
- * @param array $array
- * @return array
- */
-function arrayEncodeToRFC1738($array)
-{
-    if (is_array($array)) {
-        foreach ($array as $key => $val) {
-            if (is_string($val)) {
-                $array[$key] = rawurlencode($val);
-            }
-            elseif (is_array($val)) {
-                $array[$key] = arrayEncodeToRFC1738($val); /* :RECURSION: */
-            }
-        }
-    }
-    else {
-        if (is_string($array)) {
-            $val = $array;
-
-            return rawurlencode($val);
-        }
-    }
-
-    return $array;
-}
-
 if (!function_exists('mime_content_type')) {
     /**
      * Ermittelt den Mime Content Type f�r eine Datei
@@ -3030,7 +2928,6 @@ if (!function_exists('array_combine')) {
         return $array;
     }
 }
-
 
 /**
  * Silbentrennung
@@ -4572,7 +4469,7 @@ function isHTML(string $string): bool
  * @param string $string
  * @return bool
  */
-function isJSON(string $string): bool
+function isValidJSON(string $string): bool
 {
     $literal = substr($string, 0, 1);
     if($literal != '{' and $literal != '[') {
