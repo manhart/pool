@@ -506,6 +506,30 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * Check a row by array of values
+     *
+     * @param field name of the field used to find records (ID column)
+     * @param values array of values for rows to check
+     * @param onlyCurrentPage (default false): If true only the visible dataset will be checked. If pagination is used the other pages will be ignored.
+     */
+    checkBy(field, values, onlyCurrentPage=false)
+    {
+        this.getTable().bootstrapTable('checkBy', { field : field, values : values, onlyCurrentPage: onlyCurrentPage });
+    }
+
+    /**
+     * Uncheck a row by array of values
+     *
+     * @param field name of the field used to find records.
+     * @param values array of values for rows to uncheck.
+     * @param onlyCurrentPage (default false): If true only the visible dataset will be unchecked. If pagination is used the other pages will be ignored.
+     */
+    uncheckBy(field, values, onlyCurrentPage=false)
+    {
+        this.getTable().bootstrapTable('uncheckBy', { field : field, values : values, onlyCurrentPage: onlyCurrentPage });
+    }
+
+    /**
      * check a row
      *
      * @param index
