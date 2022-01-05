@@ -903,7 +903,7 @@ class GUI_TableConfigurable extends GUI_Table
      */
     public function parseColumns(string $columns): array
     {
-        if(isJSON($columns)) {
+        if(isValidJSON($columns)) {
             $columns = json_decode($columns, true);
         }
         else {
