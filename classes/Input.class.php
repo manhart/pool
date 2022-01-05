@@ -41,6 +41,15 @@ const I_SESSION = 64; // php equivalent INPUT_SESSION 6
 const I_REQUEST = 128; // php equivalent INPUT_REQUEST 99
 const I_ALL = 255;
 
+// 05.01.22, AM, POST Requests with JSON-Data
+if($_SERVER['REQUEST_METHOD'] == 'POST' and $_SERVER['CONTENT_TYPE'] == 'application/json') {
+    $json = file_get_contents('php://input');
+    if(isValidJSON($json)) {
+        $_POST = json_decode($json, true);
+        $_REQUEST = $_REQUEST + $_POST;
+    }
+}
+
 /**
  * base class for incoming data at the server
  */
