@@ -369,12 +369,13 @@ class GUI_Table extends GUI_Module
             console.debug(this.getName() + '.refreshOptions', this.options);
             this.scrollPosition = this.getScrollPosition();
             this.getTable().bootstrapTable('refreshOptions', this.options);
+            this.forceRefreshOptions = false;
         }
         else {
             let params = {};
             if(silent) params.silent = true;
             this.getTable().bootstrapTable('refresh', params);
-            console.debug(this.getName() + '.refreshed');
+            console.debug(this.getName() + '.refreshed', params);
         }
         return this;
     }
