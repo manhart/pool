@@ -314,7 +314,7 @@ class GUI_Table extends GUI_Module
             }
             this.$table = $('#' + this.getName())
             .on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows)
-            .on('refresh-options.bs.table', this.onRefreshOptions)
+            // .on('refresh-options.bs.table', this.onRefreshOptions)
             .on('click-row.bs.table', this.onClickRow)
             .on('check.bs.table', this.onCheck)
             .on('uncheck.bs.table', this.onUncheck)
