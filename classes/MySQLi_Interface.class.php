@@ -50,7 +50,7 @@ if (!defined('MYSQLi_LAYER')) {
      * MySQL Datenbank Layer (Schnittstelle zum MySQL Server)
      *
      * @package pool
-     * @author Alexander Manhart <alexander@manhart.bayern>
+     * @author Alexander Manhart <alexander@manhart-it.de>
      * @version $Id: MySQLi_Interface.class.php 38690 2019-09-03 15:08:59Z manhart $
      **/
     class MySQLi_Interface extends DataInterface
@@ -146,11 +146,6 @@ if (!defined('MYSQLi_LAYER')) {
         var $port = 3306;
 
         /**
-         * @var array|callable|null
-         */
-        private $onFetchingRow = null;
-
-        /**
          * class constants
          */
         const ZERO_DATE = '0000-00-00';
@@ -160,11 +155,9 @@ if (!defined('MYSQLi_LAYER')) {
         const MAX_DATETIME = '9999-12-31 23:59:59';
 
         /**
-         * Constructor
+         * @var array|callable|null
          */
-        function __construct()
-        {
-        }
+        private $onFetchingRow = null;
 
         /**
          * Sets up the object.
@@ -179,7 +172,7 @@ if (!defined('MYSQLi_LAYER')) {
          * @param array $Packet Einstellungen
          * @return boolean Erfolgsstatus
          **/
-        function setOptions($Packet)
+        public function setOptions(array $Packet): bool
         {
             $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
             $this->force_backend_read = array_key_exists('force_backend_read', $Packet) ? $Packet['force_backend_read'] : false;
@@ -786,8 +779,7 @@ if (!defined('MYSQLi_LAYER')) {
 
 
             if ($query_resource) {
-                $row = mysqli_fetch_assoc($query_resource);
-                return $row;
+                return mysqli_fetch_assoc($query_resource);
             }
             else {
                 return false;
