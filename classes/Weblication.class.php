@@ -1231,7 +1231,7 @@ class Weblication extends Component
             $locale = Translator::detectLocale();
         }
         $this->locale = $locale;
-        return setlocale($category, $locale.($this->charset ? '.'.$this->charset : ''));
+        return setlocale($category, $locale);
     }
 
     /**
