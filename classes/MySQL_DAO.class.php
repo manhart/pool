@@ -592,8 +592,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 
             $sql = sprintf('INSERT INTO `%s` (%s) VALUES (%s)', $this->table,
                 substr($keys, 0, -1), substr($values, 0, -1));
-            $MySQL_ResultSet = $this->__createMySQL_Resultset($sql);
-            return $MySQL_ResultSet;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
