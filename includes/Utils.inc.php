@@ -2733,9 +2733,20 @@ function isNotNull($var)
  * @param mixed $var
  * @return bool
  */
-function isNotEmptyString($var)
+function isNotEmptyString($var): bool
 {
     return !($var === '');
+}
+
+/**
+ * returns true if value is empty
+ *
+ * @param $value
+ * @return bool
+ */
+function isEmptyString($value): bool
+{
+    return ($value === '');
 }
 
 /**
