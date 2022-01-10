@@ -609,6 +609,7 @@ function tabOnEnter(e)
 
 function focusCtrl(elem)
 {
+    // console.debug('focusCtrl', elem);
 	if(elem) {
 		if(elem.focus) {
 			try {
