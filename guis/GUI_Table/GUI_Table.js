@@ -149,6 +149,11 @@ class GUI_Table extends GUI_Module
                 options.poolOnUncheck = this._getTable().dataset.poolOnUncheck;
             }
         }
+        if(!this.options.poolOnUncheckAll) {
+            if(this._getTable().dataset.poolOnUncheckAll) {
+                options.poolOnUncheckAll = this._getTable().dataset.poolOnUncheckAll;
+            }
+        }
 
         if(!this.options.poolFillControls) {
             if(this._getTable().dataset.poolFillControls) {
@@ -478,6 +483,10 @@ class GUI_Table extends GUI_Module
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
         }
+
+        if(this.getOption('poolOnUncheckAll')) {
+            jQuery().bootstrapTable.utils.calculateObjectValue(this.getTable(), this.getOption('poolOnUncheckAll'), [rowsAfter, rowsBefore], null)
+        }
     }
 
     /**
@@ -560,7 +569,15 @@ class GUI_Table extends GUI_Module
             index: index,
             row: row
         });
-        this.check(index);
+
+        let uniqueId = this.getUniqueId()
+        if(uniqueId && row[uniqueId]) {
+            this.pageIds.push(row[uniqueId]);
+        }
+
+        if(check) {
+            this.check(index);
+        }
     }
 
     /**
@@ -628,10 +645,11 @@ class GUI_Table extends GUI_Module
     onCheckUncheckRows = () => {
 
         let ids = this.getSelectedUniqueIds();
+        let prev = this.selections;
         this.selections = array_difference(this.selections, this.pageIds);
         this.selections = array_union(this.selections, ids);
 
-        // console.debug(this.getName()+'.onCheckUncheckRows', this.selections);
+        console.debug(this.getName()+'.onCheckUncheckRows', prev, this.pageIds, ids, this.selections);
 
         // let rows = rowsAfter;
 
@@ -666,7 +684,7 @@ class GUI_Table extends GUI_Module
         if(!uniqueId) {
             return res;
         }
-        // console.debug(this.getName() + '.responseHandler', res);
+        console.debug(this.getName() + '.responseHandler', res);
 
         let rows = (res.rows) ? res.rows : res;
 
