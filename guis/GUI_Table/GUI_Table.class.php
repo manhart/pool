@@ -726,6 +726,14 @@ class GUI_Table extends GUI_Module
             'poolEvent' => true,
             'element' => 'textarea'
         ],
+        'poolOnUncheckAll' => [
+            'attribute' => 'data-pool-on-uncheck-all',
+            'type' => 'function',
+            'value' => null,
+            'caption' => 'onUncheckAll',
+            'poolEvent' => true,
+            'element' => 'textarea'
+        ],
         'pagination' => [
             'attribute' => 'data-pagination',
             'type' => 'boolean',
