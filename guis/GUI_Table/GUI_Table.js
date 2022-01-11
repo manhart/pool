@@ -560,11 +560,13 @@ class GUI_Table extends GUI_Module
      * insert row and check row
      *
      * @param index
-     * @param row
-     * @param check (optional)
+     * @param row record
+     * @param check (optional) calls check
+     * @param paging (optional) calls selectPage
      */
-    insertRow(index, row, check = true)
+    insertRow(index, row, check = true, paging = true)
     {
+        console.debug(this.getName()+'.insertRow', index, row, check, paging);
         this.getTable().bootstrapTable('insertRow', {
             index: index,
             row: row
@@ -573,6 +575,12 @@ class GUI_Table extends GUI_Module
         let uniqueId = this.getUniqueId()
         if(uniqueId && row[uniqueId]) {
             this.pageIds.push(row[uniqueId]);
+        }
+
+        if(paging) {
+            let pageSize = this.getOption('pageSize');
+            let pageNumber = Math.ceil((index+1) / pageSize);
+            this.getTable().bootstrapTable('selectPage', pageNumber);
         }
 
         if(check) {
