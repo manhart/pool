@@ -817,6 +817,60 @@ function ready(fn) {
 }
 
 /**
+ *
+ * @param glue
+ * @param pieces
+ * @returns {string}
+ */
+function implode(glue, pieces) {
+    let fixedImplode = '';
+
+    for (x = 0; x < pieces.length; x++) {
+        fixedImplode += (glue + String(pieces[x]));
+    }
+
+    fixedImplode = fixedImplode.substring(glue.length, fixedImplode.length);
+    return fixedImplode;
+}
+
+/**
+ *
+ * @param separators
+ * @param inputstring
+ * @param includeEmpties
+ * @returns {*[]}
+ */
+function explode(separators, inputstring, includeEmpties) {
+    inputstring = new String(inputstring);
+    separators = new String(separators);
+    if (separators == "undefined") {
+        separators = " :;";
+    }
+    fixedExplode = new Array();
+    currentElement = "";
+    count = 0;
+    for(x = 0; x < inputstring.length; x++) {
+        var charX = inputstring.charAt(x);
+        if (separators.indexOf(charX) != -1) {
+            if (((includeEmpties <= 0) || (includeEmpties == false)) && (currentElement == "")) {
+            }
+            else {
+                fixedExplode[count] = currentElement;
+                count++;
+                currentElement = "";
+            }
+        }
+        else {
+            currentElement += charX;
+        }
+    }
+    if ((!(includeEmpties <= 0) && (includeEmpties != false)) || (currentElement != "")) {
+        fixedExplode[count] = currentElement;
+    }
+    return fixedExplode;
+}
+
+/**
  * fill controls (input fields) with content
  *
  * @param {string|object|array} containerSelector
