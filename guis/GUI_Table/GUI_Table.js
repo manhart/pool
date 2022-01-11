@@ -566,7 +566,7 @@ class GUI_Table extends GUI_Module
      */
     insertRow(index, row, check = true, paging = true)
     {
-        console.debug(this.getName()+'.insertRow', index, row, check, paging);
+        // console.debug(this.getName()+'.insertRow', index, row, check, paging);
         this.getTable().bootstrapTable('insertRow', {
             index: index,
             row: row
@@ -657,7 +657,7 @@ class GUI_Table extends GUI_Module
         this.selections = array_difference(this.selections, this.pageIds);
         this.selections = array_union(this.selections, ids);
 
-        console.debug(this.getName()+'.onCheckUncheckRows', prev, this.pageIds, ids, this.selections);
+        // console.debug(this.getName()+'.onCheckUncheckRows', prev, this.pageIds, ids, this.selections);
 
         // let rows = rowsAfter;
 
