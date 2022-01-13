@@ -105,7 +105,7 @@ class GUI_Table extends GUI_Module
      */
     setConfiguration(options)
     {
-        console.debug(this.getName() + '.setConfiguration', options['poolOptions']);
+        // console.debug(this.getName() + '.setConfiguration', options['poolOptions']);
         let poolOptions = {};
         if('poolOptions' in options) {
             poolOptions = options['poolOptions'];
