@@ -653,7 +653,7 @@ class GUI_Table extends GUI_Module
     onCheckUncheckRows = () => {
 
         let ids = this.getSelectedUniqueIds();
-        let prev = this.selections;
+        // let prev = this.selections;
         this.selections = array_difference(this.selections, this.pageIds);
         this.selections = array_union(this.selections, ids);
 
