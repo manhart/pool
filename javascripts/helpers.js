@@ -879,6 +879,7 @@ function explode(separators, inputstring, includeEmpties) {
  * @returns {array}
  */
 function fillControls(containerSelector, rowSet, autoSearchControlsWithinContainer = true) {
+    // console.debug('fillControls');
     if (!Array.isArray(rowSet) && !isObject(rowSet)) {
         return [];
     }
@@ -1010,6 +1011,7 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                             if (Ctrl.data('initialValue') == undefined) {
                                 Ctrl.data('initialValue', value);
                             }
+
                             // bootstrap-select support
                             if (Ctrl.hasClass('selectpicker')) {
                                 Ctrl.selectpicker('refresh');
@@ -1051,40 +1053,40 @@ function clearControls(elements) {
         elements = document.querySelectorAll(elements);
     }
 
-    let defaultValue;
     for (let z = 0; z < elements.length; z++) {
         let elem = elements[z];
 
         let tagName = elem.tagName.toUpperCase();
         let elemType = (elem.type) ? elem.type.toUpperCase() : '';
+        // console.debug(tagName, elemType, elem.name);
         if (tagName == 'SPAN') {
             elem.innerHTML = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
-        } else if (elemType == 'CHECKBOX' || elemType == 'RADIO') {
+        }
+        else if (elemType == 'CHECKBOX' || elemType == 'RADIO') {
             if (elem.getAttribute('data-default-checked') != null) {
                 elem.checked = string2bool(elem.dataset.defaultChecked);
-            } else elem.checked = false;
-        } else if (elemType == 'SELECT-ONE') {
+            }
+            else elem.checked = false;
+        }
+        else if (elemType == 'SELECT-ONE' || elemType == 'SELECT-MULTIPLE') {
 
             if (elem.hasAttribute('data-default-value')) {
                 // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute#non-existing_attributes
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
-                defaultValue = elem.getAttribute('data-default-value') ?? '';
-                for (let x = 0; x < elem.options.length; x++) {
-                    // console.debug(elem.options[x].value);
-                    if (elem.options[x].value == defaultValue) {
-                        elem.options.selectedIndex = x;
-                        break;
-                    }
-                }
+                elem.options.selectedIndex = -1;
+                elem.value = elem.getAttribute('data-default-value') ?? '';
+
                 // 04.01.22, AM, selectpicker support
                 if (elem.classList.contains('selectpicker')) {
                     jQuery(elem).selectpicker('refresh');
                 }
 
-            } else {
+            }
+            else {
                 elem.options.selectedIndex = 0;
             }
-        } else {
+        }
+        else {
             if (elem.getAttribute('data-empty-default-value')) {
                 elem.setAttribute('data-default-value', null);
             }
