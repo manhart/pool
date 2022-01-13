@@ -477,7 +477,7 @@ class Input extends PoolObject
             // AM, 22.04.09, modified (isset nimmt kein NULL)
             if(array_key_exists($prefix.$key, $this->Vars)) {
                 if($filter) {
-                    $remove = call_user_func($filter, $this->Vars[$prefix.$key]);
+                    $remove = call_user_func($filter, $this->Vars[$prefix.$key], $prefix.$key);
                     if($remove) continue;
                 }
                 $Input->setVar($new_prefix.$key, $this->Vars[$prefix.$key]);
