@@ -131,7 +131,7 @@ function RequestPOOL(module, method, params, async)
                 }
 
                 if(typeof USE_CONSOLE != 'undefined' && USE_CONSOLE) {
-                    log(message);
+                    console.log(message);
                     return;
                 }
 
@@ -239,7 +239,7 @@ function file_upload(formName, guiName, method, onServerResponse)
 	var Form = $('form[name="'+formName+'"]');
 
 	if(window.FormData != undefined) { // window.FormData != undefined
-		log('file_upload HTML 5');
+		// console.debug('file_upload HTML 5');
 		REQUEST_METHOD = 'post';
 		REQUEST_CONTENTTYPE = false;
 		REQUEST_PROCESSDATA = false;
@@ -247,8 +247,8 @@ function file_upload(formName, guiName, method, onServerResponse)
 
 		let params = new FormData(Form.get(0)); /* HTML 5 Object FormData */
 		RequestPOOL(guiName, method, params, true, function(Result) {
-			log('file_upload result:');
-			log(Result);
+			// console.debug('file_upload result:');
+			// console.debug(Result);
 			if(onServerResponse) {
 				onServerResponse(Result);
 			}
@@ -262,7 +262,7 @@ function file_upload(formName, guiName, method, onServerResponse)
 	}
 	else {
 		// alte Browser laden Daten ueber einen iframe hoch
-		log('file_upload IFRAME (alter Browser (IE8/9))');
+		// console.debug('file_upload IFRAME (alter Browser (IE8/9))');
 
 		// [GUI_Url(params=module:GUI_Liste;method:hochladen;HTTP_X_REQUESTED_WITH:XMLHttpRequest)]
 		var FormUrl = new Url();
@@ -287,9 +287,9 @@ function file_upload(formName, guiName, method, onServerResponse)
 
 		Iframe.appendTo('body');
 		Iframe.load(function() {
-			log('file_upload iframe result:')
+			// console.debug('file_upload iframe result:')
 			var data = $.parseJSON($(this).contents().text());
-			log(data);
+			// console.debug(data);
 			var Result = data['Result'];
 			var Error = data['Error'];
 

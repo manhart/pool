@@ -28,167 +28,161 @@
  * @link https://alexander-manhart.de
  */
 
-if(!defined('CLASS_MYSQL_RESULTSET')) {
-
-    #### Prevent multiple loading
-    define('CLASS_MYSQL_RESULTSET', 1);
+/**
+ * MySQL_Resultset
+ *
+ * Siehe Datei fuer ausfuehrliche Beschreibung!
+ *
+ * @package pool
+ * @author Alexander Manhart <alexander.manhart@gmx.de>
+ * @version $Id: MySQL_Resultset.class.php,v 1.13 2007/03/29 09:20:18 manhart Exp $
+ **/
+class MySQL_Resultset extends Resultset
+{
+    /**
+     * Database Interface for MySQL
+     *
+     * @var DataInterface|null
+     */
+    private ?DataInterface $db = null;
 
     /**
-     * MySQL_Resultset
+     * Erwartet Datenbank Layer als Parameter.
+     * Der Datenbank Layer ist die Schnittstelle zur MySQL Datenbank.
+     * Die MySQL_db Klasse uebt die eigentlichen datenbankspezfischen
+     * Operationen (z.B. mysql_connect, mysql_query) aus.
      *
-     * Siehe Datei fuer ausfuehrliche Beschreibung!
-     *
-     * @package pool
-     * @author Alexander Manhart <alexander.manhart@gmx.de>
-     * @version $Id: MySQL_Resultset.class.php,v 1.13 2007/03/29 09:20:18 manhart Exp $
+     * @param DataInterface $db database layer
+     * @see MySQL_db
      **/
-    class MySQL_Resultset extends Resultset
+    public function __construct(DataInterface $db)
     {
-        /**
-         * Database Interface for MySQL
-         *
-         * @var DataInterface|null
-         */
-        private ?DataInterface $db = null;
+        $this->db = $db;
+        return $this;
+    }
 
-        /**
-         * Erwartet Datenbank Layer als Parameter.
-         * Der Datenbank Layer ist die Schnittstelle zur MySQL Datenbank.
-         * Die MySQL_db Klasse uebt die eigentlichen datenbankspezfischen
-         * Operationen (z.B. mysql_connect, mysql_query) aus.
-         *
-         * @param DataInterface $db database layer
-         * @see MySQL_db
-         **/
-        public function __construct(DataInterface $db)
-        {
-            $this->db = $db;
-            return $this;
+    /**
+     * Die Funktion "execute" fuehrt das uebergebene SQL Statement aus
+     * und speichert die Ergebnismenge zwischen. Ueber vererbte Iteratoren
+     * kann durch das Ergebnis navigiert werden (z.B. $this -> prev()).
+     *
+     * Fehlermeldungen landen im $this -> errorStack und koennen ueber
+     * $this -> getLastError() abgefragt werden.
+     *
+     * @access public
+     * @param string $sql SQL Statement
+     * @param string $dbname Datenbankname
+     * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
+     * @see Resultset::getLastError()
+     **/
+    public function execute(string $sql, string $dbname=''): bool
+    {
+        $bResult = false;
+        $this->rowset = array();
+
+        $result = false;
+        if (!$this->db instanceof DataInterface) {
+            $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
         }
-
-        /**
-         * Die Funktion "execute" fuehrt das uebergebene SQL Statement aus
-         * und speichert die Ergebnismenge zwischen. Ueber vererbte Iteratoren
-         * kann durch das Ergebnis navigiert werden (z.B. $this -> prev()).
-         *
-         * Fehlermeldungen landen im $this -> errorStack und koennen ueber
-         * $this -> getLastError() abgefragt werden.
-         *
-         * @access public
-         * @param string $sql SQL Statement
-         * @param string $dbname Datenbankname
-         * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
-         * @see Resultset::getLastError()
-         **/
-        public function execute(string $sql, string $dbname=''): bool
-        {
-            $bResult = false;
-            $this->rowset = array();
-
-            $result = false;
-            if (!$this->db instanceof DataInterface) {
-                $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
-            }
-            else {
-                if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
-                    ACTIVATE_RESULTSET_SQL_LOG == 1) {
-                    // Zeitmessung starten
-                    $Stopwatch = Singleton('Stopwatch');
-                    $Stopwatch->start('SQLQUERY');
-                }
-                $result = $this->db->query($sql, $dbname);
-            }
-
-            if (!$result) {
-                $error_msg = $this->db->getErrormsg().' SQL Statement failed: '.$sql;
-                $this->raiseError(__FILE__, __LINE__, $error_msg);
-                $error = $this->db->getError();
-                $error['sql'] = $sql;
-                $this -> errorStack[] = $error;
-            }
-            else {
-                $cmd = $this->db->getLastSQLCommand();
-                #echo $cmd.'<br>';
-                if ($cmd == 'SELECT' or $cmd == 'SHOW' or $cmd == 'DESCRIBE' or $cmd == 'EXPLAIN' /* or substr($cmd, 0, 1) == '('*/) { // ( z.B. UNION
-                    if ($this->db->numrows($result) > 0) {
-                        $this->rowset = $this->db->fetchrowset($result);
-                        $this->reset();
-                    }
-                    $this->db->freeresult($result);
-                }
-                elseif ($cmd == 'INSERT') {
-                    $last_insert_id = $this->db->nextid();
-                    $affected_rows = $this->db->affectedrows();
-                    $this->rowset = array(
-                        0 => array(
-                            0 => $last_insert_id,
-                            'last_insert_id' => $last_insert_id,
-                            'id' => $last_insert_id,
-                            'affected_rows' => $affected_rows
-                        )
-                    );
-                    $this->reset();
-                }
-                elseif ($cmd == 'UPDATE' or $cmd == 'DELETE') {
-                    $affected_rows = $this->db->affectedrows();
-                    $this->rowset = array(
-                        0 => array(
-                            0 => $affected_rows,
-                            'affected_rows' => $affected_rows
-                        )
-                    );
-                    $this->reset();
-                }
-                $bResult = true;
-            }
-
-            // SQL Statement Logging:
+        else {
             if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
                 ACTIVATE_RESULTSET_SQL_LOG == 1) {
-                $Stopwatch->stop('SQLQUERY');
-                $timespent = $Stopwatch->getDiff('SQLQUERY');
-
-                $Log = Singleton('Log');
-                if($Log->isLogging()) {
-                    $Log->addLine('SQL ON DB '.$dbname.': "'.$sql.'" in '.$timespent.' sec.');
-                    if(!$bResult) $Log->addlIne('SQL-ERROR ON DB '.$dbname.': '.$this->db->getErrormsg());
-                }
+                // Zeitmessung starten
+                $Stopwatch = Singleton('Stopwatch');
+                $Stopwatch->start('SQLQUERY');
             }
-            return $bResult;
+            $result = $this->db->query($sql, $dbname);
         }
 
-        /**
-         * define callback for event onFetchingRow
-         *
-         * @param callable $callback
-         */
-        public function onFetchingRow(callable $callback)
-        {
-            $this->db->onFetchingRow($callback);
+        if (!$result) {
+            $error_msg = $this->db->getErrormsg().' SQL Statement failed: '.$sql;
+            $this->raiseError(__FILE__, __LINE__, $error_msg);
+            $error = $this->db->getError();
+            $error['sql'] = $sql;
+            $this -> errorStack[] = $error;
         }
-
-        /**
-         * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
-         *
-         * @access public
-         * @param string $table
-         * @return string
-         **/
-        function getSQLInserts($table = null)
-        {
-            $sql = '';
-
-            if($this->count() && $table) {
-                $line_break = chr(10);
-                // Zuerst die Insert Anweisung und die Feldnamen
-                foreach($this -> rowset as $row)
-                {
-                    $sql .= 'INSERT INTO '.$table.' (';
-                    $sql .= implode(',', array_keys($this -> rowset[0]));
-                    $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.$line_break;
+        else {
+            $cmd = $this->db->getLastSQLCommand();
+            #echo $cmd.'<br>';
+            if ($cmd == 'SELECT' or $cmd == 'SHOW' or $cmd == 'DESCRIBE' or $cmd == 'EXPLAIN' /* or substr($cmd, 0, 1) == '('*/) { // ( z.B. UNION
+                if ($this->db->numrows($result) > 0) {
+                    $this->rowset = $this->db->fetchrowset($result);
+                    $this->reset();
                 }
+                $this->db->freeresult($result);
             }
-            return $sql;
+            elseif ($cmd == 'INSERT') {
+                $last_insert_id = $this->db->nextid();
+                $affected_rows = $this->db->affectedrows();
+                $this->rowset = array(
+                    0 => array(
+                        0 => $last_insert_id,
+                        'last_insert_id' => $last_insert_id,
+                        'id' => $last_insert_id,
+                        'affected_rows' => $affected_rows
+                    )
+                );
+                $this->reset();
+            }
+            elseif ($cmd == 'UPDATE' or $cmd == 'DELETE') {
+                $affected_rows = $this->db->affectedrows();
+                $this->rowset = array(
+                    0 => array(
+                        0 => $affected_rows,
+                        'affected_rows' => $affected_rows
+                    )
+                );
+                $this->reset();
+            }
+            $bResult = true;
         }
+
+        // SQL Statement Logging:
+        if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
+            ACTIVATE_RESULTSET_SQL_LOG == 1) {
+            $Stopwatch->stop('SQLQUERY');
+            $timespent = $Stopwatch->getDiff('SQLQUERY');
+
+            $Log = Singleton('Log');
+            if($Log->isLogging()) {
+                $Log->addLine('SQL ON DB '.$dbname.': "'.$sql.'" in '.$timespent.' sec.');
+                if(!$bResult) $Log->addlIne('SQL-ERROR ON DB '.$dbname.': '.$this->db->getErrormsg());
+            }
+        }
+        return $bResult;
+    }
+
+    /**
+     * define callback for event onFetchingRow
+     *
+     * @param callable $callback
+     */
+    public function onFetchingRow(callable $callback)
+    {
+        $this->db->onFetchingRow($callback);
+    }
+
+    /**
+     * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
+     *
+     * @access public
+     * @param string $table
+     * @return string
+     **/
+    function getSQLInserts($table = null)
+    {
+        $sql = '';
+
+        if($this->count() && $table) {
+            $line_break = chr(10);
+            // Zuerst die Insert Anweisung und die Feldnamen
+            foreach($this -> rowset as $row)
+            {
+                $sql .= 'INSERT INTO '.$table.' (';
+                $sql .= implode(',', array_keys($this -> rowset[0]));
+                $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.$line_break;
+            }
+        }
+        return $sql;
     }
 }
