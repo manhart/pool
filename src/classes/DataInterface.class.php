@@ -54,50 +54,39 @@ if(!defined('CLASS_DATAINTERFACE')) {
      * @version $Id: DataInterface.class.php,v 1.1.1.1 2004/09/21 07:49:25 manhart Exp $
      * @access public
      **/
-    class DataInterface extends PoolObject
+    abstract class DataInterface extends PoolObject
     {
-        //@var string Interface Typ
-        //@access private
-        var $InterfaceType = '';
+        /** @var string Interface Type */
+        private string $InterfaceType = '';
 
         /**
-         * DataInterface::setInterfaceType()
-         *
          * Setzt den Interface Typ (= Klasse)
          *
-         * @access private
-         * @param string $InterfaceType Interface Typ
+         * @param string $InterfaceType Interface Type
          **/
-        function setInterfaceType($InterfaceType)
+        private function setInterfaceType(string $InterfaceType)
         {
-            $this -> InterfaceType = $InterfaceType;
+            $this->InterfaceType = $InterfaceType;
         }
 
         /**
-         * DataInterface::getInterfaceType()
-         *
          * Gibt den Interface Typ (= Klasse) zurueck
          *
-         * @return string Interface Typ
+         * @return string Interface Type
          **/
-        function getInterfaceType()
+        public function getInterfaceType(): string
         {
-            return $this -> InterfaceType;
+            return $this->InterfaceType;
         }
 
         /**
-         * DataInterface::setOptions()
-         *
          * Setzt Optionen (Einstellungen) fuer die Schnittstelle
          * zum Speichermedium (z.B. host).
          * Uebergabe der Einstellungen als Paket (=array).
          *
-         * @abstract
          * @param array $Packet Paket mit den Einstellungen (Key=Optionsname, Value=Optionswert)
          **/
-        function setOptions($Packet)
-        {
-        }
+        abstract public function setOptions(array $Packet): bool;
 
         /**
          * Legt eine Instanz des DataInterfaces an. Setzt ueber
@@ -108,7 +97,7 @@ if(!defined('CLASS_DATAINTERFACE')) {
          * @param array $Packet Optionen
          * @return object DataInterface
          **/
-        public static function &createDataInterface($InterfaceType, $Packet)
+        public static function createDataInterface(string $InterfaceType, array $Packet)
         {
             /** @var DataInterface $DataInterface */
             $DataInterface = new $InterfaceType();

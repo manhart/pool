@@ -140,28 +140,25 @@ if(!defined('CLASS_DAO')) {
          * Liefert die Anzahl gefundener Datensaete zurueck (virtuelle Methode).
          * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
          * sondern nur die Anzahl.
-         *
-         * @access protected
          **/
-        function getCount()
+        protected function getCount()
         {
         }
 
         /**
          * Setzt die Spalten die man abfragen moechte. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
          *
-         * @access public
          * @param string $col [, mixed ... ]
          **/
-        function setColumns($col)
+        public function setColumns(string $col)
         {
-            $this->columns = Array($col);
+            $this->columns = [$col];
             $num_args = func_num_args();
             if ($num_args >= 2) {
                 for ($a=1; $a < $num_args; $a++) {
                     $arg = func_get_arg($a);
                     if ($arg != '') {
-                        array_push($this->columns, $arg);
+                        $this->columns[] = $arg;
                     }
                 }
             }
@@ -171,11 +168,10 @@ if(!defined('CLASS_DAO')) {
         /**
          * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
          *
-         * @access public
          * @param string $cols Spalten
          * @param string $separator Trenner (Spaltentrenner im String)
          **/
-        function setColumnsAsString($cols, $separator=';')
+        public function setColumnsAsString(string $cols, string $separator=';')
         {
             $this->columns = explode($separator, $cols);
             $this->columns = array_map('trim', $this->columns);
@@ -264,12 +260,11 @@ if(!defined('CLASS_DAO')) {
         }
 
         /**
-         * Liefert den Prim�rschl�ssel als Array
+         * returns primary key
          *
-         * @access public
-         * @return array Primaer Schluessel
+         * @return array primary key
          **/
-        function getPrimaryKey()
+        public function getPrimaryKey(): array
         {
             return $this->pk;
         }

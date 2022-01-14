@@ -5,8 +5,12 @@
  * gui_table.class.php created at 08.04.21, 13:16
  *
  * @author Alexander Manhart <alexander@manhart-it.de>
+ * @deprecated
  */
 
+/**
+ * @deprecated
+ */
 class GUI_TableConfigurable extends GUI_Table
 {
     use Configurable;
@@ -899,7 +903,7 @@ class GUI_TableConfigurable extends GUI_Table
      */
     public function parseColumns(string $columns): array
     {
-        if(isJSON($columns)) {
+        if(isValidJSON($columns)) {
             $columns = json_decode($columns, true);
         }
         else {

@@ -18,16 +18,16 @@
 	*
 	* $Log: ActionHandler.class.php,v $
 	* Revision 1.16  2006/09/18 10:21:41  manhart
-	* Fix Partner/Verlage l?schen
+	* Fix Partner/Verlage l�schen
 	*
 	* Revision 1.15  2006/09/15 13:05:39  manhart
-	* Fix in Partner/Verlage - doppelte Listeneintr?ge
+	* Fix in Partner/Verlage - doppelte Listeneintr�ge
 	*
 	* Revision 1.14  2006/09/15 12:42:50  manhart
 	* Beschleunigung durch foreach
 	*
 	* Revision 1.13  2006/07/05 15:21:35  manhart
-	* beim Selektieren wird autoamatisch der selektierte Datensatz aktualisiert (vor Selektion!), dabei wird after_search aufgerufen um die Listenformatierungen zu ?bernehmen...
+	* beim Selektieren wird autoamatisch der selektierte Datensatz aktualisiert (vor Selektion!), dabei wird after_search aufgerufen um die Listenformatierungen zu �bernehmen...
 	*
 	* Revision 1.12  2006/02/02 13:12:31  manhart
 	* nur Kommentare
@@ -36,13 +36,13 @@
 	* comment
 	*
 	* Revision 1.10  2005/12/06 13:17:59  manhart
-	* L?schen nur, falls keine Auftr?ge existieren.
+	* L�schen nur, falls keine Auftr�ge existieren.
 	*
 	* Revision 1.9  2005/10/06 14:21:28  schmidseder
 	* Bruttoabschluss
 	*
 	* Revision 1.8  2005/08/17 14:35:04  manhart
-	* Sch?ne Fehlermeldung wenn kein PK gefunden wurde
+	* Sch�ne Fehlermeldung wenn kein PK gefunden wurde
 	*
 	* Revision 1.7  2005/07/20 14:56:29  manhart
 	* Verlags-Mediensuche in Partner/Verlage
@@ -347,7 +347,7 @@
 
 
 				//
-				// Update der Daten in der Liste (auch beim Selektieren ... z.B. beim zur?ck klicken erforderlich)
+				// Update der Daten in der Liste (auch beim Selektieren ... z.B. beim zur�ck klicken erforderlich)
 				$list = $this->buffer['list'];
 
 				$numRecords = count($list);
@@ -362,7 +362,7 @@
 							}
 						}
 						if($override) {
-							// ver?ndert eventl. das Resultset (bzw. selektierten Datensatz)
+							// ver�ndert eventl. das Resultset (bzw. selektierten Datensatz)
 							$this->after_search($Resultset, true);
 							$Resultset->reset();
 
@@ -377,7 +377,7 @@
 				// Error oder nichts gefunden $Resultset -> getLastError
 				$this->buffer['id'] = null;
 				$this->buffer['record'] = null;
-				$this->addError('Keinen Datensatz mit Prim?rschl?ssel ('.
+				$this->addError('Keinen Datensatz mit Prim�rschl�ssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
 					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
 				return false;
