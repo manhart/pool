@@ -41,6 +41,16 @@ const I_SESSION = 64; // php equivalent INPUT_SESSION 6
 const I_REQUEST = 128; // php equivalent INPUT_REQUEST 99
 const I_ALL = 255;
 
+// 05.01.22, AM, POST Requests with JSON-Data
+$REQUEST_METHOD = $_SERVER['REQUEST_METHOD'] ?? '';
+$CONTENT_TYPE = $_SERVER['CONTENT_TYPE'] ?? '';
+if($REQUEST_METHOD == 'POST' and $CONTENT_TYPE == 'application/json') {
+    $json = file_get_contents('php://input');
+    if(isValidJSON($json)) {
+        $_POST = json_decode($json, true);
+        $_REQUEST = $_REQUEST + $_POST;
+    }
+}
 
 /**
  * base class for incoming data at the server
@@ -459,13 +469,17 @@ class Input extends PoolObject
      * @param boolean $removePrefix removes prefix
      * @return Input Neues Objekt vom Typ Input (enthaelt die gefilterten Daten)
      **/
-    public function filter(array $keys_must_exists, string $prefix='', bool $removePrefix=false): Input
+    public function filter(array $keys_must_exists, ?callable $filter = null, string $prefix='', bool $removePrefix=false): Input
     {
         $Input = new Input(I_EMPTY);
         $new_prefix = ($removePrefix) ? '' : $prefix;
         foreach($keys_must_exists as $key) {
             // AM, 22.04.09, modified (isset nimmt kein NULL)
             if(array_key_exists($prefix.$key, $this->Vars)) {
+                if($filter) {
+                    $remove = call_user_func($filter, $this->Vars[$prefix.$key], $prefix.$key);
+                    if($remove) continue;
+                }
                 $Input->setVar($new_prefix.$key, $this->Vars[$prefix.$key]);
             }
         }

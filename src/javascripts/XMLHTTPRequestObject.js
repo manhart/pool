@@ -1,3 +1,14 @@
+function array2string(array) {
+    var result = '';
+    for (var key in array) {
+        if (!isUndefined(key) && !isFunction(array[key]) && !isUndefined(array[key])) {
+            if (result.length != 0) result += '&';
+            result += key + '=' + encodeURIComponent(array[key]);
+        }
+    }
+    return result;
+}
+
 function getXMLHttp() {
 	var xmlhttp=false;
 	/*@cc_on @*/
@@ -79,7 +90,7 @@ function postDataWaitResponse(url, arrData) {
 	xmlhttp.open('POST', url, false);
     //xmlhttp.setRequestHeader('X-POOL-Version', '0.1');
 	xmlhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    // xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); wegen Abwaertskompatibilität nicht möglich
+    // xmlhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); wegen Abwaertskompatibilitï¿½t nicht mï¿½glich
     xmlhttp.setRequestHeader('Accept', 'text/javascript, text/html, application/xml, text/xml, */*');
 
 	var data = array2string(arrData, true);

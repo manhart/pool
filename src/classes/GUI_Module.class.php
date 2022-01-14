@@ -1,8 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * -= Rapid Module Library (RML) =-
+ * POOL
  *
- * GUI_Module.class.php
+ * [P]HP [O]bject-[O]riented [L]ibrary
  *
  * Das GUI_Module ist die Basisklasse fuer alle graphischen Steuerelemente.
  * Sie generieren standardmaessig ein Template.
@@ -15,7 +15,7 @@
  * @version
  *
  * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart.bayern>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
 
@@ -24,22 +24,12 @@ const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
 // const FIXED_PARAM_CONFIG = 'config';
 
-/**
- * GUI_Module
- *
- * Basisklasse fuer alle graphischen Steuerelemente.
- *
- * @package pool
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @version $Id: GUI_Module.class.php,v 1.7 2006/11/02 12:04:54 manhart Exp $
- **/
 class GUI_Module extends Module
 {
     /**
      * Rapid Template Engine
      *
      * @var Template $Template
-     * @access public
      * @see Template
      */
     public Template $Template;
@@ -101,12 +91,17 @@ class GUI_Module extends Module
      *
      * @var boolean
      */
-    var $takeMeAlone = false;
+    private bool $takeMeAlone = false;
 
     /**
-     * Reiche Ergebnis als JSON durch
+     * Pass result unchanged as JSON string through
      */
     protected bool $plainJSON = false;
+
+    /**
+     * @var bool automatically create GUI_Module in JS
+     */
+    protected bool $js_createGUIModule = true;
 
     /**
      * Options for the module-inspector
@@ -172,128 +167,6 @@ class GUI_Module extends Module
         $this->Template = new Template();
         $this->AutoLoadFiles = $autoLoadFiles;
     }
-
-    /**
-     * @return Input
-     */
-//    public function getDefaults(): Input
-//    {
-//        // set default moduleName
-//        $this->inspectorProperties['moduleName']['value'] = $this->getName();
-//
-//        foreach($this->getInspectorProperties() as $key => $property) {
-//            $this->Defaults->setVar($key, $property['value']);
-//        }
-//        return $this->Defaults;
-//    }
-
-    /**
-     * provides all properties for the Inspector module
-     *
-     * @return array|array[]
-     */
-//    public function getInspectorProperties(): array
-//    {
-//        return $this->inspectorProperties;
-//    }
-
-    /**
-     * @param array $configuration
-     * @param array $properties
-     * @return array
-     */
-//    public function optimizeConfiguration(array $configuration, array $properties): array
-//    {
-//        $config = [];
-//        foreach($configuration as $key => $value) {
-//            if(isset($properties[$key])) {
-//                $property = $properties[$key];
-//                $type = $property['type'] ?? '';
-//                switch($type) {
-//                    case 'boolean':
-//                        if(is_string($value)) {
-//                            $value = string2bool($value);
-//                        }
-//                        break;
-//                }
-//
-//                //                $isPoolOption = $this->getInspectorProperties()[$key]['pool'] ?? false; // serverside only
-//                $defaultValue = $property['value'] ?? '';
-//                if($defaultValue != $value) {
-//                    $config[$key] = $value;
-//                }
-//
-//                if(isset($property['properties']) and is_array($property['properties']) and is_array($configuration[$key])) {
-//                    foreach($configuration[$key] as $z => $sub_configuration) {
-//                        $config[$key][$z] = $this->optimizeConfiguration($sub_configuration, $property['properties']);
-//                    }
-//                }
-//
-//            }
-//            //            else {
-//            //                $this->poolOptions[$key] = $value;
-//            //            }
-//        }
-//        return $config;
-//    }
-
-//    /**
-//     * set configuration for module (it only takes different values)
-//     *
-//     * @param array $configuration
-//     */
-//    public function setConfiguration(array $configuration)
-//    {
-//        $this->configuration = $this->optimizeConfiguration($configuration, $this->getInspectorProperties());
-//
-//        if(isset($this->configuration['moduleName'])) {
-//            $this->setName($this->configuration['moduleName']);
-//        }
-//
-//        $this->Input->setVar($this->configuration);
-//    }
-//
-//    /**
-//     * returns the configuration
-//     *
-//     * @return array
-//     */
-//    public function getConfiguration(): array
-//    {
-//        return $this->configuration;
-//    }
-//
-//    /**
-//     * returns the configuration as json
-//     *
-//     * @return string
-//     */
-//    public function getConfigurationAsJSON(): string
-//    {
-//        return json_encode($this->getConfiguration());
-//    }
-//
-//    /**
-//     * returns the configuration as yaml
-//     *
-//     * @return string
-//     */
-//    public function getConfigurationAsYAML(): string
-//    {
-//        return yaml_emit($this->getConfiguration());
-//    }
-
-    /**
-     * @return array|array[]
-     */
-//    public function getInspectorValues(): array
-//    {
-//        $result = $this->getInspectorProperties();
-//        foreach($this->options as $key => $value) {
-//            $result[$key]['value'] = $value;
-//        }
-//        return $result;
-//    }
 
     /**
      * Das Template Objekt laedt HTML Vorlagen.
@@ -454,10 +327,8 @@ class GUI_Module extends Module
     /**
      * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.
      * Ruft die Funktion GUI_Module::searchGUIs() auf.
-     *
-     * @access public
      **/
-    function searchGUIsInPreloadedContent()
+    protected function searchGUIsInPreloadedContent()
     {
         $TemplateFiles = $this->Template->getFiles();
         for ($f = 0, $sizeOfTemplateFiles = sizeof($TemplateFiles); $f < $sizeOfTemplateFiles; $f++) {
@@ -525,31 +396,24 @@ class GUI_Module extends Module
     /**
      * Setzt sich Merker, auf welchem FileHandle sitze ich. Welches Muster (Ident) habe ich innerhalb des Templates.
      *
-     * @access private
-     * @param string $filehandle Handle-Name eines Templates
      * @param string $ident Identifikation innerhalb des Templates
-     **/
-    function setMarker($ident)
+     */
+    private function setMarker($ident)
     {
         $this->FileIdent = $ident;
     }
 
     /**
-     * GUI_Module::getMarkerIdent()
-     *
      * Gibt einen Merker (Ident) zurueck
      *
-     * @access private
      * @return string Ident/Pattern/Muster
      **/
-    function getMarkerIdent()
+    private function getMarkerIdent()
     {
         return $this->FileIdent;
     }
 
     /**
-     * GUI_Module::enableBox()
-     *
      * Aktiviert eine Box. Erwartet als Parameter eine HTML Vorlage mit der Box.
      * In der Vorlage muss der Platzhalter {CONTENT} stehen. Bei Bedarf kann noch {TITLE} gesetzt werden.
      *
@@ -594,27 +458,67 @@ class GUI_Module extends Module
      *
      * @param bool $global makes Module global in window scope
      */
-    public function loadJavaScriptGUI(bool $global = true): bool
+    public function loadJavaScriptFiles(bool $global = true): bool
     {
         if(!$this->Weblication->hasFrame()) {
             return false;
         }
 
-        $className = $this->getClassName();
+        $className = '';
+        $myself_already_loaded = false;
+        $something_loaded = false;
         $Header = $this->Weblication->getFrame()->getHeaderdata();
-        $jsFile = $this->Weblication->findJavaScript($className.'.js', strtolower($className), $this->isBasicLibrary(), false);
-        if(!$jsFile) {
-            return false;
+        foreach($this->getJavaScriptFiles() as $jsFile) {
+            $jsFile = $this->Weblication->findJavaScript($jsFile[0], $className = $jsFile[1], $jsFile[2] ?? false, false);
+            $myself_already_loaded = ($className == $this->getClassName());
+            if($jsFile) {
+                $Header->addJavaScript($jsFile);
+                $something_loaded = true;
+            }
         }
-        $Header->addJavaScript($jsFile);
 
+        if(!$myself_already_loaded) { // look for js file
+            $jsFile = $this->Weblication->findJavaScript($this->getClassName().'.js', $this->getClassName(), $this->isBasicLibrary(), false);
+            if(!$jsFile) {
+                return false;
+            }
+            $className = $this->getClassName();
+            $Header->addJavaScript($jsFile);
+            $something_loaded = true;
+        }
+
+        if($something_loaded) {
+            $this->js_createGUIModule($className, $global);
+        }
+        return true;
+    }
+
+    /**
+     * @param string $className
+     * @param bool $global
+     * @return void
+     */
+    protected function js_createGUIModule(string $className = '', bool $global = true): void
+    {
+        if(!$this->js_createGUIModule) {
+            return;
+        }
+        if(!$this->Weblication->hasFrame()) {
+            return;
+        }
+        $className = $className ?: $this->getClassName();
         $windowCode = '';
         if($global) {
             $windowCode = 'window[\'$'.$this->getName().'\'] = ';
         }
-        $Header->addScriptCode($this->getName(),
+        $this->Weblication->getFrame()->getHeaderdata()->addScriptCode($this->getName(),
             $windowCode.'GUI_Module.createGUIModule('.$className.', \''.$this->getName().'\');');
-        return true;
+
+    }
+
+    protected function getJavaScriptFiles(): array
+    {
+        return [];
     }
 
     /**
@@ -622,9 +526,13 @@ class GUI_Module extends Module
      **/
     public function prepareContent()
     {
-        $this->provision();
+        // todo before_provision or before_parents, after_provision or after_parents ?
+//        $this->provision(); // 23.12.21, AM, moved to Weblication::prepareContent!!
 
-        if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) return true;
+//        echo 'prepare: '.$this->getName().'<br>';
+        if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) {
+            return true;
+        }
 
         $this->prepare();
         $this->prepareChilds();
@@ -633,10 +541,17 @@ class GUI_Module extends Module
     /**
      * provision something
      */
-    protected function provision() {}
+    public function provision()
+    {
+        // echo $this->getName().'<br>';
+        $max = count($this->Modules);
+        for ($m = 0; $m < $max; $m++) {
+            $this->Modules[$m]->provision();
+        }
+    }
 
     /**
-     * run/execute the main logic and fill templates.
+     * frontend control: run/execute the main logic and fill templates.
      */
     protected function prepare() {}
 
@@ -654,18 +569,16 @@ class GUI_Module extends Module
     }
 
     /**
-     * Vollende mit dem Aufruf einer Methode (Verwendungszweck Ajax)
+     * returns json encoded data of a method call of this object (intended use: ajax)
+     *
+     * @param $method
+     * @return string
      */
-    private function finalizeMethod($method)
+    private function finalizeMethod($method): string
     {
         header('Content-type: application/json');
 
         $Result = false;
-
-//        $charset = '';
-//        if ($this->Owner instanceof Weblication) {
-//            $charset = $this->Owner->getCharset();
-//        }
 
         ob_start();
 
@@ -674,11 +587,8 @@ class GUI_Module extends Module
         if(!is_callable([$this, $method])) {
             $Xception = new Xception('The method "' . $method . '" in the class ' . $this->getClassName().' is not callable', 0, array(), POOL_ERROR_DISPLAY);
             $Xception->raiseError();
-            return;
+            return '';
         }
-
-        // if (method_exists($this, $method)) {
-        // eval('$Result = $this->' . $method . '();');
 
         // todo validate parameters
 
@@ -689,7 +599,7 @@ class GUI_Module extends Module
         catch(\ReflectionException $e) {
             $Xception = new Xception('Error calling method '.$method.' on '.$this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
             $Xception->raiseError();
-            return;
+            return '';
         }
 
         $args = [];
@@ -698,18 +608,20 @@ class GUI_Module extends Module
             foreach($parameters as $Parameter) {
                 if($this->Input->exists($Parameter->getName())) {
                     $value = $this->Input->getVar($Parameter->getName());
-                    switch($Parameter->getType()->getName()) {
-                        case 'float':
-                            $value = (float)$value;
-                            break;
+                    if(is_string($value)) {
+                        switch($Parameter->getType()->getName()) {
+                            case 'float':
+                                $value = (float)$value;
+                                break;
 
-                        case 'int':
-                            $value = (int)$value;
-                            break;
+                            case 'int':
+                                $value = (int)$value;
+                                break;
 
-                        case 'bool':
-                            $value = string2bool($value);
-                            break;
+                            case 'bool':
+                                $value = string2bool($value);
+                                break;
+                        }
                     }
                     $args[] = $value;
                 }
@@ -725,7 +637,6 @@ class GUI_Module extends Module
 
         $clientData = [];
 
-        // if ($charset == 'UTF-8') {
         if ($this->plainJSON) {
             $clientData = $Result;
         }
@@ -734,85 +645,94 @@ class GUI_Module extends Module
             $output = ob_get_contents();
             $clientData['Error'] = (strlen($output) > 0) ? $output : '';
         }
-        $json = json_encode($clientData);
-
-        if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-            $json_last_error = json_last_error();
-            if ($json_last_error > 0) {
-                if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-                    $json_last_error_msg = json_last_error_msg();
-                }
-                else {
-                    $json_last_error_msg = 'Unbekannter Fehler';
-                    switch ($json_last_error) {
-                        case JSON_ERROR_DEPTH:
-                            $json_last_error_msg = 'Maximale Stacktiefe überschritten';
-                            break;
-
-                        case JSON_ERROR_STATE_MISMATCH:
-                            $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
-                            break;
-
-                        case JSON_ERROR_CTRL_CHAR:
-                            $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
-                            break;
-
-                        case JSON_ERROR_SYNTAX:
-                            $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
-                            break;
-
-                        case JSON_ERROR_UTF8:
-                            $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
-                            break;
-                    }
-                }
-
-                return $json_last_error_msg . ' in ' . $this->getClassName() . '->' . $method . '(): ' . print_r($clientData, true);
-            }
-        }
-        /*
-        }
-        else { // fuer ISO-8859-X und windows-125X
-            if ($this->plainJSON) {
-                $clientData = $Result;
-            }
-            else {
-                $clientData['Result'] = arrayEncodeToRFC1738($Result);
-                $output = ob_get_contents();
-                $clientData['Error'] = arrayEncodeToRFC1738((strlen($output) > 0) ? $output : '');
-            }
-            $json = array2json($clientData);
-        }
-        */
         ob_end_clean();
 
-        return $json;
+        $json = json_encode($clientData);
+
+        $json_last_error = json_last_error();
+        if($json_last_error == JSON_ERROR_NONE) {
+            return $json;
+        }
+
+        if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+            $json_last_error_msg = json_last_error_msg();
+        }
+        else {
+            $json_last_error_msg = 'Unknown Error';
+            switch ($json_last_error) {
+                case JSON_ERROR_DEPTH:
+                    // $json_last_error_msg = 'Maximale Stacktiefe überschritten';
+                    $json_last_error_msg = 'The maximum stack depth has been exceeded';
+                    break;
+
+                case JSON_ERROR_STATE_MISMATCH:
+//                            $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
+                    $json_last_error_msg = 'Invalid or malformed JSON';
+                    break;
+
+                case JSON_ERROR_CTRL_CHAR:
+//                            $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
+                    $json_last_error_msg = 'Control character error, possibly incorrectly encoded';
+                    break;
+
+                case JSON_ERROR_SYNTAX:
+//                            $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
+                    $json_last_error_msg = 'Syntax error';
+                    break;
+
+                case JSON_ERROR_UTF8:
+//                            $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
+                    $json_last_error_msg = 'Malformed UTF-8 characters, possibly incorrectly encoded';
+                    break;
+
+                case JSON_ERROR_RECURSION:
+                    $json_last_error_msg = 'One or more recursive references in the value to be encoded';
+                    break;
+
+                case JSON_ERROR_INF_OR_NAN:
+                    $json_last_error_msg = 'One or more NAN or INF values in the value to be encoded';
+                    break;
+
+                case JSON_ERROR_UNSUPPORTED_TYPE:
+                    $json_last_error_msg = 'A value of a type that cannot be encoded was given';
+                    break;
+
+                case JSON_ERROR_INVALID_PROPERTY_NAME:
+                    $json_last_error_msg = 'A property name that cannot be encoded was given';
+                    break;
+            }
+        }
+
+        return $json_last_error_msg . ' in ' . $this->getClassName() . '->' . $method . '(): ' . print_r($clientData, true);
     }
 
     /**
-     * Rueckgabe von Ajax Requests 1:1 (ohne Veraenderungen durch den POOL)
+     * @deprecated
      */
-    function enablePlainJSON()
+    public function enablePlainJSON()
     {
         $this->plainJSON = true;
     }
 
     /**
-     * Rueckgabe von Ajax Requests werden vom POOL als Array[Result,Error] umformatiert
+     * enable plain JSON return (without change by the POOL)
+     *
+     * @param bool $activate
+     * @return GUI_Module
      */
-    function disablePlainJSON()
+    public function returnAsPlainJSON(bool $activate = true): GUI_Module
     {
-        $this->plainJSON = false;
+        $this->plainJSON = $activate;
+        return $this;
     }
 
     /**
      * Stellt den Inhalt der Html Templates fertig und sorgt dafuer, dass auch alle Childs fertig gestellt werden.
      * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
      *
-     * @access public
      * @return string Content / Inhalt
      */
-    function finalizeContent()
+    public function finalizeContent(): string
     {
         $content = '';
         $this->finalizeChilds();
