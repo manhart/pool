@@ -33,6 +33,13 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'caption' => 'Buttons'
         ],
+        'buttonsClass' => [
+            'attribute' => 'data-buttons-class',
+            'type' => 'string',
+            'value' => 'secondary',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
         'cache' => [
             'attribute' => 'data-cache',
             'type' => 'boolean',
