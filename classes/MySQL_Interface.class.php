@@ -483,7 +483,7 @@ if(!defined('MYSQL_LAYER'))
         *
         * @access public
         */
-        function isConnected($database='', $mode=SQL_READ)
+        public function isConnected(string $database='', $mode=SQL_READ)
         {
             if ($mode == '') {
                 $mode = SQL_READ;
