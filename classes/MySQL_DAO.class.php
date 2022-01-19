@@ -280,20 +280,6 @@ if(!defined('CLASS_MYSQLDAO')) {
             $this->pk = array();
             $this->columns = array();
             $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
-
-/*				$this->pk = array();
-
-            $count = count($field_list);
-            for ($i=0; $i < $count; $i++) {
-                $fieldname=$field_list[$i]['name'];
-                array_push($this -> columns, $fieldname);
-
-                $flags = explode(' ', $field_list[$i]['flags']);
-                if (in_array('primary_key', $flags)) {
-                    array_push($this -> pk, $fieldname);
-                }
-            }*/
-
             $this->onSetColumns();
         }
 
@@ -376,6 +362,16 @@ if(!defined('CLASS_MYSQLDAO')) {
             $this->translate = [];
             $this->translateValues = [];
             return $this;
+        }
+
+        /**
+         * returns columns comma separated
+         *
+         * @return string
+         */
+        public function getColumnList(): string
+        {
+            return $this->column_list;
         }
 
         /**
