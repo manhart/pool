@@ -344,14 +344,14 @@ if(!defined('CLASS_DAO')) {
          * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
          *
          * @param array|DataInterface $interfaces Schnittstellen zu den Speichermedien (es kann auch ein objekt uebergeben werden, falls man sich sicher ist, dass nur eine Schnittstelle benoetigt wird)
-         * @param string $tabledefine Tabellendefinition (siehe database.inc.php)
+         * @param string $tableDefine Tabellendefinition (siehe database.inc.php)
          * @param boolean $autoload_fields Automatisch Lesen der Spaltendefinitionen
          * @return MySQL_DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
          **/
-        public static function createDAO($interfaces, string $tabledefine, $autoload_fields=true)
+        public static function createDAO($interfaces, string $tableDefine, bool $autoload_fields=true)
         {
             $type = $dbname = $table = '';
-            self::extractTabledefine($tabledefine, $type, $dbname, $table);
+            self::extractTabledefine($tableDefine, $type, $dbname, $table);
 
             // Interface Objekt
             if (is_array($interfaces)) {
@@ -414,11 +414,11 @@ if(!defined('CLASS_DAO')) {
 
                 default:
                     $dao = null;
-                    if (count($tabledefine) == 0) {
-                        $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $tabledefine);
+                    if (count($tableDefine) == 0) {
+                        $msg = 'Fataler Fehler: ' . sprintf('Tabellendefinition \'%s\' fehlt in der database.inc.php!', $tableDefine);
                     }
                     else {
-                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type, $tabledefine);
+                        $msg = 'Fataler Fehler: ' . sprintf('DataInterface Typ \'%s\' der Tabellendefinition \'%s\' unbekannt!', $type, $tableDefine);
                     }
 
                     $Xception = new Xception($msg, E_ERROR, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__),
