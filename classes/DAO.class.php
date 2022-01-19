@@ -148,11 +148,11 @@ if(!defined('CLASS_DAO')) {
         /**
          * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
          *
-         * @param string ...$col columns
+         * @param string ...$columns columns
          */
-        public function setColumns(string ...$col): DAO
+        public function setColumns(string ...$columns): DAO
         {
-            $this->columns = $col;
+            $this->columns = $columns;
             $this->onSetColumns();
             return $this;
         }
