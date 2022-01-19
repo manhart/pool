@@ -494,10 +494,8 @@ if (!defined('MYSQLi_LAYER')) {
          * @param string $database Datenbank
          * @param string $mode Lese- oder Schreibmodus
          * @return boolean Gibt TRUE/FALSE zurueck
-         *
-         * @access public
          */
-        function isConnected($database = '', $mode = SQL_READ)
+        public function isConnected(string $database = '', string $mode = SQL_READ): bool
         {
             if ($mode == '') {
                 $mode = SQL_READ;
@@ -511,11 +509,10 @@ if (!defined('MYSQLi_LAYER')) {
 
             if (!isset($this->connections[$mode]) or
                 !isset($this->connections[$mode][$database]) or
-                !is_resource($this->connections[$mode][$database])) {
+                ($this->connections[$mode][$database]->connect_error)) {
                 return false;
             }
             return mysqli_ping($this->connections[$mode][$database]);
-            //return is_resource($this -> connections[$mode][$database]);
         }
 
         /**
