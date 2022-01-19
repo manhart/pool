@@ -146,23 +146,15 @@ if(!defined('CLASS_DAO')) {
         }
 
         /**
-         * Setzt die Spalten die man abfragen moechte. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
+         * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
          *
-         * @param string $col [, mixed ... ]
-         **/
-        public function setColumns(string $col)
+         * @param string ...$col columns
+         */
+        public function setColumns(string ...$col): DAO
         {
-            $this->columns = [$col];
-            $num_args = func_num_args();
-            if ($num_args >= 2) {
-                for ($a=1; $a < $num_args; $a++) {
-                    $arg = func_get_arg($a);
-                    if ($arg != '') {
-                        $this->columns[] = $arg;
-                    }
-                }
-            }
+            $this->columns = $col;
             $this->onSetColumns();
+            return $this;
         }
 
         /**
@@ -171,24 +163,25 @@ if(!defined('CLASS_DAO')) {
          * @param string $cols Spalten
          * @param string $separator Trenner (Spaltentrenner im String)
          **/
-        public function setColumnsAsString(string $cols, string $separator=';')
+        public function setColumnsAsString(string $cols, string $separator=';'): DAO
         {
             $this->columns = explode($separator, $cols);
             $this->columns = array_map('trim', $this->columns);
             $this->onSetColumns();
+            return $this;
         }
 
         /**
          * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
          *
-         * @access public
          * @param array $cols Spalten
-         * @return null
-         **/
-        function setColumnsAsArray($cols)
+         * @return DAO
+         */
+        public function setColumnsAsArray(array $cols): DAO
         {
-            $this -> columns = $cols;
-            return $this -> onSetColumns();
+            $this->columns = $cols;
+            $this->onSetColumns();
+            return $this;
         }
 
         /**
@@ -196,9 +189,9 @@ if(!defined('CLASS_DAO')) {
          *
          * @return array Spalten
          **/
-        function getColumns()
+        function getColumns(): array
         {
-            return $this -> columns;
+            return $this->columns;
         }
 
         /**
