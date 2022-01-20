@@ -940,6 +940,47 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox'
+        ],
+        'groupBy' => [
+            'attribute' => 'data-group-by',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'groupByField' => [
+            'attribute' => 'data-group-by-field',
+            'type' => 'array',
+            'value' => [],
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
+        'groupByToggle' => [
+            'attribute' => 'data-group-by-toggle',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'groupByShowToggleIcon' => [
+            'attribute' => 'data-group-by-show-toggle-icon',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'groupByCollapsedGroups' => [
+            'attribute' => 'data-group-by-collapsed-groups',
+            'type' => 'array',
+            'value' => [],
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
+        'groupByFormatter' => [
+            'attribute' => 'data-group-by-formatter',
+            'type' => 'function',
+            'value' => 'function(value, idx, data) { return \'\' }',
+            'clientside' => true
         ]
     ];
 
