@@ -449,7 +449,7 @@ class GUI_Module extends Module
     *
     * @access protected
     */
-    protected function loadFiles() {}
+    public function loadFiles() {}
 
     /**
      * load, create and register JavaScript GUI
