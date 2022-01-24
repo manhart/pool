@@ -33,9 +33,12 @@
 *
 * ############################################################################################################################
 */
-$loc = setlocale(LC_TIME, 'de_DE.UTF-8'); // charset must be installed on system!
-$loc = setlocale(LC_COLLATE, 'de_DE.UTF-8'); // charset must be installed on system!
-$loc = setlocale(LC_CTYPE, 'de_DE.UTF-8'); // charset must be installed on system!
+
+const APP_INTERNAL_LOCALE = 'de_DE.UTF-8'; // for calculation
+
+$loc = setlocale(LC_TIME, APP_INTERNAL_LOCALE); // charset must be installed on system!
+$loc = setlocale(LC_COLLATE, APP_INTERNAL_LOCALE); // charset must be installed on system!
+$loc = setlocale(LC_CTYPE, APP_INTERNAL_LOCALE); // charset must be installed on system!
 
 /* check Servername und stelle die Weichen */
 switch($_SERVER['SERVER_NAME']) {
