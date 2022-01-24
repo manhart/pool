@@ -57,11 +57,11 @@ class GUI_Selectionlist extends GUI_Module
         $jsfile = $this -> Weblication -> findJavaScript('dhtmlhint.js', '', true);
         $cssfile = @$this -> Weblication -> findStyleSheet($this -> getClassName() . '.css', $this -> getClassName());
 
-        if (is_a($this -> Weblication -> Main, 'GUI_Module')) {
-            if (is_a($this -> Weblication -> Main -> Headerdata, 'GUI_Headerdata')) {
-                $this -> Weblication -> Main -> Headerdata -> addJavaScript($jsfile);
+        if (is_a($this -> Weblication -> getMain(), 'GUI_Module')) {
+            if (is_a($this -> Weblication -> getMain() -> Headerdata, 'GUI_Headerdata')) {
+                $this -> Weblication -> getMain() -> Headerdata -> addJavaScript($jsfile);
                 if ($cssfile) {
-                    $this -> Weblication -> Main -> Headerdata -> addStyleSheet($cssfile);
+                    $this -> Weblication -> getMain() -> Headerdata -> addStyleSheet($cssfile);
                 }
             }
         }
@@ -158,10 +158,10 @@ class GUI_Selectionlist extends GUI_Module
 
             $DAO = DAO::createDAO($interfaces, $tabledefine);
             //$DAO -> setColumnsAsString($Input -> getVar('searchfields'), ';');
-            $Resultset = & $DAO -> getMultiple(null, null, $filter, $sorting, $limit);
-            $list = $Resultset -> getRowset();
+            $Resultset = $DAO->getMultiple(null, null, $filter, $sorting, $limit);
+            $list = $Resultset->getRowset();
 
-            $Resultset_count = & $DAO -> getCount(null, null, $filter);
+            $Resultset_count = $DAO->getCount(null, null, $filter);
             $numRecords = $Resultset_count -> getValue('count');
         }
         else {
