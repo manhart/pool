@@ -981,6 +981,40 @@ class GUI_Table extends GUI_Module
             'type' => 'function',
             'value' => 'function(value, idx, data) { return \'\' }',
             'clientside' => true
+        ],
+        'detailFormatter' => [
+            'attribute' => 'data-detail-formatter',
+            'type' => 'function',
+            'value' => 'function(index, row, element) { return \'\' }',
+            'clientside' => true
+        ],
+        'detailView' => [
+            'attribute' => 'data-detail-view',
+            'type' => 'boolean',
+            'value' => false,
+            'element'   => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'detailViewAlign' => [
+            'attribute' => 'data-detail-view-align',
+            'type' => 'string',
+            'value' => 'left',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
+        'detailViewByClick' => [
+            'attribute' => 'data-detail-view-by-click',
+            'type'  => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'detailViewIcon' => [
+            'attribute' => 'data-detail-view-icon',
+            'type'  => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
         ]
     ];
 
