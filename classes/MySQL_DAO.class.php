@@ -732,18 +732,18 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
          * @param array $sorting Sortierung (siehe MySQL_DAO::__buildSorting())
          * @param array $limit Limit -> array(Position, Anzahl Datensaetze)
-         * @param array $groupby Gruppierung
+         * @param array $groupBy Gruppierung
          * @param array $having Filter Regeln auf die Gruppierung
          * @param array $options Optionale Parameter in der Select-Anweisung
-         * @return MySQL_Resultset Ergebnismenge
+         * @return Resultset Ergebnismenge
          * @see MySQL_Resultset
          * @see MySQL_DAO::__buildFilter
          * @see MySQL_DAO::__buildSorting
          * @see MySQL_DAO::__buildLimit
          * @see MySQL_DAO::__buildGroupby
          **/
-        public function getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array(),
-            $groupBy=array(), $having=array(), $options=array())
+        public function getMultiple($id=NULL, $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
+                                    array $groupBy=[], array $having=[], array $options=[]): Resultset
         {
             $sql = sprintf('SELECT %s %s FROM `%s` WHERE %s %s%s%s%s%s',
                 implode(' ', $options),
