@@ -242,6 +242,11 @@ class GUI_Table extends GUI_Module
             }
 
             let format = poolFormat ? poolFormat : this.formats[poolType];
+
+            let poolOverride = false;
+            if('poolOverride' in column) {
+                poolOverride = column['poolOverride'];
+            }
             // console.debug(field, poolType, format);
 
             // if('formatter' in column) {
@@ -253,14 +258,14 @@ class GUI_Table extends GUI_Module
                 case 'time':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format);
+                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format, poolOverride);
                     }
                     break;
 
                 case 'number':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format);
+                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format, poolOverride);
                     }
                     break;
             }
@@ -437,7 +442,7 @@ class GUI_Table extends GUI_Module
      */
     onCheck = (evt, row, $element) =>
     {
-        // console.debug('onCheck');
+        // console.debug('onCheck', row, $element);
         if(this.getOption('poolFillControls')) {
             if(this.getOption('poolFillControlsContainer')) {
                 fillControls(this.getOption('poolFillControlsContainer'), row, true);
@@ -718,7 +723,7 @@ class GUI_Table extends GUI_Module
         // todo
     }
 
-    number_format(value, row, index, field, format)
+    number_format(value, row, index, field, format, override)
     {
         return number_format(value, format['decimals'], format['decimal_separator'], format['thousands_separator'])
     }
@@ -731,7 +736,7 @@ class GUI_Table extends GUI_Module
         return value;
     }
 
-    strftime(value, row, index, field, format)
+    strftime(value, row, index, field, format, override)
     {
         // 09.12.21, AM, fallback: handle empty english database format (should be handled server-side!!)
         if(value == '0000-00-00 00:00:00') {
@@ -739,7 +744,16 @@ class GUI_Table extends GUI_Module
         }
 
         if(format && value) {
-            return new Date(value).strftime(format);
+            // console.debug(row);
+            // 26.01.22, AM, save data in new invisible columns
+            if(!(field+'_pool_formatted' in row)) {
+                row[field+'_pool_formatted'] = new Date(value).strftime(format)
+            }
+            if(override && !(field+'_pool_raw' in row)) {
+                row[field+'_pool_raw'] = row[field];
+                row[field] = row[field+'_pool_formatted'];
+            }
+            return row[field+'_pool_formatted'];
         }
         return value;
     }
