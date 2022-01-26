@@ -14,7 +14,7 @@ class GUI_Table extends GUI_Module
     /**
      * @var array caches dbColumns
      */
-    private $dbColumns = [];
+    private array $dbColumns = [];
 
     private array $inspectorProperties = [
         'url' => [
@@ -459,6 +459,17 @@ class GUI_Table extends GUI_Module
                     'element' => 'select',
                     'value' => '',
                     'options' => ['', 'date', 'time', 'date.time', 'number'],
+                    'pool' => true,
+                    'clientside' => true,
+                ],
+                'poolOverride' => [
+                    'attribute' => 'data-pool-override',
+                    'type' =>  'boolean',
+                    'value' => false,
+                    'element' => 'input',
+                    'inputType' => 'checkbox',
+                    'caption' => 'Override Value',
+                    'tooltip' => 'override serverside value of column',
                     'pool' => true,
                     'clientside' => true,
                 ],
