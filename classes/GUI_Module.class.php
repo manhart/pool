@@ -603,25 +603,23 @@ class GUI_Module extends Module
         if($numberOfParameters) {
             $parameters = $ReflectionMethod->getParameters();
             foreach($parameters as $Parameter) {
-                if($this->Input->exists($Parameter->getName())) {
-                    $value = $this->Input->getVar($Parameter->getName());
-                    if(is_string($value)) {
-                        switch($Parameter->getType()->getName()) {
-                            case 'float':
-                                $value = (float)$value;
-                                break;
+                $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
+                if(is_string($value)) {
+                    switch($Parameter->getType()->getName()) {
+                        case 'float':
+                            $value = (float)$value;
+                            break;
 
-                            case 'int':
-                                $value = (int)$value;
-                                break;
+                        case 'int':
+                            $value = (int)$value;
+                            break;
 
-                            case 'bool':
-                                $value = string2bool($value);
-                                break;
-                        }
+                        case 'bool':
+                            $value = string2bool($value);
+                            break;
                     }
-                    $args[] = $value;
                 }
+                $args[] = $value;
             }
         }
         try {
