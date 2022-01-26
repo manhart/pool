@@ -950,7 +950,11 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                 if (row[field + '_class']) Ctrl.addClass(row[field + '_class']);
                 if (row[field + '_title']) Ctrl.attr('title', row[field + '_title']);
 
+                // console.debug('fillControls loop over', Ctrl[0].tagName, Ctrl.attr('id'), Ctrl.attr('name'), value);
+
+
                 if (r == rowSet.length - 1) {
+                    main_switch:
                     switch (Ctrl[0].tagName) {
                         case 'TEXTAREA':
                             Ctrl.val(value);
@@ -991,17 +995,6 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                                         break;
                                 }
                                 Ctrl.val(value);
-
-                                // bootstrap-datetimepicker support v5
-                                if (Ctrl.hasClass('datetimepicker-input')) {
-                                    Ctrl.trigger('change');
-                                }
-
-                                // bootstrap-datetimepicker support v6 (maybe it works automatically
-                                // if(Ctrl.data('data-td-target')) {
-                                //     Ctrl.trigger('change');
-                                // }
-
                                 break;
                             }
 
@@ -1009,15 +1002,13 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                                 case 'checkbox':
                                 case 'radio':
                                     Ctrl.prop('checked', (value == Ctrl.val()));
-                                    break;
+                                    break main_switch;
 
-                                default:
-                                    Ctrl.val(value);
+                                // default:
+                                //     Ctrl.val(value);
                             }
-                            break;
 
                         default:
-
                             Ctrl.val(value);
                             if (Ctrl.data('initialValue') == undefined) {
                                 Ctrl.data('initialValue', value);
@@ -1027,6 +1018,18 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                             if (Ctrl.hasClass('selectpicker')) {
                                 Ctrl.selectpicker('refresh');
                             }
+
+                            // bootstrap-datetimepicker support v5
+                            // if (Ctrl.hasClass('datetimepicker-input')) {
+                            //     console.debug('trigger(change)');
+                            //     Ctrl.trigger('change');
+                            // }
+
+                            // bootstrap-datetimepicker support v6 (maybe it works automatically
+                            // if(Ctrl.data('data-td-target')) {
+                            //     Ctrl.trigger('change');
+                            // }
+
                             break;
                     }
                 }
