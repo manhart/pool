@@ -1016,6 +1016,11 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                             if (Ctrl.hasClass('selectpicker')) {
                                 Ctrl.selectpicker('refresh');
                             }
+
+                            // bootstrap-datetimepicker support v5
+                            if (Ctrl.hasClass('datetimepicker-input')) {
+                                Ctrl.trigger('change');
+                            }
                             break;
                     }
                 }
