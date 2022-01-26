@@ -252,6 +252,8 @@ class GUI_Table extends GUI_Module
             // if('formatter' in column) {
             //     column['formatter'] =
             // }
+            //
+
             switch(poolType) {
                 case 'date.time':
                 case 'date':

@@ -585,6 +585,11 @@ class GUI_Table extends GUI_Module
                 ]
             ]
         ],
+        'customSearch' => [
+            'attribute' => 'data-custom-search',
+            'type' => 'function',
+            'value' => null // undefined
+        ],
         'customSort' => [
             'attribute' => 'data-custom-sort',
             'type' => 'function',
