@@ -414,17 +414,17 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
          *
-         * @param array|false $fieldname
+         * @param array $fieldName
          */
-        function getFieldinfo($fieldname)
+        function getFieldInfo($fieldName): array
         {
             if(!$this->field_list) $this->init();
             foreach ($this->field_list as $field) {
-                if($field['Field'] == $fieldname) {
+                if($field['Field'] == $fieldName) {
                     return $field;
                 }
             }
-            return false;
+            return [];
         }
 
         /**
@@ -451,7 +451,7 @@ if(!defined('CLASS_MYSQLDAO')) {
         function formatData(&$data)
         {
             foreach ($data as $fieldname => $fieldvalue) {
-                $colinfo = $this->getFieldinfo($fieldname);
+                $colinfo = $this->getFieldInfo($fieldname);
 
                 $coltype = array();
                 $enclosure = '\'';
