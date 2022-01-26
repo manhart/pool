@@ -991,6 +991,17 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                                         break;
                                 }
                                 Ctrl.val(value);
+
+                                // bootstrap-datetimepicker support v5
+                                if (Ctrl.hasClass('datetimepicker-input')) {
+                                    Ctrl.trigger('change');
+                                }
+
+                                // bootstrap-datetimepicker support v6 (maybe it works automatically
+                                // if(Ctrl.data('data-td-target')) {
+                                //     Ctrl.trigger('change');
+                                // }
+
                                 break;
                             }
 
@@ -1015,11 +1026,6 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                             // bootstrap-select support
                             if (Ctrl.hasClass('selectpicker')) {
                                 Ctrl.selectpicker('refresh');
-                            }
-
-                            // bootstrap-datetimepicker support v5
-                            if (Ctrl.hasClass('datetimepicker-input')) {
-                                Ctrl.trigger('change');
                             }
                             break;
                     }
