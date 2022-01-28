@@ -498,6 +498,23 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
+         * Returns a value of a field of the current record as an array
+         *
+         * @param string $key
+         * @param array $default
+         * @param string $separator
+         * @return array
+         */
+        public function getValueAsArray(string $key, array $default = [], string $separator = ','): array
+        {
+            $value = $this->getValue($key, []);
+            if(is_array($value) == false) {
+                $value = explode($separator, $value);
+            }
+            return $value;
+        }
+
+        /**
          * Sets a new/overwrites a value of a field in the result set.
          *
          * @param string $key name of key/field
@@ -811,29 +828,28 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Liefert alle Werte eines Feldes bzw. einer Tabellenspalte zurueck.
          *
-         * @access public
-         * @param string|array $fieldname Feldname bzw. Spaltenname
-         * @param boolean $asKey Werte als Schluessel im Array
+         * @param string|array $fieldName Feldname bzw. Spaltenname
+         * @param string $fieldNameAsKey dieses Feld als Schlüssel
          * @return array Felddaten als Array z.B. array('Alex', 'Florian', 'Andreas')
-         **/
-        function getFieldData($fieldname, $asKey=false)
+         */
+        public function getFieldData($fieldName, $fieldNameAsKey=''): array
         {
-            $arrResult = array();
-            if(is_array($fieldname)) {
-                $fieldname = array_flip($fieldname);
+            $arrResult = [];
+            if(is_array($fieldName)) {
+                $fieldName = array_flip($fieldName);
                 foreach ($this->rowset as $row) {
-                    $record = array_intersect_key($row, $fieldname);
+                    $record = array_intersect_key($row, $fieldName);
                     $arrResult[] = $record;
                 }
             }
             else {
                 foreach($this->rowset as $row) {
-                    if(isset($row[$fieldname])) {
-                        if($asKey) {
-                            $arrResult[$row[$fieldname]] = true;
+                    if(isset($row[$fieldName])) {
+                        if($fieldNameAsKey) {
+                            $arrResult[$row[$fieldNameAsKey]] = $row[$fieldName];
                         }
                         else {
-                            $arrResult[] = $row[$fieldname];
+                            $arrResult[] = $row[$fieldName];
                         }
                     }
                 }
