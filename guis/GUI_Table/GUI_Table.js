@@ -42,6 +42,13 @@ class GUI_Table extends GUI_Module
     columnNames = [];
 
     /**
+     * Accessed by bs-table filterControl extension
+     *
+     * @type {{}}
+     */
+    filterData = {};
+
+    /**
      * unique ids of one page
      *
      * @private
@@ -303,6 +310,7 @@ class GUI_Table extends GUI_Module
             this.columns[this.columnNames[field]] = Object.assign({}, this.columns[this.columnNames[field]], options);
             this.forceRefreshOptions = true;
         }
+        // console.debug('setColumnOptions', this.columns);
         // for(let c = 0; c<this.columns.length; c++) {
         //     // console.debug(c);
         //     if (this.columns[c].field == field) {
@@ -314,6 +322,22 @@ class GUI_Table extends GUI_Module
         // }
         // console.debug('Result of setColumnOptions', this.columns);
         return this;
+    }
+
+    /**
+     * filterData is required by the filterControl extension of the bs table as soon as the bs-table is changed to server-side pagination.
+     *
+     * @param filterData
+     */
+    setFilterData(filterData)
+    {
+        // filterData is required by the filterControl extension of the bs table as soon as the bs-table is changed to server-side pagination.
+        this.filterData = filterData;
+        for(let column in this.filterData) {
+            this.setColumnOptions(column, {
+                filterData: 'obj:$'+this.getName()+'.filterData.' + column
+            });
+        }
     }
 
     getTable()
@@ -359,10 +383,11 @@ class GUI_Table extends GUI_Module
         }
 
         if(!this.rendered) {
+            // console.debug(this.getName() + ' start rendering', this.options);
             this.getTable().bootstrapTable(
                 this.options
             );
-            console.debug(this.getName() + '.rendered');
+            // console.debug(this.getName() + '.rendered');
         }
         else {
             console.info(this.getName() + '.render has already been called once.')
@@ -657,12 +682,18 @@ class GUI_Table extends GUI_Module
     /**
      * save selections
      */
-    onCheckUncheckRows = () => {
+    onCheckUncheckRows = (evt) => {
 
         let ids = this.getSelectedUniqueIds();
+
         // let prev = this.selections;
-        this.selections = array_difference(this.selections, this.pageIds);
-        this.selections = array_union(this.selections, ids);
+        if(this.getOption('singleSelect')) {
+            this.selections = ids;
+        }
+        else {
+            this.selections = array_difference(this.selections, this.pageIds);
+            this.selections = array_union(this.selections, ids);
+        }
 
         // console.debug(this.getName()+'.onCheckUncheckRows', prev, this.pageIds, ids, this.selections);
 
@@ -699,6 +730,7 @@ class GUI_Table extends GUI_Module
         if(!uniqueId) {
             return res;
         }
+
         console.debug(this.getName() + '.responseHandler', res);
 
         let rows = (res.rows) ? res.rows : res;
@@ -741,22 +773,33 @@ class GUI_Table extends GUI_Module
     strftime(value, row, index, field, format, override)
     {
         // 09.12.21, AM, fallback: handle empty english database format (should be handled server-side!!)
-        if(value == '0000-00-00 00:00:00') {
+        if(value == '0000-00-00 00:00:00' || value == '0000-00-00') {
             value = '';
         }
 
         if(format && value) {
             // console.debug(row);
             // 26.01.22, AM, save data in new invisible columns
-            if(!(field+'_pool_formatted' in row)) {
-                row[field+'_pool_formatted'] = new Date(value).strftime(format)
+            let col_pool_formatted = field + '_pool_formatted';
+
+            let already_formatted = col_pool_formatted in row;
+
+            // 28.01.22, AM, was_modified and reformat added, because updateByUniqueId modifies row at runtime.
+            let was_modified = already_formatted ? (override && value != row[col_pool_formatted]) : false;
+            let reformat = !already_formatted || was_modified;
+
+            if(reformat) {
+                row[col_pool_formatted] = new Date(value).strftime(format)
             }
-            if(override && !(field+'_pool_raw' in row)) {
-                row[field+'_pool_raw'] = row[field];
-                row[field] = row[field+'_pool_formatted'];
+            if(override && reformat) {
+                row[field + '_pool_raw'] = value;
+                row[field] = row[col_pool_formatted];
             }
-            return row[field+'_pool_formatted'];
+            // console.debug('complete row', row);
+
+            return row[col_pool_formatted];
         }
+
         return value;
     }
 }
