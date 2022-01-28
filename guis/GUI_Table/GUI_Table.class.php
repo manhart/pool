@@ -14,7 +14,13 @@ class GUI_Table extends GUI_Module
     /**
      * @var array caches dbColumns
      */
-    private array $dbColumns = [];
+    private array $dbColumns = [
+        'all' => [],
+        'aliasNames' => [],
+        'columnNames' => [], // could also be an expression
+        'searchable' => [],
+        'sortable' => [],
+    ];
 
     private array $inspectorProperties = [
         'url' => [
@@ -377,6 +383,15 @@ class GUI_Table extends GUI_Module
                     'showColumn' => 0, // tableEditor order
                     'clientside' => true,
                 ],
+                'filterByDbColumn' => [
+                    'attribute' => '',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                    'pool' => true,
+                    'clientside' => false
+                ],
                 'filterControl' => [
                     'attribute' => 'data-filter-control',
                     'type' => 'string',
@@ -387,6 +402,14 @@ class GUI_Table extends GUI_Module
                 ],
                 'filterControlPlaceholder' => [
                     'attribute' => 'data-filter-control-placeholder',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                    'clientside' => true,
+                ],
+                'filterData' => [
+                    'attribute' => 'data-filter-data',
                     'type' => 'string',
                     'value' => null,
                     'element' => 'input',
@@ -462,14 +485,14 @@ class GUI_Table extends GUI_Module
                     'pool' => true,
                     'clientside' => true,
                 ],
-                'poolOverride' => [
-                    'attribute' => 'data-pool-override',
+                'poolUseFormatted' => [
+                    'attribute' => 'data-pool-use-formatted',
                     'type' =>  'boolean',
                     'value' => false,
                     'element' => 'input',
                     'inputType' => 'checkbox',
-                    'caption' => 'Override Value',
-                    'tooltip' => 'override serverside value of column',
+                    'caption' => 'Use formatted Value',
+                    'tooltip' => 'Uses formatted bs-table value of column in fillControls',
                     'pool' => true,
                     'clientside' => true,
                 ],
@@ -1152,6 +1175,11 @@ class GUI_Table extends GUI_Module
         return $this->getInspectorProperties()['columns']['properties'];
     }
 
+    public function getColumnProperty(string $property): array
+    {
+        return $this->getColumnsProperties()[$property];
+    }
+
     /**
      * @param array $columns
      * @return $this
@@ -1202,32 +1230,61 @@ class GUI_Table extends GUI_Module
     /**
      * @return array all columns
      */
-    public function getColumns()
+    public function getColumns(): array
     {
-        return $this->Input->getVar('columns');
+        return $this->Input->getVar('columns', []);
     }
 
     /**
-     * @param bool $alias
+     * @param string $which possible keys: all, aliasNames, columnNames (assoc array), searchable (assoc array), (@todo filterable/filterSelect)
      * @return array only columns for database and sql statement passing
      */
-    public function getDBColumns(bool $alias = true): array
+    public function getDBColumns(string $which= 'all'): array
     {
         // todo if columns change / new configuration, reread with loop
-        if($this->dbColumns) {
-            return $this->dbColumns;
+        if($this->dbColumns[$which]) {
+            return $this->dbColumns[$which];
         }
 
-        $this->dbColumns = [];
+        $this->dbColumns = [
+            'all' => [],
+            'aliasNames' => [],
+            'columnNames' => [], // could also be an expression
+            'searchable' => [],
+            'sortable' => [],
+//            'searchableWithDataType' => [],
+        ];
         $columns = $this->Input->getVar('columns');
         foreach($columns as $column) {
+            if(!isset($column['field'])) continue; // necessary
             if(!isset($column['dbColumn'])) continue;
             $dbColumn = $column['dbColumn'];
-            if($alias) $dbColumn = '('.$dbColumn.')`'.$column['field'].'`';
-            $this->dbColumns[] = $dbColumn;
-            // $type = $this->getColumnsProperties()[$column]['dbColumn'];
+            if($dbColumn == '') continue;
+
+            $this->dbColumns['all'][] = '('.$dbColumn.')`'.$column['field'].'`';
+            $this->dbColumns['aliasNames'][] = $column['field'];
+            $this->dbColumns['columnNames'][$column['field']] = $dbColumn;
+
+            $assoc = [
+                'expr' => $dbColumn, // select expression
+                'alias' => $column['field'], // alias name
+                'type' => $column['poolType'] ?? '', // data type
+                'filterByColumn' => $column['filterByDbColumn'] ?? '' // column
+            ];
+
+//            $sortable = $column['searchable'] ?? $this->getColumnProperty('sortable')['value'];
+//            if($sortable) {
+//                $this->dbColumns['sortable'][] = $assoc;
+//            }
+
+            $searchable = $column['searchable'] ?? $this->getColumnProperty('searchable')['value'];
+            if($searchable) {
+//                $this->dbColumns['searchable'][] = $dbColumn;
+                $this->dbColumns['searchable'][] = $assoc;
+            }
         }
-        return $this->dbColumns;
+
+        return $this->dbColumns[$which];
     }
 
 //    public function loadConfig(string $json): bool
