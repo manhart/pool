@@ -46,7 +46,7 @@ if(!defined('DATAINTERFACE_C16')) define('DATAINTERFACE_C16', 'C16_Interface');
 /**
  * abstract Data Access Object
  */
-class DAO extends PoolObject
+abstract class DAO extends PoolObject
 {
     //@var string DAO Type
     //@access private
@@ -82,69 +82,45 @@ class DAO extends PoolObject
     var $foundRows = 0;
 
     /**
-     * Konstruktor
-     *
-     * @access protected
-     **/
-    function __construct()
-    {
-    }
-
-    /**
      * Einen Datensatz einfuegen (virtuelle Methode).
      *
      * @access protected
      **/
-    function insert($data)
-    {
-    }
+    abstract public function insert($data): Resultset;
 
     /**
      * Einen Datensatz aendern (virtuelle Methode).
-     *
-     * @access protected
      **/
-    function update($data)
-    {
-    }
+    abstract public function update($data): Resultset;
 
     /**
      * Einen Datensatz loeschen (virtuelle Methode).
-     *
-     * @access protected
      **/
-    function delete($id)
-    {
-    }
+    abstract public function delete($id): Resultset;
+
+    /**
+     * @return Resultset
+     */
+    abstract public function deleteMultiple(): Resultset;
 
     /**
      * Einen Datensatz zurueck geben (virtuelle Methode).
      * Datensaetze werden als Objekt Resultset zurueck gegeben.
-     *
-     * @access protected
      **/
-    function get($id, $key=NULL)
-    {
-    }
+    abstract public function get($id, $key=NULL): Resultset;
 
     /**
      * Mehrere Datensaetze zurueck geben (virtuelle Methode).
      * Datensaetze werden als Objekt Resultset zurueck gegeben.
-     *
-     * @access protected
      **/
-    function getMultiple()
-    {
-    }
+    abstract public function getMultiple(): Resultset;
 
     /**
      * Liefert die Anzahl gefundener Datensaete zurueck (virtuelle Methode).
      * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
      * sondern nur die Anzahl.
      **/
-    protected function getCount()
-    {
-    }
+    abstract public function getCount(): Resultset;
 
     /**
      * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
@@ -211,9 +187,7 @@ class DAO extends PoolObject
      * @abstract
      * @access protected
      **/
-    function getFieldlist()
-    {
-    }
+    abstract public function getFieldlist(): array;
 
     /**
      * Liefert den Typ einer Spalte
