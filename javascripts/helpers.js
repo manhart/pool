@@ -922,6 +922,12 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
             // Wert
             value = row[field];
 
+            // 28.01.2022, AM, special case: use formatted value if exists
+            if(field+'_pool_use_formatted' in row && row[field+'_pool_use_formatted']) {
+                value = row[field + '_pool_formatted']; // we prefer the formatted value of bs-table @see GUI_Table::strftime
+            }
+
+
             // 21.01.2013, AM, Acceleration of the selection via unique IDs (ID-Selector)
             // 07.07.2021, AM, Group-Selector added
             if (autoSearchControlsWithinContainer) {
