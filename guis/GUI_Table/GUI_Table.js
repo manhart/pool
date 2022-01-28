@@ -250,9 +250,9 @@ class GUI_Table extends GUI_Module
 
             let format = poolFormat ? poolFormat : this.formats[poolType];
 
-            let poolOverride = false;
-            if('poolOverride' in column) {
-                poolOverride = column['poolOverride'];
+            let poolUseFormatted = false;
+            if('poolUseFormatted' in column) {
+                poolUseFormatted = column['poolUseFormatted'];
             }
             // console.debug(field, poolType, format);
 
@@ -267,14 +267,14 @@ class GUI_Table extends GUI_Module
                 case 'time':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format, poolOverride);
+                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format, poolUseFormatted);
                     }
                     break;
 
                 case 'number':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format, poolOverride);
+                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format, poolUseFormatted);
                     }
                     break;
             }
@@ -757,7 +757,7 @@ class GUI_Table extends GUI_Module
         // todo
     }
 
-    number_format(value, row, index, field, format, override)
+    number_format(value, row, index, field, format, useFormatted)
     {
         return number_format(value, format['decimals'], format['decimal_separator'], format['thousands_separator'])
     }
@@ -770,7 +770,7 @@ class GUI_Table extends GUI_Module
         return value;
     }
 
-    strftime(value, row, index, field, format, override)
+    strftime(value, row, index, field, format, useFormatted)
     {
         // 09.12.21, AM, fallback: handle empty english database format (should be handled server-side!!)
         if(value == '0000-00-00 00:00:00' || value == '0000-00-00') {
@@ -785,15 +785,17 @@ class GUI_Table extends GUI_Module
             let already_formatted = col_pool_formatted in row;
 
             // 28.01.22, AM, was_modified and reformat added, because updateByUniqueId modifies row at runtime.
-            let was_modified = already_formatted ? (override && value != row[col_pool_formatted]) : false;
+            let was_modified = already_formatted ? (useFormatted && value != row[col_pool_formatted]) : false;
             let reformat = !already_formatted || was_modified;
 
             if(reformat) {
                 row[col_pool_formatted] = new Date(value).strftime(format)
             }
-            if(override && reformat) {
+            if(useFormatted && reformat) {
+                // AM, hint: _pool_use_formatted used in fillControls!!
                 row[field + '_pool_raw'] = value;
-                row[field] = row[col_pool_formatted];
+                row[field + '_pool_use_formatted'] = true;
+                // row[field] = row[col_pool_formatted];
             }
             // console.debug('complete row', row);
 
