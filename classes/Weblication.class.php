@@ -1080,7 +1080,7 @@ class Weblication extends Component
             'auth' => $name_of_auth_array,
             'persistency' => $persistent
         );
-        $MySQLInterface = &DataInterface::createDataInterface(DATAINTERFACE_MYSQL, $Packet);
+        $MySQLInterface = DataInterface::createDataInterface(DATAINTERFACE_MYSQL, $Packet);
 
         return $this->addDataInterface($MySQLInterface);
     }
@@ -1099,7 +1099,7 @@ class Weblication extends Component
             'host' => $host,
             'class_path' => $class_path
         );
-        $CISAMInterface = &DataInterface::createDataInterface(DATAINTERFACE_CISAM, $Packet);
+        $CISAMInterface = DataInterface::createDataInterface(DATAINTERFACE_CISAM, $Packet);
 
         return $this->addDataInterface($CISAMInterface);
     }
