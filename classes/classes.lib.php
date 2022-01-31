@@ -29,7 +29,7 @@ require_once __DIR__.'/Translator.class.php';		// necessary
 //require_once__DIR__.'/ActionHandler.class.php');
 //require_once__DIR__.'/TreeStructure.class.php');
 //require_once__DIR__.'/ProgressBar.class.php');
-//require_once__DIR__.'/Log.class.php');
+//require_once__DIR__.'/LogFile.class.php');
 //require_once__DIR__.'/IniFile.class.php');
 require_once __DIR__.'/Xception.class.php';
 
