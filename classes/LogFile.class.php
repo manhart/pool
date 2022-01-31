@@ -28,7 +28,7 @@
  *
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
-class Log extends PoolObject
+class LogFile extends PoolObject
 {
     /**
      * Datei
