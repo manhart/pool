@@ -1219,7 +1219,7 @@
                     $ActiveFile->setVar($name, $value, $encoding);
                 }
                 else {
-                    $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $name . '\'');
+                    $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $name . '\'. There is no file or block associated.');
                 }
             }
 
