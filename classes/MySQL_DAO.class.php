@@ -995,16 +995,30 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $alias = $isAssoc ? $column['alias'] : $column;
                 $expr = $isAssoc ? $column['expr'] : $column; // column or expression
                 $type = $isAssoc ? $column['type'] : '';
+                $isSubQuery = stripos($expr, 'select', 0) === 0;
+                if($isSubQuery) {
+                    $expr = '('.$expr.')';
+                }
                 // $format = $isAssoc ? $column['format'] : '';
 
-                if($type == 'date' or $type == 'date.time') {
+                $isDateTime = $type == 'date.time';
+                $isDate = $type == 'date';
+                if($isDate or $isDateTime) {
                     $expr = 'DATE_FORMAT('.$expr.', "'.Weblication::getInstance()->getDefaultFormat('mysql.date_format.' . $type).'")';
                 }
 
                 $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
                 if($hasDefinedFilter) {
+                    $filterByValue = $definedSearchKeywords[$alias];
                     $filterByColumn = $isAssoc ? ($column['filterByColumn']  ?: $expr) : $expr;
-                    $condition = [$filterByColumn, $operator, $definedSearchKeywords[$alias]];
+                    $filterControl = $isAssoc ? ($column['filterControl']  ?: 'input') : 'input';
+                    if($filterControl == 'select') {
+                        $operator = 'equal';
+                    }
+                    else {
+                        $filterByValue = '%'.$filterByValue.'%';
+                    }
+                    $condition = [$filterByColumn, $operator, $filterByValue];
                     $defined_filter[] = $condition;
                 }
 
