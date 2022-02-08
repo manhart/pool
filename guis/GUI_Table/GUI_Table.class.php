@@ -1077,8 +1077,8 @@ class GUI_Table extends GUI_Module
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
 
-        // 09.12.21, AM, override default filterDatepickerOptions
-        // @used-by table.js
+        // 09.12.21, AM, override default filterDatepickerOptions (language is unknown in property)
+        // @used-by GUI_Table.js
         $this->inspectorProperties['columns']['properties']['filterDatepickerOptions']['value'] =
             '{"autoclose":true, "clearBtn":true, "todayHighlight":true, "language":"'.$this->Weblication->getLanguage().'"}';
 
@@ -1269,6 +1269,7 @@ class GUI_Table extends GUI_Module
                 'expr' => $dbColumn, // select expression
                 'alias' => $column['field'], // alias name
                 'type' => $column['poolType'] ?? '', // data type
+                'filterControl' => $column['filterControl'] ?? '', // filterControl
                 'filterByColumn' => $column['filterByDbColumn'] ?? '' // column
             ];
 
