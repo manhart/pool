@@ -1274,7 +1274,8 @@ class Weblication extends Component
 
         $GUI = GUI_Module::createGUIModule($className, $this, null, $params);
         if (is_null($GUI)) {
-            throw new Exception('The class name '.$className.' was not found or does not exist');
+            throw new Exception('The class name '.$className.' was not found or does not exist. Requested URI: '.
+                $_SERVER['REQUEST_URI']. ' (Params: '.$params.')');
         }
         else {
             /** Hinweis: erstes GUI registriert sich selbst �ber setMain als
