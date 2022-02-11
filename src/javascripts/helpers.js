@@ -922,6 +922,12 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
             // Wert
             value = row[field];
 
+            // 28.01.2022, AM, special case: use formatted value if exists
+            if(field+'_pool_use_formatted' in row && row[field+'_pool_use_formatted']) {
+                value = row[field + '_pool_formatted']; // we prefer the formatted value of bs-table @see GUI_Table::strftime
+            }
+
+
             // 21.01.2013, AM, Acceleration of the selection via unique IDs (ID-Selector)
             // 07.07.2021, AM, Group-Selector added
             if (autoSearchControlsWithinContainer) {
@@ -950,7 +956,11 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                 if (row[field + '_class']) Ctrl.addClass(row[field + '_class']);
                 if (row[field + '_title']) Ctrl.attr('title', row[field + '_title']);
 
+                // console.debug('fillControls loop over', Ctrl[0].tagName, Ctrl.attr('id'), Ctrl.attr('name'), value);
+
+
                 if (r == rowSet.length - 1) {
+                    main_switch:
                     switch (Ctrl[0].tagName) {
                         case 'TEXTAREA':
                             Ctrl.val(value);
@@ -998,12 +1008,11 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                                 case 'checkbox':
                                 case 'radio':
                                     Ctrl.prop('checked', (value == Ctrl.val()));
-                                    break;
+                                    break main_switch;
 
-                                default:
-                                    Ctrl.val(value);
+                                // default:
+                                //     Ctrl.val(value);
                             }
-                            break;
 
                         default:
 
@@ -1016,6 +1025,18 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                             if (Ctrl.hasClass('selectpicker')) {
                                 Ctrl.selectpicker('refresh');
                             }
+
+                            // bootstrap-datetimepicker support v5
+                            // if (Ctrl.hasClass('datetimepicker-input')) {
+                            //     console.debug('trigger(change)');
+                            //     Ctrl.trigger('change');
+                            // }
+
+                            // bootstrap-datetimepicker support v6 (maybe it works automatically
+                            // if(Ctrl.data('data-td-target')) {
+                            //     Ctrl.trigger('change');
+                            // }
+
                             break;
                     }
                 }

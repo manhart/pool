@@ -306,9 +306,7 @@ if(!defined('CLASS_URL')) {
                 $query .= $sid;
             }
 
-
-            $url = $scheme.'://'.$this->Host.$port.$path.(($query != '') ? '?' : '').$query.$this->Anchor;
-            return $url;
+            return $scheme.'://'.$this->Host.$port.$path.(($query != '') ? '?' : '').$query.$this->Anchor;
         }
 
         /**

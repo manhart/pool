@@ -280,20 +280,6 @@ if(!defined('CLASS_MYSQLDAO')) {
             $this->pk = array();
             $this->columns = array();
             $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
-
-/*				$this->pk = array();
-
-            $count = count($field_list);
-            for ($i=0; $i < $count; $i++) {
-                $fieldname=$field_list[$i]['name'];
-                array_push($this -> columns, $fieldname);
-
-                $flags = explode(' ', $field_list[$i]['flags']);
-                if (in_array('primary_key', $flags)) {
-                    array_push($this -> pk, $fieldname);
-                }
-            }*/
-
             $this->onSetColumns();
         }
 
@@ -379,13 +365,22 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
+         * returns columns comma separated
+         *
+         * @return string
+         */
+        public function getColumnList(): string
+        {
+            return $this->column_list;
+        }
+
+        /**
          * Liefert alle Felder der Tabelle.
          *
-         * @access public
          * @param boolean $reInit Feldliste erneuern
          * @return array Felder der Tabelle
          **/
-        function getFieldlist($reInit=false)
+        public function getFieldlist($reInit=false): array
         {
             if (count($this->columns) == 0 or $reInit) {
                 $this->init();
@@ -418,17 +413,17 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
          *
-         * @param array|false $fieldname
+         * @param array $fieldName
          */
-        function getFieldinfo($fieldname)
+        function getFieldInfo($fieldName): array
         {
             if(!$this->field_list) $this->init();
             foreach ($this->field_list as $field) {
-                if($field['Field'] == $fieldname) {
+                if($field['Field'] == $fieldName) {
                     return $field;
                 }
             }
-            return false;
+            return [];
         }
 
         /**
@@ -455,7 +450,7 @@ if(!defined('CLASS_MYSQLDAO')) {
         function formatData(&$data)
         {
             foreach ($data as $fieldname => $fieldvalue) {
-                $colinfo = $this->getFieldinfo($fieldname);
+                $colinfo = $this->getFieldInfo($fieldname);
 
                 $coltype = array();
                 $enclosure = '\'';
@@ -563,7 +558,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @return MySQL_Resultset
          * @see MySQL_Resultset
          **/
-        function insert($data)
+        public function insert($data): Resultset
         {
             $keys = '';
             $values = '';
@@ -604,13 +599,12 @@ if(!defined('CLASS_MYSQLDAO')) {
          * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "affected_rows"! Sie kann
          * ueber MySQL_Resultset::getValue('affected_rows') ausgegeben werden.
          *
-         * @access public
          * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
          * Feldname und als Wert/Value den einzufuegenden Feldwert
-         * @return MySQL_Resultset
+         * @return Resultset
          * @see MySQL_Resultset
          **/
-        function update($data)
+        public function update($data): Resultset
         {
             $sizeof = sizeof($this->pk);
             for ($i=0; $i<$sizeof; $i++) {
@@ -670,12 +664,11 @@ if(!defined('CLASS_MYSQLDAO')) {
          * Die Funktion "delete" loescht einen Datensatz! Dabei muss der Primaerschluessel
          * (z.B. id) uebergeben werden. Es kann pro Aufruf nur ein Datensatz geloescht werden.
          *
-         * @access public
          * @param integer $id Eindeutige ID eines Datensatzes (Primaerschluessel!!)
-         * @return object MySQL_Resultset
+         * @return Resultset
          * @see MySQL_Resultset
          **/
-        function delete($id)
+        public function delete($id): Resultset
         {
             // $query = sprintf('update %s set _removed=1, _modified=now() where %s="%s"', $this -> table, $this -> pk, addslashes($id));
             $where = $this -> __buildWhere($id, $this -> pk);
@@ -692,15 +685,14 @@ if(!defined('CLASS_MYSQLDAO')) {
          * L�scht einen oder mehrere Datens�tze anhand des �bergebenen Filters! Achtung: immer auf korrekte Filter-Syntax achten.
          *
          * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
-         * @return MySQL_Resultset Ergebnismenge
+         * @return Resultset Ergebnismenge
          * @see MySQL_Resultset
          * @see MySQL_DAO::__buildFilter
          */
-        function deleteMultiple($filter_rules=array())
+        public function deleteMultiple(array $filter_rules=[]): Resultset
         {
             $sql = sprintf('DELETE FROM `%s` WHERE %s', $this->table, $this->__buildFilter($filter_rules, 'and', true));
-            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
@@ -712,10 +704,10 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @access public
          * @param mixed $id Eindeutige Wert (z.B. ID) eines Datensatzes
          * @param mixed $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
-         * @return MySQL_Resultset Ergebnismenge
+         * @return Resultset Ergebnismenge
          * @see MySQL_Resultset
          **/
-        function get($id, $key=NULL)
+        public function get($id, $key=NULL): Resultset
         {
             // Bugfix Alexander M.; ^^ansonsten liefert __buildWhere alle Datens�tze like getMultiple
             if(is_null($id)) $id = 0;
@@ -724,8 +716,7 @@ if(!defined('CLASS_MYSQLDAO')) {
             $sql = sprintf('select %s from `%s` where %s', $this->column_list, $this->table, $this->__buildWhere($id, $key));
             #echo "get: ".$sql."<br>";
 
-            $MySQL_Resultset = $this->__createMySQL_Resultset($sql);
-            return $MySQL_Resultset;
+            return $this->__createMySQL_Resultset($sql);
         }
 
         /**
@@ -736,18 +727,18 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
          * @param array $sorting Sortierung (siehe MySQL_DAO::__buildSorting())
          * @param array $limit Limit -> array(Position, Anzahl Datensaetze)
-         * @param array $groupby Gruppierung
+         * @param array $groupBy Gruppierung
          * @param array $having Filter Regeln auf die Gruppierung
          * @param array $options Optionale Parameter in der Select-Anweisung
-         * @return MySQL_Resultset Ergebnismenge
+         * @return Resultset Ergebnismenge
          * @see MySQL_Resultset
          * @see MySQL_DAO::__buildFilter
          * @see MySQL_DAO::__buildSorting
          * @see MySQL_DAO::__buildLimit
          * @see MySQL_DAO::__buildGroupby
          **/
-        public function getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array(),
-            $groupBy=array(), $having=array(), $options=array())
+        public function getMultiple($id=NULL, $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
+                                    array $groupBy=[], array $having=[], array $options=[]): Resultset
         {
             $sql = sprintf('SELECT %s %s FROM `%s` WHERE %s %s%s%s%s%s',
                 implode(' ', $options),
@@ -770,11 +761,11 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @param unknown $id ID's (array oder integer)
          * @param unknown $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
          * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
-         * @return MySQL_Resultset Ergebnismenge
+         * @return Resultset Ergebnismenge
          * @see MySQL_Resultset
          * @see MySQL_DAO::__buildFilter
          **/
-        function getCount($id=NULL, $key=NULL, $filter_rules=array()): MySQL_Resultset
+        public function getCount($id=NULL, $key=NULL, $filter_rules=array()): Resultset
         {
             $sql = sprintf('SELECT COUNT(%s) AS `count` FROM `%s`%s WHERE %s %s',
                 '*',
@@ -975,12 +966,83 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
+         * make filter rules based on search string or defined search keywords
+         *
+         * @param array $columns
+         * @param string $searchString
+         * @param array $definedSearchKeywords
+         * @return array
+         */
+        public function makeFilter(array $columns = [], string $searchString = '', array $definedSearchKeywords = []): array
+        {
+            $filter = [];
+            $hasSearchString = ($searchString != '');
+            if(!$hasSearchString and !count($definedSearchKeywords)) {
+                return $filter;
+            }
+
+            $operator = 'like';
+            $searchString = '%'.$searchString.'%';
+
+            $defined_filter = [];
+            $isAssoc = null;
+            $i = 0;
+            foreach($columns as $column) {
+                if(is_null($isAssoc)) $isAssoc = is_array($column);
+                if($i > 0) $filter[] = 'or';
+                $i++;
+
+                $alias = $isAssoc ? $column['alias'] : $column;
+                $expr = $isAssoc ? $column['expr'] : $column; // column or expression
+                $type = $isAssoc ? $column['type'] : '';
+                $isSubQuery = stripos($expr, 'select', 0) === 0;
+                if($isSubQuery) {
+                    $expr = '('.$expr.')';
+                }
+                // $format = $isAssoc ? $column['format'] : '';
+
+                $isDateTime = $type == 'date.time';
+                $isDate = $type == 'date';
+                if($isDate or $isDateTime) {
+                    $expr = 'DATE_FORMAT('.$expr.', "'.Weblication::getInstance()->getDefaultFormat('mysql.date_format.' . $type).'")';
+                }
+
+                $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
+                if($hasDefinedFilter) {
+                    $filterByValue = $definedSearchKeywords[$alias];
+                    $filterByColumn = $isAssoc ? ($column['filterByColumn']  ?: $expr) : $expr;
+                    $filterControl = $isAssoc ? ($column['filterControl']  ?: 'input') : 'input';
+                    if($filterControl == 'select') {
+                        $operator = 'equal';
+                    }
+                    else {
+                        $filterByValue = '%'.$filterByValue.'%';
+                    }
+                    $condition = [$filterByColumn, $operator, $filterByValue];
+                    $defined_filter[] = $condition;
+                }
+
+                if(!$hasSearchString) continue;
+
+                $condition = [$expr, $operator, $searchString];
+                $filter[] = $condition;
+            }
+
+            if($defined_filter) {
+                if($hasSearchString) $filter = array_merge(['('], $filter, [')'], ['and'], $defined_filter);
+                else $filter = $defined_filter;
+            }
+
+            return $filter;
+        }
+
+        /**
          * Filter-Regeln fuer die Gruppierung
          *
          * @param array $filter_rules Filter Regeln (siehe __buildFilter)
          * @return string SQL-Abfrage
          */
-        function __buildHaving($filter_rules)
+        function __buildHaving($filter_rules): string
         {
             $query = ltrim($this->__buildFilter($filter_rules, 'and', true));
             $beginningAnd = (substr($query, 0, 3) == 'and');
@@ -1021,8 +1083,6 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
-         * MySQL_DAO::__buildLimit()
-         *
          * @access private
          * @param array $limit Array im Format $array([offset], max). Beispiel $array(5) oder auch $array(0, 5)
          * @return string LIMIT eines SQL Statements

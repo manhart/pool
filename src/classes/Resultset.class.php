@@ -190,10 +190,9 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Setzt den internen Zeiger auf den ersten Datensatz zurueck (Iterator).
          *
-         * @access public
          * @return integer Index
          **/
-        function reset()
+        public function reset(): int
         {
             if ($this->count() > 0) {
                 $this->index = 0;
@@ -499,24 +498,51 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
-        * Setzt einen neuen/Uberschreibt einen Wert eines Feldes in der Ergebnismenge.
-        *
-        * @param string $key Schluessel (bzw. Name des Feldes)
-        * @param mixed $value Wert der Variable
-        */
-        function setValue(string $key, $value = '')
+         * Returns a value of a field of the current record as an array
+         *
+         * @param string $key
+         * @param array $default
+         * @param string $separator
+         * @return array
+         */
+        public function getValueAsArray(string $key, array $default = [], string $separator = ','): array
+        {
+            $value = $this->getValue($key, []);
+            if(is_array($value) == false) {
+                $value = explode($separator, $value);
+            }
+            return $value;
+        }
+
+        /**
+         * Sets a new/overwrites a value of a field in the result set.
+         *
+         * @param string $key name of key/field
+         * @param mixed $value value
+         * @return $this
+         */
+        public function setValue(string $key, $value): Resultset
         {
             if($this->count() == 0) {
-                $this->addValue($key, $value);
+                return $this->addValue($key, $value);
             }
-            else {
-                if (!is_array($key)) {
-                    $this->rowset[$this->index][$key] = $value;
-                }
-                else {
-                    $this->rowset[$this->index] = $key + $this->rowset[$this->index];
-                }
+            $this->rowset[$this->index][$key] = $value;
+            return $this;
+        }
+
+        /**
+         * Sets new/overwrites values of fields in the result set.
+         *
+         * @param array $assoc
+         * @return $this
+         */
+        public function setValues(array $assoc): Resultset
+        {
+            if($this->count() == 0) {
+                return $this->addValues($assoc);
             }
+            $this->rowset[$this->index] = $assoc + $this->rowset[$this->index];
+            return $this;
         }
 
         /**
@@ -544,19 +570,25 @@ if(!defined('CLASS_RESULTSET')) {
         /**
         * Fuegt einen neuen Datensatz in die Ergebnismenge ein.
         *
-        * @access public
         * @param string $key Schluessel (bzw. Name des Feldes)
-        * @param string $value Wert der Variable
+        * @param mixed $value Wert der Variable
         */
-        function addValue($key, $value = '')
+        public function addValue(string $key, $value): Resultset
         {
-            if (!is_array($key)) {
-                $this -> rowset[$this->count()][$key] = $value;
-            }
-            else {
-                $this -> rowset[$this->count()] = $key;
-            }
+            $this->rowset[$this->count()][$key] = $value;
             $this->index = $this->count()-1;
+            return $this;
+        }
+
+        /**
+         * @param array $assoc
+         * @return Resultset
+         */
+        public function addValues(array $assoc): Resultset
+        {
+            $this->rowset[$this->count()] = $assoc;
+            $this->index = $this->count()-1;
+            return $this;
         }
 
         /**
@@ -796,29 +828,28 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Liefert alle Werte eines Feldes bzw. einer Tabellenspalte zurueck.
          *
-         * @access public
-         * @param string|array $fieldname Feldname bzw. Spaltenname
-         * @param boolean $asKey Werte als Schluessel im Array
+         * @param string|array $fieldName Feldname bzw. Spaltenname
+         * @param string $fieldNameAsKey dieses Feld als Schlüssel
          * @return array Felddaten als Array z.B. array('Alex', 'Florian', 'Andreas')
-         **/
-        function getFieldData($fieldname, $asKey=false)
+         */
+        public function getFieldData($fieldName, $fieldNameAsKey=''): array
         {
-            $arrResult = array();
-            if(is_array($fieldname)) {
-                $fieldname = array_flip($fieldname);
+            $arrResult = [];
+            if(is_array($fieldName)) {
+                $fieldName = array_flip($fieldName);
                 foreach ($this->rowset as $row) {
-                    $record = array_intersect_key($row, $fieldname);
+                    $record = array_intersect_key($row, $fieldName);
                     $arrResult[] = $record;
                 }
             }
             else {
                 foreach($this->rowset as $row) {
-                    if(isset($row[$fieldname])) {
-                        if($asKey) {
-                            $arrResult[$row[$fieldname]] = true;
+                    if(isset($row[$fieldName])) {
+                        if($fieldNameAsKey) {
+                            $arrResult[$row[$fieldNameAsKey]] = $row[$fieldName];
                         }
                         else {
-                            $arrResult[] = $row[$fieldname];
+                            $arrResult[] = $row[$fieldName];
                         }
                     }
                 }
