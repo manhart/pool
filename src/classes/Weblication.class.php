@@ -1080,7 +1080,7 @@ class Weblication extends Component
             'auth' => $name_of_auth_array,
             'persistency' => $persistent
         );
-        $MySQLInterface = &DataInterface::createDataInterface(DATAINTERFACE_MYSQL, $Packet);
+        $MySQLInterface = DataInterface::createDataInterface(DATAINTERFACE_MYSQL, $Packet);
 
         return $this->addDataInterface($MySQLInterface);
     }
@@ -1099,7 +1099,7 @@ class Weblication extends Component
             'host' => $host,
             'class_path' => $class_path
         );
-        $CISAMInterface = &DataInterface::createDataInterface(DATAINTERFACE_CISAM, $Packet);
+        $CISAMInterface = DataInterface::createDataInterface(DATAINTERFACE_CISAM, $Packet);
 
         return $this->addDataInterface($CISAMInterface);
     }
@@ -1274,7 +1274,8 @@ class Weblication extends Component
 
         $GUI = GUI_Module::createGUIModule($className, $this, null, $params);
         if (is_null($GUI)) {
-            throw new Exception('The class name '.$className.' was not found or does not exist');
+            throw new Exception('The class name '.$className.' was not found or does not exist. Requested URI: '.
+                $_SERVER['REQUEST_URI']. ' (Params: "'.$params.'", isAjax: "'.bool2string(isAjax()).'")');
         }
         else {
             /** Hinweis: erstes GUI registriert sich selbst �ber setMain als

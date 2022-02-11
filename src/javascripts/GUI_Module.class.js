@@ -20,6 +20,16 @@ class GUI_Module
     {
         this.name = name;
         this.className = what(this);
+
+        // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
+        if(this.className == undefined) {
+            if(!window['pool_GUI_Module_unknown_className']) {
+                alert('An unknown error has occurred in your browser. Please try to clear the browser cache. Key combination is: '+
+                    'Ctrl+Shift+Del. ' + String.fromCharCode(10) + 'If this does not help, contact our IT (software developers).');
+            }
+            window['pool_GUI_Module_unknown_className'] = 1;
+        }
+
         Weblication.getInstance().registerModule(this);
     }
 

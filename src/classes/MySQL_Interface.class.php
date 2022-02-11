@@ -480,10 +480,8 @@ if(!defined('MYSQL_LAYER'))
         * @param string $database Datenbank
         * @param constant $mode Lese- oder Schreibmodus
         * @return boolean Gibt TRUE/FALSE zurueck
-        *
-        * @access public
         */
-        function isConnected($database='', $mode=SQL_READ)
+        public function isConnected(string $database='', $mode=SQL_READ): bool
         {
             if ($mode == '') {
                 $mode = SQL_READ;

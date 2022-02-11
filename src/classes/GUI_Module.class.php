@@ -451,7 +451,7 @@ class GUI_Module extends Module
     *
     * @access protected
     */
-    protected function loadFiles() {}
+    public function loadFiles() {}
 
     /**
      * load, create and register JavaScript GUI
@@ -578,10 +578,7 @@ class GUI_Module extends Module
     {
         header('Content-type: application/json');
 
-        $Result = false;
-
-        ob_start();
-
+        $Result = '';
 
         // 09.12.21, AM, reworked
         if(!is_callable([$this, $method])) {
@@ -602,29 +599,29 @@ class GUI_Module extends Module
             return '';
         }
 
+        ob_start();
+
         $args = [];
         if($numberOfParameters) {
             $parameters = $ReflectionMethod->getParameters();
             foreach($parameters as $Parameter) {
-                if($this->Input->exists($Parameter->getName())) {
-                    $value = $this->Input->getVar($Parameter->getName());
-                    if(is_string($value)) {
-                        switch($Parameter->getType()->getName()) {
-                            case 'float':
-                                $value = (float)$value;
-                                break;
+                $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
+                if(is_string($value)) {
+                    switch($Parameter->getType()->getName()) {
+                        case 'float':
+                            $value = (float)$value;
+                            break;
 
-                            case 'int':
-                                $value = (int)$value;
-                                break;
+                        case 'int':
+                            $value = (int)$value;
+                            break;
 
-                            case 'bool':
-                                $value = string2bool($value);
-                                break;
-                        }
+                        case 'bool':
+                            $value = string2bool($value);
+                            break;
                     }
-                    $args[] = $value;
                 }
+                $args[] = $value;
             }
         }
         try {
@@ -639,6 +636,18 @@ class GUI_Module extends Module
 
         if ($this->plainJSON) {
             $clientData = $Result;
+
+            $last_error = error_get_last();
+            if($last_error != null) {
+                if(IS_DEVELOP) { // only for developers, to have a notice
+                    $message = $last_error['message'] . ' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
+                    throw new Exception($message, $last_error['type']);
+                }
+//                error_log($message);
+//                syslog(LOG_WARNING, $message);
+
+                error_clear_last();
+            }
         }
         else {
             $clientData['Result'] = $Result;
