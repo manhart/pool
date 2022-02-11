@@ -21,6 +21,7 @@ require_once __DIR__.'/GUI_Module.class.php';	// necessary
 require_once __DIR__.'/Configurable.trait.php';	// necessary
 //require_once __DIR__.'/GUI_ModuleConfigurable.class.php';	// necessary
 require_once __DIR__.'/DAO.class.php';			// necessary
+require_once __DIR__.'/DAOException.class.php';		// necessary
 require_once __DIR__.'/Resultset.class.php';		// necessary
 require_once __DIR__.'/Singleton.class.php';		// necessary
 require_once __DIR__.'/Translator.class.php';		// necessary
@@ -28,9 +29,9 @@ require_once __DIR__.'/Translator.class.php';		// necessary
 //require_once__DIR__.'/ActionHandler.class.php');
 //require_once__DIR__.'/TreeStructure.class.php');
 //require_once__DIR__.'/ProgressBar.class.php');
-//require_once__DIR__.'/Log.class.php');
+//require_once__DIR__.'/LogFile.class.php');
 //require_once__DIR__.'/IniFile.class.php');
-require_once __DIR__.'/Exception.class.php';
+require_once __DIR__.'/Xception.class.php';
 
 //require_once__DIR__.'/SessionHandler.class.php');
 

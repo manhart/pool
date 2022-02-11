@@ -14,7 +14,13 @@ class GUI_Table extends GUI_Module
     /**
      * @var array caches dbColumns
      */
-    private $dbColumns = [];
+    private array $dbColumns = [
+        'all' => [],
+        'aliasNames' => [],
+        'columnNames' => [], // could also be an expression
+        'searchable' => [],
+        'sortable' => [],
+    ];
 
     private array $inspectorProperties = [
         'url' => [
@@ -32,6 +38,13 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'text',
             'caption' => 'Buttons'
+        ],
+        'buttonsClass' => [
+            'attribute' => 'data-buttons-class',
+            'type' => 'string',
+            'value' => 'secondary',
+            'element' => 'input',
+            'inputType' => 'text'
         ],
         'cache' => [
             'attribute' => 'data-cache',
@@ -370,6 +383,15 @@ class GUI_Table extends GUI_Module
                     'showColumn' => 0, // tableEditor order
                     'clientside' => true,
                 ],
+                'filterByDbColumn' => [
+                    'attribute' => '',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                    'pool' => true,
+                    'clientside' => false
+                ],
                 'filterControl' => [
                     'attribute' => 'data-filter-control',
                     'type' => 'string',
@@ -380,6 +402,14 @@ class GUI_Table extends GUI_Module
                 ],
                 'filterControlPlaceholder' => [
                     'attribute' => 'data-filter-control-placeholder',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                    'clientside' => true,
+                ],
+                'filterData' => [
+                    'attribute' => 'data-filter-data',
                     'type' => 'string',
                     'value' => null,
                     'element' => 'input',
@@ -452,6 +482,17 @@ class GUI_Table extends GUI_Module
                     'element' => 'select',
                     'value' => '',
                     'options' => ['', 'date', 'time', 'date.time', 'number'],
+                    'pool' => true,
+                    'clientside' => true,
+                ],
+                'poolUseFormatted' => [
+                    'attribute' => 'data-pool-use-formatted',
+                    'type' =>  'boolean',
+                    'value' => false,
+                    'element' => 'input',
+                    'inputType' => 'checkbox',
+                    'caption' => 'Use formatted Value',
+                    'tooltip' => 'Uses formatted bs-table value of column in fillControls',
                     'pool' => true,
                     'clientside' => true,
                 ],
@@ -566,6 +607,11 @@ class GUI_Table extends GUI_Module
                     'clientside' => true,
                 ]
             ]
+        ],
+        'customSearch' => [
+            'attribute' => 'data-custom-search',
+            'type' => 'function',
+            'value' => null // undefined
         ],
         'customSort' => [
             'attribute' => 'data-custom-sort',
@@ -933,6 +979,81 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox'
+        ],
+        'groupBy' => [
+            'attribute' => 'data-group-by',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'groupByField' => [
+            'attribute' => 'data-group-by-field',
+            'type' => 'array',
+            'value' => [],
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
+        'groupByToggle' => [
+            'attribute' => 'data-group-by-toggle',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'groupByShowToggleIcon' => [
+            'attribute' => 'data-group-by-show-toggle-icon',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'groupByCollapsedGroups' => [
+            'attribute' => 'data-group-by-collapsed-groups',
+            'type' => 'array',
+            'value' => [],
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
+        'groupByFormatter' => [
+            'attribute' => 'data-group-by-formatter',
+            'type' => 'function',
+            'value' => 'function(value, idx, data) { return \'\' }',
+            'clientside' => true
+        ],
+        'detailFormatter' => [
+            'attribute' => 'data-detail-formatter',
+            'type' => 'function',
+            'value' => 'function(index, row, element) { return \'\' }',
+            'clientside' => true
+        ],
+        'detailView' => [
+            'attribute' => 'data-detail-view',
+            'type' => 'boolean',
+            'value' => false,
+            'element'   => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'detailViewAlign' => [
+            'attribute' => 'data-detail-view-align',
+            'type' => 'string',
+            'value' => 'left',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
+        'detailViewByClick' => [
+            'attribute' => 'data-detail-view-by-click',
+            'type'  => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
+        'detailViewIcon' => [
+            'attribute' => 'data-detail-view-icon',
+            'type'  => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
         ]
     ];
 
@@ -956,8 +1077,8 @@ class GUI_Table extends GUI_Module
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
 
-        // 09.12.21, AM, override default filterDatepickerOptions
-        // @used-by table.js
+        // 09.12.21, AM, override default filterDatepickerOptions (language is unknown in property)
+        // @used-by GUI_Table.js
         $this->inspectorProperties['columns']['properties']['filterDatepickerOptions']['value'] =
             '{"autoclose":true, "clearBtn":true, "todayHighlight":true, "language":"'.$this->Weblication->getLanguage().'"}';
 
@@ -1054,6 +1175,11 @@ class GUI_Table extends GUI_Module
         return $this->getInspectorProperties()['columns']['properties'];
     }
 
+    public function getColumnProperty(string $property): array
+    {
+        return $this->getColumnsProperties()[$property];
+    }
+
     /**
      * @param array $columns
      * @return $this
@@ -1104,32 +1230,62 @@ class GUI_Table extends GUI_Module
     /**
      * @return array all columns
      */
-    public function getColumns()
+    public function getColumns(): array
     {
-        return $this->Input->getVar('columns');
+        return $this->Input->getVar('columns', []);
     }
 
     /**
-     * @param bool $alias
+     * @param string $which possible keys: all, aliasNames, columnNames (assoc array), searchable (assoc array), (@todo filterable/filterSelect)
      * @return array only columns for database and sql statement passing
      */
-    public function getDBColumns(bool $alias = true): array
+    public function getDBColumns(string $which= 'all'): array
     {
         // todo if columns change / new configuration, reread with loop
-        if($this->dbColumns) {
-            return $this->dbColumns;
+        if($this->dbColumns[$which]) {
+            return $this->dbColumns[$which];
         }
 
-        $this->dbColumns = [];
+        $this->dbColumns = [
+            'all' => [],
+            'aliasNames' => [],
+            'columnNames' => [], // could also be an expression
+            'searchable' => [],
+            'sortable' => [],
+//            'searchableWithDataType' => [],
+        ];
         $columns = $this->Input->getVar('columns');
         foreach($columns as $column) {
+            if(!isset($column['field'])) continue; // necessary
             if(!isset($column['dbColumn'])) continue;
             $dbColumn = $column['dbColumn'];
-            if($alias) $dbColumn = '('.$dbColumn.')`'.$column['field'].'`';
-            $this->dbColumns[] = $dbColumn;
-            // $type = $this->getColumnsProperties()[$column]['dbColumn'];
+            if($dbColumn == '') continue;
+
+            $this->dbColumns['all'][] = '('.$dbColumn.')`'.$column['field'].'`';
+            $this->dbColumns['aliasNames'][] = $column['field'];
+            $this->dbColumns['columnNames'][$column['field']] = $dbColumn;
+
+            $assoc = [
+                'expr' => $dbColumn, // select expression
+                'alias' => $column['field'], // alias name
+                'type' => $column['poolType'] ?? '', // data type
+                'filterControl' => $column['filterControl'] ?? '', // filterControl
+                'filterByColumn' => $column['filterByDbColumn'] ?? '' // column
+            ];
+
+//            $sortable = $column['searchable'] ?? $this->getColumnProperty('sortable')['value'];
+//            if($sortable) {
+//                $this->dbColumns['sortable'][] = $assoc;
+//            }
+
+            $searchable = $column['searchable'] ?? $this->getColumnProperty('searchable')['value'];
+            if($searchable) {
+//                $this->dbColumns['searchable'][] = $dbColumn;
+                $this->dbColumns['searchable'][] = $assoc;
+            }
         }
-        return $this->dbColumns;
+
+        return $this->dbColumns[$which];
     }
 
 //    public function loadConfig(string $json): bool
