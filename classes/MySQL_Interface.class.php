@@ -463,9 +463,8 @@ if(!defined('MYSQL_LAYER'))
         * Baut eine Verbindung zur Datenbank auf.
         *
         * @param string $database Datenbank
-        * @access public
         */
-        function connect($database='')
+        public function open(string $database=''): bool
         {
             $result = $this->__get_db_conid($database, SQL_READ);
             if($result != false and $this->host[SQL_READ] != $this->host[SQL_WRITE]) {
@@ -505,10 +504,9 @@ if(!defined('MYSQL_LAYER'))
         /**
          * Schliesst alle Verbindungs-Kennungen.
          *
-         * @access public
          * @return boolean true
          **/
-        function close()
+        public function close(): bool
         {
             if (is_array($this->connections[SQL_READ])) {
                 foreach ($this->connections[SQL_READ] as $database => $conid) {
