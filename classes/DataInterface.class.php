@@ -105,5 +105,17 @@ if(!defined('CLASS_DATAINTERFACE')) {
             $DataInterface->setOptions($Packet);
             return $DataInterface;
         }
+
+        /**
+         * open connection or file
+         *
+         * @return bool
+         */
+        abstract public function open(): bool;
+
+        /**
+         * close connection or file handle
+         */
+        abstract public function close(): bool;
     }
 }
