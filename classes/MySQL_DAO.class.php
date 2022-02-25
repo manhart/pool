@@ -199,10 +199,9 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * MySQL_Interface
          *
-         * @access private
          * @var MySQL_Interface
          */
-        var $db = null;
+        protected ?DataInterface $db = null;
 
         //@var string Datenbankname
         //@access protected
@@ -267,15 +266,23 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
+         * return DataInterface e.g. MySQL-Connection like MySQLi_Interface
+         *
+         * @return DataInterface
+         */
+        public function getDataInterface(): DataInterface
+        {
+            return $this->db;
+        }
+
+        /**
          * Initialisiert Objekteigenschaften: Die Funktion "init" liest automatisch alle Felder und
          * Primaerschluessel der Tabelle ein.
          *
          * Beim Setzen der Spalten/Felder wird das Ereignis
          * $this -> onSetColumns() aufgerufen
-         *
-         * @access public
          **/
-        function init()
+        public function init()
         {
             $this->pk = array();
             $this->columns = array();
@@ -1191,21 +1198,15 @@ class CustomMySQL_DAO extends MySQL_DAO
      *
      * Sets up the object.
      *
-     * @access public
-     * @param object $db Datenbankhandle
+     * @param DataInterface $db Datenbankhandle
      * @param string $dbname Datenbank
      * @param string $table Tabelle
      * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
-     **/
-    public function __construct($db, $dbname, $table, $autoload_fields=true)
+     */
+    public function __construct(DataInterface $db, string $dbname, string $table, bool $autoload_fields=true)
     {
         parent::__construct();
 
-        if(!is_a($db, 'DataInterface')) {
-            $Xeption = new Xception('No data interface was passed!', 0, array('file' => __FILE__,
-                'line' => __LINE__), null);
-            $this -> throwException($Xeption);
-        }
         $this->db = $db;
         $this->dbname = $dbname;
         $this->table = $table;
