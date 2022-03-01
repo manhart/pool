@@ -171,10 +171,9 @@ class GUI_Module extends Module
     /**
      * Das Template Objekt laedt HTML Vorlagen.
      *
-     * @access public
      * @param boolean $search True sucht nach weiteren GUIs
      **/
-    function autoLoadFiles(bool $search = true)
+    public function autoLoadFiles(bool $search = true)
     {
         if ($this->AutoLoadFiles) {
             // Lade Templates
@@ -293,7 +292,8 @@ class GUI_Module extends Module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
      * @return Module|null Neues GUI_Module
      */
-    public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = ''): ?Module
+    public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
+                                           $autoLoadFiles = true): ?Module
     {
         $class_exists = class_exists($GUIClassName, false);
 
@@ -310,7 +310,7 @@ class GUI_Module extends Module
             // AM, 22.07.2020
             $Params = new Input(I_EMPTY);
             $Params->setParams($params);
-            $GUI = new $GUIClassName($Owner, true, $Params->getData());
+            $GUI = new $GUIClassName($Owner, $autoLoadFiles, $Params->getData());
             /* @var $GUI GUI_Module */
             if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
