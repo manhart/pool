@@ -599,6 +599,10 @@ class GUI_Module extends Module
 
         ob_start();
 
+        error_clear_last();
+
+        $errorClassName = '';
+
         $args = [];
         if($numberOfParameters) {
             $parameters = $ReflectionMethod->getParameters();
@@ -624,6 +628,7 @@ class GUI_Module extends Module
         }
         try {
             $Result = $ReflectionMethod->invokeArgs($this, $args);
+            $errorClassName = $ReflectionMethod->getDeclaringClass()->getName();
         }
         catch(\ReflectionException $e) {
             echo $e->getMessage();
@@ -638,7 +643,8 @@ class GUI_Module extends Module
             $last_error = error_get_last();
             if($last_error != null) {
                 if(IS_DEVELOP) { // only for developers, to have a notice
-                    $message = $last_error['message'] . ' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
+                    $message = $last_error['message'] . ' in class '.($errorClassName ?: $this->getClassName()).
+                        ':'.$method.' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
                     throw new Exception($message, $last_error['type']);
                 }
 //                error_log($message);
