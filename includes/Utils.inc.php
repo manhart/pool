@@ -4549,3 +4549,16 @@ function pdfunite(array $pdfFiles, string $pdfOut): bool
     passthru($cmd);
     return file_exists($pdfOut);
 }
+
+/**
+ * validate date
+ *
+ * @param $date
+ * @param $format
+ * @return bool
+ */
+function validateDate($date, string $format = 'Y-m-d H:i:s'): bool
+{
+    $d = DateTime::createFromFormat($format, $date);
+    return $d && $d->format($format) == $date;
+}
