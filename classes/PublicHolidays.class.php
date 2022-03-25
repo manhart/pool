@@ -301,12 +301,12 @@ final class PublicHolidays extends PoolObject
     /**
      * checks date for a holiday
      *
-     * @param DateTime $Date
+     * @param DateTimeInterface $Date
      * @param string $state
      * @param bool $legal
      * @return bool
      */
-    static function check(\DateTime $Date, string $state = '', bool $legal = true): bool
+    static function check(\DateTimeInterface $Date, string $state = '', bool $legal = true): bool
     {
         $year = (int)$Date->format('Y');
 
