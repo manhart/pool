@@ -329,7 +329,7 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @access public;
      **/
-    function init($superglobals=0)
+    function init($superglobals=I_EMPTY)
     {
         parent::init($superglobals);
     }
