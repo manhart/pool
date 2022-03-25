@@ -895,11 +895,13 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
         if (autoSearchControlsWithinContainer) {
             // automatically search controls within container and rowset fields (very old method)
             selectors = explode(',', containerSelector, false);
-        } else {
+        }
+        else {
             // controls selector
             controls = jQuery(containerSelector);
         }
-    } else if (Array.isArray(containerSelector) || isObject(containerSelector)) {
+    }
+    else if (Array.isArray(containerSelector) || isObject(containerSelector)) {
         controls = jQuery(containerSelector);
         hasControls = true;
     }
