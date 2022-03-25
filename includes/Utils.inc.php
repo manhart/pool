@@ -4553,11 +4553,11 @@ function pdfunite(array $pdfFiles, string $pdfOut): bool
 /**
  * validate date
  *
- * @param $date
- * @param $format
+ * @param string $date
+ * @param string $format
  * @return bool
  */
-function validateDate($date, string $format = 'Y-m-d H:i:s'): bool
+function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
 {
     $d = DateTime::createFromFormat($format, $date);
     return $d && $d->format($format) == $date;
