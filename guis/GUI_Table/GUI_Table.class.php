@@ -928,13 +928,27 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'caption' => 'Single Select'
         ],
+        'sortName' => [
+            'attribute' => 'data-sort-name',
+            'type' => 'string',
+            'value' => '',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
+        'sortOrder' => [
+            'attribute' => 'data-sort-order',
+            'type' => 'string',
+            'value' => null,
+            'element' => 'select',
+            'options' => [null, 'asc', 'desc'],
+            'caption' => 'Sort Direction'
+        ],
         'sortReset' => [
             'attribute' => 'data-sort-reset',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-
         ],
         'sortable' => [
             'attribute' => 'data-sortable',
