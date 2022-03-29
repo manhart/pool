@@ -581,11 +581,29 @@ class GUI_Table extends GUI_Module
     }
 
     /**
-     * uncheck all current page rows
+     * check all rows
+     */
+    checkAll()
+    {
+        if(this.getOption('pagination')) {
+            this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
+        }
+        else {
+            this.getTable().bootstrapTable('checkAll');
+        }
+    }
+
+    /**
+     * uncheck all rows
      */
     uncheckAll()
     {
-        this.getTable().bootstrapTable('uncheckAll');
+        if(this.getOption('pagination')) {
+            this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
+        }
+        else {
+            this.getTable().bootstrapTable('uncheckAll');
+        }
     }
 
     /**
@@ -605,9 +623,14 @@ class GUI_Table extends GUI_Module
         });
 
         let uniqueId = this.getUniqueId()
-        if(uniqueId && row[uniqueId]) {
+        if(uniqueId && row[uniqueId] != '') {
             this.pageIds.push(row[uniqueId]);
+
+            // alternate
+            // this.checkBy(uniqueId, [row[uniqueId]]);
         }
+        // 29.03.22, AM, fix correct index
+        index = this.getData().indexOf(row);
 
         if(paging) {
             let pageSize = this.getOption('pageSize');
@@ -618,6 +641,42 @@ class GUI_Table extends GUI_Module
         if(check) {
             this.check(index);
         }
+
+        return index;
+    }
+
+    /**
+     * Get the loaded data of table at the moment that this method is called
+     *
+     * @param useCurrentPage if set to true the method will return the data only in the current page
+     * @param includeHiddenRows if set to false the method will exclude the hidden rows
+     * @param unfiltered if set to false the method will exclude filtered data
+     * @param formatted if set to true the method will return the formatted value
+     * @returns {*}
+     */
+    getData(useCurrentPage = false, includeHiddenRows = true, unfiltered = false, formatted = false)
+    {
+        let params = {
+            useCurrentPage: useCurrentPage,
+            includeHiddenRows: includeHiddenRows,
+            unfiltered: unfiltered,
+            formatted: formatted
+        }
+        return this.getTable().bootstrapTable('getData', params);
+    }
+
+    /**
+     * Get data from table, the row that contains the id passed by parameter.
+     *
+     * @param id
+     * @returns {*}
+     */
+    getRowByUniqueId(id)
+    {
+        let params = {
+            id: parseInt(id, 10)
+        }
+        return this.getTable().bootstrapTable('getRowByUniqueId', params);
     }
 
     /**
