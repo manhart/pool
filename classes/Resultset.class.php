@@ -289,9 +289,9 @@ if(!defined('CLASS_RESULTSET')) {
          * @access public
          * @return integer (beginnend bei 0 fuer den ersten Datensatz; -1 entspricht einer leeren Ergebnismenge)
          **/
-        function pos()
+        public function pos(): int
         {
-            return $this -> index;
+            return $this->index;
         }
 
         /**
