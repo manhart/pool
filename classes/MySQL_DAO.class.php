@@ -349,7 +349,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          *
          * @return $this
          */
-        public function enableTranslation()
+        public function enableTranslation(): MySQL_DAO
         {
             $this->translateValues = $this->cache['translatedValues'] ?: $this->translateValues;
             $this->translate = $this->cache['translate'] ?: $this->translate;
@@ -361,7 +361,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          *
          * @return $this
          */
-        public function disableTranslation()
+        public function disableTranslation(): MySQL_DAO
         {
             $this->cache['translate'] = $this->translate;
             $this->cache['translatedValues'] = $this->translateValues;
