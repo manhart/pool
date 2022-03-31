@@ -206,10 +206,9 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Setzt den internen Zeiger auf den ersten Datensatz zurueck (Iterator).
          *
-         * @access public
          * @return array Datensatz (oder false; wenn es keine Datensaetze gibt)
          **/
-        function first()
+        public function first(): array
         {
             $this->reset();
             return $this->getRow();
@@ -218,21 +217,19 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Fraegt ab, ob es sich um den ersten Datensatz handelt.
          *
-         * @access public
          * @return boolean Ergebnisstatus
          **/
-        function isFirst()
+        public function isFirst(): bool
         {
-            return $this -> index == 0;
+            return $this->index == 0;
         }
 
         /**
          * Setzt den internen Zeiger auf den letzten Datensatz (Iterator).
          *
-         * @access public
          * @return array|bool Datensatz als Array oder FALSE
          **/
-        function last()
+        public function last()
         {
             $count = $this -> count();
             if ($count > 0) {
@@ -247,23 +244,21 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Fraegt ab, ob es sich um den letzten Datensatz handelt.
          *
-         * @access public
          * @return boolean Erfolgsstatus
          **/
-        function isLast()
+        public function isLast(): bool
         {
-            return $this -> index == ($this -> count() - 1);
+            return $this->index == ($this->count() - 1);
         }
 
         /**
          * Liefert den aktuellen Datensatz
          *
-         * @access public
          * @return array Datensatz
          **/
-        function current()
+        public function current(): array
         {
-            return $this -> getRow();
+            return $this->getRow();
         }
 
         /**
@@ -272,22 +267,21 @@ if(!defined('CLASS_RESULTSET')) {
          * @param integer $index Record-Offset
          * @return array Datensatz
          **/
-        function seek($index)
+        public function seek(int $index): array
         {
-            if ($this -> count() > $index) {
-                $this -> index = $index;
+            if ($this->count() > $index) {
+                $this->index = $index;
             }
             else {
-                $this -> index = -1;
+                $this->index = -1;
             }
-            return $this -> getRow();
+            return $this->getRow();
         }
 
         /**
-         * Aktuelle Zeigerposition  (Iterator).
+         * current pointer position  (Iterator).
          *
-         * @access public
-         * @return integer (beginnend bei 0 fuer den ersten Datensatz; -1 entspricht einer leeren Ergebnismenge)
+         * @return int (beginnend bei 0 fuer den ersten Datensatz; -1 entspricht einer leeren Ergebnismenge)
          **/
         public function pos(): int
         {
@@ -297,10 +291,9 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Zum naechsten Datensatz. Bewegt den internen Zeiger um eins hoeher (Iterator).
          *
-         * @access public
-         * @return array|bool naechster Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
+         * @return array|false naechster Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
          **/
-        function next()
+        public function next()
         {
             if ($this->index < $this->count()) {
                 $this->index++;
@@ -314,10 +307,9 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Zum vorherigen Datensatz. Bewegt den internen Zeiger um eins tiefer (Iterator).
          *
-         * @access public
-         * @return array|bool vorheriger Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
+         * @return array|false vorheriger Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
          **/
-        function prev()
+        public function prev()
         {
             if ($this->index > 0) {
                 $this->index--;
@@ -331,10 +323,9 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Anzahl Datensaetze in der Ergebnismenge (Iterator)
          *
-         * @access public
-         * @return integer Anzahl
+         * @return int Anzahl
          **/
-        public function count()
+        public function count(): int
         {
             return count($this->rowset);
         }
@@ -344,9 +335,9 @@ if(!defined('CLASS_RESULTSET')) {
          *
          * @return bool
          */
-        function eof()
+        public function eof(): bool
         {
-            return ($this->index == ($this->count() - 1));
+            return $this->isLast();
         }
 
         /**
@@ -356,9 +347,9 @@ if(!defined('CLASS_RESULTSET')) {
          *
          * @return bool
          */
-        function bof()
+        public function bof(): bool
         {
-            return ($this->index == 0);
+            return $this->isFirst();
         }
 
         /**
