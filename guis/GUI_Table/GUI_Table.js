@@ -284,6 +284,17 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * return pool format
+     *
+     * @param poolType
+     * @returns {*}
+     */
+    getFormat(poolType)
+    {
+        return this.formats[poolType];
+    }
+
+    /**
      *
      * @returns {*[]}
      */
@@ -790,7 +801,7 @@ class GUI_Table extends GUI_Module
             return res;
         }
 
-        console.debug(this.getName() + '.responseHandler', res);
+        // console.debug(this.getName() + '.responseHandler', res);
 
         let rows = (res.rows) ? res.rows : res;
 
