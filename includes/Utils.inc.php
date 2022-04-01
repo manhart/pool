@@ -4562,3 +4562,16 @@ function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
     $d = DateTime::createFromFormat($format, $date);
     return $d && $d->format($format) == $date;
 }
+
+/**
+ * calculates the next day of the week based on a day of the week and an operand (subtrahend or summand).
+ *
+ * @param int $weekday
+ * @param int $operand
+ * @return int
+ */
+function calcNextWeekday(int $weekday, int $operand = 0): int
+{
+    $result = $weekday + $operand;
+    return $result <= 0 ? $result + 7 : ($result > 7 ? $result - 7 : $result);
+}
