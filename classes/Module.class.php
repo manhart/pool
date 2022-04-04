@@ -173,12 +173,7 @@ if(!defined('CLASS_MODULE')) {
          **/
         public function importParams(array $params): bool
         {
-            if (!$this->Input instanceof Input) {
-                return false;
-            }
-
             $this->setVar($params);
-
 
             // set Component Name, if set by param
             $moduleName = $this->Input->getVar('moduleName');
@@ -246,6 +241,18 @@ if(!defined('CLASS_MODULE')) {
         public function getFixedParam($param)
         {
             return $this->fixedParams[$param] ?? null;
+        }
+
+        /**
+         * set fixed param
+         * @param string $param
+         * @param $value
+         * @return Module
+         */
+        public function setFixedParam(string $param, $value): Module
+        {
+            $this->fixedParams[$param] = $value;
+            return $this;
         }
 
         /**
