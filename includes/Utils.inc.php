@@ -4575,3 +4575,25 @@ function calcNextWeekday(int $weekday, int $operand = 0): int
     $result = $weekday + $operand;
     return $result <= 0 ? $result + 7 : ($result > 7 ? $result - 7 : $result);
 }
+
+/**
+ * Calculates the difference in days of two dates (from DateTimeInterface)
+ *
+ * @param DateTimeInterface $StartDateTime
+ * @param DateTimeInterface $EndDateTime
+ * @param bool $unsigned without sign
+ * @return int
+ */
+function diffDays(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $unsigned = true): int
+{
+    $DateTime1 = clone $StartDateTime;
+    $DateTime2 = clone $EndDateTime;
+    $DateTime1->setTime(0, 0);
+    $DateTime2->setTime(0, 0);
+    $days = ($DateTime1->diff($EndDateTime)->days ?: 0);
+    if($unsigned) {
+        return $days;
+    }
+    if($DateTime1 < $DateTime2) $days *= -1;
+    return $days;
+}
