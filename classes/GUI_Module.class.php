@@ -284,16 +284,14 @@ class GUI_Module extends Module
      * Faustregel fuer Owner: als Owner sollte die Klasse Weblication uebergeben werden
      * (damit ein Zugriff auf alle Unterobjekte gewaehrleistet werden kann).
      *
-     * @method static
-     * @access public
      * @param string $GUIClassName Name der GUI Klasse
      * @param Component|null $Owner Besitzer dieses Objekts
      * @param Module|null $ParentGUI parent module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
-     * @return Module|null Neues GUI_Module
+     * @return GUI_Module|null Neues GUI_Module
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
-                                           $autoLoadFiles = true): ?Module
+                                           $autoLoadFiles = true): ?GUI_Module
     {
         $class_exists = class_exists($GUIClassName, false);
 
