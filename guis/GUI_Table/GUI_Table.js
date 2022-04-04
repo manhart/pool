@@ -204,7 +204,7 @@ class GUI_Table extends GUI_Module
 
     setOptions(options = {})
     {
-        console.debug(this.getName() + '.setOptions', options);
+        // console.debug(this.getName() + '.setOptions', options);
 
         this.options = options;
 
