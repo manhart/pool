@@ -691,6 +691,24 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * Update one cell, the params contain following properties:
+     *
+     * @param index
+     * @param field
+     * @param value
+     * @returns {*}
+     */
+    updateCell(index, field, value)
+    {
+        let params = {
+            index: index,
+            field: field,
+            value: value
+        }
+        return this.getTable().bootstrapTable('updateCell', params);
+    }
+
+    /**
      * update the specified row(s)
      *
      * @param id id where the id should be the uniqueId field assigned to the table
@@ -730,6 +748,13 @@ class GUI_Table extends GUI_Module
     {
         this.getTable().bootstrapTable('removeByUniqueId', uniqueId);
         return this;
+    }
+
+    removeAll()
+    {
+        this.pageIds = [];
+        this.selections = [];
+        this.getTable().bootstrapTable('removeAll');
     }
 
     /**
@@ -813,6 +838,17 @@ class GUI_Table extends GUI_Module
             row.state = this.selections.indexOf(row[uniqueId]) !== -1
         });
         return res;
+    }
+
+    /**
+     * Destroy the Bootstrap Table.
+     */
+    destroy()
+    {
+        this.pageIds = [];
+        this.selections = [];
+        this.rendered = false;
+        this.getTable().bootstrapTable('destroy');
     }
 
     sortDateTime(a, b)
