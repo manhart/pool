@@ -26,6 +26,7 @@
 #### Prevent auto. quotes
 const DAO_NO_QUOTES = 1;
 const DAO_NO_ESCAPE = 2;
+const DAO_IS_EXPRESSION = 2;
 
 const PWD_TILL_DAOS_MYSQL = 'mysql';
 const PWD_TILL_DAOS_CISAM = 'cisam';
