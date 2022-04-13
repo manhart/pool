@@ -877,83 +877,82 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
          * @return string Teil eines SQL Queries
          **/
-        function __buildFilter($filter_rules, $operator='and', $skip_first_operator=false)
+        function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false)
         {
             $query = '';
             $z = -1;
-            if(is_array($filter_rules)) {
-                foreach($filter_rules as $record) {
-                    $z++;
-                    if(!is_array($record)) { // operator or something manual
-                        // where 1 xxx fehlendes and
-                        if($z==0 and strtolower($record) != 'or') {
-                            $query .= ' and';
-                        }
-                        // Verknuepfungen or, and
-                        $query .= ' ' . $record . ' ';
-                        $skip_first_operator = true;
-                        continue;
+            foreach($filter_rules as $record) {
+                $z++;
+                if(!is_array($record)) { // operator or something manual
+                    // where 1 xxx fehlendes and
+                    if($z==0 and strtolower($record) != 'or') {
+                        $query .= ' and';
                     }
-                    if($skip_first_operator) {
-                        $skip_first_operator = false;
-                    }
-                    else {
-                        $query .= ' ' . $operator . ' ';
-                    }
+                    // Verknuepfungen or, and
+                    $query .= ' ' . $record . ' ';
+                    $skip_first_operator = true;
+                    continue;
+                }
+                if($skip_first_operator) {
+                    $skip_first_operator = false;
+                }
+                else {
+                    $query .= ' ' . $operator . ' ';
+                }
 
-                    if(is_array($record[0])) { // nesting
-                        $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
-                        continue;
-                    }
+                if(is_array($record[0])) { // nesting
+                    $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
+                    continue;
+                }
 
-                    // 24.07.2012, Anfuehrungszeichen steuerbar
-                    $noQuotes = false;
-                    $noEscape = false;
-                    if(isset($record[3])) { // Optionen
-                        $noQuotes = ($record[3] & DAO_NO_QUOTES);
-                        $noEscape = ($record[3] & DAO_NO_ESCAPE);
-                    }
+                // 24.07.2012, Anfuehrungszeichen steuerbar
+                $noQuotes = false;
+                $noEscape = false;
+                if(isset($record[3])) { // Optionen
+                    $noQuotes = ($record[3] & DAO_NO_QUOTES);
+                    $noEscape = ($record[3] & DAO_NO_ESCAPE);
+                }
 
-                    if($this->translateValues) {
-                        $record[0] = $this->translateValues($record[0]);
-                    }
+                if($this->translateValues) {
+                    $record[0] = $this->translateValues($record[0]);
+                }
 
-                    // Sonderregel "in", "not in"
-                    if(isset($record[2]) and is_array($record[2])) {
-                        $first = true;
-                        $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
-                        foreach ($record[2] as $value) {
-                            if (!$first) {
-                                $query .= ', ';
-                            }
-                            if(is_integer($value) or is_float($value)) {
-                                $query .= ' ' . $value;
-                            }
-                            else {
-                                if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
-                                if($noQuotes == false) $value = '\''.$value.'\'';
-                                $query .= $value;
-                            }
-                            $first = false;
+                // Sonderregel "in", "not in"
+                if(isset($record[2]) and is_array($record[2])) {
+                    $first = true;
+                    $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
+                    foreach ($record[2] as $value) {
+                        if (!$first) {
+                            $query .= ', ';
                         }
-                        $query .= ')';
-                    }
-                    else {
-                        $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
-                        if (is_null($record[2])) {
-                            $query .= ' NULL';
-                        }
-                        elseif(is_bool($record[2])) {
-                            $query .= ' ' . bool2string($record[2]);
-                        }
-                        elseif(is_integer($record[2]) or is_float($record[2]) or
-                                is_subquery($record[1], $record[2])) {
-                            $query .= ' ' . $record[2];
+                        if(is_integer($value) or is_float($value)) {
+                            $query .= ' ' . $value;
                         }
                         else {
-                            $value = $record[2];
                             if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
                             if($noQuotes == false) $value = '\''.$value.'\'';
+                            $query .= $value;
+                        }
+                        $first = false;
+                    }
+                    $query .= ')';
+                }
+                else {
+                    $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
+                    if (is_null($record[2])) {
+                        $query .= ' NULL';
+                    }
+                    elseif(is_bool($record[2])) {
+                        $query .= ' ' . bool2string($record[2]);
+                    }
+                    elseif(is_integer($record[2]) or is_float($record[2]) or
+                            is_subquery($record[1], $record[2])) {
+                        $query .= ' ' . $record[2];
+                    }
+                    else {
+                        $value = $record[2];
+                        if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
+                        if($noQuotes == false) $value = '\''.$value.'\'';
 
 //									if(mb_detect_encoding($value, array('UTF-8', 'ISO-8859-1'), true) == 'ISO-8859-1') {
 //										if(strpos($value, '_latin1') === false) {
@@ -961,8 +960,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 //										}
 //									}
 
-                            $query .= ' '.$value;
-                        }
+                        $query .= ' '.$value;
                     }
                 }
             }
