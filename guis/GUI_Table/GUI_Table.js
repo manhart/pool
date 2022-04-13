@@ -13,6 +13,7 @@ jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
     'autclose': true,
     'clearBtn': true,
     'todayHighlight': true,
+    'zIndexOffset': 1110,
     'language': document.documentElement.lang
 }
 
