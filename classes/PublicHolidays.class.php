@@ -305,6 +305,7 @@ final class PublicHolidays extends PoolObject
      * @param string $state
      * @param bool $legal
      * @return bool
+     * @throws Exception
      */
     static function check(\DateTimeInterface $Date, string $state = '', bool $legal = true): bool
     {
@@ -442,6 +443,7 @@ final class PublicHolidays extends PoolObject
      * @param int $year
      * @param string $state
      * @return array
+     * @throws Exception
      */
     public function getLegalHolidays(int $year, string $state = ''): array
     {
@@ -452,6 +454,10 @@ final class PublicHolidays extends PoolObject
 
         if($state == '') {
             return $this->publicHolidays[$year]['legal'];
+        }
+
+        if(!isset($this->publicHolidaysByState[$state])) {
+            throw new Exception('state '.$state.' unknown');
         }
 
         $holidays = [];
