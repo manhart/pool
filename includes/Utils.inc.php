@@ -3733,7 +3733,7 @@ function format24h($min)
 }
 
 // Wochenende in PHP ermitteln
-function isWochenende($intTag, $intMonat, $intJahr)
+function isWeekend($intTag, $intMonat, $intJahr)
 {
     // Wochentag berechnen
     $datum = getdate(mktime(0, 0, 0, $intMonat, $intTag, $intJahr));
