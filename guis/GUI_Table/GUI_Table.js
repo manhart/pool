@@ -415,7 +415,7 @@ class GUI_Table extends GUI_Module
         // todo stelle Seite wieder her
         if(!isEmpty(options) || this.forceRefreshOptions) {
             this.options = Object.assign({}, this.options, options);
-            console.debug(this.getName() + '.refreshOptions', this.options);
+            // console.debug(this.getName() + '.refreshOptions', this.options);
             this.scrollPosition = this.getScrollPosition();
             this.getTable().bootstrapTable('refreshOptions', this.options);
             this.forceRefreshOptions = false;
@@ -424,7 +424,7 @@ class GUI_Table extends GUI_Module
             let params = {};
             if(silent) params.silent = true;
             this.getTable().bootstrapTable('refresh', params);
-            console.debug(this.getName() + '.refreshed', params);
+            // console.debug(this.getName() + '.refreshed', params);
         }
         return this;
     }
