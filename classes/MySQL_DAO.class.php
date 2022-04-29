@@ -1028,6 +1028,14 @@ if(!defined('CLASS_MYSQLDAO')) {
                                 $filterByValue = $date['year'];
                                 $filterByValue .= '-'.str_pad($date['month'], 2, '0', STR_PAD_LEFT);
                                 $filterByValue .= '-'.str_pad($date['day'], 2, '0', STR_PAD_LEFT);
+
+                                if($date['hour'] and $date['minute']) {
+                                    $filterByValue .= ' '.str_pad($date['hour'], 2, '0', STR_PAD_LEFT).
+                                        ':'.str_pad($date['minute'], 2, '0', STR_PAD_LEFT);
+                                    if($date['second']) {
+                                        $filterByValue .= ':'.str_pad($date['second'], 2, '0', STR_PAD_LEFT);
+                                    }
+                                }
                             }
                         }
                         $filterByValue = $filterByValue.'%';
