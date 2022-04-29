@@ -1081,6 +1081,8 @@ class GUI_Table extends GUI_Module
     const RENDER_IMMEDIATELY = 1;
     const RENDER_ONDOMLOADED = 2;
 
+//    private string $version = '1.19.1';
+
     /**
      * @param const|int $superglobals
      */
@@ -1091,7 +1093,7 @@ class GUI_Table extends GUI_Module
         $this->Defaults->addVar('url', null);
         $this->Defaults->addVar('columns', null);
 
-        // 09.12.21, AM, override default filterDatepickerOptions (language is unknown in property)
+        // 09.12.21, AM, override default filterDatepickerOptions (language is unknown in property); version before <= 1.19.1
         // @used-by GUI_Table.js
         $this->inspectorProperties['columns']['properties']['filterDatepickerOptions']['value'] =
             '{"autoclose":true, "clearBtn":true, "todayHighlight":true, "language":"'.$this->Weblication->getLanguage().'"}';
@@ -1249,6 +1251,11 @@ class GUI_Table extends GUI_Module
         return $this->Input->getVar('columns', []);
     }
 
+//    public function getVersion()
+//    {
+//        return $this->version;
+//    }
+
     /**
      * @param string $which possible keys: all, aliasNames, columnNames (assoc array), searchable (assoc array), (@todo filterable/filterSelect)
      * @return array only columns for database and sql statement passing
@@ -1277,14 +1284,32 @@ class GUI_Table extends GUI_Module
 
             $this->dbColumns['all'][] = '('.$dbColumn.')`'.$column['field'].'`';
             $this->dbColumns['aliasNames'][] = $column['field'];
-            $this->dbColumns['columnNames'][$column['field']] = $dbColumn;
+
+            $expr = $dbColumn;
+            $isSubQuery = stripos($expr, 'select', 0) === 0;
+            if($isSubQuery) {
+                $expr = '('.$expr.')';
+            }
+
+            $this->dbColumns['columnNames'][$column['field']] = $expr;
+
+            $filterControl = $column['filterControl'] ?? '';
+            $filterByDbColumn = $column['filterByDbColumn'] ?? '';
+
+            // 29.04.22, AM, workaround: bootstrap-table uses input datetime since v1.20.0. js/html always sends an english date!
+            // to prevent the auto date_format in DAO::makeFilter we overwrite the filterByDbColumn if it is not set
+//            if($filterControl == 'datepicker' and $filterByDbColumn == '') {
+//                if(version_compare($this->getVersion(), '1.20.0', '>=')) {
+//                    $column['filterByDbColumn'] = $expr;
+//                }
+//            }
 
             $assoc = [
-                'expr' => $dbColumn, // select expression
+                'expr' => $expr, // select expression
                 'alias' => $column['field'], // alias name
                 'type' => $column['poolType'] ?? '', // data type
-                'filterControl' => $column['filterControl'] ?? '', // filterControl
-                'filterByColumn' => $column['filterByDbColumn'] ?? '' // column
+                'filterControl' => $filterControl, // filterControl
+                'filterByDbColumn' => $filterByDbColumn // column
             ];
 
 //            $sortable = $column['searchable'] ?? $this->getColumnProperty('sortable')['value'];
