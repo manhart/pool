@@ -998,13 +998,12 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $i++;
 
                 $alias = $isAssoc ? $column['alias'] : $column;
-                $expr = $isAssoc ? $column['expr'] : $column; // column or expression
+                $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
                 $type = $isAssoc ? $column['type'] : '';
-                $isSubQuery = stripos($expr, 'select', 0) === 0;
-                if($isSubQuery) {
-                    $expr = '('.$expr.')';
-                }
+
                 // $format = $isAssoc ? $column['format'] : '';
+
+                $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
 
                 $isDateTime = $type == 'date.time';
                 $isDate = $type == 'date';
@@ -1012,13 +1011,26 @@ if(!defined('CLASS_MYSQLDAO')) {
                     $expr = 'DATE_FORMAT('.$expr.', "'.Weblication::getInstance()->getDefaultFormat('mysql.date_format.' . $type).'")';
                 }
 
-                $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
                 if($hasDefinedFilter) {
                     $filterByValue = $definedSearchKeywords[$alias];
-                    $filterByColumn = $isAssoc ? ($column['filterByColumn']  ?: $expr) : $expr;
-                    $filterControl = $isAssoc ? ($column['filterControl']  ?: 'input') : 'input';
+                    $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $expr) : $expr;
+                    $filterControl = $isAssoc ? ($column['filterControl'] ?: 'input') : 'input';
                     if($filterControl == 'select') {
                         $operator = 'equal';
+                    }
+                    elseif($filterControl == 'datepicker') {
+                        if($filterByValue) {
+                            $date = date_parse($filterByValue); // is date?
+                            if($date['error_count'] == 0 and $date['warning_count'] == 0 and
+                                $date['year'] and $date['month'] and $date['day']) {
+                                // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
+                                $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $orig_expr) : $orig_expr;
+                                $filterByValue = $date['year'];
+                                $filterByValue .= '-'.str_pad($date['month'], 2, '0', STR_PAD_LEFT);
+                                $filterByValue .= '-'.str_pad($date['day'], 2, '0', STR_PAD_LEFT);
+                            }
+                        }
+                        $filterByValue = $filterByValue.'%';
                     }
                     else {
                         $filterByValue = '%'.$filterByValue.'%';
