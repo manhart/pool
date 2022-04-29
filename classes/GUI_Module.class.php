@@ -595,9 +595,9 @@ class GUI_Module extends Module
             return '';
         }
 
-        ob_start();
-
         error_clear_last();
+
+        ob_start();
 
         $errorClassName = '';
 
