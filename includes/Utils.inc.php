@@ -4590,7 +4590,7 @@ function diffDays(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTi
     $DateTime2 = clone $EndDateTime;
     $DateTime1->setTime(0, 0);
     $DateTime2->setTime(0, 0);
-    $days = ($DateTime1->diff($EndDateTime)->days ?: 0);
+    $days = ($DateTime1->diff($DateTime2)->days ?: 0);
     if($unsigned) {
         return $days;
     }
