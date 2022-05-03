@@ -1066,6 +1066,34 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
         ],
+        'stickyHeader' => [
+            'attribute' => 'data-sticky-header',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+        ],
+        'stickyHeaderOffsetLeft' => [
+            'attribute' => 'data-sticky-header-offset-left',
+            'type' => 'integer',
+            'value' => 0,
+            'element' => 'input',
+            'inputType' => 'number'
+        ],
+        'stickyHeaderOffsetLeft' => [
+            'attribute' => 'data-sticky-header-offset-right',
+            'type' => 'integer',
+            'value' => 0,
+            'element' => 'input',
+            'inputType' => 'number'
+        ],
+        'stickyHeaderOffsetY' => [
+            'attribute' => 'data-sticky-header-offset-y',
+            'type' => 'integer',
+            'value' => 0,
+            'element' => 'input',
+            'inputType' => 'number'
+        ],
         'sidePagination' => [
             'attribute' => 'data-side-pagination',
             'type' => 'string',
