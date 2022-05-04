@@ -713,11 +713,10 @@ if(!defined('CLASS_RESULTSET')) {
         /**
          * Liefert einen ganzen Datensatz als Array zurueck.
          *
-         * @access public
          * @param integer $index Record-Offset
          * @return array Datensatz
          **/
-        function getRow($index = -1)
+        public function getRow(int $index = -1): array
         {
             if ($index != $this->index and $index >= 0) {
                 $this->seek($index);
