@@ -402,8 +402,9 @@ class GUI_Table extends GUI_Module
             // console.debug(this.getName() + '.rendered');
         }
         else {
-            console.info(this.getName() + '.render has already been called once.')
+            // console.info(this.getName() + '.render has already been called once.')
             this.refresh(options);
+            // console.debug(this.getName() + ' .refresh', this.options);
         }
         this.inside_render = false;
         this.rendered = true;
