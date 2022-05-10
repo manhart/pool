@@ -600,6 +600,21 @@ class GUI_Table extends GUI_Module
                 ]
             ]
         ],
+        'cookie' => [
+            'attribute' => 'data-cookie',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Use cookies'
+        ],
+        'cookieIdTable' => [
+            'attribute' => 'data-cookie-id-table',
+            'type' => 'string',
+            'value' => '',
+            'element' => 'input',
+            'inputType' => 'text'
+        ],
         'customSearch' => [
             'attribute' => 'data-custom-search',
             'type' => 'function',
