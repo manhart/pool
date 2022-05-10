@@ -4577,6 +4577,28 @@ function calcNextWeekday(int $weekday, int $operand = 0): int
 }
 
 /**
+ * calculates the next working day of the week based on a day of the week and an operand (subtrahend or summand).
+ *
+ * @param int $weekday
+ * @param int $operand
+ * @return int
+ */
+function calcNextWorkingDay(int $weekday, int $operand = 0): int
+{
+    $result = $weekday + $operand;
+    $result = $result <= 0 ? $result + 7 : ($result > 7 ? $result - 7 : $result);
+    if($result >= 6) {
+        if($operand < 0) {
+            $result = 5;
+        }
+        else {
+            $result = 1;
+        }
+    }
+    return $result;
+}
+
+/**
  * Calculates the difference in days of two dates (from DateTimeInterface)
  *
  * @param DateTimeInterface $StartDateTime
