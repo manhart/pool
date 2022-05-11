@@ -928,10 +928,12 @@ class Weblication extends Component
             }
         }
 
+
         foreach ($gui_directories as $folder_guis) {
             # Projekt folder: guis
             $folder_skin = $folder_guis . '/' . $skin;
             $folder_language = $folder_skin . '/'. $language;
+
             if (is_dir($folder_language)) { // guis - classname - skin - language folder
                 if (file_exists($folder_language . '/' . $filename)) {
                     return $folder_language . '/' . $filename;
@@ -956,6 +958,16 @@ class Weblication extends Component
                 $file = $folder . '/'. $filename;
                 if (file_exists($file)) {
                     return $file;
+                }
+            }
+        }
+        else {
+            if (defined('DIR_COMMON_ROOT_REL')) { // addEndingSlash(DIR_COMMON_ROOT_REL)
+                $folder_common = DIR_COMMON_ROOT_REL.'/'.PWD_TILL_SKINS. '/' .$this->commonSkinFolder.'/' . $this->cssFolder;
+                if(is_dir($folder_common)) {
+                    if(file_exists($folder_common.'/'.$filename)) {
+                        return $folder_common.'/'.$filename;
+                    }
                 }
             }
         }
