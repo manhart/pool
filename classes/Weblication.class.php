@@ -928,7 +928,6 @@ class Weblication extends Component
             }
         }
 
-
         foreach ($gui_directories as $folder_guis) {
             # Projekt folder: guis
             $folder_skin = $folder_guis . '/' . $skin;
