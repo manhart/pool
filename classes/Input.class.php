@@ -1139,6 +1139,14 @@ class ISession extends Input
     }
 
     /**
+     * Update the current session id with a newly generated one
+     */
+    public function regenerate_id()
+    {
+        session_regenerate_id();
+    }
+
+    /**
      * write session and close it. Zu empfehlen bei lang laufenden Programmen, damit andere Scripte nicht gesperrt werden
      *
      */
