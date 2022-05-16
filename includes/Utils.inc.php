@@ -817,7 +817,6 @@ function arrayToAttr($array)
     return $strHtmlTagAttr;
 }
 
-
 /**
  * Gibt 0 zurueck (ganz n�tzlich im Zusammenhang mit Array Initialisierung array_map('zero', $arr)).
  *
@@ -869,8 +868,7 @@ function sanitizeFilename(string $filename): string
         // "file...name..zip" becomes "file.name.zip"
         '/\.{2,}/'
     ), '.', $filename);
-    $filename = trim($filename, '.-');
-    return $filename;
+    return trim($filename, '.-');
 }
 
 /**
@@ -2126,7 +2124,7 @@ function calcNextWorkingDay(int $weekday, int $operand = 0): int
  * @param bool $unsigned without sign
  * @return int
  */
-function diffDays(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $unsigned = true): int
+function calcNumberOfDaysInBetween(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $unsigned = true): int
 {
     $DateTime1 = clone $StartDateTime;
     $DateTime2 = clone $EndDateTime;
