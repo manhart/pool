@@ -23,21 +23,21 @@ function mbstring_binary_safe_encoding($reset = false)
 {
     static $encodings = array();
     static $overloaded = null;
-    
+
     if (is_null($overloaded)) {
         $overloaded = function_exists('mb_internal_encoding') && (ini_get('mbstring.func_overload') & 2);
     }
-    
+
     if (false === $overloaded) {
         return;
     }
-    
+
     if (!$reset) {
         $encoding = mb_internal_encoding();
         array_push($encodings, $encoding);
         mb_internal_encoding('ISO-8859-1');
     }
-    
+
     if ($reset && $encodings) {
         $encoding = array_pop($encodings);
         mb_internal_encoding($encoding);
@@ -87,6 +87,107 @@ function seems_utf8($str)
             }
         }
     }
-    
+
     return true;
+}
+
+/**
+ * splitcsv()
+ *
+ * @access public
+ * @param string $line Text / Zeile
+ * @param string $delim Trennzeichen (the delimiter to split by)
+ * @param boolean $removeQuotes Sollen Quotes (") vom Ergebnis entfernt werden
+ * @return array Aufgeteilte Felder
+ **/
+function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
+{
+    $fields = array();
+    $fldCount = 0;
+    $inQuotes = false;
+    for ($i = 0; $i < strlen($line); $i++) {
+        if (!isset($fields[$fldCount])) $fields[$fldCount] = '';
+        $tmp = substr($line, $i, strlen($delim));
+        if ($tmp === $delim && !$inQuotes) {
+            $fldCount++;
+            $i += strlen($delim)-1;
+        }
+        else if ($fields[$fldCount] == '' && $line[$i] == $quote && !$inQuotes) {
+            if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
+            $inQuotes = true;
+        }
+        else if ($line[$i] == $quote) {
+            if ($line[$i+1] == $quote) {
+                $i++;
+                $fields[$fldCount] .= $line[$i];
+            }
+            else {
+                if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
+                $inQuotes = false;
+            }
+        }
+        else {
+            $fields[$fldCount] .= $line[$i];
+        }
+    }
+
+    return $fields;
+}
+
+/**
+ * Dröselt nach Trennzeichen einen String $data auf. Dabei werden Steuerzeichen #10 und #13 berücksichtigt, sowie umschlossener (enclosure) Text
+ *
+ * @param string $data Inhalt (z.B. einer Datei)
+ * @param string $delim Trennzeichen (Standard = ';')
+ * @param string $enclosure Umklammerung [optional]
+ * @return array mehrdimensional (Zeilen, Felder)
+ */
+function splitcsvByContent(&$data, $delim=';', $enclosure='"')
+{
+    $ret_array = array();
+    $enclosed = false;
+    $fldcount = 0;
+    $linecount = 0;
+    $fldval = '';
+    for ($i = 0; $i < strlen($data); $i++) {
+        $chr = $data[$i];
+        switch ($chr) {
+            case $enclosure:
+                if ($enclosed && $data[$i + 1] == $enclosure) {
+                    $fldval .= $chr;
+                    ++$i; //skip next char
+                }
+                else $enclosed = !$enclosed;
+                break;
+
+            case $delim:
+                if (!$enclosed) {
+                    $ret_array[$linecount][$fldcount++] = $fldval;
+                    $fldval = '';
+                }
+                else $fldval .= $chr;
+                break;
+
+            case "\r":
+                if (!$enclosed && $data[$i + 1] == "\n") {
+                    continue 2;
+                }
+
+            case "\n":
+                if (!$enclosed) {
+                    $ret_array[$linecount++][$fldcount] = $fldval;
+                    $fldcount = 0;
+                    $fldval = '';
+                }
+                else $fldval .= $chr;
+                break;
+
+            default:
+                $fldval .= $chr;
+        }
+    }
+    if ($fldval) $ret_array[$linecount][$fldcount] = $fldval;
+    unset($fldval);
+
+    return $ret_array;
 }
