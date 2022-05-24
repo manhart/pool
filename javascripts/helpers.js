@@ -1077,6 +1077,7 @@ function clearControls(elements) {
 
     for (let z = 0; z < elements.length; z++) {
         let elem = elements[z];
+        // console.debug('clearControls', elem.name);
 
         let tagName = elem.tagName.toUpperCase();
         let elemType = (elem.type) ? elem.type.toUpperCase() : '';
@@ -1085,7 +1086,9 @@ function clearControls(elements) {
             elem.innerHTML = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
         }
         else if (elemType == 'CHECKBOX' || elemType == 'RADIO') {
+            // console.debug('checked', elem.dataset.defaultChecked);
             if (elem.getAttribute('data-default-checked') != null) {
+                // console.debug('element checked');
                 elem.checked = string2bool(elem.dataset.defaultChecked);
             }
             else elem.checked = false;
