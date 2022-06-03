@@ -167,7 +167,7 @@ abstract class DAO extends PoolObject
      *
      * @return array Spalten
      **/
-    function getColumns(): array
+    public function getColumns(): array
     {
         return $this->columns;
     }
