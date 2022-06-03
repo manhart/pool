@@ -977,7 +977,8 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                         // console.debug(field, attr, descriptor, value);
                         switch (attr) {
                             case 'data':
-                                Ctrl.data(descriptor, value);
+                                // console.debug(Ctrl, 'data', descriptor, value);
+                                Ctrl.get(0).setAttribute('data-'+descriptor, value);
                                 break;
 
                             default:
