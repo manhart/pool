@@ -547,10 +547,19 @@ if(!defined('CLASS_MYSQLDAO')) {
             }
         }
 
-
         function setTableAlias($alias)
         {
             $this->tableAlias = $alias;
+        }
+
+        /**
+         * get columns with table alias
+         *
+         * @return array
+         */
+        public function getColumnsWithTableAlias(): array
+        {
+            return array_map(function($val) { return $this->tableAlias . '.'.$val; }, $this->columns);
         }
 
         /**
