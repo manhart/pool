@@ -173,7 +173,7 @@ if(!defined('CLASS_MODULE')) {
          **/
         public function importParams(array $params): bool
         {
-            $this->setVar($params);
+            $this->setVars($params);
 
             // set Component Name, if set by param
             $moduleName = $this->Input->getVar('moduleName');
@@ -200,9 +200,9 @@ if(!defined('CLASS_MODULE')) {
          *
          * @return string params
          */
-        public function exportParams(): string
+        public function exportParams(array $otherParams = []): string
         {
-            return base64url_encode(http_build_query($this->fixedParams));
+            return base64url_encode(http_build_query(array_merge($otherParams, $this->fixedParams)));
         }
 
         /**
@@ -290,7 +290,7 @@ if(!defined('CLASS_MODULE')) {
         /**
          * puts variables into the Input container
          *
-         * @param string|array $key
+         * @param string $key
          * @param mixed $value
          */
         public function setVar($key, $value='')
