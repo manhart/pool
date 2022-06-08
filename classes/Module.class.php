@@ -296,11 +296,23 @@ if(!defined('CLASS_MODULE')) {
         public function setVar($key, $value='')
         {
             if(is_array($key)) {
+                // @deprecated
                 $this->Input->setVars($key);
             }
             else {
                 $this->Input->setVar($key, $value);
             }
+        }
+
+        /**
+         * puts the values of an array into the input container
+         *
+         * @param array $assoc
+         * @return Input
+         */
+        public function setVars(array $assoc): Input
+        {
+            return $this->Input->setVars($assoc);
         }
 
         /**
