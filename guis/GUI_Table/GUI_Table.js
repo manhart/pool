@@ -659,6 +659,23 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * Update the specified row(s). Each param contains the following properties:
+     *
+     * @param index the row index to be updated.
+     * @param row the new row data
+     * @param replace (optional): set to true to replace the row instead of extending.
+     */
+    updateRow(index, row, replace = false)
+    {
+        let params = {
+            index: index,
+            row: row,
+            replace : replace
+        };
+        this.getTable().bootstrapTable('updateRow', params);
+    }
+
+    /**
      * Get the loaded data of table at the moment that this method is called
      *
      * @param useCurrentPage if set to true the method will return the data only in the current page
