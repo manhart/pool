@@ -584,7 +584,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 if(is_null($value)) {
                     $values .= 'NULL,';
                 }
-                elseif(is_integer($value) or (is_float($value))) {
+                elseif(is_int($value) or (is_float($value))) {
                     $values .= (string)$value.',';
                 }
                 elseif(is_bool($value)) {
@@ -647,7 +647,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 if (is_null($value)) {
                     $value = 'NULL';
                 }
-                elseif(is_integer($value) or (is_float($value))) {
+                elseif(is_int($value) or (is_float($value))) {
                     $value = (string)$value;
                 }
                 elseif(is_bool($value)) {
