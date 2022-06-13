@@ -79,7 +79,7 @@ class Weblication extends Component
      *
      * @var string
      */
-    private $skin = 'default';
+    private string $skin = 'default';
 
     /**
      * @var array|null
@@ -273,11 +273,11 @@ class Weblication extends Component
      *
      * @param string $lang Country Code
      * @param string $resourceDir Directory with translations e.g. de.php, en.php
-     * @param string $subdirTranslated Subdirectory for generated static translated templates during the deployment process
+     * @param string $subDirTranslated Subdirectory for generated static translated templates during the deployment process
      * @return Weblication
      * @throws Exception
      */
-    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subdirTranslated = ''): Weblication
+    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subDirTranslated = ''): Weblication
     {
         $this->language = $lang;
 
@@ -285,7 +285,7 @@ class Weblication extends Component
             Translator::getInstance()->setResourceDir($resourceDir)->setDefaultLanguage($lang);
         }
 
-        $this->subdirTranslated = $subdirTranslated;
+        $this->subdirTranslated = $subDirTranslated;
         return $this;
     }
 
