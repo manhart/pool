@@ -341,9 +341,17 @@ final class Translator extends \PoolObject
         if (!is_dir($directory)) {
             throw new \Exception('Resource directory ' . $directory . ' not found.');
         }
-        $this->translation = array();
+        $this->translation = [];
         $this->directory = $directory;
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function wasInitialized(): bool
+    {
+        return $this->directory != '';
     }
 
     /**
