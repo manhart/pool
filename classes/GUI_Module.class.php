@@ -124,7 +124,7 @@ class GUI_Module extends Module
     /**
      * Konstruktor
      *
-     * @param Component $Owner Besitzer vom Typ Component
+     * @param Component|null $Owner Besitzer vom Typ Component
      * @param boolean $autoLoadFiles Laedt automatisch Templates und sucht darin GUIs
      * @param array $params additional parameters
      * @throws ReflectionException
