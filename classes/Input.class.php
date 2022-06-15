@@ -513,7 +513,7 @@ class Input extends PoolObject
      * @return string
      * @deprecated
      */
-    function getValuesAsString($delimiter)
+    function getValuesAsString(string $delimiter): string
     {
         $result = '';
         foreach ($this->Vars as $key => $val) {
