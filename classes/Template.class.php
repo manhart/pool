@@ -507,8 +507,8 @@
 				$content = $this->Content;
 				### TODO Pool 5, bei setVar {} adden oder read write properties...
 				#$content = str_replace(array_keys($this -> VarList), array_values($this -> VarList), $content);
-				foreach($this->VarList as $Key => $Value) {
-					$content = str_replace($varStart.$Key.$varEnd, $Value, $content);
+				foreach($this->VarList as $Key => $val) {
+					$content = str_replace($varStart.$Key.$varEnd, $val ?? '', $content);
 				}
 
 				$search = array();
