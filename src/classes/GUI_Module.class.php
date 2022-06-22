@@ -124,7 +124,7 @@ class GUI_Module extends Module
     /**
      * Konstruktor
      *
-     * @param Component $Owner Besitzer vom Typ Component
+     * @param Component|null $Owner Besitzer vom Typ Component
      * @param boolean $autoLoadFiles Laedt automatisch Templates und sucht darin GUIs
      * @param array $params additional parameters
      * @throws ReflectionException
@@ -171,10 +171,9 @@ class GUI_Module extends Module
     /**
      * Das Template Objekt laedt HTML Vorlagen.
      *
-     * @access public
      * @param boolean $search True sucht nach weiteren GUIs
      **/
-    function autoLoadFiles(bool $search = true)
+    public function autoLoadFiles(bool $search = true)
     {
         if ($this->AutoLoadFiles) {
             // Lade Templates
@@ -285,15 +284,14 @@ class GUI_Module extends Module
      * Faustregel fuer Owner: als Owner sollte die Klasse Weblication uebergeben werden
      * (damit ein Zugriff auf alle Unterobjekte gewaehrleistet werden kann).
      *
-     * @method static
-     * @access public
      * @param string $GUIClassName Name der GUI Klasse
      * @param Component|null $Owner Besitzer dieses Objekts
      * @param Module|null $ParentGUI parent module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
-     * @return Module|null Neues GUI_Module
+     * @return GUI_Module|null Neues GUI_Module
      */
-    public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = ''): ?Module
+    public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
+                                           $autoLoadFiles = true): ?GUI_Module
     {
         $class_exists = class_exists($GUIClassName, false);
 
@@ -310,7 +308,7 @@ class GUI_Module extends Module
             // AM, 22.07.2020
             $Params = new Input(I_EMPTY);
             $Params->setParams($params);
-            $GUI = new $GUIClassName($Owner, true, $Params->getData());
+            $GUI = new $GUIClassName($Owner, $autoLoadFiles, $Params->getData());
             /* @var $GUI GUI_Module */
             if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
@@ -599,7 +597,11 @@ class GUI_Module extends Module
             return '';
         }
 
+        error_clear_last();
+
         ob_start();
+
+        $errorClassName = '';
 
         $args = [];
         if($numberOfParameters) {
@@ -626,6 +628,7 @@ class GUI_Module extends Module
         }
         try {
             $Result = $ReflectionMethod->invokeArgs($this, $args);
+            $errorClassName = $ReflectionMethod->getDeclaringClass()->getName();
         }
         catch(\ReflectionException $e) {
             echo $e->getMessage();
@@ -640,7 +643,8 @@ class GUI_Module extends Module
             $last_error = error_get_last();
             if($last_error != null) {
                 if(IS_DEVELOP) { // only for developers, to have a notice
-                    $message = $last_error['message'] . ' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
+                    $message = $last_error['message'] . ' in class '.($errorClassName ?: $this->getClassName()).
+                        ':'.$method.' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
                     throw new Exception($message, $last_error['type']);
                 }
 //                error_log($message);
