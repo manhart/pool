@@ -173,12 +173,7 @@ if(!defined('CLASS_MODULE')) {
          **/
         public function importParams(array $params): bool
         {
-            if (!$this->Input instanceof Input) {
-                return false;
-            }
-
-            $this->setVar($params);
-
+            $this->setVars($params);
 
             // set Component Name, if set by param
             $moduleName = $this->Input->getVar('moduleName');
@@ -204,9 +199,9 @@ if(!defined('CLASS_MODULE')) {
          *
          * @return string params
          */
-        public function exportParams(): string
+        public function exportParams(array $otherParams = []): string
         {
-            return base64url_encode(http_build_query($this->fixedParams));
+            return base64url_encode(http_build_query(array_merge($otherParams, $this->fixedParams)));
         }
 
         /**
@@ -248,6 +243,18 @@ if(!defined('CLASS_MODULE')) {
         }
 
         /**
+         * set fixed param
+         * @param string $param
+         * @param $value
+         * @return Module
+         */
+        public function setFixedParam(string $param, $value): Module
+        {
+            $this->fixedParams[$param] = $value;
+            return $this;
+        }
+
+        /**
          * Einf�gen von Variablen, die an die Kinder-Module (Childs) weitergereicht werden.
          *
          * @access public
@@ -282,17 +289,30 @@ if(!defined('CLASS_MODULE')) {
         /**
          * puts variables into the Input container
          *
-         * @param string|array $key
+         * @param string $key
          * @param mixed $value
          */
         public function setVar($key, $value='')
         {
             if(is_array($key)) {
+                // @deprecated
                 $this->Input->setVars($key);
+                throw new Exception('avoid this shit');
             }
             else {
                 $this->Input->setVar($key, $value);
             }
+        }
+
+        /**
+         * puts the values of an array into the input container
+         *
+         * @param array $assoc
+         * @return Input
+         */
+        public function setVars(array $assoc): Input
+        {
+            return $this->Input->setVars($assoc);
         }
 
         /**

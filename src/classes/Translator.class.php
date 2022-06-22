@@ -341,9 +341,17 @@ final class Translator extends \PoolObject
         if (!is_dir($directory)) {
             throw new \Exception('Resource directory ' . $directory . ' not found.');
         }
-        $this->translation = array();
+        $this->translation = [];
         $this->directory = $directory;
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function wasInitialized(): bool
+    {
+        return $this->directory != '';
     }
 
     /**
@@ -742,19 +750,12 @@ final class Translator extends \PoolObject
      * @param string $defaultLocale
      * @return string locale
      */
-    public static function detectLocale(string $defaultLocale = 'en_US'): string
+    public static function detectLocale(string $defaultLocale = 'en_US', bool $useGeoIP = true): string
     {
         $locale = false;
 
-        // GeoIP
-        if (function_exists('geoip_country_code_by_name') and ($clientIP = getClientIP())) {
-            // for testing: $clientIP = '91.40.45.237';
-            $countryCode = geoip_country_code_by_name($clientIP);
-            $locale = self::countryCodeToLocale($countryCode) ?: false;
-        }
-
         // Try detecting locale from browser headers
-        if (!$locale and isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             if(function_exists('locale_accept_from_http')) {
                 $locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']);
             }
@@ -771,6 +772,16 @@ final class Translator extends \PoolObject
                 $locale = key($prefLocales);
             }
         }
+
+        // GeoIP
+        if (!$locale and $useGeoIP and function_exists('geoip_country_code_by_name') and
+                ($clientIP = getClientIP())) {
+            // for testing: $clientIP = '91.40.45.237';
+            $countryCode = geoip_country_code_by_name($clientIP);
+            $locale = self::countryCodeToLocale($countryCode) ?: false;
+        }
+
+
 
         // Resort to default locale specified in config file
         if (!$locale) {

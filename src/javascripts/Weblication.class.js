@@ -63,6 +63,19 @@ class Weblication
     }
 
     /**
+     * unregister module
+     *
+     * @param GUI_Module Module
+     * @returns {Weblication}
+     */
+    unregisterModule(Module)
+    {
+        let moduleName = Module.getName();
+        delete this.modules[moduleName];
+        return this;
+    }
+
+    /**
      * returns module
      *
      * @param moduleName

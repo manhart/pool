@@ -895,16 +895,18 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
         if (autoSearchControlsWithinContainer) {
             // automatically search controls within container and rowset fields (very old method)
             selectors = explode(',', containerSelector, false);
-        } else {
+        }
+        else {
             // controls selector
             controls = jQuery(containerSelector);
         }
-    } else if (Array.isArray(containerSelector) || isObject(containerSelector)) {
+    }
+    else if (Array.isArray(containerSelector) || isObject(containerSelector)) {
         controls = jQuery(containerSelector);
         hasControls = true;
     }
 
-    let row, field, value;
+    let row, field, value, attr, descriptor;
     let r = 0;
 
     // Zeile fuer Zeile durch das Rowset
@@ -915,12 +917,23 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
         for (field in row) {
 
             // Felder mit dem Namen/Suffix _class dienen zur Zuweisung von Styles und sind keine Felder
-            if (field.substr(field.length - 6) == '_class') continue;
+            if (field.substr(field.length - 6) === '_class') continue;
             // Felder mit dem Namen/Suffix _title dienen zur Zuweisung von Titles/ToolTips und sind keine Felder
-            if (field.substr(field.length - 6) == '_title') continue;
+            if (field.substr(field.length - 6) === '_title') continue;
 
             // Wert
             value = row[field];
+
+            // set attributes of an HTML element
+            attr = null;
+            if(field.includes(':')) {
+                let fieldArray = field.split(':')
+                field = fieldArray[0];
+                attr = fieldArray[1];
+                if(fieldArray.length > 2) {
+                    descriptor = fieldArray[2];
+                }
+            }
 
             // 28.01.2022, AM, special case: use formatted value if exists
             if(field+'_pool_use_formatted' in row && row[field+'_pool_use_formatted']) {
@@ -960,84 +973,97 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
 
 
                 if (r == rowSet.length - 1) {
-                    main_switch:
-                    switch (Ctrl[0].tagName) {
-                        case 'TEXTAREA':
-                            Ctrl.val(value);
-                            break;
-
-                        case 'SPAN':
-                        case 'DIV':
-                            Ctrl.html(value);
-                            break;
-
-                        case 'IMG':
-                            if (isEmpty(value)) {
-                                Ctrl.hide();
-                            } else {
-                                Ctrl.attr('src', value);
-                                Ctrl.show();
-                            }
-                            break;
-
-                        case 'INPUT':
-                            // Checkbox mit 3 Statis
-                            if (Ctrl.data('tri-state-checkbox')) {
-                                // TODO implementierung in jquery
-                                var possibleValues = explode(',', Ctrl.data('possible-values'));
-                                var img = jQuery('#tri-state-checkbox-' + Ctrl.attr('id'));
-                                switch (value) {
-                                    case null:
-                                    case possibleValues[0]:
-                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-partial');
-                                        break;
-
-                                    case possibleValues[1]:
-                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-full');
-                                        break;
-
-                                    case possibleValues[2]:
-                                        img.removeClass().addClass('tri-state-checkbox').addClass('checked-none');
-                                        break;
-                                }
-                                Ctrl.val(value);
+                    if (attr) {
+                        // console.debug(field, attr, descriptor, value);
+                        switch (attr) {
+                            case 'data':
+                                // console.debug(Ctrl, 'data', descriptor, value);
+                                Ctrl.get(0).setAttribute('data-'+descriptor, value);
                                 break;
+
+                            default:
+                                Ctrl.attr(attr, value);
+                        }
+                    }
+                    else {
+                        main_switch:
+                            switch (Ctrl[0].tagName) {
+                                case 'TEXTAREA':
+                                    Ctrl.val(value);
+                                    break;
+
+                                case 'SPAN':
+                                case 'DIV':
+                                    Ctrl.html(value);
+                                    break;
+
+                                case 'IMG':
+                                    if (isEmpty(value)) {
+                                        Ctrl.hide();
+                                    } else {
+                                        Ctrl.attr('src', value);
+                                        Ctrl.show();
+                                    }
+                                    break;
+
+                                case 'INPUT':
+                                    // Checkbox mit 3 Statis
+                                    if (Ctrl.data('tri-state-checkbox')) {
+                                        // TODO implementierung in jquery
+                                        var possibleValues = explode(',', Ctrl.data('possible-values'));
+                                        var img = jQuery('#tri-state-checkbox-' + Ctrl.attr('id'));
+                                        switch (value) {
+                                            case null:
+                                            case possibleValues[0]:
+                                                img.removeClass().addClass('tri-state-checkbox').addClass('checked-partial');
+                                                break;
+
+                                            case possibleValues[1]:
+                                                img.removeClass().addClass('tri-state-checkbox').addClass('checked-full');
+                                                break;
+
+                                            case possibleValues[2]:
+                                                img.removeClass().addClass('tri-state-checkbox').addClass('checked-none');
+                                                break;
+                                        }
+                                        Ctrl.val(value);
+                                        break;
+                                    }
+
+                                    switch (Ctrl.attr('type')) {
+                                        case 'checkbox':
+                                        case 'radio':
+                                            Ctrl.prop('checked', (value == Ctrl.val()));
+                                            break main_switch;
+
+                                        // default:
+                                        //     Ctrl.val(value);
+                                    }
+
+                                default:
+                                    Ctrl.val(value);
+                                    if (Ctrl.data('initialValue') == undefined) {
+                                        Ctrl.data('initialValue', value);
+                                    }
+
+                                    // bootstrap-select support
+                                    if (Ctrl.hasClass('selectpicker')) {
+                                        Ctrl.selectpicker('refresh');
+                                    }
+
+                                    // bootstrap-datetimepicker support v5
+                                    // if (Ctrl.hasClass('datetimepicker-input')) {
+                                    //     console.debug('trigger(change)');
+                                    //     Ctrl.trigger('change');
+                                    // }
+
+                                    // bootstrap-datetimepicker support v6 (maybe it works automatically
+                                    // if(Ctrl.data('data-td-target')) {
+                                    //     Ctrl.trigger('change');
+                                    // }
+
+                                    break;
                             }
-
-                            switch (Ctrl.attr('type')) {
-                                case 'checkbox':
-                                case 'radio':
-                                    Ctrl.prop('checked', (value == Ctrl.val()));
-                                    break main_switch;
-
-                                // default:
-                                //     Ctrl.val(value);
-                            }
-
-                        default:
-
-                            Ctrl.val(value);
-                            if (Ctrl.data('initialValue') == undefined) {
-                                Ctrl.data('initialValue', value);
-                            }
-
-                            // bootstrap-select support
-                            if (Ctrl.hasClass('selectpicker')) {
-                                Ctrl.selectpicker('refresh');
-                            }
-
-                            // bootstrap-datetimepicker support v5
-                            // if (Ctrl.hasClass('datetimepicker-input')) {
-                            //     console.debug('trigger(change)');
-                            //     Ctrl.trigger('change');
-                            // }
-
-                            // bootstrap-datetimepicker support v6 (maybe it works automatically
-                            // if(Ctrl.data('data-td-target')) {
-                            //     Ctrl.trigger('change');
-                            // }
-
-                            break;
                     }
                 }
                 // else {
@@ -1076,6 +1102,7 @@ function clearControls(elements) {
 
     for (let z = 0; z < elements.length; z++) {
         let elem = elements[z];
+        // console.debug('clearControls', elem.name);
 
         let tagName = elem.tagName.toUpperCase();
         let elemType = (elem.type) ? elem.type.toUpperCase() : '';
@@ -1084,7 +1111,9 @@ function clearControls(elements) {
             elem.innerHTML = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
         }
         else if (elemType == 'CHECKBOX' || elemType == 'RADIO') {
+            // console.debug('checked', elem.dataset.defaultChecked);
             if (elem.getAttribute('data-default-checked') != null) {
+                // console.debug('element checked');
                 elem.checked = string2bool(elem.dataset.defaultChecked);
             }
             else elem.checked = false;

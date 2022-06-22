@@ -513,7 +513,7 @@ class Input extends PoolObject
      * @return string
      * @deprecated
      */
-    function getValuesAsString($delimiter)
+    function getValuesAsString(string $delimiter): string
     {
         $result = '';
         foreach ($this->Vars as $key => $val) {
@@ -1139,6 +1139,14 @@ class ISession extends Input
     public function getSID(): string
     {
         return session_id();
+    }
+
+    /**
+     * Update the current session id with a newly generated one
+     */
+    public function regenerate_id()
+    {
+        session_regenerate_id();
     }
 
     /**
