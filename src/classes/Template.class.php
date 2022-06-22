@@ -182,10 +182,9 @@
 	        /**
 	        * Gibt den gespeicherten geparsten, vervollstaendigten Inhalt zurueck.
     	    *
-        	* @access public
 	        * @return string Geparster Inhalt
     	    */
-        	function getParsedContent()
+        	public function getParsedContent(): string
 	        {
     	        return $this->ParsedContent;
         	}
@@ -417,27 +416,23 @@
 			*
 			* @access public
 			* @param string $handle Name des Handles
-			* @return object Instanz von TempBlock oder NULL
+			* @return TempBlock|null Instanz von TempBlock oder NULL
 			*/
-        	function &getTempBlock($handle)
-	        {
-	        	$result = false;
+        	function getTempBlock(string $handle): ?TempBlock
+            {
 				if (array_key_exists($handle, $this->BlockList)) {
-				    $Obj = &$this->BlockList[$handle];
-					return $Obj;
+                    return $this->BlockList[$handle];
 				}
     	        else {
 					$keys = array_keys($this->BlockList);
 					foreach($keys as $key) {
-						$TempBlock = &$this->BlockList[$key];
-                    	$Obj = &$TempBlock->getTempBlock($handle);
-                    	unset($TempBlock);
-	                    if(@is_a($Obj, 'TempBlock')) {
+                    	$Obj = $this->BlockList[$key]->getTempBlock($handle);
+	                    if($Obj instanceof TempBlock) {
     	                	return $Obj;
 						}
 					}
 	            }
-    	        return $result;
+    	        return null;
         	}
 
 			/**
@@ -502,11 +497,11 @@
             /**
              * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
              *
-             * @param boolean $returncontent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
-             * @param bool $clearparsedcontent
+             * @param boolean $returnContent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
+             * @param bool $clearParsedContent
              * @return string Geparster Inhalt
              */
-			public function parse(bool $returncontent=false, bool $clearparsedcontent=true)
+			public function parse(bool $returnContent=false, bool $clearParsedContent=true)
 			{
 				$varStart = $this->varStart;
 				$varEnd = $this->varEnd;
@@ -514,8 +509,8 @@
 				$content = $this->Content;
 				### TODO Pool 5, bei setVar {} adden oder read write properties...
 				#$content = str_replace(array_keys($this -> VarList), array_values($this -> VarList), $content);
-				foreach($this->VarList as $Key => $Value) {
-					$content = str_replace($varStart.$Key.$varEnd, $Value, $content);
+				foreach($this->VarList as $Key => $val) {
+					$content = str_replace($varStart.$Key.$varEnd, $val ?? '', $content);
 				}
 
 				$search = array();
@@ -530,7 +525,7 @@
            	    	if ($TempBlock->allowParse()) {
     	            	$TempBlock->parse();
 						$replace[] = $TempBlock->getParsedContent();
-    	   	            if($clearparsedcontent) $TempBlock->clearParsedContent();
+    	   	            if($clearParsedContent) $TempBlock->clearParsedContent();
            			    $TempBlock->setAllowParse(false);
            	    	}
 	    	        else {
@@ -545,14 +540,13 @@
 					$TempFile->parse();
 					$search[] = '{'.$Handle.'}';
 					$replace[] = $TempFile->getParsedContent();
-					if($clearparsedcontent) $TempFile->clearParsedContent();
-
+					if($clearParsedContent) $TempFile->clearParsedContent();
 					unset($TempFile);
 				}
 
 				$content = str_replace($search, $replace, $content);
 
-	            if (!$returncontent) {
+	            if (!$returnContent) {
     	            $this->ParsedContent = $content;
     	            return true;
         	    }
@@ -610,9 +604,10 @@
 		 **/
 		class TempBlock extends TempCoreHandle
 		{
-			//@var boolean Bestimmt, ob der Content geparst werden darf.
-			//@access private
-	     	var $AllowParse;
+            /**
+             * @var bool content parseable? Am I allowed to parse the content?
+             */
+	     	private bool $allowParse;
 
 			/**
 			* TempBlock()
@@ -629,7 +624,7 @@
 				parent::__construct('BLOCK', $directory, $charset);
 
 				$this->SetHandle($handle);
-    	        $this->AllowParse = false;
+    	        $this->allowParse = false;
 				$this->SetContent($content);
 			}
 
@@ -645,9 +640,9 @@
 			* @access public
 			* @return boolean Bei true darf geparst werden, bei false nicht.
 			*/
-	        function allowParse()
+	        function allowParse(): bool
     	    {
-        	 	return $this -> AllowParse;
+        	 	return $this->allowParse;
 	        }
 
 			/**
@@ -658,9 +653,9 @@
 			* @access public
 			* @param boolean $bool True f�r ja, False f�r nein.
 			*/
-        	function setAllowParse($bool)
+        	function setAllowParse(bool $bool)
 	        {
-    	     	$this -> AllowParse = $bool;
+    	     	$this->allowParse = $bool;
         	}
 
 			/**
@@ -668,10 +663,10 @@
 			*
 			* @access public
 			*/
-    	    function parse($returncontent=false, $clearparsedcontent=true)
+    	    function parse(bool $returnContent=false, bool $clearParsedContent=true)
         	{
-            	$content = parent::parse($this->AllowParse, $clearparsedcontent);
-            	if($returncontent) {
+            	$content = parent::parse($this->allowParse, $clearParsedContent);
+            	if($returnContent) {
                     return $content;
             	}
             	else {
@@ -840,9 +835,9 @@
 			*
 			* Parst das Script. Dabei wird enthaltener PHP Code ausgefuehrt.
 			*/
-			public function parse(bool $returncontent=false, bool $clearparsedcontent=true)
+			public function parse(bool $returnContent=false, bool $clearParsedContent=true)
 			{
-				parent::parse($returncontent, $clearparsedcontent);
+				parent::parse($returnContent, $clearParsedContent);
 
 				ob_start();
 				eval('?>'.$this->ParsedContent.'<?php ');
@@ -1121,16 +1116,14 @@
 			/**
 			* Anweisung, dass ein neuer Block folgt, dem die n�chsten Variablen zugewiesen werden.
 			*
-			* @access public
 			* @param string $handle Handle-Name
 			* @return TempBlock
 			*/
-        	function &newBlock($handle)
+        	function &newBlock(string $handle)
 	        {
-    	     	if (is_object($this->ActiveFile)) {
+    	     	if ($this->ActiveFile instanceof TempFile) {
         	        if ((!isset($this->ActiveBlock)) or ($this->ActiveBlock->getHandle() != $handle)) {
-            			$TempBlock = &$this->ActiveFile->getTempBlock($handle);
-						$this->ActiveBlock = &$TempBlock;
+                        $this->ActiveBlock = $this->ActiveFile->getTempBlock($handle);
                 	}
 
 	                if ($this->ActiveBlock) {
@@ -1181,12 +1174,12 @@
              * @param string $blockHandle name of block
              * @return bool|TempBlock
              */
-			function useBlock($blockHandle)
+			function useBlock(string $blockHandle)
 			{
 				if ($this->ActiveFile) {
-					$ActiveBlock = &$this->ActiveFile->getTempBlock($blockHandle);
-					if($ActiveBlock != false) {
-						$this->ActiveBlock = &$ActiveBlock;
+					$ActiveBlock = $this->ActiveFile->getTempBlock($blockHandle);
+					if($ActiveBlock) {
+						$this->ActiveBlock = $ActiveBlock;
 						return $this->ActiveBlock;
 					}
 				}

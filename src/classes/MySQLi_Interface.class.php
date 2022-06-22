@@ -417,7 +417,7 @@ class MySQLi_Interface extends DataInterface
                 // SQL Statement Logging:
                 if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
                     if (ACTIVATE_INTERFACE_SQL_LOG >= 1) {
-                        $Log = &Singleton('Log');
+                        $Log = Singleton('Log'); // todo Rework
                         $mode_txt = $mode;
                         if ($Log->isLogging()) {
                             $Log->addLine('CONNECTED TO ' . $this->host[$mode] . ' MODE: ' . $mode_txt . ' DB: ' . $database);
@@ -473,9 +473,8 @@ class MySQLi_Interface extends DataInterface
      * Baut eine Verbindung zur Datenbank auf.
      *
      * @param string $database Datenbank
-     * @access public
      */
-    function connect($database = '')
+    public function open(string $database = ''): bool
     {
         $result = $this->__get_db_conid($database, SQL_READ);
         if ($result != false and $this->host[SQL_READ] != $this->host[SQL_WRITE]) {
@@ -514,10 +513,9 @@ class MySQLi_Interface extends DataInterface
     /**
      * Schliesst alle Verbindungs-Kennungen.
      *
-     * @access public
      * @return boolean true
      **/
-    function close()
+    public function close(): bool
     {
         if (is_array($this->connections[SQL_READ])) {
             foreach ($this->connections[SQL_READ] as $database => $conid) {

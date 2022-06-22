@@ -199,10 +199,9 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * MySQL_Interface
          *
-         * @access private
          * @var MySQL_Interface
          */
-        var $db = null;
+        protected ?DataInterface $db = null;
 
         //@var string Datenbankname
         //@access protected
@@ -267,15 +266,23 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
+         * return DataInterface e.g. MySQL-Connection like MySQLi_Interface
+         *
+         * @return DataInterface
+         */
+        public function getDataInterface(): DataInterface
+        {
+            return $this->db;
+        }
+
+        /**
          * Initialisiert Objekteigenschaften: Die Funktion "init" liest automatisch alle Felder und
          * Primaerschluessel der Tabelle ein.
          *
          * Beim Setzen der Spalten/Felder wird das Ereignis
          * $this -> onSetColumns() aufgerufen
-         *
-         * @access public
          **/
-        function init()
+        public function init()
         {
             $this->pk = array();
             $this->columns = array();
@@ -342,7 +349,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          *
          * @return $this
          */
-        public function enableTranslation()
+        public function enableTranslation(): MySQL_DAO
         {
             $this->translateValues = $this->cache['translatedValues'] ?: $this->translateValues;
             $this->translate = $this->cache['translate'] ?: $this->translate;
@@ -354,7 +361,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          *
          * @return $this
          */
-        public function disableTranslation()
+        public function disableTranslation(): MySQL_DAO
         {
             $this->cache['translate'] = $this->translate;
             $this->cache['translatedValues'] = $this->translateValues;
@@ -547,6 +554,16 @@ if(!defined('CLASS_MYSQLDAO')) {
         }
 
         /**
+         * get columns with table alias
+         *
+         * @return array
+         */
+        public function getColumnsWithTableAlias(): array
+        {
+            return array_map(function($val) { return $this->tableAlias . '.'.$val; }, $this->columns);
+        }
+
+        /**
          * Die Funktion "insert" fuegt einen neuen Datensatz in die MySQL Tabelle ein.
          *
          * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "last_insert_id"! Sie kann
@@ -568,7 +585,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 if(is_null($value)) {
                     $values .= 'NULL,';
                 }
-                elseif(is_integer($value) or (is_float($value))) {
+                elseif(is_int($value) or (is_float($value))) {
                     $values .= (string)$value.',';
                 }
                 elseif(is_bool($value)) {
@@ -631,7 +648,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 if (is_null($value)) {
                     $value = 'NULL';
                 }
-                elseif(is_integer($value) or (is_float($value))) {
+                elseif(is_int($value) or (is_float($value))) {
                     $value = (string)$value;
                 }
                 elseif(is_bool($value)) {
@@ -870,83 +887,82 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
          * @return string Teil eines SQL Queries
          **/
-        function __buildFilter($filter_rules, $operator='and', $skip_first_operator=false)
+        function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false)
         {
             $query = '';
             $z = -1;
-            if(is_array($filter_rules)) {
-                foreach($filter_rules as $record) {
-                    $z++;
-                    if(!is_array($record)) { // operator or something manual
-                        // where 1 xxx fehlendes and
-                        if($z==0 and strtolower($record) != 'or') {
-                            $query .= ' and';
-                        }
-                        // Verknuepfungen or, and
-                        $query .= ' ' . $record . ' ';
-                        $skip_first_operator = true;
-                        continue;
+            foreach($filter_rules as $record) {
+                $z++;
+                if(!is_array($record)) { // operator or something manual
+                    // where 1 xxx fehlendes and
+                    if($z==0 and strtolower($record) != 'or') {
+                        $query .= ' and';
                     }
-                    if($skip_first_operator) {
-                        $skip_first_operator = false;
-                    }
-                    else {
-                        $query .= ' ' . $operator . ' ';
-                    }
+                    // Verknuepfungen or, and
+                    $query .= ' ' . $record . ' ';
+                    $skip_first_operator = true;
+                    continue;
+                }
+                if($skip_first_operator) {
+                    $skip_first_operator = false;
+                }
+                else {
+                    $query .= ' ' . $operator . ' ';
+                }
 
-                    if(is_array($record[0])) { // nesting
-                        $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
-                        continue;
-                    }
+                if(is_array($record[0])) { // nesting
+                    $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
+                    continue;
+                }
 
-                    // 24.07.2012, Anfuehrungszeichen steuerbar
-                    $noQuotes = false;
-                    $noEscape = false;
-                    if(isset($record[3])) { // Optionen
-                        $noQuotes = ($record[3] & DAO_NO_QUOTES);
-                        $noEscape = ($record[3] & DAO_NO_ESCAPE);
-                    }
+                // 24.07.2012, Anfuehrungszeichen steuerbar
+                $noQuotes = false;
+                $noEscape = false;
+                if(isset($record[3])) { // Optionen
+                    $noQuotes = ($record[3] & DAO_NO_QUOTES);
+                    $noEscape = ($record[3] & DAO_NO_ESCAPE);
+                }
 
-                    if($this->translateValues) {
-                        $record[0] = $this->translateValues($record[0]);
-                    }
+                if($this->translateValues) {
+                    $record[0] = $this->translateValues($record[0]);
+                }
 
-                    // Sonderregel "in", "not in"
-                    if(isset($record[2]) and is_array($record[2])) {
-                        $first = true;
-                        $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
-                        foreach ($record[2] as $value) {
-                            if (!$first) {
-                                $query .= ', ';
-                            }
-                            if(is_integer($value) or is_float($value)) {
-                                $query .= ' ' . $value;
-                            }
-                            else {
-                                if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
-                                if($noQuotes == false) $value = '\''.$value.'\'';
-                                $query .= $value;
-                            }
-                            $first = false;
+                // Sonderregel "in", "not in"
+                if(isset($record[2]) and is_array($record[2])) {
+                    $first = true;
+                    $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
+                    foreach ($record[2] as $value) {
+                        if (!$first) {
+                            $query .= ', ';
                         }
-                        $query .= ')';
-                    }
-                    else {
-                        $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
-                        if (is_null($record[2])) {
-                            $query .= ' NULL';
-                        }
-                        elseif(is_bool($record[2])) {
-                            $query .= ' ' . bool2string($record[2]);
-                        }
-                        elseif(is_integer($record[2]) or is_float($record[2]) or
-                                is_subquery($record[1], $record[2])) {
-                            $query .= ' ' . $record[2];
+                        if(is_integer($value) or is_float($value)) {
+                            $query .= ' ' . $value;
                         }
                         else {
-                            $value = $record[2];
                             if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
                             if($noQuotes == false) $value = '\''.$value.'\'';
+                            $query .= $value;
+                        }
+                        $first = false;
+                    }
+                    $query .= ')';
+                }
+                else {
+                    $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
+                    if (is_null($record[2])) {
+                        $query .= ' NULL';
+                    }
+                    elseif(is_bool($record[2])) {
+                        $query .= ' ' . bool2string($record[2]);
+                    }
+                    elseif(is_integer($record[2]) or is_float($record[2]) or
+                            is_subquery($record[1], $record[2])) {
+                        $query .= ' ' . $record[2];
+                    }
+                    else {
+                        $value = $record[2];
+                        if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
+                        if($noQuotes == false) $value = '\''.$value.'\'';
 
 //									if(mb_detect_encoding($value, array('UTF-8', 'ISO-8859-1'), true) == 'ISO-8859-1') {
 //										if(strpos($value, '_latin1') === false) {
@@ -954,8 +970,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 //										}
 //									}
 
-                            $query .= ' '.$value;
-                        }
+                        $query .= ' '.$value;
                     }
                 }
             }
@@ -993,27 +1008,46 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $i++;
 
                 $alias = $isAssoc ? $column['alias'] : $column;
-                $expr = $isAssoc ? $column['expr'] : $column; // column or expression
+                $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
                 $type = $isAssoc ? $column['type'] : '';
-                $isSubQuery = stripos($expr, 'select', 0) === 0;
-                if($isSubQuery) {
-                    $expr = '('.$expr.')';
-                }
+
                 // $format = $isAssoc ? $column['format'] : '';
 
+                $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
                 $isDateTime = $type == 'date.time';
                 $isDate = $type == 'date';
                 if($isDate or $isDateTime) {
                     $expr = 'DATE_FORMAT('.$expr.', "'.Weblication::getInstance()->getDefaultFormat('mysql.date_format.' . $type).'")';
                 }
 
-                $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
                 if($hasDefinedFilter) {
                     $filterByValue = $definedSearchKeywords[$alias];
-                    $filterByColumn = $isAssoc ? ($column['filterByColumn']  ?: $expr) : $expr;
-                    $filterControl = $isAssoc ? ($column['filterControl']  ?: 'input') : 'input';
+                    $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $expr) : $expr;
+                    $filterControl = $isAssoc ? ($column['filterControl'] ?: 'input') : 'input';
                     if($filterControl == 'select') {
                         $operator = 'equal';
+                    }
+                    elseif($filterControl == 'datepicker') {
+                        if($filterByValue) {
+                            $date = date_parse($filterByValue); // is date?
+                            if($date['error_count'] == 0 and $date['warning_count'] == 0 and
+                                $date['year'] and $date['month'] and $date['day']) {
+                                // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
+                                $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $orig_expr) : $orig_expr;
+                                $filterByValue = $date['year'];
+                                $filterByValue .= '-'.str_pad($date['month'], 2, '0', STR_PAD_LEFT);
+                                $filterByValue .= '-'.str_pad($date['day'], 2, '0', STR_PAD_LEFT);
+
+                                if($date['hour'] and $date['minute']) {
+                                    $filterByValue .= ' '.str_pad($date['hour'], 2, '0', STR_PAD_LEFT).
+                                        ':'.str_pad($date['minute'], 2, '0', STR_PAD_LEFT);
+                                    if($date['second']) {
+                                        $filterByValue .= ':'.str_pad($date['second'], 2, '0', STR_PAD_LEFT);
+                                    }
+                                }
+                            }
+                        }
+                        $filterByValue = $filterByValue.'%';
                     }
                     else {
                         $filterByValue = '%'.$filterByValue.'%';
@@ -1191,21 +1225,15 @@ class CustomMySQL_DAO extends MySQL_DAO
      *
      * Sets up the object.
      *
-     * @access public
-     * @param object $db Datenbankhandle
+     * @param DataInterface $db Datenbankhandle
      * @param string $dbname Datenbank
      * @param string $table Tabelle
      * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
-     **/
-    public function __construct($db, $dbname, $table, $autoload_fields=true)
+     */
+    public function __construct(DataInterface $db, string $dbname, string $table, bool $autoload_fields=true)
     {
         parent::__construct();
 
-        if(!is_a($db, 'DataInterface')) {
-            $Xeption = new Xception('No data interface was passed!', 0, array('file' => __FILE__,
-                'line' => __LINE__), null);
-            $this -> throwException($Xeption);
-        }
         $this->db = $db;
         $this->dbname = $dbname;
         $this->table = $table;
