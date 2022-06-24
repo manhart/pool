@@ -2128,8 +2128,8 @@ function calcNumberOfDaysInBetween(DateTimeInterface $StartDateTime, DateTimeInt
 {
     $DateTime1 = clone $StartDateTime;
     $DateTime2 = clone $EndDateTime;
-    $DateTime1->setTime(0, 0);
-    $DateTime2->setTime(0, 0);
+    $DateTime1->setTime(0, 0, 0);
+    $DateTime2->setTime(0, 0, 0);
     $days = ($DateTime1->diff($DateTime2)->days ?: 0);
     if($unsigned) {
         return $days;
