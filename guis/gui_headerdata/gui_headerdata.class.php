@@ -69,7 +69,7 @@
      *
      * @var array
      */
-    var $StyleSheets = array();
+    private array $styleSheetFiles = [];
 
     /**
      * Media for StyleSheets
@@ -81,12 +81,12 @@
      /**
       * @var array javascript files with properties
       */
-    private array $javaScripts = array();
+    private array $javaScripts = [];
 
      /**
       * @var array javascript file names to prevent double inclusion
       */
-    private array $javaScriptFiles = array();
+    private array $javaScriptFiles = [];
 
     //@var string Base Target
     //@access private
@@ -112,14 +112,17 @@
     private array $scriptCode = [];
 
      /**
-      * GUI_Headerdata::GUI_Headerdata()
-      *
+      * @var array|callable|null
+      */
+    private $addFileFct = null;
+
+     /**
       * Konstruktor
       *
-      * @access public
       * @param object $Owner Besitzer vom Typ Component
       * @param bool $autoLoadFiles
       * @param array $params
+      * @throws ReflectionException
       */
     function __construct(& $Owner, $autoLoadFiles = true, array $params = [])
     {
@@ -132,21 +135,15 @@
     }
 
     /**
-     * GUI_Headerdata::LoadFiles()
-     *
-     * Laedt das headerdata.html Template (Html Kopfdaten)
-     *
-     * @access private
+     * loads the template (Html Kopfdaten)
      **/
-    function loadFiles()
+    public function loadFiles()
     {
         $file = $this->Weblication->findTemplate('tpl_headerdata.html', 'gui_headerdata', true);
         $this->Template->setFilePath('headerdata', $file);
     }
 
     /**
-     * GUI_Headerdata::setExpires()
-     *
      * Setzt die Sekunden, wann der Browser die Datei von der Originaldatei laden soll (und nicht aus dem Cache).
      * z.B. 12 Stunden = 43200; (vertraegt auch String siehe Selfhtml)
      *
@@ -159,11 +156,8 @@
     }
 
     /**
-     * GUI_Headerdata::setBrowserNoCache()
-     *
      * Teilt dem Browser mit, dass er keinen Cache verwenden soll (je nach Browserinterpretation gleich zu expire=0)
      *
-     * @access public
      * @param boolean $bValue Wahr NoCache, Falsch mit Cache
      **/
     function setBrowserNoCache($bValue)
@@ -172,11 +166,8 @@
     }
 
     /**
-     * GUI_Headerdata::setProxyNoCache()
-     *
      * Teilt einem Proxy mit, dass er keinen Cache verwenden soll (pragma)
      *
-     * @access public
      * @param boolean $bValue Wahr NoCache, Falsch mit Cache
      **/
     function setProxyNoCache($bValue)
@@ -185,11 +176,8 @@
     }
 
     /**
-     * GUI_Headerdata::setTitle()
-     *
      * Setzt den Seitentitel und MetaTags!
      *
-     * @access public
      * @param string $sTitle Titel (darf nicht leer sein; Titel muss vorhanden sein)
      **/
     function setTitle($sTitle)
@@ -210,11 +198,8 @@
     }
 
     /**
-     * GUI_Headerdata::getTitle()
-     *
      * Gibt den gesetzten Seitentitel wieder zurueck
      *
-     * @access public
      * @return string Titel der Seite
      **/
     function getTitle()
@@ -223,25 +208,19 @@
     }
 
     /**
-     * GUI_Headerdata::setDescription()
-     *
      * Setzt einen Beschreibungstext fuer Suchmaschinen
      *
-     * @access public
      * @param string $sDescription
      **/
-    function setDescription($sDescription)
+    function setDescription(string $sDescription)
     {
-        $this -> Description = $sDescription;
+        $this->Description = $sDescription;
     }
 
     /**
-     * GUI_Headerdata::setRobots()
-     *
      * Gibt Suchmaschinen Robots Anweisungen, was er auf dieser Seite tun soll. Siehe Headerdata.class.php Konstanten im oberen Bereich!!
      * z.b. Indexierung oder keine Indexierung, Follow etc.
      *
-     * @access public
      * @param string $sRobots Uebergabe von ROBOT_ Konstanten
      **/
     function setRobots($sRobots)
@@ -250,14 +229,11 @@
     }
 
     /**
-     * GUI_Headerdata::setLanguage()
-     *
      * Setzt die Sprache fuer die Seite
      *
-     * @access public
      * @param string $lang
      **/
-    function setLanguage($lang)
+    function setLanguage(string $lang)
     {
         $this->ContentLanguage = $lang;
     }
@@ -265,7 +241,6 @@
     /**
      * Diese Funktion setzt einen MetaRefresh auf die Seite.
      *
-     * @access public
      * @param integer $seconds Sekunden in den ein Refresh gemacht werden soll
      * @param string $url Auf welche Url weitergeleitet werden soll
      **/
@@ -275,18 +250,21 @@
         $this->MetaRefresh['url'] = $url;
     }
 
-    /**
-     * Fuegt der Seite eine StyleSheet Datei (.css) hinzu.
-     *
-     * @param string $filename
-     **/
-    public function addStyleSheet(string $filename, $media=null)
+     /**
+      * Add stylesheet file to the page
+      *
+      * @param string $file
+      * @param null $media
+      * @return GUI_Headerdata
+      */
+    public function addStyleSheet(string $file, $media=null): GUI_Headerdata
     {
-        if($filename == '') return false;
-        if (!in_array($filename, $this->StyleSheets)) {
-            $this->StyleSheets[] = $filename;
-            $this->StyleSheetsMedia[count($this->StyleSheets)-1] = $media;
-        }
+        if($file == '') return $this;
+        if(in_array($file, $this->styleSheetFiles)) return $this;
+        if($this->addFileFct) $file = call_user_func($this->addFileFct, $file);
+        $this->styleSheetFiles[] = $file;
+        $this->StyleSheetsMedia[count($this->styleSheetFiles)-1] = $media;
+        return $this;
     }
 
      /**
@@ -298,16 +276,27 @@
       */
     public function addJavaScript(string $file, array $attributes = []): GUI_Headerdata
     {
-        if (!in_array($file, $this->javaScriptFiles)) {
-            $js = array(
-                'file' => $file
-            );
-            if($attributes) {
-                $js['attributes'] = $attributes;
-            }
-            $this->javaScripts[] = $js;
-            $this->javaScriptFiles[] = $file;
+        if($file == '') return $this;
+        if (in_array($file, $this->javaScriptFiles)) return $this;
+        if($this->addFileFct) $file = call_user_func($this->addFileFct, $file);
+        $js = array(
+            'file' => $file
+        );
+        if($attributes) {
+            $js['attributes'] = $attributes;
         }
+        $this->javaScripts[] = $js;
+        $this->javaScriptFiles[] = $file;
+        return $this;
+    }
+
+     /**
+      * @param callable $fct
+      * @return GUI_Headerdata
+      */
+    public function onAddFile(callable $fct): GUI_Headerdata
+    {
+        $this->addFileFct = $fct;
         return $this;
     }
 
@@ -324,7 +313,7 @@
 
     function setBaseTarget($target='_top')
     {
-        $this -> Base_Target = $target;
+        $this->Base_Target = $target;
     }
 
     /**
@@ -332,29 +321,25 @@
      *
      * @param string $xuaCompatible
      */
-    function setXuaCompatible($xuaCompatible)
+    function setXuaCompatible(string $xuaCompatible)
     {
         $this->xuaCompatible = $xuaCompatible;
     }
 
     /**
-     * GUI_Headerdata::prepare()
-     *
      * Bereitet die Html Kopfdaten vor.
-     *
-     * @access public
      **/
     function prepare()
     {
         $Url = new Url(I_EMPTY);
         $this->Template->setVar(
             array(
-                'EXPIRES' => $this -> Expires,
-                'LANGUAGE' => $this -> ContentLanguage,
-                'TITLE' => $this -> Title,
-                'DESCRIPTION' => $this -> Description,
-                'ROBOTS' => $this -> Robots,
-                'BASE_TARGET' => $this -> Base_Target,
+                'EXPIRES' => $this->Expires,
+                'LANGUAGE' => $this->ContentLanguage,
+                'TITLE' => $this->Title,
+                'DESCRIPTION' => $this->Description,
+                'ROBOTS' => $this->Robots,
+                'BASE_TARGET' => $this->Base_Target,
                 'CHARSET' => $this->charset,
                 'SCRIPT' => $Url->getUrl()
             )
@@ -367,23 +352,23 @@
             $this->Template->leaveBlock();
         }
 
-        if ($this -> BrowserNoCache) {
-            $this -> Template -> newBlock('BROWSERNOCACHE');
+        if ($this->BrowserNoCache) {
+            $this->Template->newBlock('BROWSERNOCACHE');
         }
 
-        if ($this -> ProxyNoCache) {
-            $this -> Template -> newBlock('PROXYNOCACHE');
+        if ($this->ProxyNoCache) {
+            $this->Template->newBlock('PROXYNOCACHE');
         }
 
-        if (count($this -> MetaRefresh) > 0) {
-            $this -> Template -> newBlock('METAREFRESH');
-            $this -> setVar('REFRESH', $this -> MetaRefresh['seconds']);
-            $this -> setVar('URL', $this -> MetaRefresh['url']);
+        if (count($this->MetaRefresh) > 0) {
+            $this->Template->newBlock('METAREFRESH');
+            $this->setVar('REFRESH', $this->MetaRefresh['seconds']);
+            $this->setVar('URL', $this->MetaRefresh['url']);
         }
 
-        if (count($this->StyleSheets) > 0) {
+        if (count($this->styleSheetFiles) > 0) {
             $z = 0;
-            foreach($this->StyleSheets as $css) {
+            foreach($this->styleSheetFiles as $css) {
                 $this->Template->newBlock('STYLESHEET');
                 $this->Template->setVar('FILENAME', $css);
                 if(!is_null($this->StyleSheetsMedia[$z])) { // Media

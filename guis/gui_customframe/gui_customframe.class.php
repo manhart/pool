@@ -100,6 +100,11 @@ class GUI_CustomFrame extends GUI_Module
      */
     var $preventDefaultHeaderdata = false;
 
+    /**
+     * @var array|callable|null
+     */
+    private $addFileFct = null;
+
     private array $scriptAtTheEnd = [];
     private array $scriptFilesAtTheEnd = [];
     private array $scriptWhenReady = [];
@@ -110,7 +115,6 @@ class GUI_CustomFrame extends GUI_Module
      * Um DynToolTip zu aktivieren, wird im Frame ein DIV Element (innerhalb des body-tags) gebraucht:
      * <DIV id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100;"></DIV>
      *
-     * @access public
      * @param object $Owner
      * @param bool $autoLoadFiles
      * @param array $params
@@ -133,15 +137,15 @@ class GUI_CustomFrame extends GUI_Module
         }
 
         if(!$this->preventDefaultJavaScript) {
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('browser.js', $this -> getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('array.js', $this -> getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('helpers.js', $this -> getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('mouseposition.js', $this -> getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('layer.js', $this -> getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('XMLHTTPRequestObject.js', $this -> getClassName(), true));
+            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('browser.js', $this->getClassName(), true));
+            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('array.js', $this->getClassName(), true));
+            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('helpers.js', $this->getClassName(), true));
+            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('mouseposition.js', $this->getClassName(), true));
+            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('layer.js', $this->getClassName(), true));
+            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('XMLHTTPRequestObject.js', $this->getClassName(), true));
         }
 
-        //$this -> Headerdata -> addJavaScript($this -> Weblication -> findJavaScript('dyntooltip.js', $this -> getClassName(), true));
+        //$this->Headerdata->addJavaScript($this->Weblication->findJavaScript('dyntooltip.js', $this->getClassName(), true));
     }
 
     /**
@@ -149,8 +153,8 @@ class GUI_CustomFrame extends GUI_Module
      */
     public function loadFiles()
     {
-        $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
-        $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
+        $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
+        $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
     }
 
     /**
@@ -176,12 +180,11 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * Fuegt dem (Document) Body Load-Ereignis eine (JavaScript-)Funktion hinzu.
      *
-     * @access public
      * @param string $func Funktion (bitte ohne ; abschließen)
      **/
-    function addBodyLoad($func)
+    public function addBodyLoad($func)
     {
-        if (!in_array($func, $this -> DoLoad)) {
+        if (!in_array($func, $this->DoLoad)) {
             $this->DoLoad[] = $func;
         }
     }
@@ -189,13 +192,12 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * Fuegt dem (Document) Body Unload-Ereignis eine (JavaScript-) Funktion hinzu.
      *
-     * @access public
      * @param string $func Funktion
      **/
-    function addBodyUnload($func)
+    public function addBodyUnload($func)
     {
-        if (!in_array($func, $this -> DoUnload)) {
-            $this -> DoUnload[] = $func;
+        if (!in_array($func, $this->DoUnload)) {
+            $this->DoUnload[] = $func;
         }
     }
 
@@ -209,8 +211,8 @@ class GUI_CustomFrame extends GUI_Module
      **/
     function addBodyMouseover($func)
     {
-        if (!in_array($func, $this -> DoMouseover)) {
-            $this -> DoMouseover[] = $func;
+        if (!in_array($func, $this->DoMouseover)) {
+            $this->DoMouseover[] = $func;
         }
     }
 
@@ -222,8 +224,8 @@ class GUI_CustomFrame extends GUI_Module
      **/
     function addBodyMousemove($func)
     {
-        if (!in_array($func, $this -> DoMousemove)) {
-            $this -> DoMousemove[] = $func;
+        if (!in_array($func, $this->DoMousemove)) {
+            $this->DoMousemove[] = $func;
         }
     }
 
@@ -235,8 +237,8 @@ class GUI_CustomFrame extends GUI_Module
      **/
     function addBodyMouseout($func)
     {
-        if (!in_array($func, $this -> DoMouseout)) {
-            $this -> DoMouseout[] = $func;
+        if (!in_array($func, $this->DoMouseout)) {
+            $this->DoMouseout[] = $func;
         }
     }
 
@@ -248,8 +250,8 @@ class GUI_CustomFrame extends GUI_Module
      **/
     function addBodyMousedown($func)
     {
-        if (!in_array($func, $this -> DoMousedown)) {
-            $this -> DoMousedown[] = $func;
+        if (!in_array($func, $this->DoMousedown)) {
+            $this->DoMousedown[] = $func;
         }
     }
 
@@ -263,8 +265,8 @@ class GUI_CustomFrame extends GUI_Module
      **/
     function addBodyMouseup($func)
     {
-        if (!in_array($func, $this -> DoMouseup)) {
-            $this -> DoMouseup[] = $func;
+        if (!in_array($func, $this->DoMouseup)) {
+            $this->DoMouseup[] = $func;
         }
     }
 
@@ -301,6 +303,7 @@ class GUI_CustomFrame extends GUI_Module
      */
     public function addScriptFileAtTheEnd(string $jsFile, $position=null)
     {
+        if($this->addFileFct) $jsFile = call_user_func($this->addFileFct, $jsFile);
         array_unshift($this->scriptFilesAtTheEnd, $jsFile);
     }
 
@@ -325,11 +328,22 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Laden der Default Einstellungen.
+     * set callable for event on add file
      *
-     * @access public;
+     * @param callable $addFileFct
+     * @return GUI_CustomFrame
+     * @see GUI_CustomFrame::addScriptFileAtTheEnd()
+     */
+    public function onAddFile(callable $addFileFct): GUI_CustomFrame
+    {
+        $this->addFileFct = $addFileFct;
+        return $this;
+    }
+
+    /**
+     * Laden der Default Einstellungen.
      **/
-    function init($superglobals=I_EMPTY)
+    public function init($superglobals=I_EMPTY)
     {
         parent::init($superglobals);
     }
@@ -357,13 +371,13 @@ class GUI_CustomFrame extends GUI_Module
         }
 
         $onLoad = count($this->DoLoad) ? implode(';', $this->DoLoad) : '';
-        $onUnload = count($this->DoUnload) ? implode(';', $this -> DoUnload) : '';
-        $domouseover = (count($this -> DoMouseover) > 0 and is_array($this -> DoMouseover)) ? implode(';', $this -> DoMouseover) : '';
-        $domousemove = (count($this -> DoMousemove) > 0 and is_array($this -> DoMousemove)) ? implode(';', $this -> DoMousemove) : '';
-        $domouseout = (count($this -> DoMouseout) > 0 and is_array($this -> DoMouseout)) ? implode(';', $this -> DoMouseout) : '';
-        $domousedown = (count($this -> DoMousedown) > 0 and is_array($this -> DoMousedown)) ? implode(';', $this -> DoMousedown) : '';
-        $domouseup = (count($this -> DoMouseup) > 0 and is_array($this -> DoMouseup)) ? implode(';', $this -> DoMouseup) : '';
-        $dokeydown = (count($this->DoKeydown) > 0) ? implode(';', $this -> DoKeydown) : '';
+        $onUnload = count($this->DoUnload) ? implode(';', $this->DoUnload) : '';
+        $domouseover = (count($this->DoMouseover) > 0 and is_array($this->DoMouseover)) ? implode(';', $this->DoMouseover) : '';
+        $domousemove = (count($this->DoMousemove) > 0 and is_array($this->DoMousemove)) ? implode(';', $this->DoMousemove) : '';
+        $domouseout = (count($this->DoMouseout) > 0 and is_array($this->DoMouseout)) ? implode(';', $this->DoMouseout) : '';
+        $domousedown = (count($this->DoMousedown) > 0 and is_array($this->DoMousedown)) ? implode(';', $this->DoMousedown) : '';
+        $domouseup = (count($this->DoMouseup) > 0 and is_array($this->DoMouseup)) ? implode(';', $this->DoMouseup) : '';
+        $dokeydown = (count($this->DoKeydown) > 0) ? implode(';', $this->DoKeydown) : '';
         $dokeypress = (count($this->DoKeypress) > 0) ? implode(';', $this->DoKeypress) : '';
         $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
         $scriptFilesAtTheEnd = '';
