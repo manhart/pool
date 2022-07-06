@@ -978,6 +978,7 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                         switch (attr) {
                             case 'data':
                                 // console.debug(Ctrl, 'data', descriptor, value);
+                                descriptor = descriptor.split(/(?=[A-Z])/).map(s => s.toLowerCase()).join('-');
                                 Ctrl.get(0).setAttribute('data-'+descriptor, value);
                                 break;
 
