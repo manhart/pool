@@ -260,8 +260,8 @@
     public function addStyleSheet(string $file, $media=null): GUI_Headerdata
     {
         if($file == '') return $this;
-        if(in_array($file, $this->styleSheetFiles)) return $this;
         if($this->addFileFct) $file = call_user_func($this->addFileFct, $file);
+        if(in_array($file, $this->styleSheetFiles)) return $this;
         $this->styleSheetFiles[] = $file;
         $this->StyleSheetsMedia[count($this->styleSheetFiles)-1] = $media;
         return $this;
@@ -277,8 +277,8 @@
     public function addJavaScript(string $file, array $attributes = []): GUI_Headerdata
     {
         if($file == '') return $this;
-        if (in_array($file, $this->javaScriptFiles)) return $this;
         if($this->addFileFct) $file = call_user_func($this->addFileFct, $file);
+        if (in_array($file, $this->javaScriptFiles)) return $this;
         $js = array(
             'file' => $file
         );
