@@ -277,16 +277,21 @@
     public function addJavaScript(string $file, array $attributes = []): GUI_Headerdata
     {
         if($file == '') return $this;
-        if($this->addFileFct) $file = call_user_func($this->addFileFct, $file);
         if (in_array($file, $this->javaScriptFiles)) return $this;
-        $js = array(
+
+        $originalFile = $file;
+        if($this->addFileFct) {
+            $file = call_user_func($this->addFileFct, $file);
+        }
+
+        $js = [
             'file' => $file
-        );
+        ];
         if($attributes) {
             $js['attributes'] = $attributes;
         }
         $this->javaScripts[] = $js;
-        $this->javaScriptFiles[] = $file;
+        $this->javaScriptFiles[] = $originalFile;
         return $this;
     }
 
