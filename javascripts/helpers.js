@@ -754,6 +754,7 @@ function what(obj) {
 /**
  * Camelize a string, cutting the string by multiple separators like
  * hyphens, underscores and spaces.
+ * @see https://ourcodeworld.com/articles/read/608/how-to-camelize-and-decamelize-strings-in-javascript
  *
  * @param {text} string Text to camelize
  * @return string Camelized text
@@ -766,18 +767,18 @@ function camelize(text) {
 }
 
 /**
- * Decamelizes a string with/without a custom separator (underscore by default).
+ * decamelize a string with/without a custom separator (underscore by default).
+ * @see https://ourcodeworld.com/articles/read/608/how-to-camelize-and-decamelize-strings-in-javascript
  *
  * @param str String in camelcase
  * @param separator Separator for the new decamelized string.
  */
-function decamelize(str, separator) {
-    separator = typeof separator === 'undefined' ? '_' : separator;
-
-    return str
-        .replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2')
-        .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
-        .toLowerCase();
+function decamelize(str, separator = '-') {
+    return str.split(/(?=[A-Z])/).map(s => s.toLowerCase()).join(separator);
+    // return str
+    //     .replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2')
+    //     .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
+    //     .toLowerCase();
 }
 
 /**
@@ -978,7 +979,7 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                         switch (attr) {
                             case 'data':
                                 // console.debug(Ctrl, 'data', descriptor, value);
-                                descriptor = descriptor.split(/(?=[A-Z])/).map(s => s.toLowerCase()).join('-');
+                                descriptor = decamelize(descriptor);
                                 Ctrl.get(0).setAttribute('data-'+descriptor, value);
                                 break;
 
