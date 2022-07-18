@@ -590,6 +590,9 @@ if(!defined('CLASS_MYSQLDAO')) {
                 elseif(is_bool($value)) {
                     $values .= bool2string($value).',';
                 }
+                elseif(is_array($value)) {
+                    $values .= is_null($value[0]) ? 'NULL,' : $value[0].',';
+                }
                 else {
                     $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
                 }
