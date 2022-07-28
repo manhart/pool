@@ -1089,13 +1089,6 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
         ],
         'stickyHeaderOffsetLeft' => [
-            'attribute' => 'data-sticky-header-offset-left',
-            'type' => 'integer',
-            'value' => 0,
-            'element' => 'input',
-            'inputType' => 'number'
-        ],
-        'stickyHeaderOffsetLeft' => [
             'attribute' => 'data-sticky-header-offset-right',
             'type' => 'integer',
             'value' => 0,
