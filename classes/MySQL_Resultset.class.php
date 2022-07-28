@@ -165,11 +165,10 @@ class MySQL_Resultset extends Resultset
     /**
      * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
      *
-     * @access public
-     * @param string $table
+     * @param string|null $table
      * @return string
-     **/
-    function getSQLInserts($table = null)
+     */
+    function getSQLInserts(?string $table = null): string
     {
         $sql = '';
 
