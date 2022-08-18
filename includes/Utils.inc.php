@@ -623,7 +623,7 @@ function formatDEDateToEN($strDate, $delimiter = '.')
  * @param string $subject text
  * @return string replaced text
  **/
-function br2nl($subject)
+function br2nl(string $subject): string
 {
     return preg_replace('=<br(>|([\s/][^>]*)>)\r?\n?=i', chr(10), $subject);
 }
@@ -631,13 +631,13 @@ function br2nl($subject)
 /**
  * replaces all linebreaks to <br />
  *
- * @param $string
+ * @deprecated use php nl2br
+ * @param string $string
  * @return string|string[]
  */
 function nl2br2(string $string): string
 {
-    $string = str_replace(array("\r\n", "\r", "\n"), '<br>', $string);
-    return $string;
+    return str_replace(array("\r\n", "\r", "\n"), '<br>', $string);
 }
 
 /**
