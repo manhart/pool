@@ -1210,9 +1210,8 @@ class GUI_Table extends GUI_Module
      */
     public function loadFiles()
     {
-        $className = __CLASS__;
         $fw = $this->getVar('framework');
-        $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', $className, true);
+        $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $tpl);
 
         if(!$this->Weblication->hasFrame()) {
@@ -1220,10 +1219,10 @@ class GUI_Table extends GUI_Module
         }
 
         $Frame = $this->Weblication->getFrame();
-        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', $className, true);
+        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
         $Frame->getHeaderdata()->addJavaScript($jsFile);
 
-        $this->js_createGUIModule($className);
+        $this->js_createGUIModule($this->getClassName());
     }
 
     /**
