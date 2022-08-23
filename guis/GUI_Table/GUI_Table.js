@@ -305,7 +305,7 @@ class GUI_Table extends GUI_Module
     }
 
     /**
-     * set column option
+     * set column options
      *
      * @param field
      * @param options
@@ -334,6 +334,22 @@ class GUI_Table extends GUI_Module
         // }
         // console.debug('Result of setColumnOptions', this.columns);
         return this;
+    }
+
+    /**
+     * get column options
+     *
+     * @param field
+     * @return array
+     */
+    getColumnOptions(field)
+    {
+        console.debug(this.getName()+'.getColumnOptions('+field+')');
+
+        if(field in this.columnNames) {
+            return this.columns[this.columnNames[field]];
+        }
+        return [];
     }
 
     /**
