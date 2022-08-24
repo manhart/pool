@@ -905,6 +905,13 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox'
         ],
+        'reorderableRows' => [
+            'attribute' => 'data-reorderable-rows',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
         'resizable' => [
             'attribute' => 'data-resizable',
             'type' => 'boolean',
