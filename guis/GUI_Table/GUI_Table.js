@@ -344,8 +344,7 @@ class GUI_Table extends GUI_Module
      */
     getColumnOptions(field)
     {
-        console.debug(this.getName()+'.getColumnOptions('+field+')');
-
+        // console.debug(this.getName()+'.getColumnOptions('+field+')');
         if(field in this.columnNames) {
             return this.columns[this.columnNames[field]];
         }
