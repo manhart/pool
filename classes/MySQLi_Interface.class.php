@@ -151,11 +151,6 @@ class MySQLi_Interface extends DataInterface
     const MAX_DATETIME = '9999-12-31 23:59:59';
 
     /**
-     * @var array|callable|null
-     */
-    private $onFetchingRow = null;
-
-    /**
      * Sets up the object.
      *
      * Einstellungen:
@@ -778,23 +773,13 @@ class MySQLi_Interface extends DataInterface
     }
 
     /**
-     * Event onFetchingRow
-     *
-     * @param callable $callback
-     */
-    public function onFetchingRow(callable $callback)
-    {
-        $this->onFetchingRow = $callback;
-    }
-
-    /**
      * Liefert einen Datensatz als assoziatives Array und numerisches Array
      *
-     * @access public
      * @param mysqli_result|false $query_result
+     * @param callable|null $callbackOnFetchRow
      * @return array Bei Erfolg ein Array mit allen Datensaetzen ($array[index]['feldname'])
-     **/
-    public function fetchrowset($query_result = false)
+     */
+    public function fetchrowset($query_result = false, ?callable $callbackOnFetchRow = null)
     {
         if (!$query_result) {
             if (isset($this->query_result)) {
@@ -802,16 +787,16 @@ class MySQLi_Interface extends DataInterface
             }
         }
 
-        $rowset = array();
+        $rowSet = [];
         if ($query_result instanceof mysqli_result) {
             while (($row = mysqli_fetch_assoc($query_result)) != null) {
-                if($this->onFetchingRow)  {
-                    $row = call_user_func($this->onFetchingRow, $row);
+                if($callbackOnFetchRow)  {
+                    $row = call_user_func($callbackOnFetchRow, $row);
                 }
-                $rowset[] = $row;
+                $rowSet[] = $row;
             }
         }
-        return $rowset;
+        return $rowSet;
     }
 
     /**
