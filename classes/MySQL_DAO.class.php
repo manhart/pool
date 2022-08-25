@@ -818,8 +818,7 @@ if(!defined('CLASS_MYSQLDAO')) {
         protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
         {
             $MySQL_ResultSet = new MySQL_Resultset($this->db);
-            $MySQL_ResultSet->onFetchingRow(!is_null($customCallback) ? $customCallback : [$this, 'fetchingRow']);
-            $MySQL_ResultSet->execute($sql, $this->dbname);
+            $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow']);
             return $MySQL_ResultSet;
         }
 
