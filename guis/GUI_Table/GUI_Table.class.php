@@ -905,6 +905,13 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox'
         ],
+        'reorderableRows' => [
+            'attribute' => 'data-reorderable-rows',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox'
+        ],
         'resizable' => [
             'attribute' => 'data-resizable',
             'type' => 'boolean',
@@ -1089,13 +1096,6 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
         ],
         'stickyHeaderOffsetLeft' => [
-            'attribute' => 'data-sticky-header-offset-left',
-            'type' => 'integer',
-            'value' => 0,
-            'element' => 'input',
-            'inputType' => 'number'
-        ],
-        'stickyHeaderOffsetLeft' => [
             'attribute' => 'data-sticky-header-offset-right',
             'type' => 'integer',
             'value' => 0,
@@ -1217,9 +1217,8 @@ class GUI_Table extends GUI_Module
      */
     public function loadFiles()
     {
-        $className = __CLASS__;
         $fw = $this->getVar('framework');
-        $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', $className, true);
+        $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $tpl);
 
         if(!$this->Weblication->hasFrame()) {
@@ -1227,10 +1226,10 @@ class GUI_Table extends GUI_Module
         }
 
         $Frame = $this->Weblication->getFrame();
-        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', $className, true);
+        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
         $Frame->getHeaderdata()->addJavaScript($jsFile);
 
-        $this->js_createGUIModule($className);
+        $this->js_createGUIModule($this->getClassName());
     }
 
     /**
