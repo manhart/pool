@@ -69,13 +69,13 @@ class MySQL_Resultset extends Resultset
      * Fehlermeldungen landen im $this -> errorStack und koennen ueber
      * $this -> getLastError() abgefragt werden.
      *
-     * @access public
      * @param string $sql SQL Statement
-     * @param string $dbname Datenbankname
+     * @param string $dbname database name
+     * @param callable|null $callbackOnFetchRow
      * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
      * @see Resultset::getLastError()
-     **/
-    public function execute(string $sql, string $dbname=''): bool
+     */
+    public function execute(string $sql, string $dbname='', ?callable $callbackOnFetchRow = null): bool
     {
         $bResult = false;
         $this->rowset = array();
@@ -106,7 +106,7 @@ class MySQL_Resultset extends Resultset
             #echo $cmd.'<br>';
             if ($cmd == 'SELECT' or $cmd == 'SHOW' or $cmd == 'DESCRIBE' or $cmd == 'EXPLAIN' /* or substr($cmd, 0, 1) == '('*/) { // ( z.B. UNION
                 if ($this->db->numrows($result) > 0) {
-                    $this->rowset = $this->db->fetchrowset($result);
+                    $this->rowset = $this->db->fetchrowset($result, $callbackOnFetchRow);
                     $this->reset();
                 }
                 $this->db->freeresult($result);
@@ -165,11 +165,10 @@ class MySQL_Resultset extends Resultset
     /**
      * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
      *
-     * @access public
-     * @param string $table
+     * @param string|null $table
      * @return string
-     **/
-    function getSQLInserts($table = null)
+     */
+    function getSQLInserts(?string $table = null): string
     {
         $sql = '';
 
