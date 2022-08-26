@@ -623,7 +623,7 @@ function formatDEDateToEN($strDate, $delimiter = '.')
  * @param string $subject text
  * @return string replaced text
  **/
-function br2nl($subject)
+function br2nl(string $subject): string
 {
     return preg_replace('=<br(>|([\s/][^>]*)>)\r?\n?=i', chr(10), $subject);
 }
@@ -631,13 +631,13 @@ function br2nl($subject)
 /**
  * replaces all linebreaks to <br />
  *
- * @param $string
+ * @deprecated use php nl2br
+ * @param string $string
  * @return string|string[]
  */
 function nl2br2(string $string): string
 {
-    $string = str_replace(array("\r\n", "\r", "\n"), '<br>', $string);
-    return $string;
+    return str_replace(array("\r\n", "\r", "\n"), '<br>', $string);
 }
 
 /**
@@ -2124,16 +2124,17 @@ function calcNextWorkingDay(int $weekday, int $operand = 0): int
  * @param bool $unsigned without sign
  * @return int
  */
-function calcNumberOfDaysInBetween(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $unsigned = true): int
+function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $unsigned = true): int
 {
     $DateTime1 = clone $StartDateTime;
     $DateTime2 = clone $EndDateTime;
-    $DateTime1->setTime(0, 0);
-    $DateTime2->setTime(0, 0);
+    $DateTime1->setTime(0, 0, 0);
+    $DateTime2->setTime(0, 0, 0);
+    // intval($DateTime1->diff($DateTime2)->format('%r%a'))
     $days = ($DateTime1->diff($DateTime2)->days ?: 0);
     if($unsigned) {
         return $days;
     }
-    if($DateTime1 < $DateTime2) $days *= -1;
+    if($DateTime1 > $DateTime2) $days *= -1;
     return $days;
 }
