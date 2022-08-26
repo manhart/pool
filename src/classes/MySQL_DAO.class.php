@@ -176,7 +176,7 @@ $GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 
     'TINYBLOB', 'TINYINT', 'TINYTEXT', 'TO', 'TRAILING', 'TRIGGER', 'TRUE', 'UNDO', 'UNION', 'UNIQUE', 'UNLOCK',
     'UNSIGNED', 'UPDATE', 'USAGE', 'USE', 'USING', 'UTC_DATE', 'UTC_TIME', 'UTC_TIMESTAMP', 'VALUES', 'VARBINARY',
     'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHEN', 'WHERE', 'WHILE', 'WITH', 'WRITE', 'X509', 'XOR', 'YEAR_MONTH',
-    'ZEROFILL', 'DATE_FORMAT', 'LAST_DAY'));
+    'ZEROFILL', 'DATE_FORMAT', 'LAST_DAY', 'POINT', 'POINTFROMTEXT', 'ST_POINTFROMTEXT'));
 
 if(!defined('CLASS_MYSQLDAO')) {
 
@@ -591,6 +591,9 @@ if(!defined('CLASS_MYSQLDAO')) {
                 elseif(is_bool($value)) {
                     $values .= bool2string($value).',';
                 }
+                elseif(is_array($value)) {
+                    $values .= is_null($value[0]) ? 'NULL,' : $value[0].',';
+                }
                 else {
                     $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
                 }
@@ -718,7 +721,6 @@ if(!defined('CLASS_MYSQLDAO')) {
          * der Primaer Schluessel, kann dieser Feldname (/Spaltenname) ueber den
          * 2. Parameter "$key" gesetzt werden.
          *
-         * @access public
          * @param mixed $id Eindeutige Wert (z.B. ID) eines Datensatzes
          * @param mixed $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
          * @return Resultset Ergebnismenge
@@ -726,7 +728,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          **/
         public function get($id, $key=NULL): Resultset
         {
-            // Bugfix Alexander M.; ^^ansonsten liefert __buildWhere alle Datens�tze like getMultiple
+            // Bugfix Alexander M.; ^^ansonsten liefert __buildWhere alle Datensätze like getMultiple
             if(is_null($id)) $id = 0;
 
             #echo 'id: '.$id.' key:'.$key.'<br>';
@@ -753,7 +755,9 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @see MySQL_DAO::__buildSorting
          * @see MySQL_DAO::__buildLimit
          * @see MySQL_DAO::__buildGroupby
-         **/
+         *
+         * @throws Exception
+         */
         public function getMultiple($id=NULL, $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
                                     array $groupBy=[], array $having=[], array $options=[]): Resultset
         {
@@ -775,14 +779,14 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Liefert die Anzahl getroffener Datensaetze
          *
-         * @param unknown $id ID's (array oder integer)
-         * @param unknown $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
+         * @param mixed $id ID's (array oder integer)
+         * @param mixed $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
          * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
          * @return Resultset Ergebnismenge
          * @see MySQL_Resultset
          * @see MySQL_DAO::__buildFilter
          **/
-        public function getCount($id=NULL, $key=NULL, $filter_rules=array()): Resultset
+        public function getCount($id=NULL, $key=NULL, array $filter_rules=[]): Resultset
         {
             $sql = sprintf('SELECT COUNT(%s) AS `count` FROM `%s`%s WHERE %s %s',
                 '*',
@@ -800,7 +804,7 @@ if(!defined('CLASS_MYSQLDAO')) {
          *
          * @return int
          */
-        function foundRows()
+        public function foundRows(): int
         {
             return $this->db->foundRows();
         }
@@ -815,8 +819,7 @@ if(!defined('CLASS_MYSQLDAO')) {
         protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
         {
             $MySQL_ResultSet = new MySQL_Resultset($this->db);
-            $MySQL_ResultSet->onFetchingRow(!is_null($customCallback) ? $customCallback : [$this, 'fetchingRow']);
-            $MySQL_ResultSet->execute($sql, $this->dbname);
+            $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow']);
             return $MySQL_ResultSet;
         }
 
