@@ -275,6 +275,7 @@ function resizeImageToBestFit($im, $max_width, $max_height)
     $originalHeight = imagesy($im);
 
     if ($originalWidth <= $max_width and $originalHeight <= $max_height) {
+        imagesavealpha($im, true);
         return $im;
     }
 
