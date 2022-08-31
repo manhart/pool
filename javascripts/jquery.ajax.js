@@ -222,6 +222,7 @@ function RequestPOOL(module, method, params, async)
 			}
 		}
 	);
+    resetGlobalsOfRequestPOOL();
 	return jqxhr;
 }
 
