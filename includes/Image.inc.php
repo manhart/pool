@@ -275,6 +275,8 @@ function resizeImageToBestFit($im, $max_width, $max_height)
     $originalHeight = imagesy($im);
 
     if ($originalWidth <= $max_width and $originalHeight <= $max_height) {
+        imagealphablending($im, false);
+        imagesavealpha($im, true);
         return $im;
     }
 
@@ -292,12 +294,14 @@ function resizeImageToBestFit($im, $max_width, $max_height)
 /**
  * changes the dimensions of the image
  *
+ * https://christianwood.net/posts/png-files-are-complicate/
+ *
  * @param resource $im
  * @param int $width
  * @param int $height
  * @return false|resource
  */
-function resizeImage($im, $width, $height)
+function resizeImage($im, int $width, int $height)
 {
     $source_x = $dest_x = 0;
     $source_y = $dest_y = 0;
@@ -307,6 +311,12 @@ function resizeImage($im, $width, $height)
     $dest_h = $height;
 
     $dest_im = imagecreatetruecolor($dest_w, $dest_h);
+
+    imagealphablending($dest_im, false);
+    imagesavealpha($dest_im, true);
+    $transparent = imagecolorallocatealpha($dest_im, 255, 255, 255, 127);
+    imagefilledrectangle($dest_im, 0, 0, $source_w, $source_h, $transparent);
+
     imagecopyresampled(
         $dest_im,
         $im,
