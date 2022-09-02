@@ -1,27 +1,26 @@
 /**
- * -= ajax.js =-
+ * -= jquery.ajax.js =-
  *
- * Simpler AJAX Wrapper fuer den POOL
- *
- * $Log$
- *
- *
- * @version $Id: jquery.ajax.js 34024 2017-04-05 07:45:38Z aziz $
- * @version $Revision 1.0$
- * @version
+ * Simpler AJAX Wrapper for the POOL
  *
  * @since 2009-07-15
  * @author Alexander Manhart <alexander.manhart@gmx.de>
- * @link
  */
+let REQUEST_METHOD;
+let REQUEST_PARAM_MODULENAME;
+let REQUEST_CONTENTTYPE;
+let REQUEST_PROCESSDATA;
+let REQUEST_DATATYPE;
+resetGlobalsOfRequestPOOL();
 
-var php_RESULT = null;
-var RequestPOOL_DEBUG = false;
-var REQUEST_METHOD;
-var REQUEST_PARAM_MODULENAME = 'requestModule';
-var REQUEST_CONTENTTYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
-var REQUEST_PROCESSDATA = true;
-var REQUEST_DATATYPE = '';
+function resetGlobalsOfRequestPOOL()
+{
+    REQUEST_METHOD = undefined;
+    REQUEST_PARAM_MODULENAME = 'requestModule';
+    REQUEST_CONTENTTYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
+    REQUEST_PROCESSDATA = true;
+    REQUEST_DATATYPE = '';
+}
 
 /**
  * Sendet Daten an PHP bzw. an ein POOL GUI
@@ -223,6 +222,7 @@ function RequestPOOL(module, method, params, async)
 			}
 		}
 	);
+    resetGlobalsOfRequestPOOL();
 	return jqxhr;
 }
 
