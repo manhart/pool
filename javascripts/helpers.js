@@ -1406,3 +1406,31 @@ function htmlspecialchars(string, quoteStyle, charset, doubleEncode) {
     }
     return string
 }
+
+/**
+ * check if an element is visible in the viewport
+ *
+ * @see https://www.javascripttutorial.net/dom/css/check-if-an-element-is-visible-in-the-viewport/
+ * @param element
+ * @returns {boolean}
+ */
+function isElementInViewport(element)
+{
+    const rect = element.getBoundingClientRect();
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+}
+
+// function isElementInFront(element)
+// {
+//     let pseudo = document.elementFromPoint(element.offsetLeft, element.offsetTop);
+//     if(pseudo){
+//         if(pseudo.id == element.id)
+//             return true;
+//     }
+//     return false;
+// }
