@@ -73,7 +73,6 @@ class GUI_Table extends GUI_Module
     scrollPosition;
 
 
-
     // poolColumnOptions = {}; // poolOptions
 
     /**
@@ -305,7 +304,7 @@ class GUI_Table extends GUI_Module
     }
 
     /**
-     * set column option
+     * set column options
      *
      * @param field
      * @param options
@@ -337,6 +336,21 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * get column options
+     *
+     * @param field
+     * @return array
+     */
+    getColumnOptions(field)
+    {
+        // console.debug(this.getName()+'.getColumnOptions('+field+')');
+        if(field in this.columnNames) {
+            return this.columns[this.columnNames[field]];
+        }
+        return [];
+    }
+
+    /**
      * filterData is required by the filterControl extension of the bs table as soon as the bs-table is changed to server-side pagination.
      *
      * @param filterData
@@ -347,7 +361,7 @@ class GUI_Table extends GUI_Module
         this.filterData = filterData;
         for(let column in this.filterData) {
             this.setColumnOptions(column, {
-                filterData: 'obj:$'+this.getName()+'.filterData.' + column
+                filterData: 'obj:$' + this.getName() + '.filterData.' + column
             });
         }
     }
@@ -361,12 +375,12 @@ class GUI_Table extends GUI_Module
                     'were passed. Please check the order of the method calls.');
             }
             this.$table = $('#' + this.getName())
-            .on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows)
-            // .on('refresh-options.bs.table', this.onRefreshOptions)
-            .on('click-row.bs.table', this.onClickRow)
-            .on('check.bs.table', this.onCheck)
-            .on('uncheck.bs.table', this.onUncheck)
-            .on('uncheck-all.bs.table', this.onUncheckAll)
+                .on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows)
+                // .on('refresh-options.bs.table', this.onRefreshOptions)
+                .on('click-row.bs.table', this.onClickRow)
+                .on('check.bs.table', this.onCheck)
+                .on('uncheck.bs.table', this.onUncheck)
+                .on('uncheck-all.bs.table', this.onUncheckAll)
             ;
         }
         return this.$table;
@@ -461,7 +475,8 @@ class GUI_Table extends GUI_Module
     }
 
 
-    onClickRow = (evt, row, $element, field) => {
+    onClickRow = (evt, row, $element, field) =>
+    {
         // console.debug(this.getName() + '.onClickRow', row, $element, field);
 
         if(this.getOption('poolOnClickRow')) {
@@ -470,7 +485,8 @@ class GUI_Table extends GUI_Module
     }
 
 
-    onRefreshOptions = (options) => {
+    onRefreshOptions = (options) =>
+    {
     }
 
     /**
@@ -504,7 +520,8 @@ class GUI_Table extends GUI_Module
      * @param row
      * @param $element
      */
-    onUncheck = (evt, row, $element) => {
+    onUncheck = (evt, row, $element) =>
+    {
         // console.debug('onUncheck');
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
@@ -566,9 +583,9 @@ class GUI_Table extends GUI_Module
      * @param values array of values for rows to check
      * @param onlyCurrentPage (default false): If true only the visible dataset will be checked. If pagination is used the other pages will be ignored.
      */
-    checkBy(field, values, onlyCurrentPage=false)
+    checkBy(field, values, onlyCurrentPage = false)
     {
-        this.getTable().bootstrapTable('checkBy', { field : field, values : values, onlyCurrentPage: onlyCurrentPage });
+        this.getTable().bootstrapTable('checkBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
     }
 
     /**
@@ -578,9 +595,9 @@ class GUI_Table extends GUI_Module
      * @param values array of values for rows to uncheck.
      * @param onlyCurrentPage (default false): If true only the visible dataset will be unchecked. If pagination is used the other pages will be ignored.
      */
-    uncheckBy(field, values, onlyCurrentPage=false)
+    uncheckBy(field, values, onlyCurrentPage = false)
     {
-        this.getTable().bootstrapTable('uncheckBy', { field : field, values : values, onlyCurrentPage: onlyCurrentPage });
+        this.getTable().bootstrapTable('uncheckBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
     }
 
     /**
@@ -600,8 +617,7 @@ class GUI_Table extends GUI_Module
     {
         if(this.getOption('pagination')) {
             this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
-        }
-        else {
+        } else {
             this.getTable().bootstrapTable('checkAll');
         }
     }
@@ -647,7 +663,7 @@ class GUI_Table extends GUI_Module
 
         if(paging) {
             let pageSize = this.getOption('pageSize');
-            let pageNumber = Math.ceil((index+1) / pageSize);
+            let pageNumber = Math.ceil((index + 1) / pageSize);
             this.getTable().bootstrapTable('selectPage', pageNumber);
         }
 
@@ -670,7 +686,7 @@ class GUI_Table extends GUI_Module
         let params = {
             index: index,
             row: row,
-            replace : replace
+            replace: replace
         };
         this.getTable().bootstrapTable('updateRow', params);
     }
@@ -796,7 +812,8 @@ class GUI_Table extends GUI_Module
     /**
      * save selections
      */
-    onCheckUncheckRows = (evt) => {
+    onCheckUncheckRows = (evt) =>
+    {
 
         let ids = this.getSelectedUniqueIds();
 
@@ -839,7 +856,8 @@ class GUI_Table extends GUI_Module
      * @param res
      * @returns {*}
      */
-    responseHandler = (res) => {
+    responseHandler = (res) =>
+    {
         let uniqueId = this.getUniqueId();
         if(!uniqueId) {
             return res;
