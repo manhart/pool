@@ -1005,8 +1005,6 @@ if(!defined('CLASS_MYSQLDAO')) {
             $i = 0;
             foreach($columns as $column) {
                 if(is_null($isAssoc)) $isAssoc = is_array($column);
-                if($i > 0) $filter[] = 'or';
-                $i++;
 
                 $alias = $isAssoc ? $column['alias'] : $column;
                 $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
@@ -1061,6 +1059,8 @@ if(!defined('CLASS_MYSQLDAO')) {
 
                 if(!$hasSearchString) continue;
 
+                if($i > 0) $filter[] = 'or';
+                $i++;
                 $condition = [$expr, $operator, $searchString];
                 $filter[] = $condition;
             }
