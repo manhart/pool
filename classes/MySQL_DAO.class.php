@@ -998,7 +998,6 @@ if(!defined('CLASS_MYSQLDAO')) {
                 return $filter;
             }
 
-            $operator = 'like';
             $searchString = '%'.$searchString.'%';
 
             $defined_filter = [];
@@ -1012,6 +1011,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $alias = $isAssoc ? $column['alias'] : $column;
                 $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
                 $type = $isAssoc ? $column['type'] : '';
+                $operator = 'like';
 
                 // $format = $isAssoc ? $column['format'] : '';
 
