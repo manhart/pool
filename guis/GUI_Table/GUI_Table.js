@@ -955,6 +955,22 @@ class GUI_Table extends GUI_Module
     {
         this.getTable().bootstrapTable('selectPage', 1);
     }
+
+    /**
+     * collapse all rows
+     */
+    collapseAllRows()
+    {
+        this.getTable().bootstrapTable('collapseAllRows');
+    }
+
+    /**
+     * expand all rows
+     */
+    expandAllRows()
+    {
+        this.getTable().bootstrapTable('expandAllRows');
+    }
 }
 
 /*
