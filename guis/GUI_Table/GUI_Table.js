@@ -947,6 +947,30 @@ class GUI_Table extends GUI_Module
 
         return value;
     }
+
+    /**
+     * jump to first page
+     */
+    firstPage()
+    {
+        this.getTable().bootstrapTable('selectPage', 1);
+    }
+
+    /**
+     * collapse all rows
+     */
+    collapseAllRows()
+    {
+        this.getTable().bootstrapTable('collapseAllRows');
+    }
+
+    /**
+     * expand all rows
+     */
+    expandAllRows()
+    {
+        this.getTable().bootstrapTable('expandAllRows');
+    }
 }
 
 /*
