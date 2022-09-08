@@ -519,14 +519,13 @@ function remove_extension(string $file = ''): string
  * er ein Wort nicht in der Mitte teilt.
  * Wenn der Text laenger ist als der Ausschnitt, kann mittels dem Parameter more == 1 die Zeichenfolge '...' angehaengt werden.
  *
- * @access public
  * @param string $str Text
  * @param integer $len Maximale Laenge
- * @param integer $more Fuege '...' hinzu, falls der Text gekuerzt wurde
+ * @param mixed $more Fuege '...' hinzu, falls der Text gekuerzt wurde
  * @param bool $backtrack True bedeutet, die Funktion schneidet nicht innerhalb eines Wortes durch, sondern liefert nur vollst�ndige W�rter
  * @return string gekuerzte Version
  **/
-function shorten($str = '', $len = 150, $more = 1, $backtrack = true)
+function shorten(string $str = '', int $len = 150, $more = 1, bool $backtrack = true): string
 {
     if ($str == '') return $str;
     if (is_array($str)) return $str;
@@ -549,7 +548,7 @@ function shorten($str = '', $len = 150, $more = 1, $backtrack = true)
     if ($str != '') {
         // check to see if there are any spaces left
         if (!substr_count($str, ' ')) {
-            if ($more) $str .= (($more == 1) ? '...' : $more);
+            if ($more) $str .= (($more === 1) ? '...' : $more);
 
             return $str;
         }
