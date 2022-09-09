@@ -2137,15 +2137,3 @@ function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $E
     if($DateTime1 > $DateTime2) $days *= -1;
     return $days;
 }
-
-/**
- * Determine whether the given value is a binary string by checking to see if it has detectable character encoding.
- *
- * @param string $value
- *
- * @return bool
- */
-function isBinary($value): bool
-{
-    return false === mb_detect_encoding((string)$value, null, true);
-}
