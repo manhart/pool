@@ -191,3 +191,15 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
 
     return $ret_array;
 }
+
+/**
+ * Determine whether the given value is a binary string by checking to see if it has detectable character encoding.
+ *
+ * @param string $value
+ *
+ * @return bool
+ */
+function isBinary($value): bool
+{
+    return false === mb_detect_encoding((string)$value, null, true);
+}
