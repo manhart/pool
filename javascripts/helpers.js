@@ -689,7 +689,8 @@ function base64ToBlob(data, contentType) {
     try {
         // < IE 10 benoetigt Blob.js
         var blob = new Blob([byteArray], {type: contentType});
-    } catch (e) {
+    }
+    catch (e) {
         // TypeError old chrome and FF
         window.BlobBuilder = window.BlobBuilder ||
             window.WebKitBlobBuilder ||
@@ -699,10 +700,12 @@ function base64ToBlob(data, contentType) {
             var bb = new BlobBuilder();
             bb.append(byteArray);
             var blob = bb.getBlob(contentType);
-        } else if (e.name == "InvalidStateError") {
+        }
+        else if (e.name == "InvalidStateError") {
             // InvalidStateError (tested on FF13 WinXP)
             var blob = new Blob([byteArray], {type: contentType});
-        } else {
+        }
+        else {
             // We're screwed, blob constructor unsupported entirely
         }
     }
