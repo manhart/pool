@@ -183,9 +183,7 @@ if(!defined('CLASS_MYSQLDAO')) {
     #### Prevent multiple loading
     define('CLASS_MYSQLDAO', 1);
 
-    function is_subquery($op, $value) {
-        return (strpos($value, '(SELECT ') !== false/* and ($op == 'IN' or $op == 'ANY' or $op == 'SOME' or $op == 'ALL')*/);
-    }
+
 
     /**
      * MySQL_DAO
@@ -219,7 +217,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 
         var $reserved_words = array();
 
-        var $MySQL_trans = array(
+        private array $MySQL_trans = array(
             'equal'	=> '=',
             'unequal' => '!=',
             'greater' => '>',
@@ -872,6 +870,11 @@ if(!defined('CLASS_MYSQLDAO')) {
             return $field;
         }
 
+        private function __isSubQuery($op, $value): bool
+        {
+            return (strpos($value, '(SELECT ') !== false/* and ($op == 'IN' or $op == 'ANY' or $op == 'SOME' or $op == 'ALL')*/);
+        }
+
         /**
          * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
          *
@@ -958,7 +961,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                         $query .= ' ' . bool2string($record[2]);
                     }
                     elseif(is_integer($record[2]) or is_float($record[2]) or
-                            is_subquery($record[1], $record[2])) {
+                            $this->__isSubQuery($record[1], $record[2])) {
                         $query .= ' ' . $record[2];
                     }
                     else {
