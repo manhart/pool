@@ -670,7 +670,10 @@ class GUI_Table extends GUI_Module
         if(paging) {
             let pageSize = this.getOption('pageSize');
             let pageNumber = Math.ceil((index + 1) / pageSize);
-            this.getTable().bootstrapTable('selectPage', pageNumber);
+            if(pageNumber != this.getOption('pageNumber')) {
+                // triggers reload if serverside
+                this.getTable().bootstrapTable('selectPage', pageNumber);
+            }
         }
 
         if(check) {
