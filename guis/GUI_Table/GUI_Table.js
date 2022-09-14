@@ -686,14 +686,14 @@ class GUI_Table extends GUI_Module
     /**
      * Prepend the data to the table.
      *
-     * @param rows
+     * @param row
      * @param check
      * @param paging
      * @return {GUI_Table}
      */
-    prepend(rows, check, paging)
+    prependRow(row, check, paging)
     {
-        this.getTable().bootstrapTable('prepend', rows);
+        this.getTable().bootstrapTable('prepend', [row]);
 
         let uniqueId = this.getUniqueId()
         if(uniqueId && row[uniqueId] != '') {
@@ -703,7 +703,7 @@ class GUI_Table extends GUI_Module
             // this.checkBy(uniqueId, [row[uniqueId]]);
         }
         // 29.03.22, AM, fix correct index
-        let index = this.getData().indexOf(row[0]);
+        let index = this.getData().indexOf(row);
 
         if(paging) {
             this.selectPageByIndex(index);
