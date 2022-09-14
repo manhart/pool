@@ -500,6 +500,7 @@ class GUI_Table extends GUI_Module
     {
         // console.debug('onCheck', row, $element);
         if(this.getOption('poolFillControls')) {
+            // console.debug(this.getName()+'.onCheck', row, $element);
             if(this.getOption('poolFillControlsContainer')) {
                 fillControls(this.getOption('poolFillControlsContainer'), row, true);
             }
@@ -522,7 +523,7 @@ class GUI_Table extends GUI_Module
      */
     onUncheck = (evt, row, $element) =>
     {
-        // console.debug('onUncheck');
+        // console.debug(this.getName()+'.onUncheck');
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
         }
@@ -541,7 +542,7 @@ class GUI_Table extends GUI_Module
      */
     onUncheckAll = (evt, rowsAfter, rowsBefore) =>
     {
-        // console.debug('onUncheckAll');
+        // console.debug(this.getName()+'.onUncheckAll', this.getOption('poolClearControlsSelector'), this.getOption('poolOnUncheckAll'));
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
         }
@@ -615,11 +616,13 @@ class GUI_Table extends GUI_Module
      */
     checkAll()
     {
-        if(this.getOption('pagination')) {
-            this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
-        } else {
-            this.getTable().bootstrapTable('checkAll');
-        }
+        // console.debug(this.getName()+'.checkAll', this.getOption('pagination'));
+        // if(this.getOption('pagination')) {
+        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
+        // } else {
+        // maybe todo serverside?
+        this.getTable().bootstrapTable('checkAll');
+        // }
     }
 
     /**
@@ -627,12 +630,16 @@ class GUI_Table extends GUI_Module
      */
     uncheckAll()
     {
-        if(this.getOption('pagination')) {
-            this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
-        }
-        else {
-            this.getTable().bootstrapTable('uncheckAll');
-        }
+        // console.debug(this.getName()+'.uncheckAll', this.getOption('pagination'));
+        // if(this.getOption('pagination')) {
+        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
+        // }
+        // else {
+        this.pageIds = [];
+        this.selections = [];
+
+        this.getTable().bootstrapTable('uncheckAll');
+        // }
     }
 
     /**
@@ -650,6 +657,10 @@ class GUI_Table extends GUI_Module
             index: index,
             row: row
         });
+        // this.getTable().bootstrapTable('initData', {
+        //     data: null,
+        //     type: ''
+        // })
 
         let uniqueId = this.getUniqueId()
         if(uniqueId && row[uniqueId] != '') {
@@ -662,9 +673,7 @@ class GUI_Table extends GUI_Module
         index = this.getData().indexOf(row);
 
         if(paging) {
-            let pageSize = this.getOption('pageSize');
-            let pageNumber = Math.ceil((index + 1) / pageSize);
-            this.getTable().bootstrapTable('selectPage', pageNumber);
+            this.selectPageByIndex(index);
         }
 
         if(check) {
@@ -672,6 +681,54 @@ class GUI_Table extends GUI_Module
         }
 
         return index;
+    }
+
+    /**
+     * Prepend the data to the table.
+     *
+     * @param row
+     * @param check
+     * @param paging
+     * @return {GUI_Table}
+     */
+    prependRow(row, check, paging)
+    {
+        this.getTable().bootstrapTable('prepend', [row]);
+
+        let uniqueId = this.getUniqueId()
+        if(uniqueId && row[uniqueId] != '') {
+            this.pageIds.push(row[uniqueId]);
+
+            // alternate
+            // this.checkBy(uniqueId, [row[uniqueId]]);
+        }
+        // 29.03.22, AM, fix correct index
+        let index = this.getData().indexOf(row);
+
+        if(paging) {
+            this.selectPageByIndex(index);
+        }
+
+        if(check) {
+            this.check(index);
+        }
+
+        return this;
+    }
+
+    /**
+     * select page by index beginning with 0 for the first record
+     *
+     * @param index
+     */
+    selectPageByIndex(index)
+    {
+        let pageSize = this.getOption('pageSize');
+        let pageNumber = Math.ceil((index + 1) / pageSize);
+        if(pageNumber != this.getOption('pageNumber')) {
+            // triggers reload if serverside
+            this.getTable().bootstrapTable('selectPage', pageNumber);
+        }
     }
 
     /**
@@ -826,7 +883,7 @@ class GUI_Table extends GUI_Module
             this.selections = array_union(this.selections, ids);
         }
 
-        // console.debug(this.getName()+'.onCheckUncheckRows', prev, this.pageIds, ids, this.selections);
+        // console.debug(this.getName()+'.onCheckUncheckRows', this.pageIds, ids, this.selections);
 
         // let rows = rowsAfter;
 
@@ -970,6 +1027,14 @@ class GUI_Table extends GUI_Module
     expandAllRows()
     {
         this.getTable().bootstrapTable('expandAllRows');
+    }
+
+    /**
+     * Clear all the controls added by filter-control plugin (similar to showSearchClearButton option).
+     */
+    clearFilterControl()
+    {
+        this.getTable().bootstrapTable('clearFilterControl');
     }
 }
 
