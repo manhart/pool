@@ -703,7 +703,7 @@ class GUI_Table extends GUI_Module
             // this.checkBy(uniqueId, [row[uniqueId]]);
         }
         // 29.03.22, AM, fix correct index
-        let index = this.getData().indexOf(row);
+        let index = this.getData().indexOf(row[0]);
 
         if(paging) {
             this.selectPageByIndex(index);
