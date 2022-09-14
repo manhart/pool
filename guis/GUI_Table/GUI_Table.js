@@ -522,7 +522,7 @@ class GUI_Table extends GUI_Module
      */
     onUncheck = (evt, row, $element) =>
     {
-        // console.debug('onUncheck');
+        // console.debug(this.getName()+'.onUncheck');
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
         }
@@ -541,7 +541,7 @@ class GUI_Table extends GUI_Module
      */
     onUncheckAll = (evt, rowsAfter, rowsBefore) =>
     {
-        // console.debug('onUncheckAll');
+        // console.debug(this.getName()+'.onUncheckAll', this.getOption('poolClearControlsSelector'), this.getOption('poolOnUncheckAll'));
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
         }
@@ -615,11 +615,13 @@ class GUI_Table extends GUI_Module
      */
     checkAll()
     {
-        if(this.getOption('pagination')) {
-            this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
-        } else {
-            this.getTable().bootstrapTable('checkAll');
-        }
+        // console.debug(this.getName()+'.checkAll', this.getOption('pagination'));
+        // if(this.getOption('pagination')) {
+        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
+        // } else {
+        // maybe todo serverside?
+        this.getTable().bootstrapTable('checkAll');
+        // }
     }
 
     /**
@@ -627,12 +629,16 @@ class GUI_Table extends GUI_Module
      */
     uncheckAll()
     {
-        if(this.getOption('pagination')) {
-            this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
-        }
-        else {
-            this.getTable().bootstrapTable('uncheckAll');
-        }
+        // console.debug(this.getName()+'.uncheckAll', this.getOption('pagination'));
+        // if(this.getOption('pagination')) {
+        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
+        // }
+        // else {
+        this.pageIds = [];
+        this.selections = [];
+
+        this.getTable().bootstrapTable('uncheckAll');
+        // }
     }
 
     /**
@@ -826,7 +832,7 @@ class GUI_Table extends GUI_Module
             this.selections = array_union(this.selections, ids);
         }
 
-        // console.debug(this.getName()+'.onCheckUncheckRows', prev, this.pageIds, ids, this.selections);
+        // console.debug(this.getName()+'.onCheckUncheckRows', this.pageIds, ids, this.selections);
 
         // let rows = rowsAfter;
 
