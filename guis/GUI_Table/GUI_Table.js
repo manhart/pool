@@ -500,6 +500,7 @@ class GUI_Table extends GUI_Module
     {
         // console.debug('onCheck', row, $element);
         if(this.getOption('poolFillControls')) {
+            // console.debug(this.getName()+'.onCheck', row, $element);
             if(this.getOption('poolFillControlsContainer')) {
                 fillControls(this.getOption('poolFillControlsContainer'), row, true);
             }
@@ -656,6 +657,10 @@ class GUI_Table extends GUI_Module
             index: index,
             row: row
         });
+        // this.getTable().bootstrapTable('initData', {
+        //     data: null,
+        //     type: ''
+        // })
 
         let uniqueId = this.getUniqueId()
         if(uniqueId && row[uniqueId] != '') {
@@ -668,12 +673,7 @@ class GUI_Table extends GUI_Module
         index = this.getData().indexOf(row);
 
         if(paging) {
-            let pageSize = this.getOption('pageSize');
-            let pageNumber = Math.ceil((index + 1) / pageSize);
-            if(pageNumber != this.getOption('pageNumber')) {
-                // triggers reload if serverside
-                this.getTable().bootstrapTable('selectPage', pageNumber);
-            }
+            this.selectPageByIndex(index);
         }
 
         if(check) {
@@ -681,6 +681,54 @@ class GUI_Table extends GUI_Module
         }
 
         return index;
+    }
+
+    /**
+     * Prepend the data to the table.
+     *
+     * @param rows
+     * @param check
+     * @param paging
+     * @return {GUI_Table}
+     */
+    prepend(rows, check, paging)
+    {
+        this.getTable().bootstrapTable('prepend', rows);
+
+        let uniqueId = this.getUniqueId()
+        if(uniqueId && row[uniqueId] != '') {
+            this.pageIds.push(row[uniqueId]);
+
+            // alternate
+            // this.checkBy(uniqueId, [row[uniqueId]]);
+        }
+        // 29.03.22, AM, fix correct index
+        let index = this.getData().indexOf(row);
+
+        if(paging) {
+            this.selectPageByIndex(index);
+        }
+
+        if(check) {
+            this.check(index);
+        }
+
+        return this;
+    }
+
+    /**
+     * select page by index beginning with 0 for the first record
+     *
+     * @param index
+     */
+    selectPageByIndex(index)
+    {
+        let pageSize = this.getOption('pageSize');
+        let pageNumber = Math.ceil((index + 1) / pageSize);
+        if(pageNumber != this.getOption('pageNumber')) {
+            // triggers reload if serverside
+            this.getTable().bootstrapTable('selectPage', pageNumber);
+        }
     }
 
     /**
@@ -979,6 +1027,14 @@ class GUI_Table extends GUI_Module
     expandAllRows()
     {
         this.getTable().bootstrapTable('expandAllRows');
+    }
+
+    /**
+     * Clear all the controls added by filter-control plugin (similar to showSearchClearButton option).
+     */
+    clearFilterControl()
+    {
+        this.getTable().bootstrapTable('clearFilterControl');
     }
 }
 
