@@ -1034,7 +1034,7 @@ if(!defined('RAPID_TEMPLATE_ENGINE')) {
          *
          * @param string $handle Name des (File-) Handles
          */
-        function useFile($handle)
+        function useFile(string $handle)
         {
             if(array_key_exists($handle, $this->FileList)) {
                 if($handle != $this->ActiveHandle) {
@@ -1213,13 +1213,13 @@ if(!defined('RAPID_TEMPLATE_ENGINE')) {
          *
          * @param string $blockHandle Handle-Name des Blocks
          * @param array $recordset
-         * @return false
+         * @return Template
          */
-        public function assignRecordset(string $blockHandle, array $recordset = [])
+        public function assignRecordset(string $blockHandle, array $recordset = []): Template
         {
             $count = count($recordset);
             if($count == 0) {
-                return false;
+                return $this;
             }
 
             for($i = 0; $i < $count; $i++) {
@@ -1230,7 +1230,8 @@ if(!defined('RAPID_TEMPLATE_ENGINE')) {
                 }
             }
             $this->leaveBlock();
-            return true;
+
+            return $this;
         }
 
         /**
