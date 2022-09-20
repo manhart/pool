@@ -1287,6 +1287,23 @@ function loadJSON(url, opts = {}) {
 }
 
 /**
+ * check if string is a json
+ *
+ * @param str
+ * @return {boolean}
+ */
+function isStringJSON(str)
+{
+    try {
+        let json = JSON.parse(str);
+        return (typeof json === 'object');
+    }
+    catch (e) {
+        return false;
+    }
+}
+
+/**
  * remove an item (e.g. object) from array
  *
  * @param items
