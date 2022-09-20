@@ -48,19 +48,11 @@ function RequestPOOL(module, method, params, async)
 		var async = false;
 	}
 
-	var RequestUrl = new Url();
+	let RequestUrl = new Url();
 	RequestUrl.setScript(SCRIPT_NAME);
 	if(module != null) RequestUrl.setParam('module', module);
 	RequestUrl.setParam('method', method);
 
-/*	if(typeof params == 'object') {
-		for (var paramName in params) {
-			RequestUrl.setParam(paramName, encodeURIComponent(params[paramName]));
-		}
-	}
-	else {
-		parameters = params;
-	}*/
 
 	// Weitere Parameter
 	if(RequestPOOL.arguments.length > 4) {
@@ -71,21 +63,21 @@ function RequestPOOL(module, method, params, async)
 		var onRequestComplete = RequestPOOL.arguments[5];
 	}
 
+	// if(RequestPOOL.arguments.length > 6) {
+	// 	var onPhpFailure = RequestPOOL.arguments[6];
+	// }
+
 	if(RequestPOOL.arguments.length > 6) {
-		var onPhpFailure = RequestPOOL.arguments[6];
+		var onRequestFailure = RequestPOOL.arguments[6];
 	}
 
 	if(RequestPOOL.arguments.length > 7) {
-		var onRequestFailure = RequestPOOL.arguments[7];
+		var onBeforeSend = RequestPOOL.arguments[7];
 	}
 
-	if(RequestPOOL.arguments.length > 8) {
-		var onBeforeSend = RequestPOOL.arguments[8];
-	}
-
-	if(RequestPOOL.arguments.length > 9) {
-		var onJavascriptFailure = RequestPOOL.arguments[9];
-	}
+	// if(RequestPOOL.arguments.length > 8) {
+	// 	var onJavascriptFailure = RequestPOOL.arguments[8];
+	// }
 
     let contentType = REQUEST_CONTENTTYPE;
 	let processData = REQUEST_PROCESSDATA;
@@ -109,38 +101,54 @@ function RequestPOOL(module, method, params, async)
 			processData: processData,
 			dataType: dataType,
 			error: function(jqXHR, textStatus, errorThrown) {
-				if(onRequestFailure != undefined) {
-					onRequestFailure(jqXHR, textStatus, errorThrown);
-					return;
+                let message = 'Unknown Error';
+                switch(jqXHR.readyState) {
+                    case 0: // Network error
+                        message = 'Network unreachable.';
+                        break;
+
+                    case 4: // everything done
+                        // textStatus could be timeout, error, abort, parsererror.
+                        // When an HTTP error occurs, errorThrown receives the textual portion of the HTTP status, such as "Not Found" or "Internal Server Error."
+                        if(errorThrown instanceof Error) {
+                            message = errorThrown.message;
+                        }
+                        else {
+                            message = errorThrown;
+                        }
+
+                        if(jqXHR.status != 200) {
+                            message = 'HTTP Status: ' + jqXHR.status + ' ' + message;
+                        }
+
+                        if(jqXHR.responseJSON) {
+                            message = jqXHR.responseJSON.Result.message; // POOL message
+                        }
+                        else if(jqXHR.responseText) { // unspecified server response
+                            message += ' (Server-Response: ' + jqXHR.responseText + ')';
+                        }
+                        break;
+
+                    case 6: // HTTP error
+                        message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status;
+                        if(textStatus != 'error_message') { // Error comes not from the developer
+                            message = message + String.fromCharCode(10)+String.fromCharCode(10);
+                            message = message + 'Server-Response: '+jqXHR.responseText;
+                        }
+                        break;
+                }
+
+                if(window.console) {
+                    window.console.error('jqxhr.error:', textStatus, 'message:', message, 'errorThrown:', errorThrown, 'responseText:', jqXHR.responseText);
+                }
+
+                if(typeof onRequestFailure == 'function') {
+					if(onRequestFailure(jqXHR, textStatus, errorThrown, message) === true) {
+                        return;
+                    }
 				}
 
-				let message = 'Unknown Error';
-                if(jqXHR.readyState == 0) { // Network error
-                    message = 'Network unreachable.';
-                }
-                else if(jqXHR.readyState == 4) { // HTTP error
-                    switch(textStatus) {
-                        case 'error_message': // Fehlermeldung vom Entwickler
-                            message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status+String.fromCharCode(10)+String.fromCharCode(10);
-                            break;
-
-                        default:
-                            message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status+String.fromCharCode(10)+String.fromCharCode(10)+'Server-Response: '+jqXHR.responseText;
-                    }
-                }
-
-                if(typeof USE_CONSOLE != 'undefined' && USE_CONSOLE) {
-                    console.log(message);
-                    return;
-                }
-
-                // wenn die alert box verfuegbar ist, zeigen wir die Fehlermeldung darin an
-                if(typeof alert_box == 'function') {
-                    alert_box(message);
-                }
-                else {
-                    alert(message);
-                }
+                alert(message);
 			},
 			complete: function(jqXHR, textStatus) {
 //				alert('completed - textStatus: '+textStatus);
@@ -159,20 +167,20 @@ function RequestPOOL(module, method, params, async)
 				// jQuery 1.7.1 u. jQuery 1.7.2 scheinen beim Abbruch eines PHP Scripts trotzdem in die success Methode zu gehen
 
 				if(!data) {
-					this.error(jqXHR, 0, 'Apache/PHP Script died: unkown error');
+					this.error(jqXHR, 0, 'Apache/PHP Script died: unknown error');
 					return false;
 				}
 
 				if(jQuery.type(data) == 'string') {
-					this.error(jqXHR, 0, 'PHP Script Warning/Error: '+data);
+					this.error(jqXHR, 0, 'PHP Script Warning/Error: ' + data);
 					return false;
 				}
 
-				var Result = data['Result'];
-				var Error = data['Error'];
+				var Result = data.Result;
+				let Error = data.Error;
 
 				if(Error && Error.length > 0) {
-					this.error(jqXHR, 'error_message', unescape(Error));
+					this.error(jqXHR, 'error_message', window.decodeURI(Error));
 					return false;
 				}
 
