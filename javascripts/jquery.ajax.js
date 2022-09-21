@@ -107,8 +107,10 @@ function RequestPOOL(module, method, params, async)
                         message = 'Network unreachable.';
                         break;
 
-                    case 4: // everything done
+                    case 4: // HTTP error (Request was successfully, but there are other errors from JQuery or POOL)
                         // textStatus could be timeout, error, abort, parsererror.
+                        let isPoolError = textStatus == 'pool_error_message';
+
                         // When an HTTP error occurs, errorThrown receives the textual portion of the HTTP status, such as "Not Found" or "Internal Server Error."
                         if(errorThrown instanceof Error) {
                             message = errorThrown.message;
@@ -120,22 +122,23 @@ function RequestPOOL(module, method, params, async)
                         if(jqXHR.status != 200) {
                             message = 'HTTP Status: ' + jqXHR.status + ' ' + message;
                         }
-
-                        if(jqXHR.responseJSON) {
-                            message = jqXHR.responseJSON.Result.message; // POOL message
+                        if(!isPoolError && textStatus) {
+                            message = 'Status: ' + textStatus + ' ' + message;
                         }
-                        else if(jqXHR.responseText) { // unspecified server response
+
+                        // unspecified server response
+                        if(!isPoolError && jqXHR.responseText) {
                             message += ' (Server-Response: ' + jqXHR.responseText + ')';
                         }
                         break;
-
-                    case 6: // HTTP error
-                        message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status;
-                        if(textStatus != 'error_message') { // Error comes not from the developer
-                            message = message + String.fromCharCode(10)+String.fromCharCode(10);
-                            message = message + 'Server-Response: '+jqXHR.responseText;
-                        }
-                        break;
+                    //
+                    // case 4: // HTTP error
+                    //     message = 'RequestPOOL ajaxError handler: "'+textStatus+'".'+String.fromCharCode(10)+errorThrown+', status: '+jqXHR.status;
+                    //     if(textStatus != 'error_message') { // Error comes not from the developer
+                    //         message = message + String.fromCharCode(10)+String.fromCharCode(10);
+                    //         message = message + 'Server-Response: '+jqXHR.responseText;
+                    //     }
+                    //     break;
                 }
 
                 if(window.console) {
@@ -180,7 +183,7 @@ function RequestPOOL(module, method, params, async)
 				let Error = data.Error;
 
 				if(Error && Error.length > 0) {
-					this.error(jqXHR, 'error_message', window.decodeURI(Error));
+					this.error(jqXHR, 'pool_error_message', window.decodeURI(Error));
 					return false;
 				}
 
