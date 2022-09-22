@@ -1271,7 +1271,7 @@ if(!defined('RAPID_TEMPLATE_ENGINE')) {
          * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet!)
          * @return string Inhalt
          */
-        function getContent($handle = '')
+        function getContent(string $handle = ''): string
         {
             if($handle != '') {
                 $this->useFile($handle);
