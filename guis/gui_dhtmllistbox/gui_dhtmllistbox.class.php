@@ -38,7 +38,7 @@ class GUI_DHTMLListbox extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals=I_GET|I_POST)
     {
         $this -> Defaults -> addVar(
             array(
@@ -63,7 +63,7 @@ class GUI_DHTMLListbox extends GUI_Module
             )
         );
 
-        parent :: init(I_GET|I_POST);
+        parent :: init($superglobals);
     }
 
     function loadFiles()
@@ -78,10 +78,10 @@ class GUI_DHTMLListbox extends GUI_Module
     {
         #### Bindet gui_dhtmllistbox.css ein:
         $cssfile = @$this -> Weblication -> findStyleSheet($this -> getClassName() . '.css', $this -> getClassName(), true);
-        if (is_a($this -> Weblication -> Main, 'GUI_Module')) {
-            if (is_a($this -> Weblication -> Main -> Headerdata, 'GUI_Headerdata')) {
+        if (is_a($this->Weblication->getFrame(), 'GUI_Module')) {
+            if (is_a($this->Weblication->getFrame()->getHeaderdata(), 'GUI_Headerdata')) {
                 if ($cssfile) {
-                    $this -> Weblication -> Main -> Headerdata -> addStyleSheet($cssfile);
+                    $this->Weblication->getFrame()->getHeaderdata()->addStyleSheet($cssfile);
                 }
             }
         }

@@ -57,11 +57,11 @@ class GUI_DayBar extends GUI_Module
         $this -> Template -> setFilePath('stdout', $template);
 
         $jsFile = $this -> Weblication -> findJavaScript('daybar.js', 'gui_daybar', true);
-        $frame = $this -> Weblication -> getMain();
-        if(is_a($frame, 'gui_customframe')) {
+        $Frame = $this -> Weblication -> getMain();
+        if($Frame instanceof GUI_CustomFrame) {
             /* @var $Headerdata GUI_Headerdata */
-            $Headerdata = &$frame -> getHeaderdata();
-            $Headerdata -> addJavaScript($jsFile);
+            $Headerdata = $Frame->getHeaderdata();
+            $Headerdata->addJavaScript($jsFile);
         }
     }
 
@@ -72,18 +72,18 @@ class GUI_DayBar extends GUI_Module
      **/
     function prepare()
     {
-        $interfaces = & $this -> Weblication -> getInterfaces();
+        $interfaces = $this -> Weblication -> getInterfaces();
         $Template = & $this -> Template;
         $Session = & $this -> Session;
         $Input = & $this -> Input;
-        $Frame = & $this -> Weblication -> Main;
+        $Frame = $this->Weblication->getMain();
 
         #### Bindet gui_....css ein:
         $cssfile = @$this -> Weblication -> findStyleSheet($this -> getClassName() . '.css', $this -> getClassName(), true);
         if ($cssfile) {
-            if (is_a($this -> Weblication -> Main, 'GUI_Module')) {
-                if (isset($this->Weblication->Main->Headerdata) and is_a($this->Weblication->Main->Headerdata, 'GUI_Headerdata')) {
-                    $this->Weblication->Main->Headerdata->addStyleSheet($cssfile);
+            if (is_a($this->Weblication->getMain(), 'GUI_Module')) {
+                if (isset($this->Weblication->getMain()->Headerdata) and is_a($this->Weblication->getMain()->Headerdata, 'GUI_Headerdata')) {
+                    $this->Weblication->getMain()->Headerdata->addStyleSheet($cssfile);
                 }
             }
         }
