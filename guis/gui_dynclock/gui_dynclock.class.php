@@ -31,8 +31,8 @@ class GUI_DynClock extends GUI_Module
         $this -> Template -> setVar('showSec', $this -> Input -> getVar('showSec'));
         $this -> Template -> setVar('format', $this -> Input -> getVar('format'));
 
-        if ($this -> Weblication -> Main) {
-            $this -> Weblication -> Main -> addBodyLoad('startDynClock('.$this -> Input -> getVar('cycleClock').')');
+        if ($this -> Weblication -> getFrame()) {
+            $this -> Weblication -> getFrame() -> addBodyLoad('startDynClock('.$this -> Input -> getVar('cycleClock').')');
         }
     }
 

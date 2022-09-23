@@ -138,9 +138,9 @@ class GUI_DynToolTip extends GUI_Module
     function prepare()
     {
         $jsfile = $this -> Weblication -> findJavaScript('dyntooltip.js', $this -> getClassName(), true);
-        if (is_a($this -> Weblication -> Main, 'GUI_Module')) {
-            if (is_a($this -> Weblication -> Main -> Headerdata, 'GUI_Headerdata')) {
-                $this -> Weblication -> Main -> Headerdata -> addJavaScript($jsfile);
+        if (is_a($this -> Weblication -> getFrame(), 'GUI_Module')) {
+            if (is_a($this -> Weblication -> getFrame() -> Headerdata, 'GUI_Headerdata')) {
+                $this -> Weblication -> getFrame() -> Headerdata -> addJavaScript($jsfile);
             }
         }
 

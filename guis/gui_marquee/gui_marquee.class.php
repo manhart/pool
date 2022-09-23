@@ -22,10 +22,8 @@ class GUI_Marquee extends GUI_Module
 
     function prepare ()
     {
-        $Input = & $this -> Input;
-
-        if ($this -> Weblication -> Main) {
-            $this -> Weblication -> Main -> addBodyLoad('marqueePopulate()');
+        if ($this->Weblication->getFrame()) {
+            $this->Weblication->getFrame()->addBodyLoad('marqueePopulate()');
         }
     }
 
