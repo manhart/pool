@@ -34,7 +34,7 @@ class GUI_DHTMLDropdown extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals = I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
         $this->Defaults->addVar(
             array(
