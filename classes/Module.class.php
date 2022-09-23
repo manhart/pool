@@ -83,6 +83,11 @@ class Module extends Component
     private array $fixedParams = [];
 
     /**
+     * @var int filter that defines which superglobals are passed to input->vars
+     */
+    protected int $superglobals = I_EMPTY;
+
+    /**
      * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
      *
      * @param Component|null $Owner Owner
@@ -93,8 +98,8 @@ class Module extends Component
     {
         parent::__construct($Owner);
 
-        $this->Modules = Array();
-        $this->Handoff = Array();
+        $this->Modules = [];
+        $this->Handoff = [];
         $this->Defaults = new Input(I_EMPTY);
         $this->fixedParams = $params;
 
@@ -104,11 +109,14 @@ class Module extends Component
     /**
      * set default values for external inputs
      *
-     * @param int $superglobals Konstanten aus der Input.class.php
+     * @param int|null $superglobals Konstanten aus der Input.class.php
      * @see Input.class.php
      **/
-    public function init(int $superglobals = I_EMPTY)
+    public function init(?int $superglobals = null)
     {
+        if(!isset($superglobals)) {
+            $superglobals = $this->superglobals;
+        }
         $this->Input = new Input($superglobals);
         $this->mergeDefaults();
         // assigns the module name

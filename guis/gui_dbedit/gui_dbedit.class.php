@@ -42,7 +42,7 @@ class GUI_DBEdit extends GUI_Edit
      *
      * @access public
      **/
-    function init($superglobals = I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
         $this -> Defaults -> addVar('tabledefine', '');
         $this -> Defaults -> addVar('id', 0); 	// separated by ;
