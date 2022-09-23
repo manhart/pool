@@ -50,7 +50,7 @@ class GUI_Shadowimage extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('title', '');
         $this -> Defaults -> addVar('href', '');

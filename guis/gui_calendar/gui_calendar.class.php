@@ -29,7 +29,7 @@ class GUI_Calendar extends GUI_Module
     */
     var $highlightDate = false;
 
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         /*
         * $this -> Defaults -> addVar('id', $this -> getName());

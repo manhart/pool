@@ -18,7 +18,7 @@ class GUI_PageControl extends GUI_Module
         $this->Url = new Url();
     }
 
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('id', $this -> getName());
         $this->Defaults->addVar('name', $this -> getName());

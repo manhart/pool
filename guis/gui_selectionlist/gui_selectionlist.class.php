@@ -15,7 +15,7 @@ class GUI_Selectionlist extends GUI_Module
         parent::__construct($Owner, false, $params);
     }
 
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
