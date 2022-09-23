@@ -35,9 +35,9 @@ class GUI_Url extends GUI_Module
      * Default Werte setzen. Input initialisieren.
      *
      * @access public
-     * @param integer $superglobals Superglobals (siehe Klasse Input)
+     * @param integer|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init($superglobals=0)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('script', '');
         $this->Defaults->addVar('params', '');

@@ -84,18 +84,6 @@ class GUI_CustomFrame extends GUI_Module
     var $DoKeypress = array();
 
     /**
-     * Verhindert das voreingestellte Laden der "Standard" JavaScript-Dateien
-     *
-     * @var boolean
-     */
-    var $preventDefaultJavaScript = false;
-
-    /**
-     * @var bool Verhindert das voreingestellte Laden des DynToolTips
-     */
-    var $preventDefaultDynToolTip = false;
-
-    /**
      * @var bool Verhindert das voreingestellte Laden des GUI's Headerdata
      */
     var $preventDefaultHeaderdata = false;
@@ -105,8 +93,19 @@ class GUI_CustomFrame extends GUI_Module
      */
     private $addFileFct = null;
 
+    /**
+     * @var array
+     */
     private array $scriptAtTheEnd = [];
+
+    /**
+     * @var array
+     */
     private array $scriptFilesAtTheEnd = [];
+
+    /**
+     * @var array
+     */
     private array $scriptWhenReady = [];
 
     /**
@@ -119,6 +118,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param bool $autoLoadFiles
      * @param array $params
      * @return
+     * @throws ReflectionException
      **/
     function __construct($Owner, $autoLoadFiles=true, array $params = [])
     {
@@ -130,20 +130,20 @@ class GUI_CustomFrame extends GUI_Module
             $this->Headerdata->setName('Headerdata');
         }
 
-        if(!$this->preventDefaultDynToolTip) {
-            $this->DynToolTip = new GUI_DynToolTip($Owner);
-            $this->DynToolTip->loadFiles();
-            $this->DynToolTip->setName('DynToolTip');
-        }
-
-        if(!$this->preventDefaultJavaScript) {
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('browser.js', $this->getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('array.js', $this->getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('helpers.js', $this->getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('mouseposition.js', $this->getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('layer.js', $this->getClassName(), true));
-            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('XMLHTTPRequestObject.js', $this->getClassName(), true));
-        }
+//        if(!$this->preventDefaultDynToolTip) {
+//            $this->DynToolTip = new GUI_DynToolTip($Owner);
+//            $this->DynToolTip->loadFiles();
+//            $this->DynToolTip->setName('DynToolTip');
+//        }
+//
+//        if(!$this->preventDefaultJavaScript) {
+//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('browser.js', $this->getClassName(), true));
+//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('array.js', $this->getClassName(), true));
+//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('helpers.js', $this->getClassName(), true));
+//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('mouseposition.js', $this->getClassName(), true));
+//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('layer.js', $this->getClassName(), true));
+//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('XMLHTTPRequestObject.js', $this->getClassName(), true));
+//        }
 
         //$this->Headerdata->addJavaScript($this->Weblication->findJavaScript('dyntooltip.js', $this->getClassName(), true));
     }
@@ -153,8 +153,10 @@ class GUI_CustomFrame extends GUI_Module
      */
     public function loadFiles()
     {
-        $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
-        $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
+        if(!$this->preventDefaultHeaderdata) {
+            $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
+            $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
+        }
     }
 
     /**
@@ -172,10 +174,10 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @return GUI_DynToolTip
      **/
-    function getDynToolTip(): GUI_DynToolTip
-    {
-        return $this->DynToolTip;
-    }
+//    function getDynToolTip(): GUI_DynToolTip
+//    {
+//        return $this->DynToolTip;
+//    }
 
     /**
      * Fuegt dem (Document) Body Load-Ereignis eine (JavaScript-)Funktion hinzu.
@@ -341,27 +343,19 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Laden der Default Einstellungen.
-     **/
-    public function init($superglobals=I_EMPTY)
-    {
-        parent::init($superglobals);
-    }
-
-    /**
      * Fuegt die Html Kopfdaten zur Seite hinzu.
      *
      * @param string $content
      * @return string Inhalt (Content)
      **/
-    public function finalize($content='')
+    public function finalize(string $content=''): string
     {
-        $tooltip_name = '';
-        if(!$this->preventDefaultDynToolTip) {
-            $this->DynToolTip->prepare();
-            $content_tooltip = $this->DynToolTip->finalize();
-            $tooltip_name = $this->DynToolTip->getName();
-        }
+//        $tooltip_name = '';
+//        if(!$this->preventDefaultDynToolTip) {
+//            $this->DynToolTip->prepare();
+//            $content_tooltip = $this->DynToolTip->finalize();
+//            $tooltip_name = $this->DynToolTip->getName();
+//        }
 
         $header_name = '';
         if(!$this->preventDefaultHeaderdata) {
@@ -404,11 +398,11 @@ class GUI_CustomFrame extends GUI_Module
 
         if (version_compare(phpversion(), '5.0.0', '>=')) {
             if($header_name) $content = str_ireplace(array('<'.$header_name.'>'.'</'.$header_name.'>','<'.$header_name.'>', '<'.$header_name.'/>'), $content_header, $content);
-            if($tooltip_name) $content = str_ireplace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);
+//            if($tooltip_name) $content = str_ireplace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);
         }
         else {
             if($header_name) $content = str_replace(array('<'.$header_name.'>'.'</'.$header_name.'>','<'.$header_name.'>', '<'.$header_name.'/>'), $content_header, $content);
-            if($tooltip_name) $content = str_replace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);
+//            if($tooltip_name) $content = str_replace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);
         }
 
         return $content;

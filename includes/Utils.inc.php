@@ -583,18 +583,20 @@ function removeEmptyLines($line)
  *
  * @param $datetime
  * @param $format
- * @return
- **/
-function formatDateTime($datetime, $format)
+ * @return string
+ *
+ * @throws Exception
+ */
+function formatDateTime($datetime, $format): string
 {
-    if (is_numeric($datetime) == false) {
+    if (!is_numeric($datetime)) {
         $timestamp = strtotime($datetime);
         if ($timestamp !== -1) {
             $datetime = $timestamp;
         }
     }
-
-    return strftime($format, $datetime);
+    $Date = new DateTime('@' . $datetime);
+    return $Date->format($format);
 }
 
 /**
@@ -605,16 +607,16 @@ function formatDateTime($datetime, $format)
  * @param $datetime
  * @param $format
  * @return
- **@author Andreas Horvath
+ * @throws Exception
+ * @author Andreas Horvath
  * @see formatDateTime
+ * @deprecated
  */
 function formatDEDateToEN($strDate, $delimiter = '.')
 {
     $arrDate = explode($delimiter, $strDate);
-    return strftime("%Y-%m-%d", strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0]));
+    return (new DateTime(strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0])))->format('Y-m-d');
 }
-
-
 
 /**
  * replaces the html tag <br> by a new line
@@ -785,7 +787,7 @@ function formatCurrency($value, $num_decimal_places = 2, string $currency = '&#8
  * @param string $format
  * @return string formatiertes Datum
  */
-function formatDBTimestampAsDatetime($datetime, $format = '%d.%m.%Y %H:%M')
+function formatDBTimestampAsDatetime($datetime, string $format = 'd.m.Y H:i'): string
 {
     $year = substr($datetime, 0, 4);
     $mon = substr($datetime, 4, 2);

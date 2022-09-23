@@ -88,7 +88,7 @@ class GUI_DBGrid extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('DynToolTipFiltersEnabled', 1);
         $this->Defaults->addVar('submittedVerteiltermin', 0); # abgesendete Suche
