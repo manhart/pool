@@ -430,7 +430,7 @@ if(!defined('CLASS_RESULTSET')) {
                 return $value;
             }
             if(is_null($value) == false and $value !== '' and $value !== '0000-00-00' and $value !== '0000-00-00 00:00:00') {
-                if(strpos($value, '-') === false) {
+                if(strpos($value, '-') === false and is_numeric($value)) {
                     $value = '@'.$value; // should be an unix timestamp (integer)
                 }
                 return new \DateTime($value, $timezone);
@@ -690,7 +690,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param string|array $fieldnames Timestamp-Felder, die umformatiert werden sollen
          * @param string $format gültiger Formatierungsstring (siehe PHP Funktion strftime)
          */
-        function formatDBTimestampAsDatetime($fieldnames, $format='%d.%m.%Y %H:%M')
+        function formatDBTimestampAsDatetime($fieldnames, string $format='d.m.Y H:i')
         {
             if (is_array($fieldnames)) {
                 foreach($fieldnames as $fieldname) {
