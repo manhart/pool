@@ -36,7 +36,7 @@ class GUI_Select extends GUI_Universal
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -298,7 +298,7 @@ class GUI_Option extends GUI_Universal
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(

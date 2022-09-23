@@ -8,7 +8,7 @@
  */
 class GUI_Marquee extends GUI_Module
 {
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         parent::init($superglobals);
     }
@@ -22,10 +22,8 @@ class GUI_Marquee extends GUI_Module
 
     function prepare ()
     {
-        $Input = & $this -> Input;
-
-        if ($this -> Weblication -> Main) {
-            $this -> Weblication -> Main -> addBodyLoad('marqueePopulate()');
+        if ($this->Weblication->getFrame()) {
+            $this->Weblication->getFrame()->addBodyLoad('marqueePopulate()');
         }
     }
 

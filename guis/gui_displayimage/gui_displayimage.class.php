@@ -39,7 +39,7 @@ class GUI_DisplayImage extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults -> addVar('border', 0);
         $this->Defaults -> addVar('filename', 'images/pl.gif');

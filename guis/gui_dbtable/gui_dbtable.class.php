@@ -10,9 +10,9 @@
 class GUI_DBTable extends GUI_Table implements JsonConfig
 {
     /**
-     * @param const|int $superglobals
+     * @param int|null $superglobals
      */
-    public function init($superglobals = I_EMPTY)
+    public function init(?int $superglobals = I_EMPTY)
     {
         $this->Defaults->addVar('tabledefine', '');
         parent::init($superglobals);
