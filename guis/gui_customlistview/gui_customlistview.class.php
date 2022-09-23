@@ -34,7 +34,7 @@
 		 *
 		 * @access public
 		 **/
-		function init($superglobals=I_REQUEST)
+		function init(?int $superglobals=I_REQUEST)
 		{
 			$this -> Defaults -> addVar(
 				array(

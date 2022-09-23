@@ -45,9 +45,9 @@ class GUI_Schema extends GUI_Module
     /**
      * Initialisierung der Standard Werte und Superglobals.
      *
-     * @param int $superglobals
+     * @param int|null $superglobals
      **/
-    public function init($superglobals=I_REQUEST)
+    public function init(?int $superglobals=I_REQUEST)
     {
         $this->Defaults->addVar('schema', '');
         parent::init($superglobals);

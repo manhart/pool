@@ -31,7 +31,7 @@
 */
 class GUI_DHtmlCalendar extends GUI_Module
 {
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar(
             array(

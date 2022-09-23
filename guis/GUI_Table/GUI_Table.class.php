@@ -1176,9 +1176,9 @@ class GUI_Table extends GUI_Module
 //    private string $version = '1.19.1';
 
     /**
-     * @param const|int $superglobals
+     * @param int|null $superglobals
      */
-    public function init($superglobals = I_EMPTY)
+    public function init(?int $superglobals = I_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
         $this->Defaults->addVar('render', self::RENDER_ONDOMLOADED);
