@@ -273,7 +273,7 @@ class GUI_Select extends GUI_Universal
         );
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');
@@ -375,7 +375,7 @@ class GUI_Option extends GUI_Universal
         );
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

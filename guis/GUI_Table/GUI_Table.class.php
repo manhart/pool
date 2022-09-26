@@ -1679,7 +1679,7 @@ class GUI_Table extends GUI_Module
      *
      * @return string
      */
-    public function finalize()
+    protected function finalize(): string
     {
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');

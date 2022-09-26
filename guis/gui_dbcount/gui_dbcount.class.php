@@ -93,9 +93,9 @@ class GUI_DBCount extends GUI_Module
      *
      * Inhalt parsen und zurueck geben (revive).
      *
-     * @return
+     * @return string
      **/
-    function finalize()
+    function finalize(): string
     {
         return $this -> returnValue;
     }

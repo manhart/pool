@@ -449,7 +449,7 @@ class GUI_Selezione extends GUI_Module
      *
      * @return string Templateinhalt
      */
-    function finalize()
+    function finalize(): string
     {
         #echo '<br>'.$this->numRows;
         $this->Template->leaveBlock();

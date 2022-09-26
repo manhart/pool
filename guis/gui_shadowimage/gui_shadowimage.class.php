@@ -102,10 +102,9 @@ class GUI_Shadowimage extends GUI_Module
     /**
      * Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');
