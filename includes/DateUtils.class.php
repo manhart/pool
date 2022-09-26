@@ -39,9 +39,9 @@ final class DateUtils
      * @param int $day day
      * @param int $year year
      * @param int $breakpoint calendar week based on this weekday
-     * @return int
+     * @return string
      */
-    static function getCustomMonth($mon, $day, $year, $breakpoint = 4)
+    static function getCustomMonth(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
         $date = mktime(0, 0, 0, $mon, $day, $year);
         $monat = strftime('%m', $date); // KW nach ISO 8601:1988
@@ -61,9 +61,9 @@ final class DateUtils
      * @param int $day
      * @param int $year
      * @param int $breakpoint calendar week based on this weekday
-     * @return int
+     * @return string
      */
-    static function getCustomYear($mon, $day, $year, $breakpoint = 4)
+    static function getCustomYear(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
         $date = mktime(0, 0, 0, $mon, $day, $year);
         $jahr = strftime('%G', $date);
