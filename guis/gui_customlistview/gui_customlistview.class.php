@@ -272,12 +272,11 @@
 		 *
 		 * Parst Template und gibt Ergebnis zurueck.
 		 *
-		 * @access public
 		 * @param string $tpl_handle Zu parsendes Template Handle
-		 * @return
-		 **/
-		function finalize($tpl_handle='stdout')
-		{
+		 * @return string
+         **/
+		function finalize(string $tpl_handle='stdout'): string
+        {
 			$this -> Template -> parse($tpl_handle);
 			return $this -> Template -> getContent($tpl_handle);
 		}

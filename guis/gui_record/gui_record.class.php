@@ -88,7 +88,7 @@ class GUI_Record extends GUI_Module
         parent::prepare();
     }
 
-    function finalize()
+    function finalize(): string
     {
         return $this->output;
     }

@@ -583,7 +583,7 @@ class GUI_DBGrid extends GUI_Module
      *
      * @return string fertiger Content der Html Templates
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('frame');
         $content = $this -> Template -> getContent('frame');

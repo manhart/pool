@@ -74,7 +74,7 @@ class GUI_ProtectEMail extends GUI_Module
         $this -> jsEMailLink = getJSEMailLink($email, $caption);
     }
 
-    function finalize()
+    function finalize(): string
     {
         return $this -> jsEMailLink;
     }

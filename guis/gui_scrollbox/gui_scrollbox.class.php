@@ -129,10 +129,9 @@ class GUI_Scrollbox extends GUI_Module
      *
      * Scrollbox Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize($content='')
+    function finalize($content=''): string
     {
         $this -> TplSbox -> setVar('CONTENT', $content);
 

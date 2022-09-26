@@ -969,7 +969,7 @@ class GUI_TableConfigurable extends GUI_Table
      *
      * @return string
      */
-    public function finalize()
+    protected function finalize(): string
     {
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');
