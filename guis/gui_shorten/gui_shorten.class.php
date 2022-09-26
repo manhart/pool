@@ -114,10 +114,9 @@ class GUI_Shorten extends GUI_Module
     /**
      * Gibt den gek�rzten Text zur�ck
      *
-     * @access public
      * @return string Splitter
      **/
-    function finalize()
+    function finalize(): string
     {
         // onmouseover="DHtmlHintObject.showAtObject(this, '{filename}', '', '', 0, 0);
 

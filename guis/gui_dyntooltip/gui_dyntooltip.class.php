@@ -165,10 +165,9 @@ class GUI_DynToolTip extends GUI_Module
      *
      * Daten werden geparst und weiter gereicht.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

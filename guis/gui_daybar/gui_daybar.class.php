@@ -105,10 +105,9 @@ class GUI_DayBar extends GUI_Module
     /**
      * Inhalt parsen und zur�ck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

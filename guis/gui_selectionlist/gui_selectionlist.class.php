@@ -353,7 +353,7 @@ class GUI_Selectionlist extends GUI_Module
         return $value;
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> reviveChildGUIs($this -> Template -> getContent('stdout'));
