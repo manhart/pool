@@ -40,11 +40,11 @@ function RequestPOOL(module, method, params, async)
 	}
 
 	if(typeof params == 'undefined') {
-		var params = new Array();
+		 params = [];
 	}
 
 	if(typeof async == 'undefined') {
-		var async = false;
+        async = false;
 	}
 
 	// var parameters = '';
@@ -53,7 +53,7 @@ function RequestPOOL(module, method, params, async)
 	RequestUrl.setScript(SCRIPT_NAME);
 	if(module != null) RequestUrl.setParam('module', module);
 	RequestUrl.setParam('method', method);
-	
+
 	// 15.12.2017, AM, Parameter in die URL zu stecken ist nicht sinnvoll! Fehler muss im Programm behoben werden, nicht hier.
 	//if(typeof params == 'object' || what(params) != 'FormData') {
 	//	for (var paramName in params) {
@@ -63,32 +63,32 @@ function RequestPOOL(module, method, params, async)
 	//else {
 	//	parameters = params;
 	//}
-	
+
 	var parameters = params;
 
 	// Weitere Parameter
-	if(RequestPOOL.arguments.length > 4) {
-		var onRequestSuccess = RequestPOOL.arguments[4];
+	if(arguments.length > 4) {
+		var onRequestSuccess = arguments[4];
 	}
 
-	if(RequestPOOL.arguments.length > 5) {
-		var onRequestComplete = RequestPOOL.arguments[5];
+	if(arguments.length > 5) {
+		var onRequestComplete = arguments[5];
 	}
 
-	if(RequestPOOL.arguments.length > 6) {
-		var onPhpFailure = RequestPOOL.arguments[6];
+	if(arguments.length > 6) {
+		var onPhpFailure = arguments[6];
 	}
 
-	if(RequestPOOL.arguments.length > 7) {
-		var onRequestFailure = RequestPOOL.arguments[7];
+	if(arguments.length > 7) {
+		var onRequestFailure = arguments[7];
 	}
-	
+
 	php_RESULT = null;
 	new Ajax.Request(RequestUrl.getUrl(), {
 		method: REQUEST_METHOD,
 		asynchronous: async,
 		parameters: parameters, // todo evalJS
-		postBody: (what(params) == 'FormData') ? parameters : false,
+		postBody: (what(params) === 'FormData') ? parameters : false,
 		encoding: 'UTF-8',
 		contentType: REQUEST_CONTENTTYPE,
 		onFailure: function() {
@@ -108,7 +108,7 @@ function RequestPOOL(module, method, params, async)
 					}
 				}
 				catch(e) {
-					if(e.name.toString() == 'SyntaxError') {
+					if(e.name.toString() === 'SyntaxError') {
 						isPhpError = true;
 						throw e;
 					}
