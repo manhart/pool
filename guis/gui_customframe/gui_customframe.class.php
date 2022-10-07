@@ -17,7 +17,6 @@
  * @link http://www.misterelsa.de
  */
 
-use pool\includes\JS_File\dir;
 
 /**
  * GUI_CustomFrame
@@ -171,23 +170,8 @@ class GUI_CustomFrame extends GUI_Module
         return $this->Headerdata;
     }
 
-    function addResource(string $resource, bool $min):int{
-        $header = $this->getHeaderdata();
-        if (is_subclass_of($resource, dir\JavaScriptResource::class)){
-            $items = $resource::getFiles($min);
-            foreach ($items as $item)
-                $header->addJavaScript($item);
-            return count($items);
-        } elseif (is_subclass_of($resource, dir\StylesheetResource::class)) {
-            $items = $resource::getFiles($min);
-            foreach ($items as $item)
-                $header->addStyleSheet($item);
-            return count($items);
-        } else {
-            //no valid Resource
-            return -1;
-        }
-    }
+
+
     /**
      * Liefert das GUI_DynToolTip Objekt fuer ToolTip Texte.
      *
