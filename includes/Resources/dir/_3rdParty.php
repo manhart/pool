@@ -2,85 +2,143 @@
 /*
  * g7system.local
  *
- * JS_File.php created at 23.09.22, 15:51
+ * JS_File.php created at 07.10.22, 08:25
  *
  * @author p.lehfeld <p.lehfeld@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
-namespace pool\includes\JS_File\dir{
+namespace pool\includes\Resources\dir{
 
     use Weblication;
     use function addEndingSlash;
     use function readFiles;
     use function remove_extension;
-
+//    trait extendable{
+//        /**
+//         * @return void
+//         * @see _3rdParty::getFiles()
+//         */
+//        public  static  function getExtensionFiles(bool $min,string $extension, string $version = ''):array{
+//            $path = static::getExtensionPath($version, $extension);
+//            $files = readFiles($path,false, '/(\.min)?\.'.static::FILE_EXT_FILTER.'$/');
+//            return self::chooseVariant($files, $min, static::FILE_EXT_FILTER, $path);
+//        }
+//        protected static function getExtensionPath(string $version, string $extension): string
+//        {
+//            $basePath = static::getPath($version);
+//            $extensionsPath = addEndingSlash($basePath . static::EXTENSION_PATH);
+//            return  addEndingSlash($extensionsPath. $extension);
+//        }
+//    }
     abstract class _3rdParty{
-        public const DIRECTORY = '';
-        public const VERSION = '';
-        public const SUB_PATH = '';
-        public const FILE_EXT_FILTER = '';
-        public const NAME_FILTER = '';
+        protected const DIRECTORY = '';
+        protected const VERSION = '';
+        protected const SUB_PATH = '';
+        protected const FILE_EXT_FILTER = '';
+        public static function addResourceTo( $header, bool $min, string $version = '',array $resource = null):int{
+            $className = get_called_class();
+            //try to load default if no subresource is specified
+            $resource ??= (defined(static::class.'::_')? static::_ : null);
+            $nameFilter = $resource[0] ?? '';
+            $extension = $resource[1] ?? '';
 
+            if (is_subclass_of($className, JavaScriptResource::class)){
+                $items = $className::getFiles($min, $version, $nameFilter, $extension);
+                foreach ($items as $item)
+                    $header->addJavaScript($item);
+                return count($items);
+            } elseif (is_subclass_of($className, StylesheetResource::class)) {
+                $items = $className::getFiles($min, $version, $nameFilter, $extension);
+                foreach ($items as $item)
+                    $header->addStyleSheet($item);
+                return count($items);
+            } else {
+                //no valid Resource
+                return -1;
+            }
+        }
         /**Builds a path based on the called subclasses attributes and the const DIR_RELATIVE_3RDPARTY_ROOT<br>
          * and returns one variant of each file matching the filters defined in the aforementioned attributes
          * @param bool $min Prefer minified(.min.X) variant <br> !$min => Prefer plain variant
          * @param string $version Optional override for the default A:VERSION
+         * @param string $nameFilter
+         * @param string $extension
          * @return array the resulting file list prefixed with the assembled path
          */
-        public static final function getFiles(bool $min, string $version = ''):array{
-            $path = static::getPath($version,$min);
-            $files = readFiles($path,false, '/'.static::NAME_FILTER.'(\.min)?\.'.static::FILE_EXT_FILTER.'$/');
-            sort($files);
-            $returnFiles=array();
-            $minRegex = '\.min\.'.static::FILE_EXT_FILTER.'$/';
-            $iMax = count($files);
-            for ($i = 0; $i<$iMax;$i+=$step){
-                $curFile = $files[$i];
-                $nextFile = $files[$i + 1] ?? '';
-                if (!$nextFile){//leftover single
-                    //take shortcut and exit
-                    $returnFiles[] = $path.$curFile;
-                    return $returnFiles;
-                }
-                $hasPlainVersion = !$hasMinifiedVersion = $currIsMin = (bool)preg_match('/'.$minRegex, $curFile);
-                if ($currIsMin){
-                    $filename = remove_extension(remove_extension($curFile));
-                    $hasPlainVersion = preg_match("/$filename\.".static::FILE_EXT_FILTER.'$/', $nextFile);
-                }else{//plain first
-                    $filename = remove_extension($curFile);
-                    $hasMinifiedVersion = preg_match("/$filename$minRegex", $nextFile);
-                }
-                if ($hasMinifiedVersion xor $hasPlainVersion){
-                    //no alternative
-                    $returnFiles[] = $path.$curFile;
-                    $step = 1;//next set
-                }else{
-                    //chose one alternative
-                    if ($currIsMin === $min)
-                        //current file matches request
-                        $returnFiles[] = $path.$curFile;
-                    else//use alternative
-                        $returnFiles[] = $path.$nextFile;
-                    $step= 2;//next set
-                    }
-                }
-            return $returnFiles;
+        public static function getFiles(bool $min, string $version = '', string $nameFilter = '', $extension = ''):array{
+            $path = static::getSubPath($version, $min,$extension);
+            $files = readFiles($path,false, '/'.$nameFilter.'(\.min)?\.'.static::FILE_EXT_FILTER.'$/');
+            return self::chooseVariant($files, $min, static::FILE_EXT_FILTER, $path);
         }
 
 
         /**Builds a path based on the called subclasses attributes and the const DIR_RELATIVE_3RDPARTY_ROOT
          * @param string $version Optional override for the default A:VERSION
-         * @param bool $min Parameter for subclasses that override this method
          * @return string the assembled path with an ending slash
          */
-        protected static function getPath(string $version, bool $min): string
+        protected static function getPath(string $version): string
         {
             $version = $version?: static::VERSION;
             $root =     addEndingSlash(DIR_RELATIVE_3RDPARTY_ROOT);
             $dir =      addEndingSlash($root.   static::DIRECTORY);
-            $versDir =  addEndingSlash($dir.    $version);
-            return      addEndingSlash($versDir.static::SUB_PATH);
+            return      addEndingSlash($dir.    $version);
+        }
+        protected static function getSubPath(string $version, bool $min, string $extension): string
+        {
+            if ($extension === '') {
+                return addEndingSlash(static::getPath($version) . static::SUB_PATH);
+            } else{
+                return addEndingSlash(static::getPath($version).static::EXTENSION_PATH.'/'.$extension);
+            }
+        }
+
+        /**Pick minified/non-minified variants of files from a list of filenames<br>
+         * It's not recommended to mix different filetypes with the same name
+         * (e.g. hello.css hello.min.js will likely mess up if both extensions are being matched)
+         * @param array $files list of filenames to choose from
+         * @param bool $min Prefer minified(.min.X) variant <br> !$min => Prefer plain variant
+         * @param string $fileExtension file extension to match (Regex compatible)
+         * @param string $path the path to prefix the files with
+         * @return array the resulting file list prefixed with the path
+         */
+        public static final function chooseVariant(array $files, bool $min, string $fileExtension, string $path = ''): array
+        {
+            sort($files);
+            $returnFiles = array();
+            $minRegex = '\.min\.' . $fileExtension . '$/';
+            $iMax = count($files);
+            for ($i = 0; $i < $iMax; $i += $step) {
+                $curFile = $files[$i];
+                $nextFile = $files[$i + 1] ?? '';
+                if (!$nextFile) {//leftover single
+                    //take shortcut and exit
+                    $returnFiles[] = $path . $curFile;
+                    return $returnFiles;
+                }
+                $hasPlainVersion = !$hasMinifiedVersion = $currIsMin = (bool)preg_match('/' . $minRegex, $curFile);
+                if ($currIsMin) {
+                    $filename = remove_extension(remove_extension($curFile));
+                    $hasPlainVersion = preg_match("/$filename\." . $fileExtension . '$/', $nextFile);
+                } else {//plain first
+                    $filename = remove_extension($curFile);
+                    $hasMinifiedVersion = preg_match("/$filename$minRegex", $nextFile);
+                }
+                if ($hasMinifiedVersion xor $hasPlainVersion) {
+                    //no alternative
+                    $returnFiles[] = $path . $curFile;
+                    $step = 1;//next set
+                } else {
+                    //chose one alternative
+                    if ($currIsMin === $min)
+                        //current file matches request
+                        $returnFiles[] = $path . $curFile;
+                    else//use alternative
+                        $returnFiles[] = $path . $nextFile;
+                    $step = 2;//next set
+                }
+            }
+            return $returnFiles;
         }
 
     }
@@ -118,6 +176,7 @@ namespace pool\includes\JS_File\dir{
         class Dir_bootstrap_table extends _3rdParty{
             const DIRECTORY = 'bootstrap-table';
             const VERSION = '1.21.0';
+            const EXTENSION_PATH = 'extensions';
         }
         class Dir_bootstrap_toggle extends _3rdParty{
             const DIRECTORY = 'bootstrap-toggle';
@@ -157,9 +216,9 @@ namespace pool\includes\JS_File\dir{
         class Dir_dropzone extends _3rdParty{
             const DIRECTORY = 'dropzone';
             const VERSION = '5.9.3';
-            protected static function getPath(string $version,$min): string
+            protected static function getSubPath($version, $min, $extension): string
             {
-                $path = parent::getPath($version, $min);
+                $path = static::getPath($version);
                 if ($min)
                     $path = addEndingSlash($path.'min');;
                 return  $path;
@@ -223,7 +282,7 @@ namespace pool\includes\JS_File\dir{
         class Dir_summernote extends _3rdParty{
             const DIRECTORY = 'summernote';
             const VERSION = '0.8.18';
-            //todo plugin?
+            const EXTENSION_PATH = 'plugin';
         }
         class Dir_uppy extends _3rdParty{
             const DIRECTORY = 'uppy';
@@ -251,6 +310,7 @@ namespace pool\includes\JS_File\dir{
             class Res_S_bootstrap extends Dir_bootstrap implements StylesheetResource {
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'css';
+                public const _ = [__CLASS__,'bootstrap'];
             }
             class Res_S_bootstrap_datepicker extends Dir_bootstrap_datepicker implements StylesheetResource {
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
@@ -324,7 +384,6 @@ namespace pool\includes\JS_File\dir{
             }
             class Res_S_g7theme extends Dir_js implements StylesheetResource {
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
-                //todo used?
                 const SUB_PATH = 'bootstrap-theming/scss';
             }
             class Res_S_jstree extends Dir_jstree implements StylesheetResource {
@@ -364,7 +423,7 @@ namespace pool\includes\JS_File\dir{
             }
             class Res_J_air_datepicker extends Dir_air_datepicker implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
-            }
+            }//loc
             class Res_J_autocomplete extends Dir_autocomplete implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'js';
@@ -372,11 +431,15 @@ namespace pool\includes\JS_File\dir{
             class Res_J_bootstrap extends Dir_bootstrap implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'js';
+                /**Requires popper*/
+                public const _ = [__CLASS__,'bootstrap'];
+                /**Comes with popper included*/
+                public const _bundle = [__CLASS__,'bundle'];
             }
             class Res_J_bootstrap_datepicker extends Dir_bootstrap_datepicker implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'js';
-            }
+            }//loc
             class Res_J_bootstrap_datetimepicker extends Dir_bootstrap_datetimepicker implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'js';
@@ -386,9 +449,18 @@ namespace pool\includes\JS_File\dir{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'dist/js';
             }
+            class Res_L_bootstrap_select extends Dir_bootstrap_select implements JavaScriptResource{
+                const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
+                const SUB_PATH = 'dist/js/i18n';
+            }
             class Res_J_bootstrap_table extends Dir_bootstrap_table implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
+                public const _ = ['table'];
                 //extensions? themes?
+            }//
+            class Res_L_bootstrap_tabel extends Dir_bootstrap_table implements JavaScriptResource {
+                const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
+                const SUB_PATH = 'locale';
             }
             class Res_J_bootstrap_toggle extends Dir_bootstrap_toggle implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
@@ -435,6 +507,8 @@ namespace pool\includes\JS_File\dir{
             }
             class Res_J_jQuery extends Dir_jQuery implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
+                public const _ = [__CLASS__, '\d\.\d'];//__CLASS__.';\d\.\d';
+                public const slim = [__CLASS__,'slim'];
             }
             class Res_J_jquery_dragtable extends Dir_jquery_dragtable implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
@@ -486,17 +560,4 @@ namespace pool\includes\JS_File\dir{
 
         }
     }
-}
-namespace pool\includes\JS_File {
-
-    use pool\includes\JS_File\dir\_3rdParty;
-
-
-    class jQuery extends dir\Res_J_jQuery {
-        const NAME_FILTER = '\d\.\d';
-    }
-    class jQuery_Slim extends dir\Res_J_jQuery{
-        const NAME_FILTER = 'slim';
-    }
-
 }
