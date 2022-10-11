@@ -36,7 +36,7 @@ namespace pool\includes\Resources\dir{
         protected const VERSION = '';
         protected const SUB_PATH = '';
         protected const FILE_EXT_FILTER = '';
-        public static function addResourceTo( $header, bool $min, string $version = '',array $resource = null):int{
+        public static function addResourceTo(\GUI_Headerdata $header, bool $min, string $version = '',array $resource = null):int{
             $className = get_called_class();
             //try to load default if no subresource is specified
             $resource ??= (defined(static::class.'::_')? static::_ : null);
@@ -66,7 +66,7 @@ namespace pool\includes\Resources\dir{
          * @param string $extension
          * @return array the resulting file list prefixed with the assembled path
          */
-        public static function getFiles(bool $min, string $version = '', string $nameFilter = '', $extension = ''):array{
+        public static function getFiles(bool $min, string $version = '', string $nameFilter = '', string $extension = ''):array{
             $path = static::getSubPath($version, $min,$extension);
             $files = readFiles($path,false, '/'.$nameFilter.'(\.min)?\.'.static::FILE_EXT_FILTER.'$/');
             return self::chooseVariant($files, $min, static::FILE_EXT_FILTER, $path);
@@ -177,6 +177,10 @@ namespace pool\includes\Resources\dir{
             const DIRECTORY = 'bootstrap-table';
             const VERSION = '1.21.0';
             const EXTENSION_PATH = 'extensions';
+            public const _reorderRows = ['', 'reorder-rows'];
+            public const _groupByV2 = ['', 'group-by-v2'];
+            public const _stickyHeader = ['', 'sticky-header'];
+            public const _filterControl = ['', 'filter-control'];
         }
         class Dir_bootstrap_toggle extends _3rdParty{
             const DIRECTORY = 'bootstrap-toggle';
@@ -247,6 +251,7 @@ namespace pool\includes\Resources\dir{
         class Dir_jquery_tableexport extends _3rdParty{
             const DIRECTORY = 'jquery-tableexport';
             const VERSION = '1.10.24';
+            const EXTENSION_PATH = 'libs';
         }
         class Dir_js extends _3rdParty{
             const DIRECTORY = 'js';
@@ -310,7 +315,7 @@ namespace pool\includes\Resources\dir{
             class Res_S_bootstrap extends Dir_bootstrap implements StylesheetResource {
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'css';
-                public const _ = [__CLASS__,'bootstrap'];
+                public const _ = ['bootstrap'];
             }
             class Res_S_bootstrap_datepicker extends Dir_bootstrap_datepicker implements StylesheetResource {
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
@@ -432,9 +437,9 @@ namespace pool\includes\Resources\dir{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'js';
                 /**Requires popper*/
-                public const _ = [__CLASS__,'bootstrap'];
+                public const _ = ['bootstrap'];
                 /**Comes with popper included*/
-                public const _bundle = [__CLASS__,'bundle'];
+                public const _bundle = ['bundle'];
             }
             class Res_J_bootstrap_datepicker extends Dir_bootstrap_datepicker implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
@@ -456,6 +461,11 @@ namespace pool\includes\Resources\dir{
             class Res_J_bootstrap_table extends Dir_bootstrap_table implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 public const _ = ['table'];
+                public const _mobile = ['', 'mobile'];
+                public const _resizable = ['', 'resizable'];
+                public const _print = ['', 'print'];
+                public const _multipleSort = ['', 'multiple-sort'];
+                public const _export = ['', 'export'];
                 //extensions? themes?
             }//
             class Res_L_bootstrap_tabel extends Dir_bootstrap_table implements JavaScriptResource {
@@ -507,8 +517,8 @@ namespace pool\includes\Resources\dir{
             }
             class Res_J_jQuery extends Dir_jQuery implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
-                public const _ = [__CLASS__, '\d\.\d'];//__CLASS__.';\d\.\d';
-                public const slim = [__CLASS__,'slim'];
+                public const _ = ['\d\.\d'];//__CLASS__.';\d\.\d';
+                public const slim = ['slim'];
             }
             class Res_J_jquery_dragtable extends Dir_jquery_dragtable implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
@@ -521,7 +531,9 @@ namespace pool\includes\Resources\dir{
             }
             class Res_J_jquery_tableexport extends Dir_jquery_tableexport implements JavaScriptResource{
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
-                //libs?
+                const  _jsPDF = ['', 'jsPDF'];
+                const  _jsPDF_AutoTable = ['', 'jsPDF-AutoTable'];
+                const  _html2canvas = ['', 'html2canvas'];
             }
             //js
             class Res_J_jstree extends Dir_jstree implements JavaScriptResource{
