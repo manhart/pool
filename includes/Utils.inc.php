@@ -1250,27 +1250,27 @@ function move_file(string $source, string $dest): bool
 
 /**
  * Verzeichnis auslesen: erstellt Dateiliste
+ *
  * @see glob()
  * @param string $path Stammverzeichnis
  * @param boolean $absolute Datei mit absolutem Pfad zurückgeben
  * @param string $filePattern Dateifilter
  * @param string $subdir auszulesendes Unterverzeichnis
- * @return array Dateiliste
+ * @return array file list
  */
 function readFiles(string $path, bool $absolute = true, string $filePattern = '/.JPG/i', string $subdir = ''): array
 {
-    $files = array();
+    $files = [];
 
-    $path = addEndingSlash($path).addEndingSlash($subdir);
-    if ($res = opendir($path)) {
-        while (($filename = readdir($res)) !== false) {
-            $file = $path.$filename;
-            if (is_file($file) and preg_match($filePattern, $filename)) {
-                $fileRelative = addEndingSlash($subdir).$filename;
-                $files[] = ($absolute) ? $file : $fileRelative;
+    $path = addEndingSlash($path).($subdir = addEndingSlash($subdir));
+    if ($handle = opendir($path)) {
+        while (false !== ($fileName = readdir($handle))) {
+            $file = $path.$fileName;
+            if (is_file($file) and preg_match($filePattern, $fileName)) {
+                $files[] = ($absolute) ? $file : $subdir.$fileName;
             }
         }
-        closedir($res);
+        closedir($handle);
     }
 
     return $files;
