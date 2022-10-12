@@ -468,7 +468,7 @@ namespace pool\includes\Resources\dir{
                 public const _export = ['', 'export'];
                 //extensions? themes?
             }//
-            class Res_L_bootstrap_tabel extends Dir_bootstrap_table implements JavaScriptResource {
+            class Res_L_bootstrap_table extends Dir_bootstrap_table implements JavaScriptResource {
                 const FILE_EXT_FILTER = self::DEFAULT_FILE_EXT;
                 const SUB_PATH = 'locale';
             }
