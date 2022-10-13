@@ -7,7 +7,7 @@
 
 class GUI_DynClock extends GUI_Module
 {
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('cycleClock', 'true');
         $this->Defaults->addVar('showSec', 'true');
@@ -31,12 +31,12 @@ class GUI_DynClock extends GUI_Module
         $this -> Template -> setVar('showSec', $this -> Input -> getVar('showSec'));
         $this -> Template -> setVar('format', $this -> Input -> getVar('format'));
 
-        if ($this -> Weblication -> Main) {
-            $this -> Weblication -> Main -> addBodyLoad('startDynClock('.$this -> Input -> getVar('cycleClock').')');
+        if ($this -> Weblication -> getFrame()) {
+            $this -> Weblication -> getFrame() -> addBodyLoad('startDynClock('.$this -> Input -> getVar('cycleClock').')');
         }
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse();
         return $this -> Template -> getContent();

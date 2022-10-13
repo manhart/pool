@@ -76,7 +76,7 @@ class GUI_Shorten extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -114,10 +114,9 @@ class GUI_Shorten extends GUI_Module
     /**
      * Gibt den gek�rzten Text zur�ck
      *
-     * @access public
      * @return string Splitter
      **/
-    function finalize()
+    function finalize(): string
     {
         // onmouseover="DHtmlHintObject.showAtObject(this, '{filename}', '', '', 0, 0);
 

@@ -44,7 +44,7 @@ class GUI_Record extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('tabledefine', 'sinnic_tbl_firma');
         $this -> Defaults -> addVar('id', 0); 	// separated by ;
@@ -88,7 +88,7 @@ class GUI_Record extends GUI_Module
         parent::prepare();
     }
 
-    function finalize()
+    function finalize(): string
     {
         return $this->output;
     }

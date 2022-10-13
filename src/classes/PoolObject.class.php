@@ -25,323 +25,315 @@
  * @package pool
  */
 
-if(!defined('CLASS_POOLOBJECT')) {
-    /**
-     * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)
-     * @ignore
-     */
-    define('CLASS_POOLOBJECT',			1);
+if (substr(PHP_OS, 0, 3) == 'WIN') {
+    $os_windows = true;
+}
+else {
+    $os_windows = false;
+}
 
-    if (substr(PHP_OS, 0, 3) == 'WIN') {
-        $os_windows = true;
-    }
-    else {
-        $os_windows = false;
-    }
+/**
+ * Konstante sagt aus, ob PHP unter Windows laeuft
+ */
+define('OS_WINDOWS', $os_windows);
 
-    /**
-     * Konstante sagt aus, ob PHP unter Windows laeuft
-     */
-    define('OS_WINDOWS', $os_windows);
+/**
+ * Konstante sagt aus, ob PHP unter Linux laeuft
+ */
+define('OS_UNIX', !$os_windows);
 
-    /**
-     * Konstante sagt aus, ob PHP unter Linux laeuft
-     */
-    define('OS_UNIX', !$os_windows);
+/**
+ * Konstante enthaelt Name des Betriebssystems
+ */
+define('OS_POOL_NAME', ($os_windows) ? 'Windows' : 'Linux');
 
+/**
+ * Die Grundklasse, der Uhrahn aller Objekte.
+ *
+ * Die Klasse Object verf�gt �ber folgende Verhalten:
+ * - stellt eine Art Debug-Modus bereit.
+ * - Objektinstanzen erzeugen, verwalten und aufl�sen.
+ * - auf objektspezifische Informationen �ber den Klassentyp und die Instanz zugreifen.
+ * - enth�lt Fehler�berpr�fung und kann Fehler ausl�sen.
+ * - stellt ein Verfahren bereit mit dem ein Inhalt eines Objekts einem anderen zugewiesen werden kann.
+ *
+ * Object wird nie direkt instantiiert. Obwohl keine Programmiersprachenelemente zum Verhindern der Instantiierung verwendet werden, ist Object eine abstrakte Klasse.
+ *
+ * @author Alexander Manhart <alexander@manhart-it.de>
+ * @package pool
+ */
+class PoolObject extends stdClass
+{
     /**
-     * Konstante enthaelt Name des Betriebssystems
-     */
-    define('OS_POOL_NAME', ($os_windows) ? 'Windows' : 'Linux');
-
-    /**
-     * Die Grundklasse, der Uhrahn aller Objekte.
+     * Debug-Modus (Default: false)
      *
-     * Die Klasse Object verf�gt �ber folgende Verhalten:
-     * - stellt eine Art Debug-Modus bereit.
-     * - Objektinstanzen erzeugen, verwalten und aufl�sen.
-     * - auf objektspezifische Informationen �ber den Klassentyp und die Instanz zugreifen.
-     * - enth�lt Fehler�berpr�fung und kann Fehler ausl�sen.
-     * - stellt ein Verfahren bereit mit dem ein Inhalt eines Objekts einem anderen zugewiesen werden kann.
-     *
-     * Object wird nie direkt instantiiert. Obwohl keine Programmiersprachenelemente zum Verhindern der Instantiierung verwendet werden, ist Object eine abstrakte Klasse.
-     *
-     * @author Alexander Manhart <alexander@manhart-it.de>
-     * @package pool
+     * @var bool $debug
      */
-    class PoolObject extends stdClass
+    private bool $isDebugMode=false;
+
+    /**
+     * Zeilenumbruch (fuer HTML/Konsolen Ausgaben)
+     *
+     * @todo autodetect
+     * @var string $new_line
+     * @access private
+     */
+    var $new_line='<br>';
+
+    /**
+     * POOL class extension
+     */
+    const CLASS_EXTENSION = '.class.php';
+
+    /**
+     * @var string the full name of the class of the object
+     */
+    private string $class = '';
+
+    /**
+     * @var string the short name of the class of the object
+     */
+    private string $className = '';
+
+    /**
+     * @var string the filename of the the file in which the class has been defined
+     */
+    private string $classFilename = '';
+
+    /**
+     * @var bool|null determines whether the class is the POOL base library
+     */
+    private ?bool $isBasicLibrary = null;
+
+    /**
+     * @return PoolObject
+     */
+    public function __construct()
     {
-        /**
-         * Debug-Modus (Default: false)
-         *
-         * @var bool $debug
-         */
-        private bool $isDebugMode=false;
+        return $this;
+    }
 
-        /**
-         * Zeilenumbruch (fuer HTML/Konsolen Ausgaben)
-         *
-         * @todo autodetect
-         * @var string $new_line
-         * @access private
-         */
-        var $new_line='<br>';
-
-        /**
-         * POOL class extension
-         */
-        const CLASS_EXTENSION = '.class.php';
-
-        /**
-         * @var string the full name of the class of the object
-         */
-        private string $class = '';
-
-        /**
-         * @var string the short name of the class of the object
-         */
-        private string $className = '';
-
-        /**
-         * @var string the filename of the the file in which the class has been defined
-         */
-        private string $classFilename = '';
-
-        /**
-         * @var bool|null determines whether the class is the POOL base library
-         */
-        private ?bool $isBasicLibrary = null;
-
-        /**
-         * @return PoolObject
-         */
-        public function __construct()
-        {
-            return $this;
+    /**
+     * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
+     *
+     * @return string name of the class
+     */
+    public function getClass(): string
+    {
+        if($this->class == '') {
+            $this->class = get_class($this);
         }
 
-        /**
-         * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
-         *
-         * @return string name of the class
-         */
-        public function getClass(): string
-        {
-            if($this->class == '') {
-                $this->class = get_class($this);
-            }
+        return $this->class;
+    }
 
-            return $this->class;
+    /**
+     * Determines the short name of the class of the object, stores it temporarily and returns it.
+     *
+     * @return string
+     */
+    public function getClassName(): string
+    {
+        if($this->className == '') {
+            $this->className = (new \ReflectionClass($this))->getShortName();
+        }
+        return $this->className;
+    }
+
+    /**
+     * Gets the filename of the file in which the class has been defined
+     *
+     * @return string
+     */
+    public function getClassFilename(): string
+    {
+        if($this->classFilename == '') {
+            $this->classFilename = (new \ReflectionClass($this))->getFileName();
+        }
+        return $this->classFilename;
+    }
+
+    /**
+     * determines whether the class is inside the POOL (base library)
+     *
+     * @return bool
+     */
+    public function isBasicLibrary(): bool
+    {
+        if(is_null($this->isBasicLibrary)) {
+            $this->isBasicLibrary = substr_compare($this->getClassFilename(), DIR_POOL_ROOT, 0, strlen(DIR_POOL_ROOT)) === 0;
+        }
+        return $this->isBasicLibrary;
+    }
+
+    /**
+     * Gibt den Namen der Elternklasse (von dem das Objekt abgeleitet wurde) zurueck.
+     *
+     * @return string Name der Elternklasse
+     */
+    public function getParentClass(): string
+    {
+        return get_parent_class($this);
+    }
+
+    /**
+     * Autoloader for POOL Classes
+     *
+     * @param string $className Klasse
+     * @return bool
+     */
+    public static function autoloadClass(string $className): bool
+    {
+        $classRootDirs = array(
+            getcwd()
+        );
+        if(defined('DIR_POOL_ROOT')) {
+            $classRootDirs[] = DIR_POOL_ROOT;
+        }
+        if(defined('DIR_COMMON_ROOT')) {
+            $classRootDirs[] = DIR_COMMON_ROOT;
         }
 
-        /**
-         * Determines the short name of the class of the object, stores it temporarily and returns it.
-         *
-         * @return string
-         */
-        public function getClassName(): string
-        {
-            if($this->className == '') {
-                $this->className = (new \ReflectionClass($this))->getShortName();
-            }
-            return $this->className;
-        }
+        foreach ($classRootDirs as $classRootDir) {
+            $classRootDir = addEndingSlash($classRootDir).addEndingSlash(PWD_TILL_CLASSES);
 
-        /**
-         * Gets the filename of the file in which the class has been defined
-         *
-         * @return string
-         */
-        public function getClassFilename(): string
-        {
-            if($this->classFilename == '') {
-                $this->classFilename = (new \ReflectionClass($this))->getFileName();
-            }
-            return $this->classFilename;
-        }
-
-        /**
-         * determines whether the class is inside the POOL (base library)
-         *
-         * @return bool
-         */
-        public function isBasicLibrary(): bool
-        {
-            if(is_null($this->isBasicLibrary)) {
-                $this->isBasicLibrary = substr_compare($this->getClassFilename(), DIR_POOL_ROOT, 0, strlen(DIR_POOL_ROOT)) === 0;
-            }
-            return $this->isBasicLibrary;
-        }
-
-        /**
-         * Gibt den Namen der Elternklasse (von dem das Objekt abgeleitet wurde) zurueck.
-         *
-         * @return string Name der Elternklasse
-         */
-        public function getParentClass(): string
-        {
-            return get_parent_class($this);
-        }
-
-        /**
-         * Autoloader for POOL Classes
-         *
-         * @param string $className Klasse
-         * @return bool
-         */
-        public static function autoloadClass(string $className): bool
-        {
-            $classRootDirs = array(
-                getcwd()
-            );
-            if(defined('DIR_POOL_ROOT')) {
-                $classRootDirs[] = DIR_POOL_ROOT;
-            }
-            if(defined('DIR_COMMON_ROOT')) {
-                $classRootDirs[] = DIR_COMMON_ROOT;
-            }
-
-            foreach ($classRootDirs as $classRootDir) {
-                $classRootDir = addEndingSlash($classRootDir).addEndingSlash(PWD_TILL_CLASSES);
-
-                $filename = $classRootDir.$className.PoolObject::CLASS_EXTENSION;
-                if (file_exists($filename)) {
-                    require_once $filename;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * Aktiviere Fehlersuche und -behebung.
-         **/
-        public function enableDebugging(): PoolObject
-        {
-            $this->isDebugMode = true;
-            return $this;
-        }
-
-        /**
-         * Deaktiviere Fehlersuche und - behebung.
-         **/
-        public function disableDebugging(): PoolObject
-        {
-            $this->isDebugMode = false;
-            return $this;
-        }
-
-        /**
-         * Erzeugt eine Debug Ausgabe, sofern Debugging aktiviert wurde.
-         *
-         * @access public
-         * @param string $text Text
-         * @see PoolObject::$new_line
-         */
-        function debug(string $text)
-        {
-            if ($this->isDebugMode == true) {
-                print($text.$this->new_line);
+            $filename = $classRootDir.$className.PoolObject::CLASS_EXTENSION;
+            if (file_exists($filename)) {
+                require_once $filename;
+                return true;
             }
         }
+        return false;
+    }
 
-        /**
-        * Loest eine PHP Fehlermeldung vom Typ E_USER_NOTICE aus.
-        * Ab PHP 4.3.0 stehen noch __CLASS__ und __FUNCTION__ zur Verfuegung. Da diese Objekt Version jedoch unter 4.1.6 entwickelt wird, stehen nur __FILE__ und __LINE__ als Parameter bereit.
-        * Die Funktion raiseError arbeitet mit der PHP Funktion trigger_error(). Wird der PHP Error Handler ueberschrieben, koennen individuelle Fehlerprotokolle erstellt werden.
-        *
-        * @param string $file Datei (in der, der Fehler aufgetreten ist)
-        * @param int $line Zeilennummer
-        * @param string $msg Fehlermeldung (Setzt sich zusammen aus: Fehler in der Klasse -Platzhalter-, Datei -Platzhalter-, Zeile -Platzhalter- Meldung: -Fehlermeldung-
-        */
-        public function raiseError(string $file, int $line, string $msg)
-        {
-            if(error_reporting() == 0) {
-                return;
-            }
-            $error = $msg;
-            $error .= ' in class '.$this->getClassName() . ', file '.$file.', line '.$line;
+    /**
+     * Aktiviere Fehlersuche und -behebung.
+     **/
+    public function enableDebugging(): PoolObject
+    {
+        $this->isDebugMode = true;
+        return $this;
+    }
 
-            trigger_error($error);
+    /**
+     * Deaktiviere Fehlersuche und - behebung.
+     **/
+    public function disableDebugging(): PoolObject
+    {
+        $this->isDebugMode = false;
+        return $this;
+    }
+
+    /**
+     * Erzeugt eine Debug Ausgabe, sofern Debugging aktiviert wurde.
+     *
+     * @access public
+     * @param string $text Text
+     * @see PoolObject::$new_line
+     */
+    function debug(string $text)
+    {
+        if ($this->isDebugMode == true) {
+            print($text.$this->new_line);
         }
+    }
 
-        /**
-         * Wirft eine Xception am Bildschirm aus oder schreibt sie in das PHP Logfile aus.
-         *
-         * Wohin die Xception Ihre Fehlermeldung sendet (Bildschirm, Logfile, Mail), wird in der Xception Klasse festgelegt.
-         *
-         * @param Xception $Xception Die Xception oder null, falls es sich bei diesem Objekt selbst um eine Xception handelt.
-         **/
-        public function throwException($Xception=null)
-        {
-            if(is_null($Xception) and $this instanceof Xception) {
-                $Xception = &$this;
+    /**
+    * Loest eine PHP Fehlermeldung vom Typ E_USER_NOTICE aus.
+    * Ab PHP 4.3.0 stehen noch __CLASS__ und __FUNCTION__ zur Verfuegung. Da diese Objekt Version jedoch unter 4.1.6 entwickelt wird, stehen nur __FILE__ und __LINE__ als Parameter bereit.
+    * Die Funktion raiseError arbeitet mit der PHP Funktion trigger_error(). Wird der PHP Error Handler ueberschrieben, koennen individuelle Fehlerprotokolle erstellt werden.
+    *
+    * @param string $file Datei (in der, der Fehler aufgetreten ist)
+    * @param int $line Zeilennummer
+    * @param string $msg Fehlermeldung (Setzt sich zusammen aus: Fehler in der Klasse -Platzhalter-, Datei -Platzhalter-, Zeile -Platzhalter- Meldung: -Fehlermeldung-
+    */
+    public function raiseError(string $file, int $line, string $msg)
+    {
+        if(error_reporting() == 0) {
+            return;
+        }
+        $error = $msg;
+        $error .= ' in class '.$this->getClassName() . ', file '.$file.', line '.$line;
+
+        trigger_error($error);
+    }
+
+    /**
+     * Wirft eine Xception am Bildschirm aus oder schreibt sie in das PHP Logfile aus.
+     *
+     * Wohin die Xception Ihre Fehlermeldung sendet (Bildschirm, Logfile, Mail), wird in der Xception Klasse festgelegt.
+     *
+     * @param Xception $Xception Die Xception oder null, falls es sich bei diesem Objekt selbst um eine Xception handelt.
+     **/
+    public function throwException($Xception=null)
+    {
+        if(is_null($Xception) and $this instanceof Xception) {
+            $Xception = &$this;
+        }
+        if($Xception) {
+            /* @var $Xception Xception */
+            $Xception->raiseError();
+        }
+        else {
+            echo 'Fatal exception error in Object::throwException!'.$this->new_line;
+            die('Script terminated');
+        }
+    }
+
+    /**
+     * Ueberprueft Parameter $data, ob es sich um eine Xception handelt.
+     *
+     * @param Xception $data Wert, der ueberprueft wird, ob es sich um eine Xception handelt.
+     * @param int $code Wenn $data eine Xception ist, wird true zurueckgeben; aber wenn der Parameter $code ein String ist und $obj->getMessage() == $code oder $code ist ein integer und $obj->getCode() == $code
+     * @return bool true wenn es sich bei dem Parameter um eine Xception handelt.
+     **/
+    public function isError($data, $code=null): bool
+    {
+        if($data instanceof Xception) {
+            if (is_null($code)) {
+                return true;
             }
-            if($Xception) {
-                /* @var $Xception Xception */
-                $Xception->raiseError();
+            elseif (is_string($code)) {
+                return ($data->getMessage() == $code);
             }
             else {
-                echo 'Fatal exception error in Object::throwException!'.$this->new_line;
-                die('Script terminated');
+                return ($data->getCode() == $code);
             }
         }
+        return false;
+    }
 
-        /**
-         * Ueberprueft Parameter $data, ob es sich um eine Xception handelt.
-         *
-         * @param Xception $data Wert, der ueberprueft wird, ob es sich um eine Xception handelt.
-         * @param int $code Wenn $data eine Xception ist, wird true zurueckgeben; aber wenn der Parameter $code ein String ist und $obj->getMessage() == $code oder $code ist ein integer und $obj->getCode() == $code
-         * @return bool true wenn es sich bei dem Parameter um eine Xception handelt.
-         **/
-        public function isError($data, $code=null): bool
-        {
-            if($data instanceof Xception) {
-                if (is_null($code)) {
-                    return true;
-                }
-                elseif (is_string($code)) {
-                    return ($data->getMessage() == $code);
-                }
-                else {
-                    return ($data->getCode() == $code);
-                }
+    /**
+     * OS independant PHP extension load. Remember to take care
+     * on the correct extension name for case sensitive OSes.
+     *
+     * @param string $ext The extension name
+     * @return bool Success or not on the dl() call
+     */
+    function loadExtension($ext): bool
+    {
+        if (!extension_loaded($ext)) {
+            // if either returns true dl() will produce a FATAL error, stop that
+            if ((ini_get('enable_dl') != 1) || (ini_get('safe_mode') == 1)) {
+                return false;
             }
-            return false;
-        }
-
-        /**
-         * OS independant PHP extension load. Remember to take care
-         * on the correct extension name for case sensitive OSes.
-         *
-         * @param string $ext The extension name
-         * @return bool Success or not on the dl() call
-         */
-        function loadExtension($ext): bool
-        {
-            if (!extension_loaded($ext)) {
-                // if either returns true dl() will produce a FATAL error, stop that
-                if ((ini_get('enable_dl') != 1) || (ini_get('safe_mode') == 1)) {
-                    return false;
-                }
-                if (constant('OS_WINDOWS')) {
-                    $suffix = '.dll';
-                }
-                elseif (PHP_OS == 'HP-UX') {
-                    $suffix = '.sl';
-                }
-                elseif (PHP_OS == 'AIX') {
-                    $suffix = '.a';
-                }
-                elseif (PHP_OS == 'OSX') {
-                    $suffix = '.bundle';
-                }
-                else {
-                    $suffix = '.so';
-                }
-                return @dl('php_'.$ext.$suffix) || @dl($ext.$suffix);
+            if (constant('OS_WINDOWS')) {
+                $suffix = '.dll';
             }
-            return true;
+            elseif (PHP_OS == 'HP-UX') {
+                $suffix = '.sl';
+            }
+            elseif (PHP_OS == 'AIX') {
+                $suffix = '.a';
+            }
+            elseif (PHP_OS == 'OSX') {
+                $suffix = '.bundle';
+            }
+            else {
+                $suffix = '.so';
+            }
+            return @dl('php_'.$ext.$suffix) || @dl($ext.$suffix);
         }
+        return true;
     }
 }

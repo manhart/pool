@@ -18,7 +18,7 @@
 */
 class GUI_Emoticons extends GUI_Module
 {
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('memo', '');
         $this -> Defaults -> addVar('maxcols', 5);
@@ -67,7 +67,7 @@ class GUI_Emoticons extends GUI_Module
         }
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse($this -> Input -> getVar('emoticons'));
         return $this -> Template -> getContent($this -> Input -> getVar('emoticons'));

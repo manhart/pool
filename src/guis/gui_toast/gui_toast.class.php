@@ -10,9 +10,9 @@
 class GUI_Toast extends GUI_Module
 {
     /**
-     * @param const|int $superglobals
+     * @param int|null $superglobals
      */
-    public function init($superglobals = I_EMPTY)
+    public function init(?int $superglobals = I_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
         parent::init($superglobals);
@@ -50,7 +50,7 @@ class GUI_Toast extends GUI_Module
      *
      * @return string
      */
-    public function finalize()
+    protected function finalize(): string
     {
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');

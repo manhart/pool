@@ -987,8 +987,8 @@ class Weblication extends Component
 
     /**
      * Sucht das uebergebene JavaScript in einer fest vorgegebenen Verzeichnisstruktur.
-     * Sucht im Ordner /javascripts! Der 2. Parameter wird momentan nicht beruecksichtigt.
-     * Wird der dritte Parameter benutzt, werden die JavaScript Dateien in der Hauptbibliothek gesucht.
+     * Sucht im Ordner ./javascripts/ anschliessend in ./guis/$classFolder/ und ggf. noch in /poolcommons/guis/$classFolder/.
+     * Wird der dritte Parameter benutzt, wird ausgehend von /pool/ anstelle des aktuellen Arbeitsverzeichnisses gesucht.
      *
      * JavaScripts aus der Hauptbibliothek koennen nicht ueberschrieben werden (macht auch keinen Sinn).
      *
@@ -1025,12 +1025,11 @@ class Weblication extends Component
             if (file_exists($folder_guis . $filename)) {
                 return $folder_guis . $filename;
             }
-
-            if (defined('DIR_COMMON_ROOT_REL')) {
-                $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
-                if (file_exists($folder_common . $filename)) {
-                    return $folder_common . $filename;
-                }
+        }
+        if (defined('DIR_COMMON_ROOT_REL')) {
+            $folder_common = addEndingSlash(DIR_COMMON_ROOT_REL) . addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
+            if (file_exists($folder_common . $filename)) {
+                return $folder_common . $filename;
             }
         }
 

@@ -41,7 +41,7 @@ class GUI_ProtectEMail extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -74,7 +74,7 @@ class GUI_ProtectEMail extends GUI_Module
         $this -> jsEMailLink = getJSEMailLink($email, $caption);
     }
 
-    function finalize()
+    function finalize(): string
     {
         return $this -> jsEMailLink;
     }

@@ -55,9 +55,9 @@ class GUI_Box extends GUI_Module
      * Default Werte setzen. Input initialisieren.
      *
      * @access public
-     * @param mixed $superglobals Superglobals (siehe Klasse Input)
+     * @param int|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init($superglobals = I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
         parent::init($superglobals);
     }
@@ -124,11 +124,10 @@ class GUI_Box extends GUI_Module
      *
      * Box Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @param $content HTML/Texxt-Inhalt
      * @return string Content
      **/
-    function finalize($content = '')
+    function finalize($content = ''): string
     {
         if ($this->enabledBox) {
             $this->TplBox->setVar('CONTENT', $content);

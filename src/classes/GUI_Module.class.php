@@ -122,6 +122,21 @@ class GUI_Module extends Module
 //    protected array $configuration = [];
 
     /**
+     * @var array<string, string> $templates files (templates) to be loaded, usually used with $this->Template->setVar(...) in the prepare function. Defined as an associated array [handle => tplFile].
+     */
+    protected array $templates = [];
+
+    /**
+     * @var array<int, string> $jsFiles javascript files to be loaded, defined as indexed array
+     */
+    protected array $jsFiles = [];
+
+    /**
+     * @var array|string[] $cssFiles css files to be loaded, defined as indexed array
+     */
+    protected array $cssFiles = [];
+
+    /**
      * Konstruktor
      *
      * @param Component|null $Owner Besitzer vom Typ Component
@@ -449,7 +464,28 @@ class GUI_Module extends Module
     *
     * @access protected
     */
-    public function loadFiles() {}
+    public function loadFiles()
+    {
+        if(!$this->getWeblication()) return $this;
+
+        foreach($this->templates as $handle => $file) {
+            $template = $this->Weblication->findTemplate($file, $this->getClassName());
+            $this->Template->setFilePath($handle, $template);
+        }
+
+        if(!$this->getWeblication()->hasFrame()) return $this;
+        $Frame = $this->getWeblication()->getFrame();
+
+        foreach($this->cssFiles as $cssFile) {
+            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $this->getClassName());
+            $Frame->getHeaderdata()->addStyleSheet($cssFile);
+        }
+
+        foreach($this->jsFiles as $jsFile) {
+            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $this->getClassName());
+            $Frame->getHeaderdata()->addJavaScript($jsFile);
+        }
+    }
 
     /**
      * load, create and register JavaScript GUI
@@ -609,18 +645,25 @@ class GUI_Module extends Module
             foreach($parameters as $Parameter) {
                 $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
                 if(is_string($value)) {
-                    switch($Parameter->getType()->getName()) {
-                        case 'float':
-                            $value = (float)$value;
-                            break;
+                    if($Parameter->getType()) {
+                        switch($Parameter->getType()->getName()) {
+                            case 'float':
+                                $value = (float)$value;
+                                break;
 
-                        case 'int':
-                            $value = (int)$value;
-                            break;
+                            case 'int':
+                                $value = (int)$value;
+                                break;
 
-                        case 'bool':
+                            case 'bool':
+                                $value = string2bool($value);
+                                break;
+                        }
+                    }
+                    else {
+                        if($value === 'true' or $value === 'false') {
                             $value = string2bool($value);
-                            break;
+                        }
                     }
                 }
                 $args[] = $value;
@@ -820,12 +863,15 @@ class GUI_Module extends Module
     }
 
     /**
-     * Vollendet die Generierung der Templates (diese virtuelle Methode muss ueberschrieben werden).
-     *
-     * @access protected
+     * returns the contents of the module
      **/
-    protected function finalize()
+    protected function finalize(): string
     {
-        return '<font color="red">Error in GUI Module \'' . $this->getClassName() . '\' (@Finalize)! Please override this protected function.</font>';
+        $content = '';
+        foreach($this->templates as $handle => $tplFile) {
+            $this->Template->parse($handle);
+            $content .= $this->Template->getContent($handle);
+        }
+        return $content;
     }
 }

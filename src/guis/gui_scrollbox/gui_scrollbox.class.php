@@ -58,9 +58,9 @@ class GUI_Scrollbox extends GUI_Module
      * Default Werte setzen. Input initialisieren.
      *
      * @access public
-     * @param integer $superglobals Superglobals (siehe Klasse Input)
+     * @param integer|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -129,10 +129,9 @@ class GUI_Scrollbox extends GUI_Module
      *
      * Scrollbox Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize($content='')
+    function finalize($content=''): string
     {
         $this -> TplSbox -> setVar('CONTENT', $content);
 
