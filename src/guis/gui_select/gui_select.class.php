@@ -36,7 +36,7 @@ class GUI_Select extends GUI_Universal
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -273,7 +273,7 @@ class GUI_Select extends GUI_Universal
         );
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');
@@ -298,7 +298,7 @@ class GUI_Option extends GUI_Universal
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -375,7 +375,7 @@ class GUI_Option extends GUI_Universal
         );
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

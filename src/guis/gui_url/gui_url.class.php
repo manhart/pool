@@ -35,9 +35,9 @@ class GUI_Url extends GUI_Module
      * Default Werte setzen. Input initialisieren.
      *
      * @access public
-     * @param integer $superglobals Superglobals (siehe Klasse Input)
+     * @param integer|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init($superglobals=0)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('script', '');
         $this->Defaults->addVar('params', '');
@@ -63,7 +63,6 @@ class GUI_Url extends GUI_Module
         }
 
         $params = trim($this->Input->getVar('params'));
-
         if ($params != '') {
             $pieces = explode(';', $params);
             foreach ($pieces as $piece) {
@@ -90,16 +89,16 @@ class GUI_Url extends GUI_Module
                 $Url->setParam($param, NULL);
             }
         }
+
         $this->returnValue = $Url->getUrl();
     }
 
     /**
      * Box Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         return $this->returnValue;
     }

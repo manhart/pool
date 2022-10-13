@@ -29,7 +29,7 @@ class GUI_Button extends GUI_Universal
      * @access public
      * @param int Superglobals I_GET, I_POST, I_REQUEST....
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -124,7 +124,7 @@ class GUI_Button extends GUI_Universal
         );
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');

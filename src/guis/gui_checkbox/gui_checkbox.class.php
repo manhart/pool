@@ -8,7 +8,7 @@
  */
 class GUI_Checkbox extends GUI_InputElement
 {
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('type', 'checkbox');
 
@@ -50,7 +50,7 @@ class GUI_Checkbox extends GUI_InputElement
         parent :: prepare();
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

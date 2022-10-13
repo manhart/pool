@@ -18,7 +18,7 @@ class GUI_PageControl extends GUI_Module
         $this->Url = new Url();
     }
 
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('id', $this -> getName());
         $this->Defaults->addVar('name', $this -> getName());
@@ -205,10 +205,9 @@ class GUI_PageControl extends GUI_Module
      *
      * Inhalt parsen und zurueck geben (revive).
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

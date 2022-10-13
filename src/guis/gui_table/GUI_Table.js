@@ -73,7 +73,6 @@ class GUI_Table extends GUI_Module
     scrollPosition;
 
 
-
     // poolColumnOptions = {}; // poolOptions
 
     /**
@@ -251,16 +250,7 @@ class GUI_Table extends GUI_Module
 
             let format = poolFormat ? poolFormat : this.formats[poolType];
 
-            let poolUseFormatted = false;
-            if('poolUseFormatted' in column) {
-                poolUseFormatted = column['poolUseFormatted'];
-            }
             // console.debug(field, poolType, format);
-
-            // if('formatter' in column) {
-            //     column['formatter'] =
-            // }
-            //
 
             switch(poolType) {
                 case 'date.time':
@@ -268,14 +258,14 @@ class GUI_Table extends GUI_Module
                 case 'time':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format, poolUseFormatted);
+                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format);
                     }
                     break;
 
                 case 'number':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format, poolUseFormatted);
+                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format);
                     }
                     break;
             }
@@ -350,6 +340,7 @@ class GUI_Table extends GUI_Module
         }
         return [];
     }
+
     /**
      * filterData is required by the filterControl extension of the bs table as soon as the bs-table is changed to server-side pagination.
      *
@@ -500,6 +491,7 @@ class GUI_Table extends GUI_Module
     {
         // console.debug('onCheck', row, $element);
         if(this.getOption('poolFillControls')) {
+            // console.debug(this.getName()+'.onCheck', row, $element);
             if(this.getOption('poolFillControlsContainer')) {
                 fillControls(this.getOption('poolFillControlsContainer'), row, true);
             }
@@ -522,7 +514,7 @@ class GUI_Table extends GUI_Module
      */
     onUncheck = (evt, row, $element) =>
     {
-        // console.debug('onUncheck');
+        // console.debug(this.getName()+'.onUncheck');
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
         }
@@ -541,7 +533,7 @@ class GUI_Table extends GUI_Module
      */
     onUncheckAll = (evt, rowsAfter, rowsBefore) =>
     {
-        // console.debug('onUncheckAll');
+        // console.debug(this.getName()+'.onUncheckAll', this.getOption('poolClearControlsSelector'), this.getOption('poolOnUncheckAll'));
         if(this.getOption('poolClearControls') && this.getOption('poolClearControlsSelector')) {
             clearControls(this.getOption('poolClearControlsSelector'));
         }
@@ -615,11 +607,13 @@ class GUI_Table extends GUI_Module
      */
     checkAll()
     {
-        if(this.getOption('pagination')) {
-            this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
-        } else {
-            this.getTable().bootstrapTable('checkAll');
-        }
+        // console.debug(this.getName()+'.checkAll', this.getOption('pagination'));
+        // if(this.getOption('pagination')) {
+        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
+        // } else {
+        // maybe todo serverside?
+        this.getTable().bootstrapTable('checkAll');
+        // }
     }
 
     /**
@@ -627,12 +621,16 @@ class GUI_Table extends GUI_Module
      */
     uncheckAll()
     {
-        if(this.getOption('pagination')) {
-            this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
-        }
-        else {
-            this.getTable().bootstrapTable('uncheckAll');
-        }
+        // console.debug(this.getName()+'.uncheckAll', this.getOption('pagination'));
+        // if(this.getOption('pagination')) {
+        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
+        // }
+        // else {
+        this.pageIds = [];
+        this.selections = [];
+
+        this.getTable().bootstrapTable('uncheckAll');
+        // }
     }
 
     /**
@@ -650,6 +648,10 @@ class GUI_Table extends GUI_Module
             index: index,
             row: row
         });
+        // this.getTable().bootstrapTable('initData', {
+        //     data: null,
+        //     type: ''
+        // })
 
         let uniqueId = this.getUniqueId()
         if(uniqueId && row[uniqueId] != '') {
@@ -662,9 +664,7 @@ class GUI_Table extends GUI_Module
         index = this.getData().indexOf(row);
 
         if(paging) {
-            let pageSize = this.getOption('pageSize');
-            let pageNumber = Math.ceil((index + 1) / pageSize);
-            this.getTable().bootstrapTable('selectPage', pageNumber);
+            this.selectPageByIndex(index);
         }
 
         if(check) {
@@ -672,6 +672,54 @@ class GUI_Table extends GUI_Module
         }
 
         return index;
+    }
+
+    /**
+     * Prepend the data to the table.
+     *
+     * @param row
+     * @param check
+     * @param paging
+     * @return {GUI_Table}
+     */
+    prependRow(row, check, paging)
+    {
+        this.getTable().bootstrapTable('prepend', [row]);
+
+        let uniqueId = this.getUniqueId()
+        if(uniqueId && row[uniqueId] != '') {
+            this.pageIds.push(row[uniqueId]);
+
+            // alternate
+            // this.checkBy(uniqueId, [row[uniqueId]]);
+        }
+        // 29.03.22, AM, fix correct index
+        let index = this.getData().indexOf(row);
+
+        if(paging) {
+            this.selectPageByIndex(index);
+        }
+
+        if(check) {
+            this.check(index);
+        }
+
+        return this;
+    }
+
+    /**
+     * select page by index beginning with 0 for the first record
+     *
+     * @param index
+     */
+    selectPageByIndex(index)
+    {
+        let pageSize = this.getOption('pageSize');
+        let pageNumber = Math.ceil((index + 1) / pageSize);
+        if(pageNumber != this.getOption('pageNumber')) {
+            // triggers reload if serverside
+            this.getTable().bootstrapTable('selectPage', pageNumber);
+        }
     }
 
     /**
@@ -826,7 +874,7 @@ class GUI_Table extends GUI_Module
             this.selections = array_union(this.selections, ids);
         }
 
-        // console.debug(this.getName()+'.onCheckUncheckRows', prev, this.pageIds, ids, this.selections);
+        // console.debug(this.getName()+'.onCheckUncheckRows', this.pageIds, ids, this.selections);
 
         // let rows = rowsAfter;
 
@@ -900,9 +948,51 @@ class GUI_Table extends GUI_Module
         // todo
     }
 
-    number_format(value, row, index, field, format, useFormatted)
+    /**
+     * creates three separate fields in each row of bs-table, which are used by the filterControls function
+     *
+     * {field}_pool_raw contains the raw data
+     * {field}_pool_formatted contains the formatted data
+     * {field}_pool_use_formatted is a command that filterControls should use the formatted value instead of the raw data.
+     *
+     * @see helpers.js
+     *
+     * @param value
+     * @param field
+     * @param row
+     * @param formatCallback
+     * @return {*}
+     * @private
+     */
+    _usePoolFormatter(value, field, row, formatCallback)
     {
-        return number_format(value, format['decimals'], format['decimal_separator'], format['thousands_separator'])
+        let useFormatted = this.getColumnOptions(field)['poolUseFormatted'] ?? false;
+
+        // 26.01.22, AM, save data in new invisible columns
+        let col_pool_formatted = field + '_pool_formatted';
+
+        // format only if changed or if not yet done.
+        let already_formatted = col_pool_formatted in row;
+        let was_modified = already_formatted ? (useFormatted && value != row[col_pool_formatted]) : false;
+        let do_format = !already_formatted || was_modified;
+
+        if(do_format) {
+            row[col_pool_formatted] = formatCallback();
+
+            if(useFormatted) {
+                // AM, hint: _pool_use_formatted used in fillControls!!
+                row[field + '_pool_raw'] = value;
+                row[field + '_pool_use_formatted'] = true;
+            }
+        }
+        return row[col_pool_formatted];
+    }
+
+    number_format(value, row, index, field, format)
+    {
+        return this._usePoolFormatter(value, field, row, () => {
+            return number_format(value, format['decimals'], format['decimal_separator'], format['thousands_separator']);
+        })
     }
 
     sprintf(value, row, index, field, format)
@@ -913,39 +1003,51 @@ class GUI_Table extends GUI_Module
         return value;
     }
 
-    strftime(value, row, index, field, format, useFormatted)
+    strftime(value, row, index, field, format)
     {
         // 09.12.21, AM, fallback: handle empty english database format (should be handled server-side!!)
         if(value == '0000-00-00 00:00:00' || value == '0000-00-00') {
             value = '';
         }
 
-        if(format && value) {
-            // console.debug(row);
-            // 26.01.22, AM, save data in new invisible columns
-            let col_pool_formatted = field + '_pool_formatted';
+        if(!value) return value;
+        if(!format) return value;
 
-            let already_formatted = col_pool_formatted in row;
+        return this._usePoolFormatter(value, field, row, () => {
+            return (new Date(value)).strftime(format);
+        });
+    }
 
-            // 28.01.22, AM, was_modified and reformat added, because updateByUniqueId modifies row at runtime.
-            let was_modified = already_formatted ? (useFormatted && value != row[col_pool_formatted]) : false;
-            let reformat = !already_formatted || was_modified;
+    /**
+     * jump to first page
+     */
+    firstPage()
+    {
+        this.getTable().bootstrapTable('selectPage', 1);
+    }
 
-            if(reformat) {
-                row[col_pool_formatted] = new Date(value).strftime(format)
-            }
-            if(useFormatted && reformat) {
-                // AM, hint: _pool_use_formatted used in fillControls!!
-                row[field + '_pool_raw'] = value;
-                row[field + '_pool_use_formatted'] = true;
-                // row[field] = row[col_pool_formatted];
-            }
-            // console.debug('complete row', row);
+    /**
+     * collapse all rows
+     */
+    collapseAllRows()
+    {
+        this.getTable().bootstrapTable('collapseAllRows');
+    }
 
-            return row[col_pool_formatted];
-        }
+    /**
+     * expand all rows
+     */
+    expandAllRows()
+    {
+        this.getTable().bootstrapTable('expandAllRows');
+    }
 
-        return value;
+    /**
+     * Clear all the controls added by filter-control plugin (similar to showSearchClearButton option).
+     */
+    clearFilterControl()
+    {
+        this.getTable().bootstrapTable('clearFilterControl');
     }
 }
 

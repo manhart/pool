@@ -32,7 +32,7 @@ class GUI_DHtmlHint extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         parent::init($superglobals);
     }
@@ -83,10 +83,9 @@ class GUI_DHtmlHint extends GUI_Module
      *
      * Inhalt parsen und zur�ck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

@@ -588,7 +588,7 @@ final class Translator extends \PoolObject
             $translationFile = $this->directory . '/' . $language . $this->extension;
 
             // file cannot be loaded, error handling:
-            if(file_exists($translationFile) == false) {
+            if(!file_exists($translationFile)) {
                 if(!$this->directory) throw new \Exception('No directory was specified for the resources.');
                 if(!$language) throw new \Exception('No language was specified.');
                 throw new \Exception('Translation file '.$translationFile.' couldn\'t be found.');

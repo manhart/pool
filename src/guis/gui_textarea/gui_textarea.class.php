@@ -32,7 +32,7 @@ class GUI_Textarea extends GUI_Universal
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -208,10 +208,9 @@ class GUI_Textarea extends GUI_Universal
      *
      * Verarbeitet Template (Platzhalter, Bloecke, etc.) und generiert HTML Output.
      *
-     * @access public
      * @return string HTML Output (Content)
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

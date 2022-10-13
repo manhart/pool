@@ -29,7 +29,7 @@ class GUI_Calendar extends GUI_Module
     */
     var $highlightDate = false;
 
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         /*
         * $this -> Defaults -> addVar('id', $this -> getName());
@@ -240,9 +240,9 @@ class GUI_Calendar extends GUI_Module
     /**
      * GUI_Calendar::finalize()
      *
-     * @return
+     * @return string
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');
