@@ -168,7 +168,7 @@ class GUI_Choosy extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -837,7 +837,7 @@ class GUI_Choosy extends GUI_Module
      *
      * @return string fertiger Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         $content = $this -> reviveChildGUIs($this -> Template -> getContent('stdout'));

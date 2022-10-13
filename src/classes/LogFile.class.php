@@ -106,7 +106,7 @@ class LogFile extends PoolObject
      *
      * @var string
      */
-    var $formatDateTime = '[%d.%m.%Y %H:%M:%S]';
+    private string $formatDateTime = '[d.m.Y H:i:s]';
 
     /**
      * Konstruktor
@@ -250,7 +250,7 @@ class LogFile extends PoolObject
      *
      * @param string $format
      */
-    function setFormatDateTime($format='[%d.%m.%Y %H:%M:%S]')
+    function setFormatDateTime(string $format='[d.m.Y H:i:s]')
     {
         $this->formatDateTime = $format;
     }
@@ -259,8 +259,9 @@ class LogFile extends PoolObject
      * Zeilenformat-Anfang
      *
      * @return string
+     * @throws Exception
      */
-    protected function __lineFormat()
+    protected function __lineFormat(): string
     {
         return formatDateTime(time(), $this->formatDateTime) . (($this->withSID) ? $this->separator . '{' .
             sprintf('%04d', $this -> sid) . '}' : '').$this->separator.'%s';

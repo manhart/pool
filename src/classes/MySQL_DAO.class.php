@@ -183,9 +183,7 @@ if(!defined('CLASS_MYSQLDAO')) {
     #### Prevent multiple loading
     define('CLASS_MYSQLDAO', 1);
 
-    function is_subquery($op, $value) {
-        return (strpos($value, '(SELECT ') !== false/* and ($op == 'IN' or $op == 'ANY' or $op == 'SOME' or $op == 'ALL')*/);
-    }
+
 
     /**
      * MySQL_DAO
@@ -219,7 +217,7 @@ if(!defined('CLASS_MYSQLDAO')) {
 
         var $reserved_words = array();
 
-        var $MySQL_trans = array(
+        private array $MySQL_trans = array(
             'equal'	=> '=',
             'unequal' => '!=',
             'greater' => '>',
@@ -873,6 +871,11 @@ if(!defined('CLASS_MYSQLDAO')) {
             return $field;
         }
 
+        private function __isSubQuery($op, $value): bool
+        {
+            return (strpos($value, '(SELECT ') !== false/* and ($op == 'IN' or $op == 'ANY' or $op == 'SOME' or $op == 'ALL')*/);
+        }
+
         /**
          * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
          *
@@ -959,7 +962,7 @@ if(!defined('CLASS_MYSQLDAO')) {
                         $query .= ' ' . bool2string($record[2]);
                     }
                     elseif(is_integer($record[2]) or is_float($record[2]) or
-                            is_subquery($record[1], $record[2])) {
+                            $this->__isSubQuery($record[1], $record[2])) {
                         $query .= ' ' . $record[2];
                     }
                     else {
@@ -999,7 +1002,6 @@ if(!defined('CLASS_MYSQLDAO')) {
                 return $filter;
             }
 
-            $operator = 'like';
             $searchString = '%'.$searchString.'%';
 
             $defined_filter = [];
@@ -1007,12 +1009,11 @@ if(!defined('CLASS_MYSQLDAO')) {
             $i = 0;
             foreach($columns as $column) {
                 if(is_null($isAssoc)) $isAssoc = is_array($column);
-                if($i > 0) $filter[] = 'or';
-                $i++;
 
                 $alias = $isAssoc ? $column['alias'] : $column;
                 $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
                 $type = $isAssoc ? $column['type'] : '';
+                $operator = 'like';
 
                 // $format = $isAssoc ? $column['format'] : '';
 
@@ -1061,6 +1062,8 @@ if(!defined('CLASS_MYSQLDAO')) {
 
                 if(!$hasSearchString) continue;
 
+                if($i > 0) $filter[] = 'or';
+                $i++;
                 $condition = [$expr, $operator, $searchString];
                 $filter[] = $condition;
             }

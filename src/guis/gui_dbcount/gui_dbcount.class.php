@@ -53,7 +53,7 @@ class GUI_DBCount extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('tabledefine', '');
         $this -> Defaults -> addVar('fk', '');
@@ -93,9 +93,9 @@ class GUI_DBCount extends GUI_Module
      *
      * Inhalt parsen und zurueck geben (revive).
      *
-     * @return
+     * @return string
      **/
-    function finalize()
+    function finalize(): string
     {
         return $this -> returnValue;
     }

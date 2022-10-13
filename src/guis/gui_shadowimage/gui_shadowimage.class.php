@@ -50,7 +50,7 @@ class GUI_Shadowimage extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('title', '');
         $this -> Defaults -> addVar('href', '');
@@ -102,10 +102,9 @@ class GUI_Shadowimage extends GUI_Module
     /**
      * Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

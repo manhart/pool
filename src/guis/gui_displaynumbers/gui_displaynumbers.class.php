@@ -36,9 +36,9 @@ class GUI_DisplayNumbers extends GUI_Module
      * Default Werte setzen. Input initialisieren.
      *
      * @access public
-     * @param integer $superglobals Superglobals (siehe Klasse Input)
+     * @param integer|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init($superglobals=0)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('value', '');
         $this -> Defaults -> addVar('path', '');
@@ -71,10 +71,9 @@ class GUI_DisplayNumbers extends GUI_Module
      *
      * Box Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         return $this -> returnValue;
     }

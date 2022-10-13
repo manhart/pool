@@ -39,7 +39,7 @@ class GUI_Selezione extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('id', $this->getName());
         $this->Defaults->addVar('name', $this->getName());
@@ -449,7 +449,7 @@ class GUI_Selezione extends GUI_Module
      *
      * @return string Templateinhalt
      */
-    function finalize()
+    function finalize(): string
     {
         #echo '<br>'.$this->numRows;
         $this->Template->leaveBlock();

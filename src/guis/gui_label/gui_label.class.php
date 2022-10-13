@@ -32,7 +32,7 @@ class GUI_Label extends GUI_Module
      *
      * @access public
      **/
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_EMPTY)
     {
         $this -> Defaults -> addVar('id', $this -> getName());
         $this -> Defaults -> addVar('name', $this -> getName());
@@ -106,7 +106,7 @@ class GUI_Label extends GUI_Module
         //}
     }
 
-    function finalize()
+    function finalize(): string
     {
 //        $this->Template->parse('stdout');
         return $this->Input->getVar('caption'); // $this -> Template -> getContent('stdout');

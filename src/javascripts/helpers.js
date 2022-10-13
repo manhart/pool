@@ -622,14 +622,14 @@ function string2bool(val) {
  * Laedt Datei herunter (IE8 kompatibel!)
  */
 function downloadFile(file) {
-    var ts = new Date().getTime(); // Timestamp
+    let ts = new Date().getTime(); // Timestamp
 
-    var link = document.createElement('a');
+    let link = document.createElement('a');
 
     link.setAttribute('id', 'tmpdownload' + ts);
     link.setAttribute('type', 'application/octet-stream');
 
-    var isIE = /*@cc_on!@*/false;
+    let isIE = /*@cc_on!@*/false;
     if (isIE) {
         link.target = '_blank';
         document.body.appendChild(link);
@@ -641,15 +641,21 @@ function downloadFile(file) {
     link.download = basename(file);
 
     // alle modernen Browser (IE ab 9er)
-    if (document.createEvent) {
+    try {
         // funktioniert leider nicht im Safari unter Windows
-        var clickEvent = document.createEvent('MouseEvent');
-        clickEvent.initEvent('click', true, true);
+        let ClickEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: false
+        });
 
         link.target = '_blank';
-        link.dispatchEvent(clickEvent);
-    } else if (link.click) {
-        link.click();
+        link.dispatchEvent(ClickEvent);
+    }
+    catch(e) {
+        if (link.click) {
+            link.click();
+        }
     }
 
     if (isIE) {
@@ -683,7 +689,8 @@ function base64ToBlob(data, contentType) {
     try {
         // < IE 10 benoetigt Blob.js
         var blob = new Blob([byteArray], {type: contentType});
-    } catch (e) {
+    }
+    catch (e) {
         // TypeError old chrome and FF
         window.BlobBuilder = window.BlobBuilder ||
             window.WebKitBlobBuilder ||
@@ -693,10 +700,12 @@ function base64ToBlob(data, contentType) {
             var bb = new BlobBuilder();
             bb.append(byteArray);
             var blob = bb.getBlob(contentType);
-        } else if (e.name == "InvalidStateError") {
+        }
+        else if (e.name == "InvalidStateError") {
             // InvalidStateError (tested on FF13 WinXP)
             var blob = new Blob([byteArray], {type: contentType});
-        } else {
+        }
+        else {
             // We're screwed, blob constructor unsupported entirely
         }
     }
@@ -1274,6 +1283,23 @@ function loadJSON(url, opts = {}) {
         return JSON.parse(xhr.responseText);
     } else {
         return null;
+    }
+}
+
+/**
+ * check if string is a json
+ *
+ * @param str
+ * @return {boolean}
+ */
+function isStringJSON(str)
+{
+    try {
+        let json = JSON.parse(str);
+        return (typeof json === 'object');
+    }
+    catch (e) {
+        return false;
     }
 }
 

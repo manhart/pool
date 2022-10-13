@@ -31,7 +31,7 @@
 */
 class GUI_DHtmlCalendar extends GUI_Module
 {
-    function init($superglobals=I_EMPTY)
+    function init(?int $superglobals=I_GET)
     {
         $this->Defaults->addVar(
             array(
@@ -56,7 +56,7 @@ class GUI_DHtmlCalendar extends GUI_Module
             )
         );
 
-        parent::init(I_GET);
+        parent::init($superglobals);
     }
 
     /**
@@ -73,7 +73,7 @@ class GUI_DHtmlCalendar extends GUI_Module
         $file = $this->Weblication->findTemplate($template, $this->getClassName(), true);
         $this->Template->setFilePath('stdout', $file);
 
-        $Headerdata = &$this->Weblication->findComponent('Headerdata');
+        $Headerdata = $this->Weblication->findComponent('Headerdata');
         if($Headerdata) {
             // prototype.js ben�tigt von date.js
             $jsfile = $this->Weblication->findJavaScript('prototype.js', $this->getClassName(), true);
@@ -115,7 +115,7 @@ class GUI_DHtmlCalendar extends GUI_Module
 
         // if($coupledCalendar)
         if (!isAjax()) {
-            $this->Weblication->Main->addBodyLoad($Input->getVar('name').'.init();');
+            $this->Weblication->getFrame()->addBodyLoad($Input->getVar('name').'.init();');
         }
     }
 
@@ -182,7 +182,7 @@ class GUI_DHtmlCalendar extends GUI_Module
         */
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');

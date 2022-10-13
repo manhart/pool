@@ -9,24 +9,24 @@
  */
 
 /**
-* POOL (PHP Object Oriented Library): die Datei Object.class.php enthaelt die Grundklasse, der Uhrahn aller Objekte.
-*
-* Die Klasse Xception integriert eine Fehlerbehandlung.
-*
-* Vermerk Author:<br>
-* Ich will an diesem System nichts verkomplizieren, keep it simple stupid.
-*
-* Letzte Änderung am: $Date: 2007/02/16 07:46:28 $
-*
-* @version $Id: Exception.class.php,v 1.18 2007/02/16 07:46:28 manhart Exp $
-* @version $Revision 1.0$
-* @version
-*
-* @since 2003-07-10
-* @author Alexander Manhart <alexander.manhart@freenet.de>
-* @link http://www.misterelsa.de
-* @package pool
-*/
+ * POOL (PHP Object Oriented Library): die Datei Object.class.php enthaelt die Grundklasse, der Uhrahn aller Objekte.
+ *
+ * Die Klasse Xception integriert eine Fehlerbehandlung.
+ *
+ * Vermerk Author:<br>
+ * Ich will an diesem System nichts verkomplizieren, keep it simple stupid.
+ *
+ * Letzte Änderung am: $Date: 2007/02/16 07:46:28 $
+ *
+ * @version $Id: Exception.class.php,v 1.18 2007/02/16 07:46:28 manhart Exp $
+ * @version $Revision 1.0$
+ * @version
+ *
+ * @since 2003-07-10
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @link http://www.misterelsa.de
+ * @package pool
+ */
 
 /**
  * Erzwingt Fehler mittels PHP trigger_error.
@@ -39,7 +39,7 @@ const POOL_ERROR_DISPLAY = 4;
 /**
  * Sendet Fehlermail.
  */
-const POOL_ERROR_MAIL =	8;
+const POOL_ERROR_MAIL = 8;
 /**
  * Schreibt Fehler in die Datenbank
  */
@@ -74,7 +74,7 @@ class Xception
      * @var string $message Fehlermeldung
      * @access protected
      */
-    var $message='Unknow Exception';
+    var $message = 'Unknow Exception';
 
     /**
      * Enthaelt Fehlercode.
@@ -82,7 +82,7 @@ class Xception
      * @var int $code Fehlercode (optional)
      * @access protected
      */
-    var $code=0;
+    var $code = 0;
 
     /**
      * Zeitstempel der Xception
@@ -98,14 +98,14 @@ class Xception
      * @var array $backtrace Programm - Ablaufverfolgung
      * @access private
      */
-    var $backtrace=array();
+    var $backtrace = array();
 
     /**
      * Maximale Größe eines Backtrace (der in die DB oder per E-Mail versendet wird)
      *
      * @var int
      */
-    var $maxBacktraceSize=32768; //32*1024; 32KB
+    var $maxBacktraceSize = 32768; //32*1024; 32KB
 
     /**
      * Fehler-Modus als Bit-Feld
@@ -119,7 +119,7 @@ class Xception
      *
      * @var array
      */
-    var $magicInfo=array();
+    var $magicInfo = array();
 
     /**
      * ID der ErrorLog in die Datenbank
@@ -127,7 +127,7 @@ class Xception
      * @var int
      * @access private
      */
-    var $__last_insert_id=0;
+    var $__last_insert_id = 0;
 
     /**
      * Konstruktur erwartet Fehlertext, Fehlercode und optional Optionen wie File, Line und Callback.
@@ -137,14 +137,14 @@ class Xception
      * @param array $backtrace Optionen wie __FILE__, __LINE__ und Callback-Funktion
      * @access public
      */
-    function __construct($message=null, $code=0, $magicInfo=array(), $mode=null)
+    function __construct($message = null, $code = 0, $magicInfo = array(), $mode = null)
     {
-/*				if (version_compare(phpversion(), '4.3.0', '>=')) {
-            // you're on 4.3.0 or later
-            $backtrace = debug_backtrace();
-            array_shift($backtrace);
-            $this->backtrace = $backtrace;
-        }*/
+        /*				if (version_compare(phpversion(), '4.3.0', '>=')) {
+                    // you're on 4.3.0 or later
+                    $backtrace = debug_backtrace();
+                    array_shift($backtrace);
+                    $this->backtrace = $backtrace;
+                }*/
         $this->construct($message, (int)$code, $magicInfo, $mode);
     }
 
@@ -155,7 +155,7 @@ class Xception
      */
     function construct(string $message, int $code, array $magicInfo, $mode)
     {
-        if (version_compare(phpversion(), '4.3.0', '>=')) {
+        if(version_compare(phpversion(), '4.3.0', '>=')) {
             // you're on 4.3.0 or later
             $backtrace = debug_backtrace();
             array_shift($backtrace);
@@ -163,7 +163,7 @@ class Xception
         }
 
         if(is_null($magicInfo)) $magicInfo = array();
-        if (!is_null($message)) {
+        if(!is_null($message)) {
             $this->message = $message;
         }
 
@@ -199,10 +199,10 @@ class Xception
      * @param int $code Fehlercode (z.B. PHP Codes E_USER_WARNING)
      * @param array $magicInfo Magic Infos bekommt man von der Funktion magicInfo()
      * @param int $mode Fehler-Modus als Bit-Wert
-     * @see magicInfo()
      * @return Xception
+     * @see magicInfo()
      */
-    function create($message=null, $code=0, $magicInfo=array(), $mode=null)
+    function create($message = null, $code = 0, $magicInfo = array(), $mode = null)
     {
         $Xception = new Xception($message, $code, $magicInfo, $mode);
         return $Xception;
@@ -228,7 +228,7 @@ class Xception
      * @param boolean $self TRUE=parst sich selbst, sprich Platzhalter {MESSAGE}
      * @return string Fehlermeldung
      */
-    function parseMessage($message, $html=true, $self=false)
+    function parseMessage($message, $html = true, $self = false)
     {
         $backtrace = '';
         $hasBacktrace = strpos('{BACKTRACE}', $message) !== false;
@@ -237,24 +237,24 @@ class Xception
             // Args werden aus dem Backtrace gelöscht:
             // ab und zu kam es vor, dass der Backtrace die Max Memory Size von PHP überstieg!
             // aber erst beim Uwandeln von dem Array in HTML mit array2html (print_r)
-            for ($i = 0; $i < count($ayBacktrace); $i++) {
+            for($i = 0; $i < count($ayBacktrace); $i++) {
                 unset($ayBacktrace[$i]['args']);
             }
 
-            if ($html) {
+            if($html) {
                 $backtrace = pray($ayBacktrace);
             }
             else {
                 $backtrace = print_r($ayBacktrace, true);
             }
-            if (strlen($backtrace) > $this->maxBacktraceSize) {
+            if(strlen($backtrace) > $this->maxBacktraceSize) {
                 $backtrace = substr($backtrace, 0, $this->maxBacktraceSize);
             }
             unset($ayBacktrace);
         }
 
         $ayOther = $this->getOther();
-        if ($html) {
+        if($html) {
             $other = pray($ayOther);
         }
         else {
@@ -262,13 +262,13 @@ class Xception
         }
 
         $search = array('{CODE}', '{DATETIME}', '{TIMESTAMP}', '{FILE}', '{LINE}', '{CLASS}', '{FUNCTION}', '{BACKTRACE}', '{OTHER}', '{LAST_INSERT_ID}');
-        $replace = array($this -> getCode(), $this -> getDateTime(), $this -> getTimestamp(), $this -> getFile(), $this -> getLine(),
-            $this -> getClass(), $this -> getFunction(), $backtrace, $other, $this -> __last_insert_id);
+        $replace = array($this->getCode(), $this->getDateTime(), $this->getTimestamp(), $this->getFile(), $this->getLine(),
+            $this->getClass(), $this->getFunction(), $backtrace, $other, $this->__last_insert_id);
         unset($backtrace, $other);
 
-        if($self==true) {
+        if($self == true) {
             array_push($search, '{MESSAGE}');
-            array_push($replace, $this -> getMessage());
+            array_push($replace, $this->getMessage());
         }
 
         if(is_array($ayOther) and sizeof($ayOther) > 0) {
@@ -276,14 +276,14 @@ class Xception
             foreach($ayOther as $key => $value) {
                 $bufOther['{' . $key . '}'] = $value;
             }
-            $search = array_merge($search , array_keys($bufOther));
+            $search = array_merge($search, array_keys($bufOther));
             $replace = array_merge($replace, array_values($bufOther));
             unset($bufOther);
         }
         unset($ayOther);
 
-        for($i=0; $i<sizeof($replace); $i++) {
-            if($replace[$i]==='') $replace[$i] = '-';
+        for($i = 0; $i < sizeof($replace); $i++) {
+            if($replace[$i] === '') $replace[$i] = '-';
         }
 
         $message = str_replace($search, $replace, $message);
@@ -300,12 +300,12 @@ class Xception
     function getData()
     {
         $data = array(
-            'code' => $this -> getCode(),
-            'message' => $this -> getMessage(),
-            'timestamp' => $this -> getTimestamp(),
-            'backtrace' => $this -> getBacktrace()
+            'code' => $this->getCode(),
+            'message' => $this->getMessage(),
+            'timestamp' => $this->getTimestamp(),
+            'backtrace' => $this->getBacktrace()
         );
-        $data = array_merge($data, $this -> magicInfo);
+        $data = array_merge($data, $this->magicInfo);
         return $data;
     }
 
@@ -317,7 +317,7 @@ class Xception
      */
     function getCode()
     {
-       return $this -> code;
+        return $this->code;
     }
 
     /**
@@ -328,8 +328,8 @@ class Xception
      */
     function getFile()
     {
-        if (isset($this -> magicInfo['file']))
-            return $this -> magicInfo['file'];
+        if(isset($this->magicInfo['file']))
+            return $this->magicInfo['file'];
         else
             return '';
     }
@@ -342,8 +342,8 @@ class Xception
      */
     function getLine()
     {
-        if (isset($this -> magicInfo['line']))
-            return $this -> magicInfo['line'];
+        if(isset($this->magicInfo['line']))
+            return $this->magicInfo['line'];
         else
             return '';
     }
@@ -358,8 +358,8 @@ class Xception
 
 
     {
-        if(isset($this -> magicInfo['class']))
-            return $this -> magicInfo['class'];
+        if(isset($this->magicInfo['class']))
+            return $this->magicInfo['class'];
         else
             return '';
     }
@@ -372,8 +372,8 @@ class Xception
      */
     function getFunction()
     {
-        if(isset($this -> magicInfo['function']))
-            return $this -> magicInfo['function'];
+        if(isset($this->magicInfo['function']))
+            return $this->magicInfo['function'];
         else
             return '';
     }
@@ -386,7 +386,7 @@ class Xception
      */
     function getBacktrace()
     {
-        return $this -> backtrace;
+        return $this->backtrace;
     }
 
 
@@ -397,7 +397,7 @@ class Xception
      */
     function getMode()
     {
-        return $this -> mode;
+        return $this->mode;
     }
 
     /**
@@ -407,7 +407,7 @@ class Xception
      */
     function setMode($mode)
     {
-        $this -> mode = $mode;
+        $this->mode = $mode;
     }
 
     /**
@@ -417,18 +417,19 @@ class Xception
      */
     function getTimestamp()
     {
-        return $this -> timestamp;
+        return $this->timestamp;
     }
 
     /**
      * Liefert die Zeit als der Fehler auftrat formatiert.
      *
      * @param unknown_type $format
-     * @return unknown
+     * @return string
+     * @throws Exception
      */
-    function getDateTime($format='%d.%m.%Y %H:%M:%S')
+    function getDateTime($format = 'd.m.Y H:i:s'): string
     {
-        return formatDateTime($this -> timestamp, $format);
+        return formatDateTime($this->timestamp, $format);
     }
 
     /**
@@ -438,7 +439,7 @@ class Xception
      */
     function getOther()
     {
-        $magicInfo = $this -> magicInfo;
+        $magicInfo = $this->magicInfo;
         unset($magicInfo['file']);
         unset($magicInfo['line']);
         unset($magicInfo['class']);
@@ -454,7 +455,7 @@ class Xception
      */
     function __setLastInsertId($last_insert_id)
     {
-        $this -> __last_insert_id = $last_insert_id;
+        $this->__last_insert_id = $last_insert_id;
     }
 
     /**
@@ -466,7 +467,7 @@ class Xception
      * @access public
      * @param const $mode Fehlermodus (siehe POOL_ERROR_* Konstanten)
      */
-    function raiseError($triggerErrorType=E_USER_WARNING)
+    function raiseError($triggerErrorType = E_USER_WARNING)
     {
         #$ExceptionHandlerClass = 'ExceptionHandler';
         $ExceptionHandler = null;
@@ -480,7 +481,7 @@ class Xception
         }
         else {
             restore_error_handler();
-            if($this->getMode() == POOL_ERROR_DIE) $triggerErrorType=E_USER_ERROR;
+            if($this->getMode() == POOL_ERROR_DIE) $triggerErrorType = E_USER_ERROR;
             trigger_error($this->getMessage(), $triggerErrorType);
         }
     }
@@ -549,7 +550,7 @@ class ExceptionHandler
         </table>
         <hr>';
 
-    var $ExceptionList=array();
+    var $ExceptionList = array();
 
     /**
      * Bei der Behandlung eines Fehlers wird die Callback Funktion aufgerufen.
@@ -595,9 +596,9 @@ class ExceptionHandler
      * @var const $defaultTriggerErrorType Fehlertyp
      * @access private
      */
-//			var $defaultTriggerErrorType = E_USER_NOTICE;
+    //			var $defaultTriggerErrorType = E_USER_NOTICE;
 
-    function __construct($mode=POOL_ERROR_DISPLAY, $error_handler='pool_error_handler')
+    function __construct($mode = POOL_ERROR_DISPLAY, $error_handler = 'pool_error_handler')
     {
         $this->from = $_SERVER['SERVER_NAME'];
         $this->mode = $mode;
@@ -616,34 +617,34 @@ class ExceptionHandler
 
     function __isMailHTML()
     {
-        return ($this -> mailFormat == 'HTML');
+        return ($this->mailFormat == 'HTML');
     }
 
     function __isDisplayHTML()
     {
-        return ($this -> displayFormat == 'HTML');
+        return ($this->displayFormat == 'HTML');
     }
 
     function __getMessageAsHTML()
     {
-        $E = &$this -> E;
-        return $E -> parseMessage($this -> displayHTML, true, true);
+        $E = &$this->E;
+        return $E->parseMessage($this->displayHTML, true, true);
     }
 
-    function __getMessageAsText($text='')
+    function __getMessageAsText($text = '')
     {
-        $E = &$this -> E;
-        if(strlen($text)==0) $text = $this -> displayText;
-        return $E -> parseMessage($text, false, true);
+        $E = &$this->E;
+        if(strlen($text) == 0) $text = $this->displayText;
+        return $E->parseMessage($text, false, true);
     }
 
     function __error2display()
     {
-        if($this -> __isDisplayHTML()) {
-            $message = $this -> __getMessageAsHTML();
+        if($this->__isDisplayHTML()) {
+            $message = $this->__getMessageAsHTML();
         }
         else {
-            $message = $this -> __getMessageAsText($this -> displayText);
+            $message = $this->__getMessageAsText($this->displayText);
         }
 
         print($message);
@@ -651,20 +652,20 @@ class ExceptionHandler
 
     function __error2logfile()
     {
-        if($this -> logFile) {
+        if($this->logFile) {
             # schreibt Error in das angegebene Logfile
-            error_log($this -> __getMessageAsText($this -> logText), 3, $this -> logFile);
+            error_log($this->__getMessageAsText($this->logText), 3, $this->logFile);
         }
         else {
             # wie error_log in der /etc/php.ini eingestellt ist.
-            error_log($this -> __getMessageAsText($this -> logText), 0);
+            error_log($this->__getMessageAsText($this->logText), 0);
         }
     }
 
     function __error2mailaddress()
     {
         if($this->__isMailHTML()) {
-            $message = '<body>'.$this->__getMessageAsHTML().'</body>';
+            $message = '<body>' . $this->__getMessageAsHTML() . '</body>';
             $extra_headers = "MIME-Version: 1.0\nContent-Type:text/html; charset=\"ISO-8859-1\"\n";
         }
         else {
@@ -673,29 +674,29 @@ class ExceptionHandler
         if(count($this->mailAddress)) {
             $mailAddress = implode(',', $this->mailAddress);
             // PHP 5.2.5, Subject wird nicht ersetzt, nur dran gehängt (siehe Mail Header)!
-            error_log($message, 1, $mailAddress, $extra_headers.'From: '.$this->from.' <'.$this->mailFrom.'>'."\n".'Subject: '.$this->mailSubject."\n");
+            error_log($message, 1, $mailAddress, $extra_headers . 'From: ' . $this->from . ' <' . $this->mailFrom . '>' . "\n" . 'Subject: ' . $this->mailSubject . "\n");
         }
     }
 
     function __error2callback()
     {
-        $E = &$this -> E;
+        $E = &$this->E;
 
         $continue = true;
-        if(!$this -> callback) return;
+        if(!$this->callback) return;
 
-        if(is_array($this -> callback)) {
-            eval("\$continue = \$this -> callback[0] -> " . $this -> callback[1] . "(&\$E);");
+        if(is_array($this->callback)) {
+            eval("\$continue = \$this -> callback[0] -> " . $this->callback[1] . "(&\$E);");
         }
         else {
-            eval("\$continue = " . $this -> callback . "(&\$E);");
+            eval("\$continue = " . $this->callback . "(&\$E);");
         }
         if(!$continue) exit(1);
     }
 
     function __error2db()
     {
-        $E = &$this -> E;
+        $E = &$this->E;
 
         $errno = mysql_errno();
         if($errno >= 2000 and $errno <= 2055) return; // MySQL client error, e.g. connect failed, server has gone away...
@@ -715,35 +716,35 @@ class ExceptionHandler
 
         if($bResult) {
             $Input = new Input(0);
-            $Input -> setData($E -> getData());
-            $Input -> setVar('backtrace', substr(print_r($Input -> getVar('backtrace'), true), 0, $E -> maxBacktraceSize));
-            $Input = $Input->filter($ErroLog -> getFieldlist());
+            $Input->setData($E->getData());
+            $Input->setVar('backtrace', substr(print_r($Input->getVar('backtrace'), true), 0, $E->maxBacktraceSize));
+            $Input = $Input->filter($ErroLog->getFieldlist());
 
-            $type = $ErroLog -> getFieldType('timestamp');
+            $type = $ErroLog->getFieldType('timestamp');
 
             # TODO auf Datenbank unterscheiden MySQL,PostgreSQL, etc.
-            if($type == 'timestamp') $Input -> setVar('timestamp', $E -> getDateTime('%Y-%m-%d %H:%M:%S'));
+            if($type == 'timestamp') $Input->setVar('timestamp', $E->getDateTime('Y-m-d H:i:s'));
 
-            $data = $Input -> getData();
+            $data = $Input->getData();
 
-            $Result = $ErroLog -> insert($data);
+            $Result = $ErroLog->insert($data);
             $last_insert_id = $Result->getValue('last_insert_id');
-            $E -> __setLastInsertId($last_insert_id);
+            $E->__setLastInsertId($last_insert_id);
         }
     }
 
     function add(&$E)
     {
-        $this -> ExceptionList[] = &$E;
+        $this->ExceptionList[] = &$E;
         /* @var $E Xception */
-        $E -> magicInfo = array_merge($E -> magicInfo, $this -> additionalMagicInfo);
+        $E->magicInfo = array_merge($E->magicInfo, $this->additionalMagicInfo);
         return true;
     }
 
     function remove(&$E)
     {
-        $count=count($this->ExceptionList);
-        for($i=($count); $i--; $i>=0) {
+        $count = count($this->ExceptionList);
+        for($i = ($count); $i--; $i >= 0) {
             $E2 = &$this->ExceptionList[$i];
             // strict comparison will simple check whether the two objects are at the same location in memory
             // and so doesn't even look at the values of the properties (which can cause "nesting level too deep")
@@ -757,44 +758,44 @@ class ExceptionHandler
 
     function handle(&$E)
     {
-        $this -> E = & $E;
+        $this->E = &$E;
 
         //
         // Fehler-Modus (siehe POOL_ERROR_* Konstanten)
         //
-        $mode = $this -> mode;
+        $mode = $this->mode;
 
-        if($E -> getMode() != null) {
-            $mode = $E -> getMode();
+        if($E->getMode() != null) {
+            $mode = $E->getMode();
         }
 
 
         // Achtung! Die Reihenfolge für POOL_ERROR_CALLBACK und POOL_ERROR_DIE darf nicht geändert werden.
         // Achtung! POOL_ERROR_MAIL und POOL_ERROR_DB müssen hintereinander gesetzt bleiben, z.B. zum Verhindern von Spam Error Mails
         if($mode & POOL_ERROR_CALLBACK) {
-            $this -> __error2callback();
+            $this->__error2callback();
         }
 
         if($mode & POOL_ERROR_DISPLAY) {
-            $this -> __error2display();
+            $this->__error2display();
         }
 
         if($mode & POOL_ERROR_LOGFILE) {
-            $this -> __error2logfile();
+            $this->__error2logfile();
         }
 
         if($mode & POOL_ERROR_MAIL) {
-            $this -> __error2mailaddress();
+            $this->__error2mailaddress();
         }
 
         if($mode & POOL_ERROR_DB) {
-            $this -> __error2db();
+            $this->__error2db();
         }
 
         if($mode & POOL_ERROR_DIE) {
-            if(~$mode & POOL_ERROR_DISPLAY)	$this -> __error2display();
+            if(~$mode & POOL_ERROR_DISPLAY) $this->__error2display();
             $dieMsg = ' PHP process terminated ';
-            if($this -> __isDisplayHTML())	$dieMsg = '<b>&lt;&lt; PHP Proccess terminated &gt;&gt;</b>';
+            if($this->__isDisplayHTML()) $dieMsg = '<b>&lt;&lt; PHP Proccess terminated &gt;&gt;</b>';
             die($dieMsg);
         }
 
@@ -803,12 +804,12 @@ class ExceptionHandler
 
     function setLogfile($logFile)
     {
-        $this -> logFile = $logFile;
+        $this->logFile = $logFile;
     }
 
     function setLogtext($logText)
     {
-        $this -> logText = $logText;
+        $this->logText = $logText;
     }
 
     /**
@@ -818,8 +819,8 @@ class ExceptionHandler
      */
     function setMailAddress($mailAddress)
     {
-        if(!is_array($mailAddress)) $mailAddress=array($mailAddress);
-        $this->mailAddress=$mailAddress;
+        if(!is_array($mailAddress)) $mailAddress = array($mailAddress);
+        $this->mailAddress = $mailAddress;
     }
 
     /**
@@ -839,9 +840,9 @@ class ExceptionHandler
      */
     function addMailAddress($mailAddress)
     {
-        if(!is_array($mailAddress)) $mailAddress=array($mailAddress);
-        $this->mailAddress=array_merge($this->mailAddress, $mailAddress);
-        $this->mailAddress=array_unique($this->mailAddress);
+        if(!is_array($mailAddress)) $mailAddress = array($mailAddress);
+        $this->mailAddress = array_merge($this->mailAddress, $mailAddress);
+        $this->mailAddress = array_unique($this->mailAddress);
     }
 
     /**
@@ -851,13 +852,13 @@ class ExceptionHandler
      */
     function removeMailAddress($mailAddress)
     {
-        if(!is_array($mailAddress)) $mailAddress=array($mailAddress);
-        $this->mailAddress=array_diff($this->mailAddress, $mailAddress);
+        if(!is_array($mailAddress)) $mailAddress = array($mailAddress);
+        $this->mailAddress = array_diff($this->mailAddress, $mailAddress);
     }
 
-    function setFrom($from, $mailFrom='')
+    function setFrom($from, $mailFrom = '')
     {
-        if(!empty($from)) $this->from=$from;
+        if(!empty($from)) $this->from = $from;
         if(!empty($mailFrom)) $this->setMailFrom($mailFrom);
     }
 
@@ -878,7 +879,7 @@ class ExceptionHandler
      */
     function setCallback($callback)
     {
-        $this -> callback = $callback;
+        $this->callback = $callback;
     }
 
     /**
@@ -888,7 +889,7 @@ class ExceptionHandler
      */
     function setMailFormat($mailFormat)
     {
-        $this -> mailFormat = $mailFormat;
+        $this->mailFormat = $mailFormat;
     }
 
     /**
@@ -898,7 +899,7 @@ class ExceptionHandler
      */
     function setDisplayFormat($displayFormat)
     {
-        $this -> displayFormat = $displayFormat;
+        $this->displayFormat = $displayFormat;
     }
 
     /**
@@ -908,12 +909,12 @@ class ExceptionHandler
      */
     function setDisplayHTML($html)
     {
-        $this -> displayHTML = $html;
+        $this->displayHTML = $html;
     }
 
     function setMailHTML($html)
     {
-        $this -> displayHTML = $html;
+        $this->displayHTML = $html;
     }
 
     /**
@@ -923,12 +924,12 @@ class ExceptionHandler
      */
     function setDisplayText($text)
     {
-        $this -> displayText = $text;
+        $this->displayText = $text;
     }
 
     function setMailText($text)
     {
-        $this -> displayText = $text;
+        $this->displayText = $text;
     }
 
     /**
@@ -939,8 +940,8 @@ class ExceptionHandler
      */
     function setTabledefine(&$interfaces, $tabledefine)
     {
-        $this -> interfaces = &$interfaces;
-        $this -> tabledefine = $tabledefine;
+        $this->interfaces = &$interfaces;
+        $this->tabledefine = $tabledefine;
     }
 
     /**
@@ -952,7 +953,7 @@ class ExceptionHandler
     function addMagicInfo($magicInfo)
     {
         if(is_array($magicInfo)) {
-            $this -> additionalMagicInfo = $magicInfo;
+            $this->additionalMagicInfo = $magicInfo;
             return true;
         }
         else {
@@ -972,7 +973,7 @@ function isExceptionInStack()
 {
     if(global_exists('DEFAULT_EXCEPTION_HANDLER')) {
         $ExceptionHandler = &getGlobal('DEFAULT_EXCEPTION_HANDLER');
-        return (sizeof($ExceptionHandler -> ExceptionList) > 0);
+        return (sizeof($ExceptionHandler->ExceptionList) > 0);
     }
     if(global_exists('EXCEPTION_INSTANCE_STACK')) {
         $EXCEPTION_INSTANCES = &getGlobal('EXCEPTION_INSTANCE_STACK');
@@ -994,7 +995,7 @@ function raise()
     }
 
     if(is_a($ExceptionHandler, 'ExceptionHandler')) {
-        $ExceptionList = &$ExceptionHandler -> ExceptionList;
+        $ExceptionList = &$ExceptionHandler->ExceptionList;
     }
     else {
         if(global_exists('EXCEPTION_INSTANCE_STACK')) {
@@ -1003,8 +1004,8 @@ function raise()
     }
 
     $count = sizeof($ExceptionList);
-    for($i=$count; $i--; $i>=0) {
-        $ExceptionList[$i] -> raiseError();
+    for($i = $count; $i--; $i >= 0) {
+        $ExceptionList[$i]->raiseError();
         unset($ExceptionList[$i]);
     }
 }
@@ -1014,68 +1015,68 @@ function pool_error_handler($errno, $errstr, $errfile, $errline, $vars)
 {
 
     //echo error_reporting() . ' vs ' . $errno;
-//			if(error_reporting() & $errno) {
-        #echo error_reporting() . ' vs ' . $errno.' '.bool2string(error_reporting() & $errno).'<br>';
+    //			if(error_reporting() & $errno) {
+    #echo error_reporting() . ' vs ' . $errno.' '.bool2string(error_reporting() & $errno).'<br>';
 
-        // Stack verhindert, dass in Endlosschleifen tausende von Fehlermeldungen generiert werden
-        static $stack;
-        if(!is_array($stack)) $stack = array();
+    // Stack verhindert, dass in Endlosschleifen tausende von Fehlermeldungen generiert werden
+    static $stack;
+    if(!is_array($stack)) $stack = array();
 
-        // definiere ein assoziatives Array mit Fehler String
-        // in der Realität sind die einzigen zu bedenkenden
-        // Einträge 2,8,256,512 und 1024
-        $errortype = array (
-                        1	=> 'Error',				# kann nicht behandelt werden
-                        2	=> 'Warning',
-                        4	=> 'Parsing Error',		# kann nicht behandelt werden
-                        8	=> 'Notice',
-                        16	=> 'Core Error',		# kann nicht behandelt werden
-                        32	=> 'Core Warning',		# kann nicht behandelt werden
-                        64	=> 'Compile Error',		# kann nicht behandelt werden
-                        128	=> 'Compile Warning',	# kann nicht behandelt werden
-                        256	=> 'User Error',
-                        512	=> 'User Warning',
-                        1024=> 'User Notice',
-                        2047=> 'All',
-                        2048=> 'Strict'
-        );
+    // definiere ein assoziatives Array mit Fehler String
+    // in der Realität sind die einzigen zu bedenkenden
+    // Einträge 2,8,256,512 und 1024
+    $errortype = array(
+        1 => 'Error',                # kann nicht behandelt werden
+        2 => 'Warning',
+        4 => 'Parsing Error',        # kann nicht behandelt werden
+        8 => 'Notice',
+        16 => 'Core Error',        # kann nicht behandelt werden
+        32 => 'Core Warning',        # kann nicht behandelt werden
+        64 => 'Compile Error',        # kann nicht behandelt werden
+        128 => 'Compile Warning',    # kann nicht behandelt werden
+        256 => 'User Error',
+        512 => 'User Warning',
+        1024 => 'User Notice',
+        2047 => 'All',
+        2048 => 'Strict'
+    );
 
-        /*
-        Bitwert Konstante
-            1 E_ERROR
-            2 E_WARNING
-            4 E_PARSE
-            8 E_NOTICE
-            16 E_CORE_ERROR
-            32 E_CORE_WARNING
-            64 E_COMPILE_ERROR
-            128 E_COMPILE_WARNING
-            256 E_USER_ERROR
-            512 E_USER_WARNING
-            1024 E_USER_NOTICE
-            2047 E_ALL
-            2048 E_STRICT
-        */
+    /*
+    Bitwert Konstante
+        1 E_ERROR
+        2 E_WARNING
+        4 E_PARSE
+        8 E_NOTICE
+        16 E_CORE_ERROR
+        32 E_CORE_WARNING
+        64 E_COMPILE_ERROR
+        128 E_COMPILE_WARNING
+        256 E_USER_ERROR
+        512 E_USER_WARNING
+        1024 E_USER_NOTICE
+        2047 E_ALL
+        2048 E_STRICT
+    */
 
-        // Gruppe von Fehlern, die zur Nachverfolgung gespeichert werden
-        #$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE, E_WARNING);
-        # if(in_array($errno, $user_errors)) ...
+    // Gruppe von Fehlern, die zur Nachverfolgung gespeichert werden
+    #$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE, E_WARNING);
+    # if(in_array($errno, $user_errors)) ...
 
-        $error = array('errstr' => $errstr, 'errno' => $errno);
-        $errorFound = in_array($error, $stack);
+    $error = array('errstr' => $errstr, 'errno' => $errno);
+    $errorFound = in_array($error, $stack);
 
-        if(!$errorFound) {
-            array_push($stack, $error);
+    if(!$errorFound) {
+        array_push($stack, $error);
 
         ### hier stellt sich die Frage: sollen Exceptions bei @ komplett unterdrückt werden oder nur nicht ausgegeben werden?
-            if(error_reporting() != 0) {
-                $Xception = new Xception($errstr, $errno, magicInfo($errfile, $errline, '', ''), null);
-                array_shift($Xception -> backtrace);
-                $Xception -> raiseError();
-            }
+        if(error_reporting() != 0) {
+            $Xception = new Xception($errstr, $errno, magicInfo($errfile, $errline, '', ''), null);
+            array_shift($Xception->backtrace);
+            $Xception->raiseError();
         }
-//			}
-    return 	true;
+    }
+    //			}
+    return true;
 
     //
     //return true;
