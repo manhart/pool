@@ -1,36 +1,36 @@
 <?php
-/**
- * -= Rapid Template Engine (RTE) =-
- *
- * Template.class.php
- *
- * Rapid Template Engine (RTE) ist eine Template-Engine f�r PHP. Genauer gesagt erlaubt es die einfache Trennung von
- * Applikations-Logik und Design/Ausgabe. Dies ist vor allem wuenschenswert, wenn der Applikationsentwickler nicht die
- * selbe Person ist wie der Designer. Nehmen wir zum Beispiel eine Webseite die Zeitungsartikel ausgibt.
- * Der Titel, die Einfuehrung, der Author und der Inhalt selbst enthalten keine Informationen darueber wie sie dargestellt
- * werden sollen. Also werden sie von der Applikation an RTE uebergeben, damit der Designer in den Templates mit einer
- * Kombination von HTML- und Template-Tags die Ausgabe (Tabellen, Hintergrundfarben, Schriftgroessen, Stylesheets, etc.)
- * gestalten kann. Falls nun die Applikation eines Tages angepasst werden muss, ist dies fuer den Designer nicht von
- * Belang, da die Inhalte immer noch genau gleich uebergeben werden. Genauso kann der Designer die Ausgabe der Daten beliebig
- * veraendern, ohne dass eine Aenderung der Applikation vorgenommen werden muss. Somit koennen der Programmierer die
- * Applikations-Logik und der Designer die Ausgabe frei anpassen, ohne sich dabei in die Quere zu kommen.
- *
- * Features:
- * Schnelligkeit
- * Dynamische Bloecke
- * Beliebige Template-Quellen
- * Ermoeglicht die direkte Einbettung von PHP-Code (Obwohl es weder benoetigt noch empfohlen wird, da die Engine einfach erweiterbar ist).
- *
- *
- * @date $Date: 2007/03/13 08:52:50 $
- * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
- * @since 2003-07-12
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @link http://www.misterelsa.de
- */
+   /**
+	* -= Rapid Template Engine (RTE) =-
+	*
+	* Template.class.php
+	*
+	* Rapid Template Engine (RTE) ist eine Template-Engine für PHP. Genauer gesagt erlaubt es die einfache Trennung von
+	* Applikations-Logik und Design/Ausgabe. Dies ist vor allem wuenschenswert, wenn der Applikationsentwickler nicht die
+	* selbe Person ist wie der Designer. Nehmen wir zum Beispiel eine Webseite die Zeitungsartikel ausgibt.
+	* Der Titel, die Einfuehrung, der Author und der Inhalt selbst enthalten keine Informationen darueber wie sie dargestellt
+	* werden sollen. Also werden sie von der Applikation an RTE uebergeben, damit der Designer in den Templates mit einer
+	* Kombination von HTML- und Template-Tags die Ausgabe (Tabellen, Hintergrundfarben, Schriftgroessen, Stylesheets, etc.)
+	* gestalten kann. Falls nun die Applikation eines Tages angepasst werden muss, ist dies fuer den Designer nicht von
+	* Belang, da die Inhalte immer noch genau gleich uebergeben werden. Genauso kann der Designer die Ausgabe der Daten beliebig
+	* veraendern, ohne dass eine Aenderung der Applikation vorgenommen werden muss. Somit koennen der Programmierer die
+	* Applikations-Logik und der Designer die Ausgabe frei anpassen, ohne sich dabei in die Quere zu kommen.
+	*
+	* Features:
+	* Schnelligkeit
+	* Dynamische Bloecke
+	* Beliebige Template-Quellen
+	* Ermoeglicht die direkte Einbettung von PHP-Code (Obwohl es weder benoetigt noch empfohlen wird, da die Engine einfach erweiterbar ist).
+	*
+	*
+	* @date $Date: 2007/03/13 08:52:50 $
+	* @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+	* @version $Revision 1.0$
+	* @version
+	*
+	* @since 2003-07-12
+	* @author Alexander Manhart <alexander@manhart-it.de>
+	* @link https://alexander-manhart.de
+	*/
 
 if(!defined('RAPID_TEMPLATE_ENGINE')) {
     // Variablen Identifizierung
