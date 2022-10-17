@@ -244,7 +244,15 @@ if(!defined('CLASS_MYSQLDAO')) {
         protected array $translateValues = [];
 
         /**
-         * @var object|Translator|null
+         * @var array
+         */
+        private array $cache = [
+            'translatedValues' => [],
+            'translate' => []
+        ];
+
+        /**
+         * @var Translator
          */
         protected Translator $Translator;
 
