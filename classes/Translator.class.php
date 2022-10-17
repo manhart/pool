@@ -371,11 +371,22 @@ final class Translator extends \PoolObject
      * change language
      *
      * @param string $language
-     * @return $this
+     * @return Translator
      */
-    public function changeLanguage(string $language)
+    public function changeLanguage(string $language): Translator
     {
         $this->language = $language;
+        return $this;
+    }
+
+    /**
+     * change back to default language
+     *
+     * @return Translator
+     */
+    public function changeBackToDefaultLanguage(): Translator
+    {
+        $this->changeLanguage($this->defaultLanguage);
         return $this;
     }
 
