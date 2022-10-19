@@ -379,15 +379,17 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
-         * Returns a value of a field of the current record as an integer
+         * Returns a value of a field of the current record as an integer. It is also possible to return null as default value.
          *
          * @param string $key
-         * @param int $default
+         * @param int|null $default
          * @return int
          */
-        public function getValueAsInt(string $key, int $default=0): int
+        public function getValueAsInt(string $key, ?int $default=0): ?int
         {
-            return (int)$this->getValue($key, $default);
+            $value = $this->getValue($key, $default);
+            if($default === null && $value === null) return null;
+            return (int)$value;
         }
 
         /**
