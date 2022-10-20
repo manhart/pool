@@ -1254,7 +1254,7 @@ function move_file(string $source, string $dest): bool
  *
  * @see glob()
  * @param string $path Stammverzeichnis
- * @param boolean $absolute Datei mit absolutem Pfad zurückgeben
+ * @param boolean $absolute Datei mit vollstaendigem Pfad zurückgeben andernfalls nur mit $subdir/$filename
  * @param string $filePattern Dateifilter
  * @param string $subdir auszulesendes Unterverzeichnis
  * @return array file list
@@ -1276,6 +1276,24 @@ function readFiles(string $path, bool $absolute = true, string $filePattern = '/
 
     return $files;
 }
+
+/** Build a path by concatenating parts and adding '/' between them and adding an ending slash
+ * @param ...$elements
+ * @return string The assembled path with an ending slash
+ */
+function buildDirPath(...$elements): string
+{
+    return (implode('/',$elements) . '/');
+}
+/** Build a path by concatenating parts and adding '/' between them
+ * @param ...$elements
+ * @return string The assembled path without an ending slash
+ */
+function buildFilePath(...$elements): string
+{
+    return (implode('/',$elements));
+}
+
 
 /**
  * Liest ein Verzeichnis rekursiv aus. Dabei kann man per regulärem Ausdruck auf Datei- oder Verzeichnisebene filtern. Die Ergebnisse werden absolut oder relativ zum
