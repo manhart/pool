@@ -12,8 +12,6 @@ namespace pool\includes\Resources\dir{
 
     use pool\includes\Resources\JavaScriptResource;
     use pool\includes\Resources\StylesheetResource;
-    use Weblication;
-    use function addEndingSlash;
     use function readFiles;
     use function remove_extension;
 
@@ -48,18 +46,22 @@ namespace pool\includes\Resources\dir{
             }
         }
 
-        /**Builds a path based on the called subclasses attributes and the const DIR_RELATIVE_3RDPARTY_ROOT<br>
+        /**Builds a path based on the called subclasses attributes<br>
          * and returns one variant of each file matching the filters defined in the aforementioned attributes
          * @param bool $min Prefer minified(.min.X) variant <br> !$min => Prefer plain variant
          * @param string $version Optional override for the default A:VERSION
-         * @param string $nameFilter
-         * @param string $extension
+         * @param string $nameFilter in Regex filter applied before extension
+         * @param string $extension  in Regex filter applied after . up to end of filename
          * @return array the resulting file list prefixed with the assembled path
          */
         public static function getFiles(bool $min, string $version = '', string $nameFilter = '', string $extension = ''): array
         {
             $path = static::getSubPath($version, $min, $extension);
-            $files = readFiles($path, false, '/' . $nameFilter . '(\.min)?\.' . static::FILE_EXT_FILTER . '$/');
+            $fileExtFilter = static::FILE_EXT_FILTER;
+            $pattern = "/{$nameFilter}(\.min)?\.{$fileExtFilter}$/";
+            //load filename list from directory with absolute path
+            $files = readFiles(buildDirPath(DIR_DOCUMENT_ROOT,$path), false, $pattern);
+            //pick files and ad relative Path
             return self::chooseVariant($files, $min, static::FILE_EXT_FILTER, $path);
         }
 
@@ -72,16 +74,15 @@ namespace pool\includes\Resources\dir{
         protected static function getPath(string $version): string
         {
             $version = $version ?: static::VERSION;
-            return addEndingSlash(implode('/',array(
-                static::getRootPath(), static::DIRECTORY, $version)));
+            return buildDirPath(static::getRootPath(), static::DIRECTORY, $version);
         }
 
         protected static function getSubPath(string $version, bool $min, string $extension): string
         {
             if ($extension === '') {
-                return addEndingSlash(static::getPath($version) . static::SUB_PATH);
+                return buildDirPath(static::getPath($version), static::SUB_PATH);
             } else {
-                return addEndingSlash(static::getPath($version) . static::EXTENSION_PATH . '/' . $extension);
+                return buildDirPath(static::getPath($version), static::EXTENSION_PATH, $extension);
             }
         }
 
@@ -98,7 +99,7 @@ namespace pool\includes\Resources\dir{
         {
             sort($files);
             $returnFiles = array();
-            $minRegex = '\.min\.' . $fileExtension . '$/';
+            $minRegex = "\.min\.{$fileExtension}$/";
             $iMax = count($files);
             for ($i = 0; $i < $iMax; $i += $step) {
                 $curFile = $files[$i];
@@ -108,13 +109,13 @@ namespace pool\includes\Resources\dir{
                     $returnFiles[] = $path . $curFile;
                     return $returnFiles;
                 }
-                $hasPlainVersion = !$hasMinifiedVersion = $currIsMin = (bool)preg_match('/' . $minRegex, $curFile);
+                $hasPlainVersion = !$hasMinifiedVersion = $currIsMin = (bool)preg_match("/{$minRegex}", $curFile);
                 if ($currIsMin) {
                     $filename = remove_extension(remove_extension($curFile));
-                    $hasPlainVersion = preg_match("/$filename\." . $fileExtension . '$/', $nextFile);
+                    $hasPlainVersion = preg_match("/{$filename}\.{$fileExtension}$/", $nextFile);
                 } else {//plain first
                     $filename = remove_extension($curFile);
-                    $hasMinifiedVersion = preg_match("/$filename$minRegex", $nextFile);
+                    $hasMinifiedVersion = preg_match("/{$filename}{$minRegex}", $nextFile);
                 }
                 if ($hasMinifiedVersion xor $hasPlainVersion) {
                     //no alternative
