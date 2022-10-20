@@ -17,7 +17,7 @@ namespace pool\includes\Resources\dir{
     use function readFiles;
     use function remove_extension;
 
-    abstract class RessourceLoader
+    abstract class ResourceLoader
     {
         protected const DIRECTORY = '';
         protected const VERSION = '';
