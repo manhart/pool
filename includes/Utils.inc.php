@@ -325,8 +325,8 @@ if (!function_exists('addEndingSlash')) {
     function addEndingSlash(string $value): string
     {
         if ($value != '') {
-            if ($value[strlen($value) - 1] != '/') {
-                $value .= '/';
+            if ($value[strlen($value) - 1] != DIRECTORY_SEPARATOR) {
+                $value .= DIRECTORY_SEPARATOR;
             }
         }
 
@@ -346,7 +346,7 @@ if (!function_exists('removeEndingSlash')) {
     {
         if (!empty($value)) {
             $len = strlen($value) - 1;
-            if ($value[$len] == '/') {
+            if ($value[$len] == '/' || $value[$len] == '\\') {
                 $value = substr($value, 0, $len);
             }
         }
@@ -366,7 +366,7 @@ if (!function_exists('removeBeginningSlash')) {
     function removeBeginningSlash(string $value): string
     {
         if (!empty($value)) {
-            if ($value[0] == '/') {
+            if ($value[0] == '/'|| $value[0] == '\\') {
                 $value = substr($value, 1);
             }
         }
@@ -1283,17 +1283,116 @@ function readFiles(string $path, bool $absolute = true, string $filePattern = '/
  */
 function buildDirPath(...$elements): string
 {
-    return (implode('/',$elements) . '/');
+    $result = "";
+    foreach ($elements as $element){
+        $result .= addEndingSlash($element);
+    }
+    return $result;
 }
+
 /** Build a path by concatenating parts and adding '/' between them
- * @param ...$elements
+ * @param string ...$elements
  * @return string The assembled path without an ending slash
  */
 function buildFilePath(...$elements): string
 {
-    return (implode('/',$elements));
+    return removeEndingSlash(buildDirPath(...$elements));
 }
 
+/**Normalizes a path resolving steps up to containing directory's and cleaning out repeated Separators<br>
+ * beginning and ending Separators will be preserved
+ * @param string $path the path to be normalized
+ * @param bool $noFailOnRoot Drop attempts to step out of root in absolute paths instead of failing
+ * @return false|string the normalized path or false on failure.
+ */
+function normalizePath(string $path, bool $noFailOnRoot = false){
+    $pathArr = array();
+    $stepsOut = 0;
+    foreach (explode(DIRECTORY_SEPARATOR, $path) as $part){
+        //ignore self-references and separator errors
+        if ($part === '' || $part === '.')
+            continue;
+        //normal element -> add to buffer
+        if ($part !== '..'){
+            $pathArr[] = $part;
+        }
+        //wanna go up
+        elseif (count($pathArr) > 0){
+            array_pop($pathArr);
+        }else//hit the root
+            $stepsOut++;
+    }
+    $normalizedPath = implode(DIRECTORY_SEPARATOR, $pathArr);
+    //re-add the original paths beginning slash or any necessary steps out
+    if($prefix = isAbsolute($path)) {
+        //absolute path -> check for illegal steps out of root
+        if ($stepsOut && !$noFailOnRoot)
+            return false;//fail
+    }else{
+        //relative path
+        $prefix = str_repeat('..'.DIRECTORY_SEPARATOR, $stepsOut);
+    }
+    $normalizedPath = $prefix.$normalizedPath;
+    //re-add the original paths ending directory slash
+    if (str_ends_with($path, DIRECTORY_SEPARATOR))
+        $normalizedPath .= DIRECTORY_SEPARATOR;
+    return $normalizedPath;
+}
+
+/**Calculates a vector between two paths useful to turn an absolute path into a path relative to the script being served
+ * @param string|null $here the starting path if null will use the directory of $_SERVER['SCRIPT_FILENAME']
+ * @param string $toThis the path to point to
+ * @param bool $normalize normalize absolute paths before calculation
+ * @param string|null $base an optional path to base relative paths on defaults to the directory of $_SERVER['SCRIPT_FILENAME']
+ * @return string|false the calculated vector or false if normalization fails
+ */
+function makeRelativePathFrom(?string $here,string $toThis,bool $normalize = false, string $base = null)
+{
+    $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
+    $base ??= $browserPath;
+    $here ??= $browserPath;
+    //base relative paths and normalize
+    if (!isAbsolute($here)) {
+        $here = addEndingSlash($base) . $here;
+        $here = normalizePath($here);
+    } elseif ($normalize)
+        $here = normalizePath($here);
+    if (!isAbsolute($toThis)) {
+        $toThis = addEndingSlash($base) . $toThis;
+        $toThis = normalizePath($toThis);
+    } elseif ($normalize){
+        $toThis = normalizePath($toThis);
+    }
+    if(!($here&&$toThis))//normalization returned an invalid result
+        return false;//fail
+    //beginn
+    $hereArr = explode(DIRECTORY_SEPARATOR,$here);
+    $toThisArr = explode(DIRECTORY_SEPARATOR, $toThis);
+    $hereCount = count($hereArr);
+    //cut out the common part
+    $vectorArr = array_diff_assoc($toThisArr, $hereArr);
+    //calculate the size of the common part not included in target
+    $commonCount = count($toThisArr) - count($vectorArr);
+    //get from here to the common base
+    $stepsOut = $hereCount - $commonCount;
+    $stepOutString = str_repeat('..'.DIRECTORY_SEPARATOR, $stepsOut);
+    $stepOutString = removeEndingSlash($stepOutString);
+    //build path
+    array_unshift($vectorArr, $stepOutString);
+    $isDirectory = str_ends_with($toThis, DIRECTORY_SEPARATOR);
+    return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
+}
+
+/**Determine if a path is absolute
+ * @param string $path the path to check
+ * @return string|false the absolute prefix e.g. '/' or 'C:\' or 'https://
+ */
+function isAbsolute(string $path)
+{
+    $regex = "/^((\w*:)?[\/\\\\]{1,2})/";
+    //grep a potential match
+    return preg_match($regex, $path, $matches)?$matches[1] : false;
+}
 
 /**
  * Liest ein Verzeichnis rekursiv aus. Dabei kann man per regulärem Ausdruck auf Datei- oder Verzeichnisebene filtern. Die Ergebnisse werden absolut oder relativ zum

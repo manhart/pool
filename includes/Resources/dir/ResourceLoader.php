@@ -60,7 +60,7 @@ namespace pool\includes\Resources\dir{
             $fileExtFilter = static::FILE_EXT_FILTER;
             $pattern = "/{$nameFilter}(\.min)?\.{$fileExtFilter}$/";
             //load filename list from directory with absolute path
-            $files = readFiles(buildDirPath(DIR_DOCUMENT_ROOT,$path), false, $pattern);
+            $files = readFiles($path, false, $pattern);
             //pick files and ad relative Path
             return self::chooseVariant($files, $min, static::FILE_EXT_FILTER, $path);
         }
@@ -74,7 +74,8 @@ namespace pool\includes\Resources\dir{
         protected static function getPath(string $version): string
         {
             $version = $version ?: static::VERSION;
-            return buildDirPath(static::getRootPath(), static::DIRECTORY, $version);
+            $rootPath = makeRelativePathFrom(null,static::getRootPath());
+            return buildDirPath($rootPath, static::DIRECTORY, $version);
         }
 
         protected static function getSubPath(string $version, bool $min, string $extension): string
