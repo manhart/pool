@@ -325,8 +325,9 @@ if (!function_exists('addEndingSlash')) {
     function addEndingSlash(string $value): string
     {
         if ($value != '') {
-            if ($value[strlen($value) - 1] != DIRECTORY_SEPARATOR) {
-                $value .= DIRECTORY_SEPARATOR;
+            $len = strlen($value) - 1;
+            if ($value[$len] != '/'&& $value[$len] != '\\') {
+                $value .= '/';
             }
         }
 
@@ -1303,12 +1304,14 @@ function buildFilePath(...$elements): string
  * beginning and ending Separators will be preserved
  * @param string $path the path to be normalized
  * @param bool $noFailOnRoot Drop attempts to step out of root in absolute paths instead of failing
+ * @param string $separator directory separator defaults to /
  * @return false|string the normalized path or false on failure.
  */
-function normalizePath(string $path, bool $noFailOnRoot = false){
+function normalizePath(string $path, bool $noFailOnRoot = false, string $separator ='/'): bool|string
+{
     $pathArr = array();
     $stepsOut = 0;
-    foreach (explode(DIRECTORY_SEPARATOR, $path) as $part){
+    foreach (explode($separator, $path) as $part){
         //ignore self-references and separator errors
         if ($part === '' || $part === '.')
             continue;
@@ -1322,7 +1325,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false){
         }else//hit the root
             $stepsOut++;
     }
-    $normalizedPath = implode(DIRECTORY_SEPARATOR, $pathArr);
+    $normalizedPath = implode($separator, $pathArr);
     //re-add the original paths beginning slash or any necessary steps out
     if($prefix = isAbsolute($path)) {
         //absolute path -> check for illegal steps out of root
@@ -1330,12 +1333,12 @@ function normalizePath(string $path, bool $noFailOnRoot = false){
             return false;//fail
     }else{
         //relative path
-        $prefix = str_repeat('..'.DIRECTORY_SEPARATOR, $stepsOut);
+        $prefix = str_repeat('..'. $separator, $stepsOut);
     }
     $normalizedPath = $prefix.$normalizedPath;
     //re-add the original paths ending directory slash
-    if (str_ends_with($path, DIRECTORY_SEPARATOR))
-        $normalizedPath .= DIRECTORY_SEPARATOR;
+    if (str_ends_with($path, $separator))
+        $normalizedPath .= $separator;
     return $normalizedPath;
 }
 
@@ -1344,9 +1347,10 @@ function normalizePath(string $path, bool $noFailOnRoot = false){
  * @param string $toThis the path to point to
  * @param bool $normalize normalize absolute paths before calculation
  * @param string|null $base an optional path to base relative paths on defaults to the directory of $_SERVER['SCRIPT_FILENAME']
+ * @param string $separator directory separator defaults to /
  * @return string|false the calculated vector or false if normalization fails
  */
-function makeRelativePathFrom(?string $here,string $toThis,bool $normalize = false, string $base = null)
+function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = '/'): bool|string
 {
     $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
     $base ??= $browserPath;
@@ -1354,20 +1358,20 @@ function makeRelativePathFrom(?string $here,string $toThis,bool $normalize = fal
     //base relative paths and normalize
     if (!isAbsolute($here)) {
         $here = addEndingSlash($base) . $here;
-        $here = normalizePath($here);
+        $here = normalizePath($here, separator: $separator);
     } elseif ($normalize)
-        $here = normalizePath($here);
+        $here = normalizePath($here, separator: $separator);
     if (!isAbsolute($toThis)) {
         $toThis = addEndingSlash($base) . $toThis;
-        $toThis = normalizePath($toThis);
+        $toThis = normalizePath($toThis, separator: $separator);
     } elseif ($normalize){
-        $toThis = normalizePath($toThis);
+        $toThis = normalizePath($toThis, separator: $separator);
     }
     if(!($here&&$toThis))//normalization returned an invalid result
         return false;//fail
     //beginn
-    $hereArr = explode(DIRECTORY_SEPARATOR,$here);
-    $toThisArr = explode(DIRECTORY_SEPARATOR, $toThis);
+    $hereArr = explode($separator,$here);
+    $toThisArr = explode($separator, $toThis);
     $hereCount = count($hereArr);
     //cut out the common part
     $vectorArr = array_diff_assoc($toThisArr, $hereArr);
@@ -1375,11 +1379,11 @@ function makeRelativePathFrom(?string $here,string $toThis,bool $normalize = fal
     $commonCount = count($toThisArr) - count($vectorArr);
     //get from here to the common base
     $stepsOut = $hereCount - $commonCount;
-    $stepOutString = str_repeat('..'.DIRECTORY_SEPARATOR, $stepsOut);
+    $stepOutString = str_repeat('..'. $separator, $stepsOut);
     $stepOutString = removeEndingSlash($stepOutString);
     //build path
     array_unshift($vectorArr, $stepOutString);
-    $isDirectory = str_ends_with($toThis, DIRECTORY_SEPARATOR);
+    $isDirectory = str_ends_with($toThis, $separator);
     return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
 }
 
