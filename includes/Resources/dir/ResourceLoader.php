@@ -74,8 +74,7 @@ namespace pool\includes\Resources\dir{
         protected static function getPath(string $version): string
         {
             $version = $version ?: static::VERSION;
-            $rootPath = makeRelativePathFrom(null,static::getRootPath());
-            return buildDirPath($rootPath, static::DIRECTORY, $version);
+            return buildDirPath(static::getRootPath(), static::DIRECTORY, $version);
         }
 
         protected static function getSubPath(string $version, bool $min, string $extension): string
