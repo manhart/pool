@@ -612,6 +612,15 @@ final class Translator extends \PoolObject
     }
 
     /**
+     * @param string $language
+     * @return bool
+     */
+    public function resourceFile_exists(string $language): bool
+    {
+        return file_exists($this->directory . '/' . $language . $this->extension);
+    }
+
+    /**
      * The plural rules are derived from code of the Zend Framework (2010-09-25),
      * which is subject to the new BSD license
      * (http://framework.zend.com/license/new-bsd).
