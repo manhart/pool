@@ -2207,3 +2207,68 @@ function dateNow($format = '%Y%m%d')
 {
     return (strftime($format, time()));
 } // end func dateNow
+
+
+/**
+ * Gibt den Wochentag in deutscher und englischer Sprache zurueck.
+ * Wird kein Dezimal-Wert uebergeben, gibt er den aktuellen Wochentag aus.
+ * Der zweite Parameter bestimmt die Sprache. Wird er nicht angegeben,
+ * liefert die Funktion ein Array mit allen Sprachen zurueck.
+ *
+ * @param integer $decimal_value Dezimal Wert fuer Wochentag 1-7 (Mo-So)
+ * @param string $locale Internationales Format fuer Laenderlokale
+ * @return array or string Wochentag
+ **/
+function getWeekday(int $decimal_value = 0, string $locale = 'de_DE')
+{
+    if ($decimal_value == null) {
+        $decimal_value = date('w');
+    }
+    switch ($decimal_value) {
+        case 1:
+            $result['de_DE'] = 'montag';
+            $result['en_US'] = 'monday';
+            break;
+
+        case 2:
+            $result['de_DE'] = 'dienstag';
+            $result['en_US'] = 'tuesday';
+            break;
+
+        case 3:
+            $result['de_DE'] = 'mittwoch';
+            $result['en_US'] = 'wednesday';
+            break;
+
+        case 4:
+            $result['de_DE'] = 'donnerstag';
+            $result['en_US'] = 'thursday';
+            break;
+
+        case 5:
+            $result['de_DE'] = 'freitag';
+            $result['en_US'] = 'friday';
+            break;
+
+        case 6:
+            $result['de_DE'] = 'samstag';
+            $result['en_US'] = 'saturday';
+            break;
+
+        case 0:
+        case 7:
+            $result['de_DE'] = 'sonntag';
+            $result['en_US'] = 'sunday';
+            break;
+
+        default:
+            trigger_error('Unknown Weekday "'.$decimal_value.'" in '.__FUNCTION__);
+    }
+
+    if (!is_null($locale)) {
+        return $result[$locale];
+    }
+    else {
+        return $result;
+    }
+}
