@@ -21,7 +21,6 @@
 function getMicrotime($seed = 1): float
 {
     list($usec, $sec) = explode(' ', microtime());
-
     return ((float)$usec + ((float)$sec * $seed));
 }
 
@@ -33,20 +32,13 @@ function getMicrotime($seed = 1): float
  * Es zeigt alle Variablen an, die es finden kann.
  * @method static
  *
- * @access public
  * @param mixed $data Variable jeden Datentyps
- * @param boolean|int $functions Zeige Funktionsnamen der Objekte (Standard = 0)
+ * @param boolean $functions Zeige Funktionsnamen der Objekte (Standard = 0)
  * @return string
  */
-function pray($data, $functions=0): string
+function pray(mixed $data, bool $functions=false): string
 {
-    $result = "";
-    if($functions != 0) {
-        $sf = 1;
-    }
-    else {
-        $sf = 0;
-    }
+    $result = '';
 
     if (isset ($data)) {
         if ((is_array($data) and count($data)) || (is_object($data) and !isEmptyObject($data))) {
@@ -60,14 +52,14 @@ function pray($data, $functions=0): string
 
                     if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
                         and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
-                        $result .= pray($value, $sf);
+                        $result .= pray($value, $functions);
                     }
                     else {
                         $result .= 'no follow, infinite loop';
                     }
                 }
                 elseif (stripos($type, 'function') !== false) {
-                    if ($sf) {
+                    if ($functions) {
                         $result .= sprintf("<li>(%s) <b>%s</b> </LI>\n", $type, $key, $value);
                         // There doesn't seem to be anything traversable inside functions.
                     }
@@ -147,7 +139,7 @@ function returnBytes($val): int
     }
 
     if(isset($matches[1])){
-        $val = (int) $matches[1];
+        $val = (int)$matches[1];
     }
 
     switch (strtolower($last))
@@ -223,7 +215,6 @@ function getSeriesOfAppointments(int $from, ?int $to, int $intervall = 7, int $s
  * Gibt true zurueck fuer ein Schaltjahr, andernfalls false
  *
  * @param string $year Jahr im Format CCYY
- * @access public
  * @return boolean true/false
  */
 function isLeapYear(string $year = ''): bool
@@ -250,83 +241,17 @@ function isLeapYear(string $year = ''): bool
     }
 } // end func isLeapYear
 
-/**
- * Gibt den Wochentag in deutscher und englischer Sprache zurueck.
- * Wird kein Dezimal-Wert uebergeben, gibt er den aktuellen Wochentag aus.
- * Der zweite Parameter bestimmt die Sprache. Wird er nicht angegeben,
- * liefert die Funktion ein Array mit allen Sprachen zurueck.
- *
- * @param integer $decimal_value Dezimal Wert fuer Wochentag 1-7 (Mo-So)
- * @param string $locale Internationales Format fuer Laenderlokale
- * @return array or string Wochentag
- **/
-function getWeekday(int $decimal_value = 0, string $locale = 'de_DE')
-{
-    if ($decimal_value == null) {
-        $decimal_value = date('w');
-    }
-    switch ($decimal_value) {
-        case 1:
-            $result['de_DE'] = 'montag';
-            $result['en_US'] = 'monday';
-            break;
-
-        case 2:
-            $result['de_DE'] = 'dienstag';
-            $result['en_US'] = 'tuesday';
-            break;
-
-        case 3:
-            $result['de_DE'] = 'mittwoch';
-            $result['en_US'] = 'wednesday';
-            break;
-
-        case 4:
-            $result['de_DE'] = 'donnerstag';
-            $result['en_US'] = 'thursday';
-            break;
-
-        case 5:
-            $result['de_DE'] = 'freitag';
-            $result['en_US'] = 'friday';
-            break;
-
-        case 6:
-            $result['de_DE'] = 'samstag';
-            $result['en_US'] = 'saturday';
-            break;
-
-        case 0:
-        case 7:
-            $result['de_DE'] = 'sonntag';
-            $result['en_US'] = 'sunday';
-            break;
-
-        default:
-            trigger_error('Unknown Weekday "'.$decimal_value.'" in '.__FUNCTION__);
-    }
-
-    if (!is_null($locale)) {
-        return $result[$locale];
-    }
-    else {
-        return $result;
-    }
-}
-
 if (!function_exists('addEndingSlash')) {
     /**
-     * Fuegt bei Verzeichnissen einen evtl. fehlenden endenden Slash hinzu. Leerstrings werden nicht verändert
+     * Adds a possibly missing ending slash to a string. Empty strings are not changed.
      *
-     * @access public
      * @param string $value Wert (Ordner, Verzeichnis)
-     * @return string Wert mit endendem Slash
+     * @return string String with ending slash.
      **/
     function addEndingSlash(string $value): string
     {
         if ($value != '') {
-            $len = strlen($value) - 1;
-            if ($value[$len] != '/'&& $value[$len] != '\\') {
+            if ($value[-1] != '/' && $value[-1] != '\\') {
                 $value .= '/';
             }
         }
@@ -339,16 +264,14 @@ if (!function_exists('removeEndingSlash')) {
     /**
      * Entfernt endenden Slash im String
      *
-     * @access public
      * @param string $value String (z.B. Verzeichnis)
      * @return string String ohne Slash am Ende
      */
     function removeEndingSlash(string $value): string
     {
-        if (!empty($value)) {
-            $len = strlen($value) - 1;
-            if ($value[$len] == '/' || $value[$len] == '\\') {
-                $value = substr($value, 0, $len);
+        if ($value != '') {
+            if ($value[-1] == '/' || $value[-1] == '\\') {
+                $value = substr($value, 0, -1);
             }
         }
 
@@ -360,14 +283,13 @@ if (!function_exists('removeBeginningSlash')) {
     /**
      * Entfernt einen evtl. vorhandenen Slash am Anfang des uebergebenen String
      *
-     * @access public
      * @param string $value String (z.B. Verzeichnis)
      * @return string String ohne Slash am Ende
      */
     function removeBeginningSlash(string $value): string
     {
         if (!empty($value)) {
-            if ($value[0] == '/'|| $value[0] == '\\') {
+            if ($value[0] == '/' || $value[0] == '\\') {
                 $value = substr($value, 1);
             }
         }
@@ -1327,7 +1249,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
     }
     $normalizedPath = implode($separator, $pathArr);
     //re-add the original paths beginning slash or any necessary steps out
-    if($prefix = isAbsolute($path)) {
+    if($prefix = isAbsolutePath($path)) {
         //absolute path -> check for illegal steps out of root
         if ($stepsOut && !$noFailOnRoot)
             return false;//fail
@@ -1356,12 +1278,12 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     $base ??= $browserPath;
     $here ??= $browserPath;
     //base relative paths and normalize
-    if (!isAbsolute($here)) {
+    if (!isAbsolutePath($here)) {
         $here = addEndingSlash($base) . $here;
         $here = normalizePath($here, separator: $separator);
     } elseif ($normalize)
         $here = normalizePath($here, separator: $separator);
-    if (!isAbsolute($toThis)) {
+    if (!isAbsolutePath($toThis)) {
         $toThis = addEndingSlash($base) . $toThis;
         $toThis = normalizePath($toThis, separator: $separator);
     } elseif ($normalize){
@@ -1391,7 +1313,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
  * @param string $path the path to check
  * @return string|false the absolute prefix e.g. '/' or 'C:\' or 'https://
  */
-function isAbsolute(string $path)
+function isAbsolutePath(string $path): bool|string
 {
     $regex = "/^((\w*:)?[\/\\\\]{1,2})/";
     //grep a potential match
