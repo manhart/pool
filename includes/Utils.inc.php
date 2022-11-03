@@ -1417,18 +1417,15 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
 }
 
 /**
- * Schaut, ob die Anfrage per Ajax kommt.
- * Genauer gesagt, ob die Variable $_SERVER['HTTP_X_REQUESTED_WITH'] auf XMLHttpRequest gesetzt ist.
- * Dies macht z.B. das Javascript-Framework Prototype. (Ajax.Request)
+ * Checks if it is an Ajax call (XmlHttpRequest)
  *
+ * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
  * @return boolean
  */
 function isAjax(): bool
 {
-    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
-           || (isset($_REQUEST['HTTP_X_REQUESTED_WITH']) && $_REQUEST['HTTP_X_REQUESTED_WITH']);
+    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
 }
-
 
 /**
  * Umrechnung DTP-Punkt in Millimeter (Desktop-Publishing Wobla);
