@@ -603,18 +603,19 @@ class GUI_Module extends Module
     /**
      * returns json encoded data of a method call of this object (intended use: ajax)
      *
-     * @param $method
+     * @param string $method
      * @return string
+     * @throws ReflectionException
+     * @throws Exception
      */
-    private function finalizeMethod($method): string
+    private function finalizeMethod(string $method): string
     {
-        header('Content-type: application/json');
-
-        $Result = '';
+        $result = '';
 
         // 09.12.21, AM, reworked
         if(!is_callable([$this, $method])) {
-            $Xception = new Xception('The method "' . $method . '" in the class ' . $this->getClassName().' is not callable', 0, array(), POOL_ERROR_DISPLAY);
+            $Xception = new Xception('The method "' . $method . '" in the class ' . $this->getClassName().' is not callable', 0, array(),
+                POOL_ERROR_DISPLAY);
             $Xception->raiseError();
             return '';
         }
@@ -635,7 +636,7 @@ class GUI_Module extends Module
 
         ob_start();
 
-        $errorClassName = '';
+        $callingClassName = $this->getClassName();
 
         $args = [];
         if($numberOfParameters) {
@@ -669,38 +670,54 @@ class GUI_Module extends Module
             }
         }
         try {
-            $Result = $ReflectionMethod->invokeArgs($this, $args);
-            $errorClassName = $ReflectionMethod->getDeclaringClass()->getName();
+            $result = $ReflectionMethod->invokeArgs($this, $args);
+            $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
         }
         catch(\ReflectionException $e) {
             echo $e->getMessage();
         }
 
+        $undefinedContent = ob_get_contents();
+        ob_end_clean();
+
+        return $this->respondToAjaxCall($result, $undefinedContent, $callingClassName.':'.$method);
+    }
+
+    /**
+     * responds to an Ajax call
+     *
+     * @param mixed $result
+     * @param mixed $error
+     * @param string $callingMethod optional; use __METHOD__
+     * @return string
+     * @throws Exception
+     */
+    protected function respondToAjaxCall(mixed $result, mixed $error, string $callingMethod = ''): string
+    {
+        header('Content-type: application/json');
 
         $clientData = [];
 
         if ($this->plainJSON) {
-            $clientData = $Result;
+            $clientData = $result;
 
-            $last_error = error_get_last();
+            // strange behavior with xdebug; xdebug overrides error_get_last
+            $last_error = $this->Weblication->isXdebugEnabled() ? null : error_get_last();
             if($last_error != null) {
                 if(IS_DEVELOP) { // only for developers, to have a notice
-                    $message = $last_error['message'] . ' in class '.($errorClassName ?: $this->getClassName()).
-                        ':'.$method.' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
+                    $message = $last_error['message'] . ' in '.$callingMethod.' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
                     throw new Exception($message, $last_error['type']);
                 }
-//                error_log($message);
-//                syslog(LOG_WARNING, $message);
+                // error_log($message);
+                // syslog(LOG_WARNING, $message);
 
                 error_clear_last();
             }
         }
         else {
-            $clientData['Result'] = $Result;
-            $output = ob_get_contents();
-            $clientData['Error'] = (strlen($output) > 0) ? $output : '';
+            $clientData['Result'] = $result;
+            $clientData['Error'] = $error;
         }
-        ob_end_clean();
 
         $json = json_encode($clientData);
 
@@ -721,22 +738,22 @@ class GUI_Module extends Module
                     break;
 
                 case JSON_ERROR_STATE_MISMATCH:
-//                            $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
+                    // $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
                     $json_last_error_msg = 'Invalid or malformed JSON';
                     break;
 
                 case JSON_ERROR_CTRL_CHAR:
-//                            $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
+                    // $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
                     $json_last_error_msg = 'Control character error, possibly incorrectly encoded';
                     break;
 
                 case JSON_ERROR_SYNTAX:
-//                            $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
+                    //                            $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
                     $json_last_error_msg = 'Syntax error';
                     break;
 
                 case JSON_ERROR_UTF8:
-//                            $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
+                    //                            $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
                     $json_last_error_msg = 'Malformed UTF-8 characters, possibly incorrectly encoded';
                     break;
 
@@ -758,15 +775,7 @@ class GUI_Module extends Module
             }
         }
 
-        return $json_last_error_msg . ' in ' . $this->getClassName() . '->' . $method . '(): ' . print_r($clientData, true);
-    }
-
-    /**
-     * @deprecated
-     */
-    public function enablePlainJSON()
-    {
-        $this->plainJSON = true;
+        return $json_last_error_msg . ' in ' . $callingMethod . ': ' . print_r($clientData, true);
     }
 
     /**
@@ -775,7 +784,7 @@ class GUI_Module extends Module
      * @param bool $activate
      * @return GUI_Module
      */
-    public function returnAsPlainJSON(bool $activate = true): GUI_Module
+    public function respondAsPlainJSON(bool $activate = true): GUI_Module
     {
         $this->plainJSON = $activate;
         return $this;
@@ -786,6 +795,7 @@ class GUI_Module extends Module
      * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
      *
      * @return string Content / Inhalt
+     * @throws Exception
      */
     public function finalizeContent(): string
     {
