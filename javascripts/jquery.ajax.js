@@ -182,7 +182,7 @@ function RequestPOOL(module, method, params, async)
 					return false;
 				}
 
-                // expect POOL object with the properties "Result" and optionally "Error".
+                // expect POOL object with the properties "Result" and optionally "Error". If not, take it as it is.
 				var Result = data.Result ?? data;
 				let Error = data.Error;
 
