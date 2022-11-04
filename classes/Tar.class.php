@@ -286,11 +286,11 @@ class Tar extends PoolObject {
 				// Generate the TAR header for this file
 				// Filename, Permissions, UID, GID, size, Time, checksum, typeflag, linkname, magic, version, user name, group name, devmajor, devminor, prefix, end
 				$header .= str_pad($information["name"],100,chr(0));
-				$header .= str_pad(decoct($information["mode"]),7,"0",STR_PAD_LEFT) . chr(0);
-				$header .= str_pad(decoct($information["user_id"]),7,"0",STR_PAD_LEFT) . chr(0);
-				$header .= str_pad(decoct($information["group_id"]),7,"0",STR_PAD_LEFT) . chr(0);
-				$header .= str_pad(decoct($information["size"]),11,"0",STR_PAD_LEFT) . chr(0);
-				$header .= str_pad(decoct($information["time"]),11,"0",STR_PAD_LEFT) . chr(0);
+				$header .= str_pad(decoct((int)$information["mode"]),7,"0",STR_PAD_LEFT) . chr(0);
+				$header .= str_pad(decoct((int)$information["user_id"]),7,"0",STR_PAD_LEFT) . chr(0);
+				$header .= str_pad(decoct((int)$information["group_id"]),7,"0",STR_PAD_LEFT) . chr(0);
+				$header .= str_pad(decoct((int)$information["size"]),11,"0",STR_PAD_LEFT) . chr(0);
+				$header .= str_pad(decoct((int)$information["time"]),11,"0",STR_PAD_LEFT) . chr(0);
 				$header .= str_repeat(" ",8);
 				$header .= "0";
 				$header .= str_repeat(chr(0),100);
