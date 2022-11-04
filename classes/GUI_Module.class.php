@@ -137,6 +137,11 @@ class GUI_Module extends Module
     protected array $cssFiles = [];
 
     /**
+     * @var array<string, string> $ajaxMethods
+     */
+    protected array $ajaxMethods = [];
+
+    /**
      * Konstruktor
      *
      * @param Component|null $Owner Besitzer vom Typ Component
@@ -144,7 +149,7 @@ class GUI_Module extends Module
      * @param array $params additional parameters
      * @throws ReflectionException
      */
-    function __construct(?Component $Owner, bool $autoLoadFiles = true, array $params = [])
+    public function __construct(?Component $Owner, bool $autoLoadFiles = true, array $params = [])
     {
         parent::__construct($Owner, $params);
 
@@ -554,6 +559,19 @@ class GUI_Module extends Module
     }
 
     /**
+     * Adds a closed method (Closure) as an Ajax call. Only Ajax methods are callable by the client.
+     *
+     * @param string $alias name of the method
+     * @param Closure $closure class for anonymous function
+     * @return GUI_Module
+     */
+    protected function addAjaxMethod(string $alias, Closure $closure): self
+    {
+        $this->ajaxMethods[$alias] = $closure;
+        return $this;
+    }
+
+    /**
      * Provisioning data before preparing module and there children.
      **/
     public function prepareContent()
@@ -612,18 +630,20 @@ class GUI_Module extends Module
     {
         $result = '';
 
-        // 09.12.21, AM, reworked
-        if(!is_callable([$this, $method])) {
+        $Closure = $this->ajaxMethods[$method] ?? null;
+
+        // 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
+        if(!($Closure || is_callable([$this, $method]))) {
             $Xception = new Xception('The method "' . $method . '" in the class ' . $this->getClassName().' is not callable', 0, array(),
                 POOL_ERROR_DISPLAY);
             $Xception->raiseError();
             return '';
         }
 
-        // todo validate parameters
+        // @todo validate parameters?
 
         try {
-            $ReflectionMethod = new ReflectionMethod($this, $method);
+            $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $method);
             $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
         }
         catch(\ReflectionException $e) {
@@ -669,12 +689,19 @@ class GUI_Module extends Module
                 $args[] = $value;
             }
         }
-        try {
-            $result = $ReflectionMethod->invokeArgs($this, $args);
-            $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
+
+        if($Closure) {
+            // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
+            $result = $Closure(...$args);
         }
-        catch(\ReflectionException $e) {
-            echo $e->getMessage();
+        else {
+            try {
+                $result = $ReflectionMethod->invokeArgs($this, $args);
+                $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
+            }
+            catch(\ReflectionException $e) {
+                echo $e->getMessage();
+            }
         }
 
         $undefinedContent = ob_get_contents();
