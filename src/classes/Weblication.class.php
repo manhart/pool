@@ -1231,7 +1231,7 @@ class Weblication extends Component
      * set locale
      *
      * @param int $category
-     * @param string|null
+     * @param string|null $locale
      * @return false|string
      */
     public function setLocale(int $category = LC_ALL, ?string $locale = null)
