@@ -174,12 +174,16 @@ function RequestPOOL(module, method, params, async)
 					return false;
 				}
 
+                // debugger;
+                // const contentType = jqXHR.getResponseHeader('Content-Type') || '';
+
 				if(jQuery.type(data) == 'string') {
 					this.error(jqXHR, 0, 'PHP Script Warning/Error: ' + data);
 					return false;
 				}
 
-				var Result = data.Result;
+                // expect POOL object with the properties "Result" and optionally "Error". If not, take it as it is.
+				var Result = data.Result ?? data;
 				let Error = data.Error;
 
 				if(Error && Error.length > 0) {

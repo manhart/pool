@@ -1138,6 +1138,13 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'value' => null // undefined
         ],
+        'paginationParts' => [
+            'attribute' => 'data-pagination-parts',
+            'type'  => 'array',
+            'element'   => 'input',
+            'inputType' => 'text',
+            'value' => ['pageInfo', 'pageSize', 'pageList']
+        ],
         'url' => [
             'attribute' => 'data-url',
             'type' => 'string',
