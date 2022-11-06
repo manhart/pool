@@ -33,20 +33,13 @@ function getMicrotime($seed = 1): float
  * Es zeigt alle Variablen an, die es finden kann.
  * @method static
  *
- * @access public
  * @param mixed $data Variable jeden Datentyps
- * @param boolean|int $functions Zeige Funktionsnamen der Objekte (Standard = 0)
+ * @param boolean $functions Zeige Funktionsnamen der Objekte (Standard = 0)
  * @return string
  */
-function pray($data, $functions=0): string
+function pray(mixed $data, bool $functions=false): string
 {
-    $result = "";
-    if($functions != 0) {
-        $sf = 1;
-    }
-    else {
-        $sf = 0;
-    }
+    $result = '';
 
     if (isset ($data)) {
         if ((is_array($data) and count($data)) || (is_object($data) and !isEmptyObject($data))) {
@@ -60,14 +53,14 @@ function pray($data, $functions=0): string
 
                     if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
                         and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
-                        $result .= pray($value, $sf);
+                        $result .= pray($value, $functions);
                     }
                     else {
                         $result .= 'no follow, infinite loop';
                     }
                 }
                 elseif (stripos($type, 'function') !== false) {
-                    if ($sf) {
+                    if ($functions) {
                         $result .= sprintf("<li>(%s) <b>%s</b> </LI>\n", $type, $key, $value);
                         // There doesn't seem to be anything traversable inside functions.
                     }
@@ -147,7 +140,7 @@ function returnBytes($val): int
     }
 
     if(isset($matches[1])){
-        $val = (int) $matches[1];
+        $val = (int)$matches[1];
     }
 
     switch (strtolower($last))
@@ -223,7 +216,6 @@ function getSeriesOfAppointments(int $from, ?int $to, int $intervall = 7, int $s
  * Gibt true zurueck fuer ein Schaltjahr, andernfalls false
  *
  * @param string $year Jahr im Format CCYY
- * @access public
  * @return boolean true/false
  */
 function isLeapYear(string $year = ''): bool
@@ -250,82 +242,17 @@ function isLeapYear(string $year = ''): bool
     }
 } // end func isLeapYear
 
-/**
- * Gibt den Wochentag in deutscher und englischer Sprache zurueck.
- * Wird kein Dezimal-Wert uebergeben, gibt er den aktuellen Wochentag aus.
- * Der zweite Parameter bestimmt die Sprache. Wird er nicht angegeben,
- * liefert die Funktion ein Array mit allen Sprachen zurueck.
- *
- * @param integer $decimal_value Dezimal Wert fuer Wochentag 1-7 (Mo-So)
- * @param string $locale Internationales Format fuer Laenderlokale
- * @return array or string Wochentag
- **/
-function getWeekday(int $decimal_value = 0, string $locale = 'de_DE')
-{
-    if ($decimal_value == null) {
-        $decimal_value = date('w');
-    }
-    switch ($decimal_value) {
-        case 1:
-            $result['de_DE'] = 'montag';
-            $result['en_US'] = 'monday';
-            break;
-
-        case 2:
-            $result['de_DE'] = 'dienstag';
-            $result['en_US'] = 'tuesday';
-            break;
-
-        case 3:
-            $result['de_DE'] = 'mittwoch';
-            $result['en_US'] = 'wednesday';
-            break;
-
-        case 4:
-            $result['de_DE'] = 'donnerstag';
-            $result['en_US'] = 'thursday';
-            break;
-
-        case 5:
-            $result['de_DE'] = 'freitag';
-            $result['en_US'] = 'friday';
-            break;
-
-        case 6:
-            $result['de_DE'] = 'samstag';
-            $result['en_US'] = 'saturday';
-            break;
-
-        case 0:
-        case 7:
-            $result['de_DE'] = 'sonntag';
-            $result['en_US'] = 'sunday';
-            break;
-
-        default:
-            trigger_error('Unknown Weekday "'.$decimal_value.'" in '.__FUNCTION__);
-    }
-
-    if (!is_null($locale)) {
-        return $result[$locale];
-    }
-    else {
-        return $result;
-    }
-}
-
 if (!function_exists('addEndingSlash')) {
     /**
-     * Fuegt bei Verzeichnissen einen evtl. fehlenden endenden Slash hinzu. Leerstrings werden nicht verändert
+     * Adds a possibly missing ending slash to a string. Empty strings are not changed.
      *
-     * @access public
      * @param string $value Wert (Ordner, Verzeichnis)
-     * @return string Wert mit endendem Slash
+     * @return string String with ending slash.
      **/
     function addEndingSlash(string $value): string
     {
         if ($value != '') {
-            if ($value[strlen($value) - 1] != '/') {
+            if ($value[-1] != '/' && $value[-1] != '\\') {
                 $value .= '/';
             }
         }
@@ -338,16 +265,14 @@ if (!function_exists('removeEndingSlash')) {
     /**
      * Entfernt endenden Slash im String
      *
-     * @access public
      * @param string $value String (z.B. Verzeichnis)
      * @return string String ohne Slash am Ende
      */
     function removeEndingSlash(string $value): string
     {
-        if (!empty($value)) {
-            $len = strlen($value) - 1;
-            if ($value[$len] == '/') {
-                $value = substr($value, 0, $len);
+        if ($value != '') {
+            if ($value[-1] == '/' || $value[-1] == '\\') {
+                $value = substr($value, 0, -1);
             }
         }
 
@@ -359,14 +284,13 @@ if (!function_exists('removeBeginningSlash')) {
     /**
      * Entfernt einen evtl. vorhandenen Slash am Anfang des uebergebenen String
      *
-     * @access public
      * @param string $value String (z.B. Verzeichnis)
      * @return string String ohne Slash am Ende
      */
     function removeBeginningSlash(string $value): string
     {
         if (!empty($value)) {
-            if ($value[0] == '/') {
+            if ($value[0] == '/' || $value[0] == '\\') {
                 $value = substr($value, 1);
             }
         }
@@ -778,11 +702,12 @@ function getContentFromInclude(string $includeFile): string
 
 /**
  * Formatiert eine Zahl als Waehrung.
- *
+ * @deprecated
  * @param string $value Wert
  * @param mixed $num_decimal_places Dezimalstellen
  * @param string $currency Waehrungssymbol
  * @return string Zahl formatiert als Waehrung
+ * @see NumberFormatter::formatCurrency()
  */
 function formatCurrency(string $value, $num_decimal_places = 2, string $currency = '&#8364;'): string
 {
@@ -1255,7 +1180,7 @@ function move_file(string $source, string $dest): bool
  *
  * @see glob()
  * @param string $path Stammverzeichnis
- * @param boolean $absolute Datei mit absolutem Pfad zurückgeben
+ * @param boolean $absolute Datei mit vollstaendigem Pfad zurückgeben andernfalls nur mit $subdir/$filename
  * @param string $filePattern Dateifilter
  * @param string $subdir auszulesendes Unterverzeichnis
  * @return array file list
@@ -1276,6 +1201,126 @@ function readFiles(string $path, bool $absolute = true, string $filePattern = '/
     }
 
     return $files;
+}
+
+/** Build a path by concatenating parts and adding '/' between them and adding an ending slash
+ * @param ...$elements
+ * @return string The assembled path with an ending slash
+ */
+function buildDirPath(...$elements): string
+{
+    $result = "";
+    foreach ($elements as $element){
+        $result .= addEndingSlash($element);
+    }
+    return $result;
+}
+
+/** Build a path by concatenating parts and adding '/' between them
+ * @param string ...$elements
+ * @return string The assembled path without an ending slash
+ */
+function buildFilePath(...$elements): string
+{
+    return removeEndingSlash(buildDirPath(...$elements));
+}
+
+/**Normalizes a path resolving steps up to containing directory's and cleaning out repeated Separators<br>
+ * beginning and ending Separators will be preserved
+ * @param string $path the path to be normalized
+ * @param bool $noFailOnRoot Drop attempts to step out of root in absolute paths instead of failing
+ * @param string $separator directory separator defaults to /
+ * @return false|string the normalized path or false on failure.
+ */
+function normalizePath(string $path, bool $noFailOnRoot = false, string $separator ='/'): bool|string
+{
+    $pathArr = array();
+    $stepsOut = 0;
+    foreach (explode($separator, $path) as $part){
+        //ignore self-references and separator errors
+        if ($part === '' || $part === '.')
+            continue;
+        //normal element -> add to buffer
+        if ($part !== '..'){
+            $pathArr[] = $part;
+        }
+        //wanna go up
+        elseif (count($pathArr) > 0){
+            array_pop($pathArr);
+        }else//hit the root
+            $stepsOut++;
+    }
+    $normalizedPath = implode($separator, $pathArr);
+    //re-add the original paths beginning slash or any necessary steps out
+    if($prefix = isAbsolutePath($path)) {
+        //absolute path -> check for illegal steps out of root
+        if ($stepsOut && !$noFailOnRoot)
+            return false;//fail
+    }else{
+        //relative path
+        $prefix = str_repeat('..'. $separator, $stepsOut);
+    }
+    $normalizedPath = $prefix.$normalizedPath;
+    //re-add the original paths ending directory slash
+    if (str_ends_with($path, $separator))
+        $normalizedPath .= $separator;
+    return $normalizedPath;
+}
+
+/**Calculates a vector between two paths useful to turn an absolute path into a path relative to the script being served
+ * @param string|null $here the starting path if null will use the directory of $_SERVER['SCRIPT_FILENAME']
+ * @param string $toThis the path to point to
+ * @param bool $normalize normalize absolute paths before calculation
+ * @param string|null $base an optional path to base relative paths on defaults to the directory of $_SERVER['SCRIPT_FILENAME']
+ * @param string $separator directory separator defaults to /
+ * @return string|false the calculated vector or false if normalization fails
+ */
+function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = '/'): bool|string
+{
+    $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
+    $base ??= $browserPath;
+    $here ??= $browserPath;
+    //base relative paths and normalize
+    if (!isAbsolutePath($here)) {
+        $here = addEndingSlash($base) . $here;
+        $here = normalizePath($here, separator: $separator);
+    } elseif ($normalize)
+        $here = normalizePath($here, separator: $separator);
+    if (!isAbsolutePath($toThis)) {
+        $toThis = addEndingSlash($base) . $toThis;
+        $toThis = normalizePath($toThis, separator: $separator);
+    } elseif ($normalize){
+        $toThis = normalizePath($toThis, separator: $separator);
+    }
+    if(!($here&&$toThis))//normalization returned an invalid result
+        return false;//fail
+    //beginn
+    $hereArr = explode($separator,$here);
+    $toThisArr = explode($separator, $toThis);
+    $hereCount = count($hereArr);
+    //cut out the common part
+    $vectorArr = array_diff_assoc($toThisArr, $hereArr);
+    //calculate the size of the common part not included in target
+    $commonCount = count($toThisArr) - count($vectorArr);
+    //get from here to the common base
+    $stepsOut = $hereCount - $commonCount;
+    $stepOutString = str_repeat('..'. $separator, $stepsOut);
+    $stepOutString = removeEndingSlash($stepOutString);
+    //build path
+    array_unshift($vectorArr, $stepOutString);
+    $isDirectory = str_ends_with($toThis, $separator);
+    return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
+}
+
+/**Determine if a path is absolute
+ * @param string $path the path to check
+ * @return string|false the absolute prefix e.g. '/' or 'C:\' or 'https://
+ */
+function isAbsolutePath(string $path): bool|string
+{
+    $regex = "/^((\w*:)?[\/\\\\]{1,2})/";
+    //grep a potential match
+    return preg_match($regex, $path, $matches)?$matches[1] : false;
 }
 
 /**
@@ -1375,16 +1420,14 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
 }
 
 /**
- * Schaut, ob die Anfrage per Ajax kommt.
- * Genauer gesagt, ob die Variable $_SERVER['HTTP_X_REQUESTED_WITH'] auf XMLHttpRequest gesetzt ist.
- * Dies macht z.B. das Javascript-Framework Prototype. (Ajax.Request)
+ * Checks if it is an Ajax call (XmlHttpRequest)
  *
+ * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
  * @return boolean
  */
 function isAjax(): bool
 {
-    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
-           || (isset($_REQUEST['HTTP_X_REQUESTED_WITH']) && $_REQUEST['HTTP_X_REQUESTED_WITH']);
+    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
 }
 
 
