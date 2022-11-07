@@ -17,6 +17,7 @@
  * @link http://www.misterelsa.de
  */
 
+
 /**
  * GUI_CustomFrame
  *
@@ -168,6 +169,8 @@ class GUI_CustomFrame extends GUI_Module
     {
         return $this->Headerdata;
     }
+
+
 
     /**
      * Liefert das GUI_DynToolTip Objekt fuer ToolTip Texte.

@@ -124,7 +124,7 @@ class GUI_Button extends GUI_Universal
         );
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');

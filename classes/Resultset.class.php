@@ -379,15 +379,17 @@ if(!defined('CLASS_RESULTSET')) {
         }
 
         /**
-         * Returns a value of a field of the current record as an integer
+         * Returns a value of a field of the current record as an integer. It is also possible to return null as default value.
          *
          * @param string $key
-         * @param int $default
+         * @param int|null $default
          * @return int
          */
-        public function getValueAsInt(string $key, int $default=0): int
+        public function getValueAsInt(string $key, ?int $default=0): ?int
         {
-            return (int)$this->getValue($key, $default);
+            $value = $this->getValue($key, $default);
+            if($default === null && $value === null) return null;
+            return (int)$value;
         }
 
         /**
@@ -937,7 +939,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param string $text_clinch text clinch
          * @return string csv string
          **/
-        function getCSV($with_headline=true, $separator=';', $line_break="\n", $text_clinch='"')
+        function getCSV(bool $with_headline=true, string $separator=';', string $line_break="\n", string $text_clinch='"'): string
         {
             $csv='';
             if($this->count()) {
@@ -983,7 +985,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param string $text_clinch Textklammer
          * @return string
          */
-        function getRowAsCSV($with_headline=true, $separator=';', $line_break="\n", $text_clinch='"')
+        function getRowAsCSV(bool $with_headline=true, string $separator=';', string $line_break="\n", string $text_clinch='"'): string
         {
             $csv = '';
             if($this->count()) {
@@ -992,7 +994,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $row = '';
                     foreach ($this->fields as $key) {
                         if($row != '') $row .= $separator;
-                        $val = self::maskTextCSVcompliant($this->rowset[$this->index][$key], $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant((string)$this->rowset[$this->index][$key], $separator, $text_clinch);
                         $row .= $val;
                     }
                     $row .= $line_break;
@@ -1007,7 +1009,7 @@ if(!defined('CLASS_RESULTSET')) {
                     $values = array_values($this->getRow());
                     $i = 0;
                     foreach($values as $val) {
-                        $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
+                        $val = self::maskTextCSVcompliant((string)$val, $separator, $text_clinch);
                         $csv .= ($i == 0) ? ''.$val : $separator.$val;
                         $i++;
                     }
@@ -1037,7 +1039,7 @@ if(!defined('CLASS_RESULTSET')) {
          * @param string $text_clinch Zeichen für Textklammer
          * @return string
          */
-        static function maskTextCSVcompliant($val, $separator=';', $text_clinch='"')
+        static function maskTextCSVcompliant(string $val, string $separator=';', string $text_clinch='"'): string
         {
             $hasTextClinch = false;
             if($text_clinch != '') {
@@ -1046,7 +1048,7 @@ if(!defined('CLASS_RESULTSET')) {
             if($hasTextClinch !== false) {
                 $val = str_replace($text_clinch, $text_clinch.$text_clinch, $val);
             }
-            if ($hasTextClinch !== false or strpos($val, $separator) !== false or strpos($val, chr(10)) !== false or strpos($val, chr(13)) !== false) {
+            if ($hasTextClinch !== false or str_contains($val, $separator) or strpos($val, chr(10)) !== false or strpos($val, chr(13)) !== false) {
                 $val = $text_clinch.$val.$text_clinch;
             }
             return $val;

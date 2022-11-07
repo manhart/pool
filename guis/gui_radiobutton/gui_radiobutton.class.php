@@ -37,7 +37,7 @@ class GUI_Radiobutton extends GUI_InputElement
         parent :: prepare();
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

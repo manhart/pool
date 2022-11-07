@@ -4,7 +4,7 @@
  *
  * Template.class.php
  *
- * Rapid Template Engine (RTE) ist eine Template-Engine f�r PHP. Genauer gesagt erlaubt es die einfache Trennung von
+ * Rapid Template Engine (RTE) ist eine Template-Engine für PHP. Genauer gesagt erlaubt es die einfache Trennung von
  * Applikations-Logik und Design/Ausgabe. Dies ist vor allem wuenschenswert, wenn der Applikationsentwickler nicht die
  * selbe Person ist wie der Designer. Nehmen wir zum Beispiel eine Webseite die Zeitungsartikel ausgibt.
  * Der Titel, die Einfuehrung, der Author und der Inhalt selbst enthalten keine Informationen darueber wie sie dargestellt
@@ -28,8 +28,8 @@
  * @version
  *
  * @since 2003-07-12
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @link http://www.misterelsa.de
+ * @author Alexander Manhart <alexander@manhart-it.de>
+ * @link https://alexander-manhart.de
  */
 
 if(!defined('RAPID_TEMPLATE_ENGINE')) {
@@ -1074,10 +1074,9 @@ if(!defined('RAPID_TEMPLATE_ENGINE')) {
         /**
          * Liefert ein Array mit allen TempFile Objekten (auch TempScript).
          *
-         * @access public
          * @return array Liste aus TempFile Objekten
          */
-        function &getFiles()
+        public function getFiles(): array
         {
             $files = array();
 
@@ -1088,10 +1087,10 @@ if(!defined('RAPID_TEMPLATE_ENGINE')) {
                 if($TempFile instanceof TempSimple) {
                     continue;
                 }
-                $files[] = &$TempFile;
+                $files[] = $TempFile;
 
                 // Suche innerhalb des TempFile's nach weiteren TemplateFiles
-                $more_files = &$TempFile->getFiles();
+                $more_files = $TempFile->getFiles();
                 if(count($more_files) > 0) {
                     $files = array_merge($files, $more_files);
                 }
@@ -1139,11 +1138,11 @@ if(!defined('RAPID_TEMPLATE_ENGINE')) {
          *
          * @access public
          */
-        function backToFile($filehandle = '')
+        function backToFile(string $fileHandle = '')
         {
             $this->leaveBlock();
-            if(!is_null($filehandle)) {
-                $this->useFile($filehandle);
+            if(!is_null($fileHandle)) {
+                $this->useFile($fileHandle);
             }
         }
 

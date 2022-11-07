@@ -36,7 +36,7 @@ class GUI_DynClock extends GUI_Module
         }
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse();
         return $this -> Template -> getContent();

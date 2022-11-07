@@ -240,9 +240,9 @@ class GUI_Calendar extends GUI_Module
     /**
      * GUI_Calendar::finalize()
      *
-     * @return
+     * @return string
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

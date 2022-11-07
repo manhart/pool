@@ -250,16 +250,7 @@ class GUI_Table extends GUI_Module
 
             let format = poolFormat ? poolFormat : this.formats[poolType];
 
-            let poolUseFormatted = false;
-            if('poolUseFormatted' in column) {
-                poolUseFormatted = column['poolUseFormatted'];
-            }
             // console.debug(field, poolType, format);
-
-            // if('formatter' in column) {
-            //     column['formatter'] =
-            // }
-            //
 
             switch(poolType) {
                 case 'date.time':
@@ -267,14 +258,14 @@ class GUI_Table extends GUI_Module
                 case 'time':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format, poolUseFormatted);
+                        column['formatter'] = (value, row, index, field) => this.strftime(value, row, index, field, format);
                     }
                     break;
 
                 case 'number':
 
                     if(!('formatter' in column)) {
-                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format, poolUseFormatted);
+                        column['formatter'] = (value, row, index, field) => this.number_format(value, row, index, field, format);
                     }
                     break;
             }
@@ -957,9 +948,51 @@ class GUI_Table extends GUI_Module
         // todo
     }
 
-    number_format(value, row, index, field, format, useFormatted)
+    /**
+     * creates three separate fields in each row of bs-table, which are used by the filterControls function
+     *
+     * {field}_pool_raw contains the raw data
+     * {field}_pool_formatted contains the formatted data
+     * {field}_pool_use_formatted is a command that filterControls should use the formatted value instead of the raw data.
+     *
+     * @see helpers.js
+     *
+     * @param value
+     * @param field
+     * @param row
+     * @param formatCallback
+     * @return {*}
+     * @private
+     */
+    _usePoolFormatter(value, field, row, formatCallback)
     {
-        return number_format(value, format['decimals'], format['decimal_separator'], format['thousands_separator'])
+        let useFormatted = this.getColumnOptions(field)['poolUseFormatted'] ?? false;
+
+        // 26.01.22, AM, save data in new invisible columns
+        let col_pool_formatted = field + '_pool_formatted';
+
+        // format only if changed or if not yet done.
+        let already_formatted = col_pool_formatted in row;
+        let was_modified = already_formatted ? (useFormatted && value != row[col_pool_formatted]) : false;
+        let do_format = !already_formatted || was_modified;
+
+        if(do_format) {
+            row[col_pool_formatted] = formatCallback();
+
+            if(useFormatted) {
+                // AM, hint: _pool_use_formatted used in fillControls!!
+                row[field + '_pool_raw'] = value;
+                row[field + '_pool_use_formatted'] = true;
+            }
+        }
+        return row[col_pool_formatted];
+    }
+
+    number_format(value, row, index, field, format)
+    {
+        return this._usePoolFormatter(value, field, row, () => {
+            return number_format(value, format['decimals'], format['decimal_separator'], format['thousands_separator']);
+        })
     }
 
     sprintf(value, row, index, field, format)
@@ -970,39 +1003,19 @@ class GUI_Table extends GUI_Module
         return value;
     }
 
-    strftime(value, row, index, field, format, useFormatted)
+    strftime(value, row, index, field, format)
     {
         // 09.12.21, AM, fallback: handle empty english database format (should be handled server-side!!)
         if(value == '0000-00-00 00:00:00' || value == '0000-00-00') {
             value = '';
         }
 
-        if(format && value) {
-            // console.debug(row);
-            // 26.01.22, AM, save data in new invisible columns
-            let col_pool_formatted = field + '_pool_formatted';
+        if(!value) return value;
+        if(!format) return value;
 
-            let already_formatted = col_pool_formatted in row;
-
-            // 28.01.22, AM, was_modified and reformat added, because updateByUniqueId modifies row at runtime.
-            let was_modified = already_formatted ? (useFormatted && value != row[col_pool_formatted]) : false;
-            let reformat = !already_formatted || was_modified;
-
-            if(reformat) {
-                row[col_pool_formatted] = new Date(value).strftime(format)
-            }
-            if(useFormatted && reformat) {
-                // AM, hint: _pool_use_formatted used in fillControls!!
-                row[field + '_pool_raw'] = value;
-                row[field + '_pool_use_formatted'] = true;
-                // row[field] = row[col_pool_formatted];
-            }
-            // console.debug('complete row', row);
-
-            return row[col_pool_formatted];
-        }
-
-        return value;
+        return this._usePoolFormatter(value, field, row, () => {
+            return (new Date(value)).strftime(format);
+        });
     }
 
     /**

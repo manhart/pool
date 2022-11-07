@@ -837,7 +837,7 @@ class GUI_Choosy extends GUI_Module
      *
      * @return string fertiger Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         $content = $this -> reviveChildGUIs($this -> Template -> getContent('stdout'));

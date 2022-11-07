@@ -12,6 +12,8 @@
 namespace pool\classes;
 
 
+use Exception;
+
 final class Translator extends \PoolObject
 {
     /**
@@ -334,12 +336,12 @@ final class Translator extends \PoolObject
      *
      * @param string $directory
      * @return $this
-     * @throws \Exception
+     * @throws Exception
      */
     public function setResourceDir(string $directory)
     {
         if (!is_dir($directory)) {
-            throw new \Exception('Resource directory ' . $directory . ' not found.');
+            throw new Exception('Resource directory ' . $directory . ' not found.');
         }
         $this->translation = [];
         $this->directory = $directory;
@@ -371,11 +373,22 @@ final class Translator extends \PoolObject
      * change language
      *
      * @param string $language
-     * @return $this
+     * @return Translator
      */
-    public function changeLanguage(string $language)
+    public function changeLanguage(string $language): Translator
     {
         $this->language = $language;
+        return $this;
+    }
+
+    /**
+     * change back to default language
+     *
+     * @return Translator
+     */
+    public function changeBackToDefaultLanguage(): Translator
+    {
+        $this->changeLanguage($this->defaultLanguage);
         return $this;
     }
 
@@ -423,7 +436,7 @@ final class Translator extends \PoolObject
      * @param string $key
      * @param mixed|null ...$args
      * @return mixed|string
-     * @throws \Exception
+     * @throws Exception
      */
     public function get(string $key, ...$args)
     {
@@ -447,7 +460,7 @@ final class Translator extends \PoolObject
      * @param int $n
      * @param mixed|null ...$args
      * @return mixed|string
-     * @throws \Exception
+     * @throws Exception
      */
     public function nget(string $key, int $n, ...$args)
     {
@@ -472,7 +485,7 @@ final class Translator extends \PoolObject
      *
      * @param string $key
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function exists(string $key)
     {
@@ -505,7 +518,7 @@ final class Translator extends \PoolObject
 
         if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
             $errormessage = preg_last_error_message($lastErrorCode);
-            throw new \Exception($errormessage, $lastErrorCode);
+            throw new Exception($errormessage, $lastErrorCode);
         }
 
         foreach ($matches as $match) {
@@ -521,7 +534,7 @@ final class Translator extends \PoolObject
             $content = preg_replace($reg, $translation, $content, 1);
             if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
                 $errormessage = preg_last_error_message($lastErrorCode);
-                throw new \Exception($errormessage, $lastErrorCode);
+                throw new Exception($errormessage, $lastErrorCode);
             }
         }
 
@@ -529,7 +542,7 @@ final class Translator extends \PoolObject
         preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
         if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
             $errormessage = preg_last_error_message($lastErrorCode);
-            throw new \Exception($errormessage, $lastErrorCode);
+            throw new Exception($errormessage, $lastErrorCode);
         }
 
         foreach($matches as $match) {
@@ -545,7 +558,7 @@ final class Translator extends \PoolObject
             $content = preg_replace($reg, $translation, $content, 1);
             if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
                 $errormessage = preg_last_error_message($lastErrorCode);
-                throw new \Exception($errormessage, $lastErrorCode);
+                throw new Exception($errormessage, $lastErrorCode);
             }
 
         }
@@ -580,7 +593,7 @@ final class Translator extends \PoolObject
      *
      * @param string $language language code/country code
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public function getTranslation(string $language): array
     {
@@ -588,14 +601,23 @@ final class Translator extends \PoolObject
             $translationFile = $this->directory . '/' . $language . $this->extension;
 
             // file cannot be loaded, error handling:
-            if(file_exists($translationFile) == false) {
-                if(!$this->directory) throw new \Exception('No directory was specified for the resources.');
-                if(!$language) throw new \Exception('No language was specified.');
-                throw new \Exception('Translation file '.$translationFile.' couldn\'t be found.');
+            if(!file_exists($translationFile)) {
+                if(!$this->directory) throw new Exception('No directory was specified for the resources.');
+                if(!$language) throw new Exception('No language was specified.');
+                throw new \TranslatorMissingFileException('Translation file '.$translationFile.' couldn\'t be found.');
             }
             $this->setTranslation($language, include($translationFile));
         }
         return $this->translation[$language];
+    }
+
+    /**
+     * @param string $language
+     * @return bool
+     */
+    public function resourceFile_exists(string $language): bool
+    {
+        return file_exists($this->directory . '/' . $language . $this->extension);
     }
 
     /**

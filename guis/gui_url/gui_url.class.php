@@ -96,10 +96,9 @@ class GUI_Url extends GUI_Module
     /**
      * Box Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         return $this->returnValue;
     }
