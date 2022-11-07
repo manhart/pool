@@ -124,11 +124,10 @@ class GUI_Box extends GUI_Module
      *
      * Box Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @param $content HTML/Texxt-Inhalt
      * @return string Content
      **/
-    function finalize($content = '')
+    function finalize($content = ''): string
     {
         if ($this->enabledBox) {
             $this->TplBox->setVar('CONTENT', $content);

@@ -182,7 +182,7 @@ class GUI_DHtmlCalendar extends GUI_Module
         */
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');

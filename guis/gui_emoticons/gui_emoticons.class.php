@@ -67,7 +67,7 @@ class GUI_Emoticons extends GUI_Module
         }
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse($this -> Input -> getVar('emoticons'));
         return $this -> Template -> getContent($this -> Input -> getVar('emoticons'));

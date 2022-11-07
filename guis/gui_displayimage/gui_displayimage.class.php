@@ -134,10 +134,9 @@ class GUI_DisplayImage extends GUI_Module
      *
      * Template parsen.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize($content = '')
+    function finalize($content = ''): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

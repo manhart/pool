@@ -94,10 +94,9 @@ class GUI_DHtmlXGridExport extends GUI_Module
     /**
      * Box Inhalt parsen und zurueck geben.
      *
-     * @access public
      * @return string Content
      **/
-    function finalize($content = '')
+    function finalize($content = ''): string
     {
         return $content;
     }

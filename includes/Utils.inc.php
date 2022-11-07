@@ -18,10 +18,9 @@
  *
  * @return float Zeitstempel in Mikrosekunden
  **/
-function getMicrotime($seed = 1)
+function getMicrotime($seed = 1): float
 {
     list($usec, $sec) = explode(' ', microtime());
-
     return ((float)$usec + ((float)$sec * $seed));
 }
 
@@ -29,24 +28,17 @@ function getMicrotime($seed = 1)
  * pray ()
  * Erweiterte var_dump Funktion mit formatierter Ausgabe
  * Durchlaeuft die Argumente (Arrays/Objects) rekursiv und gibt eine formatierte Liste aus.
- * Optional werden Funktionsnamen von Objekten ausgegeben .
+ * Optional werden Funktionsnamen von Objekten ausgegeben.
  * Es zeigt alle Variablen an, die es finden kann.
  * @method static
  *
- * @access public
  * @param mixed $data Variable jeden Datentyps
- * @param boolean|int $functions Zeige Funktionsnamen der Objekte (Standard = 0)
+ * @param boolean $functions Zeige Funktionsnamen der Objekte (Standard = 0)
  * @return string
  */
-function pray($data, $functions=0)
+function pray(mixed $data, bool $functions=false): string
 {
-    $result = "";
-    if($functions != 0) {
-        $sf = 1;
-    }
-    else {
-        $sf = 0;
-    }
+    $result = '';
 
     if (isset ($data)) {
         if ((is_array($data) and count($data)) || (is_object($data) and !isEmptyObject($data))) {
@@ -60,14 +52,14 @@ function pray($data, $functions=0)
 
                     if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
                         and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
-                        $result .= pray($value, $sf);
+                        $result .= pray($value, $functions);
                     }
                     else {
                         $result .= 'no follow, infinite loop';
                     }
                 }
                 elseif (stripos($type, 'function') !== false) {
-                    if ($sf) {
+                    if ($functions) {
                         $result .= sprintf("<li>(%s) <b>%s</b> </LI>\n", $type, $key, $value);
                         // There doesn't seem to be anything traversable inside functions.
                     }
@@ -97,9 +89,9 @@ function pray($data, $functions=0)
  * @param bool $shortVersion Abgekuerzt
  * @param int $decimals
  * @param string $blank
- * @return string Formatierter String z.B.  33,44 MBytes
+ * @return string Formatierter String z.B. 33,44 MBytes
  */
-function formatBytes($bytes, $shortVersion = false, $decimals = 2, $blank = ' ')
+function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, string $blank = ' '): string
 {
     // Bytes
     if ($bytes < 1024) {
@@ -133,7 +125,7 @@ function formatBytes($bytes, $shortVersion = false, $decimals = 2, $blank = ' ')
  * @param $val
  * @return int
  */
-function returnBytes($val)
+function returnBytes($val): int
 {
     if(empty($val))return 0;
 
@@ -147,19 +139,26 @@ function returnBytes($val)
     }
 
     if(isset($matches[1])){
-        $val = (int) $matches[1];
+        $val = (int)$matches[1];
     }
 
     switch (strtolower($last))
     {
+        case 't':
+        case 'tb':
+        case 'tib':
+            $val *= 1024;
         case 'g':
         case 'gb':
+        case 'gib':
             $val *= 1024;
         case 'm':
         case 'mb':
+        case 'mib':
             $val *= 1024;
         case 'k':
         case 'kb':
+        case 'kib':
             $val *= 1024;
     }
 
@@ -167,15 +166,15 @@ function returnBytes($val)
 }
 
 /**
- * Errechnet eine Terminserie (ber�cksichtigt Sommer- & Winterzeit)
+ * Errechnet eine Terminserie (beruecksichtigt Sommer- & Winterzeit)
  *
- * @param int $von Startzeitpunkt
- * @param int $bis Endzeitpunkt
- * @param int $intervall Intervall in Tage (Standard 7 f�r eine Woche)
- * @param int $step Schritte (schrittweise) bedeutet zu jedem $step 'ten Intervall. Z.B. bei 2 wird jeder 2. Termin �bersprungen (bzw. 2 Wochen Intervall bei 7 Tagen erreicht)
+ * @param int $from Startzeitpunkt
+ * @param int|null $to Endzeitpunkt
+ * @param int $intervall Intervall in Tage (Standard 7 fuer eine Woche)
+ * @param int $step Schritte (schrittweise) bedeutet zu jedem $step 'ten Intervall. Z.B. bei 2 wird jeder 2. Termin uebersprungen (bzw. 2-Wochen-Intervall bei 7 Tagen erreicht)
  * @return array
  */
-function getSeriesOfAppointments($from, $to, $intervall = 7, $step = 1)
+function getSeriesOfAppointments(int $from, ?int $to, int $intervall = 7, int $step = 1): array
 {
     $dates = array();
 
@@ -203,7 +202,7 @@ function getSeriesOfAppointments($from, $to, $intervall = 7, $step = 1)
             $new_date['date'] = date('d.m.Y', $time);
             $new_date['step'] = $step;
             if ($time <= $to) {
-                array_push($dates, $new_date);
+                $dates[] = $new_date;
             }
             unset($new_date);
         }
@@ -215,11 +214,10 @@ function getSeriesOfAppointments($from, $to, $intervall = 7, $step = 1)
 /**
  * Gibt true zurueck fuer ein Schaltjahr, andernfalls false
  *
- * @param string Jahr im Format CCYY
- * @access public
+ * @param string $year Jahr im Format CCYY
  * @return boolean true/false
  */
-function isLeapYear($year = '')
+function isLeapYear(string $year = ''): bool
 {
     if (empty($year)) {
         $year = date('Y');
@@ -243,82 +241,17 @@ function isLeapYear($year = '')
     }
 } // end func isLeapYear
 
-/**
- * Gibt den Wochentag in deutscher und englischer Sprache zurueck.
- * Wird kein Dezimal-Wert uebergeben, gibt er den aktuellen Wochentag aus.
- * Der zweite Parameter bestimmt die Sprache. Wird er nicht angegeben,
- * liefert die Funktion ein Array mit allen Sprachen zurueck.
- *
- * @param integer $decimal_value Dezimal Wert fuer Wochentag 1-7 (Mo-So)
- * @param string $locale Internationales Format fuer Laenderlokale
- * @return array or string Wochentag
- **/
-function getWeekday($decimal_value = 0, $locale = 'de_DE')
-{
-    if ($decimal_value == null) {
-        $decimal_value = date('w');
-    }
-    switch ($decimal_value) {
-        case 1:
-            $result['de_DE'] = 'montag';
-            $result['en_US'] = 'monday';
-            break;
-
-        case 2:
-            $result['de_DE'] = 'dienstag';
-            $result['en_US'] = 'tuesday';
-            break;
-
-        case 3:
-            $result['de_DE'] = 'mittwoch';
-            $result['en_US'] = 'wednesday';
-            break;
-
-        case 4:
-            $result['de_DE'] = 'donnerstag';
-            $result['en_US'] = 'thursday';
-            break;
-
-        case 5:
-            $result['de_DE'] = 'freitag';
-            $result['en_US'] = 'friday';
-            break;
-
-        case 6:
-            $result['de_DE'] = 'samstag';
-            $result['en_US'] = 'saturday';
-            break;
-
-        case 0:
-        case 7:
-            $result['de_DE'] = 'sonntag';
-            $result['en_US'] = 'sunday';
-            break;
-
-        default:
-            trigger_error('Unknown Weekday "'.$decimal_value.'" in '.__FUNCTION__);
-    }
-
-    if (!is_null($locale)) {
-        return $result[$locale];
-    }
-    else {
-        return $result;
-    }
-}
-
 if (!function_exists('addEndingSlash')) {
     /**
-     * Fuegt bei Verzeichnissen endenden Slash hinzu.
+     * Adds a possibly missing ending slash to a string. Empty strings are not changed.
      *
-     * @access public
      * @param string $value Wert (Ordner, Verzeichnis)
-     * @return Wert mit endenden Slash
+     * @return string String with ending slash.
      **/
-    function addEndingSlash($value)
+    function addEndingSlash(string $value): string
     {
         if ($value != '') {
-            if ($value[strlen($value) - 1] != '/') {
+            if ($value[-1] != '/' && $value[-1] != '\\') {
                 $value .= '/';
             }
         }
@@ -331,16 +264,14 @@ if (!function_exists('removeEndingSlash')) {
     /**
      * Entfernt endenden Slash im String
      *
-     * @access public
      * @param string $value String (z.B. Verzeichnis)
      * @return string String ohne Slash am Ende
      */
-    function removeEndingSlash($value)
+    function removeEndingSlash(string $value): string
     {
-        if (!empty($value)) {
-            $len = strlen($value) - 1;
-            if ($value[$len] == '/') {
-                $value = substr($value, 0, $len);
+        if ($value != '') {
+            if ($value[-1] == '/' || $value[-1] == '\\') {
+                $value = substr($value, 0, -1);
             }
         }
 
@@ -350,16 +281,15 @@ if (!function_exists('removeEndingSlash')) {
 
 if (!function_exists('removeBeginningSlash')) {
     /**
-     * Entfernt endenden Slash im String
+     * Entfernt einen evtl. vorhandenen Slash am Anfang des uebergebenen String
      *
-     * @access public
      * @param string $value String (z.B. Verzeichnis)
      * @return string String ohne Slash am Ende
      */
-    function removeBeginningSlash($value)
+    function removeBeginningSlash(string $value): string
     {
         if (!empty($value)) {
-            if ($value[0] == '/') {
+            if ($value[0] == '/' || $value[0] == '\\') {
                 $value = substr($value, 1);
             }
         }
@@ -375,7 +305,7 @@ if (!function_exists('removeBeginningSlash')) {
  * @param integer $mode
  * @return boolean success
  **/
-function mkdirs(string $strPath, $mode = 0777)
+function mkdirs(string $strPath, int $mode = 0777): bool
 {
     if (@is_dir($strPath)) {
         return true;
@@ -395,11 +325,11 @@ function mkdirs(string $strPath, $mode = 0777)
  * Maskiert z.B. URIs:
  * Die Maskierung besteht darin, ein Prozentzeichen % zu notieren, gefolgt von dem hexadezimal ausgedrueckten Zeichenwert des gewuenschten Zeichens.
  *
- * @param string $text Bliebiger Text, URI, E-Mail, etc.
- * @return maskierter / codierter Text
+ * @param string $text Beliebiger Text, URI, E-Mail, etc.
+ * @return string maskierter / codierter Text
  * @link http://selfhtml.teamone.de/html/verweise/email.htm
  **/
-function hex_encode($text)
+function hex_encode(string $text): string
 {
     $encoded = '';
     if (strlen($text) > 0) {
@@ -412,14 +342,14 @@ function hex_encode($text)
 }
 
 /**
- * getJSEMailLink()
+ *
  * Gibt einen klickbaren JavaScript HEX kodierten E-Mail Link zurueck.
  * Vor allem gegen Spam Bots interessant!
  *
  * @param string $email E-Mail Adresse
  * @return string JavaScript E-Mail Link
  **/
-function getJSEMailLink($email, $caption = null)
+function getJSEMailLink(string $email, $caption = null): string
 {
     if (strpos($email, '@') === false) {
         return '';
@@ -428,7 +358,7 @@ function getJSEMailLink($email, $caption = null)
     $en_caption = hex_encode($email[0]);
     $en_at = hex_encode('@');
     $en_ext = hex_encode($email[1]);
-    $js = '<script type="text/javascript" language="javascript">
+    $js = '<script type="text/javascript">
 				<!--
 					var caption = "'.$en_caption.'";
 					var at = "'.$en_at.'";
@@ -452,13 +382,13 @@ function getJSEMailLink($email, $caption = null)
 
 /**
  * deleteDir()
- * Loescht kompletten Inhalt  inkl. Unterverzeichnisse eines Verzeichnis
+ * Loescht kompletten Inhalt inkl. Unterverzeichnisse eines Verzeichnisses
  *
  * @access public
  * @param string $dir Verzeichnis
  * @return boolean Erfolgsstatus
  **/
-function deleteDir($dir, $rmSelf = true)
+function deleteDir(string $dir, $rmSelf = true): bool
 {
     if (!$opendir = opendir($dir)) {
         return false;
@@ -492,7 +422,7 @@ function deleteDir($dir, $rmSelf = true)
 
 /**
  * determines the extension of the file without the dot
- * see also PHP function pathinfo since version 4.0.3
+ * @see pathinfo() buildin function since PHP 4.0.3
  *
  * @param string $file filename
  * @return string file extension
@@ -573,7 +503,7 @@ function shorten(string $str = '', int $len = 150, $more = 1, bool $backtrack = 
  * @param string $line Wert
  * @return boolean
  **/
-function removeEmptyLines($line)
+function removeEmptyLines(string $line): bool
 {
     return trim($line) != '';
 }
@@ -612,7 +542,7 @@ function formatDateTime($datetime, $format): string
  * @see formatDateTime
  * @deprecated
  */
-function formatDEDateToEN($strDate, $delimiter = '.')
+function formatDEDateToEN($strDate, $delimiter = '.'): string
 {
     $arrDate = explode($delimiter, $strDate);
     return (new DateTime(strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0])))->format('Y-m-d');
@@ -648,7 +578,7 @@ function nl2br2(string $string): string
  * @param string $file_content Datei
  * @return string Datei ohne Html, Head und Body Tags
  **/
-function strip_body($file_content)
+function strip_body(string $file_content): string
 {
     $body = '';
     if (preg_match('#<body[^>]*?>(.*?)</body>#si', $file_content, $matches)) {
@@ -664,7 +594,7 @@ function strip_body($file_content)
  * @param string $html
  * @return string
  */
-function strip_head($html): string
+function strip_head(string $html): string
 {
     $head = '';
     if (preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches)) {
@@ -679,7 +609,7 @@ function strip_head($html): string
  *
  * @return array Browser und Version
  */
-function getClientBrowser()
+function getClientBrowser(): array
 {
     $userAgent = $_SERVER['HTTP_USER_AGENT'];
     if (($pos = strpos($userAgent, 'MSIE')) !== false) {
@@ -707,7 +637,7 @@ function getClientBrowser()
  *
  * @return string Remote/Client IP Adresse
  **/
-function getClientIP()
+function getClientIP(): string
 {
     foreach (
         array(
@@ -736,7 +666,7 @@ function getClientIP()
  * @param bool $withClientIP
  * @return string
  */
-function getBrowserFingerprint($withClientIP=true)
+function getBrowserFingerprint(bool $withClientIP=true): string
 {
     $data = ($withClientIP ? getClientIp() : '');
     $data .= $_SERVER['HTTP_USER_AGENT'];
@@ -757,7 +687,7 @@ function getBrowserFingerprint($withClientIP=true)
  * @param string $includeFile Absoluter Dateipfad
  * @return string
  */
-function getContentFromInclude($includeFile)
+function getContentFromInclude(string $includeFile): string
 {
     ob_start();
     include($includeFile);
@@ -768,16 +698,17 @@ function getContentFromInclude($includeFile)
 }
 
 /**
- * Formatiert eine Zahl als W�hrung.
- *
+ * Formatiert eine Zahl als Waehrung.
+ * @deprecated
  * @param string $value Wert
- * @param string $num_decimal_places Dezimalstellen
- * @param string $currency W�hrungssymbol
- * @return string Zahl formatiert als W�hrung
+ * @param mixed $num_decimal_places Dezimalstellen
+ * @param string $currency Waehrungssymbol
+ * @return string Zahl formatiert als Waehrung
+ * @see NumberFormatter::formatCurrency()
  */
-function formatCurrency($value, $num_decimal_places = 2, string $currency = '&#8364;')
+function formatCurrency(string $value, $num_decimal_places = 2, string $currency = '&#8364;'): string
 {
-    return number_format(floatval($value), $num_decimal_places, ',', '.').$currency;
+    return number_format(floatval($value), (int)$num_decimal_places, ',', '.').$currency;
 }
 
 /**
@@ -786,8 +717,9 @@ function formatCurrency($value, $num_decimal_places = 2, string $currency = '&#8
  * @param int $datetime Datenbank Timestamp im Format YYYYMMDDhhmmss
  * @param string $format
  * @return string formatiertes Datum
+ * @throws Exception
  */
-function formatDBTimestampAsDatetime($datetime, string $format = 'd.m.Y H:i'): string
+function formatDBTimestampAsDatetime(int $datetime, string $format = 'd.m.Y H:i'): string
 {
     $year = substr($datetime, 0, 4);
     $mon = substr($datetime, 4, 2);
@@ -805,35 +737,33 @@ function formatDBTimestampAsDatetime($datetime, string $format = 'd.m.Y H:i'): s
  * @param array $array Array
  * @return string
  */
-function arrayToAttr($array)
+function arrayToAttr(array $array): string
 {
     $strHtmlTagAttr = '';
-    if (is_array($array)) {
-        foreach ($array as $key => $value) {
-            if ($strHtmlTagAttr != '') $strHtmlTagAttr .= ' ';
-            $strHtmlTagAttr .= $key.'="'.$value.'"';
-        }
+    foreach ($array as $key => $value) {
+        if ($strHtmlTagAttr != '') $strHtmlTagAttr .= ' ';
+        $strHtmlTagAttr .= $key.'="'.$value.'"';
     }
 
     return $strHtmlTagAttr;
 }
 
 /**
- * Gibt 0 zurueck (ganz n�tzlich im Zusammenhang mit Array Initialisierung array_map('zero', $arr)).
+ * Gibt 0 zurueck (ganz nuetzlich im Zusammenhang mit Array Initialisierung array_map('zero', $arr)).
  *
  * @return int 0
  */
-function zero()
+function zero(): int
 {
     return 0;
 }
 
 /**
- * Gibt einen Leerstring zurueck (ganz n�tzlich im Zusammenhang mit Array Initialisierung array_map('emptyString', $arr)).
+ * Gibt einen Leerstring zurueck (ganz nuetzlich im Zusammenhang mit Array Initialisierung array_map('emptyString', $arr)).
  *
- * @return int 0
+ * @return string ''
  */
-function emptyString()
+function emptyString(): string
 {
     return '';
 }
@@ -926,7 +856,7 @@ function isEmptyObject($obj): bool
  * @param mixed $var
  * @return bool
  */
-function isNotEmpty($var)
+function isNotEmpty($var): bool
 {
     return !empty($var);
 }
@@ -937,7 +867,7 @@ function isNotEmpty($var)
  * @param mixed $var
  * @return bool
  */
-function isNotNull($var)
+function isNotNull($var): bool
 {
     return !is_null($var);
 }
@@ -970,7 +900,7 @@ function isEmptyString($value): bool
  * @param string $printer Druckername
  * @param array $files Dateien (z.B. PDF Dokumente)
  */
-function printFiles($printer, $files)
+function printFiles(string $printer, array $files): bool
 {
     $files = array_map('escapeshellarg', $files);
     $command = 'lp -d '.$printer.' '.implode(' ', $files);
@@ -980,33 +910,32 @@ function printFiles($printer, $files)
 }
 
 /**
- * �berpr�ft, ob die Datei lokal existiert (das PHP file_exists erkennt neu angelegte Dateien auf der Shell/NFS Laufwerke nicht)
+ * ueberprueft, ob die Datei lokal existiert (das PHP file_exists erkennt neu angelegte Dateien auf der Shell/NFS Laufwerke nicht)
  *
  * @param string $file
  * @param string $remote z.B. rsh root@blub.de
  * @return boolean
  */
-function shellFileExists($file, $remote = '')
+function shellFileExists(string $file, string $remote = ''): bool
 {
     $cmd = 'test -e '.$file.' && echo 1 || echo 0';
     if ($remote != '') $cmd = $remote.' "'.$cmd.'"';
     exec($cmd, $arrOutFileExists);
-    if (!isset($arrOutFileExists[0])) return false;
-    $file_exists = (trim($arrOutFileExists[0]) === '1') ? true : false;
-
-    return $file_exists;
+    if (!isset($arrOutFileExists[0]))
+        return false;
+    return trim($arrOutFileExists[0]) === '1';
 }
 
 /**
- * Erstellt Suchmuster f�r SQL-Statement. Sehr hilfreich, wenn man Textfeldsuche ben�tigt.
+ * Erstellt Suchmuster fuer SQL-Statement. Sehr hilfreich, wenn man Textfeldsuche benoetigt.
  * Z.B. Eingabe von A listet alle mit A beginnenden Treffer auf. Eingabe > Parameter "$min" listet
- * alle Treffer die die Eingabe enthalten auf.
+ * alle Treffer, die die Eingabe enthalten auf.
  *
  * @param string $wert
  * @param int $min
  * @return string
  */
-function getSearchPattern4SQL($wert, $min = 2)
+function getSearchPattern4SQL($wert, $min = 2): string
 {
     $len_wert = strlen($wert);
 
@@ -1028,7 +957,7 @@ function getSearchPattern4SQL($wert, $min = 2)
  * @param string $key
  * @param mixed $value
  */
-function setGlobal($key, &$value)
+function setGlobal(string $key, &$value)
 {
     $GLOBALS[$key] = &$value;
 }
@@ -1039,7 +968,7 @@ function setGlobal($key, &$value)
  * @param string $key
  * @return mixed
  */
-function &getGlobal($key)
+function &getGlobal(string $key)
 {
     return $GLOBALS[$key];
 }
@@ -1050,13 +979,13 @@ function &getGlobal($key)
  * @param string $key
  * @return bool
  */
-function global_exists($key)
+function global_exists(string $key): bool
 {
     return isset($GLOBALS[$key]);
 }
 
 /**
- * Magische PHP Konstanten in ein Array zusammenf�hren
+ * Magische PHP Konstanten in ein Array zusammenfuehren
  *
  * @param mixed $file __FILE__
  * @param mixed $line __LINE__
@@ -1065,7 +994,7 @@ function global_exists($key)
  * @param mixed $method erst ab PHP 5
  * @return array
  */
-function magicInfo($file, $line, $function, $class, $specific = array())
+function magicInfo($file, $line, $function, $class, $specific = array()): array
 {
     if (!is_array($specific)) {
         if (!is_null($specific)) {
@@ -1084,12 +1013,12 @@ function magicInfo($file, $line, $function, $class, $specific = array())
 
 if (!function_exists('mime_content_type')) {
     /**
-     * Ermittelt den Mime Content Type f�r eine Datei
+     * Ermittelt den Mime Content Type fuer eine Datei
      *
      * @param string $f Datei
      * @return string
      */
-    function mime_content_type($f)
+    function mime_content_type(string $f): string
     {
         return trim(exec('file -bi '.escapeshellarg($f)));
     }
@@ -1099,9 +1028,9 @@ if (!function_exists('mime_content_type')) {
  * Silbentrennung
  *
  * @param string $word Zu trennendes Wort
- * @return array M�gliche Trennpositionen
+ * @return array Moegliche Trennpositionen
  */
-function hyphenation($word)
+function hyphenation(string $word): array
 {
     $hyphenationPositions = array();
 
@@ -1126,23 +1055,23 @@ function hyphenation($word)
 
         for ($i = 2; $i < $wordLen - 1; $i++) {
             $c0 = $word[$i - 1];
-            if ($allowHyphenation == false and in_array($c0, $vowels)) {
+            if (!$allowHyphenation and in_array($c0, $vowels)) {
                 $allowHyphenation = true;
             }
             if ($allowHyphenation) {
                 $c = $word[$i];
                 $c1 = $word[$i + 1];
-                $v = $c0 + $c;
+                $v = $c0 . $c;
                 if ($v == 'ch' and $i > 2 and $word[$i - 2] == 's') {
                     $v = 'sch';
                 }
-                if (in_array($c1, $vowels) and (in_array($c, $vowels) == false) and (in_array($c, $divider) == false) and
-                                                                                    (in_array($c0, $divider) == false)) {
+                if (in_array($c1, $vowels) and !in_array($c, $vowels) and
+                    !in_array($c, $divider) and !in_array($c0, $divider)) {
                     if (in_array($v, $splices)) {
-                        array_push($hyphenationPositions, ($i - strlen($v) + 1));
+                        $hyphenationPositions[] = ($i - strlen($v) + 1);
                     }
                     else {
-                        array_push($hyphenationPositions, $i);
+                        $hyphenationPositions[] = $i;
                     }
                 }
             }
@@ -1157,7 +1086,7 @@ function hyphenation($word)
  *
  * @param int $num
  */
-function HTTPStatus($num)
+function HTTPStatus(int $num)
 {
     static $http = array(
         100 => "HTTP/1.1 100 Continue",
@@ -1205,11 +1134,11 @@ function HTTPStatus($num)
 }
 
 /**
- * L�dt das Dokument neu.
+ * Laedt das Dokument neu.
  *
  * @param $params array
  */
-function reloadUrl($params = array())
+function reloadUrl(array $params = array())
 {
     if (class_exists('Url')) {
         $Url = new Url();
@@ -1233,8 +1162,9 @@ function reloadUrl($params = array())
  *
  * @param string $source Quelle
  * @param string $dest Ziel
+ * @return bool
  */
-function move_file($source, $dest)
+function move_file(string $source, string $dest): bool
 {
     $res_copy = copy($source, $dest);
     if ($res_copy) $res_unlink = unlink($source);
@@ -1245,44 +1175,165 @@ function move_file($source, $dest)
 /**
  * Verzeichnis auslesen: erstellt Dateiliste
  *
+ * @see glob()
  * @param string $path Stammverzeichnis
- * @param boolean $absolute Datei mit absolutem Pfad zurückgeben
+ * @param boolean $absolute Datei mit vollstaendigem Pfad zurückgeben andernfalls nur mit $subdir/$filename
  * @param string $filePattern Dateifilter
  * @param string $subdir auszulesendes Unterverzeichnis
- * @return array Dateiliste
+ * @return array file list
  */
-function readFiles($path, $absolute = true, $filePattern = '/.JPG/i', $subdir = '')
+function readFiles(string $path, bool $absolute = true, string $filePattern = '/.JPG/i', string $subdir = ''): array
 {
-    $files = array();
+    $files = [];
 
-    $path = addEndingSlash($path).addEndingSlash($subdir);
-    if ($res = opendir($path)) {
-        while (($filename = readdir($res)) !== false) {
-            $file = $path.$filename;
-            if (is_file($file) and preg_match($filePattern, $filename)) {
-                $fileRelative = addEndingSlash($subdir).$filename;
-                array_push($files, ($absolute) ? $file : $fileRelative);
+    $path = addEndingSlash($path).($subdir = addEndingSlash($subdir));
+    if ($handle = opendir($path)) {
+        while (false !== ($fileName = readdir($handle))) {
+            $file = $path.$fileName;
+            if (is_file($file) and preg_match($filePattern, $fileName)) {
+                $files[] = ($absolute) ? $file : $subdir.$fileName;
             }
         }
-        closedir($res);
+        closedir($handle);
     }
 
     return $files;
+}
+
+/** Build a path by concatenating parts and adding '/' between them and adding an ending slash
+ * @param ...$elements
+ * @return string The assembled path with an ending slash
+ */
+function buildDirPath(...$elements): string
+{
+    $result = "";
+    foreach ($elements as $element){
+        $result .= addEndingSlash($element);
+    }
+    return $result;
+}
+
+/** Build a path by concatenating parts and adding '/' between them
+ * @param string ...$elements
+ * @return string The assembled path without an ending slash
+ */
+function buildFilePath(...$elements): string
+{
+    return removeEndingSlash(buildDirPath(...$elements));
+}
+
+/**Normalizes a path resolving steps up to containing directory's and cleaning out repeated Separators<br>
+ * beginning and ending Separators will be preserved
+ * @param string $path the path to be normalized
+ * @param bool $noFailOnRoot Drop attempts to step out of root in absolute paths instead of failing
+ * @param string $separator directory separator defaults to /
+ * @return false|string the normalized path or false on failure.
+ */
+function normalizePath(string $path, bool $noFailOnRoot = false, string $separator ='/'): bool|string
+{
+    $pathArr = array();
+    $stepsOut = 0;
+    foreach (explode($separator, $path) as $part){
+        //ignore self-references and separator errors
+        if ($part === '' || $part === '.')
+            continue;
+        //normal element -> add to buffer
+        if ($part !== '..'){
+            $pathArr[] = $part;
+        }
+        //wanna go up
+        elseif (count($pathArr) > 0){
+            array_pop($pathArr);
+        }else//hit the root
+            $stepsOut++;
+    }
+    $normalizedPath = implode($separator, $pathArr);
+    //re-add the original paths beginning slash or any necessary steps out
+    if($prefix = isAbsolutePath($path)) {
+        //absolute path -> check for illegal steps out of root
+        if ($stepsOut && !$noFailOnRoot)
+            return false;//fail
+    }else{
+        //relative path
+        $prefix = str_repeat('..'. $separator, $stepsOut);
+    }
+    $normalizedPath = $prefix.$normalizedPath;
+    //re-add the original paths ending directory slash
+    if (str_ends_with($path, $separator))
+        $normalizedPath .= $separator;
+    return $normalizedPath;
+}
+
+/**Calculates a vector between two paths useful to turn an absolute path into a path relative to the script being served
+ * @param string|null $here the starting path if null will use the directory of $_SERVER['SCRIPT_FILENAME']
+ * @param string $toThis the path to point to
+ * @param bool $normalize normalize absolute paths before calculation
+ * @param string|null $base an optional path to base relative paths on defaults to the directory of $_SERVER['SCRIPT_FILENAME']
+ * @param string $separator directory separator defaults to /
+ * @return string|false the calculated vector or false if normalization fails
+ */
+function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = '/'): bool|string
+{
+    $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
+    $base ??= $browserPath;
+    $here ??= $browserPath;
+    //base relative paths and normalize
+    if (!isAbsolutePath($here)) {
+        $here = addEndingSlash($base) . $here;
+        $here = normalizePath($here, separator: $separator);
+    } elseif ($normalize)
+        $here = normalizePath($here, separator: $separator);
+    if (!isAbsolutePath($toThis)) {
+        $toThis = addEndingSlash($base) . $toThis;
+        $toThis = normalizePath($toThis, separator: $separator);
+    } elseif ($normalize){
+        $toThis = normalizePath($toThis, separator: $separator);
+    }
+    if(!($here&&$toThis))//normalization returned an invalid result
+        return false;//fail
+    //beginn
+    $hereArr = explode($separator,$here);
+    $toThisArr = explode($separator, $toThis);
+    $hereCount = count($hereArr);
+    //cut out the common part
+    $vectorArr = array_diff_assoc($toThisArr, $hereArr);
+    //calculate the size of the common part not included in target
+    $commonCount = count($toThisArr) - count($vectorArr);
+    //get from here to the common base
+    $stepsOut = $hereCount - $commonCount;
+    $stepOutString = str_repeat('..'. $separator, $stepsOut);
+    $stepOutString = removeEndingSlash($stepOutString);
+    //build path
+    array_unshift($vectorArr, $stepOutString);
+    $isDirectory = str_ends_with($toThis, $separator);
+    return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
+}
+
+/**Determine if a path is absolute
+ * @param string $path the path to check
+ * @return string|false the absolute prefix e.g. '/' or 'C:\' or 'https://
+ */
+function isAbsolutePath(string $path): bool|string
+{
+    $regex = "/^((\w*:)?[\/\\\\]{1,2})/";
+    //grep a potential match
+    return preg_match($regex, $path, $matches)?$matches[1] : false;
 }
 
 /**
  * Liest ein Verzeichnis rekursiv aus. Dabei kann man per regulärem Ausdruck auf Datei- oder Verzeichnisebene filtern. Die Ergebnisse werden absolut oder relativ zum
  * übergebenen Pfad zurück gegeben.
  *
- * @param $path Stammpfad
+ * @param string $path Stammpfad
  * @param bool $absolute Datei mit absolutem Pfad
  * @param string $filePattern Dateifilter
  * @param string $dirPattern Verzeichnisfilter
  * @param string $subdir auszulesendes Unterverzeichnis
+ * @param Closure|null $callback
  * @return array
  * @throws Exception
  */
-function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPattern = '/^[^\.].*$/', $subdir = '', $callback = null)
+function readFilesRecursive(string $path, bool $absolute = true, string $filePattern = '', string $dirPattern = '/^[^\.].*$/', string $subdir = '',Closure $callback = null): array
 {
     $files = array();
 
@@ -1307,7 +1358,7 @@ function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPatt
                 }
                 $subdirectory = $fileRelative;
                 $files = array_merge(readFilesRecursive($root, $absolute, $filePattern, $dirPattern, $subdirectory, $callback), $files);
-                // Doppelte gleichnamige Dateien gibt es nicht. Aber afufgrund der Callback Funktion implementiert (u.a. basename):
+                // Doppelte gleichnamige Dateien gibt es nicht. Aber aufgrund der Callbackfunktion implementiert (u.a. basename):
                 // $files = array_unique($files, SORT_STRING);
                 break;
 
@@ -1322,7 +1373,7 @@ function readFilesRecursive($path, $absolute = true, $filePattern = '', $dirPatt
                     $file = call_user_func($callback, $file);
                 }
                 if ($file != '') {
-                    array_push($files, $file);
+                    $files[] = $file;
                 }
                 break;
         }
@@ -1350,7 +1401,7 @@ function readDirs(string $path)
  * @param int $sortorder PHP Konstante
  * @return array
  */
-function multisort($hauptArray, $columnName, $sorttype = SORT_STRING, $sortorder = SORT_ASC)
+function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_STRING, int $sortorder = SORT_ASC): array
 {
     $sortarr = array();
     foreach ($hauptArray as $row) {
@@ -1366,27 +1417,24 @@ function multisort($hauptArray, $columnName, $sorttype = SORT_STRING, $sortorder
 }
 
 /**
- * Schaut, ob die Anfrage per Ajax kommt.
- * Genauer gesagt, ob die Variable $_SERVER['HTTP_X_REQUESTED_WITH'] auf XMLHttpRequest gesetzt ist.
- * Dies macht z.B. das Javascript-Framework Prototype. (Ajax.Request)
+ * Checks if it is an Ajax call (XmlHttpRequest)
  *
+ * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
  * @return boolean
  */
 function isAjax(): bool
 {
-    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
-           || (isset($_REQUEST['HTTP_X_REQUESTED_WITH']) && $_REQUEST['HTTP_X_REQUESTED_WITH']);
+    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
 }
 
-
 /**
- * Umrechnung DTP-Punkt in Millimeter (Desktop Publishing Wobla);
+ * Umrechnung DTP-Punkt in Millimeter (Desktop-Publishing Wobla);
  *
  * @link http://de.wikipedia.org/wiki/Pica_%28Typografie%29
- * @param float $pp
+ * @param float $pt
  * @return float
  */
-function pt2mm($pt)
+function pt2mm(float $pt): float
 {
     return $pt * 0.35277;
 }
@@ -1397,7 +1445,7 @@ function pt2mm($pt)
  * @param string $file Datei (mit absolutem Pfad)
  * @param string $mimetype Mimetype z.b. application/octet-stream
  */
-function forceFileDownload($file, $mimetype = '')
+function forceFileDownload(string $file, string $mimetype = ''):void
 {
     if (empty($mimetype)) $mimetype = mime_content_type($file);
     if (empty($mimetype)) $mimetype = 'application/octet-stream';
@@ -1424,18 +1472,18 @@ function forceFileDownload($file, $mimetype = '')
  * @param string $destFile Lokale Zieldatei
  * @return int|false gibt die Anzahl geschriebener Bytes oder False zurueck
  */
-function downloadFile($sourceFile, $destFile)
+function downloadFile(string $sourceFile, string $destFile)
 {
     return file_put_contents($destFile, fopen($sourceFile, 'r'), LOCK_EX);
 }
 
 /**
- * Die Funktion pr�ft mit Shell-Komandos, ob ein entferntes Verzeichnis gemountet ist.
+ * Die Funktion prueft mit Shell-Kommandos, ob ein entferntes Verzeichnis gemountet ist.
  *
  * @param string $mountPoint (der exakte Mount-Point(so wie er in der /etc/fstab steht.))
  * @return int [0|1]
  */
-function isMounted($mountPoint)
+function isMounted(string $mountPoint): int
 {
     if (is_dir($mountPoint)) { # man kann nur in ein Verzeichnis rein-mounten
         $mountPoint = removeEndingSlash($mountPoint);
@@ -1456,7 +1504,7 @@ function isMounted($mountPoint)
  * @param string $light Helle Farbe
  * @return string Helle oder dunkle Farbe
  */
-function legibleColor($hexcolor, $dark = '#000000', $light = '#FFFFFF')
+function legibleColor(string $hexcolor, string $dark = '#000000', string $light = '#FFFFFF'): string
 {
     return (hexdec($hexcolor) > 0xffffff / 2) ? $dark : $light;
 }
@@ -1466,7 +1514,7 @@ function legibleColor($hexcolor, $dark = '#000000', $light = '#FFFFFF')
  *
  * @return string
  */
-function randColor()
+function randColor():string
 {
     $red = dechex(mt_rand(0, 255));
     $green = dechex(mt_rand(0, 255));
@@ -1487,7 +1535,7 @@ function randColor()
  * @author Kyle Gibson
  * @see http://spin.atomicobject.com/2010/08/25/rendering-utf8-characters-in-rich-text-format-with-php/
  */
-function utf8_to_rtf($utf8_text)
+function utf8_to_rtf(string $utf8_text): string
 {
     $utf8_patterns = array(
         "[\xC2-\xDF][\x80-\xBF]",
@@ -1509,7 +1557,7 @@ function utf8_to_rtf($utf8_text)
  * @param integer $priority
  * @return string
  */
-function shell_exec_background($cmd, $priority = 0)
+function shell_exec_background(string $cmd, int $priority = 0): string
 {
     if ($priority) {
         $PID = shell_exec('nohup nice -n '.$priority.' '.$cmd.' >/dev/null 2>&1 & echo $!');
@@ -1527,7 +1575,7 @@ function shell_exec_background($cmd, $priority = 0)
  * @param int $PID
  * @return boolean
  */
-function is_process_running($PID)
+function is_process_running(int $PID): bool
 {
     exec('ps '.$PID, $state);
 
@@ -1537,11 +1585,11 @@ function is_process_running($PID)
 /**
  * Berechne Alter
  *
- * @param date $from Datum im englischen Format
- * @param date $to Datum im englischen Format
+ * @param string $from Datum im englischen Format
+ * @param string $to Datum im englischen Format
  * @return int Alter
  */
-function calcAge($from, $to = 'now')
+function calcAge(string $from, string $to = 'now'): int
 {
     // funktioniert leider erst ab PHP 5.3
 //    if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
@@ -1574,10 +1622,10 @@ function calcAge($from, $to = 'now')
 /**
  * Formatiere Minuten um als Stunde-Minuten Text
  *
- * @param int Minuten
+ * @param int $min Minuten
  * @return string
  */
-function formatStdMin($min)
+function formatStdMin(int $min): string
 {
     $val = intval($min);
 
@@ -1587,10 +1635,10 @@ function formatStdMin($min)
 /**
  * Formatiere Minuten in 24h Format um
  *
- * @param $min
+ * @param mixed $min
  * @return string
  */
-function format24h($min)
+function format24h($min): string
 {
     $val = intval($min);
 
@@ -1598,14 +1646,14 @@ function format24h($min)
 }
 
 /**
- * @param $code Passwort oder Coupon
+ * @param string $code Passwort oder Coupon
  * @param string $pepper zusätzliche Verschlüsselung mit einem serverseitigen Schlüssel (= Pfeffer). Mit pepper ist der zurückgegebene Hash 108 Zeichen lang, ohne 60 Zeichen!
  * @param array $options individuelles Salt,
  * @return string Hash
- * @deprecated
  * @throws Exception, InvalidArgumentException
+ *@deprecated
  */
-function pool_hash_code($code, $pepper = '', array $options = [])
+function pool_hash_code(string $code, string $pepper = '', array $options = []): string
 {
     if (!defined('CRYPT_BLOWFISH')) {
         throw new Exception('The CRYPT_BLOWFISH algorithm is required (PHP 5.3).');
@@ -1754,7 +1802,7 @@ function decryptTwofish($encryptedData, $key)
  * @param array $options
  * @return string
  */
-function pool_generate_code($bytes = 10, $parts = 1, array $options = [])
+function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []): string
 {
     $ascii = array(
         0 => array(48, 57), // 0-9
@@ -1787,14 +1835,14 @@ function pool_generate_code($bytes = 10, $parts = 1, array $options = [])
 }
 
 /**
- * @param $pdf Quelle (PDF)
- * @param $jpg Ziel (JPEG)
- * @param $output GS Ausgabe
+ * @param string $pdf Quelle (PDF)
+ * @param string $jpg Ziel (JPEG)
+ * @param array $output GS Ausgabe
  * @param int $resolution dpi
  * @param boolean $sudo bei NFS notwendig
  * @return bool Erfolgsstatus
  */
-function pdf2jpg($pdf, $jpg, &$output, $resolution = 72, $sudo = false)
+function pdf2jpg(string $pdf, string $jpg, array &$output, int $resolution = 72, bool $sudo = false): bool
 {
     # Setzen der Fontmap
     //    GS_FONTMAP=/opt/AVE_Javaserver/EDV_ORG/gs/Fontmap
@@ -1826,12 +1874,12 @@ function getFieldData($array, $column): array
 
 /**
  * creates path from last alphanumeric characters
- *
+ *('abcde', 3) => 'c/d/e/'
  * @param $chars
  * @param int $numberOfDirectories
  * @return string
  */
-function createPathFromLastChars($chars, $numberOfDirectories=4)
+function createPathFromLastChars($chars, int $numberOfDirectories=4): string
 {
     $result = '';
     for($i=(-1*$numberOfDirectories); $i<0; $i++) {
@@ -1848,7 +1896,7 @@ function createPathFromLastChars($chars, $numberOfDirectories=4)
  * meinDokument-02.pdf
  *
  */
-function nextFreeFilename($dir, $filename, $delimiter='-') {
+function nextFreeFilename(string $dir, string $filename, string $delimiter='-'):string {
     if($filename == '') {
         return '';
     }
@@ -2017,10 +2065,10 @@ function isValidJSON(string $string): bool
  * @param string $separator default dash
  * @return string
  */
-function camelize(string $string, $capitalizeFirstCharacter = false, $separator = '-'): string
+function camelize(string $string, bool $capitalizeFirstCharacter = false, string $separator = '-'): string
 {
     $result = str_replace($separator, '', ucwords($string, $separator));
-    if($capitalizeFirstCharacter == false) {
+    if(!$capitalizeFirstCharacter) {
         $result = lcfirst($result);
     }
     return $result;
@@ -2033,7 +2081,7 @@ function camelize(string $string, $capitalizeFirstCharacter = false, $separator 
  * @param string $separator
  * @return string
  */
-function decamelize(string $string, $separator = '-'): string
+function decamelize(string $string, string $separator = '-'): string
 {
     return preg_replace('/\B([A-Z])/', $separator.'$0', $string);
     // alternate (todo: test speed) return strtolower(preg_replace(['/([a-z\d])([A-Z])/', '/([^_])([A-Z][a-z])/'], '$1'.$separator.'$2', $string));
