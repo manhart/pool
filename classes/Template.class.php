@@ -4,7 +4,7 @@
  *
  * Template.class.php
  *
- * Rapid Template Engine (RTE) ist eine Template-Engine f�r PHP. Genauer gesagt erlaubt es die einfache Trennung von
+ * Rapid Template Engine (RTE) ist eine Template-Engine für PHP. Genauer gesagt erlaubt es die einfache Trennung von
  * Applikations-Logik und Design/Ausgabe. Dies ist vor allem wuenschenswert, wenn der Applikationsentwickler nicht die
  * selbe Person ist wie der Designer. Nehmen wir zum Beispiel eine Webseite die Zeitungsartikel ausgibt.
  * Der Titel, die Einfuehrung, der Author und der Inhalt selbst enthalten keine Informationen darueber wie sie dargestellt
@@ -28,8 +28,8 @@
  * @version
  *
  * @since 2003-07-12
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @link http://www.misterelsa.de
+ * @author Alexander Manhart <alexander@manhart-it.de>
+ * @link https://alexander-manhart.de
  */
 
 if(!defined('RAPID_TEMPLATE_ENGINE')) {
