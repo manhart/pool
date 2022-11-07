@@ -205,10 +205,9 @@ class GUI_PageControl extends GUI_Module
      *
      * Inhalt parsen und zurueck geben (revive).
      *
-     * @access public
      * @return string Content
      **/
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

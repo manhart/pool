@@ -167,7 +167,7 @@ class GUI_DHTMLListbox extends GUI_Module
         $Template -> setVar('SCROLLBOX', $scrollbox_content);
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('stdout');
         return $this -> Template -> getContent('stdout');

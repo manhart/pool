@@ -657,10 +657,9 @@ class GUI_Splitter extends GUI_Module
     /**
      * Gibt die Daten zurueck
      *
-     * @access public
      * @return string Splitter
      **/
-    function finalize()
+    function finalize(): string
     {
         return $this -> splitter;
     }

@@ -226,7 +226,7 @@ class GUI_Comments extends GUI_Module
         $this->addHandoffVar($Input->getData());
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this->Template->parse($this->Input->getVar('tplhandle'));
         return $this->reviveChildGUIs($this->Template->getContent($this->Input->getVar('tplhandle')));

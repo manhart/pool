@@ -27,7 +27,7 @@ class GUI_Marquee extends GUI_Module
         }
     }
 
-    function finalize()
+    function finalize(): string
     {
         $this -> Template -> parse('marquee');
         return $this -> Template -> getContent('marquee');
