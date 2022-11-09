@@ -490,6 +490,10 @@ class GUI_Module extends Module
             $jsFile = $this->getWeblication()->findJavaScript($jsFile, $className);
             $Frame->getHeaderdata()->addJavaScript($jsFile);
         }
+
+        // automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication (if enabled).
+        $this->js_createGUIModule($this->getClassName());
+
         return $this;
     }
 
