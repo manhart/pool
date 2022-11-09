@@ -40,6 +40,7 @@ const TEMP_VAR_END = '}';
 const TEMP_BLOCK_IDENT = 'BLOCK';
 const TEMP_INCLUDE_IDENT = 'INCLUDE';
 const TEMP_INCLUDESCRIPT_IDENT = 'INCLUDESCRIPT';
+const TEMP_TRANSL_IDENT = 'TRANSL';
 const TEMP_SESSION_IDENT = '';
 
 /**
@@ -462,6 +463,9 @@ class TempCoreHandle extends TempHandle
                 case TEMP_SESSION_IDENT:
                     $value = isset($_SESSION[$content]) ? urldecode($_SESSION[$content]) : '';
                     break;
+
+                case TEMP_TRANSL_IDENT:
+                    $value = $match; // so that the code continues to work temporarily
             }
 
             $this->content = str_replace($match,  $value , $this->content);
