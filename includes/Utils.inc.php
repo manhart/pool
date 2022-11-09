@@ -1231,23 +1231,29 @@ function buildFilePath(...$elements): string
  */
 function normalizePath(string $path, bool $noFailOnRoot = false, string $separator ='/'): bool|string
 {
-    $pathArr = array();
+    $bufferOutput = array();
     $stepsOut = 0;
-    foreach (explode($separator, $path) as $part){
+
+    $bufferInput = explode($separator, $path);
+    //jump to last position
+    end($bufferInput);
+    //loop backwards through the parts of the path
+    while (false !== ($part = current($bufferInput))){
         //ignore self-references and separator errors
-        if ($part === '' || $part === '.')
-            continue;
+        if ($part === '' || $part === '.');
         //normal element -> add to buffer
-        if ($part !== '..'){
-            $pathArr[] = $part;
-        }
-        //wanna go up
-        elseif (count($pathArr) > 0){
-            array_pop($pathArr);
-        }else//hit the root
+        elseif ($part !== '..'){
+            if ($stepsOut>0)//element was stepped out of again later in the Path
+                $stepsOut--;
+            else            //append on the beginning of the buffer
+                array_unshift($bufferOutput, $part);
+        } else //go up
             $stepsOut++;
+        //set pointer to previous element of the Array
+        prev($bufferInput);
     }
-    $normalizedPath = implode($separator, $pathArr);
+
+    $normalizedPath = implode($separator, $bufferOutput);
     //re-add the original paths beginning slash or any necessary steps out
     if($prefix = isAbsolutePath($path)) {
         //absolute path -> check for illegal steps out of root
@@ -1417,18 +1423,15 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
 }
 
 /**
- * Schaut, ob die Anfrage per Ajax kommt.
- * Genauer gesagt, ob die Variable $_SERVER['HTTP_X_REQUESTED_WITH'] auf XMLHttpRequest gesetzt ist.
- * Dies macht z.B. das Javascript-Framework Prototype. (Ajax.Request)
+ * Checks if it is an Ajax call (XmlHttpRequest)
  *
+ * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
  * @return boolean
  */
 function isAjax(): bool
 {
-    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
-           || (isset($_REQUEST['HTTP_X_REQUESTED_WITH']) && $_REQUEST['HTTP_X_REQUESTED_WITH']);
+    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
 }
-
 
 /**
  * Umrechnung DTP-Punkt in Millimeter (Desktop-Publishing Wobla);
