@@ -440,9 +440,8 @@ function file_extension(string $file = ""): string
  **/
 function remove_extension(string $file = ''): string
 {
-    return substr($file, 0, (strrpos($file, '.') ? strrpos($file, '.') : strlen($file)));
+    return substr($file, 0, (strrpos($file, '.') ?: strlen($file)));
 }
-
 
 /**
  * Verkuerzt einen Text auf eine bestimme Laenge. Beim Abschneiden geht die Funktion jedoch bis zum letzten Leerzeichen zurueck, damit
