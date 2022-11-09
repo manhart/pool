@@ -102,8 +102,6 @@ class TempHandle extends PoolObject
     }
 
     /**
-     * TempHandle::getHandle()
-     *
      * Liefert Handle
      *
      * @return string Handle
@@ -1022,13 +1020,14 @@ class Template extends PoolObject
         else {
             $found = false;
             $keys = array_keys($this->FileList);
-            for($i = 0; $i < SizeOf($keys); $i++) {
+            $numKeys = count($keys);
+            for($i = 0; $i < $numKeys; $i++) {
                 $TempFile = &$this->FileList[$keys[$i]];
 
-                $obj = &$TempFile->findFile($handle);
-                if(is_object($obj)) {
+                $obj = $TempFile->findFile($handle);
+                if($obj instanceof TempFile) {
                     $this->ActiveHandle = $handle;
-                    $this->ActiveFile = &$obj;
+                    $this->ActiveFile = $obj;
                     // Referenz aufheben
                     unset($this->ActiveBlock);
                     $found = true;
