@@ -32,1285 +32,1242 @@
  * @link https://alexander-manhart.de
  */
 
-if(!defined('RAPID_TEMPLATE_ENGINE')) {
-    // Variablen Identifizierung
-    define('TEMP_VAR_START', '{');
-    define('TEMP_VAR_END', '}');
+// Variablen Identifizierung
+const TEMP_VAR_START = '{';
+const TEMP_VAR_END = '}';
 
-    // Template Objekt Elemente Identifizierung
-    define('TEMP_DYNBLOCK_IDENT', 'BLOCK');
-    define('TEMP_INCLUDE_IDENT', 'INCLUDE');
-    define('TEMP_INCLUDESCRIPT_IDENT', 'INCLUDESCRIPT');
-    define('TEMP_SESSION_IDENT', 'SESSION');
+// Template Objekt Elemente Identifizierung
+const TEMP_BLOCK_IDENT = 'BLOCK';
+const TEMP_INCLUDE_IDENT = 'INCLUDE';
+const TEMP_INCLUDESCRIPT_IDENT = 'INCLUDESCRIPT';
+const TEMP_SESSION_IDENT = '';
 
-    // Prevent multiple loading
-    define('RAPID_TEMPLATE_ENGINE', 1);
+/**
+ * TempHandle
+ *
+ * TempHandle ist die abstrakte Basisklasse fuer alle eingebetteten Template Elemente (oder auch Platzhalter).
+ * Die Klasse bewahrt den Name des Handles, Typ und Inhalt auf.
+ *
+ * @package rte
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+ * @access private
+ **/
+class TempHandle extends PoolObject
+{
+    //@var string Typ des Handles
+    //@access public
+    var $Type;
 
-    /**
-     * TempHandle
-     *
-     * TempHandle ist die abstrakte Basisklasse fuer alle eingebetteten Template Elemente (oder auch Platzhalter).
-     * Die Klasse bewahrt den Name des Handles, Typ und Inhalt auf.
-     *
-     * @package rte
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
-     * @access private
-     **/
-    class TempHandle extends PoolObject
-    {
-        //@var string Typ des Handles
-        //@access public
-        var $Type;
+    //@var string Name des Handles (muss unique sein)
+    //@access public
+    var $Handle;
 
-        //@var string Name des Handles (muss unique sein)
-        //@access public
-        var $Handle;
+    //@var string Inhalt des Handles
+    //@access public
+    protected string $content = '';
 
-        //@var string Inhalt des Handles
-        //@access public
-        var $Content = '';
-
-        //@var string Geparster, vervollstaendigter Inhalt
-        //@access public
-        var $ParsedContent = '';
-
-        /**
-         * Konstruktor der Klasse TempHandle (lang TemplateHandle)
-         *
-         * TempHandle ist das Grundgeruest aller Handles der Rapid Template Engine.
-         * Ein Handle wird in der Template Engine Sprache wie folgt definiert:
-         * <!-- ANWEISUNG HANDLE -->INHALT<!-- END HANDLE -->
-         * Um den Handle besser zu identifizieren verwendet man eigene Prefixe, z.B. BLOCK_HANDLE, FILE_HANDLE, SCRIPT_HANDLE...
-         *
-         * Die Basisklasse TempHandle haelt Informationen zum Handle Typ, Content und vervollstaendigten Inhalt bereit!
-         *
-         * @access public
-         * @param string $type Typ set of (FILE, BLOCK)
-         */
-        function __construct($type)
-        {
-            parent::__construct();
-
-            $this->setType($type);
-        }
-
-        /**
-         * Setzt eindeutigen Handle.
-         *
-         * @param string $handle Eindeutiger Name fuer Handle
-         */
-        function setHandle($handle)
-        {
-            $this->Handle = $handle;
-        }
-
-        /**
-         * TempHandle::getHandle()
-         *
-         * Liefert Handle
-         *
-         * @access public
-         * @return string Handle
-         */
-        function getHandle()
-        {
-            return $this->Handle;
-        }
-
-        /**
-         * TempHandle::setType()
-         *
-         * Setzt Handle Typ. Anhand des Typs unterscheidet man derzeit zwischen Block- und File Handles.
-         *
-         * @access public
-         * @param string $type Typ set of (BLOCK, FILE)
-         */
-        function setType($type)
-        {
-            $this->Type = $type;
-        }
-
-        /**
-         * TempHandle::getType()
-         *
-         * Liefert den Handle Typ
-         *
-         * @access public
-         * @return string Typ set of (BLOCK, FILE)
-         */
-        function getType()
-        {
-            return $this->Type;
-        }
-
-        /**
-         * TempHandle::setContent()
-         *
-         * Speichert Inhalt im Handle ab.
-         *
-         * @access public
-         * @param string $content Inhalt (z.B. eines BLOCK's, FILE's)
-         */
-        function setContent($content)
-        {
-            $this->Content = $content;
-        }
-
-        /**
-         * Liefert den gespeicherten Inhalt eines Handles.
-         *
-         * @access public
-         * @return string Inhalt dieses Handles
-         */
-        function getContent()
-        {
-            return $this->Content;
-        }
-
-        /**
-         * Funktion dient zum Zwischenspeichern von vervollstaendigten Inhalt.
-         *
-         * @access public
-         * @param string $content Geparster, vervollstaendigter Inhalt
-         */
-        function setParsedContent($content)
-        {
-            $this->ParsedContent = $content;
-        }
-
-        /**
-         * Gibt den gespeicherten geparsten, vervollstaendigten Inhalt zurueck.
-         *
-         * @return string Geparster Inhalt
-         */
-        public function getParsedContent(): string
-        {
-            return $this->ParsedContent;
-        }
-
-        /**
-         * Leert den gespeicherten geparsten Inhalt.
-         *
-         * @access public
-         */
-        function clearParsedContent()
-        {
-            $this->ParsedContent = '';
-        }
-
-        /**
-         * Leert auch den geladenen Content inkl. geparsten Content
-         *
-         */
-        function clear()
-        {
-            $this->Content = '';
-            $this->ParsedContent = '';
-        }
-    }
-
-    /* --------------------- */
-    ##### TempCoreHandle ######
-    /* --------------------- */
+    //@var string Geparster, vervollstaendigter Inhalt
+    //@access public
+    var $ParsedContent = '';
 
     /**
-     * TempCoreHandle
+     * Konstruktor der Klasse TempHandle (lang TemplateHandle)
      *
-     * TempCoreHandle ist der Kern aller Template Elemente. Er kuemmert sich um die Erstellung neuer Objekte und kann Inhalt parsen.
-     * Im Container merkt er sich alle erstellten Objekte. Neue TempX Elemente werden von TempCoreHandle abgeleitet (siehe TempFile, TempBlock)!
+     * TempHandle ist das Grundgeruest aller Handles der Rapid Template Engine.
+     * Ein Handle wird in der Template Engine Sprache wie folgt definiert:
+     * <!-- ANWEISUNG HANDLE -->INHALT<!-- END HANDLE -->
+     * Um den Handle besser zu identifizieren verwendet man eigene Prefixe, z.B. BLOCK_HANDLE, FILE_HANDLE, SCRIPT_HANDLE...
      *
-     * @package rte
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
-     * @access private
-     **/
-    class TempCoreHandle extends TempHandle
+     * Die Basisklasse TempHandle haelt Informationen zum Handle Typ, Content und vervollstaendigten Inhalt bereit!
+     *
+     * @param string $type Typ set of (FILE, BLOCK)
+     */
+    function __construct(string $type)
     {
-        //@var array Variablen Container
-        //@access private
-        var $VarList;
+        parent::__construct();
 
-        //@var array Block Container
-        //@access private
-        var $BlockList;
-
-        //@var array File Container
-        //@access private
-        var $FileList;
-
-        //@var string Verzeichnis zum Template
-        //@access public
-        var $Directory;
-
-        var $varStart = TEMP_VAR_START;
-
-        var $varEnd = TEMP_VAR_END;
-
-        public $charset = 'UTF-8';
-
-        /**
-         * Konstruktor: benoetigt Handle-Typ und Verzeichnis zum Template.
-         * Array fuer Variablen Container und Block Container werden angelegt.
-         *
-         * @access public
-         * @param string $type Handle-Typ set of (BLOCK, FILE)
-         * @param string $directory Verzeichnis zum Template
-         */
-        function __construct($type, $directory, $charset = 'UTF-8')
-        {
-            $this->charset = $charset;
-            parent::__construct($type);
-
-            $this->setDirectory($directory);
-            $this->BlockList = array();
-            $this->FileList = array();
-            $this->VarList = array();
-        }
-
-        /**
-         * Die Funktion createBlock legt einen neuen Block (Objekt vom Typ TempBlock) an.
-         *
-         * @access public
-         * @param string $handle Name des Handles
-         * @param string $dir Verzeichnis zum Template
-         * @param string $content Inhalt des Blocks
-         * @return object TempBlock
-         * @see TempBlock
-         */
-        function createBlock($handle, $dir, $content, $charset = 'UTF-8')
-        {
-            $obj = new TempBlock($handle, $dir, $content, $charset);
-            $this->BlockList[$handle] = $obj;
-            return $obj;
-        }
-
-        /**
-         * Die Funktion createFile legt eine neue Datei (Objekt vom Typ TempFile) an.
-         *
-         * @access public
-         * @param string $handle Name des Handles
-         * @param string $dir Verzeichnis zum Template
-         * @param string $filename Dateiname (des Templates)
-         * @return object TempFile
-         * @see TempFile
-         */
-        function createFile($handle, $dir, $filename, $charset = 'UTF-8')
-        {
-            $obj = new TempFile($handle, $dir, $filename, $charset);
-            $this->FileList[$handle] = $obj;
-            return $obj;
-        }
-
-        /**
-         * Legt ein neues Script (Objekt vom Typ TempScript) an.
-         * Hinweis: TempScript arbeitet ebenfalls mit dem Handle-Typ FILE
-         *
-         * @access public
-         * @param string $handle Name des Handles
-         * @param string $dir Verzeichnis zum Template
-         * @param string $filename Dateiname (des Scripts)
-         * @return object TempScript
-         * @see TempScript
-         */
-        function createScript($handle, $dir, $filename, $charset = 'UTF-8')
-        {
-            $obj = new TempScript($handle, $dir, $filename, $charset);
-            $this->FileList[$handle] = $obj;
-            return $obj;
-        }
-
-        /**
-         * Diese Prozedur fuegt eine Variable zum Variablen Container hinzu.
-         *
-         * @param string|array $name name of the variable (placeholder in the template)
-         * @param mixed $value (zuzuweisender) Wert der Variable
-         */
-        function setVar($name, $value = '', int $encode = Template::ENCODE_NONE)
-        {
-            $encode = function($value) use ($encode) {
-                if($encode == Template::ENCODE_NONE) {
-                    return $value;
-                }
-                if($encode == Template::ENCODE_HTMLSPECIALCHARS) {
-                    return htmlspecialchars($value, ENT_QUOTES, $this->charset);
-                }
-                if($encode == Template::ENCODE_HTMLENTITIES) {
-                    return htmlentities($value, ENT_QUOTES, $this->charset);
-                }
-            };
-
-            if(!is_array($name)) {
-                $this->VarList[$name] = $encode($value);
-            }
-            else {
-                if((array)$value !== $value) {
-                    foreach($name as $key => $value) {
-                        switch(gettype($value)) {
-                            case 'array':
-                                $this->VarList[$key] = 'array';
-                                break;
-
-                            case 'object':
-                                $this->VarList[$key] = 'object';
-                                break;
-
-                            default:
-                                $this->VarList[$key] = $encode($value);
-                                break;
-                        }
-                    }
-                }
-                else {
-                    foreach($name as $key => $value) {
-                        $this->VarList[$key] = $encode($value);
-                    }
-                }
-            }
-        }
-
-        /**
-         * Beim Setzen des Inhalts fuer einen Handle, wird dieser Inhalt automatisch nach Bloecken, Includes (Files) untersucht.
-         *
-         * @param string $content Inhalt/Content
-         */
-        function setContent($content, $scan = true)
-        {
-            parent::setContent($content);
-
-            if($scan) {
-                $this->findPattern($this->Content);
-            }
-        }
-
-        /**
-         * Weist der Eigenschaft Directory ein Verzeichnis zu.
-         * Das Verzeichnis muss durch alle Handles gereicht werden,
-         * damit in jedem Handle die File Includes auf die richtigen Quellen zeigen.
-         *
-         * @access public
-         * @param string $dir Verzeichnis
-         */
-        function setDirectory($dir)
-        {
-            $this->Directory = $dir;
-        }
-
-        /**
-         * Liefert das Verzeichnis.
-         *
-         * @access public
-         * @return string Verzeichnis zum Template
-         */
-        function getDirectory()
-        {
-            return $this->Directory;
-        }
-
-        /**
-         * Gibt das Block Objekt mit dem uebergebenen Namen des Handles $handle zurueck.
-         * Falls er ueberhaupt existiert! Ansonsten wird NULL zurueck gegeben.
-         *
-         * @access public
-         * @param string $handle Name des Handles
-         * @return TempBlock|null Instanz von TempBlock oder NULL
-         */
-        function getTempBlock(string $handle): ?TempBlock
-        {
-            if(array_key_exists($handle, $this->BlockList)) {
-                return $this->BlockList[$handle];
-            }
-            else {
-                $keys = array_keys($this->BlockList);
-                foreach($keys as $key) {
-                    $Obj = $this->BlockList[$key]->getTempBlock($handle);
-                    if($Obj instanceof TempBlock) {
-                        return $Obj;
-                    }
-                }
-            }
-            return null;
-        }
-
-        /**
-         * Eine der Hauptfunktionen in der Rapid Template Engine!
-         * Objekt Elemente haben im Template das Muster <!-- FUNKTION HANDLENAME>INHALT<!-- END HANDLENAME --> .
-         * Ein Block kann in diesem Fall auch ein Include eines weiteren Templates oder Scripts sein
-         * (Dies gilt aber nur fuer die Blockdefinition innerhalb des Templates).
-         *
-         * Findet er einen neuen Block, wird entsprechend ein neues Objekt mit dem Inhalt des gefunden Blocks angelegt.
-         *
-         * @access public
-         * @param string Inhalt, welcher nach Template Elementen abgesucht werden soll
-         */
-        function findPattern($content)
-        {
-            $elemsymbols = '(' . TEMP_DYNBLOCK_IDENT . '|' . TEMP_INCLUDE_IDENT . '|' . TEMP_INCLUDESCRIPT_IDENT . '|' .
-                TEMP_SESSION_IDENT . ')'; // TODO REUSE
-            // AM, 24.09.20, without modificator /s,
-            // by default . doesn't match new lines - [\s\S] is a hack around that problem
-            $reg = "/\<\!\-\- $elemsymbols (.+) \-\-\>([\s\S]*)\<\!\-\- END \\2 \-\-\>/U";
-            $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
-            if($bResult) {
-                $numMatches = SizeOf($matches);
-                for($i = 0; $i < $numMatches; $i++) {
-
-                    $kind = $matches[$i][1];
-                    $handle = ($matches[$i][2]);
-                    $content = ($matches[$i][3]);
-
-                    $reg = "/\<\!\-\- $elemsymbols $handle \-\-\>([\s\S]*)\<\!\-\- END $handle \-\-\>/U";
-                    $this->Content = preg_replace($reg, '{' . $handle . '}', $this->Content);
-
-                    switch($kind) {
-                        case TEMP_DYNBLOCK_IDENT:
-                            $this->createBlock($handle, $this->getDirectory(), $content, $this->charset);
-                            break;
-
-                        case TEMP_INCLUDE_IDENT:
-                            $this->createFile($handle, $this->getDirectory(), $content, $this->charset);
-                            break;
-
-                        case TEMP_INCLUDESCRIPT_IDENT:
-                            /*
-                            if($content[0] == '/') {
-                                $directory = addEndingSlash(dirname($content));
-                                $content = basename($content);
-                            } else $directory = $this -> Directory;
-                            */
-                            $this->createScript($handle, $this->getDirectory(), $content, $this->charset);
-                            break;
-
-                        case TEMP_SESSION_IDENT:
-                            $value = isset($_SESSION[$content]) ? urldecode($_SESSION[$content]) : '';
-                            $this->setVar($handle, $value);
-                            break;
-                    }
-                }
-            }
-        }
-
-        /**
-         * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
-         *
-         * @param boolean $returnContent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
-         * @param bool $clearParsedContent
-         * @return string Geparster Inhalt
-         */
-        public function parse(bool $returnContent = false, bool $clearParsedContent = true)
-        {
-            $varStart = $this->varStart;
-            $varEnd = $this->varEnd;
-
-            $content = $this->Content;
-            ### TODO Pool 5, bei setVar {} adden oder read write properties...
-            #$content = str_replace(array_keys($this -> VarList), array_values($this -> VarList), $content);
-            foreach($this->VarList as $Key => $val) {
-                $content = str_replace($varStart . $Key . $varEnd, $val ?? '', $content);
-            }
-
-            $search = array();
-            $replace = array();
-            /**
-             * @var string $Handle
-             * @var TempBlock $TempBlock
-             */
-            foreach($this->BlockList as $Handle => $TempBlock) {
-                $search[] = '{' . $Handle . '}';
-
-                if($TempBlock->allowParse()) {
-                    $TempBlock->parse();
-                    $replace[] = $TempBlock->getParsedContent();
-                    if($clearParsedContent) $TempBlock->clearParsedContent();
-                    $TempBlock->setAllowParse(false);
-                }
-                else {
-                    //		                $content = str_replace('{'.$Handle.'}', '', $content);
-                    $replace[] = $TempBlock->getParsedContent();
-                }
-
-                unset($TempBlock);
-            }
-
-            foreach($this->FileList as $Handle => $TempFile) {
-                $TempFile->parse();
-                $search[] = '{' . $Handle . '}';
-                $replace[] = $TempFile->getParsedContent();
-                if($clearParsedContent) $TempFile->clearParsedContent();
-                unset($TempFile);
-            }
-
-            $content = str_replace($search, $replace, $content);
-
-            if(!$returnContent) {
-                $this->ParsedContent = $content;
-                return true;
-            }
-            else {
-                return $content;
-            }
-        }
-
-        /**
-         * Sucht nach einem File mit dem uebergebenen Namen des Handles $handle.
-         *
-         * @access public
-         * @param string $handle Name des Handles
-         * @return object Instanz von TempFile oder false
-         * @see TempFile
-         */
-        function &findFile($handle)
-        {
-            $keys = array_keys($this->FileList);
-            for($i = 0; $i < SizeOf($keys); $i++) {
-                $TempHandle = &$this->FileList[$keys[$i]];
-                if($keys[$i] == $handle && $TempHandle->GetType() == 'FILE') {
-                    return $TempHandle;
-                }
-                else {
-                    $obj = &$TempHandle->findFile($handle);
-                    if($obj) {
-                        return $obj;
-                    }
-                }
-            }
-            $bResult = false;
-            return $bResult;
-        }
+        $this->setType($type);
     }
-
-    /* --------------------- */
-    ######## TempBlock ########
-    /* --------------------- */
 
     /**
-     * TempBlock
+     * Setzt eindeutigen Handle.
      *
-     * TempBlock ein Template Element konzipiert fuer dynamische Inhalte. Im Template definiert man einen Block wie folgt:
-     * <!-- BEGIN BLOCK_MYNAME --> ...Inhalt... <!-- END BLOCK_MYNAME -->
-     *
-     * Ob der Block im Endresultat erscheint oder wie oft wiederholt wird, bestimmt der Programmierer.
-     *
-     * @package rte
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
-     * @access private
-     **/
-    class TempBlock extends TempCoreHandle
+     * @param string $handle Eindeutiger Name fuer Handle
+     */
+    public function setHandle(string $handle)
     {
-        /**
-         * @var bool content parseable? Am I allowed to parse the content?
-         */
-        private bool $allowParse;
-
-        /**
-         * TempBlock()
-         *
-         * Konstruktor
-         *
-         * @access public
-         * @param string $handle Name des Handles
-         * @param string $directory Verzeichnis zum Template
-         * @param string $content Inhalt des Blocks
-         */
-        function __construct($handle, $directory, $content, $charset = 'UTF-8')
-        {
-            parent::__construct('BLOCK', $directory, $charset);
-
-            $this->SetHandle($handle);
-            $this->allowParse = false;
-            $this->SetContent($content);
-        }
-
-        /**
-         * TempBlock::allowParse()
-         *
-         * Die Funktion fraegt ab, ob geparst werden darf.
-         * Beim ersten Aufruf der Funktion NewBlock darf noch nicht geparst werden,
-         * da noch keine Variablen zugewiesen wurden. Erst bei weiteren Aufrufen (z.B. Schleife) wird geparst,
-         * damit neuer Content entsteht.
-         * Hinweis: wird in Verwendung mit parse($returncontent) verwendet. Um bei Schleifen den Content aneinander zu haengen.
-         *
-         * @access public
-         * @return boolean Bei true darf geparst werden, bei false nicht.
-         */
-        function allowParse(): bool
-        {
-            return $this->allowParse;
-        }
-
-        /**
-         * TempBlock::setAllowParse()
-         *
-         * Setzt den Status, ob geparst werden darf.
-         *
-         * @access public
-         * @param boolean $bool True f�r ja, False f�r nein.
-         */
-        function setAllowParse(bool $bool)
-        {
-            $this->allowParse = $bool;
-        }
-
-        /**
-         * Parst den Block Inhalt und fuegt das Ergebnis an den bisherigen geparsten Inhalt hinzu.
-         *
-         * @access public
-         */
-        function parse(bool $returnContent = false, bool $clearParsedContent = true)
-        {
-            $content = parent::parse($this->allowParse, $clearParsedContent);
-            if($returnContent) {
-                return $content;
-            }
-            else {
-                $this->addParsedContent($content);
-            }
-        }
-
-        /**
-         * Fuegt Inhalt an.
-         *
-         * @access private
-         * @param string $content Inhalt der angefuegt werden soll
-         */
-        function addParsedContent($content)
-        {
-            $this->ParsedContent .= $content;
-        }
+        $this->Handle = $handle;
     }
-
-    /* --------------------- */
-    ######## TempFile #########
-    /* --------------------- */
 
     /**
-     * TempFile
+     * TempHandle::getHandle()
      *
-     * TempFile ein Template Element konzipiert fuer weitere Template Dateien. Im Template definiert man eine neues Template wie folgt:
-     * <!-- INCLUDE MYNAME --> Pfad + Dateiname des Html Templates <!-- END MYNAME -->
+     * Liefert Handle
      *
-     * Inkludierte Dateien werden genauso behandelt wie andere Html Templates. Man kann darin Variablen, Bloecke und weitere Html Templates definieren.
-     *
-     * @package rte
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
-     * @access private
-     **/
-    class TempFile extends TempCoreHandle
+     * @return string Handle
+     */
+    public function getHandle(): string
     {
-        //@var string Dateiname
-        //@access private
-        var $Filename;
-
-        /**
-         * TempFile
-         *
-         * Konstruktor
-         *
-         * Ruft die Funktion zum Laden der Datei auf.
-         *
-         * @access public
-         * @param string $handle Name des Handles
-         * @param string $directory Verzeichnis zur Datei
-         * @param string $filename Dateiname
-         */
-        function __construct($handle, $directory, $filename, $charset = 'UTF-8')
-        {
-            parent::__construct('FILE', $directory, $charset);
-
-            $this->setHandle($handle);
-            $this->Filename = $filename;
-            $this->loadFile();
-        }
-
-        /**
-         * TempFile::loadFile()
-         *
-         * Laedt eine Datei (verwendet die Eigenschaft "filename") und setzt den Inhalt in die Eigenschaft "content"
-         *
-         * @access private
-         */
-        function loadFile()
-        {
-            $content = '';
-            $fp = fopen($this->getDirectory() . $this->Filename, 'r');
-            if(!$fp) {
-                $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
-                    $this->getDirectory() . $this->Filename));
-                return;
-            }
-            $size = filesize($this->Directory . $this->Filename);
-            if($size > 0) {
-                $content = fread($fp, $size);
-            }
-            fclose($fp);
-
-            $this->setContent($content);
-        }
-
-        /**
-         * Sucht nach allen inkludierten TempFiles und gibt die Instanzen in einem Array zurueck (Rekursion).
-         *
-         * @access public
-         * @return array Liste aus TempFile
-         * @see TempFile
-         */
-        function &getFiles()
-        {
-            $files = array();
-
-            $keys = array_keys($this->FileList);
-            for($i = 0; $i < SizeOf($keys); $i++) {
-                $TempFile = &$this->FileList[$keys[$i]];
-                $files[] = &$TempFile;
-                $more_files = &$TempFile->getFiles();
-                if(count($more_files) > 0) {
-                    $files = array_merge($files, $more_files);
-                }
-                unset($TempFile, $more_files);
-            }
-
-            return $files;
-        }
+        return $this->Handle;
     }
-
-    /* --------------------- */
-    ######## TempSimple #######
-    /* --------------------- */
-
-    class TempSimple extends TempCoreHandle
-    {
-        function __construct($handle, $content, $charset = 'UTF-8')
-        {
-            parent::__construct('FILE', '', $charset);
-            $this->setHandle($handle);
-            $this->setContent($content);
-        }
-    }
-
-    /* --------------------- */
-    ####### TempScript ########
-    /* --------------------- */
 
     /**
-     * TempScript
+     * Setzt Handle Typ. Anhand des Typs unterscheidet man derzeit zwischen Block- und File Handles.
      *
-     * TempScript ein Template Element konzipiert fuer weitere Php Html Template Dateien. Im Template definiert man eine neues Script wie folgt:
-     * <!-- INCLUDESCRIPT MYNAME --> Pfad + Dateiname des pHtml Templates <!-- END MYNAME -->
-     *
-     * Achtung: PHP Inhalt wird ausgefuehrt! Dadurch kann die Sicherheit gefaehrdet werden.
-     *
-     * @package rte
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
-     * @access private
-     **/
-    class TempScript extends TempFile
+     * @param string $type Typ set of (BLOCK, FILE)
+     */
+    public function setType(string $type)
     {
-        /**
-         * TempScript()
-         *
-         * Konstruktor
-         *
-         * @access public
-         * @param string $handle Name des Handles (unique)
-         * @param string $directory Verzeichnis zur Datei
-         * @param string $filename Dateiname
-         */
-        function __construct($handle, $directory, $filename, $charset = 'UTF-8')
-        {
-            parent::__construct($handle, $directory, $filename, $charset);
-        }
-
-        /**
-         * TempScript::parse()
-         *
-         * Parst das Script. Dabei wird enthaltener PHP Code ausgefuehrt.
-         */
-        public function parse(bool $returnContent = false, bool $clearParsedContent = true)
-        {
-            parent::parse($returnContent, $clearParsedContent);
-
-            ob_start();
-            eval('?>' . $this->ParsedContent . '<?php ');
-            $this->ParsedContent = ob_get_contents();
-            ob_end_clean();
-        }
+        $this->Type = $type;
     }
 
-    /* --------------------- */
-    ######## Template #########
-    # Rapid Template Engine   #
-    # ... arise ...  :)       #
-    /* --------------------- */
+    /**
+     * Liefert den Handle Typ
+     *
+     * @return string Typ set of (BLOCK, FILE)
+     */
+    public function getType(): string
+    {
+        return $this->Type;
+    }
 
     /**
-     * Template
+     * Speichert Inhalt im Handle ab.
      *
-     * Die Template Klasse! Sie liest die gewuenschten Templates ein, weist dynamische Bloecke und Variablen zu und stosst
-     * letzendlich die Uebersetzung, den Parse Vorgang, an.
+     * @param string $content Inhalt (z.B. eines BLOCK's, FILE's)
+     */
+    public function setContent(string $content)
+    {
+        $this->content = $content;
+    }
+
+    /**
+     * Liefert den gespeicherten Inhalt eines Handles.
      *
-     * @package rte
-     * @author Alexander Manhart <alexander.manhart@freenet.de>
-     * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+     * @return string Inhalt dieses Handles
+     */
+    public function getContent(): string
+    {
+        return $this->content;
+    }
+
+    /**
+     * Funktion dient zum Zwischenspeichern von vervollstaendigten Inhalt.
+     *
+     * @param string $content Geparster, vervollstaendigter Inhalt
+     */
+    public function setParsedContent(string $content)
+    {
+        $this->ParsedContent = $content;
+    }
+
+    /**
+     * Gibt den gespeicherten geparsten, vervollstaendigten Inhalt zurueck.
+     *
+     * @return string Geparster Inhalt
+     */
+    public function getParsedContent(): string
+    {
+        return $this->ParsedContent;
+    }
+
+    /**
+     * Leert den gespeicherten geparsten Inhalt.
+     */
+    public function clearParsedContent()
+    {
+        $this->ParsedContent = '';
+    }
+
+    /**
+     * Leert auch den geladenen Content inkl. geparsten Content
+     */
+    public function clear()
+    {
+        $this->content = '';
+        $this->ParsedContent = '';
+    }
+}
+
+/* --------------------- */
+##### TempCoreHandle ######
+/* --------------------- */
+
+/**
+ * TempCoreHandle
+ *
+ * TempCoreHandle ist der Kern aller Template Elemente. Er kuemmert sich um die Erstellung neuer Objekte und kann Inhalt parsen.
+ * Im Container merkt er sich alle erstellten Objekte. Neue TempX Elemente werden von TempCoreHandle abgeleitet (siehe TempFile, TempBlock)!
+ *
+ * @package rte
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+ * @access private
+ **/
+class TempCoreHandle extends TempHandle
+{
+    /**
+     * @var array container for placeholders (key, value)
+     */
+    protected array $VarList = [];
+
+    /**
+     * @var array container for blocks (key, content of block)
+     */
+    protected array $BlockList = [];
+
+    /**
+     * @var array container for files (key, content of file)
+     */
+    protected array $FileList = [];
+
+    /**
+     * @var string directory to the templates
+     */
+    protected string $Directory;
+
+    private string $varStart = TEMP_VAR_START;
+
+    private string $varEnd = TEMP_VAR_END;
+
+    protected string $charset = 'UTF-8';
+
+    /**
+     * Konstruktor: benoetigt Handle-Typ und Verzeichnis zum Template.
+     * Array fuer Variablen Container und Block Container werden angelegt.
+     *
+     * @param string $type Handle-Typ set of (BLOCK, FILE)
+     * @param string $directory Verzeichnis zum Template
+     */
+    function __construct(string $type, string $directory, string $charset = 'UTF-8')
+    {
+        $this->charset = $charset;
+        parent::__construct($type);
+
+        $this->setDirectory($directory);
+        $this->BlockList = [];
+        $this->FileList = [];
+        $this->VarList = [];
+    }
+
+    /**
+     * Die Funktion createBlock legt einen neuen Block (Objekt vom Typ TempBlock) an.
+     *
      * @access public
-     **/
-    class Template extends PoolObject
+     * @param string $handle Name des Handles
+     * @param string $dir Verzeichnis zum Template
+     * @param string $content Inhalt des Blocks
+     * @param string $charset
+     * @return TempBlock TempBlock
+     * @see TempBlock
+     */
+    function createBlock(string $handle, string $dir, string $content, string $charset): TempBlock
     {
-        //@var string Verzeichnis zu den Templates
-        //@access private
-        var $dir;
+        $obj = new TempBlock($handle, $dir, $content, $charset);
+        $this->BlockList[$handle] = $obj;
+        return $obj;
+    }
 
-        //@var string Aktiv verwendeter Handle (wohin gehen die Variablenzuweisungen)
-        //@access private
-        var $ActiveHandle = '';
+    /**
+     * Die Funktion createFile legt eine neue Datei (Objekt vom Typ TempFile) an.
+     *
+     * @access public
+     * @param string $handle Name des Handles
+     * @param string $dir Verzeichnis zum Template
+     * @param string $filename Dateiname (des Templates)
+     * @param string $charset
+     * @return TempFile
+     * @see TempFile
+     */
+    function createFile(string $handle, string $dir, string $filename, string $charset): TempFile
+    {
+        $obj = new TempFile($handle, $dir, $filename, $charset);
+        $this->FileList[$handle] = $obj;
+        return $obj;
+    }
 
-        /**
-         * Aktive Instanz TempBlock (hat eine hoehere Prioritaet als TempFile). Ist ein Block gesetzt, folgt darin die Variablenzuweisung
-         *
-         * @var TempFile
-         * @access private
-         */
-        var $ActiveFile;
+    /**
+     * Legt ein neues Script (Objekt vom Typ TempScript) an.
+     * Hinweis: TempScript arbeitet ebenfalls mit dem Handle-Typ FILE
+     *
+     * @access public
+     * @param string $handle Name des Handles
+     * @param string $dir Verzeichnis zum Template
+     * @param string $filename Dateiname (des Scripts)
+     * @param string $charset
+     * @return TempScript
+     * @see TempScript
+     */
+    function createScript(string $handle, string $dir, string $filename, string $charset): TempScript
+    {
+        $obj = new TempScript($handle, $dir, $filename, $charset);
+        $this->FileList[$handle] = $obj;
+        return $obj;
+    }
 
-        /**
-         * Aktive Instanz TempBlock (hat eine hoehere Prioritaet als TempFile). Ist ein Block gesetzt, folgt darin die Variablenzuweisung
-         *
-         * @var TempBlock
-         */
-        var $ActiveBlock;
-
-        //@var array Template Container (hier sind nur die Files enthalten, die �ber das Template Objekt gesetzt werden)
-        //@access private
-        var $FileList;
-
-        var $varStart = TEMP_VAR_START;
-
-        var $varEnd = TEMP_VAR_END;
-
-        const ENCODE_NONE = 0;
-        const ENCODE_HTMLSPECIALCHARS = 1;
-        const ENCODE_HTMLENTITIES = 2;
-
-        /**
-         * @var string
-         */
-        private string $charset = 'UTF-8';
-
-        /**
-         * Konstruktor
-         *
-         * @param string $dir Verzeichnis zu den Templates (Standardwert ./)
-         */
-        function __construct($dir = './')
-        {
-            $this->FileList = array();
-            $this->setDirectory($dir);
-        }
-
-        /**
-         * @param string $charset
-         */
-        public function setCharset(string $charset = 'UTF-8')
-        {
-            $this->charset = $charset;
-        }
-
-        /**
-         * aendert das Verzeichnis worin die Templates liegen.
-         *
-         * @param string $dir Verzeichnis zu den Templates
-         */
-        function setDirectory($dir)
-        {
-            if(strlen($dir) > 0) {
-                $dir = addEndingSlash($dir);
-                if(is_dir($dir)) {
-                    $this->dir = $dir;
-                }
-                else {
-                    $this->raiseError(__FILE__, __LINE__, sprintf('Directory \'%s\' not found!', $dir));
-                }
+    /**
+     * Diese Prozedur fuegt eine Variable zum Variablen Container hinzu.
+     *
+     * @param string|array $name name of the variable (placeholder in the template)
+     * @param mixed $value (zuzuweisender) Wert der Variable
+     */
+    public function setVar($name, $value = '', int $encode = Template::ENCODE_NONE)
+    {
+        $encode = function($value) use ($encode) {
+            if($encode == Template::ENCODE_NONE) {
+                return $value;
             }
+            if($encode == Template::ENCODE_HTMLSPECIALCHARS) {
+                return htmlspecialchars($value, ENT_QUOTES, $this->charset);
+            }
+            if($encode == Template::ENCODE_HTMLENTITIES) {
+                return htmlentities($value, ENT_QUOTES, $this->charset);
+            }
+        };
+
+        if(!is_array($name)) {
+            $this->VarList[$name] = $encode($value);
         }
+        else {
+            if((array)$value !== $value) {
+                foreach($name as $key => $value) {
+                    switch(gettype($value)) {
+                        case 'array':
+                            $this->VarList[$key] = 'array';
+                            break;
 
-        /**
-         * Liefert das Verzeichnis zu den Templates zurueck
-         *
-         * @access public
-         * @return string Verzeichnis zu den Templates
-         */
-        function getDirectory()
-        {
-            return $this->dir;
-        }
+                        case 'object':
+                            $this->VarList[$key] = 'object';
+                            break;
 
-        /**
-         * Setzt die Templates. Der Handle-Name dient der Identifikation der Datei.
-         *
-         * @param string $handle Handle-Name; es kann auch ein Array mit Schluesselname und Wert (= Dateinamen) uebergeben werden.
-         * @param string $filename Dateiname
-         */
-        function setFile($handle, $filename = '')
-        {
-            if(!is_array($handle)) {
-                $this->addFile($handle, $filename);
-            }
-            else {
-                foreach($handle as $filehandle => $filename) {
-                    $this->addFile($filehandle, $filename);
-                }
-            }
-        }
-
-        /**
-         * Setzt die Template Dateien samt Pfad. Der Pfad wird automatisch extrahiert. Der Handle-Name dient der Identifikation der Datei.
-         *
-         * @access public
-         * @param string $handle Handle-Name (array erlaubt)
-         * @param string $filename Pfad und Dateiname (Template)
-         **/
-        function setFilePath($handle, $filename = '')
-        {
-            if(!is_array($handle)) {
-                $this->setDirectory(dirname($filename));
-                $this->addFile($handle, basename($filename));
-            }
-            else {
-                foreach($handle as $filehandle => $filename) {
-                    $this->setDirectory(dirname($filename));
-                    $this->addFile($filehandle, basename($filename));
-                }
-            }
-        }
-
-        function setContent($handle, $content)
-        {
-            $TempSimple = new TempSimple($handle, $content, $this->charset);
-            $this->FileList[$handle] = $TempSimple;
-
-            if($this->ActiveHandle == '') {
-                $this->useFile($handle);
-            }
-        }
-
-        function setBrackets($varStart, $varEnd)
-        {
-            $this->varStart = $varStart;
-            $this->varEnd = $varEnd;
-
-            if($this->ActiveFile) {
-                $this->ActiveFile->varStart = $varStart;
-                $this->ActiveFile->varEnd = $varEnd;
-            }
-        }
-
-        /**
-         * Fuegt ein Template zum File Container hinzu.
-         *
-         * @access private
-         * @param string $handle Handle-Name
-         * @param string $file Datei
-         */
-        function addFile($handle, $file)
-        {
-            $TempFile = new TempFile($handle, $this->getDirectory(), $file, $this->charset);
-            $this->FileList[$handle] = $TempFile;
-
-            if($TempFile) {
-                // added 02.05.2006 Alex M.
-                $TempFile->varStart = $this->varStart;
-                $TempFile->varEnd = $this->varEnd;
-            }
-
-            if($this->ActiveHandle == '') {
-                $this->useFile($handle);
-            }
-        }
-
-        /**
-         * Die Funktion sagt der Template Engine, dass die nachfolgenden Variablenzuweisungen auf ein anderes Html Template fallen.
-         *
-         * @param string $handle Name des (File-) Handles
-         */
-        function useFile(string $handle)
-        {
-            if(array_key_exists($handle, $this->FileList)) {
-                if($handle != $this->ActiveHandle) {
-                    $TempFile = &$this->FileList[$handle];
-
-                    $this->ActiveHandle = $handle;
-                    $this->ActiveFile = &$TempFile;
-                    // Referenz aufheben
-                    unset($this->ActiveBlock);
+                        default:
+                            $this->VarList[$key] = $encode($value);
+                            break;
+                    }
                 }
             }
             else {
-                $found = false;
-                $keys = array_keys($this->FileList);
-                for($i = 0; $i < SizeOf($keys); $i++) {
-                    $TempFile = &$this->FileList[$keys[$i]];
-
-                    $obj = &$TempFile->findFile($handle);
-                    if(is_object($obj)) {
-                        $this->ActiveHandle = $handle;
-                        $this->ActiveFile = &$obj;
-                        // Referenz aufheben
-                        unset($this->ActiveBlock);
-                        $found = true;
-                        break;
-                    }
-                }
-                if(!$found) {
-                    // TODO Error
-                    $this->raiseError(__FILE__, __LINE__, sprintf('FileHandle %s not found', $handle));
-                    unset($this->ActiveFile);
-                    unset($this->ActiveBlock);
+                foreach($name as $key => $value) {
+                    $this->VarList[$key] = $encode($value);
                 }
             }
         }
+    }
 
-        /**
-         * Liefert ein Array mit allen TempFile Objekten (auch TempScript).
-         *
-         * @return array Liste aus TempFile Objekten
-         */
-        public function getFiles(): array
-        {
-            $files = array();
+    /**
+     * Beim Setzen des Inhalts fuer einen Handle, wird dieser Inhalt automatisch nach Bloecken, Includes (Files) untersucht.
+     *
+     * @param string $content Inhalt/Content
+     */
+    public function setContent(string $content, bool $scanForPattern = true)
+    {
+        parent::setContent($content);
 
-            $keys = array_keys($this->FileList);
-            $numFiles = sizeof($keys);
-            for($i = 0; $i < $numFiles; $i++) {
-                $TempFile = &$this->FileList[$keys[$i]];
-                if($TempFile instanceof TempSimple) {
-                    continue;
-                }
-                $files[] = $TempFile;
-
-                // Suche innerhalb des TempFile's nach weiteren TemplateFiles
-                $more_files = $TempFile->getFiles();
-                if(count($more_files) > 0) {
-                    $files = array_merge($files, $more_files);
-                }
-                unset($more_files);
-            }
-
-            return $files;
+        if($scanForPattern) {
+            $this->findPattern($this->content);
         }
+    }
 
-        /**
-         * Anweisung, dass ein neuer Block folgt, dem die n�chsten Variablen zugewiesen werden.
-         *
-         * @param string $handle Handle-Name
-         * @return TempBlock
-         */
-        function &newBlock(string $handle)
-        {
-            if($this->ActiveFile instanceof TempFile) {
-                if((!isset($this->ActiveBlock)) or ($this->ActiveBlock->getHandle() != $handle)) {
-                    $this->ActiveBlock = $this->ActiveFile->getTempBlock($handle);
-                }
+    /**
+     * Weist der Eigenschaft Directory ein Verzeichnis zu.
+     * Das Verzeichnis muss durch alle Handles gereicht werden,
+     * damit in jedem Handle die File Includes auf die richtigen Quellen zeigen.
+     *
+     * @param string $dir Verzeichnis
+     */
+    public function setDirectory(string $dir)
+    {
+        $this->Directory = $dir;
+    }
 
-                if($this->ActiveBlock) {
-                    // added 2.5.06 Alex M.
-                    $this->ActiveBlock->varStart = $this->varStart;
-                    $this->ActiveBlock->varEnd = $this->varEnd;
+    /**
+     * Liefert das Verzeichnis.
+     *
+     * @return string Verzeichnis zum Template
+     */
+    public function getDirectory(): string
+    {
+        return $this->Directory;
+    }
 
-                    if($this->ActiveBlock->allowParse()) {
-                        $this->ActiveBlock->parse();
-                    }
-                    else {
-                        $this->ActiveBlock->setAllowParse(true);
-                    }
-                    return $this->ActiveBlock;
-                }
-                else unset($this->ActiveBlock);
-            }
-            $false = false; // PHP Notice, only variables should be returned by reference
-            return $false;
+    /**
+     * Gibt das Block Objekt mit dem uebergebenen Namen des Handles $handle zurueck.
+     * Falls er ueberhaupt existiert! Ansonsten wird NULL zurueck gegeben.
+     *
+     * @param string $handle Name des Handles
+     * @return TempBlock|null Instanz von TempBlock oder NULL
+     */
+    public function getTempBlock(string $handle): ?TempBlock
+    {
+        if(array_key_exists($handle, $this->BlockList)) {
+            return $this->BlockList[$handle];
         }
-
-        /**
-         * Verlaesst einen Block (einleitend mit der Funktion Template::newBlock(), anschliessend Template::backToFile($filehandle)).
-         * Verwendet Template::leaveBlock() und Template::useFile().
-         *
-         * @access public
-         */
-        function backToFile(string $fileHandle = '')
-        {
-            $this->leaveBlock();
-            if(!is_null($fileHandle)) {
-                $this->useFile($fileHandle);
+        else {
+            $keys = array_keys($this->BlockList);
+            foreach($keys as $key) {
+                $Obj = $this->BlockList[$key]->getTempBlock($handle);
+                if($Obj instanceof TempBlock) {
+                    return $Obj;
+                }
             }
         }
+        return null;
+    }
 
-        /**
-         * Verlaesst einen Block (einleitend mit der Funktion Template::newBlock(), anschliessend Template::leaveBlock())
-         **/
-        public function leaveBlock()
-        {
-            // Referenz zum aktiven Block aufheben
-            unset($this->ActiveBlock);
-        }
-
-        /**
-         * Weist die Template Engine an, als nächstes einen anderen BLOCK zu verwenden.
-         *
-         * @param string $blockHandle name of block
-         * @return bool|TempBlock
-         */
-        function useBlock(string $blockHandle)
-        {
-            if($this->ActiveFile) {
-                $ActiveBlock = $this->ActiveFile->getTempBlock($blockHandle);
-                if($ActiveBlock) {
-                    $this->ActiveBlock = $ActiveBlock;
-                    return $this->ActiveBlock;
-                }
-            }
+    /**
+     * Eine der Hauptfunktionen in der Rapid Template Engine!
+     * Objekt Elemente haben im Template das Muster <!-- FUNKTION HANDLENAME>INHALT<!-- END HANDLENAME --> .
+     * Ein Block kann in diesem Fall auch ein Include eines weiteren Templates oder Scripts sein
+     * (Dies gilt aber nur fuer die Blockdefinition innerhalb des Templates).
+     *
+     * Findet er einen neuen Block, wird entsprechend ein neues Objekt mit dem Inhalt des gefunden Blocks angelegt.
+     *
+     * @param string $content Inhalt, welcher nach Template Elementen abgesucht werden soll
+     */
+    protected function findPattern(string $content): bool
+    {
+        // Matches Blocks like <!-- XXX key -->freeform-text<!-- END key -->
+        $reg = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*)<!-- END \2 -->/Us';
+        $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
+        if(!$bResult) {
             return false;
         }
 
-        /**
-         * Weist Variablen zu. Standard Variablen werden im Template mit { } markiert.
-         *
-         * @access public
-         * @param string $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
-         * @param string $value Wert der Variable
-         */
-        function assignVar($varname, $value = '')
-        {
-            $this->setVar($varname, $value);
+        $numMatches = count($matches);
+        for($i = 0; $i < $numMatches; $i++) {
+
+            $match = $matches[$i][0];
+            $kind = $matches[$i][1];
+            $handle = ($matches[$i][2]);
+            $content = ($matches[$i][3]);
+
+            $value = IS_DEVELOP ? "Unknown block $kind" : '';
+            switch($kind) {
+                case TEMP_BLOCK_IDENT:
+                    $value = "[$handle]";
+                    $this->createBlock($handle, $this->getDirectory(), $content, $this->charset);
+                    break;
+
+                case TEMP_INCLUDE_IDENT:
+                    $value = "[$handle]";
+                    $this->createFile($handle, $this->getDirectory(), $content, $this->charset);
+                    break;
+
+                case TEMP_INCLUDESCRIPT_IDENT:
+                    $value = "[$handle]";
+                    $this->createScript($handle, $this->getDirectory(), $content, $this->charset);
+                    break;
+
+                case TEMP_SESSION_IDENT:
+                    $value = isset($_SESSION[$content]) ? urldecode($_SESSION[$content]) : '';
+                    break;
+            }
+
+            $this->content = str_replace($match,  $value , $this->content);
+        }
+        return true;
+    }
+
+    /**
+     * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
+     *
+     * @param boolean $returnContent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
+     * @param bool $clearParsedContent
+     * @return string Geparster Inhalt
+     */
+    public function parse(bool $returnContent = false, bool $clearParsedContent = true): string
+    {
+        $varStart = $this->varStart;
+        $varEnd = $this->varEnd;
+
+        $content = $this->content;
+        ### TODO Pool 5, bei setVar {} adden oder read write properties...
+        #$content = str_replace(array_keys($this -> VarList), array_values($this -> VarList), $content);
+        foreach($this->VarList as $Key => $val) {
+            $content = str_replace($varStart . $Key . $varEnd, $val ?? '', $content);
         }
 
+        $search = [];
+        $replace = [];
         /**
-         * Synonym auf die Template Funktion Template::assignVar().
-         *
-         * @param string|array $name name of placeholder
-         * @param mixed $value value for placeholder
+         * @var string $Handle
+         * @var TempBlock $TempBlock
          */
-        function setVar($name, $value = '', int $encoding = Template::ENCODE_NONE)
-        {
-            if(isset($this->ActiveBlock)) {
-                $ActiveBlock = $this->ActiveBlock;
-                $ActiveBlock->setVar($name, $value, $encoding);
-            }
-            elseif(isset($this->ActiveFile)) {
-                $ActiveFile = $this->ActiveFile;
-                $ActiveFile->setVar($name, $value, $encoding);
+        foreach($this->BlockList as $Handle => $TempBlock) {
+            $search[] = '[' . $Handle . ']';
+
+            if($TempBlock->allowParse()) {
+                $TempBlock->parse();
+                $replace[] = $TempBlock->getParsedContent();
+                if($clearParsedContent) $TempBlock->clearParsedContent();
+                $TempBlock->setAllowParse(false);
             }
             else {
-                $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $name . '\'. There is no file or block associated.');
+                //		                $content = str_replace('{'.$Handle.'}', '', $content);
+                $replace[] = $TempBlock->getParsedContent();
             }
+
+            unset($TempBlock);
         }
 
-        /**
-         * Erstellt automatisch dynamische Bloecke mit den uebergebenen Datensaetzen.
-         * Das Array muss wie folgt aufgebaut werden: $array[$laufender_record_index][$varname] = $value !
-         *
-         * @param string $blockHandle Handle-Name des Blocks
-         * @param array $recordset
-         * @return Template
-         */
-        public function assignRecordset(string $blockHandle, array $recordset = []): Template
-        {
-            $count = count($recordset);
-            if($count == 0) {
-                return $this;
-            }
-
-            for($i = 0; $i < $count; $i++) {
-                $record = $recordset[$i];
-
-                if($this->newBlock($blockHandle)) {
-                    $this->assignVar($record);
-                }
-            }
-            $this->leaveBlock();
-
-            return $this;
+        foreach($this->FileList as $Handle => $TempFile) {
+            $TempFile->parse();
+            $search[] = '[' . $Handle . ']';
+            $replace[] = $TempFile->getParsedContent();
+            if($clearParsedContent) $TempFile->clearParsedContent();
+            unset($TempFile);
         }
 
-        /**
-         * Synonym auf die Template Funktion Template::assignRecordset()
-         *
-         * @access public
-         * @param string $blockhandle Handle-Name des Blocks
-         * @param array $redordset Datensaetze (z.B. aus einem MySQL Ergebnis)
-         * @see Template::AssignRecordset()
-         */
-        function setRecordset($blockhandle, $recordset = array())
-        {
-            $this->assignRecordset($blockhandle, $recordset);
-        }
+        $content = str_replace($search, $replace, $content);
 
-        /**
-         * Die Prozedur veranlasst, dass alle Dateien (Template Elemente) rekursiv geparst werden.
-         *
-         * @access public
-         * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet)
-         */
-        function parse($handle = '')
-        {
-            if($handle != '') {
-                $this->useFile($handle);
-            }
-            if($this->ActiveFile) {
-                $this->ActiveFile->parse();
-            }
-            return $this;
-        }
-
-        /**
-         * Liefert den Inhalt aller geparsten Dateien, Includes, Variablen und Bloecken!
-         *
-         * @access public
-         * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet!)
-         * @return string Inhalt
-         */
-        function getContent(string $handle = ''): string
-        {
-            if($handle != '') {
-                $this->useFile($handle);
-            }
-
-            if($this->ActiveFile) {
-                return $this->ActiveFile->getParsedContent();
-            }
+        if(!$returnContent) {
+            $this->ParsedContent = $content;
             return '';
         }
+        else {
+            return $content;
+        }
+    }
 
-        /**
-         * Leert den Buffer (ParsedContent)
-         *
-         * @access public
-         * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet!)
-         **/
-        function clear($handle = '')
-        {
-            if($handle != '') {
-                $this->useFile($handle);
+    /**
+     * set parentheses for the variable placeholders
+     *
+     * @param string $start
+     * @param string $end
+     * @return void
+     */
+    public function setParentheses(string $start, string $end): void
+    {
+        $this->varStart = $start;
+        $this->varEnd = $end;
+    }
+
+    /**
+     * Sucht nach einem File mit dem uebergebenen Namen des Handles $handle.
+     *
+     * @param string $handle Name des Handles
+     * @return TempFile|null Instanz von TempFile oder false
+     * @see TempFile
+     */
+    public function findFile(string $handle): ?TempFile
+    {
+        $keys = array_keys($this->FileList);
+        $numFiles = count($keys);
+        for($i = 0; $i < $numFiles; $i++) {
+            /** @var TempHandle $TempHandle */
+            $TempHandle = $this->FileList[$keys[$i]];
+            if($keys[$i] == $handle && $TempHandle->getType() == 'FILE') {
+                return $TempHandle;
             }
-
-            if(@is_a($this->ActiveFile, 'TempFile')) {
-                $TempFile = &$this->ActiveFile;
-                $TempFile->clearParsedContent();
+            else {
+                $obj = $TempHandle->findFile($handle);
+                if($obj) {
+                    return $obj;
+                }
             }
         }
+        return null;
+    }
+}
 
-        /**
-         * Setzt alle Werte zurueck (Loescht alle Files aus dem Buffer).
-         *
-         * @return
-         **/
-        function reset()
-        {
-            $this->ActiveHandle = '';
-            unset($this->ActiveFile);
-            unset($this->ActiveBlock);
-            $this->FileList = array();
+/* --------------------- */
+######## TempBlock ########
+/* --------------------- */
+
+/**
+ * TempBlock
+ *
+ * TempBlock ein Template Element konzipiert fuer dynamische Inhalte. Im Template definiert man einen Block wie folgt:
+ * <!-- BEGIN BLOCK_MYNAME --> ...Inhalt... <!-- END BLOCK_MYNAME -->
+ *
+ * Ob der Block im Endresultat erscheint oder wie oft wiederholt wird, bestimmt der Programmierer.
+ *
+ * @package rte
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+ * @access private
+ **/
+class TempBlock extends TempCoreHandle
+{
+    /**
+     * @var bool content parseable? Am I allowed to parse the content?
+     */
+    private bool $allowParse;
+
+    /**
+     * @param string $handle Name des Handles
+     * @param string $directory Verzeichnis zum Template
+     * @param string $content Inhalt des Blocks
+     */
+    function __construct(string $handle, string $directory, string $content, string $charset)
+    {
+        parent::__construct('BLOCK', $directory, $charset);
+
+        $this->setHandle($handle);
+        $this->allowParse = false;
+        $this->setContent($content);
+    }
+
+    /**
+     * TempBlock::allowParse()
+     *
+     * Die Funktion fraegt ab, ob geparst werden darf.
+     * Beim ersten Aufruf der Funktion NewBlock darf noch nicht geparst werden,
+     * da noch keine Variablen zugewiesen wurden. Erst bei weiteren Aufrufen (z.B. Schleife) wird geparst,
+     * damit neuer Content entsteht.
+     * Hinweis: wird in Verwendung mit parse($returncontent) verwendet. Um bei Schleifen den Content aneinander zu haengen.
+     *
+     * @return boolean Bei true darf geparst werden, bei false nicht.
+     */
+    public function allowParse(): bool
+    {
+        return $this->allowParse;
+    }
+
+    /**
+     * Setzt den Status, ob geparst werden darf.
+     *
+     * @param boolean $bool True f�r ja, False f�r nein.
+     */
+    public function setAllowParse(bool $bool)
+    {
+        $this->allowParse = $bool;
+    }
+
+    /**
+     * Parst den Block Inhalt und fuegt das Ergebnis an den bisherigen geparsten Inhalt hinzu.
+     */
+    public function parse(bool $returnContent = false, bool $clearParsedContent = true): string
+    {
+        $content = parent::parse($this->allowParse, $clearParsedContent);
+        if($returnContent) {
+            return $content;
         }
+        else {
+            $this->addParsedContent($content);
+        }
+        return '';
+    }
+
+    /**
+     * Fuegt Inhalt an.
+     *
+     * @param string $content Inhalt der angefuegt werden soll
+     */
+    private function addParsedContent(string $content)
+    {
+        $this->ParsedContent .= $content;
+    }
+}
+
+/* --------------------- */
+######## TempFile #########
+/* --------------------- */
+
+/**
+ * TempFile
+ *
+ * TempFile ein Template Element konzipiert fuer weitere Template Dateien. Im Template definiert man eine neues Template wie folgt:
+ * <!-- INCLUDE MYNAME --> Pfad + Dateiname des Html Templates <!-- END MYNAME -->
+ *
+ * Inkludierte Dateien werden genauso behandelt wie andere Html Templates. Man kann darin Variablen, Bloecke und weitere Html Templates definieren.
+ *
+ * @package rte
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+ * @access private
+ **/
+class TempFile extends TempCoreHandle
+{
+    //@var string Dateiname
+    //@access private
+    var $Filename;
+
+    /**
+     * Ruft die Funktion zum Laden der Datei auf.
+     *
+     * @param string $handle Name des Handles
+     * @param string $directory Verzeichnis zur Datei
+     * @param string $filename Dateiname
+     */
+    function __construct(string $handle, string $directory, string $filename, string $charset)
+    {
+        parent::__construct('FILE', $directory, $charset);
+
+        $this->setHandle($handle);
+        $this->Filename = $filename;
+        $this->loadFile();
+    }
+
+    /**
+     * Laedt eine Datei (verwendet die Eigenschaft "filename") und setzt den Inhalt in die Eigenschaft "content"
+     */
+    private function loadFile()
+    {
+        $content = '';
+        $fp = fopen($this->getDirectory() . $this->Filename, 'r');
+        if(!$fp) {
+            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
+                $this->getDirectory() . $this->Filename));
+            return;
+        }
+        $size = filesize($this->Directory . $this->Filename);
+        if($size > 0) {
+            $content = fread($fp, $size);
+        }
+        fclose($fp);
+
+        $this->setContent($content);
+    }
+
+    /**
+     * Sucht nach allen inkludierten TempFiles und gibt die Instanzen in einem Array zurueck (Rekursion).
+     *
+     * @return array Liste aus TempFile
+     * @see TempFile
+     */
+    public function getFiles(): array
+    {
+        $files = [];
+
+        $keys = array_keys($this->FileList);
+        for($i = 0; $i < SizeOf($keys); $i++) {
+            $TempFile = &$this->FileList[$keys[$i]];
+            $files[] = $TempFile;
+            $more_files = $TempFile->getFiles();
+            if(count($more_files) > 0) {
+                $files = array_merge($files, $more_files);
+            }
+            unset($TempFile, $more_files);
+        }
+
+        return $files;
+    }
+}
+
+/* --------------------- */
+######## TempSimple #######
+/* --------------------- */
+
+class TempSimple extends TempCoreHandle
+{
+    function __construct(string $handle, string $content, string $charset)
+    {
+        parent::__construct('FILE', '', $charset);
+        $this->setHandle($handle);
+        $this->setContent($content);
+    }
+}
+
+/* --------------------- */
+####### TempScript ########
+/* --------------------- */
+
+/**
+ * TempScript
+ *
+ * TempScript ein Template Element konzipiert fuer weitere Php Html Template Dateien. Im Template definiert man eine neues Script wie folgt:
+ * <!-- INCLUDESCRIPT MYNAME --> Pfad + Dateiname des pHtml Templates <!-- END MYNAME -->
+ *
+ * Achtung: PHP Inhalt wird ausgefuehrt! Dadurch kann die Sicherheit gefaehrdet werden.
+ *
+ * @package rte
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+ * @access private
+ **/
+class TempScript extends TempFile
+{
+    /**
+     * Parst das Script. Dabei wird enthaltener PHP Code ausgefuehrt.
+     */
+    public function parse(bool $returnContent = false, bool $clearParsedContent = true): string
+    {
+        $content = parent::parse($returnContent, $clearParsedContent);
+        if($returnContent) {
+            return $content;
+        }
+
+        ob_start();
+        eval('?>' . $this->ParsedContent . '<?php ');
+        $this->ParsedContent = ob_get_contents();
+        ob_end_clean();
+
+        return '';
+    }
+}
+
+/* --------------------- */
+######## Template #########
+# Rapid Template Engine   #
+# ... arise ...  :)       #
+/* --------------------- */
+
+/**
+ * Template
+ *
+ * Die Template Klasse! Sie liest die gewuenschten Templates ein, weist dynamische Bloecke und Variablen zu und stosst
+ * letzendlich die Uebersetzung, den Parse Vorgang, an.
+ *
+ * @package rte
+ * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
+ * @access public
+ **/
+class Template extends PoolObject
+{
+    //@var string Verzeichnis zu den Templates
+    private string $dir;
+
+    //@var string Aktiv verwendeter Handle (wohin gehen die Variablenzuweisungen)
+    private string $ActiveHandle = '';
+
+    /**
+     * Aktive Instanz TempBlock (hat eine hoehere Prioritaet als TempFile). Ist ein Block gesetzt, folgt darin die Variablenzuweisung
+     *
+     * @var null|TempFile|TempSimple
+     */
+    public null|TempFile|TempSimple $ActiveFile = null;
+
+    /**
+     * Aktive Instanz TempBlock (hat eine hoehere Prioritaet als TempFile). Ist ein Block gesetzt, folgt darin die Variablenzuweisung
+     *
+     * @var null|TempBlock
+     */
+    public ?TempBlock $ActiveBlock = null;
+
+    //@var array Template Container (hier sind nur die Files enthalten, die �ber das Template Objekt gesetzt werden)
+    protected array $FileList = [];
+
+    private string $varStart = TEMP_VAR_START;
+
+    private string $varEnd = TEMP_VAR_END;
+
+    const ENCODE_NONE = 0;
+    const ENCODE_HTMLSPECIALCHARS = 1;
+    const ENCODE_HTMLENTITIES = 2;
+
+    /**
+     * @var string
+     */
+    private string $charset = 'UTF-8';
+
+    /**
+     * Konstruktor
+     *
+     * @param string $dir Verzeichnis zu den Templates (Standardwert ./)
+     */
+    function __construct(string $dir = './')
+    {
+        $this->FileList = [];
+        $this->setDirectory($dir);
+    }
+
+    /**
+     * @param string $charset
+     */
+    public function setCharset(string $charset)
+    {
+        $this->charset = $charset;
+    }
+
+    /**
+     * aendert das Verzeichnis worin die Templates liegen.
+     *
+     * @param string $dir Verzeichnis zu den Templates
+     */
+    function setDirectory(string $dir)
+    {
+        if(!$dir) {
+            return;
+        }
+
+        $dir = addEndingSlash($dir);
+        if(is_dir($dir)) {
+            $this->dir = $dir;
+        }
+        else {
+            $this->raiseError(__FILE__, __LINE__, sprintf('Directory \'%s\' not found!', $dir));
+        }
+    }
+
+    /**
+     * Liefert das Verzeichnis zu den Templates zurueck
+     *
+     * @return string Verzeichnis zu den Templates
+     */
+    public function getDirectory(): string
+    {
+        return $this->dir;
+    }
+
+    /**
+     * Setzt die Templates. Der Handle-Name dient der Identifikation der Datei.
+     *
+     * @param string $handle Handle-Name; es kann auch ein Array mit Schluesselname und Wert (= Dateinamen) uebergeben werden.
+     * @param string $filename Dateiname
+     */
+    public function setFile(string $handle, string $filename = '')
+    {
+//        if(!is_array($handle)) {
+        $this->addFile($handle, $filename);
+//        }
+//        else {
+//            foreach($handle as $filehandle => $filename) {
+//                $this->addFile($filehandle, $filename);
+//            }
+//        }
+    }
+
+    /**
+     * Setzt die Template Dateien samt Pfad. Der Pfad wird automatisch extrahiert. Der Handle-Name dient der Identifikation der Datei.
+     *
+     * @param string $handle Handle-Name (array erlaubt)
+     * @param string $filename Pfad und Dateiname (Template)
+     */
+    public function setFilePath(string $handle, string $filename = '')
+    {
+//        if(!is_array($handle)) {
+        $this->setDirectory(dirname($filename));
+        $this->addFile($handle, basename($filename));
+        /*}
+        else {
+            foreach($handle as $filehandle => $filename) {
+                $this->setDirectory(dirname($filename));
+                $this->addFile($filehandle, basename($filename));
+            }
+        }*/
+    }
+
+    /**
+     * Set content directly
+     *
+     * @param string $handle
+     * @param string $content
+     * @return void
+     */
+    public function setContent(string $handle, string $content): void
+    {
+        $TempSimple = new TempSimple($handle, $content, $this->charset);
+        $this->FileList[$handle] = $TempSimple;
+
+        if($this->ActiveHandle == '') {
+            $this->useFile($handle);
+        }
+    }
+
+    /**
+     * Set the parentheses for the placeholders
+     *
+     * @param string $varStart
+     * @param string $varEnd
+     * @return void
+     */
+    public function setParentheses(string $varStart, string $varEnd): void
+    {
+        $this->varStart = $varStart;
+        $this->varEnd = $varEnd;
+
+        $this->ActiveFile?->setParentheses($varStart, $varEnd);
+    }
+
+    /**
+     * Fuegt ein Template zum File Container hinzu.
+     *
+     * @param string $handle Handle-Name
+     * @param string $file Datei
+     */
+    private function addFile(string $handle, string $file)
+    {
+        $TempFile = new TempFile($handle, $this->getDirectory(), $file, $this->charset);
+        $this->FileList[$handle] = $TempFile;
+
+        // added 02.05.2006 Alex M.
+        $this->setParentheses($this->varStart, $this->varEnd);
+
+        if($this->ActiveHandle == '') {
+            $this->useFile($handle);
+        }
+    }
+
+    /**
+     * Die Funktion sagt der Template Engine, dass die nachfolgenden Variablenzuweisungen auf ein anderes Html Template fallen.
+     *
+     * @param string $handle Name des (File-) Handles
+     */
+    function useFile(string $handle)
+    {
+        if(array_key_exists($handle, $this->FileList)) {
+            if($handle != $this->ActiveHandle) {
+                $TempFile = $this->FileList[$handle];
+
+                $this->ActiveHandle = $handle;
+                $this->ActiveFile = $TempFile;
+                // Referenz aufheben
+                unset($this->ActiveBlock);
+            }
+        }
+        else {
+            $found = false;
+            $keys = array_keys($this->FileList);
+            for($i = 0; $i < SizeOf($keys); $i++) {
+                $TempFile = &$this->FileList[$keys[$i]];
+
+                $obj = &$TempFile->findFile($handle);
+                if(is_object($obj)) {
+                    $this->ActiveHandle = $handle;
+                    $this->ActiveFile = &$obj;
+                    // Referenz aufheben
+                    unset($this->ActiveBlock);
+                    $found = true;
+                    break;
+                }
+            }
+            if(!$found) {
+                // TODO Error
+                $this->raiseError(__FILE__, __LINE__, sprintf('FileHandle %s not found', $handle));
+                unset($this->ActiveFile);
+                unset($this->ActiveBlock);
+            }
+        }
+    }
+
+    /**
+     * Liefert ein Array mit allen TempFile Objekten (auch TempScript).
+     *
+     * @return array Liste aus TempFile Objekten
+     */
+    public function getFiles(): array
+    {
+        $files = [];
+
+        $keys = array_keys($this->FileList);
+        $numFiles = count($keys);
+        for($i = 0; $i < $numFiles; $i++) {
+            $TempFile = &$this->FileList[$keys[$i]];
+            if($TempFile instanceof TempSimple) {
+                continue;
+            }
+            $files[] = $TempFile;
+
+            // Suche innerhalb des TempFile's nach weiteren TemplateFiles
+            $more_files = $TempFile->getFiles();
+            if(count($more_files) > 0) {
+                $files = array_merge($files, $more_files);
+            }
+            unset($more_files);
+        }
+
+        return $files;
+    }
+
+    /**
+     * Anweisung, dass ein neuer Block folgt, dem die n�chsten Variablen zugewiesen werden.
+     *
+     * @param string $handle Handle-Name
+     * @return TempBlock|null
+     */
+    function newBlock(string $handle): ?TempBlock
+    {
+        if($this->ActiveFile instanceof TempFile) {
+            if((!isset($this->ActiveBlock)) or ($this->ActiveBlock->getHandle() != $handle)) {
+                $this->ActiveBlock = $this->ActiveFile->getTempBlock($handle);
+            }
+
+            if($this->ActiveBlock) {
+                // added 2.5.06 Alex M.
+                $this->ActiveBlock->setParentheses($this->varStart, $this->varEnd);
+
+                if($this->ActiveBlock->allowParse()) {
+                    $this->ActiveBlock->parse();
+                }
+                else {
+                    $this->ActiveBlock->setAllowParse(true);
+                }
+                return $this->ActiveBlock;
+            }
+            else unset($this->ActiveBlock);
+        }
+        return null;
+    }
+
+    /**
+     * Verlaesst einen Block (einleitend mit der Funktion Template::newBlock(), anschliessend Template::backToFile($filehandle)).
+     * Verwendet Template::leaveBlock() und Template::useFile().
+     */
+    public function backToFile(string $fileHandle = ''): static
+    {
+        $this->leaveBlock();
+        if(!is_null($fileHandle)) {
+            $this->useFile($fileHandle);
+        }
+        return $this;
+    }
+
+    /**
+     * Verlaesst einen Block (einleitend mit der Funktion Template::newBlock(), anschliessend Template::leaveBlock())
+     *
+     * @return Template
+     */
+    public function leaveBlock(): static
+    {
+        // Referenz zum aktiven Block aufheben
+        unset($this->ActiveBlock);
+        return $this;
+    }
+
+    /**
+     * Weist die Template Engine an, als nächstes einen anderen BLOCK zu verwenden.
+     *
+     * @param string $blockHandle name of block
+     * @return null|TempBlock
+     */
+    function useBlock(string $blockHandle): ?TempBlock
+    {
+        if($this->ActiveFile) {
+            $ActiveBlock = $this->ActiveFile->getTempBlock($blockHandle);
+            if($ActiveBlock) {
+                $this->ActiveBlock = $ActiveBlock;
+                return $this->ActiveBlock;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Weist Variablen zu. Standard Variablen werden im Template mit { } markiert.
+     *
+     * @access public
+     * @param string $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
+     * @param string $value Wert der Variable
+     */
+    function assignVar($varname, $value = '')
+    {
+        $this->setVar($varname, $value);
+    }
+
+    /**
+     * Synonym auf die Template Funktion Template::assignVar().
+     *
+     * @param string|array $name name of placeholder
+     * @param mixed $value value for placeholder
+     */
+    function setVar($name, $value = '', int $encoding = Template::ENCODE_NONE)
+    {
+        if(isset($this->ActiveBlock)) {
+            $ActiveBlock = $this->ActiveBlock;
+            $ActiveBlock->setVar($name, $value, $encoding);
+        }
+        elseif(isset($this->ActiveFile)) {
+            $ActiveFile = $this->ActiveFile;
+            $ActiveFile->setVar($name, $value, $encoding);
+        }
+        else {
+            $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $name . '\'. There is no file or block associated.');
+        }
+    }
+
+    /**
+     * Erstellt automatisch dynamische Bloecke mit den uebergebenen Datensaetzen.
+     * Das Array muss wie folgt aufgebaut werden: $array[$laufender_record_index][$varname] = $value !
+     *
+     * @param string $blockHandle Handle-Name des Blocks
+     * @param array $recordset
+     * @return Template
+     */
+    public function assignRecordset(string $blockHandle, array $recordset = []): static
+    {
+        $count = count($recordset);
+        if($count == 0) {
+            return $this;
+        }
+
+        for($i = 0; $i < $count; $i++) {
+            $record = $recordset[$i];
+
+            if($this->newBlock($blockHandle)) {
+                $this->assignVar($record);
+            }
+        }
+        $this->leaveBlock();
+
+        return $this;
+    }
+
+    /**
+     * Alias for Template::assignRecordset()
+     *
+     * @param string $blockHandle Handle-Name des Blocks
+     * @param array $recordSet
+     * @return Template
+     * @see Template::assignRecordset()
+     */
+    public function setRecordset(string $blockHandle, array $recordSet = []): static
+    {
+        return $this->assignRecordset($blockHandle, $recordSet);
+    }
+
+    /**
+     * Die Prozedur veranlasst, dass alle Dateien (Template Elemente) rekursiv geparst werden.
+     *
+     * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet)
+     * @return Template
+     */
+    public function parse(string $handle = ''): static
+    {
+        if($handle != '') {
+            $this->useFile($handle);
+        }
+        $this->ActiveFile?->parse();
+        return $this;
+    }
+
+    /**
+     * Liefert den Inhalt aller geparsten Dateien, Includes, Variablen und Bloecken!
+     *
+     * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet!)
+     * @return string Inhalt
+     */
+    public function getContent(string $handle = ''): string
+    {
+        if($handle != '') {
+            $this->useFile($handle);
+        }
+
+        if($this->ActiveFile) {
+            return $this->ActiveFile->getParsedContent();
+        }
+        return '';
+    }
+
+    /**
+     * Leert den Buffer (ParsedContent)
+     *
+     * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet!)
+     **/
+    public function clear(string $handle = '')
+    {
+        if($handle != '') {
+            $this->useFile($handle);
+        }
+
+        if($this->ActiveFile instanceof TempFile) {
+            $TempFile = $this->ActiveFile;
+            $TempFile->clearParsedContent();
+        }
+    }
+
+    /**
+     * Setzt alle Werte zurueck (Loescht alle Files aus dem Buffer).
+     *
+     * @return void
+     */
+    function reset(): void
+    {
+        $this->ActiveHandle = '';
+        unset($this->ActiveFile);
+        unset($this->ActiveBlock);
+        $this->FileList = [];
     }
 }
