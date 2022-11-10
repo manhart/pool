@@ -502,10 +502,11 @@ class GUI_Module extends Module
      * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication.
      *
      * @param string $className
+     * @param bool $includeJS
      * @param bool $global
      * @return void
      */
-    protected function js_createGUIModule(string $className = '', bool $global = true): void
+    protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $global = true): void
     {
         if(!$this->js_createGUIModule) {
             return;
@@ -516,12 +517,14 @@ class GUI_Module extends Module
 
         $className = $className ?: $this->getClassName();
 
-        $js = $this->Weblication->findJavaScript($className.'.js', $className, false, false);
-        if(!$js) {
-            return;
-        }
+        if($includeJS) {
+            $js = $this->Weblication->findJavaScript($className . '.js', $className, false, false);
+            if(!$js) {
+                return;
+            }
 
-        $this->Weblication->getFrame()->getHeaderdata()->addJavaScript($js);
+            $this->Weblication->getFrame()->getHeaderdata()->addJavaScript($js);
+        }
 
         $windowCode = '';
         if($global) {
