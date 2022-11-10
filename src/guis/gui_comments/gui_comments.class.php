@@ -150,7 +150,7 @@ class GUI_Comments extends GUI_Module
 
                 break;
 
-            case delete:
+            case 'delete':
 
 
                 $daoComment = DAO::createDAO($this->Weblication->getInterfaces(), 'Intranet_tbl_Comments');
