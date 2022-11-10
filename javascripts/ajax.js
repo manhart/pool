@@ -49,8 +49,8 @@ function RequestPOOL(module, method, params, async)
 
 	// var parameters = '';
 
-	var RequestUrl = new Url();
-	RequestUrl.setScript(SCRIPT_NAME);
+    const RequestUrl = new Url();
+    RequestUrl.setScript(SCRIPT_NAME);
 	if(module != null) RequestUrl.setParam('module', module);
 	RequestUrl.setParam('method', method);
 
