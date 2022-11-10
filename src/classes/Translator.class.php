@@ -399,11 +399,7 @@ final class Translator extends \PoolObject
      */
     private function getLanguage(): string
     {
-        $language = $this->defaultLanguage;
-        if ($this->defaultLanguage != $this->language) {
-            $language = $this->language ?: $this->defaultLanguage;
-        }
-        return $language;
+        return ($this->language ?: $this->defaultLanguage);
     }
 
     /**
@@ -507,6 +503,7 @@ final class Translator extends \PoolObject
     /**
      * @param string $content
      * @return string
+     * @throws Exception
      */
     public function parse(string $content): string
     {
