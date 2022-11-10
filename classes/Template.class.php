@@ -422,55 +422,61 @@ class TempCoreHandle extends TempHandle
      * Ein Block kann in diesem Fall auch ein Include eines weiteren Templates oder Scripts sein
      * (Dies gilt aber nur fuer die Blockdefinition innerhalb des Templates).
      *
-     * Findet er einen neuen Block, wird entsprechend ein neues Objekt mit dem Inhalt des gefunden Blocks angelegt.
+     * Findet er einen neuen Block, wird entsprechend ein neues Objekt mit dem Inhalt des gefundenen Blocks angelegt.
      *
-     * @param string $content Inhalt, welcher nach Template Elementen abgesucht werden soll
+     * @param string $templateContent Inhalt, welcher nach Template Elementen abgesucht werden soll
      */
-    protected function findPattern(string $content): bool
+    protected function findPattern(string $templateContent): bool
     {
-        // Matches Blocks like <!-- XXX key -->freeform-text<!-- END key -->
+        // Matches Blocks like <!-- XXX handle -->freeform-text<!-- END handle -->
         $reg = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*)<!-- END \2 -->/Us';
-        $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
-        if(!$bResult) {
-            return false;
-        }
+        $bResult = preg_match_all($reg, $templateContent, $matches, PREG_SET_ORDER);
+        $changes = array();
+        foreach ($matches as $match) {
+            //the entire Comment Block
+            $fullMatchText = $match[0];
+            //the XXX Tag part
+            $kind = $match[1];
+            //the handle part
+            $handle = ($match[2]);
+           //the freeform-text part
+            $tagContent = ($match[3]);
 
-        $numMatches = count($matches);
-        for($i = 0; $i < $numMatches; $i++) {
-
-            $match = $matches[$i][0];
-            $kind = $matches[$i][1];
-            $handle = ($matches[$i][2]);
-            $content = ($matches[$i][3]);
-
-            $value = IS_DEVELOP ? "Unknown block $kind" : '';
             switch($kind) {
                 case TEMP_BLOCK_IDENT:
                     $value = "[$handle]";
-                    $this->createBlock($handle, $this->getDirectory(), $content, $this->charset);
+                    $this->createBlock($handle, $this->getDirectory(), $tagContent, $this->charset);
                     break;
 
                 case TEMP_INCLUDE_IDENT:
                     $value = "[$handle]";
-                    $this->createFile($handle, $this->getDirectory(), $content, $this->charset);
+                    $this->createFile($handle, $this->getDirectory(), $tagContent, $this->charset);
                     break;
 
                 case TEMP_INCLUDESCRIPT_IDENT:
                     $value = "[$handle]";
-                    $this->createScript($handle, $this->getDirectory(), $content, $this->charset);
+                    $this->createScript($handle, $this->getDirectory(), $tagContent, $this->charset);
                     break;
 
                 case TEMP_SESSION_IDENT:
-                    $value = isset($_SESSION[$content]) ? urldecode($_SESSION[$content]) : '';
+                    $value = isset($_SESSION[$tagContent]) ? urldecode($_SESSION[$tagContent]) : '';
                     break;
 
                 case TEMP_TRANSL_IDENT:
-                    $value = $match; // so that the code continues to work temporarily
+                    $value = $tagContent; // so that the code continues to work temporarily
+                    //TODO Translate
+                    break;
+                default:
+                    $value = IS_DEVELOP ? "Unknown block $kind" : '';
             }
-
-            $this->content = str_replace($match,  $value , $this->content);
+            if ($value !== $fullMatchText)
+                //made a change
+                $changes[$fullMatchText] = $value;
         }
-        return true;
+        $this->content = strtr($this->content, $changes);
+        $countChanges = count($changes);
+        unset($changes);
+        return $countChanges;
     }
 
     /**
