@@ -430,12 +430,13 @@ class TempCoreHandle extends TempHandle
      * Findet er einen neuen Block, wird entsprechend ein neues Objekt mit dem Inhalt des gefundenen Blocks angelegt.
      *
      * @param string $templateContent Inhalt, welcher nach Template Elementen abgesucht werden soll
+     * @return int number of changes
      */
-    protected function findPattern(string $templateContent): bool
+    protected function findPattern(string $templateContent): int
     {
         // Matches Blocks like <!-- XXX handle -->freeform-text<!-- END handle -->
         $reg = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*)<!-- END \2 -->/Us';
-        $bResult = preg_match_all($reg, $templateContent, $matches, PREG_SET_ORDER);
+        preg_match_all($reg, $templateContent, $matches, PREG_SET_ORDER);
         $changes = array();
         foreach ($matches as $match) {
             //the entire Comment Block
@@ -471,6 +472,7 @@ class TempCoreHandle extends TempHandle
                     $value = $tagContent; // so that the code continues to work temporarily
                     //TODO Translate
                     break;
+
                 default:
                     $value = IS_DEVELOP ? "Unknown block $kind" : '';
             }
