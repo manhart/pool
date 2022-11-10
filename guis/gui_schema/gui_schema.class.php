@@ -150,7 +150,7 @@ class GUI_Schema extends GUI_Module
             $schema = $this->Weblication->getDefaultSchema();
         }
 
-        if(strpos($schema, ',') !== false) {
+        if(str_contains($schema, ',')) {
             $schemes = explode(',', $schema);
         }
         else {
@@ -173,7 +173,7 @@ class GUI_Schema extends GUI_Module
     public function finalize(): string
     {
         $content = '';
-        $numSchemes = sizeof($this->SchemeHandles);
+        $numSchemes = count($this->SchemeHandles);
         for ($i=0; $i<$numSchemes; $i++) {
             $this->Template->parse($this->SchemeHandles[$i]);
             $content .= $this->Template->getContent($this->SchemeHandles[$i]);
