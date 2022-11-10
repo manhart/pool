@@ -1055,7 +1055,7 @@ class Template extends PoolObject
         $keys = array_keys($this->FileList);
         $numFiles = count($keys);
         for($i = 0; $i < $numFiles; $i++) {
-            $TempFile = &$this->FileList[$keys[$i]];
+            $TempFile = $this->FileList[$keys[$i]];
             if($TempFile instanceof TempSimple) {
                 continue;
             }
@@ -1070,6 +1070,14 @@ class Template extends PoolObject
         }
 
         return $files;
+    }
+
+    /**
+     * @return int
+     */
+    public function countFileList(): int
+    {
+        return count($this->FileList);
     }
 
     /**
