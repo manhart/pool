@@ -16,19 +16,20 @@ use Exception;
 
 final class Translator extends \PoolObject
 {
-    /**
+    /**@deprecated
      * @var string
+     * TODO extract to Resource-file based Provider
      */
     private string $extension = '.php';
 
-    /**
+    /**@deprecated
      * language
      *
      * @var string
      */
     private string $language = '';
 
-    /**
+    /**@deprecated
      * default language
      *
      * @var string
@@ -36,25 +37,34 @@ final class Translator extends \PoolObject
     private string $defaultLanguage = '';
 
     /**
+     * @var array holds the currently available languages and their associated translation-providers<br>
+     * in the format (lang/locale => provider)
+     */
+    private array $loadedLanguages = [];
+
+    /**
+     * @var array Stores a list of languages for use in translations.<br>
+     * Intended to hold a subset of $loadedLanguages which will be used to look up translation-keys
+     */
+    private array $activeLanguages =  [];
+
+    /**@deprecated
      * resources directory with the language files
-     *
+     *TODO extract to Resource-file based Provider
      * @var string|null
      */
     private ?string $directory = null;
 
-    /**
+    /**@deprecated
      * holds the translations
-     *
+     *TODO extract to Resource-file based Provider
      * @var array
      */
     protected array $translation = array();
 
-    /**
-     * @var array
-     */
-    private array $parseErrors = array();
 
     /**
+     * @deprecated?
      * @var string[]
      */
     public static array $LOCALES = [
@@ -312,11 +322,12 @@ final class Translator extends \PoolObject
     private static ?Translator $Instance = null;
 
     /**
-     * is not allowed to call from outside to prevent from creating multiple instances,
+     * It is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
     private function __construct()
     {
+        parent::__construct();
     }
 
     /**
@@ -324,16 +335,13 @@ final class Translator extends \PoolObject
      */
     public static function getInstance(): Translator
     {
-        if (static::$Instance === null) {
-            static::$Instance = new static();
-        }
-
-        return static::$Instance;
+        Translator::$Instance ??= new Translator();
+        return Translator::$Instance;
     }
 
     /**
      * sets the resources directory
-     *
+     * TODO extract to Resource-file based Provider
      * @param string $directory
      * @return $this
      * @throws Exception
@@ -348,7 +356,7 @@ final class Translator extends \PoolObject
         return $this;
     }
 
-    /**
+    /**TODO change to provider
      * @return bool
      */
     public function wasInitialized(): bool
@@ -356,7 +364,7 @@ final class Translator extends \PoolObject
         return $this->directory != '';
     }
 
-    /**
+    /**TODO replace with Language-list
      * sets default language
      *
      * @param string $language
@@ -369,7 +377,7 @@ final class Translator extends \PoolObject
         return $this;
     }
 
-    /**
+    /**TODO replace with Language-list
      * change language
      *
      * @param string $language
@@ -381,7 +389,7 @@ final class Translator extends \PoolObject
         return $this;
     }
 
-    /**
+    /**TODO replace with Language-list
      * change back to default language
      *
      * @return Translator
@@ -392,7 +400,7 @@ final class Translator extends \PoolObject
         return $this;
     }
 
-    /**
+    /**TODO replace with Language-list
      * get active language
      *
      * @return string
@@ -402,11 +410,12 @@ final class Translator extends \PoolObject
         return ($this->language ?: $this->defaultLanguage);
     }
 
-    /**
+    /**@param int $weekday 0-6 = Sunday - Saturday
+     * @return string
+     * @throws Exception
+     * @deprecated
      * gets the weekday expression according to the weekday number (strftime('%w'))
      *
-     * @param int $weekday 0-6 = Sunday - Saturday
-     * @return string
      */
     public function getWeekday(int $weekday): string
     {
@@ -426,7 +435,7 @@ final class Translator extends \PoolObject
         return '';
     }
 
-    /**
+    /**TODO
      * get translation
      *
      * @param string $key
@@ -449,7 +458,7 @@ final class Translator extends \PoolObject
         return $string;
     }
 
-    /**
+    /**@deprecated merge with get
      * get plural translation
      *
      * @param string $key
@@ -489,78 +498,68 @@ final class Translator extends \PoolObject
     }
 
 
-    /**
+    /**@deprecated
      * @return array|null
      */
     public function getParseErrors(): ?array
     {
-        if(count($this->parseErrors) > 0) {
-            return $this->parseErrors;
-        }
         return null;
     }
 
-    /**
-     * @param string $content
-     * @return string
-     * @throws Exception
+    /** Parses TRANSL Tokens in a string and replaces them with their translation, non-translatable tokens will be ignored
+     * @param string $templateContent the string to check for tokens
+     * @param string|array|null $language
+     * @param int $countChanges
+     * @return string the result of translation
      */
-    public function parse(string $content): string
+    public function parse(string $templateContent, string|array $language = null, int &$countChanges = 0): string
     {
-        $this->parseErrors = array();
-        $symbols = 'LANG|TRANSL';
-        $reg = '/\<\!\-\- *(?>LANG|TRANSL) +(.+) *\-\-\>([\s\S]*)\<\!\-\- *END +\1 *\-\-\>/Uu';
 
-        preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
+        //More specific copy of code from \TempCoreHandle::findPattern
+        $changes = array();
+        // Matches Blocks like <!-- TRANSL handle -->freeform-text<!-- END handle -->
+        $reg = '/<!-- (TRANSL) ([^>]+) -->(.*?)<!-- END \1 -->/s';
+        $this->translateWithRegEx($templateContent,$reg, $changes);
+        //this perfectly readable regex Matches Blocks like {TRANSL key[(args)][??<default>]}
+        //key and args are retrieved as handle in group 2
+        //avoid constructs like )?? )} in args and >} in default
+        $reg = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?>\?\?<((?>[^>]*(?>>(?!}))?)*)>)?}/su';
 
-        if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
-            $errormessage = preg_last_error_message($lastErrorCode);
-            throw new Exception($errormessage, $lastErrorCode);
-        }
+        $translatedContent = strtr($templateContent, $changes);
+        $countChanges = count($changes);
+        unset($changes);
+        //END of copy region
+        return $translatedContent;
+    }
 
-        foreach ($matches as $match) {
-            $key = $match[1];
-            $translation = $this->get($key);
-
-            if ($translation == '') {
-                $this->parseErrors[] = $key;
-                $translation = $match[2]; // hold original
-            }
-
-            $reg = '/\<\!\-\- *(?>LANG|TRANSL) +'.$key.' *\-\-\>([\s\S]*)\<\!\-\- *END +'.$key.' *\-\-\>/Uu';
-            $content = preg_replace($reg, $translation, $content, 1);
-            if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
-                $errormessage = preg_last_error_message($lastErrorCode);
-                throw new Exception($errormessage, $lastErrorCode);
-            }
-        }
-
-        $reg = '/(?>\{(?>LANG|TRANSL) +)(.*)\}/sUu';
-        preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
-        if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
-            $errormessage = preg_last_error_message($lastErrorCode);
-            throw new Exception($errormessage, $lastErrorCode);
-        }
-
+    /** Performs the parsing of the content using a specific RegularExpression for finding and analyzing the translation tags
+     * @param string $content the string to check for tokens
+     * @param string $regEX A pattern that matches the tag to replace and captures Keyword, handle/key and the default value / tag content
+     * @param array $changes An array to store the translations in (tag => translation) for use with strtr()
+     * @return bool false on RegXx-failure
+     */
+    private function translateWithRegEx(string $content, string $regEX, array &$changes): bool
+    {
+        //More specific copy of code from \TempCoreHandle::findPattern
+        preg_match_all($regEX, $content, $matches, PREG_SET_ORDER);
+        $outcome = \checkRegExOutcome($regEX, $content);
         foreach($matches as $match) {
-            $key = $match[1];
-
-            $translation = $this->get($key);
-            if ($translation == '') {
-                $this->parseErrors[] = $key;
-                $translation = $match[0]; // hold original
-            }
-
-            $reg = '/(?>\{(?>LANG|TRANSL) +)'.$key.'\}/sUu';
-            $content = preg_replace($reg, $translation, $content, 1);
-            if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
-                $errormessage = preg_last_error_message($lastErrorCode);
-                throw new Exception($errormessage, $lastErrorCode);
-            }
-
+            //the entire Comment Block
+            $fullMatchText = $match[0];
+            //the handle part -> the key
+            $handle = ($match[2]);
+            //the freeform-text part -> the default value
+            $tagContent = ($match[3]);
+            $value = $tagContent;
+            //TODO Translate
+            $handle = strtok($handle, '(');
+            $args = strtok('');
+            //END TODO
+            if ($value !== $fullMatchText)
+                $changes[$fullMatchText] = $value;
         }
-
-        return $content;
+        unset($matches);
+        return $outcome;
     }
 
     /**
@@ -861,4 +860,5 @@ final class Translator extends \PoolObject
         list($languageCode,) = explode('_', $locale);
         return $languageCode;
     }
+
 }
