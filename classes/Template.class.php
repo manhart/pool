@@ -499,44 +499,44 @@ class TempCoreHandle extends TempHandle
         $varEnd = $this->varEnd;
 
         $content = $this->content;
+
         ### TODO Pool 5, bei setVar {} adden oder read write properties...
-        #$content = str_replace(array_keys($this -> VarList), array_values($this -> VarList), $content);
-        foreach($this->VarList as $Key => $val) {
-            $content = str_replace($varStart . $Key . $varEnd, $val ?? '', $content);
+        # $content = strtr($content, $this->VarList);
+
+        $replace_pairs = [];
+        foreach($this->VarList as $key => $val) {
+            $replace_pairs["$varStart$key$varEnd"] = $val;
         }
 
-        $search = [];
-        $replace = [];
         /**
          * @var string $Handle
          * @var TempBlock $TempBlock
          */
         foreach($this->BlockList as $Handle => $TempBlock) {
-            $search[] = '[' . $Handle . ']';
-
             if($TempBlock->allowParse()) {
                 $TempBlock->parse();
-                $replace[] = $TempBlock->getParsedContent();
+                $parsedContent = $TempBlock->getParsedContent();
                 if($clearParsedContent) $TempBlock->clearParsedContent();
                 $TempBlock->setAllowParse(false);
             }
             else {
-                //		                $content = str_replace('{'.$Handle.'}', '', $content);
-                $replace[] = $TempBlock->getParsedContent();
+                $parsedContent = $TempBlock->getParsedContent();
             }
-
+            $replace_pairs["[$Handle]"] = $parsedContent;
             unset($TempBlock);
         }
 
         foreach($this->FileList as $Handle => $TempFile) {
             $TempFile->parse();
-            $search[] = '[' . $Handle . ']';
-            $replace[] = $TempFile->getParsedContent();
+            $parsedContent = $TempFile->getParsedContent();
             if($clearParsedContent) $TempFile->clearParsedContent();
             unset($TempFile);
+            $replace_pairs["[$Handle]"] = $parsedContent;
         }
 
-        $content = str_replace($search, $replace, $content);
+        $content = strtr($content, $replace_pairs);
+        unset($replace_pairs);
+
 
         if(!$returnContent) {
             $this->ParsedContent = $content;
@@ -572,7 +572,7 @@ class TempCoreHandle extends TempHandle
         $keys = array_keys($this->FileList);
         $numFiles = count($keys);
         for($i = 0; $i < $numFiles; $i++) {
-            /** @var TempHandle $TempHandle */
+            /** @var TempCoreHandle $TempHandle */
             $TempHandle = $this->FileList[$keys[$i]];
             if($keys[$i] == $handle && $TempHandle->getType() == 'FILE') {
                 return $TempHandle;
