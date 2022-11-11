@@ -165,7 +165,7 @@ if(!defined('MYSQL_LAYER'))
          * @param array $Packet Einstellungen
          * @return boolean Erfolgsstatus
          **/
-        function setOptions($Packet)
+        public function setOptions($Packet): bool
         {
             $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
             $this->force_backend_read = array_key_exists('force_backend_read', $Packet) ? $Packet['force_backend_read'] : false;
