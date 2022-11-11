@@ -1236,7 +1236,7 @@ class GUI_Table extends GUI_Module
         $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
         $Frame->getHeaderdata()->addJavaScript($jsFile);
 
-        $this->js_createGUIModule($this->getClassName());
+        $this->js_createGUIModule($this->getClassName(), false);
     }
 
     /**

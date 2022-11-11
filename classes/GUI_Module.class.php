@@ -346,7 +346,7 @@ class GUI_Module extends Module
     /**
      * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.
      * Ruft die Funktion GUI_Module::searchGUIs() auf.
-     **/
+     */
     protected function searchGUIsInPreloadedContent()
     {
         $TemplateFiles = $this->Template->getFiles();
@@ -464,16 +464,18 @@ class GUI_Module extends Module
     }
 
     /*
-    * Laedt Templates (virtuelle Methode sollte ueberschrieben werden, falls im Konstruktor AutoLoad auf true gesetzt wird).
-    *
-    * @access protected
-    */
+     * Laedt Templates (virtuelle Methode sollte ueberschrieben werden, falls im Konstruktor AutoLoad auf true gesetzt wird).
+     *
+     * @return GUI_Module
+     */
     public function loadFiles()
     {
         if(!$this->getWeblication()) return $this;
 
+        $className = $this->getClassName();
+
         foreach($this->templates as $handle => $file) {
-            $template = $this->Weblication->findTemplate($file, $this->getClassName());
+            $template = $this->Weblication->findTemplate($file, $className);
             $this->Template->setFilePath($handle, $template);
         }
 
@@ -481,62 +483,31 @@ class GUI_Module extends Module
         $Frame = $this->getWeblication()->getFrame();
 
         foreach($this->cssFiles as $cssFile) {
-            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $this->getClassName());
+            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
             $Frame->getHeaderdata()->addStyleSheet($cssFile);
         }
 
         foreach($this->jsFiles as $jsFile) {
-            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $this->getClassName());
+            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $className);
             $Frame->getHeaderdata()->addJavaScript($jsFile);
         }
+
+        // automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication (if enabled).
+        $this->js_createGUIModule($this->getClassName());
+
+        return $this;
     }
 
+
     /**
-     * load, create and register JavaScript GUI
+     * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication.
      *
-     * @param bool $global makes Module global in window scope
-     */
-    public function loadJavaScriptFiles(bool $global = true): bool
-    {
-        if(!$this->Weblication->hasFrame()) {
-            return false;
-        }
-
-        $className = '';
-        $myself_already_loaded = false;
-        $something_loaded = false;
-        $Header = $this->Weblication->getFrame()->getHeaderdata();
-        foreach($this->getJavaScriptFiles() as $jsFile) {
-            $jsFile = $this->Weblication->findJavaScript($jsFile[0], $className = $jsFile[1], $jsFile[2] ?? false, false);
-            $myself_already_loaded = ($className == $this->getClassName());
-            if($jsFile) {
-                $Header->addJavaScript($jsFile);
-                $something_loaded = true;
-            }
-        }
-
-        if(!$myself_already_loaded) { // look for js file
-            $jsFile = $this->Weblication->findJavaScript($this->getClassName().'.js', $this->getClassName(), $this->isBasicLibrary(), false);
-            if(!$jsFile) {
-                return false;
-            }
-            $className = $this->getClassName();
-            $Header->addJavaScript($jsFile);
-            $something_loaded = true;
-        }
-
-        if($something_loaded) {
-            $this->js_createGUIModule($className, $global);
-        }
-        return true;
-    }
-
-    /**
      * @param string $className
+     * @param bool $includeJS
      * @param bool $global
      * @return void
      */
-    protected function js_createGUIModule(string $className = '', bool $global = true): void
+    protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $global = true): void
     {
         if(!$this->js_createGUIModule) {
             return;
@@ -544,14 +515,24 @@ class GUI_Module extends Module
         if(!$this->Weblication->hasFrame()) {
             return;
         }
+
         $className = $className ?: $this->getClassName();
+
+        if($includeJS) {
+            $js = $this->Weblication->findJavaScript($className . '.js', $className, false, false);
+            if(!$js) {
+                return;
+            }
+
+            $this->Weblication->getFrame()->getHeaderdata()->addJavaScript($js);
+        }
+
         $windowCode = '';
         if($global) {
-            $windowCode = 'window[\'$'.$this->getName().'\'] = ';
+            $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
         }
         $this->Weblication->getFrame()->getHeaderdata()->addScriptCode($this->getName(),
-            $windowCode.'GUI_Module.createGUIModule('.$className.', \''.$this->getName().'\');');
-
+            $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
     }
 
     protected function getJavaScriptFiles(): array

@@ -10,7 +10,7 @@
 
 class Weblication
 {
-    modules = [];
+    #modules = [];
 
     static classesMapping = {};
 
@@ -54,10 +54,10 @@ class Weblication
     registerModule(Module)
     {
         let moduleName = Module.getName();
-        if((moduleName in this.modules)) {
+        if((moduleName in this.#modules)) {
             throw new Error('Module with Name ' + moduleName + ' already exists. Registration not possible!');
         }
-        this.modules[moduleName] = Module;
+        this.#modules[moduleName] = Module;
         // console.debug('Weblication has Module "' + moduleName + '" registered');
         return this;
     }
@@ -71,7 +71,7 @@ class Weblication
     unregisterModule(Module)
     {
         let moduleName = Module.getName();
-        delete this.modules[moduleName];
+        delete this.#modules[moduleName];
         return this;
     }
 
@@ -86,12 +86,17 @@ class Weblication
         if(!this.module_exists(moduleName)) {
             throw new Error('Module '+ moduleName + ' is not registered!');
         }
-        return this.modules[moduleName];
+        return this.#modules[moduleName];
     }
 
     module_exists(moduleName)
     {
-        return (moduleName in this.modules);
+        return (moduleName in this.#modules);
+    }
+
+    getModules()
+    {
+        return this.#modules;
     }
 }
 const $Weblication = Weblication.getInstance();

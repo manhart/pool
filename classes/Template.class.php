@@ -102,8 +102,6 @@ class TempHandle extends PoolObject
     }
 
     /**
-     * TempHandle::getHandle()
-     *
      * Liefert Handle
      *
      * @return string Handle
@@ -308,52 +306,59 @@ class TempCoreHandle extends TempHandle
     }
 
     /**
-     * Diese Prozedur fuegt eine Variable zum Variablen Container hinzu.
+     * Convert special characters to HTML Entities
      *
+     * @param $value
+     * @param int $convert converting method
+     * @return string|void
+     */
+    private function convertToHTML($value, int $convert)
+    {
+        if($convert == Template::CONVERT_NONE) {
+            return $value;
+        }
+        if($convert == Template::CONVERT_HTMLSPECIALCHARS) {
+            $value = $value ?? '';
+            return htmlspecialchars($value, ENT_QUOTES, $this->charset);
+        }
+        if($convert == Template::CONVERT_HTMLENTITIES) {
+            $value = $value ?? '';
+            return htmlentities($value, ENT_QUOTES, $this->charset);
+        }
+    }
+
+    /**
+     * Fills placeholder with value
+     *
+     * @note should no longer be used for arrays, instead use @see Template::setVars
      * @param string|array $name name of the variable (placeholder in the template)
      * @param mixed $value (zuzuweisender) Wert der Variable
      */
-    public function setVar($name, $value = '', int $encode = Template::ENCODE_NONE)
+    public function setVar($name, $value = '', int $convert = Template::CONVERT_NONE): static
     {
-        $encode = function($value) use ($encode) {
-            if($encode == Template::ENCODE_NONE) {
-                return $value;
-            }
-            if($encode == Template::ENCODE_HTMLSPECIALCHARS) {
-                return htmlspecialchars($value, ENT_QUOTES, $this->charset);
-            }
-            if($encode == Template::ENCODE_HTMLENTITIES) {
-                return htmlentities($value, ENT_QUOTES, $this->charset);
-            }
-        };
-
         if(!is_array($name)) {
-            $this->VarList[$name] = $encode($value);
+            $this->VarList[$name] = $this->convertToHTML($value, $convert);
         }
         else {
-            if((array)$value !== $value) {
-                foreach($name as $key => $value) {
-                    switch(gettype($value)) {
-                        case 'array':
-                            $this->VarList[$key] = 'array';
-                            break;
-
-                        case 'object':
-                            $this->VarList[$key] = 'object';
-                            break;
-
-                        default:
-                            $this->VarList[$key] = $encode($value);
-                            break;
-                    }
-                }
-            }
-            else {
-                foreach($name as $key => $value) {
-                    $this->VarList[$key] = $encode($value);
-                }
-            }
+            // backward compatibility
+            $this->setVars($name, $convert);
         }
+        return $this;
+    }
+
+    /**
+     * Fills multiple placeholders with values
+     *
+     * @param array $vars
+     * @param int $convert
+     * @return TempCoreHandle
+     */
+    public function setVars(array $vars, int $convert = Template::CONVERT_NONE): static
+    {
+        foreach($vars as $key => $value) {
+            $this->VarList[$key] = $this->convertToHTML($value, $convert);
+        }
+        return $this;
     }
 
     /**
@@ -468,6 +473,7 @@ class TempCoreHandle extends TempHandle
                     $value = $tagContent; // so that the code continues to work temporarily
                     //TODO Translate
                     break;
+
                 default:
                     $value = IS_DEVELOP ? "Unknown block $kind" : '';
             }
@@ -494,44 +500,44 @@ class TempCoreHandle extends TempHandle
         $varEnd = $this->varEnd;
 
         $content = $this->content;
+
         ### TODO Pool 5, bei setVar {} adden oder read write properties...
-        #$content = str_replace(array_keys($this -> VarList), array_values($this -> VarList), $content);
-        foreach($this->VarList as $Key => $val) {
-            $content = str_replace($varStart . $Key . $varEnd, $val ?? '', $content);
+        # $content = strtr($content, $this->VarList);
+
+        $replace_pairs = [];
+        foreach($this->VarList as $key => $val) {
+            $replace_pairs["$varStart$key$varEnd"] = $val;
         }
 
-        $search = [];
-        $replace = [];
         /**
          * @var string $Handle
          * @var TempBlock $TempBlock
          */
         foreach($this->BlockList as $Handle => $TempBlock) {
-            $search[] = '[' . $Handle . ']';
-
             if($TempBlock->allowParse()) {
                 $TempBlock->parse();
-                $replace[] = $TempBlock->getParsedContent();
+                $parsedContent = $TempBlock->getParsedContent();
                 if($clearParsedContent) $TempBlock->clearParsedContent();
                 $TempBlock->setAllowParse(false);
             }
             else {
-                //		                $content = str_replace('{'.$Handle.'}', '', $content);
-                $replace[] = $TempBlock->getParsedContent();
+                $parsedContent = $TempBlock->getParsedContent();
             }
-
+            $replace_pairs["[$Handle]"] = $parsedContent;
             unset($TempBlock);
         }
 
         foreach($this->FileList as $Handle => $TempFile) {
             $TempFile->parse();
-            $search[] = '[' . $Handle . ']';
-            $replace[] = $TempFile->getParsedContent();
+            $parsedContent = $TempFile->getParsedContent();
             if($clearParsedContent) $TempFile->clearParsedContent();
             unset($TempFile);
+            $replace_pairs["[$Handle]"] = $parsedContent;
         }
 
-        $content = str_replace($search, $replace, $content);
+        $content = strtr($content, $replace_pairs);
+        unset($replace_pairs);
+
 
         if(!$returnContent) {
             $this->ParsedContent = $content;
@@ -567,7 +573,7 @@ class TempCoreHandle extends TempHandle
         $keys = array_keys($this->FileList);
         $numFiles = count($keys);
         for($i = 0; $i < $numFiles; $i++) {
-            /** @var TempHandle $TempHandle */
+            /** @var TempCoreHandle $TempHandle */
             $TempHandle = $this->FileList[$keys[$i]];
             if($keys[$i] == $handle && $TempHandle->getType() == 'FILE') {
                 return $TempHandle;
@@ -856,9 +862,9 @@ class Template extends PoolObject
 
     private string $varEnd = TEMP_VAR_END;
 
-    const ENCODE_NONE = 0;
-    const ENCODE_HTMLSPECIALCHARS = 1;
-    const ENCODE_HTMLENTITIES = 2;
+    const CONVERT_NONE = 0;
+    const CONVERT_HTMLSPECIALCHARS = 1;
+    const CONVERT_HTMLENTITIES = 2;
 
     /**
      * @var string
@@ -1023,13 +1029,14 @@ class Template extends PoolObject
         else {
             $found = false;
             $keys = array_keys($this->FileList);
-            for($i = 0; $i < SizeOf($keys); $i++) {
+            $numKeys = count($keys);
+            for($i = 0; $i < $numKeys; $i++) {
                 $TempFile = &$this->FileList[$keys[$i]];
 
-                $obj = &$TempFile->findFile($handle);
-                if(is_object($obj)) {
+                $obj = $TempFile->findFile($handle);
+                if($obj instanceof TempFile) {
                     $this->ActiveHandle = $handle;
-                    $this->ActiveFile = &$obj;
+                    $this->ActiveFile = $obj;
                     // Referenz aufheben
                     unset($this->ActiveBlock);
                     $found = true;
@@ -1057,7 +1064,7 @@ class Template extends PoolObject
         $keys = array_keys($this->FileList);
         $numFiles = count($keys);
         for($i = 0; $i < $numFiles; $i++) {
-            $TempFile = &$this->FileList[$keys[$i]];
+            $TempFile = $this->FileList[$keys[$i]];
             if($TempFile instanceof TempSimple) {
                 continue;
             }
@@ -1072,6 +1079,14 @@ class Template extends PoolObject
         }
 
         return $files;
+    }
+
+    /**
+     * @return int
+     */
+    public function countFileList(): int
+    {
+        return count($this->FileList);
     }
 
     /**
@@ -1148,36 +1163,48 @@ class Template extends PoolObject
     }
 
     /**
-     * Weist Variablen zu. Standard Variablen werden im Template mit { } markiert.
-     *
-     * @access public
-     * @param string $varname Name der Variable (= Name im Template); oder Array mit Schluesselnamen und deren Werte.
-     * @param string $value Wert der Variable
-     */
-    function assignVar($varname, $value = '')
-    {
-        $this->setVar($varname, $value);
-    }
-
-    /**
-     * Synonym auf die Template Funktion Template::assignVar().
+     * Fill placeholder with value
      *
      * @param string|array $name name of placeholder
      * @param mixed $value value for placeholder
      */
-    function setVar($name, $value = '', int $encoding = Template::ENCODE_NONE)
+    public function setVar($name, $value = '', int $convert = Template::CONVERT_NONE): static
     {
         if(isset($this->ActiveBlock)) {
             $ActiveBlock = $this->ActiveBlock;
-            $ActiveBlock->setVar($name, $value, $encoding);
+            $ActiveBlock->setVar($name, $value, $convert);
         }
         elseif(isset($this->ActiveFile)) {
             $ActiveFile = $this->ActiveFile;
-            $ActiveFile->setVar($name, $value, $encoding);
+            $ActiveFile->setVar($name, $value, $convert);
         }
         else {
-            $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variable \'' . $name . '\'. There is no file or block associated.');
+            $this->raiseError(__FILE__, __LINE__, "Class Template: Cannot assign Variable $name. There is no file or block associated.");
         }
+        return $this;
+    }
+
+    /**
+     * Fill multiple placeholders with values
+     *
+     * @param array $vars
+     * @param int $encoding
+     * @return Template
+     */
+    public function setVars(array $vars, int $encoding = Template::CONVERT_NONE): static
+    {
+        if(isset($this->ActiveBlock)) {
+            $ActiveBlock = $this->ActiveBlock;
+            $ActiveBlock->setVars($vars, $encoding);
+        }
+        elseif(isset($this->ActiveFile)) {
+            $ActiveFile = $this->ActiveFile;
+            $ActiveFile->setVars($vars, $encoding);
+        }
+        else {
+            $this->raiseError(__FILE__, __LINE__, 'Class Template: Cannot assign Variables. There is no file or block associated.');
+        }
+        return $this;
     }
 
     /**
@@ -1199,7 +1226,7 @@ class Template extends PoolObject
             $record = $recordset[$i];
 
             if($this->newBlock($blockHandle)) {
-                $this->assignVar($record);
+                $this->setVar($record);
             }
         }
         $this->leaveBlock();
