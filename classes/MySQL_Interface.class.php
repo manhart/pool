@@ -562,7 +562,7 @@ if(!defined('MYSQL_LAYER'))
 
                 $buf = $this->sql;
                 #echo '<hr>'.$buf.'<br>';
-                if($buf{0} == '(') $buf = ltrim(substr($buf, 1));
+                if($buf[0] == '(') $buf = ltrim(substr($buf, 1));
                 $posSpace = strpos($buf, chr(32), 2);
                 $posLN = strpos($buf, chr(10), 2); // TODO MySQL Syntax DO, USE?
                 $posCR = strpos($buf, chr(13), 2);
