@@ -328,6 +328,7 @@ class GUI_Module extends Module
             // AM, 22.07.2020
             $Params = new Input(I_EMPTY);
             $Params->setParams($params);
+            //TODO check authorisation
             $GUI = new $GUIClassName($Owner, $autoLoadFiles, $Params->getData());
             /* @var $GUI GUI_Module */
             if ($ParentGUI instanceof Module) {
@@ -672,6 +673,8 @@ class GUI_Module extends Module
         }
 
         if($Closure) {
+            //TODO check Authorisation
+
             // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
             $result = $Closure(...$args);
         }
