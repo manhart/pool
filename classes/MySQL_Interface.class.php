@@ -577,7 +577,7 @@ if(!defined('MYSQL_LAYER'))
                 if($pos == -1) {
                     $pos = $posSpace;
                 }
-                if($pos == false) {
+                if(!$pos) {
                     $pos = strlen($buf);
                 }
 
