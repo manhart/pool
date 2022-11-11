@@ -627,7 +627,7 @@ if(!defined('MYSQL_LAYER'))
 
                 if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
                     if(ACTIVATE_INTERFACE_SQL_LOG == 2) {
-                        $Log = &Singleton('Log');
+                        $Log = Singleton('Log');
                         $mode_txt = $mode;
                         if($Log->isLogging()) {
                             $Log->addLine('SQL MODE: '.$mode_txt);
