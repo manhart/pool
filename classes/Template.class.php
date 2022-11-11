@@ -500,11 +500,20 @@ class TempCoreHandle extends TempHandle
 
         $content = $this->content;
 
-        ### TODO Pool 5, bei setVar {} adden oder read write properties...
-        # $content = strtr($content, $this->VarList);
+        $search = [];
+        $replace = [];
 
         foreach($this->VarList as $key => $val) {
-            $content = strtr($content, ["$varStart$key$varEnd" => $val]);
+            $search[] = "$varStart$key$varEnd";
+            $replace[] = $val;
+        }
+
+        $sizeOfVarList = count($this->VarList);
+        $iterations = 0;
+        $count = 1;
+        while($count and $iterations < $sizeOfVarList) {
+            $content = str_replace($search, $replace, $content, $count);
+            $iterations++;
         }
 
         $replace_pairs = [];
