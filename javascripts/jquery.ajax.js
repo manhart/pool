@@ -6,7 +6,10 @@
  * @since 2009-07-15
  * @author Alexander Manhart <alexander.manhart@gmx.de>
  */
+'use strict';
+
 let REQUEST_METHOD;
+let REQUEST_SCHEMA;
 let REQUEST_PARAM_MODULENAME;
 let REQUEST_CONTENTTYPE;
 let REQUEST_PROCESSDATA;
@@ -16,6 +19,7 @@ resetGlobalsOfRequestPOOL();
 function resetGlobalsOfRequestPOOL()
 {
     REQUEST_METHOD = undefined;
+    REQUEST_SCHEMA = null;
     REQUEST_PARAM_MODULENAME = 'requestModule';
     REQUEST_CONTENTTYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
     REQUEST_PROCESSDATA = true;
@@ -41,38 +45,39 @@ function RequestPOOL(module, method, params, async)
 	}
 
 	if(typeof params == 'undefined') {
-		var params = new Array();
+		params = [];
 	}
 
 	if(typeof async == 'undefined') {
-		var async = false;
+		async = false;
 	}
 
-	let RequestUrl = new Url();
+	const RequestUrl = new Url();
 	RequestUrl.setScript(SCRIPT_NAME);
+    if(REQUEST_SCHEMA != null) RequestUrl.setParam('schema', REQUEST_SCHEMA);
 	if(module != null) RequestUrl.setParam('module', module);
 	RequestUrl.setParam('method', method);
 
 
 	// Weitere Parameter
-	if(RequestPOOL.arguments.length > 4) {
-		var onRequestSuccess = RequestPOOL.arguments[4];
+	if(arguments.length > 4) {
+		var onRequestSuccess = arguments[4];
 	}
 
-	if(RequestPOOL.arguments.length > 5) {
-		var onRequestComplete = RequestPOOL.arguments[5];
+	if(arguments.length > 5) {
+		var onRequestComplete = arguments[5];
 	}
 
 	// if(RequestPOOL.arguments.length > 6) {
 	// 	var onPhpFailure = RequestPOOL.arguments[6];
 	// }
 
-	if(RequestPOOL.arguments.length > 6) {
-		var onRequestFailure = RequestPOOL.arguments[6];
+	if(arguments.length > 6) {
+		var onRequestFailure = arguments[6];
 	}
 
-	if(RequestPOOL.arguments.length > 7) {
-		var onBeforeSend = RequestPOOL.arguments[7];
+	if(arguments.length > 7) {
+		var onBeforeSend = arguments[7];
 	}
 
 	// if(RequestPOOL.arguments.length > 8) {

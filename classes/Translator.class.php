@@ -503,6 +503,7 @@ final class Translator extends \PoolObject
     /**
      * @param string $content
      * @return string
+     * @throws Exception
      */
     public function parse(string $content): string
     {

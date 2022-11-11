@@ -56,8 +56,9 @@ Url.prototype.getParam = function(key) {
  */
 Url.prototype.setParam = function(key, val) {
 	if(typeof key == 'object') {
-		for(var keyname in key) {
-			this.params[keyname] = key[keyname];
+        let param;
+		for(param in key) {
+			this.params[param] = key[param];
 		}
 	}
 	else {
@@ -68,7 +69,10 @@ Url.prototype.addParam = function(key, val) {
    this.setParam(key, val);
 }
 Url.prototype.removeParam = function(key) {
-   delete(this.params[key]) ;
+   this.delParam(key);
+}
+Url.prototype.delParam = function(key) {
+    delete(this.params[key]);
 }
 Url.prototype.restartUrl = function() {
 	location.href = this.getUrl();
