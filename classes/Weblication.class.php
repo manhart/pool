@@ -302,16 +302,11 @@ class Weblication extends Component
     /**
      * Get translator
      *
-     * @param string|null $language overrides default language
      * @return Translator
      */
-    public function getTranslator(?string $language = null): Translator
+    public function getTranslator(): Translator
     {
-        $Translator = Translator::getInstance();
-        if ($language) {
-            $Translator->changeLanguage($language);
-        }
-        return $Translator;
+        return Translator::getInstance();
     }
 
     /**
