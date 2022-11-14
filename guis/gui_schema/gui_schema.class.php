@@ -30,9 +30,7 @@ class GUI_Schema extends GUI_Module
     private array $SchemeHandles = [];
 
     /**
-     * Konstruktor
-     *
-     * @param Component|null $Owner Besitzer
+     * @param Component $Owner Besitzer
      * @param bool $autoLoadFiles
      * @param array $params
      * @throws ReflectionException
@@ -95,7 +93,7 @@ class GUI_Schema extends GUI_Module
             $this->Template->setDirectory($directory);
             for ($i=0; $i<$numSchemes; $i++) {
                 $bExists = file_exists($directory . $schemes[$i] . '.html');
-                if($bExists == false and $alternate != null) {
+                if(!$bExists and $alternate != null) {
                     $schemes[$i] = $alternate;
                     $bExists = file_exists($directory . $schemes[$i] . '.html');
                 }
@@ -125,7 +123,7 @@ class GUI_Schema extends GUI_Module
      *
      * @param string $schema None existing Schema
      **/
-    private function Schema404($schema = '')
+    private function Schema404(string $schema = '')
     {
         $schema404 = 'schema404.html';
         $this->raiseError(__FILE__, __LINE__, sprintf('Schema \'%s\' doesn\'t exist', $schema . '.html'));
