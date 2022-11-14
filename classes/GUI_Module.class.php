@@ -634,6 +634,12 @@ class GUI_Module extends Module
             return '';
         }
 
+        // collect every ajax calls that are not closures
+        if(!$Closure) {
+            Log::info('The method '.$this->getClassName().':'.$method.' is not used as Closure ', ['className' => $this->getClassName(),
+                'method' => $method], 'ajaxCallLog');
+        }
+
         error_clear_last();
 
         ob_start();
