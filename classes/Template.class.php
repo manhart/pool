@@ -33,6 +33,8 @@
  */
 
 // Variablen Identifizierung
+use pool\classes\Translator;
+
 const TEMP_VAR_START = '{';
 const TEMP_VAR_END = '}';
 
@@ -470,8 +472,7 @@ class TempCoreHandle extends TempHandle
                     break;
 
                 case TEMP_TRANSL_IDENT:
-                    $value = $tagContent; // so that the code continues to work temporarily
-                    //TODO Translate
+                    $value = Translator::getInstance()->translateTag($handle, $tagContent);
                     break;
 
                 default:
