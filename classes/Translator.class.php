@@ -37,6 +37,11 @@ final class Translator extends \PoolObject
     private string $defaultLanguage = '';
 
     /**
+     * @var array holds the TranslationProviderFactory's to use for loading a language
+     */
+    private array $translationResources = [];
+
+    /**
      * @var array holds the currently available languages and their associated translation-providers<br>
      * in the format (lang/locale => provider)
      */
@@ -48,6 +53,10 @@ final class Translator extends \PoolObject
      */
     private array $activeLanguages =  [];
 
+    /**
+     * @var string The intl locale for formatting
+     */
+    private string $locale;
     /**@deprecated
      * resources directory with the language files
      *TODO extract to Resource-file based Provider
@@ -435,29 +444,6 @@ final class Translator extends \PoolObject
         return '';
     }
 
-    /**TODO
-     * get translation
-     *
-     * @param string $key
-     * @param mixed|null ...$args
-     * @return mixed|string
-     * @throws Exception
-     */
-    public function get(string $key, ...$args)
-    {
-        $translation = $this->getTranslation($this->getLanguage());
-
-        if (!$args) {
-            $args = [];
-        }
-
-        $string = $translation[$key] ?? '';
-        if ($args) {
-            $string = vsprintf($string, $args);
-        }
-        return $string;
-    }
-
     /**@deprecated merge with get
      * get plural translation
      *
@@ -497,7 +483,6 @@ final class Translator extends \PoolObject
         return isset($this->getTranslation($this->getLanguage())[$key]);
     }
 
-
     /**@deprecated
      * @return array|null
      */
@@ -506,15 +491,90 @@ final class Translator extends \PoolObject
         return null;
     }
 
+
+    /**
+     * @param string $lang
+     * @param bool $tryHard
+     * @return TranslationProvider|Exception
+     * @throws Exception
+     */
+    private function autoloadLanguage(string $lang, bool $tryHard = false): ?TranslationProvider
+    {
+        foreach ($this->translationResources as $factory){
+            /**@var TranslationProviderFactory $factory*/
+            if ($factory->hasLang($lang))
+                return $factory->getProvider($lang);
+        }
+        if ($tryHard){
+            foreach ($this->translationResources as $factory){
+                /**@var TranslationProviderFactory $factory*/
+                if ($bestLang = $factory->getBestLang($lang))
+                    return $factory->getProvider($bestLang);
+            }
+        }
+        throw new Exception("Language $lang could not be loaded");
+    }
+
+    /** Sets a new active language list from the $language parameter and
+     * returns the active language list for later restore using this function again
+     * @param array|string|null $language A language list with language names as keys and optionally TranslationProviders as value<br>
+     * or the name of the Language to use
+     * @return array|null
+     * @throws Exception missing TranslationProvider
+     */
+    private function swapLangList(array|string|null $language): ?array
+    {
+        if ($language ===null)
+            return null;
+        $newActiveLanguages = (array)$language;
+        foreach ($newActiveLanguages as $lang => &$provider){
+                $provider ??= $this->loadedLanguages[$lang] ??
+                    $this->autoloadLanguage($lang);
+        }
+        $oldActiveLanguages = $this->activeLanguages;
+        $this->activeLanguages = $newActiveLanguages;
+        return $oldActiveLanguages;
+    }
+
+    /**
+     * @param string $sourceFile
+     * @param string $lang
+     * @return string
+     * @throws Exception missing TranslationProvider, File*
+     */
+    public function translateFile(string $sourceFile, string $lang):string{
+        $translatedDir = buildDirPath(dirname($sourceFile), $lang);
+        if (!is_dir($translatedDir))
+            mkdir($translatedDir);
+        $filename = basename($sourceFile);
+        $manualPreTranslatedFile = buildFilePath($translatedDir, 'man', $filename);
+        //manual Translation exists
+        if (file_exists($manualPreTranslatedFile))
+            //override source
+            $sourceFile = $manualPreTranslatedFile;
+        $translatedFile = $translatedDir . $filename;
+        $sourceContent = file_get_contents($sourceFile);
+        $countChanges = 0;
+        $translatedContent = $this->parse($sourceContent, $lang, $countChanges);
+        unlink($translatedFile);
+        if ($countChanges)
+            //save translation
+            file_put_contents($translatedFile, $translatedContent);
+        else //hardlink unchanged file
+            link($sourceFile, $translatedFile);
+        return $translatedFile;
+    }
+
     /** Parses TRANSL Tokens in a string and replaces them with their translation, non-translatable tokens will be ignored
      * @param string $templateContent the string to check for tokens
-     * @param string|array|null $language
-     * @param int $countChanges
+     * @param string|array|null $language One-of langauge list that overrides the current setting for this translation
+     * @param int $countChanges The number of unique tags that have been translated. 0 means that no replacements were made
      * @return string the result of translation
+     * @throws Exception missing TranslationProvider
      */
     public function parse(string $templateContent, string|array $language = null, int &$countChanges = 0): string
     {
-
+        $defaultLangList = $this->swapLangList($language);
         //More specific copy of code from \TempCoreHandle::findPattern
         $changes = array();
         // Matches Blocks like <!-- TRANSL handle -->freeform-text<!-- END handle -->
@@ -524,19 +584,21 @@ final class Translator extends \PoolObject
         //key and args are retrieved as handle in group 2
         //avoid constructs like )?? )} in args and >} in default
         $reg = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?>\?\?<((?>[^>]*(?>>(?!}))?)*)>)?}/su';
-
+        $this->translateWithRegEx($templateContent,$reg, $changes);
         $translatedContent = strtr($templateContent, $changes);
         $countChanges = count($changes);
         unset($changes);
         //END of copy region
+        $this->swapLangList($defaultLangList);
         return $translatedContent;
     }
 
-    /** Performs the parsing of the content using a specific RegularExpression for finding and analyzing the translation tags
+    /** Performs the parsing of the content using a specific RegularExpression for finding and analyzing the translation tags<br>
+     * uses TODO translate without language parameter so set activeLangauges accordingly
      * @param string $content the string to check for tokens
      * @param string $regEX A pattern that matches the tag to replace and captures Keyword, handle/key and the default value / tag content
-     * @param array $changes An array to store the translations in (tag => translation) for use with strtr()
-     * @return bool false on RegXx-failure
+     * @param array $changes An array to store the translations in (tag => translation) for use with strtr(). New tags will be inserted present tags won't be fetched again
+     * @return bool false on RegEx-failure
      */
     private function translateWithRegEx(string $content, string $regEX, array &$changes): bool
     {
@@ -550,19 +612,48 @@ final class Translator extends \PoolObject
             $handle = ($match[2]);
             //the freeform-text part -> the default value
             $tagContent = ($match[3]);
-            $value = $tagContent;
-            //TODO Translate
-            $handle = strtok($handle, '(');
-            $args = strtok('');
-            //END TODO
-            if ($value !== $fullMatchText)
-                $changes[$fullMatchText] = $value;
+            //skip repeating tags
+            if (!isset($changes[$fullMatchText])) {
+                $value = $this->translateTag($handle, $tagContent);
+                if ($value !== $fullMatchText)
+                    $changes[$fullMatchText] = $value;
+            }
         }
         unset($matches);
         return $outcome;
     }
 
-    /**
+    /** Translates a TRANSL Tag
+     * @param string $handle The tag handle with the Key
+     * @param string|null $tagContent The content with the default translation
+     * @return string The translated value
+     */
+    public function translateTag(string $handle, ?string $tagContent):string{
+        $key = strtok($handle, '(');
+        $args = trim(strtok(''), ' ()');
+        return $this->get($key, $args, $tagContent);
+    }
+
+    /**TODO
+     * get translation
+     *
+     * @param string $key
+     * @param mixed|null ...$args
+     * @return string
+     */
+    public function get(string $key, ...$args):string
+    {
+        //TODO transform args
+        if (!$args) {
+            $args = [];
+        }
+        $translation = '';
+        $formattedTranslation = \MessageFormatter::formatMessage('TODO', $translation, $args);
+        return $formattedTranslation;
+    }
+
+
+    /**TODO
      * checks if translation for a specific language is available
      *
      * @param string $language language code/country code
@@ -573,7 +664,7 @@ final class Translator extends \PoolObject
         return isset($this->translation[$language]);
     }
 
-    /**
+    /**TODO extract to Resource-file based Provider
      * set translations for a language
      *
      * @param string $language language code/country code
@@ -584,7 +675,7 @@ final class Translator extends \PoolObject
         $this->translation[$language] = $trans;
     }
 
-    /**
+    /**TODO extract to Resource-file based Provider
      * get translations for a language
      *
      * @param string $language language code/country code
@@ -607,7 +698,7 @@ final class Translator extends \PoolObject
         return $this->translation[$language];
     }
 
-    /**
+    /**TODO extract to Resource-file based Provider
      * @param string $language
      * @return bool
      */
@@ -616,7 +707,7 @@ final class Translator extends \PoolObject
         return file_exists($this->directory . '/' . $language . $this->extension);
     }
 
-    /**
+    /**@deprecated use intl MessageFormatter
      * The plural rules are derived from code of the Zend Framework (2010-09-25),
      * which is subject to the new BSD license
      * (http://framework.zend.com/license/new-bsd).
@@ -762,10 +853,11 @@ final class Translator extends \PoolObject
         return $index;
     }
 
-    /**
+    /**TODO
      * detects locale from browser
      *
      * @param string $defaultLocale
+     * @param bool $useGeoIP
      * @return string locale
      */
     public static function detectLocale(string $defaultLocale = 'en_US', bool $useGeoIP = true): string
@@ -818,7 +910,6 @@ final class Translator extends \PoolObject
     {
         if(function_exists('locale_get_primary_language')) {
             $language = locale_get_primary_language($locale);
-            if($locale == $language) $language == '';
         }
         else {
             $language = self::localeToLanguageCode($locale);
@@ -835,18 +926,6 @@ final class Translator extends \PoolObject
     public static function countryCodeToLocale(string $countryCode): string
     {
         return self::$LOCALES[strtoupper($countryCode)] ?? '';
-    }
-
-    /**
-     * Get country code from locale
-     *
-     * @param string $locale
-     * @return string country code
-     */
-    public static function localeToCountryCode(string $locale): string
-    {
-        $key = array_search($locale, self::$LOCALES) ?: '';
-        return strtolower($key);
     }
 
     /**
