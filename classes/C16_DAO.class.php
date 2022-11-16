@@ -150,7 +150,7 @@
 				// $this->db->__get_db_conid();
 				$fldnames = array();
 				$keynames = array();
-				
+
 				$fields = $this->db->listfields($this->file, $fldnames, $this->dbname);
 
 				$this->fields = $fields;
@@ -303,7 +303,7 @@
 			 * @return MySQL_Resultset
 			 * @see MySQL_Resultset
 			 **/
-			function &insert($data)
+			public function insert(array $data): Resultset
 			{
 				if(is_array($this -> fieldnames)) {
 					foreach($this -> fieldnames as $fieldname) {
@@ -331,7 +331,7 @@
 			 * @return MySQL_Resultset
 			 * @see MySQL_Resultset
 			 **/
-			function &update($data)
+			public function update(array $data): Resultset
 			{
 				$countPk = count($this -> pk);
 
@@ -383,7 +383,7 @@
 			 * @return C16_Resultset C16_Resultset
 			 * @see C16_Resultset
 			 **/
-			function &delete($id)
+			public function delete($id): Resultset
 			{
 				// Key ermitteln anhand von $id (bzw. Anzahl der in $id enthaltenen Felder)
 				$countPk = count($this->unique_keys);
@@ -428,7 +428,7 @@
 			 * @return object C16_Resultset
 			 * @see C16_Resultset
 			 **/
-			function &get($fldval, $key=null)
+			public function get($fldval, $key=null): Resultset
 			{
 				$keyname='';
 				$keynr=0;
@@ -539,7 +539,7 @@
 			 * @see MySQL_DAO::__buildSorting
 			 * @see MySQL_DAO::__buildLimit
 			 **/
-			function &getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array())
+			public function getMultiple($id=NULL, $key=NULL, $filter_rules=array(), $sorting=array(), $limit=array()): Resultset
 			{
 				#echo pray($filter_rules);
 				$C16_Resultset = new C16_Resultset($this -> db);
@@ -602,7 +602,7 @@
 			 * @see MySQL_Resultset
 			 * @see MySQL_DAO::__buildFilter
 			 **/
-			function &getCount($id=NULL, $key=NULL, $filter_rules=array())
+			public function getCount($id=NULL, $key=NULL, $filter_rules=array()): Resultset
 			{
 				$C16_Resultset = new C16_Resultset($this->db);
 
@@ -639,7 +639,7 @@
 			 * @return MySQL_Resultset Ergebnismenge
 			 * @see MySQL_Resultset
 			 **/
-			function &__createC16_Resultset($fldval, $keynr, $method, $keyval=array(), $limit=array())
+			function __createC16_Resultset($fldval, $keynr, $method, $keyval=array(), $limit=array())
 			{
 				$C16_Resultset = new C16_Resultset($this -> db);
 				$this -> debug('C16_Resultset -> execute(method: ' . $method . ', file: ' . $this -> file. ', keynr: ' .
@@ -832,7 +832,15 @@
 				}
 				return $result;
 			}
-		}
+
+            /**
+             * @return Resultset
+             */
+            public function deleteMultiple(): Resultset
+            {
+                // TODO: Implement deleteMultiple() method.
+            }
+        }
 	}
 
 

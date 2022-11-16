@@ -580,38 +580,50 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @return MySQL_Resultset
          * @see MySQL_Resultset
          **/
-        public function insert($data): Resultset
+        public function insert(array $data): Resultset
         {
-            $keys = '';
+            $columns = '';
             $values = '';
+
             foreach($data as $field => $value) {
-                $keys .= sprintf('`%s`,', $field);
-                // 18.06.2018, AM @deprecated $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
-                if(is_null($value)) {
-                    $values .= 'NULL,';
-                }
-                elseif(is_int($value) or (is_float($value))) {
-                    $values .= (string)$value.',';
-                }
-                elseif(is_bool($value)) {
-                    $values .= bool2string($value).',';
-                }
-                elseif(is_array($value)) {
-                    $values .= is_null($value[0]) ? 'NULL,' : $value[0].',';
+                // key concatenation
+                if($columns == '') {
+                    $columns = "`$field`";
                 }
                 else {
-                    $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
+                    $columns = "$columns,`$field`";
+                }
+
+                // value concatenating
+                if(is_null($value)) {
+                    $value = 'NULL';
+                }
+                elseif(is_bool($value)) {
+                    $value = bool2string($value);
+                }
+                elseif(is_array($value)) {
+                    $value = is_null($value[0]) ? 'NULL' : $value[0];
+                }
+                elseif(!is_int($value) && !is_float($value)) {
+                    $value = $this->db->escapestring($value, $this->dbname);
+                    $value = "'$value'";
+                }
+
+                if($values == '') {
+                    $values = $value;
+                }
+                else {
+                    $values = "$values,$value";
                 }
             }
 
-            if ('' == $keys) {
+            if ('' == $columns) {
                 $ResultSet = new Resultset();
                 $ResultSet->addError('MySQL_DAO::insert failed. No fields stated!');
                 return $ResultSet;
             }
 
-            $sql = sprintf('INSERT INTO `%s` (%s) VALUES (%s)', $this->table,
-                substr($keys, 0, -1), substr($values, 0, -1));
+            $sql = "INSERT INTO `{$this->table}` ($columns) VALUES ($values)";
             return $this->__createMySQL_Resultset($sql);
         }
 
@@ -629,9 +641,10 @@ if(!defined('CLASS_MYSQLDAO')) {
          * @return Resultset
          * @see MySQL_Resultset
          **/
-        public function update($data): Resultset
+        public function update(array $data): Resultset
         {
-            $sizeof = sizeof($this->pk);
+            $sizeof = count($this->pk);
+            $pk = [];
             for ($i=0; $i<$sizeof; $i++) {
                 if(!isset($data[$this->pk[$i]])) {
                     $ResultSet = new Resultset();
@@ -651,13 +664,10 @@ if(!defined('CLASS_MYSQLDAO')) {
                 }
             }
 
-            $update = '';
+            $set = '';
             foreach ($data as $field => $value) {
                 if (is_null($value)) {
                     $value = 'NULL';
-                }
-                elseif(is_int($value) or (is_float($value))) {
-                    $value = (string)$value;
                 }
                 elseif(is_bool($value)) {
                     $value = bool2string($value);
@@ -665,23 +675,24 @@ if(!defined('CLASS_MYSQLDAO')) {
                 elseif(in_array(strtoupper($value) , array('NOW()', 'CURRENT_DATE()', 'CURRENT_TIMESTAMP()'))) {
                     // reserved keywords don't need to be masked
                 }
-                else {
-                    $value = '\''.$this->db->escapestring($value, $this->dbname).'\'';
+                elseif(!is_int($value) && !is_float($value)) {
+                    $value = "'{$this->db->escapestring($value, $this->dbname)}'";
                 }
-                $update .= '`'.$field.'`='.$value.',';
+                if($set == '') $set = "`$field`=$value";
+                $set = "$set,`$field`=$value";
             }
 
-            if (!$update) {
+            if (!$set) {
                 return new MySQL_Resultset($this->db);
             }
 
             $where = $this->__buildWhere($pk, $this->pk);
             if ($where == '1') {
-                $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this -> table;
-                $this -> raiseError(__FILE__, __LINE__, $error_msg);
+                $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this->table;
+                $this->raiseError(__FILE__, __LINE__, $error_msg);
                 die($error_msg);
             }
-            $sql = sprintf('update `%s` set %s where %s', $this->table, substr($update, 0, -1), $where);
+            $sql = "update `{$this->table}` set $set where $where";
             return $this->__createMySQL_Resultset($sql);
         }
 
@@ -695,14 +706,13 @@ if(!defined('CLASS_MYSQLDAO')) {
          **/
         public function delete($id): Resultset
         {
-            // $query = sprintf('update %s set _removed=1, _modified=now() where %s="%s"', $this -> table, $this -> pk, addslashes($id));
-            $where = $this -> __buildWhere($id, $this -> pk);
+            $where = $this -> __buildWhere($id, $this->pk);
             if ($where == '1') {
                 $error_msg = 'Delete maybe wrong! Do you really want to delete all records in the table: '. $this -> table;
                 $this -> raiseError(__FILE__, __LINE__, $error_msg);
                 die($error_msg);
             }
-            $sql = sprintf('delete from `%s` where %s', $this -> table, $where);
+            $sql = "delete from `{$this->table}` where $where";
             return $this->__createMySQL_Resultset($sql);
         }
 
@@ -716,7 +726,8 @@ if(!defined('CLASS_MYSQLDAO')) {
          */
         public function deleteMultiple(array $filter_rules=[]): Resultset
         {
-            $sql = sprintf('DELETE FROM `%s` WHERE %s', $this->table, $this->__buildFilter($filter_rules, 'and', true));
+            $where = $this->__buildFilter($filter_rules, 'and', true);
+            $sql = "DELETE FROM `{$this->table}` WHERE $where";
             return $this->__createMySQL_Resultset($sql);
         }
 
@@ -733,13 +744,8 @@ if(!defined('CLASS_MYSQLDAO')) {
          **/
         public function get($id, $key=NULL): Resultset
         {
-            // Bugfix Alexander M.; ^^ansonsten liefert __buildWhere alle Datensätze like getMultiple
-            if(is_null($id)) $id = 0;
-
-            #echo 'id: '.$id.' key:'.$key.'<br>';
-            $sql = sprintf('select %s from `%s` where %s', $this->column_list, $this->table, $this->__buildWhere($id, $key));
-            #echo "get: ".$sql."<br>";
-
+            $id = $id ?? 0;
+            $sql = "select {$this->column_list} from `{$this->table}` where {$this->__buildWhere($id, $key)}";
             return $this->__createMySQL_Resultset($sql);
         }
 
@@ -766,17 +772,10 @@ if(!defined('CLASS_MYSQLDAO')) {
         public function getMultiple($id=NULL, $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
                                     array $groupBy=[], array $having=[], array $options=[]): Resultset
         {
-            $sql = sprintf('SELECT %s %s FROM `%s` WHERE %s %s%s%s%s%s',
-                implode(' ', $options),
-                $this->column_list,
-                $this->table,
-                $this->__buildWhere($id, $key),
-                $this->__buildFilter($filter_rules),
-                $this->__buildGroupby($groupBy),
-                $this->__buildHaving($having),
-                $this->__buildSorting($sorting),
-                $this->__buildLimit($limit)
-            );
+            $options = implode(' ', $options);
+
+            $sql = "SELECT $options {$this->column_list} FROM `{$this->table}` WHERE {$this->__buildWhere($id, $key)} {$this->__buildFilter($filter_rules)}
+{$this->__buildGroupby($groupBy)}{$this->__buildHaving($having)}{$this->__buildSorting($sorting)}{$this->__buildLimit($limit)}";
 
             return $this->__createMySQL_Resultset($sql);
         }
@@ -793,14 +792,8 @@ if(!defined('CLASS_MYSQLDAO')) {
          **/
         public function getCount($id=NULL, $key=NULL, array $filter_rules=[]): Resultset
         {
-            $sql = sprintf('SELECT COUNT(%s) AS `count` FROM `%s`%s WHERE %s %s',
-                '*',
-                $this->table,
-                $this->tableAlias,
-                $this->__buildWhere($id, $key),
-                $this->__buildFilter($filter_rules)
-            );
-
+            $where = $this->__buildWhere($id, $key).' '.$this->__buildFilter($filter_rules);
+            $sql = "SELECT COUNT(*) AS `count` FROM `{$this->table}`{$this->tableAlias} WHERE $where";
             return $this->__createMySQL_Resultset($sql);
         }
 
@@ -1179,14 +1172,13 @@ if(!defined('CLASS_MYSQLDAO')) {
         /**
          * Erstellt die Abfrage auf Primaer Schluessel (Indexes, Unique Keys etc.).
          *
-         * @access private
          * @param mixed $id integer oder array (ID's)
          * @param mixed $key integer oder array (Spalten)
          * @return string Teil eines SQL Queries
          **/
-        function __buildWhere($id, $key)
+        protected function __buildWhere($id, $key): string
         {
-            $result='';
+            $result = '';
             if (is_null($id)) {
                 return '1';
             }
@@ -1202,13 +1194,13 @@ if(!defined('CLASS_MYSQLDAO')) {
                 $count = count($key);
                 for ($i=0; $i<$count; $i++) {
                     $keyName = $key[$i];
-                    $result .= sprintf('%s="%s"', $alias.$keyName, $this->db->escapestring($id[$i], $this->dbname));
+                    $result = "$result$alias$keyName=\"{$this->db->escapestring($id[$i], $this->dbname)}\"";
                     if(!isset($id[$i+1])) break;
                     $result .= ' and ';
                 }
             }
             else {
-                $result = sprintf('%s="%s"', $alias.$key, $this->db->escapestring($id, $this->dbname));
+                $result = "$alias$key=\"{$this->db->escapestring($id, $this->dbname)}\"";
             }
             return $result;
         }
