@@ -320,11 +320,9 @@ class TempCoreHandle extends TempHandle
             return $value;
         }
         if($convert == Template::CONVERT_HTMLSPECIALCHARS) {
-            $value = $value ?? '';
             return htmlspecialchars($value, ENT_QUOTES, $this->charset);
         }
         if($convert == Template::CONVERT_HTMLENTITIES) {
-            $value = $value ?? '';
             return htmlentities($value, ENT_QUOTES, $this->charset);
         }
     }
@@ -339,6 +337,7 @@ class TempCoreHandle extends TempHandle
     public function setVar($name, $value = '', int $convert = Template::CONVERT_NONE): static
     {
         if(!is_array($name)) {
+            $value = $value ?? '';
             $this->VarList[$name] = $this->convertToHTML($value, $convert);
         }
         else {
@@ -358,7 +357,7 @@ class TempCoreHandle extends TempHandle
     public function setVars(array $vars, int $convert = Template::CONVERT_NONE): static
     {
         foreach($vars as $key => $value) {
-            $this->VarList[$key] = $this->convertToHTML($value, $convert);
+            $this->setVar($key, $value, $convert);
         }
         return $this;
     }
@@ -502,18 +501,23 @@ class TempCoreHandle extends TempHandle
 
         $content = $this->content;
 
-        ### TODO Pool 5, bei setVar {} adden oder read write properties...
-        # $content = strtr($content, $this->VarList);
+        $search = [];
+        $replace = [];
 
-        $replace_pairs = [];
         foreach($this->VarList as $key => $val) {
-            $replace_pairs["$varStart$key$varEnd"] = $val;
+            $search[] = "$varStart$key$varEnd";
+            $replace[] = $val;
         }
 
-        /**
-         * @var string $Handle
-         * @var TempBlock $TempBlock
-         */
+        $sizeOfVarList = count($this->VarList);
+        $iterations = 0;
+        $count = 1;
+        while($count and $iterations < $sizeOfVarList) {
+            $content = str_replace($search, $replace, $content, $count);
+            $iterations++;
+        }
+
+        $replace_pairs = [];
         foreach($this->BlockList as $Handle => $TempBlock) {
             if($TempBlock->allowParse()) {
                 $TempBlock->parse();
@@ -629,9 +633,7 @@ class TempBlock extends TempCoreHandle
     }
 
     /**
-     * TempBlock::allowParse()
-     *
-     * Die Funktion fraegt ab, ob geparst werden darf.
+     *f Die Funktion fraegt ab, ob geparst werden darf.
      * Beim ersten Aufruf der Funktion NewBlock darf noch nicht geparst werden,
      * da noch keine Variablen zugewiesen wurden. Erst bei weiteren Aufrufen (z.B. Schleife) wird geparst,
      * damit neuer Content entsteht.

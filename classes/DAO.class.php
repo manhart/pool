@@ -84,15 +84,13 @@ abstract class DAO extends PoolObject
 
     /**
      * Einen Datensatz einfuegen (virtuelle Methode).
-     *
-     * @access protected
      **/
-    abstract public function insert($data): Resultset;
+    abstract public function insert(array $data): Resultset;
 
     /**
      * Einen Datensatz aendern (virtuelle Methode).
      **/
-    abstract public function update($data): Resultset;
+    abstract public function update(array $data): Resultset;
 
     /**
      * Einen Datensatz loeschen (virtuelle Methode).
