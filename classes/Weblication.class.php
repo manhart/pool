@@ -1135,7 +1135,7 @@ class Weblication extends Component
     public function setLocale(int $category = LC_ALL, ?string $locale = null)
     {
         if(is_null($locale)) {
-            $locale = Translator::detectLocale();
+            $locale = Translator::parseLangHeader();
         }
         $this->locale = $locale;
         return setlocale($category, $locale);
