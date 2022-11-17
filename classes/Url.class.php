@@ -490,7 +490,7 @@ if(!defined('CLASS_URL')) {
          * @access public
          * @param boolean $with_sid Session Id uebernehmen
          **/
-        function reloadUrl($with_sid=true, $replace=true, $http_response_code=302)
+        function reloadUrl($with_sid=true, $replace=true, $http_response_code=302):never
         {
             header('Location: '.$this->getUrl('', $with_sid), $replace, $http_response_code);
             exit;
@@ -502,7 +502,7 @@ if(!defined('CLASS_URL')) {
          * @access public
          * @param boolean $with_sid Session Id uebernehmen
          **/
-        function restartUrl($with_sid=true)
+        function restartUrl($with_sid=true):never
         {
             $this->reloadUrl($with_sid);
         }

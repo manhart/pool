@@ -408,7 +408,7 @@ class GUI_Module extends Module
         $content = $this->searchGUIs($content);
         $this->prepareChilds();
         $this->finalizeChilds();
-        return $this->pasteChilds($content);
+        return $this->pasteChildren($content);
     }
 
     /**
@@ -426,7 +426,7 @@ class GUI_Module extends Module
      *
      * @return string Ident/Pattern/Muster
      **/
-    private function getMarkerIdent()
+    private function getMarkerIdent(): string
     {
         return $this->FileIdent;
     }
@@ -846,7 +846,7 @@ class GUI_Module extends Module
             }
 
             if (!$this->takeMeAlone) {
-                $content = $this->pasteChilds($content);
+                $content = $this->pasteChildren($content);
             }
         }
         return $content;
@@ -878,7 +878,7 @@ class GUI_Module extends Module
      * @param string $content Eigener Content
      * @return string Eigener Content samt dem Content der Child GUIs
      **/
-    private function pasteChilds(string $content): string
+    private function pasteChildren(string $content): string
     {
         $count = count($this->Modules);
         for ($m = 0; $m < $count; $m++) {
