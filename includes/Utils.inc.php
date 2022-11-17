@@ -1994,9 +1994,9 @@ function base64url_encode($data)
  * Decodes a base64 URL token back into a string.
  *
  * @param $token
- * @return bool|false|string
+ * @return false|string
  */
-function base64url_decode($token)
+function base64url_decode($token): bool|string
 {
     $length = strlen($token);
     if($length == 0) return false;
