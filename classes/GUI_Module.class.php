@@ -19,6 +19,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\ModulNotFoundExeption;
+
 const REQUEST_PARAM_MODULENAME = 'requestModule';
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
@@ -190,9 +192,10 @@ class GUI_Module extends Module
 
     /**
      * Das Template Objekt laedt HTML Vorlagen.
-     *
      * @param boolean $search True sucht nach weiteren GUIs
-     **/
+     *
+     * @throws ModulNotFoundExeption
+     */
     public function autoLoadFiles(bool $search = true)
     {
         if ($this->AutoLoadFiles) {
@@ -209,9 +212,10 @@ class GUI_Module extends Module
      * Liefert den Pfad des GUI's fuer die Template Engine
      *
      * @param bool $lookInside Wenn es sich um ein verschachteltes GUI handelt, dann sollte dies auf true stehen
+     * @param bool $without_frame
      * @return string
      */
-    function getTemplatePath($lookInside = false, $without_frame = true)
+    function getTemplatePath(bool $lookInside = false, bool $without_frame = true): string
     {
         $Parent = $this->Parent;
         $parent_directory = '';
@@ -309,6 +313,7 @@ class GUI_Module extends Module
      * @param Module|null $ParentGUI parent module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
      * @return GUI_Module|null Neues GUI_Module
+     * @throws ModulNotFoundExeption
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
                                            $autoLoadFiles = true): ?GUI_Module
@@ -323,9 +328,6 @@ class GUI_Module extends Module
         }
 
         if ($class_exists) {
-            // AM, 15.07.2009
-            // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
-            // AM, 22.07.2020
             $Params = new Input(I_EMPTY);
             $Params->setParams($params);
             //TODO check authorisation
@@ -337,15 +339,15 @@ class GUI_Module extends Module
             //            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;
-        }
-        else {
-            return null;
+        } else {//Class not found
+            throw new ModulNotFoundExeption("Fehler beim Erzeugen der Klasse '$GUIClassName'");
         }
     }
 
     /**
      * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.
      * Ruft die Funktion GUI_Module::searchGUIs() auf.
+     * @throws ModulNotFoundExeption
      */
     protected function searchGUIsInPreloadedContent()
     {
@@ -360,34 +362,49 @@ class GUI_Module extends Module
      *
      * @param string $content Zu durchsuchender Inhalt
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
-     *
-     * @throws ReflectionException
+     * @throws ModulNotFoundExeption
      */
     public function searchGUIs(string $content): string
     {
         $reg = '/\[(GUI_.*)(\((.*)\)|)\]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
+        //GUIs found
         if ($bResult) {
-            for ($i = 0, $numMatches = count($matches); $i < $numMatches; $i++) {
-                $pattern = $matches[$i][0];
-                $guiname = $matches[$i][1];
-                $params = isset($matches[$i][3]) ? $matches[$i][3] : '';
-                $new_GUI = $this->createGUIModule($guiname, $this->getOwner(), $this, $params);
+            $newContent = [];
+            $caret = 0;
+            foreach ($matches as $match) {
+                $pattern = $match[0];
+                $patternLength = strlen($pattern);
+                $guiName = $match[1];
+                $params = $match[3] ?? '';
+                //try building the GUI found
+                $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params);
 
-                if (is_null($new_GUI)) {
-                    $message = 'Fehler beim Erzeugen der Klasse "{guiname}"';
-                    $E = new Xception($message, 0, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__,
-                        compact('guiname')), null);
+                if (isset($new_GUI)) {
+                    $guiIdentifier = "[{$new_GUI->getName()}]";
+                    //store reference for later insertion in pasteChildren()
+                    $new_GUI->setMarker($guiIdentifier);
+                    //add GUI to child-list
+                    $this->insertModule($new_GUI);
+                    //find the beginning of this Match
+                    $beginningOfMatch = strpos($content, $pattern, $caret);
+                    //save content between Matches
+                    $newContent[] = substr($content, $caret, $beginningOfMatch - $caret);
+                    //insert identifier
+                    $newContent[] = $guiIdentifier;
+                    //move caret to end of this match
+                    $caret = $beginningOfMatch + $patternLength;
+                } else {
+                    $message = "Fehler beim Erzeugen der Klasse '$guiName'";
+                    $E = new Xception($message, 0, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__));
                     $this->throwException($E);
                 }
-                else {
-                    $replacement = '{' . strtoupper($new_GUI->getName()) . '}';
-                    $new_GUI->setMarker($replacement);
-                    $content = preg_replace('/' . preg_quote($pattern, '/') . '/mU', $replacement, $content, 1);
-                    $this->insertModule($new_GUI);
-                }
                 unset($new_GUI);
-            }
+            }//end foreach
+            //add remainder
+            $newContent[] = substr($content, $caret);
+            //replace content
+            $content = implode($newContent);
         }
         return $content;
     }
@@ -400,7 +417,7 @@ class GUI_Module extends Module
      * @param string $content Content / Inhalt
      * @return string Content / Inhalt aller Childs
      *
-     * @throws ReflectionException
+     * @throws ModulNotFoundExeption
      */
     public function reviveChildGUIs(string $content): string
     {
@@ -426,7 +443,7 @@ class GUI_Module extends Module
      *
      * @return string Ident/Pattern/Muster
      **/
-    private function getMarkerIdent(): string
+    private function getMarker(): string
     {
         return $this->FileIdent;
     }
@@ -883,7 +900,7 @@ class GUI_Module extends Module
         $count = count($this->Modules);
         for ($m = 0; $m < $count; $m++) {
             $gui = $this->Modules[$m];
-            $content = str_replace($gui->getMarkerIdent(), $gui->FinalContent, $content);
+            $content = str_replace($gui->getMarker(), $gui->FinalContent, $content);
         }
         return $content;
     }

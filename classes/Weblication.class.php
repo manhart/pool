@@ -17,6 +17,7 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\ModulNotFoundExeption;
 use pool\classes\Translator;
 
 class Weblication extends Component
@@ -1173,34 +1174,29 @@ class Weblication extends Component
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
      * @return Weblication
      *
-     * @throws Exception
+     * @throws ModulNotFoundExeption
      */
     public function run(string $className = 'GUI_CustomFrame'): Weblication
     {
         // TODO Get Parameter frame
         // TODO Subcode :: createSubCode()
         $params = $_REQUEST['params'] ?? '';
-        if ($params != '' and isAjax()) {
-            $params = base64url_decode($params);
+        if (isNotEmpty($params) and isAjax()) {
+            $params = base64url_decode($params) ?: "";
         }
 
-        $GUI = GUI_Module::createGUIModule($className, $this, null, $params);
-        if (is_null($GUI)) {
-            throw new Exception('The class name '.$className.' was not found or does not exist. Requested URI: '.
-                $_SERVER['REQUEST_URI']. ' (Params: "'.$params.'", isAjax: "'.bool2string(isAjax()).'")');
-        }
-        else {
-            /** Hinweis: erstes GUI registriert sich selbst �ber setMain als
-             * Haupt-GUI im GUI_Module Konstruktor **/
+        GUI_Module::createGUIModule($className, $this, null, $params);
+        /** Hinweis: erstes GUI registriert sich selbst mittels setMain als
+         * Haupt-GUI im GUI_Module Konstruktor **/
 
-            if ($this->hasFrame()) {
-                # Seitentitel (= Project)
-                $Header = $this->getFrame()->getHeaderdata();
+        if ($this->hasFrame()) {
+            //Seitentitel (= Project)
+            $Header = $this->getFrame()->getHeaderdata();
 
-                $Header->setTitle($this->title);
-                $Header->setLanguage($this->language);
-                if ($this->charset) $Header->setCharset($this->charset);
-            }
+            $Header->setTitle($this->title);
+            //TODO Translator?
+            $Header->setLanguage($this->language);
+            if ($this->charset) $Header->setCharset($this->charset);
         }
         return $this;
     }

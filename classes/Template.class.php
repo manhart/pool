@@ -728,7 +728,7 @@ class TempFile extends TempCoreHandle
         $content = '';
         $fp = fopen($this->getDirectory() . $this->Filename, 'r');
         if(!$fp) {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
+            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',//TODO Exeption
                 $this->getDirectory() . $this->Filename));
             return;
         }
