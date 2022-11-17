@@ -294,14 +294,9 @@ class Input extends PoolObject
      * @param mixed $value value
      * @return Input
      */
-    public function setVar(string $key, $value = ''): Input
+    public function setVar(string $key, mixed $value = ''): Input
     {
-//        if(is_array($key)) {
-//            $this->setVars($key);
-//        }
-//        else {
-            $this->Vars[$key] = $value;
-//        }
+        $this->Vars[$key] = $value;
         return $this;
     }
 
