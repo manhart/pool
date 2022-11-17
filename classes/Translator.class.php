@@ -13,6 +13,7 @@ namespace pool\classes;
 
 
 use Exception;
+use function explode;
 
 final class Translator extends \PoolObject
 {
@@ -54,9 +55,10 @@ final class Translator extends \PoolObject
     private array $activeLanguages =  [];
 
     /**
-     * @var string The intl locale for formatting
+     * @var bool Determines whether text-translations with args should be resolved<br>
+     * Used in caching of template translations
      */
-    private string $locale;
+    private bool $formatMessages = true;
     /**@deprecated
      * resources directory with the language files
      *TODO extract to Resource-file based Provider
@@ -351,6 +353,7 @@ final class Translator extends \PoolObject
     /**
      * sets the resources directory
      * TODO extract to Resource-file based Provider
+     * @deprecated
      * @param string $directory
      * @return $this
      * @throws Exception
@@ -375,7 +378,7 @@ final class Translator extends \PoolObject
 
     /**TODO replace with Language-list
      * sets default language
-     *
+     * @deprecated
      * @param string $language
      * @return $this
      */
@@ -388,7 +391,7 @@ final class Translator extends \PoolObject
 
     /**TODO replace with Language-list
      * change language
-     *
+     * @deprecated
      * @param string $language
      * @return Translator
      */
@@ -400,7 +403,7 @@ final class Translator extends \PoolObject
 
     /**TODO replace with Language-list
      * change back to default language
-     *
+     * @deprecated
      * @return Translator
      */
     public function changeBackToDefaultLanguage(): Translator
@@ -411,7 +414,7 @@ final class Translator extends \PoolObject
 
     /**TODO replace with Language-list
      * get active language
-     *
+     * @deprecated
      * @return string
      */
     private function getLanguage(): string
@@ -471,18 +474,6 @@ final class Translator extends \PoolObject
         return $string;
     }
 
-    /**
-     * translation exists?
-     *
-     * @param string $key
-     * @return bool
-     * @throws Exception
-     */
-    public function exists(string $key)
-    {
-        return isset($this->getTranslation($this->getLanguage())[$key]);
-    }
-
     /**@deprecated
      * @return array|null
      */
@@ -491,29 +482,21 @@ final class Translator extends \PoolObject
         return null;
     }
 
-
     /**
      * @param string $lang
-     * @param bool $tryHard
      * @return TranslationProvider|Exception
      * @throws Exception
      */
-    private function autoloadLanguage(string $lang, bool $tryHard = false): ?TranslationProvider
+    private function autoloadLanguage(string $lang): ?TranslationProvider
     {
-        foreach ($this->translationResources as $factory){
-            /**@var TranslationProviderFactory $factory*/
-            if ($factory->hasLang($lang))
-                return $factory->getProvider($lang);
-        }
-        if ($tryHard){
-            foreach ($this->translationResources as $factory){
-                /**@var TranslationProviderFactory $factory*/
-                if ($bestLang = $factory->getBestLang($lang))
-                    return $factory->getProvider($bestLang);
-            }
+        foreach ($this->translationResources as $factory) {
+            /**@var TranslationProviderFactory $factory */
+            if ($bestLang = $factory->getBestLang($lang))
+                return $factory->getProvider($bestLang);
         }
         throw new Exception("Language $lang could not be loaded");
     }
+
 
     /** Sets a new active language list from the $language parameter and
      * returns the active language list for later restore using this function again
@@ -522,7 +505,7 @@ final class Translator extends \PoolObject
      * @return array|null
      * @throws Exception missing TranslationProvider
      */
-    private function swapLangList(array|string|null $language): ?array
+    public function swapLangList(array|string|null $language): ?array
     {
         if ($language ===null)
             return null;
@@ -536,26 +519,37 @@ final class Translator extends \PoolObject
         return $oldActiveLanguages;
     }
 
+    public function suppressFormatting(bool $suppressed = true):bool{
+        $oldValue = $this->formatMessages;
+        $this->formatMessages = !$suppressed;
+        return !$oldValue;
+    }
+
     /**
      * @param string $sourceFile
      * @param string $lang
      * @return string
-     * @throws Exception missing TranslationProvider, File*
+     * @throws Exception missing TranslationProvider
      */
     public function translateFile(string $sourceFile, string $lang):string{
+        //get variables
         $translatedDir = buildDirPath(dirname($sourceFile), $lang);
         if (!is_dir($translatedDir))
             mkdir($translatedDir);
         $filename = basename($sourceFile);
+        $translatedFile = $translatedDir . $filename;
         $manualPreTranslatedFile = buildFilePath($translatedDir, 'man', $filename);
         //manual Translation exists
         if (file_exists($manualPreTranslatedFile))
-            //override source
-            $sourceFile = $manualPreTranslatedFile;
-        $translatedFile = $translatedDir . $filename;
+        //override source
+        $sourceFile = $manualPreTranslatedFile;
         $sourceContent = file_get_contents($sourceFile);
+        //parse static tags
+        $defaultFormatDirective =  $this->suppressFormatting();
         $countChanges = 0;
         $translatedContent = $this->parse($sourceContent, $lang, $countChanges);
+        $this->suppressFormatting($defaultFormatDirective);
+        //save translation
         unlink($translatedFile);
         if ($countChanges)
             //save translation
@@ -652,10 +646,22 @@ final class Translator extends \PoolObject
         return $formattedTranslation;
     }
 
+    /**
+     * translation exists?
+     *
+     * @param string $key
+     * @return bool
+     * @throws Exception
+     */
+    public function exists(string $key): bool
+    {
+        return isset($this->getTranslation($this->getLanguage())[$key]);
+    }
+
 
     /**TODO
      * checks if translation for a specific language is available
-     *
+     * @deprecated
      * @param string $language language code/country code
      * @return bool
      */
@@ -666,7 +672,7 @@ final class Translator extends \PoolObject
 
     /**TODO extract to Resource-file based Provider
      * set translations for a language
-     *
+     * @deprecated
      * @param string $language language code/country code
      * @param array $trans
      */
@@ -677,7 +683,7 @@ final class Translator extends \PoolObject
 
     /**TODO extract to Resource-file based Provider
      * get translations for a language
-     *
+     * @deprecated
      * @param string $language language code/country code
      * @return array
      * @throws Exception
@@ -699,6 +705,7 @@ final class Translator extends \PoolObject
     }
 
     /**TODO extract to Resource-file based Provider
+     * @deprecated
      * @param string $language
      * @return bool
      */
@@ -857,47 +864,30 @@ final class Translator extends \PoolObject
      * detects locale from browser
      *
      * @param string $defaultLocale
-     * @param bool $useGeoIP
      * @return string locale
      */
-    public static function detectLocale(string $defaultLocale = 'en_US', bool $useGeoIP = true): string
+    public static function parseLangHeader(string $defaultLocale = 'en_US'): string
     {
-        $locale = false;
-
-        // Try detecting locale from browser headers
+        $header = [$defaultLocale => 0.0];
+        // Try detecting better locales from browser headers
         if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-            if(function_exists('locale_accept_from_http')) {
-                $locale = locale_accept_from_http($_SERVER['HTTP_ACCEPT_LANGUAGE']);
-            }
-            else {
-                $prefLocales = array_reduce(
-                    explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']),
-                    function ($res, $el) {
-                        list($l, $q) = array_merge(explode(';q=', $el), [1]);
-                        if (strpos($l, '-') !== false) $l = str_replace('-', '_', trim($l));
-                        $res[$l] = (float)$q;
-                        return $res;
-                    }, []);
-                arsort($prefLocales);
-                $locale = key($prefLocales);
-            }
+            foreach (explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']) as $el) {
+                $temp = explode(';q=', $el);
+                $l = trim($temp[0]);
+                $l = str_replace('-', '_', $l);
+                $q = (float)($temp[1] ?? 1);
+                $header[$l] = $q;
+            };
+            arsort($header);
         }
+        //TODO
+        $languages = [];
+        foreach ($header as $locale => $value){
 
-        // GeoIP
-        if (!$locale and $useGeoIP and function_exists('geoip_country_code_by_name') and
-                ($clientIP = getClientIP())) {
-            // for testing: $clientIP = '91.40.45.237';
-            $countryCode = geoip_country_code_by_name($clientIP);
-            $locale = self::countryCodeToLocale($countryCode) ?: false;
         }
-
-
-
-        // Resort to default locale specified in config file
-        if (!$locale) {
-            $locale = $defaultLocale;
-        }
-        return $locale;
+        //temp
+        return $defaultLocale;
+        return $languages;
     }
 
     /**
@@ -908,36 +898,22 @@ final class Translator extends \PoolObject
      */
     public static function getPrimaryLanguage(string $locale): string
     {
-        if(function_exists('locale_get_primary_language')) {
+        if(function_exists('locale_get_primary_language'))
             $language = locale_get_primary_language($locale);
-        }
-        else {
-            $language = self::localeToLanguageCode($locale);
-        }
+        else
+            list($language,) = explode('_', $locale);
         return $language;
     }
 
     /**
      * Get locale from country code
-     *
+     * @deprecated
      * @param string $countryCode
      * @return string locale
      */
     public static function countryCodeToLocale(string $countryCode): string
     {
         return self::$LOCALES[strtoupper($countryCode)] ?? '';
-    }
-
-    /**
-     * Get language code from locale
-     *
-     * @param string $locale
-     * @return string language code
-     */
-    public static function localeToLanguageCode(string $locale): string
-    {
-        list($languageCode,) = explode('_', $locale);
-        return $languageCode;
     }
 
 }
