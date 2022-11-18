@@ -254,6 +254,7 @@ class GUI_Module extends Module
      * @param bool $search Do search for GUIs in preloaded Content
      * @return GUI_Module Neues GUI_Module
      * @throws ModulNotFoundExeption
+     * @see GUI_Module::searchGUIsInPreloadedContent()
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
                                                   bool $autoLoadFiles = true, bool $search = true): GUI_Module
@@ -276,10 +277,11 @@ class GUI_Module extends Module
             if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
             }
-            if ($autoLoadFiles && $GUI->autoLoadFiles)
+            if ($autoLoadFiles && $GUI->autoLoadFiles) {
                 $GUI->loadFiles();
-            if ($search)
-                $GUI->searchGUIsInPreloadedContent();
+                if ($search)
+                    $GUI->searchGUIsInPreloadedContent();
+            }
             return $GUI;
         }
         else {//Class not found
@@ -288,15 +290,24 @@ class GUI_Module extends Module
     }
 
     /**
-     * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.
-     * Ruft die Funktion GUI_Module::searchGUIs() auf.
+     * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.<br>
+     * Automatically creates them and adds them to the children of this Modul
+     * @param bool $recurse Execute this while creating the GUIs found in the preloaded content
+     * @param bool $autoLoadFiles Preload the GUIs found
+     * @return void
+     * @see GUI_Module::createGUIModule()
      * @throws ModulNotFoundExeption
      */
-    public function searchGUIsInPreloadedContent()
+    public function searchGUIsInPreloadedContent(bool $recurse = true, bool $autoLoadFiles = true):void
     {
         $TemplateFiles = $this->Template->getFiles();
         foreach($TemplateFiles as $TemplateFile) {
-            $TemplateFile->setContent($this->searchGUIs($TemplateFile->getContent()), false);
+            /**@var TempCoreHandle $TemplateFile*/
+            //pump content through searchGUIs
+
+            $content = $TemplateFile->getContent();
+            $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
+            $TemplateFile->setContent($newContent, false);
         }
     }
 
@@ -307,15 +318,14 @@ class GUI_Module extends Module
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
      * @throws ModulNotFoundExeption
      */
-    public function searchGUIs(string $content): string
+    protected function searchGUIs(string $content, bool $recurse = true, bool $autoLoadFiles = true): string
     {
         $reg = '/\[(GUI_.*)(\((.*)\)|)\]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 
-        if(!$bResult) return $content;
-
-        //GUIs found
-        if ($bResult) {
+        if(!$bResult)//no GUIs
+            return $content;
+        else {//GUIs found
             $newContent = [];
             $caret = 0;
             foreach ($matches as $match) {
@@ -323,7 +333,7 @@ class GUI_Module extends Module
                 $guiName = $match[1];
                 $params = $match[3] ?? '';
                 //try building the GUI found
-                $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params, true);
+                $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
                 //get unique identifier
                 $guiIdentifier = "[{$new_GUI->getName()}]";
                 //store reference for later insertion in pasteChildren()
@@ -343,10 +353,8 @@ class GUI_Module extends Module
             }//end foreach
             //add remainder
             $newContent[] = substr($content, $caret);
-            //replace content
-            $content = implode($newContent);
+            return implode($newContent);
         }
-        return $content;
     }
 
     /**
