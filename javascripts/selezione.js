@@ -63,6 +63,7 @@
 			for(var key in Row) {
 				Buf[key] = encodeURIComponent(Row[key]);
 			}
+            // @todo AM, 18.11.2022, removed REQUEST_PARAM_MODULENAME!!
 			Buf[REQUEST_PARAM_MODULENAME] = this.name; // needed for ajax request
 			Buf['PK'] = PK;
 			this.add(Sender, Buf);
@@ -80,6 +81,7 @@
 			this.await(this.rows[i]);
 			this.SelectedRowIndex = i;
 			var params = {'URL_SELEZIONE_KEY':i};
+            // @todo AM, 18.11.2022, removed REQUEST_PARAM_MODULENAME!!
 			params[REQUEST_PARAM_MODULENAME] = this.name;
 			RequestPOOL(null, 'remove1', params, true, this._forwardSelectionList.bind(this));
 		},
@@ -96,6 +98,7 @@
 			this.await(null);
 			params['componentName'] = modulename;
 			params['customMethod'] = customMethod;
+            // @todo AM, 18.11.2022, removed REQUEST_PARAM_MODULENAME!!
 			params[REQUEST_PARAM_MODULENAME] = this.name;
 			RequestPOOL(null, 'renderList', params, true, this._forwardList.bind(this));
 		},
