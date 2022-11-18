@@ -114,7 +114,7 @@ class GUI_Choosy extends GUI_Module
 
     public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false, $params);
+        parent::__construct($Owner, $params);
     }
 
     /**
@@ -289,7 +289,7 @@ class GUI_Choosy extends GUI_Module
 
         #### Instanziere GUI_Shorten (kuerzt Textausgaben)
         $GUI_Shorten = new GUI_Shorten($this->getOwner());
-        $GUI_Shorten->autoLoadFiles();
+        $GUI_Shorten->loadFiles();
 
         #### Hauptargumente
         $transfer			= $Input -> getVar('transfer');

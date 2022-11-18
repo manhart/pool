@@ -26,7 +26,7 @@ class GUI_DHTMLDropdown extends GUI_Module
 {
     public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false, $params);
+        parent::__construct($Owner, $params);
     }
 
     /**

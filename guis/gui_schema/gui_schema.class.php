@@ -37,7 +37,7 @@ class GUI_Schema extends GUI_Module
      */
     function __construct(Component $Owner, bool $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false, $params);
+        parent::__construct($Owner, $params);
     }
 
     /**
