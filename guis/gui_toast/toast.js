@@ -5,6 +5,7 @@
  *
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
+
 'use strict';
 
 /* Styles */

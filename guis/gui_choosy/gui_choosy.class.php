@@ -107,12 +107,16 @@ define('CHOOSY_TRANSFER_DB', 		'transfer_by_db');
  **/
 class GUI_Choosy extends GUI_Module
 {
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
 
     //@var boolean Merker, ob das GUI_DHtmlHint verwendet werden kann (ist abhaengig vom POOL)
     //@access private
     var $enable_GUI_DHtmlHint = false;
 
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
+    public function __construct($Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
     }

@@ -14,7 +14,12 @@
 
 class GUI_Comments extends GUI_Module
 {
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
+
+    public function __construct($Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
     }

@@ -32,14 +32,10 @@ class GUI_DBCount extends GUI_Module
 {
     var $returnValue = '';
 
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
-    {
-        parent::__construct($Owner, $params);
-    }
-
-    function loadFiles()
-    {
-    }
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
 
     /**
      * GUI_DBCount::init()
