@@ -496,12 +496,15 @@ class GUI_Module extends Module
      * Adds a closed method (Closure) as an Ajax call. Only Ajax methods are callable by the client.
      *
      * @param string $alias name of the method
-     * @param Closure $closure class for anonymous function
+     * @param Closure $method class for anonymous function
+     * @param mixed ...$meta
      * @return GUI_Module
      */
-    protected function addAjaxMethod(string $alias, Closure $closure): self
+    protected function registerAjaxMethod(string $alias, Closure $method, ...$meta): self
     {
-        $this->ajaxMethods[$alias] = $closure;
+        $meta['alias'] = $alias;
+        $meta['method'] = $method;
+        $this->ajaxMethods[$alias] = $meta;
         return $this;
     }
 
@@ -547,41 +550,39 @@ class GUI_Module extends Module
     /**
      * returns json encoded data of a method call of this object (intended use: ajax)
      *
-     * @param string $method
+     * @param string $requestedMethod
      * @return string
      * @throws ReflectionException
      * @throws Exception
      */
-    private function finalizeMethod(string $method): string
+    private function finalizeMethod(string $requestedMethod): string
     {
         $result = '';
 
-        $Closure = $this->ajaxMethods[$method] ?? null;
+        $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
+        $Closure = $ajaxMethod['method'] ?? null;
 
         // 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
-        if(!($Closure || is_callable([$this, $method]))) {
-            $Xception = new Xception('The method "' . $method . '" in the class ' . $this->getClassName().' is not callable', 0, array(),
-                POOL_ERROR_DISPLAY);
-            $Xception->raiseError();
-            return '';
+        if(!($Closure || is_callable([$this, $requestedMethod]))) {
+            throw new Exception('The method "' . $requestedMethod . '" in the class ' . $this->getClassName().' is not callable');
         }
 
         // @todo validate parameters?
 
         try {
-            $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $method);
+            $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $requestedMethod);
             $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
         }
         catch(\ReflectionException $e) {
-            $Xception = new Xception('Error calling method '.$method.' on '.$this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
+            $Xception = new Xception('Error calling method '.$requestedMethod.' on '.$this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
             $Xception->raiseError();
             return '';
         }
 
         // collect every ajax calls that are not closures
         if(!$Closure) {
-            Log::info('The method '.$this->getClassName().':'.$method.' is not used as Closure ', ['className' => $this->getClassName(),
-                'method' => $method], 'ajaxCallLog');
+            Log::info('The method '.$this->getClassName().':'.$requestedMethod.' is not used as Closure ', ['className' => $this->getClassName(),
+                'method' => $requestedMethod], 'ajaxCallLog');
         }
 
         error_clear_last();
@@ -642,7 +643,7 @@ class GUI_Module extends Module
         $undefinedContent = ob_get_contents();
         ob_end_clean();
 
-        return $this->respondToAjaxCall($result, $undefinedContent, $callingClassName.':'.$method);
+        return $this->respondToAjaxCall($result, $undefinedContent, $callingClassName.':'.$requestedMethod);
     }
 
     /**
