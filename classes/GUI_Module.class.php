@@ -51,40 +51,37 @@ class GUI_Module extends Module
     private string $finalContent = '';
 
     /**
-     * HTML-Vorlage automatisch vorladen
+     * This will call the loadFiles method.
      *
-     * @var bool $AutoLoadFiles
-     * @access private
+     * @var bool $autoLoadFiles
      */
-    var $AutoLoadFiles;
+    private bool $autoLoadFiles;
 
     /**
      * @var Template $TemplateBox Rapid Template Engine rendert eine Box (nur wenn diese ueber enableBox aktiviert wird)
-     * @access public
      */
-    var $TemplateBox = null;
+    private Template $TemplateBox;
 
     /**
-     * Status der Rahmenbox (um das GUI): TRUE Box ist eingeschaltet und FALSE Box ist deaktiviert
+     * This is how you put a HML template around this GUI. E.g. to create a frame around this template
      *
      * @var bool $enabledBox
-     * @access private
      */
-    var $enabledBox = false;
+    private bool $enabledBox = false;
 
     /**
      * Ajax Request / XMLHttpRequest
      *
      * @var boolean
      */
-    var $isMyXMLHttpRequest = false;
+    private bool $isAjax = false;
 
     /**
      * Ajax Request auf eine bestimmte Methode in einem GUI; f�hrt kein prepare aus
      *
      * @var string
      */
-    var $XMLHttpRequestMethod = '';
+    private string $ajaxMethod = '';
 
     /**
      * Nimmt nur den Content eines Moduls u. vernachl�ssigt alle anderen GUI's in der Hierarchie
@@ -155,26 +152,26 @@ class GUI_Module extends Module
 
         if (isAjax()) {
             if (isset($_REQUEST[REQUEST_PARAM_MODULE]) and $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE]) {
-                $this->isMyXMLHttpRequest = true;
+                $this->isAjax = true;
 
                 // eventl. genauer definiert, welches Modul, falls es mehrere des gleichen Typs/Klasse gibt
                 if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
                     if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
-                        $this->isMyXMLHttpRequest = true;
+                        $this->isAjax = true;
                     }
                     else {
-                        $this->isMyXMLHttpRequest = false;
+                        $this->isAjax = false;
                     }
                 }
             }
             elseif (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
                 if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
-                    $this->isMyXMLHttpRequest = true;
+                    $this->isAjax = true;
                 }
             }
 
-            if ($this->isMyXMLHttpRequest and isset($_REQUEST[REQUEST_PARAM_METHOD])) {
-                $this->XMLHttpRequestMethod = $_REQUEST[REQUEST_PARAM_METHOD];
+            if ($this->isAjax and isset($_REQUEST[REQUEST_PARAM_METHOD])) {
+                $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD];
             }
         }
 
@@ -185,7 +182,7 @@ class GUI_Module extends Module
         }
 
         $this->Template = new Template();
-        $this->AutoLoadFiles = $autoLoadFiles;
+        $this->autoLoadFiles = $autoLoadFiles;
     }
 
     /**
@@ -196,11 +193,11 @@ class GUI_Module extends Module
      */
     public function autoLoadFiles(bool $search = true)
     {
-        if ($this->AutoLoadFiles) {
-            // Lade Templates
+        if ($this->autoLoadFiles) {
+            // load templates
             $this->loadFiles();
             if ($search) {
-                // Suche nach weiteren Modulen (in den Html Templates)
+                // Search for additional modules (in the html templates)
                 $this->searchGUIsInPreloadedContent();
             }
         }
@@ -447,11 +444,10 @@ class GUI_Module extends Module
      *
      * @param string $title Titel
      * @param string $template HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html"); sucht immer im Projektverzeichnis nach der Vorlage.
-     * @access public
      **/
-    function enableBox(string $title = '', $template = 'tpl_box.html')
+    public function enableBox(string $title = '', string $template = 'tpl_box.html')
     {
-        $file = $this->Weblication->findTemplate($template, $this->getClassName(), false);
+        $file = $this->Weblication->findTemplate($template, $this->getClassName());
         if ($file) {
             $this->TemplateBox = new Template();
             $this->TemplateBox->setFilePath('stdout', $file);
@@ -560,7 +556,7 @@ class GUI_Module extends Module
      **/
     public function prepareContent()
     {
-        if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) {
+        if ($this->isAjax and $this->ajaxMethod) {
             return;
         }
 
@@ -814,7 +810,7 @@ class GUI_Module extends Module
         $content = '';
         $this->finalizeChildren();
         if ($this->enabled) {
-            if ($this->isMyXMLHttpRequest && isset($_REQUEST[REQUEST_PARAM_METHOD])) {
+            if ($this->isAjax && isset($_REQUEST[REQUEST_PARAM_METHOD])) {
                 // dispatch Ajax Call only for ONE GUI -> returns JSON
                 $content = $this->finalizeMethod($_REQUEST[REQUEST_PARAM_METHOD]);
                 // hier wird abgebrochen, pool wurde bis zu dieser instanz durchlaufen
