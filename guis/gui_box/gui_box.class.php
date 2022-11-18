@@ -21,7 +21,7 @@
  * Klasse zum Erstellen von graphischen Boxen (z.B. News-Boxen, Bl�cke, Container).
  *
  * @package rml
- * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @version $Id: gui_box.class.php,v 1.1.1.1 2004/09/21 07:49:31 manhart Exp $
  * @access public
  **/
@@ -42,11 +42,13 @@ class GUI_Box extends GUI_Module
      *
      * @access public
      * @param object $Owner Besitzer
-     **/
+     *
+     * @throws ReflectionException
+     */
     function __construct(& $Owner, $autoLoadFiles=true, array $params = [])
     {
-        $this -> enabledBox = false;
-        $this -> TplBox = & new Template();
+        $this->enabledBox = false;
+        $this->TplBox = new Template();
 
         parent::__construct($Owner, $autoLoadFiles, $params);
     }
@@ -54,37 +56,22 @@ class GUI_Box extends GUI_Module
     /**
      * Default Werte setzen. Input initialisieren.
      *
-     * @access public
      * @param int|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init(?int $superglobals = I_EMPTY)
+    public function init(?int $superglobals = I_EMPTY)
     {
         parent::init($superglobals);
     }
 
     /**
-     * GUI_Box::prepare()
-     *
-     * Template vorbereiten
-     *
-     * @access public
-     **/
-    function prepare()
-    {
-    }
-
-    /**
-     * GUI_Box::enableBox()
-     *
      * Aktiviert die Box. Erwartet die HTML Vorlage mit der Box. Darin muss der Platzhalter {CONTENT} stehen.
      * Bei Bedarf kann noch {TITLE} gesetzt werden.
      *
-     * @param string $template HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html")
-     * @access public
+     * @param string $title HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html")
      **/
-    function enableBox($template='tpl_box.html')
+    public function enableBox(string $title='tpl_box.html', string $template = '')
     {
-        $file = $this->Weblication->findTemplate($template, $this->getClassName(), false);
+        $file = $this->Weblication->findTemplate($title, $this->getClassName());
         if ($file) {
             $this->TplBox -> setFilePath('box', $file);
             $this->enabledBox = true;
@@ -107,27 +94,22 @@ class GUI_Box extends GUI_Module
     }
 
     /**
-     * GUI_Box::setTitle()
-     *
      * Setzt einen Titel fuer die Box.
      *
-     * @access public
      * @param string $title Titel
-     **/
-    function setTitle($title)
+     */
+    public function setTitle($title)
     {
         $this->TplBox->setVar('TITLE', $title);
     }
 
     /**
-     * GUI_Box::finalize()
-     *
      * Box Inhalt parsen und zurueck geben.
      *
-     * @param $content HTML/Texxt-Inhalt
+     * @param $content string Text-Inhalt
      * @return string Content
      **/
-    function finalize($content = ''): string
+    function finalize(string $content = ''): string
     {
         if ($this->enabledBox) {
             $this->TplBox->setVar('CONTENT', $content);
