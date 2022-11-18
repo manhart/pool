@@ -12,7 +12,7 @@ class GUI_Selectionlist extends GUI_Module
 {
     public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
     {
-        parent::__construct($Owner, false, $params);
+        parent::__construct($Owner, $params);
     }
 
     function init(?int $superglobals=I_EMPTY)
@@ -84,7 +84,7 @@ class GUI_Selectionlist extends GUI_Module
 
 
         $GUI_Shorten = new GUI_Shorten($this->getOwner());
-        $GUI_Shorten->autoLoadFiles();
+        $GUI_Shorten->loadFiles();
 
         $inputfile = $Input -> getVar('inputfile');
         $selectionfile = $Input -> getVar('selectionfile');

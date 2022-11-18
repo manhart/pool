@@ -122,7 +122,7 @@ class GUI_Headerdata extends GUI_Module
      */
     function __construct($Owner, $autoLoadFiles = true, array $params = [])
     {
-        parent::__construct($Owner, $autoLoadFiles, $params);
+        parent::__construct($Owner, $params);
 
         $php_default_charset = ini_get('default_charset');
         if(strlen($php_default_charset) > 0) {

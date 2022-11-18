@@ -134,11 +134,9 @@ class GUI_Module extends Module
      * Konstruktor
      *
      * @param Component|null $Owner Besitzer vom Typ Component
-     * @param boolean $autoLoadFiles Laedt automatisch Templates und sucht darin GUIs
      * @param array $params additional parameters
-     * @throws ReflectionException
      */
-    public function __construct(?Component $Owner, bool $autoLoadFiles = true, array $params = [])
+    public function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
 
@@ -146,32 +144,7 @@ class GUI_Module extends Module
         $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod;
 
 
-        if ($Owner instanceof Weblication) {
-            if (is_null($Owner->getMain())) {
-                $Owner->setMain($this);
-            }
-        }
-
         $this->Template = new Template();
-        $this->autoLoadFiles = $autoLoadFiles;
-    }
-
-    /**
-     * Das Template Objekt laedt HTML Vorlagen.
-     * @param boolean $search True sucht nach weiteren GUIs
-     *
-     * @throws ModulNotFoundExeption
-     */
-    public function autoLoadFiles(bool $search = true)
-    {
-        if ($this->autoLoadFiles) {
-            // load templates
-            $this->loadFiles();
-            if ($search) {
-                // Search for additional modules (in the html templates)
-                $this->searchGUIsInPreloadedContent();
-            }
-        }
     }
 
     /**
@@ -278,11 +251,13 @@ class GUI_Module extends Module
      * @param Component|null $Owner Besitzer dieses Objekts
      * @param Module|null $ParentGUI parent module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
-     * @return GUI_Module|null Neues GUI_Module
+     * @param bool $autoLoadFiles parameter of GUI-constructor
+     * @param bool $search Do search for GUIs in preloaded Content
+     * @return GUI_Module Neues GUI_Module
      * @throws ModulNotFoundExeption
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
-                                           $autoLoadFiles = true): ?GUI_Module
+                                                  bool $autoLoadFiles = true, bool $search = true): GUI_Module
     {
         $class_exists = class_exists($GUIClassName, false);
 
@@ -297,13 +272,15 @@ class GUI_Module extends Module
             $Params = new Input(I_EMPTY);
             $Params->setParams($params);
             //TODO check authorisation
-            $GUI = new $GUIClassName($Owner, $autoLoadFiles, $Params->getData());
+            $GUI = new $GUIClassName($Owner, $Params->getData());
             /* @var $GUI GUI_Module */
             if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
             }
-            //            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
-            $GUI->autoLoadFiles(true);
+            if ($autoLoadFiles)
+                $GUI->loadFiles();
+            if ($search)
+                $GUI->searchGUIsInPreloadedContent();
             return $GUI;
         }
         else {//Class not found
@@ -316,7 +293,7 @@ class GUI_Module extends Module
      * Ruft die Funktion GUI_Module::searchGUIs() auf.
      * @throws ModulNotFoundExeption
      */
-    protected function searchGUIsInPreloadedContent()
+    public function searchGUIsInPreloadedContent()
     {
         $TemplateFiles = $this->Template->getFiles();
         foreach($TemplateFiles as $TemplateFile) {
@@ -339,35 +316,38 @@ class GUI_Module extends Module
         if(!$bResult) return $content;
 
         //GUIs found
-        $newContent = [];
-        $caret = 0;
-        foreach ($matches as $match) {
-            $pattern = $match[0];
-            $patternLength = strlen($pattern);
-            $guiName = $match[1];
-            $params = $match[3] ?? '';
-            //try building the GUI found
-            $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params);
+        if ($bResult) {
+            $newContent = [];
+            $caret = 0;
+            foreach ($matches as $match) {
+                $pattern = $match[0];
+                $guiName = $match[1];
+                $params = $match[3] ?? '';
+                //try building the GUI found
+                $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params, true);
+                //get unique identifier
+                $guiIdentifier = "[{$new_GUI->getName()}]";
+                //store reference for later insertion in pasteChildren()
+                $new_GUI->setMarker($guiIdentifier);
+                //add GUI to child-list
+                $this->insertModule($new_GUI);
+                unset($new_GUI);
 
-            $guiIdentifier = "[{$new_GUI->getName()}]";
-            //store reference for later insertion in pasteChildren()
-            $new_GUI->setMarker($guiIdentifier);
-            //add GUI to child-list
-            $this->insertModule($new_GUI);
-            //find the beginning of this Match
-            $beginningOfMatch = strpos($content, $pattern, $caret);
-            //save content between Matches
-            $newContent[] = substr($content, $caret, $beginningOfMatch - $caret);
-            //insert identifier
-            $newContent[] = $guiIdentifier;
-            //move caret to end of this match
-            $caret = $beginningOfMatch + $patternLength;
-            unset($new_GUI);
-        }//end foreach
-        //add remainder
-        $newContent[] = substr($content, $caret);
-        //replace content
-        return implode($newContent);
+                //find the beginning of this Match
+                $beginningOfMatch = strpos($content, $pattern, $caret);
+                //save content between Matches
+                $newContent[] = substr($content, $caret, $beginningOfMatch - $caret);
+                //insert identifier
+                $newContent[] = $guiIdentifier;
+                //move caret to end of this match
+                $caret = $beginningOfMatch + strlen($pattern);
+            }//end foreach
+            //add remainder
+            $newContent[] = substr($content, $caret);
+            //replace content
+            $content = implode($newContent);
+        }
+        return $content;
     }
 
     /**
@@ -439,11 +419,6 @@ class GUI_Module extends Module
         $this->enabledBox = false;
     }
 
-    /*
-     * Laedt Templates (virtuelle Methode sollte ueberschrieben werden, falls im Konstruktor AutoLoad auf true gesetzt wird).
-     *
-     * @return GUI_Module
-     */
     public function loadFiles()
     {
         if(!$this->getWeblication()) return $this;

@@ -80,7 +80,6 @@ class Component extends PoolObject
      *
      * @access public
      * @param Component|null $Owner Der Eigentuemer erwartet ein Objekt vom Typ Component.
-     * @throws ReflectionException
      */
     function __construct(?Component $Owner)
     {
@@ -106,7 +105,6 @@ class Component extends PoolObject
      *
      * @access public
      * @return string Eindeutiger Name
-     * @throws ReflectionException
      */
     function getUniqueName(): string
     {
