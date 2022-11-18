@@ -73,7 +73,7 @@ class GUI_Module extends Module
      *
      * @var boolean
      */
-    private bool $isAjax = false;
+    private bool $isAjax;
 
     /**
      * Ajax Request auf eine bestimmte Methode in einem GUI; f�hrt kein prepare aus
@@ -143,7 +143,7 @@ class GUI_Module extends Module
         parent::__construct($Owner, $params);
 
         $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
-        $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE];
+        $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod;
 
 
         if ($Owner instanceof Weblication) {
@@ -528,7 +528,7 @@ class GUI_Module extends Module
      **/
     public function prepareContent()
     {
-        if ($this->isAjax and $this->ajaxMethod) {
+        if ($this->isAjax) {
             return;
         }
 
@@ -782,7 +782,7 @@ class GUI_Module extends Module
         $content = '';
         $this->finalizeChildren();
         if ($this->enabled) {
-            if ($this->isAjax && $this->ajaxMethod) {
+            if ($this->isAjax) {
                 // dispatch Ajax Call only for ONE GUI -> returns JSON
                 $content = $this->finalizeMethod($this->ajaxMethod);
             }
