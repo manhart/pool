@@ -1255,7 +1255,7 @@ class Template extends PoolObject
      * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet)
      * @return Template
      */
-    public function parse(string $handle = ''): static
+    public function parse(string $handle = ''): self
     {
         if($handle != '') {
             $this->useFile($handle);
