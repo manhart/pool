@@ -101,7 +101,7 @@ class Input extends PoolObject
     *
     * @param int $superglobals Einzulesende Superglobals (siehe Konstanten)
     */
-    protected function init(int $superglobals = I_EMPTY)
+    protected function init(int $superglobals = I_EMPTY): void
     {
         if ($superglobals == 0) {
             return;
