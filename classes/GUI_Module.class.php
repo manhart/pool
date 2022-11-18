@@ -21,7 +21,6 @@
 
 use pool\classes\ModulNotFoundExeption;
 
-const REQUEST_PARAM_MODULENAME = 'requestModule';
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
 // const FIXED_PARAM_CONFIG = 'config';
@@ -84,13 +83,6 @@ class GUI_Module extends Module
     private string $ajaxMethod = '';
 
     /**
-     * Nimmt nur den Content eines Moduls u. vernachl�ssigt alle anderen GUI's in der Hierarchie
-     *
-     * @var boolean
-     */
-    private bool $takeMeAlone = false;
-
-    /**
      * Pass result unchanged as JSON string through
      */
     protected bool $plainJSON = false;
@@ -150,30 +142,9 @@ class GUI_Module extends Module
     {
         parent::__construct($Owner, $params);
 
-        if (isAjax()) {
-            if (isset($_REQUEST[REQUEST_PARAM_MODULE]) and $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE]) {
-                $this->isAjax = true;
+        $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
+        $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE];
 
-                // eventl. genauer definiert, welches Modul, falls es mehrere des gleichen Typs/Klasse gibt
-                if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                    if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
-                        $this->isAjax = true;
-                    }
-                    else {
-                        $this->isAjax = false;
-                    }
-                }
-            }
-            elseif (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
-                    $this->isAjax = true;
-                }
-            }
-
-            if ($this->isAjax and isset($_REQUEST[REQUEST_PARAM_METHOD])) {
-                $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD];
-            }
-        }
 
         if ($Owner instanceof Weblication) {
             if (is_null($Owner->getMain())) {
@@ -408,6 +379,7 @@ class GUI_Module extends Module
      * @return string Content / Inhalt aller Childs
      *
      * @throws ModulNotFoundExeption
+     * @throws Exception
      */
     public function reviveChildGUIs(string $content): string
     {
@@ -810,21 +782,12 @@ class GUI_Module extends Module
         $content = '';
         $this->finalizeChildren();
         if ($this->enabled) {
-            if ($this->isAjax && isset($_REQUEST[REQUEST_PARAM_METHOD])) {
+            if ($this->isAjax && $this->ajaxMethod) {
                 // dispatch Ajax Call only for ONE GUI -> returns JSON
-                $content = $this->finalizeMethod($_REQUEST[REQUEST_PARAM_METHOD]);
-                // hier wird abgebrochen, pool wurde bis zu dieser instanz durchlaufen
-                if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                    $this->takeMeAlone = true; // dieses GUI wirft ganz alleine den Inhalt von finalizeMethod zur�ck
-                    /*						print $content;
-                                        exit(0);*/
-                }
-            }
-            elseif (!$this->takeMeAlone) {
-                $content = $this->finalize();
+                $content = $this->finalizeMethod($this->ajaxMethod);
             }
             else {
-                $content = $this->finalContent;
+                $content = $this->finalize();
             }
 
 
@@ -836,9 +799,7 @@ class GUI_Module extends Module
                 $this->TemplateBox->clear();
             }
 
-            if (!$this->takeMeAlone) {
-                $content = $this->pasteChildren($content);
-            }
+            $content = $this->pasteChildren($content);
         }
         return $content;
     }
@@ -854,11 +815,6 @@ class GUI_Module extends Module
         foreach($this->modules as $GUI) {
             if(!$GUI->enabled) continue;
             $GUI->finalContent = $GUI->finalizeContent();
-            $this->takeMeAlone = $GUI->takeMeAlone;
-            if ($this->takeMeAlone) {
-                $this->finalContent = $GUI->finalContent;
-                break; // nachfolgende Module wuerden Fehler verursachen, da takeMeAlone reseted w�rde
-            }
         }
     }
 
