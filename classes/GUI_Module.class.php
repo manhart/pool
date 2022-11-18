@@ -54,7 +54,7 @@ class GUI_Module extends Module
      *
      * @var bool $autoLoadFiles
      */
-    protected bool $autoLoadFiles;
+    protected bool $autoLoadFiles = true;
 
     /**
      * @var Template $TemplateBox Rapid Template Engine rendert eine Box (nur wenn diese ueber enableBox aktiviert wird)
