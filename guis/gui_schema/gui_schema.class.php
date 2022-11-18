@@ -30,17 +30,6 @@ class GUI_Schema extends GUI_Module
     private array $SchemeHandles = [];
 
     /**
-     * @param Component $Owner Besitzer
-     * @param bool $autoLoadFiles
-     * @param array $params
-     * @throws ReflectionException
-     */
-    function __construct(Component $Owner, bool $autoLoadFiles = false, array $params = [])
-    {
-        parent::__construct($Owner, $params);
-    }
-
-    /**
      * Initialisierung der Standard Werte und Superglobals.
      *
      * @param int|null $superglobals
