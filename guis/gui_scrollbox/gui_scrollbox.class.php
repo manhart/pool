@@ -45,7 +45,7 @@ class GUI_Scrollbox extends GUI_Module
     {
         $this->TplSbox = new Template();
 
-        parent::__construct($Owner, $autoLoadFiles, $params);
+        parent::__construct($Owner, $params);
 
         $file = $this->Weblication->findTemplate($this->Input->getVar('fileTemplateHTML'),
             'gui_scrollbox', true);

@@ -92,7 +92,6 @@ class Module extends Component
      *
      * @param Component|null $Owner Owner
      * @param array $params fixed params
-     * @throws ReflectionException
      */
     function __construct(?Component $Owner, array $params = [])
     {

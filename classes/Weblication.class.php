@@ -1185,9 +1185,10 @@ class Weblication extends Component
             $params = base64url_decode($params) ?: "";
         }
 
-        GUI_Module::createGUIModule($className, $this, null, $params);
-        /** Hinweis: erstes GUI registriert sich selbst mittels setMain als
-         * Haupt-GUI im GUI_Module Konstruktor **/
+        $mainGUI = GUI_Module::createGUIModule($className, $this, null, $params, true, false);
+        $this->setMain($mainGUI);
+        //
+        $mainGUI->searchGUIsInPreloadedContent();
 
         if ($this->hasFrame()) {
             //Seitentitel (= Project)

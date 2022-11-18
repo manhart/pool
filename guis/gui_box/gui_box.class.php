@@ -50,7 +50,7 @@ class GUI_Box extends GUI_Module
         $this->enabledBox = false;
         $this->TplBox = new Template();
 
-        parent::__construct($Owner, $autoLoadFiles, $params);
+        parent::__construct($Owner, $params);
     }
 
     /**

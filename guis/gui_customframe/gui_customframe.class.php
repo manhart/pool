@@ -123,7 +123,7 @@ class GUI_CustomFrame extends GUI_Module
      **/
     function __construct($Owner, $autoLoadFiles=true, array $params = [])
     {
-        parent::__construct($Owner, $autoLoadFiles, $params);
+        parent::__construct($Owner, $params);
 
         if(!$this->preventDefaultHeaderdata) {
             $this->Headerdata = new GUI_Headerdata($Owner);
