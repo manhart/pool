@@ -54,7 +54,7 @@ class GUI_Module extends Module
      *
      * @var bool $autoLoadFiles
      */
-    private bool $autoLoadFiles;
+    protected bool $autoLoadFiles;
 
     /**
      * @var Template $TemplateBox Rapid Template Engine rendert eine Box (nur wenn diese ueber enableBox aktiviert wird)
@@ -142,7 +142,6 @@ class GUI_Module extends Module
 
         $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
         $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod;
-
 
         $this->Template = new Template();
     }
@@ -277,7 +276,7 @@ class GUI_Module extends Module
             if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
             }
-            if ($autoLoadFiles)
+            if ($autoLoadFiles && $GUI->autoLoadFiles)
                 $GUI->loadFiles();
             if ($search)
                 $GUI->searchGUIsInPreloadedContent();
