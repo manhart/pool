@@ -737,7 +737,7 @@ class GUI_TableConfigurable extends GUI_Table
     /**
      * Provisioning data before preparing module and there children.
      */
-    public function provision()
+    public function provision(): void
     {
         parent::provision();
 //        $data = $this->Input->getData();
