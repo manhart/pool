@@ -23,29 +23,32 @@
  * @package rml
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @version $Id: gui_box.class.php,v 1.1.1.1 2004/09/21 07:49:31 manhart Exp $
- * @access public
- **/
+ */
 class GUI_Box extends GUI_Module
 {
-    //@var object Template
-    //@access private
-    var $TplBox = null;
-
-    //@var boolean Box aktiv (Standard false)
-    //@access public
-    var $enabledBox = false;
+    /**
+     * @var Template
+     */
+    private Template $TplBox;
 
     /**
-     * GUI_Box::GUI_Box()
-     *
+     * @var bool
+     */
+    private bool $enabledBox;
+
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
+
+    /**
      * Konstruktor
      *
      * @access public
      * @param object $Owner Besitzer
      *
-     * @throws ReflectionException
      */
-    function __construct(& $Owner, $autoLoadFiles=true, array $params = [])
+    function __construct($Owner, array $params = [])
     {
         $this->enabledBox = false;
         $this->TplBox = new Template();
@@ -82,11 +85,7 @@ class GUI_Box extends GUI_Module
     }
 
     /**
-     * GUI_Box::disableBox()
-     *
      * Deaktiviert die Box.
-     *
-     * @access public
      **/
     function disableBox()
     {
@@ -98,7 +97,7 @@ class GUI_Box extends GUI_Module
      *
      * @param string $title Titel
      */
-    public function setTitle($title)
+    public function setTitle(string $title)
     {
         $this->TplBox->setVar('TITLE', $title);
     }

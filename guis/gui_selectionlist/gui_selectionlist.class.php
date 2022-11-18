@@ -10,10 +10,10 @@ define('CHOOSY_TRANSFER_DB', 		'transfer_by_db');
 
 class GUI_Selectionlist extends GUI_Module
 {
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
-    {
-        parent::__construct($Owner, $params);
-    }
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
 
     function init(?int $superglobals=I_EMPTY)
     {

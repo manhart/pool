@@ -27,10 +27,10 @@ class GUI_ProtectEMail extends GUI_Module
 {
     var $jsEMailLink='';
 
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
-    {
-        parent::__construct($Owner, $params);
-    }
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
 
     /**
      * Initialisiert Standardwerte:
