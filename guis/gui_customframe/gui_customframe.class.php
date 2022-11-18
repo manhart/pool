@@ -13,7 +13,7 @@
  * @version
  *
  * @since 2003-07-10
- * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @link http://www.misterelsa.de
  */
 
@@ -27,7 +27,7 @@
  * GUI_CustomFrame kuemmert sich um den Rahmen der Webseite (Kopfdaten, Fusszeile, Menue, seitliche Boxen).
  *
  * @package rml
- * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @version $Id: gui_customframe.class.php,v 1.5 2006/01/19 10:07:05 manhart Exp $
  * @access public
  **/
@@ -353,13 +353,6 @@ class GUI_CustomFrame extends GUI_Module
      **/
     public function finalize(string $content=''): string
     {
-//        $tooltip_name = '';
-//        if(!$this->preventDefaultDynToolTip) {
-//            $this->DynToolTip->prepare();
-//            $content_tooltip = $this->DynToolTip->finalize();
-//            $tooltip_name = $this->DynToolTip->getName();
-//        }
-
         $header_name = '';
         if(!$this->preventDefaultHeaderdata) {
             $this->Headerdata->prepare();

@@ -139,7 +139,7 @@ class GUI_Schema extends GUI_Module
      * Liest die _GET Variable "schema" ein, laedt Schemas und sucht nach den darin befindlichen GUIs.
      * Wurde kein Schema angegeben, wird versucht von der Weblication ein Default Schema reinzuladen.
      **/
-    public function provision()
+    public function provision(): void
     {
         $schemes = array();
 
