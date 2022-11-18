@@ -19,20 +19,17 @@ class GUI_Toast extends GUI_Module
     }
 
     /**
-     * Load files
-     *
-     * @throws ReflectionException
+     * load files
      */
     public function loadFiles()
     {
-        $className = strtolower($this->getClassName());
         $fw = $this->getVar('framework');
-        $tpl = $this->Weblication->findTemplate('tpl_toast_'.$fw.'.html', $className, true);
+        $tpl = $this->Weblication->findTemplate('tpl_toast_'.$fw.'.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $tpl);
 
         if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('toast.js', $className, true));
-            $this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', $className, true));
+            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('toast.js', __CLASS__, true));
+            $this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', __CLASS__, true));
         }
     }
 
@@ -46,9 +43,7 @@ class GUI_Toast extends GUI_Module
     }
 
     /**
-     * render content
-     *
-     * @return string
+     * @return string html of toast
      */
     protected function finalize(): string
     {
