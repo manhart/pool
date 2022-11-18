@@ -40,7 +40,7 @@ class GUI_DBTable extends GUI_Table implements JsonConfig
     /**
      * Provisioning data before preparing module and there children.
      */
-    public function provision()
+    public function provision(): void
     {
         parent::provision();
     }
