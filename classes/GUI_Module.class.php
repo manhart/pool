@@ -39,18 +39,16 @@ class GUI_Module extends Module
     /**
      * Merkt sich mit dieser Variable das eigene Muster im Template (dient der Identifikation)
      *
-     * @var string $FileIdent
-     * @access private
+     * @var string $marker
      */
-    var $FileIdent;
+    private string $marker;
 
     /**
      * Kompletter Inhalt (geparster Content)
      *
-     * @var string $FinalContent
-     * @access private
+     * @var string $finalContent
      */
-    var $FinalContent = '';
+    private string $finalContent = '';
 
     /**
      * HTML-Vorlage automatisch vorladen
@@ -217,7 +215,7 @@ class GUI_Module extends Module
      */
     function getTemplatePath(bool $lookInside = false, bool $without_frame = true): string
     {
-        $Parent = $this->Parent;
+        $Parent = $this->getParent();
         $parent_directory = '';
         if ($lookInside and $Parent != null) {
             do {
@@ -339,7 +337,8 @@ class GUI_Module extends Module
             //            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
             $GUI->autoLoadFiles(true);
             return $GUI;
-        } else {//Class not found
+        }
+        else {//Class not found
             throw new ModulNotFoundExeption("Fehler beim Erzeugen der Klasse '$GUIClassName'");
         }
     }
@@ -352,8 +351,8 @@ class GUI_Module extends Module
     protected function searchGUIsInPreloadedContent()
     {
         $TemplateFiles = $this->Template->getFiles();
-        for ($f = 0, $sizeOfTemplateFiles = sizeof($TemplateFiles); $f < $sizeOfTemplateFiles; $f++) {
-            $TemplateFiles[$f]->setContent($this->searchGUIs($TemplateFiles[$f]->getContent()), false);
+        foreach($TemplateFiles as $TemplateFile) {
+            $TemplateFile->setContent($this->searchGUIs($TemplateFile->getContent()), false);
         }
     }
 
@@ -368,45 +367,39 @@ class GUI_Module extends Module
     {
         $reg = '/\[(GUI_.*)(\((.*)\)|)\]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
-        //GUIs found
-        if ($bResult) {
-            $newContent = [];
-            $caret = 0;
-            foreach ($matches as $match) {
-                $pattern = $match[0];
-                $patternLength = strlen($pattern);
-                $guiName = $match[1];
-                $params = $match[3] ?? '';
-                //try building the GUI found
-                $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params);
 
-                if (isset($new_GUI)) {
-                    $guiIdentifier = "[{$new_GUI->getName()}]";
-                    //store reference for later insertion in pasteChildren()
-                    $new_GUI->setMarker($guiIdentifier);
-                    //add GUI to child-list
-                    $this->insertModule($new_GUI);
-                    //find the beginning of this Match
-                    $beginningOfMatch = strpos($content, $pattern, $caret);
-                    //save content between Matches
-                    $newContent[] = substr($content, $caret, $beginningOfMatch - $caret);
-                    //insert identifier
-                    $newContent[] = $guiIdentifier;
-                    //move caret to end of this match
-                    $caret = $beginningOfMatch + $patternLength;
-                } else {
-                    $message = "Fehler beim Erzeugen der Klasse '$guiName'";
-                    $E = new Xception($message, 0, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__));
-                    $this->throwException($E);
-                }
-                unset($new_GUI);
-            }//end foreach
-            //add remainder
-            $newContent[] = substr($content, $caret);
-            //replace content
-            $content = implode($newContent);
-        }
-        return $content;
+        if(!$bResult) return $content;
+
+        //GUIs found
+        $newContent = [];
+        $caret = 0;
+        foreach ($matches as $match) {
+            $pattern = $match[0];
+            $patternLength = strlen($pattern);
+            $guiName = $match[1];
+            $params = $match[3] ?? '';
+            //try building the GUI found
+            $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params);
+
+            $guiIdentifier = "[{$new_GUI->getName()}]";
+            //store reference for later insertion in pasteChildren()
+            $new_GUI->setMarker($guiIdentifier);
+            //add GUI to child-list
+            $this->insertModule($new_GUI);
+            //find the beginning of this Match
+            $beginningOfMatch = strpos($content, $pattern, $caret);
+            //save content between Matches
+            $newContent[] = substr($content, $caret, $beginningOfMatch - $caret);
+            //insert identifier
+            $newContent[] = $guiIdentifier;
+            //move caret to end of this match
+            $caret = $beginningOfMatch + $patternLength;
+            unset($new_GUI);
+        }//end foreach
+        //add remainder
+        $newContent[] = substr($content, $caret);
+        //replace content
+        return implode($newContent);
     }
 
     /**
@@ -423,19 +416,19 @@ class GUI_Module extends Module
     {
         //$content = $this -> FindGUIsByContent($content);
         $content = $this->searchGUIs($content);
-        $this->prepareChilds();
-        $this->finalizeChilds();
+        $this->prepareChildren();
+        $this->finalizeChildren();
         return $this->pasteChildren($content);
     }
 
     /**
      * Setzt sich Merker, auf welchem FileHandle sitze ich. Welches Muster (Ident) habe ich innerhalb des Templates.
      *
-     * @param string $ident Identifikation innerhalb des Templates
+     * @param string $marker Identifikation innerhalb des Templates
      */
-    private function setMarker($ident)
+    private function setMarker(string $marker)
     {
-        $this->FileIdent = $ident;
+        $this->marker = $marker;
     }
 
     /**
@@ -445,7 +438,7 @@ class GUI_Module extends Module
      **/
     private function getMarker(): string
     {
-        return $this->FileIdent;
+        return $this->marker;
     }
 
     /**
@@ -456,7 +449,7 @@ class GUI_Module extends Module
      * @param string $template HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html"); sucht immer im Projektverzeichnis nach der Vorlage.
      * @access public
      **/
-    function enableBox($title = '', $template = 'tpl_box.html')
+    function enableBox(string $title = '', $template = 'tpl_box.html')
     {
         $file = $this->Weblication->findTemplate($template, $this->getClassName(), false);
         if ($file) {
@@ -472,10 +465,8 @@ class GUI_Module extends Module
 
     /**
      * Deaktiviert die Box.
-     *
-     * @access public
-     **/
-    function disableBox()
+     */
+    public function disableBox()
     {
         $this->enabledBox = false;
     }
@@ -515,7 +506,6 @@ class GUI_Module extends Module
         return $this;
     }
 
-
     /**
      * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication.
      *
@@ -552,11 +542,6 @@ class GUI_Module extends Module
             $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
     }
 
-    protected function getJavaScriptFiles(): array
-    {
-        return [];
-    }
-
     /**
      * Adds a closed method (Closure) as an Ajax call. Only Ajax methods are callable by the client.
      *
@@ -575,27 +560,21 @@ class GUI_Module extends Module
      **/
     public function prepareContent()
     {
-        // todo before_provision or before_parents, after_provision or after_parents ?
-//        $this->provision(); // 23.12.21, AM, moved to Weblication::prepareContent!!
-
-//        echo 'prepare: '.$this->getName().'<br>';
         if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) {
-            return true;
+            return;
         }
 
         $this->prepare();
-        $this->prepareChilds();
+        $this->prepareChildren();
     }
 
     /**
      * provision something
      */
-    public function provision()
+    public function provision(): void
     {
-        // echo $this->getName().'<br>';
-        $max = count($this->Modules);
-        for ($m = 0; $m < $max; $m++) {
-            $this->Modules[$m]->provision();
+        foreach($this->modules as $Module) {
+            $Module->provision();
         }
     }
 
@@ -607,13 +586,11 @@ class GUI_Module extends Module
     /**
      * Bereitet alle Html Templates aller Childs auf.
      **/
-    private function prepareChilds()
+    private function prepareChildren()
     {
-        $max = count($this->Modules);
-        for ($m = 0; $m < $max; $m++) {
-            $gui = $this->Modules[$m];
-            $gui->importHandoff($this->Handoff);
-            $gui->prepareContent();
+        foreach($this->modules as $Module) {
+            $Module->importHandoff($this->Handoff);
+            $Module->prepareContent();
         }
     }
 
@@ -707,6 +684,7 @@ class GUI_Module extends Module
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
             catch(\ReflectionException $e) {
+
                 echo $e->getMessage();
             }
         }
@@ -834,7 +812,7 @@ class GUI_Module extends Module
     public function finalizeContent(): string
     {
         $content = '';
-        $this->finalizeChilds();
+        $this->finalizeChildren();
         if ($this->enabled) {
             if ($this->isMyXMLHttpRequest && isset($_REQUEST[REQUEST_PARAM_METHOD])) {
                 // dispatch Ajax Call only for ONE GUI -> returns JSON
@@ -850,12 +828,12 @@ class GUI_Module extends Module
                 $content = $this->finalize();
             }
             else {
-                $content = $this->FinalContent;
+                $content = $this->finalContent;
             }
 
 
             # render Box
-            if ($this->enabledBox == true) {
+            if ($this->enabledBox) {
                 $this->TemplateBox->setVar('CONTENT', $content);
                 $this->TemplateBox->parse('stdout');
                 $content = $this->TemplateBox->getContent('stdout');
@@ -871,20 +849,19 @@ class GUI_Module extends Module
 
     /**
      * Fertigt alle Html Templates der Childs an.
-     **/
-    private function finalizeChilds()
+     *
+     * @throws Exception
+     */
+    private function finalizeChildren()
     {
-        $count = count($this->Modules);
-        for ($m = 0; $m < $count; $m++) {
-            $gui = $this->Modules[$m];
-            /*echo $gui->getClassName().' '.bool2string($gui->enabled).'<br>';*/
-            if ($gui->enabled) {
-                $gui->FinalContent = $gui->finalizeContent();
-                $this->takeMeAlone = $gui->takeMeAlone;
-                if ($this->takeMeAlone) {
-                    $this->FinalContent = $gui->FinalContent;
-                    break; // nachfolgende Module wuerden Fehler verursachen, da takeMeAlone reseted w�rde
-                }
+        /** @var GUI_Module $GUI */
+        foreach($this->modules as $GUI) {
+            if(!$GUI->enabled) continue;
+            $GUI->finalContent = $GUI->finalizeContent();
+            $this->takeMeAlone = $GUI->takeMeAlone;
+            if ($this->takeMeAlone) {
+                $this->finalContent = $GUI->finalContent;
+                break; // nachfolgende Module wuerden Fehler verursachen, da takeMeAlone reseted w�rde
             }
         }
     }
@@ -897,12 +874,11 @@ class GUI_Module extends Module
      **/
     private function pasteChildren(string $content): string
     {
-        $count = count($this->Modules);
-        for ($m = 0; $m < $count; $m++) {
-            $gui = $this->Modules[$m];
-            $content = str_replace($gui->getMarker(), $gui->FinalContent, $content);
+        $replace_pairs = [];
+        foreach($this->modules as $GUI) {
+            $replace_pairs[$GUI->getMarker()] = $GUI->finalContent;
         }
-        return $content;
+        return strtr($content, $replace_pairs);
     }
 
     /**
