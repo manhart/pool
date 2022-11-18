@@ -99,7 +99,7 @@ class Input extends PoolObject
     * Falls Magic Quotes eingestellt sind, werden bei den $_GET und $_POST Superglobals alle Escape Zeichen entfernt.
     * Aussnahme: Session! Die Superglobale Variable $_SESSION wird zum internen Container referenziert!
     *
-    * @param integer $superglobals Einzulesende Superglobals (siehe Konstanten)
+    * @param int $superglobals Einzulesende Superglobals (siehe Konstanten)
     */
     protected function init(int $superglobals = I_EMPTY)
     {
@@ -262,10 +262,10 @@ class Input extends PoolObject
     * Liefert den Wert fuer den uebergebenen Schluessel.
     *
     * @param string $key Name der Variable
-    * @param mixed|null $default return default value, if key is not set
+    * @param mixed $default return default value, if key is not set
     * @return mixed Wert der Variable oder NULL, wenn die Variable nicht existiert
     */
-    public function getVar(string $key, $default=null)
+    public function getVar(string $key, mixed $default=null): mixed
     {
         return $this->Vars[$key] ?? $default;
     }
@@ -333,7 +333,7 @@ class Input extends PoolObject
      * @param mixed $filterOptions
      * @return Input
      */
-    public function addVar($key, $value = '', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
+    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
     {
         if (!is_array($key)) {
             if (!isset($this->Vars[$key])) {
@@ -344,8 +344,21 @@ class Input extends PoolObject
             }
         }
         else {
-            $this->Vars = $this->Vars + $key;
+            // @deprecated
+            $this->addVars($key);
         }
+        return $this;
+    }
+
+    /**
+     * merge array with vars but don't override existing vars
+     *
+     * @param array $vars
+     * @return Input
+     */
+    public function addVars(array $vars): self
+    {
+        $this->Vars = $this->Vars + $vars;
         return $this;
     }
 
@@ -365,14 +378,16 @@ class Input extends PoolObject
     *
     * @param string $key Schluessel (bzw. Name der Variable)
     */
-    function delVar($key)
+    public function delVar($key): self
     {
         if (!is_array($key)) {
             unset($this->Vars[$key]);
         }
         else {
+            // @deprecated
             $this->delVars($key);
         }
+        return $this;
     }
 
     /**
@@ -1050,10 +1065,10 @@ class ISession extends Input
      * @param mixed $filterOptions
      * @return Input Erfolgsstatus
      */
-    public function addVar($key, $value='', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
+    public function addVar($key, mixed $value='', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
     {
         $this->start();
-        parent::addVar($key, $value);
+        parent::addVar($key, $value, $filter, $filterOptions);
         $this->write_close();
         return $this;
     }
@@ -1063,7 +1078,7 @@ class ISession extends Input
     *
     * @param string $key Schluessel (bzw. Name der Variable)
     */
-    public function delVar($key)
+    public function delVar($key): Input
     {
         $this->start();
         parent::delVar($key);
