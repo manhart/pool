@@ -180,7 +180,7 @@ trait Configurable
         return $this->configuration;
     }
 
-    public function provision()
+    public function provision(): void
     {
         // todo auto config
 
