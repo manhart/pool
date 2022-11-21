@@ -49,7 +49,7 @@ class Component extends PoolObject
      *
      * @var string $name
      */
-    private string $name='';
+    private string $name;
 
     /**
      * Array als Zaehler, gewaehrleistet eindeutige Komponentennamen (fortlaufend)
