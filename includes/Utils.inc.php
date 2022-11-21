@@ -673,12 +673,8 @@ function getBrowserFingerprint(bool $withClientIP=true): string
     $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-    $hash = md5($data);
-    return $hash;
+    return md5($data);
 }
-
-
-
 
 /**
  * Holt sich den Inhalt von PHP Skripten und gibt ihn per return Wert zurueck.
