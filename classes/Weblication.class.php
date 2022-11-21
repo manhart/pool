@@ -23,18 +23,16 @@ use pool\classes\Translator;
 class Weblication extends Component
 {
     /**
-     * name of the project
-     *
-     * @var string $project
-     */
-    private string $project = 'unknown';
-
-    /**
      * Titel der Weblication
      *
      * @var string
      */
     private string $title = '';
+
+    /**
+     * @var string class name of the module that is started as main module
+     */
+    protected string $launchModule = 'GUI_CustomFrame';
 
     /**
      * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
@@ -334,7 +332,7 @@ class Weblication extends Component
     public function setCharset(string $charset): Weblication
     {
         header('content-type: text/html; charset=' . $charset);
-        $this->charset = strtoupper($charset);
+        $this->charset = $charset;
         return $this;
     }
 
@@ -354,9 +352,9 @@ class Weblication extends Component
      * reads the saved format
      *
      * @param string $key
-     * @return string|array|null
+     * @return string|array
      */
-    public function getDefaultFormat(string $key)
+    public function getDefaultFormat(string $key): array|string
     {
         return $this->formats[$key] ?? '';
     }
@@ -382,18 +380,6 @@ class Weblication extends Component
     {
         return $this->progId;
     }
-
-
-    /**
-     * Setzt das Standard Schema, welches geladen wird, wenn kein Schema uebergeben wurde.
-     *
-     * @param string $default Standard Schema
-     * @deprecated
-     */
-//    function setSchema(string $default = 'index')
-//    {
-//        $this->schema = $default;
-//    }
 
     /**
      * set default schema/layout, if none is loaded by request
@@ -975,49 +961,6 @@ class Weblication extends Component
     }
 
     /**
-     * Erzeugt das MySQL Datenbank Objekt
-     *
-     * @param string $host Hostname des Datenbankservers
-     * @param string $dbname Standard Datenbankname
-     * @param string $name_of_auth_array Name des Authentifizierungsarrays
-     * @param boolean $persistent
-     * @return object MySQL_db
-     * @deprecated
-     * @access public
-     */
-    function createMySQL($host, $dbname, $name_of_auth_array = 'mysql_auth', $persistent = false)
-    {
-        $Packet = array(
-            'host' => $host,
-            'database' => $dbname,
-            'auth' => $name_of_auth_array,
-            'persistency' => $persistent
-        );
-        $MySQLInterface = DataInterface::createDataInterface(DATAINTERFACE_MYSQL, $Packet);
-
-        return $this->addDataInterface($MySQLInterface);
-    }
-
-    /**
-     * Erzeugt das CISAM Client Objekt (not yet implemented)
-     *
-     * @param string $host Hostname des Java Servers
-     * @param string $class_path Java Klassenpfad
-     * @access public
-     * @deprecated
-     */
-    function createCISAM($host, $class_path)
-    {
-        $Packet = array(
-            'host' => $host,
-            'class_path' => $class_path
-        );
-        $CISAMInterface = DataInterface::createDataInterface(DATAINTERFACE_CISAM, $Packet);
-
-        return $this->addDataInterface($CISAMInterface);
-    }
-
-    /**
      * DataInterface in die Anwendung einfuegen. Somit ist es ueberall bekannt und kann
      * fuer die DAO Geschichte verwendet werden.
      *
@@ -1056,12 +999,25 @@ class Weblication extends Component
      * starts any session derived from the class ISession
      *
      * @param array $settings configuration parameters:
-     *                        sessionClassName - overrides default session class
+     *   application.launchModule - sets the main module that is launched
+     *   application.sessionClassName - overrides default session class
      * @return Weblication
+     * @throws Exception
      */
-    public function setup(array $settings = []): Weblication
+    public function setup(array $settings = []): self
     {
         $this->Settings->setVars($settings);
+
+        $applicationName = $this->Settings->getVar('application.name', $this->getName());
+        if($applicationName == '') {
+            throw new Exception('application.name must be defined');
+        }
+        $this->setName($applicationName);
+
+        $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
+        $this->setCharset($this->Settings->getVar('application.charset', $this->getCharset()));
+
+        $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
         return $this;
     }
 
@@ -1074,8 +1030,8 @@ class Weblication extends Component
      * @param integer $use_cookies Verwende Cookies (Default: 1)
      * @param integer $use_only_cookies Verwende nur Cookies (Default: 0)
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
-     * @return ISession
-     **/
+     * @return ISession|null
+     */
     public function startPHPSession(string $session_name = 'PHPSESSID', int $use_trans_sid = 0, int $use_cookies = 1,
                                     int $use_only_cookies = 0, bool $autoClose = true): ?ISession
     {
@@ -1093,7 +1049,7 @@ class Weblication extends Component
         if ($isStatic) {
             return new ISession($autoClose);
         }
-        $className = $this->Settings->getVar('sessionClassName', 'ISession');
+        $className = $this->Settings->getVar('application.sessionClassName', 'ISession');
         $this->Session = new $className($autoClose);
         return $this->Session;
     }
@@ -1169,6 +1125,41 @@ class Weblication extends Component
     }
 
     /**
+     * @param string $launchModule
+     * @return $this
+     */
+    public function setLaunchModule(string $launchModule): self
+    {
+        $this->launchModule = $launchModule;
+        return $this;
+    }
+
+    /**
+     * returns module that should be launched
+     *
+     * @return string
+     */
+    public function getLaunchModule(): string
+    {
+        return $_GET[REQUEST_PARAM_MODULE] ?? $this->launchModule;
+    }
+
+    /**
+     * render application
+     *
+     * @return void
+     * @throws ModulNotFoundExeption
+     * @throws Exception
+     */
+    public function render(): void
+    {
+        if($this->run($this->getLaunchModule())) {
+            $this->prepareContent();
+            echo $this->finalizeContent();
+        }
+    }
+
+    /**
      * Erzeugt das erste GUI_Module in der Kette (Momentan wird hier der Seitentitel mit dem Projektnamen gefuellt).
      *
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
@@ -1203,53 +1194,36 @@ class Weblication extends Component
     }
 
     /**
-     * main logic of the front controller
-     **/
-    public function prepareContent(): void
+     * main logic of the front controller. compile main content.
+     */
+    protected function prepareContent(): void
     {
-        if ($this->Main instanceof GUI_Module) {
-            $this->Main->provision();
-            $this->Main->prepareContent();
-        }
-        else {
-            $this->raiseError(__FILE__, __LINE__, 'Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@PrepareContent).');
-        }
+        $this->Main->provision();
+        $this->Main->prepareContent();
     }
 
     /**
      * return finished HTML content
      *
-     * @param boolean $print True gibt den Inhalt sofort auf den Bildschirm aus. False liefert den Inhalt zurueck
      * @return string website content
      *
      * @throws Exception
      */
-    public function finalizeContent(bool $print = true): string
+    protected function finalizeContent(): string
     {
-        if ($this->Main instanceof GUI_Module) {
-            $content = $this->Main->finalizeContent();
+        $content = $this->Main->finalizeContent();
 
-            // Odd, there were outputs written?
-            if(headers_sent()) {
-                $error = error_get_last();
-                // error was triggered (old method)
-                if($this->isXdebugEnabled()) {
-                    // we suppress the output of the application @todo redirect to an error page?
-                    if($error) return '';
-                }
-            }
-
-            if ($print) {
-                print $content;
-            }
-            else {
-                return $content;
+        // Odd, there were outputs written?
+        if(headers_sent()) {
+            $error = error_get_last();
+            // error was triggered (old method)
+            if($this->isXdebugEnabled()) {
+                // we suppress the output of the application @todo redirect to an error page?
+                if($error) return '';
             }
         }
-        else {
-            throw new Exception('Main ist nicht vom Typ GUI_Module oder nicht gesetzt (@CreateContent).');
-        }
-        return '';
+
+        return $content;
     }
 
     /**
