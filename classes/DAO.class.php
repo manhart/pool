@@ -30,6 +30,7 @@ const DAO_NO_ESCAPE = 2;
 
 const PWD_TILL_DAOS_MYSQL = 'mysql';
 const PWD_TILL_DAOS_CISAM = 'cisam';
+const PWD_TILL_DAOS_C16 = 'c16';
 const PWD_TILL_DAOS_POSTGRESQL = 'postgresql';
 const PWD_TILL_DAOS_MSSQL = 'mssql';
 const PWD_TILL_DAOS_INFORMIX = 'informix';
