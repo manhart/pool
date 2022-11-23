@@ -1078,11 +1078,12 @@ class ISession extends Input
     *
     * @param string $key Schluessel (bzw. Name der Variable)
     */
-    public function delVar($key): Input
+    public function delVar($key): self
     {
         $this->start();
         parent::delVar($key);
         $this->write_close();
+        return $this;
     }
 
     /**
