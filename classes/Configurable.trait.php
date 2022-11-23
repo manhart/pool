@@ -187,6 +187,5 @@ trait Configurable
 //        if($this->getConfigurationLoader()->configureAutomatically()) {
 //
 //        }
-        parent::provision();
     }
 }
