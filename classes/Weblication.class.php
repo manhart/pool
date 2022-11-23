@@ -1213,13 +1213,15 @@ class Weblication extends Component
      */
     protected function prepareContent(): void
     {
-        $this->Main->provision();
-        $this->Main->prepareContent();
+        $this->Main->provisionContent();
+        if (!$this->Main->isAjax()) {
+            $this->Main->prepareContent();
+        }
     }
 
     /**
      * return finished HTML content
-     *
+     * Error handling wrapper around finalizeContent of the Main-GUI
      * @return string website content
      *
      * @throws Exception
