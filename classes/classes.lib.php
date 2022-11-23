@@ -56,12 +56,6 @@ require_once __DIR__.'/MySQLi_Interface.class.php';		// necessary
 //require_once__DIR__.'/CISAM_Interface.class.php'); // necessary
 // require_once__DIR__.'/C16_Interface.class.php');		// necessary
 
-// Third Party Tools
-require_once __DIR__.'/htmlMimeMail-2.5.1/mimePart.class.php';
-require_once __DIR__.'/htmlMimeMail-2.5.1/HtmlMimeMail.class.php';
-require_once __DIR__.'/htmlMimeMail-2.5.1/smtp.class.php';
-require_once __DIR__.'/htmlMimeMail-2.5.1/RFC822.class.php';
-
 // derived from Component
 //require_once__DIR__.'/Weblication.class.php');
 

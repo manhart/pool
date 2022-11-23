@@ -19,7 +19,7 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\ModulNotFoundExeption;
+use pool\classes\ModulNotFoundException;
 
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
@@ -69,7 +69,7 @@ class GUI_Module extends Module
     private bool $enabledBox = false;
 
     /**
-     * Ajax Request / XMLHttpRequest
+     * Is this module the Target of an Ajax-Call
      *
      * @var boolean
      */
@@ -114,7 +114,6 @@ class GUI_Module extends Module
      * @var array<string, string> $templates files (templates) to be loaded, usually used with $this->Template->setVar(...) in the prepare function. Defined as an associated array [handle => tplFile].
      */
     protected array $templates = [];
-
     /**
      * @var array<int, string> $jsFiles javascript files to be loaded, defined as indexed array
      */
@@ -144,6 +143,15 @@ class GUI_Module extends Module
         $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod;
 
         $this->Template = new Template();
+    }
+
+    /**
+     * Is this module the Target of an Ajax-Call
+     * @return bool
+     */
+    public function isAjax(): bool
+    {
+        return $this->isAjax;
     }
 
     /**
@@ -253,7 +261,7 @@ class GUI_Module extends Module
      * @param bool $autoLoadFiles parameter of GUI-constructor
      * @param bool $search Do search for GUIs in preloaded Content
      * @return GUI_Module Neues GUI_Module
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      * @see GUI_Module::searchGUIsInPreloadedContent()
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
@@ -285,7 +293,7 @@ class GUI_Module extends Module
             return $GUI;
         }
         else {//Class not found
-            throw new ModulNotFoundExeption("Fehler beim Erzeugen der Klasse '$GUIClassName'");
+            throw new ModulNotFoundException("Fehler beim Erzeugen der Klasse '$GUIClassName'");
         }
     }
 
@@ -295,8 +303,8 @@ class GUI_Module extends Module
      * @param bool $recurse Execute this while creating the GUIs found in the preloaded content
      * @param bool $autoLoadFiles Preload the GUIs found
      * @return void
-     * @see GUI_Module::createGUIModule()
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
+     *@see GUI_Module::createGUIModule()
      */
     public function searchGUIsInPreloadedContent(bool $recurse = true, bool $autoLoadFiles = true):void
     {
@@ -316,11 +324,11 @@ class GUI_Module extends Module
      *
      * @param string $content Zu durchsuchender Inhalt
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      */
     protected function searchGUIs(string $content, bool $recurse = true, bool $autoLoadFiles = true): string
     {
-        $reg = '/\[(GUI_.*)(\((.*)\)|)\]/mU';
+        $reg = '/\[(GUI_.*)(\((.*)\)|)]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 
         if(!$bResult)//no GUIs
@@ -365,7 +373,7 @@ class GUI_Module extends Module
      * @param string $content Content / Inhalt
      * @return string Content / Inhalt aller Childs
      *
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      * @throws Exception
      */
     public function reviveChildGUIs(string $content): string
@@ -509,25 +517,20 @@ class GUI_Module extends Module
     }
 
     /**
-     * Provisioning data before preparing module and there children.
-     **/
-    public function prepareContent()
-    {
-        if ($this->isAjax) {
-            return;
-        }
-
-        $this->prepare();
-        $this->prepareChildren();
-    }
+     * frontend control: Prepare data for building the content or responding to an ajax-call<br>
+     * Called once all modules and files have been loaded
+     */
+    public function provision(): void{}
 
     /**
-     * provision something
+     * Runs provision on all modules
+     * @return void
      */
-    public function provision(): void
+    public function provisionContent(): void
     {
-        foreach($this->modules as $Module) {
-            $Module->provision();
+        $this->provision();
+        foreach($this->childModules as $modul) {
+            $modul->provisionContent();
         }
     }
 
@@ -537,13 +540,24 @@ class GUI_Module extends Module
     protected function prepare() {}
 
     /**
-     * Bereitet alle Html Templates aller Childs auf.
+     * Runs prepare on all modules
+     * Preparing modules and their children.
+     **/
+    public function prepareContent()
+    {
+        $this->prepare();
+        $this->prepareChildren();
+    }
+
+    /**
+     * Bereitet alle Html Templates aller Children auf.
      **/
     private function prepareChildren()
     {
-        foreach($this->modules as $Module) {
-            $Module->importHandoff($this->Handoff);
-            $Module->prepareContent();
+        foreach($this->childModules as $module) {
+            /** @var GUI_Module $module */
+            $module->importHandoff($this->Handoff);
+            $module->prepareContent();
         }
     }
 
@@ -555,7 +569,7 @@ class GUI_Module extends Module
      * @throws ReflectionException
      * @throws Exception
      */
-    private function finalizeMethod(string $requestedMethod): string
+    private function invokeAjaxMethod(string $requestedMethod): string
     {
         $result = '';
 
@@ -754,7 +768,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Stellt den Inhalt der Html Templates fertig und sorgt dafuer, dass auch alle Childs fertig gestellt werden.
+     * Stellt den Inhalt der Html Templates fertig und sorgt dafuer, dass auch alle Children fertiggestellt werden.
      * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
      *
      * @return string Content / Inhalt
@@ -762,29 +776,26 @@ class GUI_Module extends Module
      */
     public function finalizeContent(): string
     {
-        $content = '';
-        $this->finalizeChildren();
-        if ($this->enabled) {
-            if ($this->isAjax) {
-                // dispatch Ajax Call only for ONE GUI -> returns JSON
-                $content = $this->finalizeMethod($this->ajaxMethod);
-            }
-            else {
+        if ($this->enabled()) {
+            $this->finalizeChildren();
+            if ($this->isAjax) {//GUI is target of the Ajax-Call
+                //Start the Ajax Method -> returns JSON
+                $content = $this->invokeAjaxMethod($this->ajaxMethod);
+            } else {
+                //Parse Templates or get the finished Content from a specific implementation
                 $content = $this->finalize();
+                //Wrap a GUI_Box around the content
+                if ($this->enabledBox) {
+                    $this->TemplateBox->setVar('CONTENT', $content);
+                    $this->TemplateBox->parse('stdout');
+                    $content = $this->TemplateBox->getContent('stdout');
+                    $this->TemplateBox->clear();
+                }
             }
-
-
-            # render Box
-            if ($this->enabledBox) {
-                $this->TemplateBox->setVar('CONTENT', $content);
-                $this->TemplateBox->parse('stdout');
-                $content = $this->TemplateBox->getContent('stdout');
-                $this->TemplateBox->clear();
-            }
-
-            $content = $this->pasteChildren($content);
+            return $this->pasteChildren($content);
+        } else {
+            return "";
         }
-        return $content;
     }
 
     /**
@@ -795,8 +806,8 @@ class GUI_Module extends Module
     private function finalizeChildren()
     {
         /** @var GUI_Module $GUI */
-        foreach($this->modules as $GUI) {
-            if(!$GUI->enabled) continue;
+        foreach($this->childModules as $GUI) {
+            if(!$GUI->enabled()) continue;
             $GUI->finalContent = $GUI->finalizeContent();
         }
     }
@@ -810,7 +821,7 @@ class GUI_Module extends Module
     private function pasteChildren(string $content): string
     {
         $replace_pairs = [];
-        foreach($this->modules as $GUI) {
+        foreach($this->childModules as $GUI) {
             $replace_pairs[$GUI->getMarker()] = $GUI->finalContent;
         }
         return strtr($content, $replace_pairs);
