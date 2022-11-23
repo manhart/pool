@@ -17,7 +17,7 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\ModulNotFoundExeption;
+use pool\classes\ModulNotFoundException;
 use pool\classes\Translator;
 
 class Weblication extends Component
@@ -1158,7 +1158,7 @@ class Weblication extends Component
      * render application
      *
      * @return void
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      * @throws Exception
      */
     public function render(): void
@@ -1175,7 +1175,7 @@ class Weblication extends Component
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
      * @return Weblication
      *
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      */
     public function run(string $className = 'GUI_CustomFrame'): Weblication
     {

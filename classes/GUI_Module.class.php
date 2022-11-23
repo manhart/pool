@@ -19,7 +19,7 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\ModulNotFoundExeption;
+use pool\classes\ModulNotFoundException;
 
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
@@ -262,7 +262,7 @@ class GUI_Module extends Module
      * @param bool $autoLoadFiles parameter of GUI-constructor
      * @param bool $search Do search for GUIs in preloaded Content
      * @return GUI_Module Neues GUI_Module
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      * @see GUI_Module::searchGUIsInPreloadedContent()
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
@@ -294,7 +294,7 @@ class GUI_Module extends Module
             return $GUI;
         }
         else {//Class not found
-            throw new ModulNotFoundExeption("Fehler beim Erzeugen der Klasse '$GUIClassName'");
+            throw new ModulNotFoundException("Fehler beim Erzeugen der Klasse '$GUIClassName'");
         }
     }
 
@@ -304,8 +304,8 @@ class GUI_Module extends Module
      * @param bool $recurse Execute this while creating the GUIs found in the preloaded content
      * @param bool $autoLoadFiles Preload the GUIs found
      * @return void
-     * @see GUI_Module::createGUIModule()
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
+     *@see GUI_Module::createGUIModule()
      */
     public function searchGUIsInPreloadedContent(bool $recurse = true, bool $autoLoadFiles = true):void
     {
@@ -325,7 +325,7 @@ class GUI_Module extends Module
      *
      * @param string $content Zu durchsuchender Inhalt
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      */
     protected function searchGUIs(string $content, bool $recurse = true, bool $autoLoadFiles = true): string
     {
@@ -374,7 +374,7 @@ class GUI_Module extends Module
      * @param string $content Content / Inhalt
      * @return string Content / Inhalt aller Childs
      *
-     * @throws ModulNotFoundExeption
+     * @throws ModulNotFoundException
      * @throws Exception
      */
     public function reviveChildGUIs(string $content): string
