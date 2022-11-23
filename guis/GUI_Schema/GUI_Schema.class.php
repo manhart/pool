@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\ModulNotFoundException;
+
 /**
  * -= Rapid Module Library (RML) =-
  *
@@ -29,10 +32,6 @@ class GUI_Schema extends GUI_Module
      */
     private array $handles = [];
 
-    /**
-     * @var bool no files needed
-     */
-    protected bool $autoLoadFiles = false;
 
     /**
      * @param int|null $superglobals takes parameter schema from request
@@ -129,10 +128,8 @@ class GUI_Schema extends GUI_Module
      * Liest die _GET Variable "schema" ein, laedt Schemas und sucht nach den darin befindlichen GUIs.
      * Wurde kein Schema angegeben, wird versucht von der Weblication ein Default Schema reinzuladen.
      **
-     *
-     * @throws \pool\classes\ModulNotFoundExeption
      */
-    public function provision(): void
+    public function loadFiles(): void
     {
         $schemes = [];
 
@@ -149,9 +146,8 @@ class GUI_Schema extends GUI_Module
         }
 
         $this->loadSchemes($schemes);
-        $this->searchGUIsInPreloadedContent();
 
-        parent::provision();
+        parent::loadFiles();
     }
 
     /**
