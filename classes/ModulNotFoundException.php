@@ -10,7 +10,7 @@
 
 namespace pool\classes;
 
-class ModulNotFoundExeption extends \Exception
+class ModulNotFoundException extends \Exception
 {
 
 }

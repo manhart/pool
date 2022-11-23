@@ -82,3 +82,4 @@ require_once __DIR__.'/GUI_Universal.class.php';
 require_once __DIR__.'/GUI_InputElement.class.php';
 
 require_once __DIR__.'/Net_Ping.class.php';
+require_once __DIR__.'/ModulNotFoundException.php';

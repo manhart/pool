@@ -1,6 +1,6 @@
 <?php
 
-use pool\classes\ModulNotFoundExeption;
+use pool\classes\ModulNotFoundException;
 
 /**
  * -= Rapid Module Library (RML) =-
