@@ -30,7 +30,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @package pool
  */
-
 class Module extends Component
 {
     /**
@@ -41,9 +40,9 @@ class Module extends Component
     private Module $Parent;
 
     /**
-     * @var array{Module} $modules contains all children modules
+     * @var array{Module} $childModules contains all children modules
      */
-    protected array $modules = [];
+    protected array $childModules = [];
 
     /**
      * Standardwerte sollten gew�hrleisten, dass das Modul auch ohne Parametrisierung l�uft. Die Standardwerte werden in der Funktion "init" festgelegt und bestimmen das normale Verhalten des Moduls.
@@ -72,9 +71,8 @@ class Module extends Component
      * Merker, ob das Modul aktiv ist / eingebunden wird.
      *
      * @var bool $enabled
-     * @access private
      */
-    var $enabled = true;
+    private bool $enabled = true;
 
     /**
      * @var array fixed params
@@ -97,7 +95,7 @@ class Module extends Component
     {
         parent::__construct($Owner);
 
-        $this->modules = [];
+        $this->childModules = [];
         $this->Handoff = [];
         $this->Defaults = new Input(I_EMPTY);
         $this->fixedParams = $params;
@@ -148,7 +146,7 @@ class Module extends Component
      */
     function importHandoff(array $Handoff): self
     {
-        if (count($Handoff) == 0) {
+        if(count($Handoff) == 0) {
             return $this;
         }
 
@@ -165,11 +163,11 @@ class Module extends Component
      * - ModuleName: setzt den Komponentennamen
      * - ModuleDisabled: deaktiviert das Modul
      *
-     * @see Component::setName()
-     * @see Module::disable()
      * @param array $params Im Format: key=value&key2=value2&
      * @return bool Erfolgsstatus
-     **/
+     **@see Component::setName()
+     * @see Module::disable()
+     */
     public function importParams(array $params): bool
     {
         $this->setVars($params);
@@ -182,7 +180,7 @@ class Module extends Component
             $moduleName = $otherFixedName;
         }
 
-        if ($moduleName != null) {
+        if($moduleName != null) {
             $this->setName($moduleName);
         }
         return true;
@@ -209,11 +207,11 @@ class Module extends Component
      * @return bool Erfolgsstatus
      * @deprecated
      */
-    function setParam($modulename, $param, $value=null)
+    function setParam(string $modulename, $param, $value = null)
     {
         $bResult = false;
         $Module = $this->Weblication->findComponent($modulename);
-        if ($Module instanceof Module) {
+        if($Module instanceof Module) {
             $Module->Input->setVar($param, $value);
             $bResult = true;
         }
@@ -223,7 +221,6 @@ class Module extends Component
         }
         return $bResult;
     }
-
 
     /**
      * get fixed param
@@ -238,6 +235,7 @@ class Module extends Component
 
     /**
      * set fixed param
+     *
      * @param string $param
      * @param $value
      * @return Module
@@ -258,7 +256,7 @@ class Module extends Component
      */
     function addHandoffVar($key, $value = '')
     {
-        if (!is_array($key)) {
+        if(!is_array($key)) {
             $this->Handoff[$key] = $value;
         }
         else {
@@ -287,7 +285,7 @@ class Module extends Component
      * @param mixed $value
      * @return Module
      */
-    public function setVar($key, $value=''): Module
+    public function setVar($key, $value = ''): Module
     {
         if(is_array($key)) {
             // @deprecated
@@ -361,7 +359,7 @@ class Module extends Component
      */
     public function insertModule(Module $Module): self
     {
-        $this->modules[] = $Module;
+        $this->childModules[] = $Module;
         return $this;
     }
 
@@ -375,13 +373,13 @@ class Module extends Component
         $new_Modules = [];
 
         // Rebuild Modules
-        foreach($this->modules as $SearchedModule) {
-            if ($Module != $SearchedModule) {
+        foreach($this->childModules as $SearchedModule) {
+            if($Module != $SearchedModule) {
                 $new_Modules[] = $SearchedModule;
             }
         }
 
-        $this->modules = $new_Modules;
+        $this->childModules = $new_Modules;
     }
 
     /**
@@ -394,8 +392,8 @@ class Module extends Component
     {
         if($moduleName == '') return null;
 
-        foreach($this->modules as $Module) {
-            if (strcmp($Module->getName(), $moduleName) == 0) {
+        foreach($this->childModules as $Module) {
+            if(strcmp($Module->getName(), $moduleName) == 0) {
                 return $Module;
             }
         }
@@ -416,5 +414,15 @@ class Module extends Component
     public function enable()
     {
         $this->enabled = true;
+    }
+
+    /**
+     * Returns that the module is enabled
+     *
+     * @return bool
+     */
+    public function enabled(): bool
+    {
+        return $this->enabled;
     }
 }
