@@ -739,7 +739,6 @@ class GUI_TableConfigurable extends GUI_Table
      */
     public function provision(): void
     {
-        parent::provision();
 //        $data = $this->Input->getData();
 //        unset(
 //            $data['moduleName'],
