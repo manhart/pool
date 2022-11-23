@@ -97,7 +97,7 @@ class Weblication extends Component
      *
      * @var array
      */
-    private array $Interfaces = [];
+    private array $interfaces = [];
 
     /**
      * Zeichensatz
@@ -276,7 +276,7 @@ class Weblication extends Component
      * @return Weblication
      * @throws Exception
      */
-    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subDirTranslated = ''): Weblication
+    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subDirTranslated = ''): self
     {
         $this->language = $lang;
 
@@ -952,12 +952,12 @@ class Weblication extends Component
     /**
      * Relativer Pfad zum Rootverzeichnis der Baselib
      *
-     * @param string $subdir
+     * @param string $subDir
      * @return string path from project to library pool
      */
-    public function getRelativePathBaselib(string $subdir = '')
+    public function getRelativePathBaselib(string $subDir = ''): string
     {
-        return $this->relativePathBaselib . '/' . $subdir;
+        return $this->relativePathBaselib . '/' . $subDir;
     }
 
     /**
@@ -969,7 +969,7 @@ class Weblication extends Component
      **/
     public function addDataInterface(DataInterface $DataInterface): DataInterface
     {
-        $this->Interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
+        $this->interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
         return $DataInterface;
     }
 
@@ -981,7 +981,7 @@ class Weblication extends Component
      **/
     public function getInterface(string $interface_name): DataInterface
     {
-        return $this->Interfaces[$interface_name];
+        return $this->interfaces[$interface_name];
     }
 
     /**
@@ -992,7 +992,7 @@ class Weblication extends Component
      **/
     public function getInterfaces(): array
     {
-        return $this->Interfaces;
+        return $this->interfaces;
     }
 
     /**
@@ -1009,9 +1009,6 @@ class Weblication extends Component
         $this->Settings->setVars($settings);
 
         $applicationName = $this->Settings->getVar('application.name', $this->getName());
-        if($applicationName == '') {
-            throw new Exception('application.name must be defined');
-        }
         $this->setName($applicationName);
 
         $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
@@ -1035,14 +1032,27 @@ class Weblication extends Component
     public function startPHPSession(string $session_name = 'PHPSESSID', int $use_trans_sid = 0, int $use_cookies = 1,
                                     int $use_only_cookies = 0, bool $autoClose = true): ?ISession
     {
-        $sessionConfig = array(
-            'name' => $session_name,
-            'use_trans_sid' => $use_trans_sid,
-            'use_cookies' => $use_cookies,
-            'use_only_cookies' => $use_only_cookies
-        );
-        foreach ($sessionConfig as $param => $value) {
-            ini_set('session.' . $param, (string)$value);
+        switch(session_status()) {
+            case PHP_SESSION_DISABLED:
+                throw new Exception('PHP Session is  disabled.');
+
+            case PHP_SESSION_NONE:
+                // setting ini is only possible, if the session is not started yet
+                $use_trans_sid = (string)$use_trans_sid;
+                $use_cookies = (string)$use_cookies;
+                $use_only_cookies = (string)$use_only_cookies;
+
+                $sessionConfig = [
+                    'session.name' => $session_name,
+                    'session.use_trans_sid' => $use_trans_sid,
+                    'session.use_cookies' => $use_cookies,
+                    'session.use_only_cookies' => $use_only_cookies
+                ];
+                foreach($sessionConfig as $option => $value) {
+                    if(ini_get($option) != $value) {
+                        ini_set($option, $value);
+                    }
+                }
         }
 
         $isStatic = !(isset($this)); // TODO static calls or static AppSettings
@@ -1058,10 +1068,10 @@ class Weblication extends Component
      * Erzeugt eine Instanz vom eigenen Session Handler. Ansprechbar ueber Weblication::Session.
      *
      * @param string $tabledefine DAO Tabellendefinition.
-     **/
+     */
     public function createSessionHandler($tabledefine)
     {
-        $this->SessionHandler = new SessionHandler($this->Interfaces, $tabledefine);
+        $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
         $this->Session = new ISession();
     }
 
@@ -1092,9 +1102,9 @@ class Weblication extends Component
      *
      * @param int $category
      * @param string|null $locale
-     * @return false|string
+     * @return bool|string
      */
-    public function setLocale(int $category = LC_ALL, ?string $locale = null)
+    public function setLocale(int $category = LC_ALL, ?string $locale = null): bool|string
     {
         if(is_null($locale)) {
             $locale = Translator::detectLocale();
@@ -1169,6 +1179,11 @@ class Weblication extends Component
      */
     public function run(string $className = 'GUI_CustomFrame'): Weblication
     {
+        // An application name is required. For example, the application name is used for creating directories in the data folder.
+        if($this->getName() == '') {
+            throw new Exception('The application name must be defined.');
+        }
+
         // TODO Get Parameter frame
         // TODO Subcode :: createSubCode()
         $params = $_REQUEST['params'] ?? '';
@@ -1244,22 +1259,22 @@ class Weblication extends Component
     public function destroy()
     {
         if (defined('DATAINTERFACE_MYSQL')) {
-            if (isset($this->Interfaces[DATAINTERFACE_MYSQL]) and is_a($this->Interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
-                $this->Interfaces[DATAINTERFACE_MYSQL]->close();
-                unset($this->Interfaces[DATAINTERFACE_MYSQL]);
+            if (isset($this->interfaces[DATAINTERFACE_MYSQL]) and is_a($this->interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
+                $this->interfaces[DATAINTERFACE_MYSQL]->close();
+                unset($this->interfaces[DATAINTERFACE_MYSQL]);
             }
         }
 
         if (defined('DATAINTERFACE_MYSQLI')) {
-            if (isset($this->Interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->Interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
-                $this->Interfaces[DATAINTERFACE_MYSQLI]->close();
-                unset($this->Interfaces[DATAINTERFACE_MYSQLI]);
+            if (isset($this->interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
+                $this->interfaces[DATAINTERFACE_MYSQLI]->close();
+                unset($this->interfaces[DATAINTERFACE_MYSQLI]);
             }
         }
         if (defined('DATAINTERFACE_C16')) {
-            if (isset($this->Interfaces[DATAINTERFACE_C16]) and is_a($this->Interfaces[DATAINTERFACE_C16], 'C16_Interface')) {
-                $this->Interfaces[DATAINTERFACE_C16]->close();
-                unset($this->Interfaces[DATAINTERFACE_C16]);
+            if (isset($this->interfaces[DATAINTERFACE_C16]) and is_a($this->interfaces[DATAINTERFACE_C16], 'C16_Interface')) {
+                $this->interfaces[DATAINTERFACE_C16]->close();
+                unset($this->interfaces[DATAINTERFACE_C16]);
             }
         }
         parent::destroy();
