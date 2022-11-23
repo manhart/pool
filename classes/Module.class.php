@@ -41,9 +41,9 @@ class Module extends Component
     private Module $Parent;
 
     /**
-     * @var array{Module} $modules contains all children modules
+     * @var array{Module} $childModules contains all children modules
      */
-    protected array $modules = [];
+    protected array $childModules = [];
 
     /**
      * Standardwerte sollten gew�hrleisten, dass das Modul auch ohne Parametrisierung l�uft. Die Standardwerte werden in der Funktion "init" festgelegt und bestimmen das normale Verhalten des Moduls.
@@ -97,7 +97,7 @@ class Module extends Component
     {
         parent::__construct($Owner);
 
-        $this->modules = [];
+        $this->childModules = [];
         $this->Handoff = [];
         $this->Defaults = new Input(I_EMPTY);
         $this->fixedParams = $params;
@@ -361,7 +361,7 @@ class Module extends Component
      */
     public function insertModule(Module $Module): self
     {
-        $this->modules[] = $Module;
+        $this->childModules[] = $Module;
         return $this;
     }
 
@@ -375,13 +375,13 @@ class Module extends Component
         $new_Modules = [];
 
         // Rebuild Modules
-        foreach($this->modules as $SearchedModule) {
+        foreach($this->childModules as $SearchedModule) {
             if ($Module != $SearchedModule) {
                 $new_Modules[] = $SearchedModule;
             }
         }
 
-        $this->modules = $new_Modules;
+        $this->childModules = $new_Modules;
     }
 
     /**
@@ -394,7 +394,7 @@ class Module extends Component
     {
         if($moduleName == '') return null;
 
-        foreach($this->modules as $Module) {
+        foreach($this->childModules as $Module) {
             if (strcmp($Module->getName(), $moduleName) == 0) {
                 return $Module;
             }
