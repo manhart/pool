@@ -212,12 +212,12 @@ class TempCoreHandle extends TempHandle
     protected array $VarList = [];
 
     /**
-     * @var array container for blocks (key, content of block)
+     * @var array(TempBlock) container for blocks (key, content of block)
      */
     protected array $BlockList = [];
 
     /**
-     * @var array container for files (key, content of file)
+     * @var array(TempCoreHandle) container for files (key, content of file)
      */
     protected array $FileList = [];
 
@@ -515,7 +515,7 @@ class TempCoreHandle extends TempHandle
             $content = str_replace($search, $replace, $content, $count);
             $iterations++;
         }
-
+        //TODO translate {TRANSL } Tags
         $replace_pairs = [];
         foreach($this->BlockList as $Handle => $TempBlock) {
             if($TempBlock->allowParse()) {
@@ -532,6 +532,7 @@ class TempCoreHandle extends TempHandle
         }
 
         foreach($this->FileList as $Handle => $TempFile) {
+            /**@var TempCoreHandle $TempFile*/
             $TempFile->parse();
             $parsedContent = $TempFile->getParsedContent();
             if($clearParsedContent) $TempFile->clearParsedContent();
