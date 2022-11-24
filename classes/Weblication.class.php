@@ -1198,7 +1198,7 @@ class Weblication extends Component
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
      * @return Weblication
      *
-     * @throws ModulNotFoundException
+     * @throws ModulNotFoundException|Exception
      */
     public function run(string $className = 'GUI_CustomFrame'): self
     {
