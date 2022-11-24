@@ -35,17 +35,6 @@
  * @link https://alexander-manhart.de
  */
 
-
-/**
- * GUI_Shorten
- *
- * Kuerzt Text und zeigt dafuer ein Tooltip an.
- *
- * @package pool
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: gui_shorten.class.php,v 1.7 2005/07/25 08:45:21 manhart Exp $
- * @access public
- **/
 class GUI_Shorten extends GUI_Module
 {
     /**
