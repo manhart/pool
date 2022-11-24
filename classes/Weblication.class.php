@@ -875,22 +875,22 @@ class Weblication extends Component
 
         //common-skin
         if($this->hasCommonSkinFolder($elementSubFolder)) {
-            $stylesheet = buildFilePath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-            if(file_exists($stylesheet))
-                return $stylesheet;
+            $file = buildFilePath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
+            if(file_exists($file))
+                return $file;
         }
 
         if($this->hasSkinFolder($elementSubFolder)) {
             //skin-translated
             if($this->hasSkinFolder($elementSubFolder, $language)) { // with language, more specific
-                $stylesheet = buildFilePath($skinElementFolder, $language, $filename);
-                if(file_exists($stylesheet))
-                    return $stylesheet;
+                $file = buildFilePath($skinElementFolder, $language, $filename);
+                if(file_exists($file))
+                    return $file;
             }
             //skin without language
-            $stylesheet = buildFilePath($skinElementFolder, $filename);
-            if(file_exists($stylesheet))
-                return $stylesheet;
+            $file = buildFilePath($skinElementFolder, $filename);
+            if(file_exists($file))
+                return $file;
         }
 
         $gui_directories = [];
@@ -909,14 +909,14 @@ class Weblication extends Component
         }
 
         foreach($gui_directories as $folder_guis) {
-            $stylesheet = $folder_guis . $filename;
-            if(file_exists($stylesheet)) {
+            $file = $folder_guis . $filename;
+            if(file_exists($file)) {
                 $translatedStylesheet = buildFilePath($folder_guis, $language, $filename);
                 if(file_exists($translatedStylesheet))
                     // Language Ordner
                     return $translatedStylesheet;
                 // GUI Ordner
-                return $stylesheet;
+                return $file;
             }
         }
         return "";
@@ -1221,7 +1221,7 @@ class Weblication extends Component
 
         if($this->hasFrame()) {
             //Seitentitel (= Project)
-            $Header = $this->getFrame()->getHeaderdata();
+            $Header = $this->getFrame()->getHead();
 
             $Header->setTitle($this->title);
             //TODO Translator?
