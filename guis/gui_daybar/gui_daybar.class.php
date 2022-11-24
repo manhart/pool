@@ -28,22 +28,22 @@ class GUI_DayBar extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
-        $this -> Defaults -> addVar(
+        $this->Defaults->addVar(
             array(
-                'name'			=> $this -> getClassName(),
-                'value'			=> 0,
-                'defaultvalue'	=> 0,
+                'name' => $this->getClassName(),
+                'value' => 0,
+                'defaultvalue' => 0,
 
 
                 // Events
                 'onbeforeclick' => '',
-                'onclick'		=> '',
-                'pathToImages'	=> 'eingabemaske'
+                'onclick' => '',
+                'pathToImages' => 'eingabemaske'
             )
         );
-        parent :: init(I_GET);
+        parent:: init(I_GET);
     }
 
     /**
@@ -53,14 +53,14 @@ class GUI_DayBar extends GUI_Module
      **/
     function loadFiles()
     {
-        $template = $this -> Weblication -> findTemplate('tpl_daybar.html', 'gui_daybar', true);
-        $this -> Template -> setFilePath('stdout', $template);
+        $template = $this->Weblication->findTemplate('tpl_daybar.html', 'gui_daybar', true);
+        $this->Template->setFilePath('stdout', $template);
 
-        $jsFile = $this -> Weblication -> findJavaScript('daybar.js', 'gui_daybar', true);
-        $Frame = $this -> Weblication -> getMain();
+        $jsFile = $this->Weblication->findJavaScript('daybar.js', 'gui_daybar', true);
+        $Frame = $this->Weblication->getMain();
         if($Frame instanceof GUI_CustomFrame) {
-            /* @var $Headerdata GUI_Headerdata */
-            $Headerdata = $Frame->getHeaderdata();
+            /* @var $Headerdata GUI_Head */
+            $Headerdata = $Frame->getHead();
             $Headerdata->addJavaScript($jsFile);
         }
     }
@@ -72,34 +72,31 @@ class GUI_DayBar extends GUI_Module
      **/
     function prepare()
     {
-        $interfaces = $this -> Weblication -> getInterfaces();
-        $Template = & $this -> Template;
-        $Session = & $this -> Session;
-        $Input = & $this -> Input;
-        $Frame = $this->Weblication->getMain();
+        $Template = &$this->Template;
+        $Input = &$this->Input;
 
         #### Bindet gui_....css ein:
-        $cssfile = @$this -> Weblication -> findStyleSheet($this -> getClassName() . '.css', $this -> getClassName(), true);
-        if ($cssfile) {
-            if (is_a($this->Weblication->getMain(), 'GUI_Module')) {
-                if (isset($this->Weblication->getMain()->Headerdata) and is_a($this->Weblication->getMain()->Headerdata, 'GUI_Headerdata')) {
-                    $this->Weblication->getMain()->Headerdata->addStyleSheet($cssfile);
+        $cssfile = @$this->Weblication->findStyleSheet($this->getClassName() . '.css', $this->getClassName(), true);
+        if($cssfile) {
+            if($this->Weblication->hasFrame()) {
+                if($this->Weblication->getFrame()->getHead()) {
+                    $this->Weblication->getFrame()->getHead()->addStyleSheet($cssfile);
                 }
             }
         }
 
-        $dayBarValue = $Input -> getVar('value');
+        $dayBarValue = $Input->getVar('value');
 
-        $Template -> setVar('defaultValue', $Input -> getVar('defaultvalue'));
-        $Template -> setVar('dayBarValue', $dayBarValue);
-        $Template -> setVar('name', $this -> getName());
-        $Template -> setVar('pathToImages', addEndingSlash($Input -> getVar('pathToImages')));
+        $Template->setVar('defaultValue', $Input->getVar('defaultvalue'));
+        $Template->setVar('dayBarValue', $dayBarValue);
+        $Template->setVar('name', $this->getName());
+        $Template->setVar('pathToImages', addEndingSlash($Input->getVar('pathToImages')));
 
-        $onbeforeclick = $Input -> getVar('onbeforeclick');
-        $Template -> setVar('onbeforeclick', $onbeforeclick);
+        $onbeforeclick = $Input->getVar('onbeforeclick');
+        $Template->setVar('onbeforeclick', $onbeforeclick);
 
-        $onclick = $Input -> getVar('onclick');
-        $Template -> setVar('onclick', $onclick);
+        $onclick = $Input->getVar('onclick');
+        $Template->setVar('onclick', $onclick);
     }
 
     /**
@@ -109,7 +106,7 @@ class GUI_DayBar extends GUI_Module
      **/
     function finalize(): string
     {
-        $this -> Template -> parse('stdout');
-        return $this -> Template -> getContent('stdout');
+        $this->Template->parse('stdout');
+        return $this->Template->getContent('stdout');
     }
 }

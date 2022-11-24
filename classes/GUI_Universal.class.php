@@ -84,7 +84,7 @@ class GUI_Universal extends GUI_Module
         #### Bindet gui_....css ein:
         if($this->Weblication->hasFrame()) {
             $cssFile = @$this->Weblication->findStyleSheet($this->getClassName().'.css', $this->getClassName(), true);
-            $this->Weblication->getFrame()->getHeaderdata()->addStyleSheet($cssFile);
+            $this->Weblication->getFrame()->getHead()->addStyleSheet($cssFile);
         }
 
         $this->id = $this->Input->getVar('id');

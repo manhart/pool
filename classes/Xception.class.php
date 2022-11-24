@@ -132,57 +132,33 @@ class Xception
     /**
      * Konstruktur erwartet Fehlertext, Fehlercode und optional Optionen wie File, Line und Callback.
      *
-     * @param string $message Fehlertext
+     * @param string|null $message Fehlertext
      * @param int $code Fehlercode
-     * @param array $backtrace Optionen wie __FILE__, __LINE__ und Callback-Funktion
+     * @param array $magicInfo
+     * @param null $mode
      * @access public
      */
-    function __construct($message = null, $code = 0, $magicInfo = array(), $mode = null)
+    function __construct(?string $message = null, int $code = 0, array $magicInfo = array(), $mode = null)
     {
-        /*				if (version_compare(phpversion(), '4.3.0', '>=')) {
-                    // you're on 4.3.0 or later
-                    $backtrace = debug_backtrace();
-                    array_shift($backtrace);
-                    $this->backtrace = $backtrace;
-                }*/
-        $this->construct($message, (int)$code, $magicInfo, $mode);
-    }
-
-    /**
-     * __construct PHP 5 compatible (siehe Konstruktor).
-     *
-     * @access private
-     */
-    function construct(string $message, int $code, array $magicInfo, $mode)
-    {
-        if(version_compare(phpversion(), '4.3.0', '>=')) {
-            // you're on 4.3.0 or later
-            $backtrace = debug_backtrace();
-            array_shift($backtrace);
-            $this->backtrace = $backtrace;
-        }
-
-        if(is_null($magicInfo)) $magicInfo = array();
-        if(!is_null($message)) {
-            $this->message = $message;
-        }
-
+        $backtrace = debug_backtrace();
+        array_shift($backtrace);
+        $this->backtrace = $backtrace;
+        $this->message = $message;
         $this->code = $code;
         $this->magicInfo = $magicInfo;
         $this->timestamp = time();
         $this->mode = $mode;
 
         $ExceptionHandler = null;
-        if(global_exists('DEFAULT_EXCEPTION_HANDLER')) {
+        if (global_exists('DEFAULT_EXCEPTION_HANDLER')) {
             $ExceptionHandler = &getGlobal('DEFAULT_EXCEPTION_HANDLER');
         }
 
-        if(is_a($ExceptionHandler, 'ExceptionHandler')) {
+        if (is_a($ExceptionHandler, 'ExceptionHandler')) {
             $ExceptionHandler->add($this);
-        }
-        else {
+        } else {
             $EXCEPTION_INSTANCES = array();
-            if(global_exists('EXCEPTION_INSTANCE_STACK')) {
+            if (global_exists('EXCEPTION_INSTANCE_STACK')) {
                 $EXCEPTION_INSTANCES = &getGlobal('EXCEPTION_INSTANCE_STACK');
             }
             $EXCEPTION_INSTANCES[] = &$this;

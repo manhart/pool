@@ -24,10 +24,10 @@
  **/
 class GUI_DHTMLDropdown extends GUI_Module
 {
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
-    {
-        parent::__construct($Owner, false, $params);
-    }
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
 
     /**
      * Default Werte setzen. Input initialisieren.
@@ -74,9 +74,7 @@ class GUI_DHTMLDropdown extends GUI_Module
     {
         $this->loadFiles();
 
-        $interfaces = $this->Weblication->getInterfaces();
         $Template = &$this->Template;
-        $Session = &$this->Session;
         $Input = &$this->Input;
         $Frame = $this->Weblication->getFrame();
 
@@ -131,11 +129,11 @@ class GUI_DHTMLDropdown extends GUI_Module
         $Template->leaveBlock();
 
         #### Funktionen fuer D-Html Dropdown einbinden
-        if(is_a($Frame, 'GUI_CustomFrame')) {
+        if($this->Weblication->hasFrame()) {
             $jsfile = $this->Weblication->findJavaScript('dropdown.js', $this->getClassName(), true);
-            $Frame->Headerdata->addJavaScript($jsfile);
-            $Frame->addBodyMousemove('MousePosition.detect(event)');
-            $Frame->addBodyMouseup('closeDropdownLayer()');
+            $Frame->getHead()->addJavaScript($jsfile);
+            $Frame->addBodyEvent('onmousemove', 'MousePosition.detect(event)');
+            $Frame->addBodyEvent('onmouseup', 'closeDropdownLayer()');
         }
     }
 

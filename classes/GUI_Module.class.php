@@ -19,7 +19,8 @@
  * @link https://alexander-manhart.de
  */
 
-const REQUEST_PARAM_MODULENAME = 'requestModule';
+use pool\classes\ModulNotFoundException;
+
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
 // const FIXED_PARAM_CONFIG = 'config';
@@ -37,61 +38,49 @@ class GUI_Module extends Module
     /**
      * Merkt sich mit dieser Variable das eigene Muster im Template (dient der Identifikation)
      *
-     * @var string $FileIdent
-     * @access private
+     * @var string $marker
      */
-    var $FileIdent;
+    private string $marker;
 
     /**
      * Kompletter Inhalt (geparster Content)
      *
-     * @var string $FinalContent
-     * @access private
+     * @var string $finalContent
      */
-    var $FinalContent = '';
+    private string $finalContent = '';
 
     /**
-     * HTML-Vorlage automatisch vorladen
+     * This will call the loadFiles method.
      *
-     * @var bool $AutoLoadFiles
-     * @access private
+     * @var bool $autoLoadFiles
      */
-    var $AutoLoadFiles;
+    protected bool $autoLoadFiles = true;
 
     /**
      * @var Template $TemplateBox Rapid Template Engine rendert eine Box (nur wenn diese ueber enableBox aktiviert wird)
-     * @access public
      */
-    var $TemplateBox = null;
+    private Template $TemplateBox;
 
     /**
-     * Status der Rahmenbox (um das GUI): TRUE Box ist eingeschaltet und FALSE Box ist deaktiviert
+     * This is how you put a HML template around this GUI. E.g. to create a frame around this template
      *
      * @var bool $enabledBox
-     * @access private
      */
-    var $enabledBox = false;
+    private bool $enabledBox = false;
 
     /**
-     * Ajax Request / XMLHttpRequest
+     * Is this module the Target of an Ajax-Call
      *
      * @var boolean
      */
-    var $isMyXMLHttpRequest = false;
+    private bool $isAjax;
 
     /**
      * Ajax Request auf eine bestimmte Methode in einem GUI; f�hrt kein prepare aus
      *
      * @var string
      */
-    var $XMLHttpRequestMethod = '';
-
-    /**
-     * Nimmt nur den Content eines Moduls u. vernachl�ssigt alle anderen GUI's in der Hierarchie
-     *
-     * @var boolean
-     */
-    private bool $takeMeAlone = false;
+    private string $ajaxMethod = '';
 
     /**
      * Pass result unchanged as JSON string through
@@ -125,7 +114,6 @@ class GUI_Module extends Module
      * @var array<string, string> $templates files (templates) to be loaded, usually used with $this->Template->setVar(...) in the prepare function. Defined as an associated array [handle => tplFile].
      */
     protected array $templates = [];
-
     /**
      * @var array<int, string> $jsFiles javascript files to be loaded, defined as indexed array
      */
@@ -145,75 +133,37 @@ class GUI_Module extends Module
      * Konstruktor
      *
      * @param Component|null $Owner Besitzer vom Typ Component
-     * @param boolean $autoLoadFiles Laedt automatisch Templates und sucht darin GUIs
      * @param array $params additional parameters
-     * @throws ReflectionException
      */
-    public function __construct(?Component $Owner, bool $autoLoadFiles = true, array $params = [])
+    public function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
 
-        if (isAjax()) {
-            if (isset($_REQUEST[REQUEST_PARAM_MODULE]) and $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE]) {
-                $this->isMyXMLHttpRequest = true;
-
-                // eventl. genauer definiert, welches Modul, falls es mehrere des gleichen Typs/Klasse gibt
-                if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                    if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
-                        $this->isMyXMLHttpRequest = true;
-                    }
-                    else {
-                        $this->isMyXMLHttpRequest = false;
-                    }
-                }
-            }
-            elseif (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                if ($this->Name == $_REQUEST[REQUEST_PARAM_MODULENAME]) {
-                    $this->isMyXMLHttpRequest = true;
-                }
-            }
-
-            if ($this->isMyXMLHttpRequest and isset($_REQUEST[REQUEST_PARAM_METHOD])) {
-                $this->XMLHttpRequestMethod = $_REQUEST[REQUEST_PARAM_METHOD];
-            }
-        }
-
-        if ($Owner instanceof Weblication) {
-            if (is_null($Owner->getMain())) {
-                $Owner->setMain($this);
-            }
-        }
+        $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
+        $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod;
 
         $this->Template = new Template();
-        $this->AutoLoadFiles = $autoLoadFiles;
     }
 
     /**
-     * Das Template Objekt laedt HTML Vorlagen.
-     *
-     * @param boolean $search True sucht nach weiteren GUIs
-     **/
-    public function autoLoadFiles(bool $search = true)
+     * Is this module the Target of an Ajax-Call
+     * @return bool
+     */
+    public function isAjax(): bool
     {
-        if ($this->AutoLoadFiles) {
-            // Lade Templates
-            $this->loadFiles();
-            if ($search) {
-                // Suche nach weiteren Modulen (in den Html Templates)
-                $this->searchGUIsInPreloadedContent();
-            }
-        }
+        return $this->isAjax;
     }
 
     /**
      * Liefert den Pfad des GUI's fuer die Template Engine
      *
      * @param bool $lookInside Wenn es sich um ein verschachteltes GUI handelt, dann sollte dies auf true stehen
+     * @param bool $without_frame
      * @return string
      */
-    function getTemplatePath($lookInside = false, $without_frame = true)
+    function getTemplatePath(bool $lookInside = false, bool $without_frame = true): string
     {
-        $Parent = $this->Parent;
+        $Parent = $this->getParent();
         $parent_directory = '';
         if ($lookInside and $Parent != null) {
             do {
@@ -308,10 +258,14 @@ class GUI_Module extends Module
      * @param Component|null $Owner Besitzer dieses Objekts
      * @param Module|null $ParentGUI parent module
      * @param string $params Parameter in der Form key1=value1&key2=value2=&
-     * @return GUI_Module|null Neues GUI_Module
+     * @param bool $autoLoadFiles parameter of GUI-constructor
+     * @param bool $search Do search for GUIs in preloaded Content
+     * @return GUI_Module Neues GUI_Module
+     * @throws ModulNotFoundException
+     * @see GUI_Module::searchGUIsInPreloadedContent()
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
-                                           $autoLoadFiles = true): ?GUI_Module
+                                                  bool $autoLoadFiles = true, bool $search = true): GUI_Module
     {
         $class_exists = class_exists($GUIClassName, false);
 
@@ -323,35 +277,45 @@ class GUI_Module extends Module
         }
 
         if ($class_exists) {
-            // AM, 15.07.2009
-            // eval was slower: eval ("\$GUI = & new $GUIClassName(\$Owner);");
-            // AM, 22.07.2020
             $Params = new Input(I_EMPTY);
             $Params->setParams($params);
             //TODO check authorisation
-            $GUI = new $GUIClassName($Owner, $autoLoadFiles, $Params->getData());
+            $GUI = new $GUIClassName($Owner, $Params->getData());
             /* @var $GUI GUI_Module */
             if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
             }
-            //            if(!$GUI->importParamsDone) $GUI->importParams($params); // Downward compatibility with older GUIs
-            $GUI->autoLoadFiles(true);
+            if ($autoLoadFiles && $GUI->autoLoadFiles) {
+                $GUI->loadFiles();
+                if ($search)
+                    $GUI->searchGUIsInPreloadedContent();
+            }
             return $GUI;
         }
-        else {
-            return null;
+        else {//Class not found
+            throw new ModulNotFoundException("Fehler beim Erzeugen der Klasse '$GUIClassName'");
         }
     }
 
     /**
-     * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.
-     * Ruft die Funktion GUI_Module::searchGUIs() auf.
+     * Sucht in allen vorgeladenen Html Templates nach fest eingetragenen GUIs.<br>
+     * Automatically creates them and adds them to the children of this Modul
+     * @param bool $recurse Execute this while creating the GUIs found in the preloaded content
+     * @param bool $autoLoadFiles Preload the GUIs found
+     * @return void
+     * @throws ModulNotFoundException
+     *@see GUI_Module::createGUIModule()
      */
-    protected function searchGUIsInPreloadedContent()
+    public function searchGUIsInPreloadedContent(bool $recurse = true, bool $autoLoadFiles = true):void
     {
         $TemplateFiles = $this->Template->getFiles();
-        for ($f = 0, $sizeOfTemplateFiles = sizeof($TemplateFiles); $f < $sizeOfTemplateFiles; $f++) {
-            $TemplateFiles[$f]->setContent($this->searchGUIs($TemplateFiles[$f]->getContent()), false);
+        foreach($TemplateFiles as $TemplateFile) {
+            /**@var TempCoreHandle $TemplateFile*/
+            //pump content through searchGUIs
+
+            $content = $TemplateFile->getContent();
+            $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
+            $TemplateFile->setContent($newContent, false);
         }
     }
 
@@ -360,36 +324,45 @@ class GUI_Module extends Module
      *
      * @param string $content Zu durchsuchender Inhalt
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
-     *
-     * @throws ReflectionException
+     * @throws ModulNotFoundException
      */
-    public function searchGUIs(string $content): string
+    protected function searchGUIs(string $content, bool $recurse = true, bool $autoLoadFiles = true): string
     {
-        $reg = '/\[(GUI_.*)(\((.*)\)|)\]/mU';
+        $reg = '/\[(GUI_.*)(\((.*)\)|)]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
-        if ($bResult) {
-            for ($i = 0, $numMatches = count($matches); $i < $numMatches; $i++) {
-                $pattern = $matches[$i][0];
-                $guiname = $matches[$i][1];
-                $params = isset($matches[$i][3]) ? $matches[$i][3] : '';
-                $new_GUI = $this->createGUIModule($guiname, $this->getOwner(), $this, $params);
 
-                if (is_null($new_GUI)) {
-                    $message = 'Fehler beim Erzeugen der Klasse "{guiname}"';
-                    $E = new Xception($message, 0, magicInfo(__FILE__, __LINE__, __FUNCTION__, __CLASS__,
-                        compact('guiname')), null);
-                    $this->throwException($E);
-                }
-                else {
-                    $replacement = '{' . strtoupper($new_GUI->getName()) . '}';
-                    $new_GUI->setMarker($replacement);
-                    $content = preg_replace('/' . preg_quote($pattern, '/') . '/mU', $replacement, $content, 1);
-                    $this->insertModule($new_GUI);
-                }
+        if(!$bResult)//no GUIs
+            return $content;
+        else {//GUIs found
+            $newContent = [];
+            $caret = 0;
+            foreach ($matches as $match) {
+                $pattern = $match[0];
+                $guiName = $match[1];
+                $params = $match[3] ?? '';
+                //try building the GUI found
+                $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
+                //get unique identifier
+                $guiIdentifier = "[{$new_GUI->getName()}]";
+                //store reference for later insertion in pasteChildren()
+                $new_GUI->setMarker($guiIdentifier);
+                //add GUI to child-list
+                $this->insertModule($new_GUI);
                 unset($new_GUI);
-            }
+
+                //find the beginning of this Match
+                $beginningOfMatch = strpos($content, $pattern, $caret);
+                //save content between Matches
+                $newContent[] = substr($content, $caret, $beginningOfMatch - $caret);
+                //insert identifier
+                $newContent[] = $guiIdentifier;
+                //move caret to end of this match
+                $caret = $beginningOfMatch + strlen($pattern);
+            }//end foreach
+            //add remainder
+            $newContent[] = substr($content, $caret);
+            return implode($newContent);
         }
-        return $content;
     }
 
     /**
@@ -400,25 +373,26 @@ class GUI_Module extends Module
      * @param string $content Content / Inhalt
      * @return string Content / Inhalt aller Childs
      *
-     * @throws ReflectionException
+     * @throws ModulNotFoundException
+     * @throws Exception
      */
     public function reviveChildGUIs(string $content): string
     {
         //$content = $this -> FindGUIsByContent($content);
         $content = $this->searchGUIs($content);
-        $this->prepareChilds();
-        $this->finalizeChilds();
-        return $this->pasteChilds($content);
+        $this->prepareChildren();
+        $this->finalizeChildren();
+        return $this->pasteChildren($content);
     }
 
     /**
      * Setzt sich Merker, auf welchem FileHandle sitze ich. Welches Muster (Ident) habe ich innerhalb des Templates.
      *
-     * @param string $ident Identifikation innerhalb des Templates
+     * @param string $marker Identifikation innerhalb des Templates
      */
-    private function setMarker($ident)
+    private function setMarker(string $marker)
     {
-        $this->FileIdent = $ident;
+        $this->marker = $marker;
     }
 
     /**
@@ -426,9 +400,9 @@ class GUI_Module extends Module
      *
      * @return string Ident/Pattern/Muster
      **/
-    private function getMarkerIdent()
+    private function getMarker(): string
     {
-        return $this->FileIdent;
+        return $this->marker;
     }
 
     /**
@@ -437,11 +411,10 @@ class GUI_Module extends Module
      *
      * @param string $title Titel
      * @param string $template HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html"); sucht immer im Projektverzeichnis nach der Vorlage.
-     * @access public
      **/
-    function enableBox($title = '', $template = 'tpl_box.html')
+    public function enableBox(string $title = '', string $template = 'tpl_box.html')
     {
-        $file = $this->Weblication->findTemplate($template, $this->getClassName(), false);
+        $file = $this->Weblication->findTemplate($template, $this->getClassName());
         if ($file) {
             $this->TemplateBox = new Template();
             $this->TemplateBox->setFilePath('stdout', $file);
@@ -455,19 +428,12 @@ class GUI_Module extends Module
 
     /**
      * Deaktiviert die Box.
-     *
-     * @access public
-     **/
-    function disableBox()
+     */
+    public function disableBox()
     {
         $this->enabledBox = false;
     }
 
-    /*
-     * Laedt Templates (virtuelle Methode sollte ueberschrieben werden, falls im Konstruktor AutoLoad auf true gesetzt wird).
-     *
-     * @return GUI_Module
-     */
     public function loadFiles()
     {
         if(!$this->getWeblication()) return $this;
@@ -484,12 +450,12 @@ class GUI_Module extends Module
 
         foreach($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
-            $Frame->getHeaderdata()->addStyleSheet($cssFile);
+            $Frame->getHead()->addStyleSheet($cssFile);
         }
 
         foreach($this->jsFiles as $jsFile) {
             $jsFile = $this->getWeblication()->findJavaScript($jsFile, $className);
-            $Frame->getHeaderdata()->addJavaScript($jsFile);
+            $Frame->getHead()->addJavaScript($jsFile);
         }
 
         // automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication (if enabled).
@@ -497,7 +463,6 @@ class GUI_Module extends Module
 
         return $this;
     }
-
 
     /**
      * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication.
@@ -524,61 +489,48 @@ class GUI_Module extends Module
                 return;
             }
 
-            $this->Weblication->getFrame()->getHeaderdata()->addJavaScript($js);
+            $this->Weblication->getFrame()->getHead()->addJavaScript($js);
         }
 
         $windowCode = '';
         if($global) {
             $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
         }
-        $this->Weblication->getFrame()->getHeaderdata()->addScriptCode($this->getName(),
+        $this->Weblication->getFrame()->getHead()->addScriptCode($this->getName(),
             $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
-    }
-
-    protected function getJavaScriptFiles(): array
-    {
-        return [];
     }
 
     /**
      * Adds a closed method (Closure) as an Ajax call. Only Ajax methods are callable by the client.
      *
      * @param string $alias name of the method
-     * @param Closure $closure class for anonymous function
+     * @param Closure $method class for anonymous function
+     * @param mixed ...$meta
      * @return GUI_Module
      */
-    protected function addAjaxMethod(string $alias, Closure $closure): self
+    protected function registerAjaxMethod(string $alias, Closure $method, ...$meta): self
     {
-        $this->ajaxMethods[$alias] = $closure;
+        $meta['alias'] = $alias;
+        $meta['method'] = $method;
+        $this->ajaxMethods[$alias] = $meta;
         return $this;
     }
 
     /**
-     * Provisioning data before preparing module and there children.
-     **/
-    public function prepareContent()
-    {
-        // todo before_provision or before_parents, after_provision or after_parents ?
-//        $this->provision(); // 23.12.21, AM, moved to Weblication::prepareContent!!
-
-//        echo 'prepare: '.$this->getName().'<br>';
-        if ($this->isMyXMLHttpRequest and $this->XMLHttpRequestMethod) {
-            return true;
-        }
-
-        $this->prepare();
-        $this->prepareChilds();
-    }
+     * frontend control: Prepare data for building the content or responding to an ajax-call<br>
+     * Called once all modules and files have been loaded
+     */
+    public function provision(): void{}
 
     /**
-     * provision something
+     * Runs provision on all modules
+     * @return void
      */
-    public function provision()
+    public function provisionContent(): void
     {
-        // echo $this->getName().'<br>';
-        $max = count($this->Modules);
-        for ($m = 0; $m < $max; $m++) {
-            $this->Modules[$m]->provision();
+        $this->provision();
+        foreach($this->childModules as $modul) {
+            $modul->provisionContent();
         }
     }
 
@@ -588,56 +540,63 @@ class GUI_Module extends Module
     protected function prepare() {}
 
     /**
-     * Bereitet alle Html Templates aller Childs auf.
+     * Runs prepare on all modules
+     * Preparing modules and their children.
      **/
-    private function prepareChilds()
+    public function prepareContent()
     {
-        $max = count($this->Modules);
-        for ($m = 0; $m < $max; $m++) {
-            $gui = $this->Modules[$m];
-            $gui->importHandoff($this->Handoff);
-            $gui->prepareContent();
+        $this->prepare();
+        $this->prepareChildren();
+    }
+
+    /**
+     * Bereitet alle Html Templates aller Children auf.
+     **/
+    private function prepareChildren()
+    {
+        foreach($this->childModules as $module) {
+            /** @var GUI_Module $module */
+            $module->importHandoff($this->Handoff);
+            $module->prepareContent();
         }
     }
 
     /**
      * returns json encoded data of a method call of this object (intended use: ajax)
      *
-     * @param string $method
+     * @param string $requestedMethod
      * @return string
      * @throws ReflectionException
      * @throws Exception
      */
-    private function finalizeMethod(string $method): string
+    private function invokeAjaxMethod(string $requestedMethod): string
     {
         $result = '';
 
-        $Closure = $this->ajaxMethods[$method] ?? null;
+        $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
+        $Closure = $ajaxMethod['method'] ?? null;
 
         // 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
-        if(!($Closure || is_callable([$this, $method]))) {
-            $Xception = new Xception('The method "' . $method . '" in the class ' . $this->getClassName().' is not callable', 0, array(),
-                POOL_ERROR_DISPLAY);
-            $Xception->raiseError();
-            return '';
+        if(!($Closure || is_callable([$this, $requestedMethod]))) {
+            throw new Exception('The method "' . $requestedMethod . '" in the class ' . $this->getClassName().' is not callable');
         }
 
         // @todo validate parameters?
 
         try {
-            $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $method);
+            $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $requestedMethod);
             $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
         }
         catch(\ReflectionException $e) {
-            $Xception = new Xception('Error calling method '.$method.' on '.$this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
+            $Xception = new Xception('Error calling method '.$requestedMethod.' on '.$this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
             $Xception->raiseError();
             return '';
         }
 
         // collect every ajax calls that are not closures
         if(!$Closure) {
-            Log::info('The method '.$this->getClassName().':'.$method.' is not used as Closure ', ['className' => $this->getClassName(),
-                'method' => $method], 'ajaxCallLog');
+            Log::info('The method '.$this->getClassName().':'.$requestedMethod.' is not used as Closure ', ['className' => $this->getClassName(),
+                'method' => $requestedMethod], 'ajaxCallLog');
         }
 
         error_clear_last();
@@ -690,6 +649,7 @@ class GUI_Module extends Module
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
             catch(\ReflectionException $e) {
+
                 echo $e->getMessage();
             }
         }
@@ -697,7 +657,7 @@ class GUI_Module extends Module
         $undefinedContent = ob_get_contents();
         ob_end_clean();
 
-        return $this->respondToAjaxCall($result, $undefinedContent, $callingClassName.':'.$method);
+        return $this->respondToAjaxCall($result, $undefinedContent, $callingClassName.':'.$requestedMethod);
     }
 
     /**
@@ -808,7 +768,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Stellt den Inhalt der Html Templates fertig und sorgt dafuer, dass auch alle Childs fertig gestellt werden.
+     * Stellt den Inhalt der Html Templates fertig und sorgt dafuer, dass auch alle Children fertiggestellt werden.
      * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
      *
      * @return string Content / Inhalt
@@ -816,59 +776,39 @@ class GUI_Module extends Module
      */
     public function finalizeContent(): string
     {
-        $content = '';
-        $this->finalizeChilds();
-        if ($this->enabled) {
-            if ($this->isMyXMLHttpRequest && isset($_REQUEST[REQUEST_PARAM_METHOD])) {
-                // dispatch Ajax Call only for ONE GUI -> returns JSON
-                $content = $this->finalizeMethod($_REQUEST[REQUEST_PARAM_METHOD]);
-                // hier wird abgebrochen, pool wurde bis zu dieser instanz durchlaufen
-                if (isset($_REQUEST[REQUEST_PARAM_MODULENAME])) {
-                    $this->takeMeAlone = true; // dieses GUI wirft ganz alleine den Inhalt von finalizeMethod zur�ck
-                    /*						print $content;
-                                        exit(0);*/
+        if ($this->enabled()) {
+            $this->finalizeChildren();
+            if ($this->isAjax) {//GUI is target of the Ajax-Call
+                //Start the Ajax Method -> returns JSON
+                $content = $this->invokeAjaxMethod($this->ajaxMethod);
+            } else {
+                //Parse Templates or get the finished Content from a specific implementation
+                $content = $this->finalize();
+                //Wrap a GUI_Box around the content
+                if ($this->enabledBox) {
+                    $this->TemplateBox->setVar('CONTENT', $content);
+                    $this->TemplateBox->parse('stdout');
+                    $content = $this->TemplateBox->getContent('stdout');
+                    $this->TemplateBox->clear();
                 }
             }
-            elseif (!$this->takeMeAlone) {
-                $content = $this->finalize();
-            }
-            else {
-                $content = $this->FinalContent;
-            }
-
-
-            # render Box
-            if ($this->enabledBox == true) {
-                $this->TemplateBox->setVar('CONTENT', $content);
-                $this->TemplateBox->parse('stdout');
-                $content = $this->TemplateBox->getContent('stdout');
-                $this->TemplateBox->clear();
-            }
-
-            if (!$this->takeMeAlone) {
-                $content = $this->pasteChilds($content);
-            }
+            return $this->pasteChildren($content);
+        } else {
+            return "";
         }
-        return $content;
     }
 
     /**
      * Fertigt alle Html Templates der Childs an.
-     **/
-    private function finalizeChilds()
+     *
+     * @throws Exception
+     */
+    private function finalizeChildren()
     {
-        $count = count($this->Modules);
-        for ($m = 0; $m < $count; $m++) {
-            $gui = $this->Modules[$m];
-            /*echo $gui->getClassName().' '.bool2string($gui->enabled).'<br>';*/
-            if ($gui->enabled) {
-                $gui->FinalContent = $gui->finalizeContent();
-                $this->takeMeAlone = $gui->takeMeAlone;
-                if ($this->takeMeAlone) {
-                    $this->FinalContent = $gui->FinalContent;
-                    break; // nachfolgende Module wuerden Fehler verursachen, da takeMeAlone reseted w�rde
-                }
-            }
+        /** @var GUI_Module $GUI */
+        foreach($this->childModules as $GUI) {
+            if(!$GUI->enabled()) continue;
+            $GUI->finalContent = $GUI->finalizeContent();
         }
     }
 
@@ -878,14 +818,13 @@ class GUI_Module extends Module
      * @param string $content Eigener Content
      * @return string Eigener Content samt dem Content der Child GUIs
      **/
-    private function pasteChilds(string $content): string
+    private function pasteChildren(string $content): string
     {
-        $count = count($this->Modules);
-        for ($m = 0; $m < $count; $m++) {
-            $gui = $this->Modules[$m];
-            $content = str_replace($gui->getMarkerIdent(), $gui->FinalContent, $content);
+        $replace_pairs = [];
+        foreach($this->childModules as $GUI) {
+            $replace_pairs[$GUI->getMarker()] = $GUI->finalContent;
         }
-        return $content;
+        return strtr($content, $replace_pairs);
     }
 
     /**

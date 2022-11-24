@@ -10,7 +10,6 @@
 
 let REQUEST_METHOD;
 let REQUEST_SCHEMA;
-let REQUEST_PARAM_MODULENAME;
 let REQUEST_CONTENTTYPE;
 let REQUEST_PROCESSDATA;
 let REQUEST_DATATYPE;
@@ -20,7 +19,6 @@ function resetGlobalsOfRequestPOOL()
 {
     REQUEST_METHOD = undefined;
     REQUEST_SCHEMA = null;
-    REQUEST_PARAM_MODULENAME = 'requestModule';
     REQUEST_CONTENTTYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
     REQUEST_PROCESSDATA = true;
     REQUEST_DATATYPE = '';

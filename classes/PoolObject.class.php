@@ -25,7 +25,7 @@
  * @package pool
  */
 
-if (substr(PHP_OS, 0, 3) == 'WIN') {
+if(str_starts_with(PHP_OS, 'WIN')) {
     $os_windows = true;
 }
 else {
@@ -69,7 +69,7 @@ class PoolObject extends stdClass
      *
      * @var bool $debug
      */
-    private bool $isDebugMode=false;
+    private bool $isDebugMode = false;
 
     /**
      * Zeilenumbruch (fuer HTML/Konsolen Ausgaben)
@@ -78,7 +78,7 @@ class PoolObject extends stdClass
      * @var string $new_line
      * @access private
      */
-    var $new_line='<br>';
+    var $new_line = '<br>';
 
     /**
      * POOL class extension
@@ -184,21 +184,33 @@ class PoolObject extends stdClass
      */
     public static function autoloadClass(string $className): bool
     {
-        $classRootDirs = array(
-            getcwd()
-        );
-        if(defined('DIR_POOL_ROOT')) {
-            $classRootDirs[] = DIR_POOL_ROOT;
+        $hasNamespace = str_contains($className, '\\');
+
+        if($hasNamespace) {
+            $classRootDirs = [
+                DIR_DOCUMENT_ROOT
+            ];
+
+            $className = str_replace('\\', '/', $className);
         }
-        if(defined('DIR_COMMON_ROOT')) {
-            $classRootDirs[] = DIR_COMMON_ROOT;
+        else {
+            $classRootDirs = [
+                getcwd() . '/' . PWD_TILL_CLASSES
+            ];
+            if(defined('DIR_POOL_ROOT')) {
+                $classRootDirs[] = DIR_POOL_ROOT . '/' . PWD_TILL_CLASSES;
+            }
+            if(defined('DIR_COMMON_ROOT')) {
+                $classRootDirs[] = DIR_COMMON_ROOT . '/' . PWD_TILL_CLASSES;
+            }
         }
 
-        foreach ($classRootDirs as $classRootDir) {
-            $classRootDir = addEndingSlash($classRootDir).addEndingSlash(PWD_TILL_CLASSES);
+        foreach($classRootDirs as $classRootDir) {
+            $classRootDir = addEndingSlash($classRootDir);
 
-            $filename = $classRootDir.$className.PoolObject::CLASS_EXTENSION;
-            if (file_exists($filename)) {
+            $filename = $classRootDir . $className . PoolObject::CLASS_EXTENSION;
+
+            if(file_exists($filename)) {
                 require_once $filename;
                 return true;
             }
@@ -233,27 +245,27 @@ class PoolObject extends stdClass
      */
     function debug(string $text)
     {
-        if ($this->isDebugMode == true) {
-            print($text.$this->new_line);
+        if($this->isDebugMode == true) {
+            print($text . $this->new_line);
         }
     }
 
     /**
-    * Loest eine PHP Fehlermeldung vom Typ E_USER_NOTICE aus.
-    * Ab PHP 4.3.0 stehen noch __CLASS__ und __FUNCTION__ zur Verfuegung. Da diese Objekt Version jedoch unter 4.1.6 entwickelt wird, stehen nur __FILE__ und __LINE__ als Parameter bereit.
-    * Die Funktion raiseError arbeitet mit der PHP Funktion trigger_error(). Wird der PHP Error Handler ueberschrieben, koennen individuelle Fehlerprotokolle erstellt werden.
-    *
-    * @param string $file Datei (in der, der Fehler aufgetreten ist)
-    * @param int $line Zeilennummer
-    * @param string $msg Fehlermeldung (Setzt sich zusammen aus: Fehler in der Klasse -Platzhalter-, Datei -Platzhalter-, Zeile -Platzhalter- Meldung: -Fehlermeldung-
-    */
+     * Loest eine PHP Fehlermeldung vom Typ E_USER_NOTICE aus.
+     * Ab PHP 4.3.0 stehen noch __CLASS__ und __FUNCTION__ zur Verfuegung. Da diese Objekt Version jedoch unter 4.1.6 entwickelt wird, stehen nur __FILE__ und __LINE__ als Parameter bereit.
+     * Die Funktion raiseError arbeitet mit der PHP Funktion trigger_error(). Wird der PHP Error Handler ueberschrieben, koennen individuelle Fehlerprotokolle erstellt werden.
+     *
+     * @param string $file Datei (in der, der Fehler aufgetreten ist)
+     * @param int $line Zeilennummer
+     * @param string $msg Fehlermeldung (Setzt sich zusammen aus: Fehler in der Klasse -Platzhalter-, Datei -Platzhalter-, Zeile -Platzhalter- Meldung: -Fehlermeldung-
+     */
     public function raiseError(string $file, int $line, string $msg)
     {
         if(error_reporting() == 0) {
             return;
         }
         $error = $msg;
-        $error .= ' in class '.$this->getClassName() . ', file '.$file.', line '.$line;
+        $error .= ' in class ' . $this->getClassName() . ', file ' . $file . ', line ' . $line;
 
         trigger_error($error);
     }
@@ -265,7 +277,7 @@ class PoolObject extends stdClass
      *
      * @param Xception $Xception Die Xception oder null, falls es sich bei diesem Objekt selbst um eine Xception handelt.
      **/
-    public function throwException($Xception=null)
+    public function throwException($Xception = null)
     {
         if(is_null($Xception) and $this instanceof Xception) {
             $Xception = &$this;
@@ -275,7 +287,7 @@ class PoolObject extends stdClass
             $Xception->raiseError();
         }
         else {
-            echo 'Fatal exception error in Object::throwException!'.$this->new_line;
+            echo 'Fatal exception error in Object::throwException!' . $this->new_line;
             die('Script terminated');
         }
     }
@@ -287,13 +299,13 @@ class PoolObject extends stdClass
      * @param int $code Wenn $data eine Xception ist, wird true zurueckgeben; aber wenn der Parameter $code ein String ist und $obj->getMessage() == $code oder $code ist ein integer und $obj->getCode() == $code
      * @return bool true wenn es sich bei dem Parameter um eine Xception handelt.
      **/
-    public function isError($data, $code=null): bool
+    public function isError($data, $code = null): bool
     {
         if($data instanceof Xception) {
-            if (is_null($code)) {
+            if(is_null($code)) {
                 return true;
             }
-            elseif (is_string($code)) {
+            elseif(is_string($code)) {
                 return ($data->getMessage() == $code);
             }
             else {
@@ -312,27 +324,27 @@ class PoolObject extends stdClass
      */
     function loadExtension($ext): bool
     {
-        if (!extension_loaded($ext)) {
+        if(!extension_loaded($ext)) {
             // if either returns true dl() will produce a FATAL error, stop that
-            if ((ini_get('enable_dl') != 1) || (ini_get('safe_mode') == 1)) {
+            if((ini_get('enable_dl') != 1) || (ini_get('safe_mode') == 1)) {
                 return false;
             }
-            if (constant('OS_WINDOWS')) {
+            if(constant('OS_WINDOWS')) {
                 $suffix = '.dll';
             }
-            elseif (PHP_OS == 'HP-UX') {
+            elseif(PHP_OS == 'HP-UX') {
                 $suffix = '.sl';
             }
-            elseif (PHP_OS == 'AIX') {
+            elseif(PHP_OS == 'AIX') {
                 $suffix = '.a';
             }
-            elseif (PHP_OS == 'OSX') {
+            elseif(PHP_OS == 'OSX') {
                 $suffix = '.bundle';
             }
             else {
                 $suffix = '.so';
             }
-            return @dl('php_'.$ext.$suffix) || @dl($ext.$suffix);
+            return @dl('php_' . $ext . $suffix) || @dl($ext . $suffix);
         }
         return true;
     }
