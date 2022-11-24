@@ -2,11 +2,11 @@
 /**
  * -= Rapid Module Library (RML) =-
  *
- * Headerdata.class.php
+ * Header.class.php
  *
- * Kopfdaten fuer ein Html Dokument.
+ * Kopfdaten fuer ein Html Dokument (<head>kopfdaten</head>)..
  *
- * @version $Id: gui_headerdata.class.php,v 1.6 2007/08/09 10:23:06 manhart Exp $
+ * @version $Id: gui_head.class.php,v 1.6 2007/08/09 10:23:06 manhart Exp $
  * @version $Revision 1.0$
  * @version
  *
@@ -15,23 +15,13 @@
  * @link https://alexander-manhart.de
  */
 
-const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
-const ROBOTS_INDEX = 'index';        # Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (index = Indizierung).
-const ROBOTS_NOFOLLOW = 'nofollow';    # Damit erlauben Sie einem Suchprogramm, Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (nofollow = nicht folgen). Sie verbieten dem Suchprogramm jedoch, untergeordnete Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen.
-const ROBOTS_FOLLOW = 'follow';        # Damit erlauben Sie einem Suchprogramm ausdruecklich, Inhalte aus der aktuellen HTML-Datei und aus untergeordneten Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen und an seine Suchdatenbank zu uebermitteln (follow = folgen).
-
-/**
- * Class GUI_Headerdata
- *
- * Objekt fuer die Html Kopfdaten (<head>kopfdaten</head>).
- *
- * @package pool
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: gui_headerdata.class.php,v 1.6 2007/08/09 10:23:06 manhart Exp $
- * @access public
- **/
-class GUI_Headerdata extends GUI_Module
+class GUI_Head extends GUI_Module
 {
+    const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
+    const ROBOTS_INDEX = 'index';        # Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (index = Indizierung).
+    const ROBOTS_NOFOLLOW = 'nofollow';    # Damit erlauben Sie einem Suchprogramm, Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (nofollow = nicht folgen). Sie verbieten dem Suchprogramm jedoch, untergeordnete Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen.
+    const ROBOTS_FOLLOW = 'follow';        # Damit erlauben Sie einem Suchprogramm ausdruecklich, Inhalte aus der aktuellen HTML-Datei und aus untergeordneten Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen und an seine Suchdatenbank zu uebermitteln (follow = folgen).
+
     // @var integer Datei von Originaladresse laden; z.B. 12 Stunden = 43200; (vertraegt auch String siehe Selfhtml)
     // @access private
     var $Expires = 0;
@@ -48,9 +38,11 @@ class GUI_Headerdata extends GUI_Module
     // @access private
     var $ProxyNoCache = true;
 
-    // @var array [seconds] [url] Automatische Weiterleitung zu anderer Adresse (Forwarding)
-    // @access private
-    var $MetaRefresh = array();
+    /**
+     * meta refresh
+     * @var array
+     */
+    private array $metaRefresh = [];
 
     /**
      * @var string
@@ -62,8 +54,7 @@ class GUI_Headerdata extends GUI_Module
     var $Description = '';
 
     // @var string Suchmaschinenen-Robot Anweisungen
-    // @access private
-    var $Robots = ROBOTS_NOFOLLOW;
+    private string $robots = self::ROBOTS_NOFOLLOW;
 
     /**
      * StyleSheet Files
@@ -77,7 +68,7 @@ class GUI_Headerdata extends GUI_Module
      *
      * @var array
      */
-    var $StyleSheetsMedia = array();
+    private array $styleSheetsMedia = [];
 
     /**
      * @var array javascript file names to prevent double inclusion
@@ -85,8 +76,18 @@ class GUI_Headerdata extends GUI_Module
     private array $javaScriptFiles = [];
 
     //@var string Base Target
-    //@access private
-    var $Base_Target = '_top';
+
+    /**
+     * base target: _blank, _self (browser default), _parent, _top
+     * @var string
+     */
+    private string $baseTarget = '_self';
+
+    /**
+     * base href
+     * @var string
+     */
+    private string $baseHref;
 
     /**
      * X-UA-Compatible Meta Tag
@@ -116,27 +117,27 @@ class GUI_Headerdata extends GUI_Module
      * Konstruktor
      *
      * @param object $Owner Besitzer vom Typ Component
-     * @param bool $autoLoadFiles
      * @param array $params
-     * @throws ReflectionException
      */
-    function __construct($Owner, $autoLoadFiles = true, array $params = [])
+    function __construct($Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
 
+        $this->baseHref = $_SERVER['PHP_SELF'];
+
         $php_default_charset = ini_get('default_charset');
-        if(strlen($php_default_charset) > 0) {
+        if($php_default_charset) {
             $this->charset = strtoupper($php_default_charset);
         }
     }
 
     /**
      * loads the template (Html Kopfdaten)
-     **/
+     */
     public function loadFiles()
     {
-        $file = $this->Weblication->findTemplate('tpl_headerdata.html', 'gui_headerdata', true);
-        $this->Template->setFilePath('headerdata', $file);
+        $file = $this->Weblication->findTemplate('tpl_head.html', __CLASS__, true);
+        $this->Template->setFilePath('head', $file);
     }
 
     /**
@@ -146,7 +147,7 @@ class GUI_Headerdata extends GUI_Module
      * @access public
      * @param integer $expire Anzahl in Sekunden. 0 bedeutet der Browser muss immer von der Originaldatei laden
      **/
-    function setExpires($expire)
+    public function setExpires($expire)
     {
         $this->Expires = $expire;
     }
@@ -212,14 +213,14 @@ class GUI_Headerdata extends GUI_Module
     }
 
     /**
-     * Gibt Suchmaschinen Robots Anweisungen, was er auf dieser Seite tun soll. Siehe Headerdata.class.php Konstanten im oberen Bereich!!
+     * Gibt Suchmaschinen Robots Anweisungen, was er auf dieser Seite tun soll. Siehe head.class.php Konstanten im oberen Bereich!!
      * z.b. Indexierung oder keine Indexierung, Follow etc.
      *
      * @param string $sRobots Uebergabe von ROBOT_ Konstanten
      **/
     function setRobots($sRobots)
     {
-        $this->Robots = $sRobots;
+        $this->robots = $sRobots;
     }
 
     /**
@@ -240,8 +241,8 @@ class GUI_Headerdata extends GUI_Module
      **/
     function setMetaRefresh($seconds, $url)
     {
-        $this->MetaRefresh['seconds'] = $seconds;
-        $this->MetaRefresh['url'] = $url;
+        $this->metaRefresh['seconds'] = $seconds;
+        $this->metaRefresh['url'] = $url;
     }
 
     /**
@@ -249,7 +250,7 @@ class GUI_Headerdata extends GUI_Module
      *
      * @param string $file
      * @param null $media
-     * @return GUI_Headerdata
+     * @return GUI_Head
      */
     public function addStyleSheet(string $file, $media = null): self
     {
@@ -257,7 +258,7 @@ class GUI_Headerdata extends GUI_Module
         if($this->addFileFct) $file = call_user_func($this->addFileFct, $file);
         if(in_array($file, $this->styleSheetFiles)) return $this;
         $this->styleSheetFiles[] = $file;
-        $this->StyleSheetsMedia[count($this->styleSheetFiles) - 1] = $media;
+        $this->styleSheetsMedia[count($this->styleSheetFiles) - 1] = $media;
         return $this;
     }
 
@@ -266,7 +267,7 @@ class GUI_Headerdata extends GUI_Module
      *
      * @param string $file file
      * @param array $attributes (optional)
-     * @return GUI_Headerdata
+     * @return GUI_Head
      */
     public function addJavaScript(string $file, array $attributes = []): self
     {
@@ -298,7 +299,7 @@ class GUI_Headerdata extends GUI_Module
 
     /**
      * @param callable $fct
-     * @return GUI_Headerdata
+     * @return GUI_Head
      */
     public function onAddFile(callable $fct): self
     {
@@ -317,9 +318,16 @@ class GUI_Headerdata extends GUI_Module
         $this->scriptCode[$name] = $code;
     }
 
-    function setBaseTarget($target = '_top')
+    /**
+     * @param string $href
+     * @param string $target
+     * @return GUI_Head
+     */
+    public function setBaseTarget(string $href, string $target = '_top'): self
     {
-        $this->Base_Target = $target;
+        $this->baseHref = $href;
+        $this->baseTarget = $target;
+        return $this;
     }
 
     /**
@@ -334,18 +342,20 @@ class GUI_Headerdata extends GUI_Module
 
     /**
      * Bereitet die Html Kopfdaten vor.
-     **/
-    function prepare()
+     */
+    public function prepare()
     {
         $Url = new Url(I_EMPTY);
-        $this->Template->setVar(
+
+        $this->Template->setVars(
             array(
                 'EXPIRES' => $this->Expires,
                 'LANGUAGE' => $this->ContentLanguage,
                 'TITLE' => $this->title,
                 'DESCRIPTION' => $this->Description,
-                'ROBOTS' => $this->Robots,
-                'BASE_TARGET' => $this->Base_Target,
+                'ROBOTS' => $this->robots,
+                'BASE_HREF' => $this->baseHref,
+                'BASE_TARGET' => $this->baseTarget,
                 'CHARSET' => $this->charset,
                 'SCRIPT' => $Url->getUrl()
             )
@@ -366,37 +376,33 @@ class GUI_Headerdata extends GUI_Module
             $this->Template->newBlock('PROXYNOCACHE');
         }
 
-        if(count($this->MetaRefresh) > 0) {
+        if(count($this->metaRefresh) > 0) {
             $this->Template->newBlock('METAREFRESH');
-            $this->setVar('REFRESH', $this->MetaRefresh['seconds']);
-            $this->setVar('URL', $this->MetaRefresh['url']);
+            $this->setVar('REFRESH', $this->metaRefresh['seconds']);
+            $this->setVar('URL', $this->metaRefresh['url']);
         }
 
-        if(count($this->styleSheetFiles) > 0) {
-            $z = 0;
-            foreach($this->styleSheetFiles as $css) {
-                $this->Template->newBlock('STYLESHEET');
-                $this->Template->setVar('FILENAME', $css);
-                if(!is_null($this->StyleSheetsMedia[$z])) { // Media
-                    $this->Template->setVar('MEDIA', ' media="' . $this->StyleSheetsMedia[$z] . '"');
-                }
-                else {
-                    $this->Template->setVar('MEDIA', '');
-                }
-                $z++;
+        $z = 0;
+        foreach($this->styleSheetFiles as $css) {
+            $this->Template->newBlock('STYLESHEET');
+            $this->Template->setVar('FILENAME', $css);
+            if(!is_null($this->styleSheetsMedia[$z])) { // Media
+                $this->Template->setVar('MEDIA', ' media="' . $this->styleSheetsMedia[$z] . '"');
             }
+            else {
+                $this->Template->setVar('MEDIA', '');
+            }
+            $z++;
         }
 
-        if(count($this->javaScriptFiles) > 0) {
-            foreach($this->javaScriptFiles as $js) {
-                $this->Template->newBlock('JAVASCRIPT');
-                $this->Template->setVar('FILENAME', $js['file']);
-                $attributes = '';
-                if(isset($js['attributes'])) {
-                    $attributes = htmlAttributes($js['attributes']);
-                }
-                $this->Template->setVar('attributes', $attributes);
+        foreach($this->javaScriptFiles as $js) {
+            $this->Template->newBlock('JAVASCRIPT');
+            $this->Template->setVar('FILENAME', $js['file']);
+            $attributes = '';
+            if(isset($js['attributes'])) {
+                $attributes = htmlAttributes($js['attributes']);
             }
+            $this->Template->setVar('attributes', $attributes);
         }
 
         if(count($this->scriptCode) > 0) {
@@ -408,7 +414,7 @@ class GUI_Headerdata extends GUI_Module
                 }
                 else {
                     if($this->Weblication->isXdebugEnabled()) {
-                        xdebug_print_function_stack('SCRIPT_CODE is missing in tpl_headerdata.html');
+                        xdebug_print_function_stack('SCRIPT_CODE is missing in tpl_head.html');
                     }
                 }
             }
@@ -425,7 +431,7 @@ class GUI_Headerdata extends GUI_Module
      * Gibt die fertigen Html Kopfdaten zurueck.
      *
      * @return string Content (Kopfdaten)
-     **/
+     */
     public function finalize(): string
     {
         $this->Template->parse();
