@@ -45,7 +45,7 @@ class GUI_Scrollbox extends GUI_Module
     {
         $this->TplSbox = new Template();
 
-        parent::__construct($Owner, $autoLoadFiles, $params);
+        parent::__construct($Owner, $params);
 
         $file = $this->Weblication->findTemplate($this->Input->getVar('fileTemplateHTML'),
             'gui_scrollbox', true);
@@ -60,18 +60,18 @@ class GUI_Scrollbox extends GUI_Module
      * @access public
      * @param integer|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
-        $this -> Defaults -> addVar(
+        $this->Defaults->addVar(
             array(
-                'boxwidth'			=> 190,
-                'boxheight'			=> 160,
-                'gapheight'			=> 37, // Summe Kopfzeilenhoehe + Fusszeilenhoehe und Abstaende; daraus errechnet sich CONTENTHEIGHT der div's
-                'fileTemplateHTML'	=> 'tpl_scrollbox.html'
+                'boxwidth' => 190,
+                'boxheight' => 160,
+                'gapheight' => 37, // Summe Kopfzeilenhoehe + Fusszeilenhoehe und Abstaende; daraus errechnet sich CONTENTHEIGHT der div's
+                'fileTemplateHTML' => 'tpl_scrollbox.html'
             )
         );
 
-        parent :: init($superglobals);
+        parent:: init($superglobals);
     }
 
     /**
@@ -83,26 +83,26 @@ class GUI_Scrollbox extends GUI_Module
      **/
     function prepare()
     {
-        $Weblication = &$this -> getWeblication();
-        $Frame = &$Weblication -> getFrame();
+        $Weblication = $this->getWeblication();
+        $Frame = $Weblication->getFrame();
 
-        if (is_a($Frame, 'GUI_CustomFrame')) {
-            $this -> TplSbox -> setVar('NAME', $this -> Name);
-            $Frame -> addBodyLoad('InitScrollbox(\''.$this -> Name.'\')');
-            $Frame -> addBodyMousemove('Scrollbox_MoveController(event)');
-            $Frame -> addBodyMouseup('Scrollbox_DropController(event)');
-            $jsFile = $Weblication -> findJavaScript('scrollbox.js', $this -> getClassName(), true);
-            $Headerdata = &$Frame -> getHeaderdata();
-            $Headerdata -> addJavaScript($jsFile);
+        if(is_a($Frame, 'GUI_CustomFrame')) {
+            $this->TplSbox->setVar('NAME', $this->Name);
+            $Frame->addBodyEvent('onload', 'InitScrollbox(\'' . $this->Name . '\')');
+            $Frame->addBodyEvent('onmousemove', 'Scrollbox_MoveController(event)');
+            $Frame->addBodyEvent('onmouseup', 'Scrollbox_DropController(event)');
+            $jsFile = $Weblication->findJavaScript('scrollbox.js', $this->getClassName(), true);
+            $Headerdata = $Frame->getHead();
+            $Headerdata->addJavaScript($jsFile);
         }
 
-        $gapheight = $this -> Input -> getVar('gapheight');
-        $boxwidth = $this -> Input -> getVar('boxwidth');
-        $boxheight = $this -> Input -> getVar('boxheight');
+        $gapheight = $this->Input->getVar('gapheight');
+        $boxwidth = $this->Input->getVar('boxwidth');
+        $boxheight = $this->Input->getVar('boxheight');
 
         $contentheight = ($boxheight - $gapheight);
 
-        $this -> TplSbox -> setVar(
+        $this->TplSbox->setVar(
             array(
                 'BOXWIDTH' => $boxwidth,
                 'BOXHEIGHT' => $boxheight,
@@ -121,7 +121,7 @@ class GUI_Scrollbox extends GUI_Module
      **/
     function setTitle($title)
     {
-        $this -> TplSbox -> setVar('TITLE', $title);
+        $this->TplSbox->setVar('TITLE', $title);
     }
 
     /**
@@ -131,11 +131,11 @@ class GUI_Scrollbox extends GUI_Module
      *
      * @return string Content
      **/
-    function finalize($content=''): string
+    function finalize($content = ''): string
     {
-        $this -> TplSbox -> setVar('CONTENT', $content);
+        $this->TplSbox->setVar('CONTENT', $content);
 
-        $this -> TplSbox -> parse('scrollbox');
-        return $this -> TplSbox -> getContent('scrollbox');
+        $this->TplSbox->parse('scrollbox');
+        return $this->TplSbox->getContent('scrollbox');
     }
 }

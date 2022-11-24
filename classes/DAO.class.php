@@ -45,6 +45,19 @@ if(!defined('DATAINTERFACE_POSQL')) define('DATAINTERFACE_POSQL', 'PostgreSQL_In
 if(!defined('DATAINTERFACE_C16')) define('DATAINTERFACE_C16', 'C16_Interface');
 
 /**
+ * define general commands for DAO's
+ * @todo namespaces
+ */
+enum Commands {
+    case Now;
+    case CurrentDate;
+    case CurrentTimestamp;
+    case Increase;
+    case Decrease;
+    case Reset;
+}
+
+/**
  * abstract Data Access Object
  */
 abstract class DAO extends PoolObject
@@ -68,6 +81,12 @@ abstract class DAO extends PoolObject
     protected array $pk = [];
 
     /**
+     * @var array overwrite this array in the constructor to create the commands needed for the database.
+     * @see Commands
+     */
+    protected array $commands;
+
+    /**
      * Spalten in detaillierter Form (siehe MySQL: SHOW COLUMNS)
      *
      * @access private
@@ -81,6 +100,22 @@ abstract class DAO extends PoolObject
      * @var int $foundRows
      */
     var $foundRows = 0;
+
+    /**
+     *
+     */
+    public function __construct()
+    {
+        $commands = [
+            Commands::Now->name => 'NOW()',
+            Commands::CurrentDate->name => 'CURRENT_DATE()',
+            Commands::CurrentTimestamp->name => 'CURRENT_TIMESTAMP()',
+            Commands::Increase->name => fn($field) => "$field+1",
+            Commands::Decrease->name => fn($field) => "$field-1",
+            Commands::Reset->name => fn($field) => "DEFAULT($field)",
+        ];
+        $this->commands = $commands;
+    }
 
     /**
      * Einen Datensatz einfuegen (virtuelle Methode).

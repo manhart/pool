@@ -673,12 +673,8 @@ function getBrowserFingerprint(bool $withClientIP=true): string
     $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-    $hash = md5($data);
-    return $hash;
+    return md5($data);
 }
-
-
-
 
 /**
  * Holt sich den Inhalt von PHP Skripten und gibt ihn per return Wert zurueck.
@@ -1994,9 +1990,9 @@ function base64url_encode($data)
  * Decodes a base64 URL token back into a string.
  *
  * @param $token
- * @return bool|false|string
+ * @return false|string
  */
-function base64url_decode($token)
+function base64url_decode($token): bool|string
 {
     $length = strlen($token);
     if($length == 0) return false;

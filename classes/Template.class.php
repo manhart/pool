@@ -214,12 +214,12 @@ class TempCoreHandle extends TempHandle
     protected array $VarList = [];
 
     /**
-     * @var array container for blocks (key, content of block)
+     * @var array(TempBlock) container for blocks (key, content of block)
      */
     protected array $BlockList = [];
 
     /**
-     * @var array container for files (key, content of file)
+     * @var array(TempCoreHandle) container for files (key, content of file)
      */
     protected array $FileList = [];
 
@@ -516,7 +516,7 @@ class TempCoreHandle extends TempHandle
             $content = str_replace($search, $replace, $content, $count);
             $iterations++;
         }
-
+        //TODO translate {TRANSL } Tags
         $replace_pairs = [];
         foreach($this->BlockList as $Handle => $TempBlock) {
             if($TempBlock->allowParse()) {
@@ -533,6 +533,7 @@ class TempCoreHandle extends TempHandle
         }
 
         foreach($this->FileList as $Handle => $TempFile) {
+            /**@var TempCoreHandle $TempFile*/
             $TempFile->parse();
             $parsedContent = $TempFile->getParsedContent();
             if($clearParsedContent) $TempFile->clearParsedContent();
@@ -729,7 +730,7 @@ class TempFile extends TempCoreHandle
         $content = '';
         $fp = fopen($this->getDirectory() . $this->Filename, 'r');
         if(!$fp) {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
+            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',//TODO Exeption
                 $this->getDirectory() . $this->Filename));
             return;
         }
@@ -1256,7 +1257,7 @@ class Template extends PoolObject
      * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet)
      * @return Template
      */
-    public function parse(string $handle = ''): static
+    public function parse(string $handle = ''): self
     {
         if($handle != '') {
             $this->useFile($handle);
