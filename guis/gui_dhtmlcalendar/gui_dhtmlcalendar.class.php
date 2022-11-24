@@ -115,7 +115,7 @@ class GUI_DHtmlCalendar extends GUI_Module
 
         // if($coupledCalendar)
         if (!isAjax()) {
-            $this->Weblication->getFrame()->addBodyLoad($Input->getVar('name').'.init();');
+            $this->Weblication->getFrame()->addBodyEvent('onload', $Input->getVar('name').'.init();');
         }
     }
 
