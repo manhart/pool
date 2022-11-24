@@ -32,8 +32,8 @@ class GUI_DBTable extends GUI_Table implements JsonConfig
 //        $this->Template->setFilePath('stdout', $tpl);
 //
 //        if($this->Weblication->hasFrame()) {
-//            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
-//            //$this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
+//            $this->Weblication->getFrame()->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
+//            //$this->Weblication->getFrame()->getHeaderdata()->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
 //        }
     }
 

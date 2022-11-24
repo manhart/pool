@@ -450,12 +450,12 @@ class GUI_Module extends Module
 
         foreach($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
-            $Frame->getHeaderdata()->addStyleSheet($cssFile);
+            $Frame->getHead()->addStyleSheet($cssFile);
         }
 
         foreach($this->jsFiles as $jsFile) {
             $jsFile = $this->getWeblication()->findJavaScript($jsFile, $className);
-            $Frame->getHeaderdata()->addJavaScript($jsFile);
+            $Frame->getHead()->addJavaScript($jsFile);
         }
 
         // automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication (if enabled).
@@ -489,14 +489,14 @@ class GUI_Module extends Module
                 return;
             }
 
-            $this->Weblication->getFrame()->getHeaderdata()->addJavaScript($js);
+            $this->Weblication->getFrame()->getHead()->addJavaScript($js);
         }
 
         $windowCode = '';
         if($global) {
             $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
         }
-        $this->Weblication->getFrame()->getHeaderdata()->addScriptCode($this->getName(),
+        $this->Weblication->getFrame()->getHead()->addScriptCode($this->getName(),
             $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
     }
 

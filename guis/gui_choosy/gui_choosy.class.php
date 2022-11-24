@@ -34,29 +34,29 @@
  * $ChoosySet = &$DAO_Choosy->insertRowset($name_set, $Set->getRowset(), '');
  *
  * $idChoosy = $ChoosySet->getValue('idChoosy');
-*
-* $Url = new Url();
-* $Url->modifyParam(
-*   array(
-*     'module' => 'GUI_Choosy',
-*     'transfer' => constant('CHOOSY_TRANSFER_DBCHOOSY'),
-*     'tabledefine' => 'xxxChoosyTable',
-*     'tableid' => $idchoosy,
-*     'primarykeys' => 'id',
-*
-*     'displayfields' => 'id;lagername',
-*     'shortenlength' => '0;25',
-*
-*     'enableSearchbar' => 1,
-*     'searchfields' => 'lagername',
-*
-*     'reloadOpenerBeforeClose' => 0,
-*
-*     'quickselect' => 1
-*   )
-* );
-* $Template->setVar('URL_AUSWAHLLISTE_2', $Url->getUrl());
-* </code>
+ *
+ * $Url = new Url();
+ * $Url->modifyParam(
+ *   array(
+ *     'module' => 'GUI_Choosy',
+ *     'transfer' => constant('CHOOSY_TRANSFER_DBCHOOSY'),
+ *     'tabledefine' => 'xxxChoosyTable',
+ *     'tableid' => $idchoosy,
+ *     'primarykeys' => 'id',
+ *
+ *     'displayfields' => 'id;lagername',
+ *     'shortenlength' => '0;25',
+ *
+ *     'enableSearchbar' => 1,
+ *     'searchfields' => 'lagername',
+ *
+ *     'reloadOpenerBeforeClose' => 0,
+ *
+ *     'quickselect' => 1
+ *   )
+ * );
+ * $Template->setVar('URL_AUSWAHLLISTE_2', $Url->getUrl());
+ * </code>
  *
  *
  * @version $Id: gui_choosy.class.php,v 1.15 2006/12/29 12:22:03 aziz Exp $
@@ -69,9 +69,9 @@
  * @see GUI_Choosy::init()
  */
 
-define('CHOOSY_TRANSFER_FILE', 		'transfer_by_file');
-define('CHOOSY_TRANSFER_DBCHOOSY', 	'transfer_by_db_choosy');
-define('CHOOSY_TRANSFER_DB', 		'transfer_by_db');
+define('CHOOSY_TRANSFER_FILE', 'transfer_by_file');
+define('CHOOSY_TRANSFER_DBCHOOSY', 'transfer_by_db_choosy');
+define('CHOOSY_TRANSFER_DB', 'transfer_by_db');
 
 /**
  * GUI_Choosy
@@ -172,13 +172,13 @@ class GUI_Choosy extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
-        $this -> Defaults -> addVar(
+        $this->Defaults->addVar(
             array(
                 'transfer' => '',
                 'input' => '',
-                'output' => '',			// + Zwischenspeicher fuer Auswahl
+                'output' => '',            // + Zwischenspeicher fuer Auswahl
                 'tabledefine' => '',
                 'tableid' => null,
                 'primarykeys' => '',
@@ -204,91 +204,84 @@ class GUI_Choosy extends GUI_Module
                 'submitsearch' => 0,
                 'suchbegriff' => '',
 
-                'enableSplitterbar'			=> 1,
+                'enableSplitterbar' => 1,
 
-                'enableScrollbox'			=> 0,
-                'scrollBoxheight' 			=> '100',
-                'scrollBoxwidth'			=> '100%',
+                'enableScrollbox' => 0,
+                'scrollBoxheight' => '100',
+                'scrollBoxwidth' => '100%',
 
-                'frameTitle'				=> '',
-                'fileTemplateHTML'			=> 'tpl_choosy.html',
+                'frameTitle' => '',
+                'fileTemplateHTML' => 'tpl_choosy.html',
 
-                'reloadOpenerBeforeClose'	=> 0,
-                'closeWindow'				=> 1,
+                'reloadOpenerBeforeClose' => 0,
+                'closeWindow' => 1,
 
-                'rowClass'					=> array(),
-                'watchFieldValue'			=> false,
-                'fieldNameTextClass'		=> 'textClass_',
+                'rowClass' => array(),
+                'watchFieldValue' => false,
+                'fieldNameTextClass' => 'textClass_',
 
-                'user_function'				=> false,
-                'user_function_count'		=> false,
+                'user_function' => false,
+                'user_function_count' => false,
 
                 /* private */
                 'submitFChoosy' => 0
             )
         );
-        parent :: init(I_REQUEST);
+        parent:: init(I_REQUEST);
     }
-
-
 
     function loadFiles()
     {
-        $file = $this -> Weblication -> findTemplate($this -> Input -> getVar('fileTemplateHTML'), $this -> getClassName(), true);
-        $this -> Template -> setFilePath('stdout', $file);
+        $file = $this->Weblication->findTemplate($this->Input->getVar('fileTemplateHTML'), $this->getClassName(), true);
+        $this->Template->setFilePath('stdout', $file);
 
-        $jsfile = $this -> Weblication -> findJavaScript('dhtmlhint.js', '', true);
-        $cssfile = @$this -> Weblication -> findStyleSheet($this -> getClassName() . '.css', $this -> getClassName());
+        $jsfile = $this->Weblication->findJavaScript('dhtmlhint.js', '', true);
+        $cssfile = @$this->Weblication->findStyleSheet($this->getClassName() . '.css', $this->getClassName());
 
-        $Frame = &$this -> Weblication -> getFrame();
-        if (is_a($Frame, 'GUI_Module') and is_a($Frame -> Headerdata, 'GUI_Headerdata')) {
-            $Frame -> Headerdata -> addJavaScript($jsfile);
-            $this -> enable_GUI_DHtmlHint = true;
-            if ($cssfile) {
-                $Frame -> Headerdata -> addStyleSheet($cssfile);
+        if($this->Weblication->hasFrame()) {
+            $this->Weblication->getFrame()->getHead()->addJavaScript($jsfile);
+            $this->enable_GUI_DHtmlHint = true;
+            if($cssfile) {
+                $this->Weblication->getFrame()->getHead()->addStyleSheet($cssfile);
             }
         }
         else {
             // add needed files manual
-            if ($cssfile) {
-                $this -> Template -> newBlock('STYLESHEET');
-                $this -> Template -> setVar('FILENAME', $cssfile);
+            if($cssfile) {
+                $this->Template->newBlock('STYLESHEET');
+                $this->Template->setVar('FILENAME', $cssfile);
             }
-            $this -> Template -> leaveBlock();
+            $this->Template->leaveBlock();
         }
     }
 
     /**
-     * GUI_Choosy::prepare()
-     *
      * Die eigentlich Arbeit wird verrichtet. Parameterauswertung, Platzhalter ersetzt...
      *
      * @access public
-     **/
-    function prepare ()
+     */
+    function prepare()
     {
-        $this -> loadFiles();
+        $this->loadFiles();
 
-        /* @var $Template Template */
-        $Template = & $this -> Template;
+        $Template = &$this->Template;
 
-        /* @var $Input Input */
-        $Input = & $this -> Input;
-        $interfaces = & $this -> Weblication -> getInterfaces();
+        $Input = &$this->Input;
+        $interfaces = $this->Weblication->getInterfaces();
 
-         //echo pray($Input -> Vars);
+        //echo pray($Input -> Vars);
 
         #### Frame Titel
-        $Frame = & $this -> Weblication -> getFrame();
-        if (is_a($Frame, 'GUI_CustomFrame')) {
-            $Frame -> Headerdata -> setTitle($Input -> getVar('frameTitle'));
+        if($this->Weblication->hasFrame()) {
+            $Frame = $this->Weblication->getFrame();
+            $Frame->getHead()->setTitle($Input->getVar('frameTitle'));
         }
 
         #### Auswahl gespeichert = okClick - Url->reload() - windowClose()
-        if($Input -> getVar('closeWindow') == 1 and $Input -> getVar('saved') == 1) {
-            if($Input -> getVar('reloadOpenerBeforeClose') == 1) $Template -> newBlock('reloadOpener');
-            $Template -> newBlock('closeWindow');
-            $Template -> leaveBlock();
+        if($Input->getVar('closeWindow') == 1 and $Input->getVar('saved') == 1) {
+            if($Input->getVar('reloadOpenerBeforeClose') == 1) $Template->newBlock('reloadOpener');
+            $Template->newBlock('closeWindow');
+            $Template->leaveBlock();
         }
 
         #### Instanziere GUI_Shorten (kuerzt Textausgaben)
@@ -296,39 +289,39 @@ class GUI_Choosy extends GUI_Module
         $GUI_Shorten->loadFiles();
 
         #### Hauptargumente
-        $transfer			= $Input -> getVar('transfer');
-        $tabledefine		= $Input -> getVar('tabledefine');
-        $primarykeys 		= $Input -> getVar('primarykeys');
-        $input				= $Input -> getVar('input');
-        $output				= $Input -> getVar('output');
-        $separator			= $Input -> getVar('separator');
-        $multiple			= (int)$Input -> getVar('multiple');
+        $transfer = $Input->getVar('transfer');
+        $tabledefine = $Input->getVar('tabledefine');
+        $primarykeys = $Input->getVar('primarykeys');
+        $input = $Input->getVar('input');
+        $output = $Input->getVar('output');
+        $separator = $Input->getVar('separator');
+        $multiple = (int)$Input->getVar('multiple');
 
-        if (empty($primarykeys)) {
-            $this -> raiseError(__FILE__, __LINE__, 'Der Parameter "primarykeys" (Prim�rschl�ssel) wurde nicht �bergeben! ' .
+        if(empty($primarykeys)) {
+            $this->raiseError(__FILE__, __LINE__, 'Der Parameter "primarykeys" (Prim�rschl�ssel) wurde nicht �bergeben! ' .
                 'Der Prim�rschl�ssel ist notwendig und bestimmt die R�ckgabewerte der Auswahlliste.');
         }
 
 
         #### Weitere Parameter:
-        $splitterPos		 = $Input -> getVar('splitterPos'); // private
-        $maxRecordsPerPage	 = $Input -> getVar('maxRecordsPerPage');
+        $splitterPos = $Input->getVar('splitterPos'); // private
+        $maxRecordsPerPage = $Input->getVar('maxRecordsPerPage');
 
-        $quickselect		 = (int)$Input -> getVar('quickselect');
+        $quickselect = (int)$Input->getVar('quickselect');
 
-        $enableSearchbar	 = $Input -> getVar('enableSearchbar');
-        $searchfields		 = explode($separator, $Input -> getVar('searchfields'));
+        $enableSearchbar = $Input->getVar('enableSearchbar');
+        $searchfields = explode($separator, $Input->getVar('searchfields'));
 
-        $enableSplitterbar	 = $Input -> getVar('enableSplitterbar');
+        $enableSplitterbar = $Input->getVar('enableSplitterbar');
 
-        $rowClass			 = $Input -> getVar('rowClass');
-        $watchFieldValue	 = $Input -> getVar('watchFieldValue');
+        $rowClass = $Input->getVar('rowClass');
+        $watchFieldValue = $Input->getVar('watchFieldValue');
 
-        $user_function 		 = $Input -> getVar('user_function');
-        $user_function_count = $Input -> getVar('user_function_count');
+        $user_function = $Input->getVar('user_function');
+        $user_function_count = $Input->getVar('user_function_count');
 
-        if(!$Input -> emptyVar('colalign') and (!is_array($Input -> getVar('colalign')))) {
-            $colalign = explode($separator, $Input -> getVar('colalign'));
+        if(!$Input->emptyVar('colalign') and (!is_array($Input->getVar('colalign')))) {
+            $colalign = explode($separator, $Input->getVar('colalign'));
         }
         else {
             $colalign = array();
@@ -338,54 +331,54 @@ class GUI_Choosy extends GUI_Module
         if(!is_array($rowClass)) $rowClass = explode($separator, $rowClass);
 
         #### Suche
-        if($Input -> getVar('submitsearch') == 1) {
+        if($Input->getVar('submitsearch') == 1) {
             $Url = new Url();
             $Url->setParam('splitterPos', 0);
-            $Url->setParam('suchbegriff', $Input -> getVar('suchbegriff'));
+            $Url->setParam('suchbegriff', $Input->getVar('suchbegriff'));
             $Url->restartUrl();
         }
 
         #### enable Searchbar
         if($enableSearchbar) {
-            $Template -> newBlock('searchBar');
-            $Template -> leaveBlock();
+            $Template->newBlock('searchBar');
+            $Template->leaveBlock();
         }
 
         #### enable Splitterbar
         if($enableSplitterbar) {
-            $Template -> newBlock('splitterBar');
-            $Template -> leaveBlock();
+            $Template->newBlock('splitterBar');
+            $Template->leaveBlock();
         }
 
         #### Daten einlesen:
         #### $selectionlines, $list, $numRecords
         switch($transfer) {
             case CHOOSY_TRANSFER_DB:
-                if ($tabledefine) {
+                if($tabledefine) {
                     #### input from daos
-                    $filter = $Input -> getVar('filter');
-                    $this -> getSQLSearchfilter($filter, $searchfields);
-                    $sorting = ($Input -> getVar('defaultSortfield')) ? array($Input -> getVar('defaultSortfield') => $Input -> getVar('defaultSortorder')) : array();
+                    $filter = $Input->getVar('filter');
+                    $this->getSQLSearchfilter($filter, $searchfields);
+                    $sorting = ($Input->getVar('defaultSortfield')) ? array($Input->getVar('defaultSortfield') => $Input->getVar('defaultSortorder')) : array();
                     $limit = array($splitterPos, $maxRecordsPerPage);
 
                     $DAO = DAO::createDAO($interfaces, $tabledefine);
                     // $DAO -> enableDebugging();
                     // $DAO -> setColumnsAsString($Input -> getVar('searchfields'), ';');
                     if($user_function != false) {
-                        $Resultset = &$DAO -> $user_function(null, null, $filter, $sorting, $limit);
-                        $Resultset_count = & $DAO -> $user_function_count(null, null, $filter);
+                        $Resultset = &$DAO->$user_function(null, null, $filter, $sorting, $limit);
+                        $Resultset_count = &$DAO->$user_function_count(null, null, $filter);
                     }
                     else {
-                        $Resultset = & $DAO -> getMultiple(null, null, $filter, $sorting, $limit);
-                        $Resultset_count = & $DAO -> getCount(null, null, $filter);
+                        $Resultset = $DAO->getMultiple(null, null, $filter, $sorting, $limit);
+                        $Resultset_count = $DAO->getCount(null, null, $filter);
                     }
-                    $list = $Resultset -> getRowset();
+                    $list = $Resultset->getRowset();
 
 
-                    $numRecords = $Resultset_count -> getValue('count');
+                    $numRecords = $Resultset_count->getValue('count');
 
                     #### Output (gespeicherte Auswahl) laden
-                    if (file_exists($output)) {
+                    if(file_exists($output)) {
                         $selectionlines = file($output);
                         // echo '<br>ganz am anfang: ' . pray($selectionlines);
                         $key_line = trim(array_shift($selectionlines));
@@ -394,7 +387,7 @@ class GUI_Choosy extends GUI_Module
                         $selection = array();
                         foreach($selectionlines as $line) {
                             $line = trim($line);
-                            if (empty($line)) {
+                            if(empty($line)) {
                                 continue;
                             }
                             array_push($selection, explode($separator, $line));
@@ -409,51 +402,50 @@ class GUI_Choosy extends GUI_Module
                 break;
 
             case CHOOSY_TRANSFER_DBCHOOSY:
-                $tableid = $Input -> getVar('tableid');
-                if($tableid=='') die('no tableid!!');
+                $tableid = $Input->getVar('tableid');
+                if($tableid == '') die('no tableid!!');
                 $DAO_Choosy = DAO::createDAO($interfaces, $tabledefine);
-                $Resultset_Choosy = $DAO_Choosy -> get($tableid);
+                $Resultset_Choosy = $DAO_Choosy->get($tableid);
 
-                $input_as_sql = $Resultset_Choosy -> getValue('input_as_sql');
+                $input_as_sql = $Resultset_Choosy->getValue('input_as_sql');
                 if($input_as_sql == 1) {
-                    $database = $Input -> getVar('database');
+                    $database = $Input->getVar('database');
                     $limit = array($splitterPos, $maxRecordsPerPage);
-                    $sql = $Resultset_Choosy -> getValue('input');
+                    $sql = $Resultset_Choosy->getValue('input');
 
                     $MySQL_Resultset = new MySQL_Resultset($interfaces[constant('DATAINTERFACE_MYSQL')]);
 
-                    $this -> getSQLSearchstring($sql, $searchfields);
-                    $MySQL_Resultset -> execute($sql, $database);
-                    $hole_list = $MySQL_Resultset -> getRowset();
+                    $this->getSQLSearchstring($sql, $searchfields);
+                    $MySQL_Resultset->execute($sql, $database);
+                    $hole_list = $MySQL_Resultset->getRowset();
 
                     $sql .= ' LIMIT ' . implode(', ', $limit);
-                    $MySQL_Resultset -> execute($sql, $database);
+                    $MySQL_Resultset->execute($sql, $database);
 
-                    $list = $MySQL_Resultset -> getRowset();
+                    $list = $MySQL_Resultset->getRowset();
                     $numRecords = sizeof($hole_list);
-
                 }
                 else {
-                    $rowset = unserialize($Resultset_Choosy -> getValue('input'));
+                    $rowset = unserialize($Resultset_Choosy->getValue('input'));
 
                     $list = $rowset;
-                    $this -> filterList($list, $searchfields);
+                    $this->filterList($list, $searchfields);
                     $numRecords = sizeof($list);
 
-                    if($maxRecordsPerPage>0){
+                    if($maxRecordsPerPage > 0) {
                         $list = array_slice($list, $splitterPos, $maxRecordsPerPage);
                     }
                     #else $list=$rowset;
                 }
 
-                $selectionlines = explode("\n", $Resultset_Choosy -> getValue('output'));
+                $selectionlines = explode("\n", $Resultset_Choosy->getValue('output'));
                 $key_line = trim(array_shift($selectionlines));
 
                 $keys = explode($separator, $key_line);
                 $selection = array();
                 foreach($selectionlines as $line) {
                     $line = trim($line);
-                    if (empty($line)) {
+                    if(empty($line)) {
                         continue;
                     }
                     array_push($selection, explode($separator, $line));
@@ -464,7 +456,7 @@ class GUI_Choosy extends GUI_Module
 
             case CHOOSY_TRANSFER_FILE:
                 #### Output (gespeicherte Auswahl) laden
-                if (file_exists($output)) {
+                if(file_exists($output)) {
                     $selectionlines = file($output);
                     // echo '<br>ganz am anfang: ' . pray($selectionlines);
                     $key_line = trim(array_shift($selectionlines));
@@ -473,7 +465,7 @@ class GUI_Choosy extends GUI_Module
                     $selection = array();
                     foreach($selectionlines as $line) {
                         $line = trim($line);
-                        if (empty($line)) {
+                        if(empty($line)) {
                             continue;
                         }
                         array_push($selection, explode($separator, $line));
@@ -495,34 +487,34 @@ class GUI_Choosy extends GUI_Module
 
         #### ok - Auswahlliste speichern
         if(!is_array($selectionlines)) $selectionlines = array();
-        if ($Input -> getVar('submitFChoosy') == 1) {
-            $auswahl = $Input -> getVar('auswahl');
+        if($Input->getVar('submitFChoosy') == 1) {
+            $auswahl = $Input->getVar('auswahl');
 
-//				echo 'auswahl: ' . pray($auswahl);
+            //				echo 'auswahl: ' . pray($auswahl);
             #### Radiobutton; Auswahl nicht als Array
             if(!is_array($auswahl)) $auswahl = array($auswahl);
 
             //if (is_array($auswahl) and count($auswahl)) {
-            $saved_list = explode("\n", trim($Input -> getVar('saved_list')));
+            $saved_list = explode("\n", trim($Input->getVar('saved_list')));
 
             foreach($saved_list as $pkstring) {
                 $pkstring = trim($pkstring);
 
-                if (empty($pkstring)) {
+                if(empty($pkstring)) {
                     continue;
                 }
 
                 #### INSERT
-                if (is_array($auswahl) and in_array($pkstring, $auswahl)) {
+                if(is_array($auswahl) and in_array($pkstring, $auswahl)) {
                     if(!$multiple) $selectionlines = array();
-                    if (!in_array($pkstring, $selectionlines)) {
+                    if(!in_array($pkstring, $selectionlines)) {
                         $selectionlines[] = $pkstring;
                     }
                 }
                 #### DELETE
                 else {
                     $key = array_search($pkstring, $selectionlines, false);
-                    if ($key !== false) {
+                    if($key !== false) {
                         unset($selectionlines[$key]);
                     }
                 }
@@ -537,30 +529,29 @@ class GUI_Choosy extends GUI_Module
                 case CHOOSY_TRANSFER_DB:
                 case CHOOSY_TRANSFER_FILE:
                     $fhandle = fopen($output, 'w');
-                    if ($fhandle) {
+                    if($fhandle) {
                         fwrite($fhandle, trim(implode("\n", $selectionlines)));
                     }
                     @fclose($fhandle);
                     break;
 
                 case CHOOSY_TRANSFER_DBCHOOSY:
-                    $tableid = $Input -> getVar('tableid');
+                    $tableid = $Input->getVar('tableid');
                     $DAO_Choosy = DAO::createDAO($interfaces, $tabledefine);
-                    $DAO_Choosy -> update(array('idtbl_choosy' => $tableid,
+                    $DAO_Choosy->update(array('idtbl_choosy' => $tableid,
                         'output' => trim(implode("\n", $selectionlines)),
                         'ready' => 1));
                     break;
-
             }
 
             $Url = new Url();
-            $Url->setParam('splitterPos', $Input -> getVar('splitterPos'));
-            $Url->setParam('saved', $Input -> getVar('submitok'));
+            $Url->setParam('splitterPos', $Input->getVar('splitterPos'));
+            $Url->setParam('saved', $Input->getVar('submitok'));
             $Url->restartUrl();
         }
 
         #### Anzuzeigende Felder (*=alle):
-        $displayfields = $Input -> getVar('displayfields');
+        $displayfields = $Input->getVar('displayfields');
         if($displayfields != '*') {
             $displayfields = explode($separator, $displayfields);
         }
@@ -568,28 +559,27 @@ class GUI_Choosy extends GUI_Module
             $displayfields = array_keys($list[0]);
         }
         $count_displayfields = count($displayfields);
-        $shortenlength = explode($separator, $Input -> getVar('shortenlength'));
+        $shortenlength = explode($separator, $Input->getVar('shortenlength'));
 
         #### Zaehler
         $z = 0;
         $w = 0;
 
 
-
         #### Auswahlliste erzeugen:
         $old_value = '';
-        if (is_array($list)) {
+        if(is_array($list)) {
             #### Datensaetze
             $saved_list = array();
             $count_keys = count($keys);
             foreach($list as $row) {
                 #### Datensaetz ausgewaehlt?
                 $selected = false;
-                if (is_array($selection)) {
+                if(is_array($selection)) {
                     foreach($selection as $selvalues) {
-                        for ($k=0; $k < $count_keys; $k++) {
+                        for($k = 0; $k < $count_keys; $k++) {
                             $key = trim($keys[$k]);
-                            if ($row[$key] == trim($selvalues[$k])) {
+                            if($row[$key] == trim($selvalues[$k])) {
                                 $selected = true;
                             }
                             else {
@@ -597,46 +587,46 @@ class GUI_Choosy extends GUI_Module
                                 break 1;
                             }
                         }
-                        if ($selected) {
+                        if($selected) {
                             break 1;
                         }
                     }
                 }
 
 
-                $Template -> newBlock('list_element');
+                $Template->newBlock('list_element');
 
                 #### Zeile: StyleSheets
                 if($watchFieldValue !== false) {
-                        if ($old_value != $row[$watchFieldValue]) {
-                            $Template -> setVar('rowClass', (is_array($rowClass) and count($rowClass))? $rowClass[$w%count($rowClass)] : '');
-                            $old_value = $row[$watchFieldValue];
-                            $w++;
-                        }
+                    if($old_value != $row[$watchFieldValue]) {
+                        $Template->setVar('rowClass', (is_array($rowClass) and count($rowClass)) ? $rowClass[$w % count($rowClass)] : '');
+                        $old_value = $row[$watchFieldValue];
+                        $w++;
+                    }
                 }
                 else {
-                    $Template -> setVar('rowClass', (is_array($rowClass) and count($rowClass))? $rowClass[$z%count($rowClass)] : '');
+                    $Template->setVar('rowClass', (is_array($rowClass) and count($rowClass)) ? $rowClass[$z % count($rowClass)] : '');
                 }
 
-                for ($i=0; $i < $count_displayfields; $i++) {
+                for($i = 0; $i < $count_displayfields; $i++) {
 
-                    $text_r='';
-                    $Template -> newBlock('columns');
-                    if ($shortenlength[$i] > 0) {
-                        $GUI_Shorten -> Input -> setVar(
+                    $text_r = '';
+                    $Template->newBlock('columns');
+                    if($shortenlength[$i] > 0) {
+                        $GUI_Shorten->Input->setVar(
                             array(
                                 'text' => $row[$displayfields[$i]],
                                 'len' => $shortenlength[$i],
-                                'more' => $Input -> getVar('shortenmore'),
-                                'hint' => $this -> enable_GUI_DHtmlHint
+                                'more' => $Input->getVar('shortenmore'),
+                                'hint' => $this->enable_GUI_DHtmlHint
                             )
                         );
 
-                        $GUI_Shorten -> prepareContent();
-                        $text = $GUI_Shorten -> finalizeContent();
+                        $GUI_Shorten->prepareContent();
+                        $text = $GUI_Shorten->finalizeContent();
                     }
                     else {
-                        if ($selected) {
+                        if($selected) {
                             $text = $row[$displayfields[$i]];
                         }
                         else {
@@ -646,11 +636,11 @@ class GUI_Choosy extends GUI_Module
                     $text_r = $row[$displayfields[$i]];
                     #### Text: Stylesheet
                     $textClass = '';
-                    $fieldNameTextClass = $Input -> getVar('fieldNameTextClass') . $displayfields[$i];
+                    $fieldNameTextClass = $Input->getVar('fieldNameTextClass') . $displayfields[$i];
                     if(key_exists($fieldNameTextClass, $row)) {
                         $textClass = $row[$fieldNameTextClass];
                     }
-                    $Template -> setVar(
+                    $Template->setVar(
                         array(
                             'text' => $text,
                             'index' => $z,
@@ -658,12 +648,11 @@ class GUI_Choosy extends GUI_Module
                             'textClass' => $textClass
                         )
                     );
-
                 }
                 #### selmode (checkbox, radiobutton, ...)
-                $value = $this -> getPKString($row);
-                $Template -> newBlock($Input -> getVar('selmode'));
-                $Template -> setVar(
+                $value = $this->getPKString($row);
+                $Template->newBlock($Input->getVar('selmode'));
+                $Template->setVar(
                     array(
                         'text_r' => $text_r,
                         'checked' => ($selected) ? '1' : '0',
@@ -676,9 +665,9 @@ class GUI_Choosy extends GUI_Module
                 $z++;
             }
         }
-        $Template -> leaveBlock();
+        $Template->leaveBlock();
 
-        $Template -> setVar(
+        $Template->setVar(
             array(
                 'saved_list' => @implode("\n", $saved_list),
                 'multiple' => $multiple,
@@ -687,7 +676,7 @@ class GUI_Choosy extends GUI_Module
         );
 
         #### GUI_Splitter Parameter:
-        $this -> addHandOffVar(
+        $this->addHandOffVar(
             array(
                 'maxRecordsPerPage' => $maxRecordsPerPage,
                 'numRecords' => $numRecords
@@ -706,21 +695,21 @@ class GUI_Choosy extends GUI_Module
      **/
     function getSQLSearchfilter(&$filter, $searchfields)
     {
-        $suchbegriff = $this -> Input -> getVar('suchbegriff');
+        $suchbegriff = $this->Input->getVar('suchbegriff');
         if(empty($suchbegriff)) return;
 
-        $merker=false;
-        $jump=false;
-        if (count($filter)) {
+        $merker = false;
+        $jump = false;
+        if(count($filter)) {
             array_push($filter, 'and');
             array_push($filter, '(');
-            $merker=true;
-            $jump=true;
+            $merker = true;
+            $jump = true;
         }
         foreach($searchfields as $fieldname) {
-            if (count($filter)) {
+            if(count($filter)) {
                 if($jump) {
-                    $jump=false;
+                    $jump = false;
                 }
                 else {
                     array_push($filter, 'or');
@@ -744,24 +733,24 @@ class GUI_Choosy extends GUI_Module
      **/
     function getSQLSearchstring(&$string, $searchfields)
     {
-        $suchbegriff = $this -> Input -> getVar('suchbegriff');
+        $suchbegriff = $this->Input->getVar('suchbegriff');
         if(empty($suchbegriff)) return;
 
-        if (strpos($string, 'where') !== false) {
+        if(strpos($string, 'where') !== false) {
             $string .= ' and ';
             $string .= '(';
-            $merker=true;
-            $jump=true;
+            $merker = true;
+            $jump = true;
         }
         else {
             $string .= ' where ';
-            $jump=true;
-            $merker=false;
+            $jump = true;
+            $merker = false;
         }
         foreach($searchfields as $fieldname) {
-            if (strlen($string)>0) {
+            if(strlen($string) > 0) {
                 if($jump) {
-                    $jump=false;
+                    $jump = false;
                 }
                 else {
                     $string .= ' or ';
@@ -783,12 +772,12 @@ class GUI_Choosy extends GUI_Module
      **/
     function filterList(&$list, $searchfields)
     {
-        $suchbegriff = $this -> Input -> getVar('suchbegriff');
-        $customSearchFunction = $this -> Input -> getVar('customSearchFunction');
+        $suchbegriff = $this->Input->getVar('suchbegriff');
+        $customSearchFunction = $this->Input->getVar('customSearchFunction');
         if($suchbegriff) {
-            $this -> temp_searchfields = $searchfields;
+            $this->temp_searchfields = $searchfields;
             $list = array_filter($list, $customSearchFunction);
-            unset($this -> temp_searchfields);
+            unset($this->temp_searchfields);
         }
     }
 
@@ -802,8 +791,8 @@ class GUI_Choosy extends GUI_Module
     function custom_array_filter($row)
     {
         $bResult = 0;
-        $suchbegriff = strtolower($this -> Input -> getVar('suchbegriff'));
-        foreach($this -> temp_searchfields as $fieldname) {
+        $suchbegriff = strtolower($this->Input->getVar('suchbegriff'));
+        foreach($this->temp_searchfields as $fieldname) {
             $value = strtolower($row[$fieldname]);
             $bResult = (strpos($value, $suchbegriff) !== false);
         }
@@ -820,12 +809,12 @@ class GUI_Choosy extends GUI_Module
      **/
     function getPKString($row)
     {
-        $separator = $this -> Input -> getVar('separator');
+        $separator = $this->Input->getVar('separator');
 
         $primarykeys = explode($separator, $this->Input->getVar('primarykeys'));
         $value = '';
         foreach($primarykeys as $pk) {
-            if ($value != '') {
+            if($value != '') {
                 $value .= $separator;
             }
             $value .= $row[$pk];
@@ -843,22 +832,22 @@ class GUI_Choosy extends GUI_Module
      **/
     function finalize(): string
     {
-        $this -> Template -> parse('stdout');
-        $content = $this -> reviveChildGUIs($this -> Template -> getContent('stdout'));
+        $this->Template->parse('stdout');
+        $content = $this->reviveChildGUIs($this->Template->getContent('stdout'));
 
-        $enableScrollbox = $this -> Input -> getVar('enableScrollbox');
-        if($enableScrollbox==1) {
+        $enableScrollbox = $this->Input->getVar('enableScrollbox');
+        if($enableScrollbox == 1) {
             $Scrollbox = new GUI_Scrollbox($this->getOwner());
-            $Scrollbox -> Input -> setVar(
+            $Scrollbox->Input->setVar(
                 array(
-                    'boxwidth' => $this -> Input -> getVar('scrollBoxwidth'),
-                    'boxheight' => $this -> Input -> getVar('scrollBoxheight'),
+                    'boxwidth' => $this->Input->getVar('scrollBoxwidth'),
+                    'boxheight' => $this->Input->getVar('scrollBoxheight'),
                     'gapheight' => 0
                 )
             );
 
-            $Scrollbox -> prepareContent();
-            return $Scrollbox -> finalize($content);
+            $Scrollbox->prepareContent();
+            return $Scrollbox->finalize($content);
         }
         else {
             return $content;
