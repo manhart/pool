@@ -58,9 +58,7 @@ class GUI_Shorten extends GUI_Module
      * - url = Url im ToolTip Hint
      * - htmlTag = HTML Tag, dass OnMouseOver f�r ToolTip Hint enth�lt. Standard "p" f�r <p>
      * - htmlTagAttr = HTML Tag Attribute als Array z.B. array('class' => 'fontcss');
-     *
-     * @access public
-     **/
+     */
     function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVars(
