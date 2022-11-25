@@ -2,42 +2,35 @@
 /**
  * -= Rapid Module Library (RML) =-
  *
- * gui_url.class.php
+ * gui_url.class.php - fast way to render an url
  *
  * @version $Id: gui_url.class.php,v 1.4 2007/05/31 14:34:40 manhart Exp $
  * @version $Revision 1.0$
  * @version
  *
  * @since 2003-08-19
- * @author Alexander Manhart <alexander@manhart.bayern>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
 
-/**
- * GUI_Url
- *
- * Fast way to render a URL in.
- *
- * @package pool
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @version $Id: gui_url.class.php,v 1.4 2007/05/31 14:34:40 manhart Exp $
- **/
 class GUI_Url extends GUI_Module
 {
-    private string $returnValue = '';
+    /**
+     * @var string contains the rendered url
+     */
+    private string $content = '';
 
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
-    {
-        parent::__construct($Owner, false, $params);
-    }
+    /**
+     * @var bool no files needed
+     */
+    protected bool $autoLoadFiles = false;
 
     /**
      * Default Werte setzen. Input initialisieren.
      *
-     * @access public
-     * @param integer|null $superglobals Superglobals (siehe Klasse Input)
+     * @param int|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init(?int $superglobals=I_EMPTY)
+    public function init(?int $superglobals=I_EMPTY)
     {
         $this->Defaults->addVar('script', '');
         $this->Defaults->addVar('params', '');
@@ -48,11 +41,9 @@ class GUI_Url extends GUI_Module
     }
 
     /**
-     * Template vorbereiten
-     *
-     * @access public
-     **/
-    function prepare()
+     * prepare url
+     */
+    public function prepare()
     {
         $empty = (int)$this->Input->getVar('empty');
         $Url = new Url($empty ? I_EMPTY : I_GET);
@@ -73,11 +64,11 @@ class GUI_Url extends GUI_Module
             }
         }
 
-        $passthrough = trim($this->Input->getVar('passthrough'));
-        if ($passthrough != '') {
+        $passThrough = trim($this->Input->getVar('passthrough'));
+        if ($passThrough != '') {
             $IGet = new Input(I_GET);
-            $passthrough = explode(';', $passthrough);
-            foreach($passthrough as $param) {
+            $passThrough = explode(';', $passThrough);
+            foreach($passThrough as $param) {
                 $Url->setParam($param, $IGet -> getVar($param));
             }
             unset($IGet);
@@ -90,16 +81,14 @@ class GUI_Url extends GUI_Module
             }
         }
 
-        $this->returnValue = $Url->getUrl();
+        $this->content = $Url->getUrl();
     }
 
     /**
-     * Box Inhalt parsen und zurueck geben.
-     *
-     * @return string Content
-     **/
-    function finalize(): string
+     * @return string return url
+     */
+    public function finalize(): string
     {
-        return $this->returnValue;
+        return $this->content;
     }
 }

@@ -165,7 +165,7 @@ if(!defined('MYSQL_LAYER'))
          * @param array $Packet Einstellungen
          * @return boolean Erfolgsstatus
          **/
-        function setOptions($Packet)
+        public function setOptions($Packet): bool
         {
             $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
             $this->force_backend_read = array_key_exists('force_backend_read', $Packet) ? $Packet['force_backend_read'] : false;
@@ -562,7 +562,7 @@ if(!defined('MYSQL_LAYER'))
 
                 $buf = $this->sql;
                 #echo '<hr>'.$buf.'<br>';
-                if($buf{0} == '(') $buf = ltrim(substr($buf, 1));
+                if($buf[0] == '(') $buf = ltrim(substr($buf, 1));
                 $posSpace = strpos($buf, chr(32), 2);
                 $posLN = strpos($buf, chr(10), 2); // TODO MySQL Syntax DO, USE?
                 $posCR = strpos($buf, chr(13), 2);
@@ -577,7 +577,7 @@ if(!defined('MYSQL_LAYER'))
                 if($pos == -1) {
                     $pos = $posSpace;
                 }
-                if($pos == false) {
+                if(!$pos) {
                     $pos = strlen($buf);
                 }
 
@@ -627,7 +627,7 @@ if(!defined('MYSQL_LAYER'))
 
                 if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
                     if(ACTIVATE_INTERFACE_SQL_LOG == 2) {
-                        $Log = &Singleton('Log');
+                        $Log = Singleton('Log');
                         $mode_txt = $mode;
                         if($Log->isLogging()) {
                             $Log->addLine('SQL MODE: '.$mode_txt);

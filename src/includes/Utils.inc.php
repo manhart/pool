@@ -21,7 +21,6 @@
 function getMicrotime($seed = 1): float
 {
     list($usec, $sec) = explode(' ', microtime());
-
     return ((float)$usec + ((float)$sec * $seed));
 }
 
@@ -444,7 +443,6 @@ function remove_extension(string $file = ''): string
     return substr($file, 0, (strrpos($file, '.') ?: strlen($file)));
 }
 
-
 /**
  * Verkuerzt einen Text auf eine bestimme Laenge. Beim Abschneiden geht die Funktion jedoch bis zum letzten Leerzeichen zurueck, damit
  * er ein Wort nicht in der Mitte teilt.
@@ -548,8 +546,6 @@ function formatDEDateToEN($strDate, $delimiter = '.'): string
     $arrDate = explode($delimiter, $strDate);
     return (new DateTime(strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0])))->format('Y-m-d');
 }
-
-
 
 /**
  * replaces the html tag <br> by a new line
@@ -677,8 +673,7 @@ function getBrowserFingerprint(bool $withClientIP=true): string
     $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-    $hash = md5($data);
-    return $hash;
+    return md5($data);
 }
 
 
@@ -1234,23 +1229,29 @@ function buildFilePath(...$elements): string
  */
 function normalizePath(string $path, bool $noFailOnRoot = false, string $separator ='/'): bool|string
 {
-    $pathArr = array();
+    $bufferOutput = array();
     $stepsOut = 0;
-    foreach (explode($separator, $path) as $part){
+
+    $bufferInput = explode($separator, $path);
+    //jump to last position
+    end($bufferInput);
+    //loop backwards through the parts of the path
+    while (false !== ($part = current($bufferInput))){
         //ignore self-references and separator errors
-        if ($part === '' || $part === '.')
-            continue;
+        if ($part === '' || $part === '.');
         //normal element -> add to buffer
-        if ($part !== '..'){
-            $pathArr[] = $part;
-        }
-        //wanna go up
-        elseif (count($pathArr) > 0){
-            array_pop($pathArr);
-        }else//hit the root
+        elseif ($part !== '..'){
+            if ($stepsOut>0)//element was stepped out of again later in the Path
+                $stepsOut--;
+            else            //append on the beginning of the buffer
+                array_unshift($bufferOutput, $part);
+        } else //go up
             $stepsOut++;
+        //set pointer to previous element of the Array
+        prev($bufferInput);
     }
-    $normalizedPath = implode($separator, $pathArr);
+
+    $normalizedPath = implode($separator, $bufferOutput);
     //re-add the original paths beginning slash or any necessary steps out
     if($prefix = isAbsolutePath($path)) {
         //absolute path -> check for illegal steps out of root
@@ -1395,6 +1396,31 @@ function readDirs(string $path)
     return glob(addEndingSlash($path).'*', GLOB_ONLYDIR);
 }
 
+/**Checks the Error code of the PCRE (RegEx engine) and logs any Errors
+ * @param string $regEX the executed expression for logging
+ * @param string $content the content that was processed
+ * @return bool Outcome is ok
+ */
+function checkRegExOutcome(string $regEX, string $content): bool
+{
+    if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
+        $errormessage = preg_last_error_message($lastErrorCode);
+        $errormessage = "RegularExpression $regEX failed with error code $lastErrorCode :$errormessage";
+        $detailsFile = '';
+        try {
+            $detailsFile = \Log::makeDetailsFile(
+                "$errormessage\nParsed string:\n$content"
+            );
+        } catch (Exception $e) {
+        }
+        if (!empty($detailsFile))
+            $errormessage .= ' Details have been saved to: ' . $detailsFile;
+        error_log($errormessage, 0);
+        return false;
+    } else
+        return true;
+}
+
 /**
  * Sortiert mehrere oder multidimensionale Arrays
  *
@@ -1429,7 +1455,6 @@ function isAjax(): bool
 {
     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
 }
-
 
 /**
  * Umrechnung DTP-Punkt in Millimeter (Desktop-Publishing Wobla);
@@ -1968,9 +1993,9 @@ function base64url_encode($data)
  * Decodes a base64 URL token back into a string.
  *
  * @param $token
- * @return bool|false|string
+ * @return false|string
  */
-function base64url_decode($token)
+function base64url_decode($token): bool|string
 {
     $length = strlen($token);
     if($length == 0) return false;

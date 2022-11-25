@@ -65,34 +65,34 @@ class GUI_Selezione extends GUI_Module
         $this->Template->setFilePath('stdout', $file);
 
         if(!isAjax()) {
-            $Headerdata = &$this->Weblication->findComponent('Headerdata');
-            if($Headerdata) {
+            $HeadData = $this->Weblication->getHead();
+            if($HeadData) {
                 switch ($jsLib) {
                     case 'prototype':
                         // prototype.js benoetigt
                         $jsfile = $this->Weblication->findJavaScript('prototype.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('ajax.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('url.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('selezione.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
                         break;
 
                     case 'jquery':
                         // jquery wird im moment von der software aufgrund der version selbst eingebunden (TODO)
                         $jsfile = $this->Weblication->findJavaScript('jquery.ajax.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('url.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('jquery.selezione.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
                         break;
                 }
             }
