@@ -468,6 +468,14 @@ class Weblication extends Component
     }
 
     /**
+     * @return GUI_HeaderData|null
+     */
+    public function getHead(): ?GUI_HeaderData
+    {
+        return $this->getFrame()?->getHeaderData();
+    }
+
+    /**
      * returns the main frame
      *
      * @return GUI_CustomFrame|null
@@ -1221,7 +1229,7 @@ class Weblication extends Component
 
         if($this->hasFrame()) {
             //Seitentitel (= Project)
-            $Header = $this->getFrame()->getHead();
+            $Header = $this->getFrame()->getHeaderData();
 
             $Header->setTitle($this->title);
             //TODO Translator?
