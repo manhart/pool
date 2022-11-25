@@ -59,7 +59,7 @@ class GUI_Shorten extends GUI_Module
      * - htmlTagAttr = HTML Tag Attribute als Array z.B. array('class' => 'fontcss');
      *
      * @access public
-     **/
+     */
     function init(?int $superglobals = I_EMPTY)
     {
         $this->Defaults->addVars(
