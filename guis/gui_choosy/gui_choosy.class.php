@@ -239,10 +239,10 @@ class GUI_Choosy extends GUI_Module
         $cssfile = @$this->Weblication->findStyleSheet($this->getClassName() . '.css', $this->getClassName());
 
         if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->getHead()->addJavaScript($jsfile);
+            $this->Weblication->getFrame()->getHeadData()->addJavaScript($jsfile);
             $this->enable_GUI_DHtmlHint = true;
             if($cssfile) {
-                $this->Weblication->getFrame()->getHead()->addStyleSheet($cssfile);
+                $this->Weblication->getFrame()->getHeadData()->addStyleSheet($cssfile);
             }
         }
         else {
@@ -274,7 +274,7 @@ class GUI_Choosy extends GUI_Module
         #### Frame Titel
         if($this->Weblication->hasFrame()) {
             $Frame = $this->Weblication->getFrame();
-            $Frame->getHead()->setTitle($Input->getVar('frameTitle'));
+            $Frame->getHeadData()->setTitle($Input->getVar('frameTitle'));
         }
 
         #### Auswahl gespeichert = okClick - Url->reload() - windowClose()

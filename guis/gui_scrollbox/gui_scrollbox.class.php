@@ -92,8 +92,8 @@ class GUI_Scrollbox extends GUI_Module
             $Frame->addBodyEvent('onmousemove', 'Scrollbox_MoveController(event)');
             $Frame->addBodyEvent('onmouseup', 'Scrollbox_DropController(event)');
             $jsFile = $Weblication->findJavaScript('scrollbox.js', $this->getClassName(), true);
-            $Headerdata = $Frame->getHead();
-            $Headerdata->addJavaScript($jsFile);
+            $HeadData = $Frame->getHeadData();
+            $HeadData->addJavaScript($jsFile);
         }
 
         $gapheight = $this->Input->getVar('gapheight');

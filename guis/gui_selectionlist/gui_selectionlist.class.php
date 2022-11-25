@@ -58,9 +58,9 @@ class GUI_Selectionlist extends GUI_Module
         $cssfile = @$this->Weblication->findStyleSheet($this->getClassName() . '.css', $this->getClassName());
 
         if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->getHead()->addJavaScript($jsfile);
+            $this->Weblication->getFrame()->getHeadData()->addJavaScript($jsfile);
             if($cssfile) {
-                $this->Weblication->getFrame()->getHead()->addStyleSheet($cssfile);
+                $this->Weblication->getFrame()->getHeadData()->addStyleSheet($cssfile);
             }
         }
     }
@@ -73,7 +73,7 @@ class GUI_Selectionlist extends GUI_Module
         $Input = $this->Input;
         $interfaces = $this->Weblication->getInterfaces();
         $Frame = $this->Weblication->getFrame();
-        $Frame->getHead()->setTitle('Auswahlliste Zwangskombinationen');
+        $Frame->getHeadData()->setTitle('Auswahlliste Zwangskombinationen');
 
         if($Input->getVar('primarykeys') == '') {
             $this->raiseError(__FILE__, __LINE__, 'Der Parameter "primarykeys" (Primärschlässel) wurde nicht übergeben! ' .
