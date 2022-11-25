@@ -212,12 +212,12 @@ class TempCoreHandle extends TempHandle
     protected array $VarList = [];
 
     /**
-     * @var array container for blocks (key, content of block)
+     * @var array(TempBlock) container for blocks (key, content of block)
      */
     protected array $BlockList = [];
 
     /**
-     * @var array container for files (key, content of file)
+     * @var array(TempCoreHandle) container for files (key, content of file)
      */
     protected array $FileList = [];
 
@@ -318,11 +318,9 @@ class TempCoreHandle extends TempHandle
             return $value;
         }
         if($convert == Template::CONVERT_HTMLSPECIALCHARS) {
-            $value = $value ?? '';
             return htmlspecialchars($value, ENT_QUOTES, $this->charset);
         }
         if($convert == Template::CONVERT_HTMLENTITIES) {
-            $value = $value ?? '';
             return htmlentities($value, ENT_QUOTES, $this->charset);
         }
     }
@@ -337,6 +335,7 @@ class TempCoreHandle extends TempHandle
     public function setVar($name, $value = '', int $convert = Template::CONVERT_NONE): static
     {
         if(!is_array($name)) {
+            $value = $value ?? '';
             $this->VarList[$name] = $this->convertToHTML($value, $convert);
         }
         else {
@@ -356,7 +355,7 @@ class TempCoreHandle extends TempHandle
     public function setVars(array $vars, int $convert = Template::CONVERT_NONE): static
     {
         foreach($vars as $key => $value) {
-            $this->VarList[$key] = $this->convertToHTML($value, $convert);
+            $this->setVar($key, $value, $convert);
         }
         return $this;
     }
@@ -430,13 +429,14 @@ class TempCoreHandle extends TempHandle
      * Findet er einen neuen Block, wird entsprechend ein neues Objekt mit dem Inhalt des gefundenen Blocks angelegt.
      *
      * @param string $templateContent Inhalt, welcher nach Template Elementen abgesucht werden soll
-     * @return int number of changes
+     * @return int Number of replaced patterns
      */
-    protected function findPattern(string $templateContent): int
+    protected function findPattern(string $templateContent):int
     {
         // Matches Blocks like <!-- XXX handle -->freeform-text<!-- END handle -->
-        $reg = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*)<!-- END \2 -->/Us';
+        $reg = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*?)<!-- END \2 -->/s';
         preg_match_all($reg, $templateContent, $matches, PREG_SET_ORDER);
+        checkRegExOutcome($reg, $templateContent);
         $changes = array();
         foreach ($matches as $match) {
             //the entire Comment Block
@@ -500,18 +500,23 @@ class TempCoreHandle extends TempHandle
 
         $content = $this->content;
 
-        ### TODO Pool 5, bei setVar {} adden oder read write properties...
-        # $content = strtr($content, $this->VarList);
+        $search = [];
+        $replace = [];
 
-        $replace_pairs = [];
         foreach($this->VarList as $key => $val) {
-            $replace_pairs["$varStart$key$varEnd"] = $val;
+            $search[] = "$varStart$key$varEnd";
+            $replace[] = $val;
         }
 
-        /**
-         * @var string $Handle
-         * @var TempBlock $TempBlock
-         */
+        $sizeOfVarList = count($this->VarList);
+        $iterations = 0;
+        $count = 1;
+        while($count and $iterations < $sizeOfVarList) {
+            $content = str_replace($search, $replace, $content, $count);
+            $iterations++;
+        }
+        //TODO translate {TRANSL } Tags
+        $replace_pairs = [];
         foreach($this->BlockList as $Handle => $TempBlock) {
             if($TempBlock->allowParse()) {
                 $TempBlock->parse();
@@ -527,6 +532,7 @@ class TempCoreHandle extends TempHandle
         }
 
         foreach($this->FileList as $Handle => $TempFile) {
+            /**@var TempCoreHandle $TempFile*/
             $TempFile->parse();
             $parsedContent = $TempFile->getParsedContent();
             if($clearParsedContent) $TempFile->clearParsedContent();
@@ -627,9 +633,7 @@ class TempBlock extends TempCoreHandle
     }
 
     /**
-     * TempBlock::allowParse()
-     *
-     * Die Funktion fraegt ab, ob geparst werden darf.
+     *f Die Funktion fraegt ab, ob geparst werden darf.
      * Beim ersten Aufruf der Funktion NewBlock darf noch nicht geparst werden,
      * da noch keine Variablen zugewiesen wurden. Erst bei weiteren Aufrufen (z.B. Schleife) wird geparst,
      * damit neuer Content entsteht.
@@ -725,7 +729,7 @@ class TempFile extends TempCoreHandle
         $content = '';
         $fp = fopen($this->getDirectory() . $this->Filename, 'r');
         if(!$fp) {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',
+            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',//TODO Exeption
                 $this->getDirectory() . $this->Filename));
             return;
         }
@@ -1252,7 +1256,7 @@ class Template extends PoolObject
      * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet)
      * @return Template
      */
-    public function parse(string $handle = ''): static
+    public function parse(string $handle = ''): self
     {
         if($handle != '') {
             $this->useFile($handle);

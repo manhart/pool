@@ -608,8 +608,8 @@ class GUI_TableConfigurable extends GUI_Table
 //        $this->Template->setFilePath('stdout', $tpl);
 //
 //        if($this->Weblication->hasFrame()) {
-//            $this->Weblication->getFrame()->Headerdata->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
-//            //$this->Weblication->getFrame()->Headerdata->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
+//            $this->Weblication->getFrame()->getHead()->addJavaScript($this->Weblication->findJavaScript('table.js', $className, true));
+//            //$this->Weblication->getFrame()->getHead()->addStyleSheet($this->Weblication->findStyleSheet('table_'.$fw.'.css', $className, true));
 //        }
 //    }
 
@@ -737,9 +737,8 @@ class GUI_TableConfigurable extends GUI_Table
     /**
      * Provisioning data before preparing module and there children.
      */
-    public function provision()
+    public function provision(): void
     {
-        parent::provision();
 //        $data = $this->Input->getData();
 //        unset(
 //            $data['moduleName'],
