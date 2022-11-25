@@ -1,4 +1,13 @@
 <?php
+/*
+ * g7system.local
+ *
+ * GUI_HeaderData.class.php created at 24.11.22, 23:43
+ *
+ * @author A.Manhart <A.Manhart@group-7.de>
+ * @copyright Copyright (c) 2022, GROUP7 AG
+ */
+
 /**
  * -= Rapid Module Library (RML) =-
  *
@@ -6,7 +15,7 @@
  *
  * Kopfdaten fuer ein Html Dokument (<head>kopfdaten</head>)..
  *
- * @version $Id: gui_head.class.php,v 1.6 2007/08/09 10:23:06 manhart Exp $
+ * @version $Id: GUI_HeaderData.class.php,v 1.6 2007/08/09 10:23:06 manhart Exp $
  * @version $Revision 1.0$
  * @version
  *
@@ -15,7 +24,7 @@
  * @link https://alexander-manhart.de
  */
 
-class GUI_Head extends GUI_Module
+class GUI_HeadData extends GUI_Module
 {
     const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
     const ROBOTS_INDEX = 'index';        # Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (index = Indizierung).
@@ -136,7 +145,7 @@ class GUI_Head extends GUI_Module
      */
     public function loadFiles()
     {
-        $file = $this->Weblication->findTemplate('tpl_head.html', __CLASS__, true);
+        $file = $this->Weblication->findTemplate('tpl_headData.html', __CLASS__, true);
         $this->Template->setFilePath('head', $file);
     }
 
@@ -250,7 +259,7 @@ class GUI_Head extends GUI_Module
      *
      * @param string $file
      * @param null $media
-     * @return GUI_Head
+     * @return GUI_HeadData
      */
     public function addStyleSheet(string $file, $media = null): self
     {
@@ -267,7 +276,7 @@ class GUI_Head extends GUI_Module
      *
      * @param string $file file
      * @param array $attributes (optional)
-     * @return GUI_Head
+     * @return GUI_HeadData
      */
     public function addJavaScript(string $file, array $attributes = []): self
     {
@@ -299,7 +308,7 @@ class GUI_Head extends GUI_Module
 
     /**
      * @param callable $fct
-     * @return GUI_Head
+     * @return GUI_HeadData
      */
     public function onAddFile(callable $fct): self
     {
@@ -321,7 +330,7 @@ class GUI_Head extends GUI_Module
     /**
      * @param string $href
      * @param string $target
-     * @return GUI_Head
+     * @return GUI_HeadData
      */
     public function setBaseTarget(string $href, string $target = '_top'): self
     {
@@ -344,6 +353,16 @@ class GUI_Head extends GUI_Module
      * Bereitet die Html Kopfdaten vor.
      */
     public function prepare()
+    {
+
+    }
+
+    /**
+     * Gibt die fertigen Html Kopfdaten zurueck.
+     *
+     * @return string Content (Kopfdaten)
+     */
+    public function finalize(): string
     {
         $Url = new Url(I_EMPTY);
 
@@ -424,16 +443,6 @@ class GUI_Head extends GUI_Module
             $this->Template->newBlock('favicon');
         }
 
-        $this->Template->leaveBlock();
-    }
-
-    /**
-     * Gibt die fertigen Html Kopfdaten zurueck.
-     *
-     * @return string Content (Kopfdaten)
-     */
-    public function finalize(): string
-    {
         $this->Template->parse();
         return $this->Template->getContent();
     }

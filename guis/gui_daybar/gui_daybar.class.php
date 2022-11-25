@@ -57,19 +57,15 @@ class GUI_DayBar extends GUI_Module
         $this->Template->setFilePath('stdout', $template);
 
         $jsFile = $this->Weblication->findJavaScript('daybar.js', 'gui_daybar', true);
-        $Frame = $this->Weblication->getMain();
-        if($Frame instanceof GUI_CustomFrame) {
-            /* @var $Headerdata GUI_Head */
-            $Headerdata = $Frame->getHead();
-            $Headerdata->addJavaScript($jsFile);
+        if($this->Weblication->hasFrame()) {
+            $HeadData = $this->Weblication->getHead();
+            $HeadData->addJavaScript($jsFile);
         }
     }
 
     /**
      * Template vorbereiten
-     *
-     * @access public
-     **/
+     */
     function prepare()
     {
         $Template = &$this->Template;
@@ -79,8 +75,8 @@ class GUI_DayBar extends GUI_Module
         $cssfile = @$this->Weblication->findStyleSheet($this->getClassName() . '.css', $this->getClassName(), true);
         if($cssfile) {
             if($this->Weblication->hasFrame()) {
-                if($this->Weblication->getFrame()->getHead()) {
-                    $this->Weblication->getFrame()->getHead()->addStyleSheet($cssfile);
+                if($this->Weblication->getFrame()->getHeadData()) {
+                    $this->Weblication->getFrame()->getHeadData()->addStyleSheet($cssfile);
                 }
             }
         }

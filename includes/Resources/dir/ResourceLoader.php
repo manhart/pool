@@ -10,7 +10,7 @@
 
 namespace pool\includes\Resources\dir{
 
-    use GUI_Head;
+    use GUI_HeadData;
     use pool\includes\Resources\JavaScriptResource;
     use pool\includes\Resources\StylesheetResource;
     use function readFiles;
@@ -23,7 +23,7 @@ namespace pool\includes\Resources\dir{
         protected const SUB_PATH = '';
         protected const FILE_EXT_FILTER = '';
 
-        public static function addResourceTo(GUI_Head $Head, bool $min, string $version = '', array $resource = null): int
+        public static function addResourceTo(GUI_HeadData $Head, bool $min, string $version = '', array $resource = null): int
         {
             $className = get_called_class();
             //try to load default if no subresource is specified
