@@ -9,18 +9,18 @@
  * Tooltip einbinden:
  * [GUI_DHtmlHint] in Template einbinden.
  * Stylesheet definieren zum Beispiel:
- * 	#DHtmlHint {
- *		position: absolute;
- *		width: 150px;
- *		border: 1px solid black;
- *		padding: 0px;
- *		background-color: lightyellow;
- *		visibility: hidden;
- *		z-index: 100;
- *		font-size: 11px;
- *		font-family: helvetica;
- *		Remove below line to remove shadow. Below line should always appear last within this CSS
- *		filter: progid:DXImageTransform.Microsoft.Shadow(color=gray,direction=135);
+ *    #DHtmlHint {
+ *        position: absolute;
+ *        width: 150px;
+ *        border: 1px solid black;
+ *        padding: 0px;
+ *        background-color: lightyellow;
+ *        visibility: hidden;
+ *        z-index: 100;
+ *        font-size: 11px;
+ *        font-family: helvetica;
+ *        Remove below line to remove shadow. Below line should always appear last within this CSS
+ *        filter: progid:DXImageTransform.Microsoft.Shadow(color=gray,direction=135);
  *  }
  *
  * Darauf achten, dass im Body Tag die Maus-Events: onMousemove="MousePosition.detect(event);DHtmlHintObject.doMouseMove(event)" implementiert werden.
@@ -38,19 +38,14 @@
 class GUI_Shorten extends GUI_Module
 {
     /**
-     * Gek�rzter Text
-     *
-     * @access private
      * @var string
      */
-    var $shortenText = '';
+    private string $shortenText = '';
 
     /**
-     * Flag, ob der Text gek�rzt wurde.
-     *
      * @var bool
      */
-    var $modified = false;
+    private bool $modified = false;
 
     /**
      * Standardwerte initialisieren:
@@ -65,62 +60,49 @@ class GUI_Shorten extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
-        $this -> Defaults -> addVar(
-            array(
-                'text'			=> '',
-                'len'			=> 150,
-                'more'			=> 1,
-                'hint'			=> 1,
-                'url'			=> '',
-                'htmlTag'		=> 'p',
-                'htmlTagAttr'	=> null,
-                'backtrack'		=> true
-            )
+        $this->Defaults->addVars(
+            [
+                'text' => '',
+                'len' => 150,
+                'more' => 1,
+                'hint' => 1,
+                'url' => '',
+                'htmlTag' => 'span',
+                'htmlTagAttr' => null,
+                'backtrack' => true
+            ]
         );
 
         parent::init($superglobals);
     }
 
-    function loadFiles()
+    /**
+     * takes parameter and tries to shorten the text
+     */
+    public function prepare()
     {
+        $text = shorten($this->Input->getVar('text'), $this->Input->getVar('len'), $this->Input->getVar('more'), $this->Input->getVar('backtrack'));
+        $this->modified = strcmp($text, $this->Input->getVar('text')) != 0;
+        $this->shortenText = $text;
     }
 
     /**
-     * Kuerzt den Text
-     *
-     * @access public
-     **/
-    function prepare ()
+     * @return string shortened text
+     */
+    public function finalize(): string
     {
-        $Input = &$this -> Input;
-        $text = shorten($Input -> getVar('text'), $Input -> getVar('len'), $Input -> getVar('more'), $Input -> getVar('backtrack'));
-        $this -> modified = strcmp($text, $Input -> getVar('text')) != 0;
-        $this -> shortenText = $text;
-    }
-
-    /**
-     * Gibt den gek�rzten Text zur�ck
-     *
-     * @return string Splitter
-     **/
-    function finalize(): string
-    {
-        // onmouseover="DHtmlHintObject.showAtObject(this, '{filename}', '', '', 0, 0);
-
-        $Input = &$this -> Input;
-
-        $url = $Input -> getVar('url');
-        $text = $Input -> getVar('text');
-        $htmlTag = $Input -> getVar('htmlTag');
-        $htmlTagAttr = $Input -> getVar('htmlTagAttr');
-        $bHint = ($Input -> getVar('hint') == 1);
+        $url = $this->Input->getVar('url');
+        $text = $this->Input->getVar('text');
+        $htmlTag = $this->Input->getVar('htmlTag');
+        $htmlTagAttr = $this->Input->getVar('htmlTagAttr');
+        $bHint = ($this->Input->getVar('hint') == 1);
         $strHtmlTagAttr = arrayToAttr($htmlTagAttr);
 
-        return '<' . $htmlTag . ' ' . $strHtmlTagAttr .(($this -> modified && $bHint) ?
-            ' onMouseOver="DHtmlHintObject.showAtObject(this, \'' .
-            addslashes(str_replace(array('"', "\r", "\n"), array('&#34;', '', ''), (($url) ? ('<a href="'.$url.'">') : '').nl2br($text))) .
-            (($url) ? '</a>' : '') . '\', \'\', \'\', 0, 0);"' : '') .'>' . $this -> shortenText . '</' . $htmlTag . '>';
+        return '<' . $htmlTag . ' ' . $strHtmlTagAttr . (($this->modified && $bHint) ?
+                ' onMouseOver="DHtmlHintObject.showAtObject(this, \'' .
+                addslashes(str_replace(array('"', "\r", "\n"), array('&#34;', '', ''), (($url) ? ('<a href="' . $url . '">') : '') . nl2br($text))) .
+                (($url) ? '</a>' : '') . '\', \'\', \'\', 0, 0);"' : '') . '>' . $this->shortenText . '</' . $htmlTag . '>';
     }
 }
