@@ -61,9 +61,8 @@ class GUI_DHtmlHint extends GUI_Module
         $Frame = $this->Weblication->getFrame();
 
         $jsfile = $this->Weblication->findJavaScript('dhtmlhint.js', $this->getClassName(), true);
-        if(is_a($Frame, 'GUI_CustomFrame') and is_a($Frame->getHead(), 'GUI_Head')) {
-            $Headerdata = $Frame->getHead();
-            $Headerdata->addJavaScript($jsfile);
+        if($this->Weblication->hasFrame()) {
+            $this->Weblication->getHead()->addJavaScript($jsfile);
         }
 
         if(is_a($Frame, 'GUI_CustomFrame')) {

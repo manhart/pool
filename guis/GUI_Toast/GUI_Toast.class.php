@@ -28,8 +28,8 @@ class GUI_Toast extends GUI_Module
         $this->Template->setFilePath('stdout', $tpl);
 
         if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->getHead()->addJavaScript($this->Weblication->findJavaScript('toast.js', __CLASS__, true));
-            $this->Weblication->getFrame()->getHead()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', __CLASS__, true));
+            $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('toast.js', __CLASS__, true));
+            $this->Weblication->getFrame()->getHeadData()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', __CLASS__, true));
         }
     }
 
