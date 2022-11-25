@@ -13,81 +13,38 @@
  * @version
  *
  * @since 2003-07-10
- * @author Alexander Manhart <alexander.manhart@freenet.de>
+ * @author Alexander Manhart <alexander@manhart-it.de>
  * @link http://www.misterelsa.de
  */
 
-
-/**
- * GUI_CustomFrame
- *
- * Abstrakte Klasse GUI_CustomFrame. An jeder Webseite (an sich) aendert sich meistens nur der Inhalt.
- * Bei diesen Bedingungen kommt GUI_CustomFrame gerade richtig zum Einsatz:
- *
- * GUI_CustomFrame kuemmert sich um den Rahmen der Webseite (Kopfdaten, Fusszeile, Menue, seitliche Boxen).
- *
- * @package rml
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: gui_customframe.class.php,v 1.5 2006/01/19 10:07:05 manhart Exp $
- * @access public
- **/
 class GUI_CustomFrame extends GUI_Module
 {
     /**
-     * @var GUI_Headerdata
+     * @var GUI_HeadData
      */
-    public GUI_Headerdata $Headerdata;
+    protected GUI_HeadData $HeadData;
 
     /**
-     * ToolTip
-     *
-     * @var GUI_DynToolTip
+     * @var array event container
      */
-    var $DynToolTip;
-
-    //@var string Body Event OnLoad=""
-    //@access private
-    var $DoLoad = array();
-
-    //@var string Body Event OnUnload=""
-    //@access private
-    var $DoUnload = array();
-
-    //@var string Body Event OnMouseover=""
-    //@access private
-    var $DoMouseover = array();
-
-    //@var string Body Event OnMousemove=""
-    //@access private
-    var $DoMousemove = array();
-
-    //@var string Body Event OnMouseout=""
-    //@access private
-    var $DoMouseout = array();
-
-    //@var string Body Event OnMousedown=""
-    //@access private
-    var $DoMousedown = array();
-
-    //@var string Body Event OnMouseup=""
-    //@access private
-    var $DoMouseup = array();
-
-    //@var string Body Event OnKeydown=""
-    //@access private
-    var $DoKeydown = array();
-
-    /**
-     * JavaScript-Funktionen fuer Onkeypress
-     *
-     * @var array JavaScript-Funktionen fuer Onkeypress
-     */
-    var $DoKeypress = array();
-
-    /**
-     * @var bool Verhindert das voreingestellte Laden des GUI's Headerdata
-     */
-    var $preventDefaultHeaderdata = false;
+    private array $events = [/*
+        'onafterprint' => [], // Script to be run after the document is printed
+        'onbeforeprint' => [], // Script to be run before the document is printed
+        'onbeforeunload' => [], // Script to be run when the document is about to be unloaded
+        'onerror' => [], // Script to be run when an error occurs
+        'onhashchange' => [],// Script to be run when there has been changes to the anchor part of the a URL
+        'onload' => [], // Fires after the page is finished loading
+        'onmessage' => [], // Script to be run when the message is triggered
+        'onoffline' => [], // Script to be run when the browser starts to work offline
+        'ononline' => [], // Script to be run when the browser starts to work online
+        'onpagehide' => [], // Script to be run when a user navigates away from a page
+        'onpageshow' => [], // Script to be run when a user navigates to a page
+        'onpopstate' => [], // Script to be run when the window's history changes
+        'onresize' => [], // Fires when the browser window is resized
+        'onstorage' => [], // Script to be run when a Web Storage area is updated
+        'onunload' => [], // Fires once a page has unloaded (or the browser window has been closed)
+*/
+    ];
 
     /**
      * @var array|callable|null
@@ -110,43 +67,18 @@ class GUI_CustomFrame extends GUI_Module
     private array $scriptWhenReady = [];
 
     /**
-     * Konstruktor: erzeugt das GUI_Headerdata Object
-     *
-     * Um DynToolTip zu aktivieren, wird im Frame ein DIV Element (innerhalb des body-tags) gebraucht:
-     * <DIV id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100;"></DIV>
-     *
-     * @param object $Owner
-     * @param bool $autoLoadFiles
+     * @param Component|null $Owner
      * @param array $params
-     * @return
-     * @throws ReflectionException
-     **/
-    function __construct($Owner, $autoLoadFiles=true, array $params = [])
+     * @throws \pool\classes\ModulNotFoundException
+     */
+    function __construct(?Component $Owner, array $params = [])
     {
-        parent::__construct($Owner, $autoLoadFiles, $params);
+        parent::__construct($Owner, $params);
 
-        if(!$this->preventDefaultHeaderdata) {
-            $this->Headerdata = new GUI_Headerdata($Owner);
-            $this->Headerdata->loadFiles();
-            $this->Headerdata->setName('Headerdata');
-        }
-
-//        if(!$this->preventDefaultDynToolTip) {
-//            $this->DynToolTip = new GUI_DynToolTip($Owner);
-//            $this->DynToolTip->loadFiles();
-//            $this->DynToolTip->setName('DynToolTip');
-//        }
-//
-//        if(!$this->preventDefaultJavaScript) {
-//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('browser.js', $this->getClassName(), true));
-//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('array.js', $this->getClassName(), true));
-//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('helpers.js', $this->getClassName(), true));
-//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('mouseposition.js', $this->getClassName(), true));
-//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('layer.js', $this->getClassName(), true));
-//            $this->Headerdata->addJavaScript($this->Weblication->findJavaScript('XMLHTTPRequestObject.js', $this->getClassName(), true));
-//        }
-
-        //$this->Headerdata->addJavaScript($this->Weblication->findJavaScript('dyntooltip.js', $this->getClassName(), true));
+        $this->HeadData = GUI_Module::createGUIModule(GUI_HeadData::class, $this->Weblication, $this);
+        $this->HeadData->setName('HeadData');
+        $this->HeadData->setMarker('<headdata></headdata>');
+        $this->insertModule($this->HeadData);
     }
 
     /**
@@ -154,150 +86,38 @@ class GUI_CustomFrame extends GUI_Module
      */
     public function loadFiles()
     {
-        if(!$this->preventDefaultHeaderdata) {
-            $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
-            $this->getHeaderdata()->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
-        }
+        parent::loadFiles();
+
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
     }
 
     /**
-     * Liefert das GUI_Headerdata Object zum Aendern der Html Kopfdaten.
+     * Liefert das GUI_Head Object zum Aendern der Html Kopfdaten.
      *
-     * @return GUI_Headerdata GUI_Headerdata
-     **/
-    public function getHeaderdata(): GUI_Headerdata
-    {
-        return $this->Headerdata;
-    }
-
-
-
-    /**
-     * Liefert das GUI_DynToolTip Objekt fuer ToolTip Texte.
-     *
-     * @return GUI_DynToolTip
-     **/
-//    function getDynToolTip(): GUI_DynToolTip
-//    {
-//        return $this->DynToolTip;
-//    }
-
-    /**
-     * Fuegt dem (Document) Body Load-Ereignis eine (JavaScript-)Funktion hinzu.
-     *
-     * @param string $func Funktion (bitte ohne ; abschließen)
-     **/
-    public function addBodyLoad($func)
-    {
-        if (!in_array($func, $this->DoLoad)) {
-            $this->DoLoad[] = $func;
-        }
-    }
-
-    /**
-     * Fuegt dem (Document) Body Unload-Ereignis eine (JavaScript-) Funktion hinzu.
-     *
-     * @param string $func Funktion
-     **/
-    public function addBodyUnload($func)
-    {
-        if (!in_array($func, $this->DoUnload)) {
-            $this->DoUnload[] = $func;
-        }
-    }
-
-    /**
-     * GUI_CustomFrame::addBodyMouseover()
-     *
-     * Fuegt dem (Document) Body Mouseover-Ereignis eine JavaScript-Funktion hinzu.
-     *
-     * @access public
-     * @param string $func Funktion
-     **/
-    function addBodyMouseover($func)
-    {
-        if (!in_array($func, $this->DoMouseover)) {
-            $this->DoMouseover[] = $func;
-        }
-    }
-
-    /**
-     * Fuegt dem (Document) Body Mousemove-Ereignis eine JavaScript-Funktion hinzu.
-     *
-     * @access public
-     * @param string $func Funktion
-     **/
-    function addBodyMousemove($func)
-    {
-        if (!in_array($func, $this->DoMousemove)) {
-            $this->DoMousemove[] = $func;
-        }
-    }
-
-    /**
-     * Fuegt dem (Document) Body Mouseout-Ereignis eine JavaScript-Funktion hinzu.
-     *
-     * @access public
-     * @param string $func Funktion
-     **/
-    function addBodyMouseout($func)
-    {
-        if (!in_array($func, $this->DoMouseout)) {
-            $this->DoMouseout[] = $func;
-        }
-    }
-
-    /**
-     * Fuegt dem (Document) Body Mousedown-Ereignis eine JavaScript-Funktion hinzu.
-     *
-     * @access public
-     * @param string $func Funktion
-     **/
-    function addBodyMousedown($func)
-    {
-        if (!in_array($func, $this->DoMousedown)) {
-            $this->DoMousedown[] = $func;
-        }
-    }
-
-    /**
-     * GUI_CustomFrame::addBodyMouseup()
-     *
-     * Fuegt dem (Document) Body Mouseup-Ereignis eine JavaScript-Funktion hinzu.
-     *
-     * @access public
-     * @param string $func Funktion
-     **/
-    function addBodyMouseup($func)
-    {
-        if (!in_array($func, $this->DoMouseup)) {
-            $this->DoMouseup[] = $func;
-        }
-    }
-
-    /**
-     * Fuegt dem (Document) Body Keydown-Ereignis eine JavaScript-Funktion hinzu.
-     *
-     * @access public
-     * @param string $func Funktion
-     **/
-    function addBodyKeydown($func)
-    {
-        if (!in_array($func, $this->DoKeydown)) {
-            $this->DoKeydown[] = $func;
-        }
-    }
-
-    /**
-     * Fuegt dem (Document) Body Keypress-Ereignis eine JavaScript-Funktion hinzu
-     *
-     * @param string $func Funktion
+     * @return GUI_HeadData Head of HTML
      */
-    function addBodyKeypress($func)
+    public function getHeadData(): GUI_HeadData
     {
-        if(!in_array($func, $this->DoKeypress)) {
-            $this->DoKeypress[] = $func;
+        return $this->HeadData;
+    }
+
+    /**
+     * Adds a window event to the html body
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body?retiredLocale=de
+     * @param string $event an event like onload
+     * @param string $function
+     * @return GUI_CustomFrame
+     */
+    public function addBodyEvent(string $event, string $function): self
+    {
+        if(!isset($this->events[$event])) $this->events[$event] = [];
+
+        if(!in_array($function, $this->events[$event])) {
+            $this->events[$event][] = $function;
         }
+        return $this;
     }
 
     /**
@@ -346,68 +166,35 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Fuegt die Html Kopfdaten zur Seite hinzu.
+     * puts javascript code into the template
      *
-     * @param string $content
-     * @return string Inhalt (Content)
-     **/
-    public function finalize(string $content=''): string
+     * @return string parsed content
+     */
+    public function finalize(): string
     {
-//        $tooltip_name = '';
-//        if(!$this->preventDefaultDynToolTip) {
-//            $this->DynToolTip->prepare();
-//            $content_tooltip = $this->DynToolTip->finalize();
-//            $tooltip_name = $this->DynToolTip->getName();
-//        }
-
-        $header_name = '';
-        if(!$this->preventDefaultHeaderdata) {
-            $this->Headerdata->prepare();
-            $content_header = $this->Headerdata->finalize();
-            $header_name = $this->Headerdata->getName();
-        }
-
-        $onLoad = count($this->DoLoad) ? implode(';', $this->DoLoad) : '';
-        $onUnload = count($this->DoUnload) ? implode(';', $this->DoUnload) : '';
-        $domouseover = (count($this->DoMouseover) > 0 and is_array($this->DoMouseover)) ? implode(';', $this->DoMouseover) : '';
-        $domousemove = (count($this->DoMousemove) > 0 and is_array($this->DoMousemove)) ? implode(';', $this->DoMousemove) : '';
-        $domouseout = (count($this->DoMouseout) > 0 and is_array($this->DoMouseout)) ? implode(';', $this->DoMouseout) : '';
-        $domousedown = (count($this->DoMousedown) > 0 and is_array($this->DoMousedown)) ? implode(';', $this->DoMousedown) : '';
-        $domouseup = (count($this->DoMouseup) > 0 and is_array($this->DoMouseup)) ? implode(';', $this->DoMouseup) : '';
-        $dokeydown = (count($this->DoKeydown) > 0) ? implode(';', $this->DoKeydown) : '';
-        $dokeypress = (count($this->DoKeypress) > 0) ? implode(';', $this->DoKeypress) : '';
         $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
+
         $scriptFilesAtTheEnd = '';
         if(count($this->scriptFilesAtTheEnd)) {
             foreach($this->scriptFilesAtTheEnd as $scriptFile) {
                 $scriptFilesAtTheEnd .= '<script src="' . $scriptFile . '"></script>'.chr(10);
             }
         }
+
         $scriptWhenReady = count($this->scriptWhenReady) ? implode(';', $this->scriptWhenReady) : '';
 
-        $content = str_replace(
-            ['{DOLOAD}', '{DOUNLOAD}', '{ScriptWhenReady}', '{ScriptAtTheEnd}', '{ScriptFilesAtTheEnd}'],
-            [$onLoad, $onUnload, $scriptWhenReady, $scriptAtTheEnd, $scriptFilesAtTheEnd],
-            $content
-        );
-        $content = str_replace('{DOMOUSEOVER}', $domouseover, $content);
-        $content = str_replace('{DOMOUSEMOVE}', $domousemove, $content);
-        $content = str_replace('{DOMOUSEOUT}', $domouseout, $content);
-        $content = str_replace('{DOMOUSEDOWN}', $domousedown, $content);
-        $content = str_replace('{DOMOUSEUP}', $domouseup, $content);
-        $content = str_replace('{DOKEYDOWN}', $dokeydown, $content);
-        $content = str_replace('{DOKEYPRESS}', $dokeypress, $content);
+        $this->Template->setVars([
+            'ScriptWhenReady' => $scriptWhenReady,
+            'ScriptAtTheEnd' => $scriptAtTheEnd,
+            'ScriptFilesAtTheEnd' => $scriptFilesAtTheEnd
+        ]);
 
+        $vars = array_map(function($functions) {
+            // concatenating javascript functions
+            return implode(';', $functions);
+        }, $this->events);
+        $this->Template->setVars($vars);
 
-        if (version_compare(phpversion(), '5.0.0', '>=')) {
-            if($header_name) $content = str_ireplace(array('<'.$header_name.'>'.'</'.$header_name.'>','<'.$header_name.'>', '<'.$header_name.'/>'), $content_header, $content);
-//            if($tooltip_name) $content = str_ireplace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);
-        }
-        else {
-            if($header_name) $content = str_replace(array('<'.$header_name.'>'.'</'.$header_name.'>','<'.$header_name.'>', '<'.$header_name.'/>'), $content_header, $content);
-//            if($tooltip_name) $content = str_replace(array('<'.$tooltip_name.'>'.'</'.$tooltip_name.'>','<'.$tooltip_name.'>', '<'.$tooltip_name.'/>'), $content_tooltip, $content);
-        }
-
-        return $content;
+        return parent::finalize();
     }
 }

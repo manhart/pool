@@ -269,7 +269,7 @@ function resizeImageToWidth($im, $max_width)
  * @param int $max_height
  * @return false|resource
  */
-function resizeImageToBestFit($im, $max_width, $max_height)
+function resizeImageToBestFit($im, int $max_width, int $max_height)
 {
     $originalWidth = imagesx($im);
     $originalHeight = imagesy($im);
@@ -282,10 +282,10 @@ function resizeImageToBestFit($im, $max_width, $max_height)
 
     $ratio = $originalHeight / $originalWidth;
     $width = $max_width;
-    $height = $width * $ratio;
+    $height = intval($width * $ratio);
     if ($height > $max_height) {
         $height = $max_height;
-        $width = $height / $ratio;
+        $width = intval($height / $ratio);
     }
 
     return resizeImage($im, $width, $height);

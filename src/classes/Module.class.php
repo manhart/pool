@@ -29,27 +29,26 @@
  *
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @package pool
- **/
+ */
+
 class Module extends Component
 {
     /**
      * Eltern-Objekt (Parent)->auf wem sitze ich fest?
      *
      * @var Module $Parent
-     * @access private
      */
-    var $Parent=null;
+    private Module $Parent;
 
     /**
-     * @var array{Module} $Modules contains all children modules
+     * @var array{Module} $childModules contains all children modules
      */
-    protected array $Modules = [];
+    protected array $childModules = [];
 
     /**
      * Standardwerte sollten gew�hrleisten, dass das Modul auch ohne Parametrisierung l�uft. Die Standardwerte werden in der Funktion "init" festgelegt und bestimmen das normale Verhalten des Moduls.
      *
      * @var Input $Defaults
-     * @access public
      */
     protected Input $Defaults;
 
@@ -72,9 +71,8 @@ class Module extends Component
      * Merker, ob das Modul aktiv ist / eingebunden wird.
      *
      * @var bool $enabled
-     * @access private
      */
-    var $enabled = true;
+    private bool $enabled = true;
 
     /**
      * @var array fixed params
@@ -92,13 +90,12 @@ class Module extends Component
      *
      * @param Component|null $Owner Owner
      * @param array $params fixed params
-     * @throws ReflectionException
      */
     function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner);
 
-        $this->Modules = [];
+        $this->childModules = [];
         $this->Handoff = [];
         $this->Defaults = new Input(I_EMPTY);
         $this->fixedParams = $params;
@@ -145,19 +142,18 @@ class Module extends Component
      * Importiert Variablen vom Elternmodul (durchschleifen von Variablen).
      *
      * @param array $Handoff Liste bestehend aus Variablen
-     * @return bool Erfolgsstatus
-     **/
-    function importHandoff($Handoff)
+     * @return Module Erfolgsstatus
+     */
+    function importHandoff(array $Handoff): self
     {
-        if (!$this->Input instanceof Input) {
-            return false;
+        if(count($Handoff) == 0) {
+            return $this;
         }
 
-        if (count($Handoff) > 0) {
-            $this->addHandoffVar($Handoff);
-            $this->Input->setVars($Handoff);
-        }
-        return true;
+        $this->addHandoffVar($Handoff);
+        $this->Input->setVars($Handoff);
+
+        return $this;
     }
 
     /**
@@ -167,11 +163,11 @@ class Module extends Component
      * - ModuleName: setzt den Komponentennamen
      * - ModuleDisabled: deaktiviert das Modul
      *
-     * @see Component::setName()
-     * @see Module::disable()
      * @param array $params Im Format: key=value&key2=value2&
      * @return bool Erfolgsstatus
-     **/
+     **@see Component::setName()
+     * @see Module::disable()
+     */
     public function importParams(array $params): bool
     {
         $this->setVars($params);
@@ -184,15 +180,9 @@ class Module extends Component
             $moduleName = $otherFixedName;
         }
 
-        if ($moduleName != null) {
+        if($moduleName != null) {
             $this->setName($moduleName);
         }
-
-        // @deprecated
-        // $disabled = $this->Input->getVar('ModuleDisabled');
-        // if ($disabled == 1) {
-        //   $this->disable();
-        // }
         return true;
     }
 
@@ -217,11 +207,11 @@ class Module extends Component
      * @return bool Erfolgsstatus
      * @deprecated
      */
-    function setParam($modulename, $param, $value=null)
+    function setParam(string $modulename, $param, $value = null)
     {
         $bResult = false;
         $Module = $this->Weblication->findComponent($modulename);
-        if ($Module instanceof Module) {
+        if($Module instanceof Module) {
             $Module->Input->setVar($param, $value);
             $bResult = true;
         }
@@ -237,15 +227,16 @@ class Module extends Component
      * get fixed param
      *
      * @param $param
-     * @return mixed|null
+     * @return mixed
      */
-    public function getFixedParam($param)
+    public function getFixedParam($param): mixed
     {
         return $this->fixedParams[$param] ?? null;
     }
 
     /**
      * set fixed param
+     *
      * @param string $param
      * @param $value
      * @return Module
@@ -266,7 +257,7 @@ class Module extends Component
      */
     function addHandoffVar($key, $value = '')
     {
-        if (!is_array($key)) {
+        if(!is_array($key)) {
             $this->Handoff[$key] = $value;
         }
         else {
@@ -276,26 +267,13 @@ class Module extends Component
     }
 
     /**
-     * Einf�gen von Variablen, die an die Kinder-Module (Childs) weitergereicht werden.
-     *
-     * @access public
-     * @param string $key Schluessel der Variable
-     * @param string $value Wert der Variable
-     * @return bool Erfolgsstatus
-     */
-    function setHandoffVar($key, $value = '')
-    {
-        return $this->addHandoffVar($key, $value);
-    }
-
-    /**
      * puts variables into the Input container
      *
      * @param string $key
      * @param mixed $value
      * @return Module
      */
-    public function setVar($key, $value=''): Module
+    public function setVar($key, $value = ''): Module
     {
         if(is_array($key)) {
             // @deprecated
@@ -324,18 +302,19 @@ class Module extends Component
      * @param string $key
      * @return mixed
      */
-    public function getVar(string $key)
+    public function getVar(string $key): mixed
     {
         return $this->Input->getVar($key);
     }
 
     /**
-     * Prueft ob eine Variable im Container Input enthalten ist
+     * Wrapper for Input::emptyVar
      *
      * @param string $key
      * @return boolean
+     * @see Input
      */
-    function emptyVar($key)
+    public function emptyVar(string $key): bool
     {
         return $this->Input->emptyVar($key);
     }
@@ -343,10 +322,9 @@ class Module extends Component
     /**
      * Setzt das Eltern-Modul (Parent = wem gehoere ich?)
      *
-     * @access public
-     * @param Module|null $Parent Klasse vom Typ Module
+     * @param Module $Parent Klasse vom Typ Module
      */
-    function setParent(?Module $Parent)
+    public function setParent(Module $Parent)
     {
         $this->Parent = $Parent;
     }
@@ -354,22 +332,23 @@ class Module extends Component
     /**
      * Gibt das Eltern-Modul (Parent) zurueck.
      *
-     * @access public
-     * @return Module Ergebnis vom Typ Module
+     * @return Module|null Ergebnis vom Typ Module
      */
     public function getParent(): ?Module
     {
-        return $this->Parent;
+        return $this->Parent ?? null;
     }
 
     /**
      * Fuegt ein Modul in den internen Modul-Container ein.
      *
      * @param Module $Module
+     * @return Module
      */
-    public function insertModule(Module $Module)
+    public function insertModule(Module $Module): self
     {
-        $this->Modules[] = $Module;
+        $this->childModules[] = $Module;
+        return $this;
     }
 
     /**
@@ -379,17 +358,16 @@ class Module extends Component
      */
     public function removeModule(Module $Module)
     {
-        $new_Modules = Array();
+        $new_Modules = [];
 
         // Rebuild Modules
-        $max = count($this->Modules);
-        for ($i = 0; $i < $max; $i++) {
-            if ($Module != $this->Modules[$i]) {
-                $new_Modules[] = $this->Modules[$i];
+        foreach($this->childModules as $SearchedModule) {
+            if($Module != $SearchedModule) {
+                $new_Modules[] = $SearchedModule;
             }
         }
 
-        $this->Modules = $new_Modules;
+        $this->childModules = $new_Modules;
     }
 
     /**
@@ -400,36 +378,39 @@ class Module extends Component
      */
     public function findChild(string $moduleName): ?Module
     {
-        $result = null;
         if($moduleName == '') return null;
 
-        $max = count($this->Modules);
-        for ($i = 0; $i < $max; $i++){
-            if (strcasecmp($this->Modules[$i]->getName(), $moduleName) == 0) {
-                $result = $this->Modules[$i];
-                break;
+        foreach($this->childModules as $Module) {
+            if(strcmp($Module->getName(), $moduleName) == 0) {
+                return $Module;
             }
         }
-        return $result;
+        return null;
     }
 
     /**
-     * Modul wird deaktiviert.
-     *
-     * @access public
-     **/
-    function disable()
+     * deactivates module
+     */
+    public function disable()
     {
         $this->enabled = false;
     }
 
     /**
-     * Modul wird aktiviert.
-     *
-     * @access public
-     **/
-    function enable()
+     * enables module
+     */
+    public function enable()
     {
         $this->enabled = true;
+    }
+
+    /**
+     * Returns that the module is enabled
+     *
+     * @return bool
+     */
+    public function enabled(): bool
+    {
+        return $this->enabled;
     }
 }

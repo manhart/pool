@@ -226,12 +226,12 @@
 			 * zusammen und fuehrt es auch gleich aus. Als Ergebnis erhaelt man ein Objekt
 			 * CISAM_Resultset.
 			 *
-			 * @see CISAM_Resultset.class.php
 			 * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
 			 * Feldname und als Wert/Value den einzufuegenden Feldwert
 			 * @return object CISAM_Resultset
-			 **/
-			function insert($data)
+			 **@see CISAM_Resultset.class.php
+			 */
+			public function insert(array $data): Resultset
 			{
 				$buffer = '';
 				$next = false;
@@ -260,12 +260,12 @@
 			 * zusammen und fuehrt es auch gleich aus. Als Ergebnis erhaelt man ein Objekt
 			 * CISAM_Resultset.
 			 *
-			 * @see CISAM_Resultset.class.php
 			 * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
 			 * Feldnamen und als Wert/Value den zu aendernden Feldwert
 			 * @return object CISAM_Resultset
-			 **/
-			function update($data)
+			 **@see CISAM_Resultset.class.php
+			 */
+			public function update(array $data): Resultset
 			{
 				$sizeof = sizeof($this -> pk);
 				for ($i=0; $i<$sizeof; $i++) {
