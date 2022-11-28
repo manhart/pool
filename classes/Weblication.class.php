@@ -1286,6 +1286,15 @@ class Weblication extends Component
     }
 
     /**
+     * @return void
+     */
+    public function logout(): void
+    {
+        // reset the session
+        $this->Session->destroy();
+    }
+
+    /**
      * Schliesst alle Verbindungen und loescht die Interface Objekte.
      * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
      */
