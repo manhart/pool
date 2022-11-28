@@ -684,41 +684,47 @@ class GUI_Table extends GUI_Module
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'ignorePropertyByInspector' => true,
         ],
         'groupByField' => [
             'attribute' => 'data-group-by-field',
             'type' => 'array',
             'value' => [],
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'ignorePropertyByInspector' => true,
         ],
         'groupByToggle' => [
             'attribute' => 'data-group-by-toggle',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'ignorePropertyByInspector' => true,
         ],
         'groupByShowToggleIcon' => [
             'attribute' => 'data-group-by-show-toggle-icon',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'ignorePropertyByInspector' => true,
         ],
         'groupByCollapsedGroups' => [
             'attribute' => 'data-group-by-collapsed-groups',
             'type' => 'array',
             'value' => [],
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'ignorePropertyByInspector' => true,
         ],
         'groupByFormatter' => [
             'attribute' => 'data-group-by-formatter',
             'type' => 'function',
             'value' => 'function(value, idx, data) { return \'\' }',
-            'clientside' => true
+            'clientside' => true,
+            'ignorePropertyByInspector' => true,
         ],
         'height' => [
             'attribute' => 'data-height',
@@ -745,7 +751,8 @@ class GUI_Table extends GUI_Module
                 'minus' => 'fa-minus'
             ],
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'ignorePropertyByInspector' => true,
         ],
         'iconSize' => [
             'attribute' => 'data-icon-size',
@@ -1071,7 +1078,8 @@ class GUI_Table extends GUI_Module
             'type' => 'array',
             'value' => null,
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'ignorePropertyByInspector' => true,
         ],
         'sortReset' => [
             'attribute' => 'data-sort-reset',
@@ -1143,7 +1151,8 @@ class GUI_Table extends GUI_Module
             'type'  => 'array',
             'element'   => 'input',
             'inputType' => 'text',
-            'value' => ['pageInfo', 'pageSize', 'pageList']
+            'value' => ['pageInfo', 'pageSize', 'pageList'],
+            'ignorePropertyByInspector' => true,
         ],
         'url' => [
             'attribute' => 'data-url',
