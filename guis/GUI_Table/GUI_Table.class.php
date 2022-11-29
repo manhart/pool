@@ -1160,7 +1160,7 @@ class GUI_Table extends GUI_Module
             'value' => null, // undefined
             'element' => 'input',
             'inputType' => 'text',
-            'caption' => 'Data Url'
+            'caption' => 'Url'
         ],
         'virtualScrollItemHeight' => [
             'attribute' => 'data-virtual-scroll-item-height',
