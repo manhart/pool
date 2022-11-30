@@ -2,13 +2,13 @@
 /*
  * g7system.local
  *
- * TranslationProvider_ToolDecorator.php created at 30.11.22, 10:16
+ * TranslationProvider_ToolDecorator.php created at 30.11.22, 13:21
  *
- * @author p.lehfeld <p.lehfeld@group-7.de>
+ * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
-namespace pool\classes;
+namespace pool\classes\translator;
 /**
  * A decorator that adds functionality for interacting with the Translator tool
  */

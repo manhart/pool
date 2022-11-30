@@ -20,8 +20,8 @@ declare(strict_types=1);
  */
 
 use pool\classes\ModulNotFoundException;
-use pool\classes\TranslationProviderFactory_ResourceFile;
-use pool\classes\Translator;
+use pool\classes\translator\TranslationProviderFactory_ResourceFile;
+use pool\classes\translator\Translator;
 
 class Weblication extends Component
 {
