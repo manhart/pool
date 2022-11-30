@@ -15,10 +15,15 @@ use Exception;
 class TranslationProvider_ResourceFile implements TranslationProvider
 {
     private string $lang;
+
     private string $locale;
+
     private string $resourceFile;
+
     private array $translations;
+
     private ?Exception $error = null;
+
     private ?string $lastResult = null;
 
     /**
@@ -31,7 +36,8 @@ class TranslationProvider_ResourceFile implements TranslationProvider
         $this->resourceFile = $resourceFileName;
         try {
             $this->translations = include($resourceFileName);
-        } catch (Exception){
+        }
+        catch(Exception) {
             throw new Exception("Failed to load Translation-Ressource for $lang");
         }
     }
@@ -51,7 +57,6 @@ class TranslationProvider_ResourceFile implements TranslationProvider
         return $this->lastResult;
     }
 
-
     /**
      * @inheritDoc
      */
@@ -65,11 +70,11 @@ class TranslationProvider_ResourceFile implements TranslationProvider
      */
     function query(string $key): int
     {
-        if (!isset($this->translations[$key]))
+        if(!isset($this->translations[$key]))
             return self::TranslationNotExistent;
         $result = $this->translations[$key];
         $this->lastResult = $result;
-        if ($result === null)
+        if($result === null)
             return self::TranslationKnownMissing;
         else
             return self::OK;
@@ -82,20 +87,12 @@ class TranslationProvider_ResourceFile implements TranslationProvider
             $this->translations = include($this->resourceFile);
             //manipulate Translations
             $this->translations[$key] = $value;
-            //format as PHP code
-            $phpArray = [];
-            foreach ($this->translations as $key => $value){
-                $phpArray[]= "'$key' => '$value',\n";
-            }
-            $phpArray = implode($phpArray);
-            $newContent = <<<PHP
-<?php \n\n return[ \n
-$phpArray
-];
-PHP;
+            $code = var_export($this->translations, true);
+            $newContent = "<?php return $code;";
             //write generated resource to disk
             file_put_contents($this->resourceFile, $newContent);
-        }catch (Exception $e){
+        }
+        catch(Exception $e) {
             //failed
             $this->error = $e;
             return self::Error;
