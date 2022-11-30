@@ -48,7 +48,6 @@ class Module extends Component
      * Standardwerte sollten gew�hrleisten, dass das Modul auch ohne Parametrisierung l�uft. Die Standardwerte werden in der Funktion "init" festgelegt und bestimmen das normale Verhalten des Moduls.
      *
      * @var Input $Defaults
-     * @access public
      */
     protected Input $Defaults;
 
@@ -263,19 +262,6 @@ class Module extends Component
             $this->Handoff = array_merge($key, $this->Handoff);
         }
         return true;
-    }
-
-    /**
-     * Einf�gen von Variablen, die an die Kinder-Module (Childs) weitergereicht werden.
-     *
-     * @access public
-     * @param string $key Schluessel der Variable
-     * @param string $value Wert der Variable
-     * @return bool Erfolgsstatus
-     */
-    function setHandoffVar($key, $value = '')
-    {
-        return $this->addHandoffVar($key, $value);
     }
 
     /**

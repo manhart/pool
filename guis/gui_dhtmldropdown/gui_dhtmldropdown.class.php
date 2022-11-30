@@ -131,7 +131,7 @@ class GUI_DHTMLDropdown extends GUI_Module
         #### Funktionen fuer D-Html Dropdown einbinden
         if($this->Weblication->hasFrame()) {
             $jsfile = $this->Weblication->findJavaScript('dropdown.js', $this->getClassName(), true);
-            $Frame->getHead()->addJavaScript($jsfile);
+            $Frame->getHeadData()->addJavaScript($jsfile);
             $Frame->addBodyEvent('onmousemove', 'MousePosition.detect(event)');
             $Frame->addBodyEvent('onmouseup', 'closeDropdownLayer()');
         }

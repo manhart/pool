@@ -20,9 +20,9 @@
 class GUI_CustomFrame extends GUI_Module
 {
     /**
-     * @var GUI_Head
+     * @var GUI_HeadData
      */
-    protected GUI_Head $Head;
+    protected GUI_HeadData $HeadData;
 
     /**
      * @var array event container
@@ -46,46 +46,6 @@ class GUI_CustomFrame extends GUI_Module
 */
     ];
 
-    //@var string Body Event OnUnload=""
-    //@access private
-    var $DoUnload = array();
-
-    //@var string Body Event OnMouseover=""
-    //@access private
-    var $DoMouseover = array();
-
-    //@var string Body Event OnMousemove=""
-    //@access private
-    var $DoMousemove = array();
-
-    //@var string Body Event OnMouseout=""
-    //@access private
-    var $DoMouseout = array();
-
-    //@var string Body Event OnMousedown=""
-    //@access private
-    var $DoMousedown = array();
-
-    //@var string Body Event OnMouseup=""
-    //@access private
-    var $DoMouseup = array();
-
-    //@var string Body Event OnKeydown=""
-    //@access private
-    var $DoKeydown = array();
-
-    /**
-     * JavaScript-Funktionen fuer Onkeypress
-     *
-     * @var array JavaScript-Funktionen fuer Onkeypress
-     */
-    var $DoKeypress = array();
-
-    /**
-     * @var bool Verhindert das voreingestellte Laden des GUI's Headerdata
-     */
-    var $preventDefaultHeaderdata = false;
-
     /**
      * @var array|callable|null
      */
@@ -107,23 +67,18 @@ class GUI_CustomFrame extends GUI_Module
     private array $scriptWhenReady = [];
 
     /**
-     * Konstruktor: erzeugt das GUI_Head Object
-     *
-     * Um DynToolTip zu aktivieren, wird im Frame ein DIV Element (innerhalb des body-tags) gebraucht:
-     * <DIV id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100;"></DIV>
-     *
-     * @param object $Owner
+     * @param Component|null $Owner
      * @param array $params
+     * @throws \pool\classes\ModulNotFoundException
      */
-    function __construct($Owner, array $params = [])
+    function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
 
-        if(!$this->preventDefaultHeaderdata) {
-            $this->Head = new GUI_Head($Owner);
-            $this->Head->loadFiles();
-            $this->Head->setName('Head');
-        }
+        $this->HeadData = GUI_Module::createGUIModule(GUI_HeadData::class, $this->Weblication, $this);
+        $this->HeadData->setName('HeadData');
+        $this->HeadData->setMarker('<headdata></headdata>');
+        $this->insertModule($this->HeadData);
     }
 
     /**
@@ -131,20 +86,20 @@ class GUI_CustomFrame extends GUI_Module
      */
     public function loadFiles()
     {
-        if(!$this->preventDefaultHeaderdata) {
-            $this->Head->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
-            $this->Head->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
-        }
+        parent::loadFiles();
+
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
     }
 
     /**
      * Liefert das GUI_Head Object zum Aendern der Html Kopfdaten.
      *
-     * @return GUI_Head Head of HTML
+     * @return GUI_HeadData Head of HTML
      */
-    public function getHead(): GUI_Head
+    public function getHeadData(): GUI_HeadData
     {
-        return $this->Head;
+        return $this->HeadData;
     }
 
     /**
@@ -211,40 +166,35 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Fuegt die Html Kopfdaten zur Seite hinzu.
+     * puts javascript code into the template
      *
-     * @param string $content
-     * @return string Inhalt (Content)
-     **/
-    public function finalize(string $content=''): string
+     * @return string parsed content
+     */
+    public function finalize(): string
     {
-        $headTag = '<head>';
-        if(!$this->preventDefaultHeaderdata) {
-            $this->Head->prepare();
-            $content_header = $this->Head->finalize();
-        }
-
         $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
+
         $scriptFilesAtTheEnd = '';
         if(count($this->scriptFilesAtTheEnd)) {
             foreach($this->scriptFilesAtTheEnd as $scriptFile) {
                 $scriptFilesAtTheEnd .= '<script src="' . $scriptFile . '"></script>'.chr(10);
             }
         }
+
         $scriptWhenReady = count($this->scriptWhenReady) ? implode(';', $this->scriptWhenReady) : '';
 
-        $content = str_replace(
-            ['{ScriptWhenReady}', '{ScriptAtTheEnd}', '{ScriptFilesAtTheEnd}'],
-            [$scriptWhenReady, $scriptAtTheEnd, $scriptFilesAtTheEnd],
-            $content
-        );
+        $this->Template->setVars([
+            'ScriptWhenReady' => $scriptWhenReady,
+            'ScriptAtTheEnd' => $scriptAtTheEnd,
+            'ScriptFilesAtTheEnd' => $scriptFilesAtTheEnd
+        ]);
 
-        $replace_pair = [];
-        foreach($this->events as $event => $functions) {
-            $replace_pair['{'.$event.'}'] = implode(';', $functions);
-        }
-        $content = strtr($content, $replace_pair);
+        $vars = array_map(function($functions) {
+            // concatenating javascript functions
+            return implode(';', $functions);
+        }, $this->events);
+        $this->Template->setVars($vars);
 
-        return str_ireplace($headTag, "$headTag\n$content_header", $content);
+        return parent::finalize();
     }
 }

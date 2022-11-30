@@ -34,7 +34,7 @@ class GUI_Emoticons extends GUI_Module
         $this -> Template -> setFilePath('emoticons', $file_emoticons);
 
         $file_javascript = $this -> Weblication -> findJavascript('emoticon.js', $this -> getClassName(), true);
-        $this -> Weblication -> getFrame() -> getHead() -> addJavaScript($file_javascript);
+        $this -> Weblication -> getFrame() -> getHeadData() -> addJavaScript($file_javascript);
     }
 
     function prepare ()

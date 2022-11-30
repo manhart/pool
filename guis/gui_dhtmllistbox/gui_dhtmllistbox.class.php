@@ -79,9 +79,9 @@ class GUI_DHTMLListbox extends GUI_Module
         #### Bindet gui_dhtmllistbox.css ein:
         $cssfile = @$this -> Weblication -> findStyleSheet($this -> getClassName() . '.css', $this -> getClassName(), true);
         if (is_a($this->Weblication->getFrame(), 'GUI_Module')) {
-            if (is_a($this->Weblication->getFrame()->getHead(), 'GUI_Head')) {
+            if (is_a($this->Weblication->getFrame()->getHeadData(), 'GUI_HeadData')) {
                 if ($cssfile) {
-                    $this->Weblication->getFrame()->getHead()->addStyleSheet($cssfile);
+                    $this->Weblication->getFrame()->getHeadData()->addStyleSheet($cssfile);
                 }
             }
         }
