@@ -876,6 +876,7 @@ class Weblication extends Component
      * @param string $language
      * @param string $classFolder
      * @param bool $baselib
+     * @param bool $translate
      * @return string
      */
     public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib, bool $translate = false): string
@@ -902,7 +903,7 @@ class Weblication extends Component
             if(file_exists($file)) {
                 if ($translate)
                     try {
-                        return $this->getTranslator()->translateFile($file, $this->getLanguage());
+                        return Template::getTranslator()->translateFile($file, $language);
                     } catch (Exception) {
                         return $file;
                     }
@@ -934,7 +935,7 @@ class Weblication extends Component
                 // GUI Ordner
                 if ($translate)
                     try {
-                        return $this->getTranslator()->translateFile($file, $this->getLanguage());
+                        return Template::getTranslator()->translateFile($file, $language);
                     } catch (Exception) {}
                 return $file;
             }
