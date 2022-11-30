@@ -13,11 +13,18 @@ namespace pool\classes;
 abstract Class TranslationProviderFactory
 {
     protected static TranslationProviderFactory $instance;
-    static function getInstance():TranslationProviderFactory{
+    static function create():static{
         return static::$instance ?? static::$instance= new static();
     }
     protected function __construct(){}
     abstract function hasLang(string $language, float &$quality = 0):bool;
-    abstract function getBestLang(string $proposed, float &$fitness = 0):string|false;
-    abstract function getProvider(string $language):TranslationProvider|null;
+    function getBestLang(string $proposed, float &$fitness = 0):string|false{
+        if ($this->hasLang($proposed))
+            return $proposed;
+        $generic = Translator::getPrimaryLanguage($proposed);
+        if ($this->hasLang($generic))
+            return $generic;
+        return false;
+    }
+    abstract function getProvider(string $language, string $locale):TranslationProvider;
 }
