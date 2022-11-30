@@ -20,6 +20,7 @@ declare(strict_types=1);
  */
 
 use pool\classes\ModulNotFoundException;
+use pool\classes\TranslationProviderFactory_ResourceFile;
 use pool\classes\Translator;
 
 class Weblication extends Component
@@ -215,8 +216,6 @@ class Weblication extends Component
     /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
-     *
-     * @throws ReflectionException
      */
     private function __construct()
     {
@@ -231,10 +230,7 @@ class Weblication extends Component
      */
     public static function getInstance(): Weblication
     {
-        if(static::$Instance === null) {
-            static::$Instance = new static();
-        }
-
+        static::$Instance ??= new static();
         return static::$Instance;
     }
 
@@ -284,7 +280,7 @@ class Weblication extends Component
     }
 
     /**
-     * Sets the language for the Page. It's used for html templates and images
+     * Sets the main language for the Page. It's used for html templates and images
      *
      * @param string $lang Country Code
      * @param string $resourceDir Directory with translations e.g. de.php, en.php
@@ -297,7 +293,8 @@ class Weblication extends Component
         $this->language = $lang;
 
         if($resourceDir) {
-            Translator::getInstance()->setResourceDir($resourceDir)->setDefaultLanguage($lang);
+            $resource = TranslationProviderFactory_ResourceFile::create($resourceDir);
+            $this->getTranslator()->addTranslationResource($resource)->swapLangList($lang);
         }
 
         $this->subdirTranslated = $subDirTranslated;
@@ -793,7 +790,7 @@ class Weblication extends Component
             }
         }
 
-        $template = $this->findBestElement($templates_subFolder, $filename, $language, $classFolder, $baselib);
+        $template = $this->findBestElement($templates_subFolder, $filename, $language, $classFolder, $baselib, true);
         if($template)
             return $template;
 
@@ -863,7 +860,7 @@ class Weblication extends Component
      * @param bool $baselib
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib, bool $translate = false): string
     {
         $skinElementFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
 
@@ -872,7 +869,7 @@ class Weblication extends Component
         if($this->hasCommonSkinFolder($elementSubFolder)) {
             $file = buildFilePath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
             if(file_exists($file))
-                return $file;
+                return $file;//Translated version?
         }
 
         if($this->hasSkinFolder($elementSubFolder)) {
@@ -884,8 +881,14 @@ class Weblication extends Component
             }
             //skin without language
             $file = buildFilePath($skinElementFolder, $filename);
-            if(file_exists($file))
-                return $file;
+            if(file_exists($file)) {
+                if ($translate)
+                    try {
+                        return $this->getTranslator()->translateFile($file, $this->getLanguage());
+                    } catch (Exception) {
+                        return $file;
+                    }
+            }
         }
 
         $gui_directories = [];
@@ -906,11 +909,15 @@ class Weblication extends Component
         foreach($gui_directories as $folder_guis) {
             $file = $folder_guis . $filename;
             if(file_exists($file)) {
-                $translatedStylesheet = buildFilePath($folder_guis, $language, $filename);
-                if(file_exists($translatedStylesheet))
+                $translatedFile = buildFilePath($folder_guis, $language, $filename);
+                if(file_exists($translatedFile))
                     // Language Ordner
-                    return $translatedStylesheet;
+                    return $translatedFile;
                 // GUI Ordner
+                if ($translate)
+                    try {
+                        return $this->getTranslator()->translateFile($file, $this->getLanguage());
+                    } catch (Exception) {}
                 return $file;
             }
         }
@@ -1125,7 +1132,7 @@ class Weblication extends Component
     public function setLocale(int $category = LC_ALL, ?string $locale = null): bool|string
     {
         if(is_null($locale)) {
-            $locale = Translator::parseLangHeader();
+            $locale = $this->getTranslator()->parseLangHeader();
         }
         $this->locale = $locale;
         return setlocale($category, $locale);
@@ -1203,7 +1210,6 @@ class Weblication extends Component
         }
 
         // TODO Get Parameter frame
-        // TODO Subcode :: createSubCode()
         $params = $_REQUEST['params'] ?? '';
         if(isNotEmpty($params) and isAjax()) {
             $params = base64url_decode($params) ?: "";
@@ -1219,7 +1225,6 @@ class Weblication extends Component
             $Header = $this->getFrame()->getHead();
 
             $Header->setTitle($this->title);
-            //TODO Translator?
             $Header->setLanguage($this->language);
             if($this->charset) $Header->setCharset($this->charset);
         }
