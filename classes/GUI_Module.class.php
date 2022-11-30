@@ -114,6 +114,7 @@ class GUI_Module extends Module
      * @var array<string, string> $templates files (templates) to be loaded, usually used with $this->Template->setVar(...) in the prepare function. Defined as an associated array [handle => tplFile].
      */
     protected array $templates = [];
+
     /**
      * @var array<int, string> $jsFiles javascript files to be loaded, defined as indexed array
      */
@@ -390,7 +391,7 @@ class GUI_Module extends Module
      *
      * @param string $marker Identifikation innerhalb des Templates
      */
-    private function setMarker(string $marker)
+    protected function setMarker(string $marker)
     {
         $this->marker = $marker;
     }
@@ -450,12 +451,12 @@ class GUI_Module extends Module
 
         foreach($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
-            $Frame->getHead()->addStyleSheet($cssFile);
+            $Frame->getHeadData()->addStyleSheet($cssFile);
         }
 
         foreach($this->jsFiles as $jsFile) {
             $jsFile = $this->getWeblication()->findJavaScript($jsFile, $className);
-            $Frame->getHead()->addJavaScript($jsFile);
+            $Frame->getHeadData()->addJavaScript($jsFile);
         }
 
         // automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication (if enabled).
@@ -489,14 +490,14 @@ class GUI_Module extends Module
                 return;
             }
 
-            $this->Weblication->getFrame()->getHead()->addJavaScript($js);
+            $this->Weblication->getFrame()->getHeadData()->addJavaScript($js);
         }
 
         $windowCode = '';
         if($global) {
             $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
         }
-        $this->Weblication->getFrame()->getHead()->addScriptCode($this->getName(),
+        $this->Weblication->getFrame()->getHeadData()->addScriptCode($this->getName(),
             $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
     }
 
@@ -837,6 +838,7 @@ class GUI_Module extends Module
             $this->Template->parse($handle);
             $content .= $this->Template->getContent($handle);
         }
+
         return $content;
     }
 }

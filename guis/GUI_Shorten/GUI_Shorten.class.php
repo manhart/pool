@@ -36,32 +36,17 @@
  */
 
 
-/**
- * GUI_Shorten
- *
- * Kuerzt Text und zeigt dafuer ein Tooltip an.
- *
- * @package pool
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: gui_shorten.class.php,v 1.7 2005/07/25 08:45:21 manhart Exp $
- * @access public
- **/
 class GUI_Shorten extends GUI_Module
 {
     /**
-     * Gek�rzter Text
-     *
-     * @access private
      * @var string
      */
-    var $shortenText = '';
+    private string $shortenText = '';
 
     /**
-     * Flag, ob der Text gek�rzt wurde.
-     *
      * @var bool
      */
-    var $modified = false;
+    private bool $modified = false;
 
     /**
      * Standardwerte initialisieren:
@@ -73,60 +58,45 @@ class GUI_Shorten extends GUI_Module
      * - url = Url im ToolTip Hint
      * - htmlTag = HTML Tag, dass OnMouseOver f�r ToolTip Hint enth�lt. Standard "p" f�r <p>
      * - htmlTagAttr = HTML Tag Attribute als Array z.B. array('class' => 'fontcss');
-     *
-     * @access public
-     **/
+     */
     function init(?int $superglobals=I_EMPTY)
     {
-        $this -> Defaults -> addVar(
-            array(
+        $this->Defaults->addVars(
+            [
                 'text'			=> '',
                 'len'			=> 150,
                 'more'			=> 1,
                 'hint'			=> 1,
                 'url'			=> '',
-                'htmlTag'		=> 'p',
+                'htmlTag' => 'span',
                 'htmlTagAttr'	=> null,
                 'backtrack'		=> true
-            )
+            ]
         );
 
         parent::init($superglobals);
     }
 
-    function loadFiles()
-    {
-    }
-
     /**
-     * Kuerzt den Text
-     *
-     * @access public
-     **/
-    function prepare ()
+     * takes parameter and tries to shorten the text
+     */
+    public function prepare()
     {
-        $Input = &$this -> Input;
-        $text = shorten($Input -> getVar('text'), $Input -> getVar('len'), $Input -> getVar('more'), $Input -> getVar('backtrack'));
-        $this -> modified = strcmp($text, $Input -> getVar('text')) != 0;
+        $text = shorten($this->Input->getVar('text'), $this->Input->getVar('len'), $this->Input->getVar('more'), $this->Input->getVar('backtrack'));
+        $this->modified = strcmp($text, $this->Input->getVar('text')) != 0;
         $this -> shortenText = $text;
     }
 
     /**
-     * Gibt den gek�rzten Text zur�ck
-     *
-     * @return string Splitter
-     **/
-    function finalize(): string
+     * @return string shortened text
+     */
+    public function finalize(): string
     {
-        // onmouseover="DHtmlHintObject.showAtObject(this, '{filename}', '', '', 0, 0);
-
-        $Input = &$this -> Input;
-
-        $url = $Input -> getVar('url');
-        $text = $Input -> getVar('text');
-        $htmlTag = $Input -> getVar('htmlTag');
-        $htmlTagAttr = $Input -> getVar('htmlTagAttr');
-        $bHint = ($Input -> getVar('hint') == 1);
+        $url = $this->Input->getVar('url');
+        $text = $this->Input->getVar('text');
+        $htmlTag = $this->Input->getVar('htmlTag');
+        $htmlTagAttr = $this->Input->getVar('htmlTagAttr');
+        $bHint = ($this->Input->getVar('hint') == 1);
         $strHtmlTagAttr = arrayToAttr($htmlTagAttr);
 
         return '<' . $htmlTag . ' ' . $strHtmlTagAttr .(($this -> modified && $bHint) ?

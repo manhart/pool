@@ -1,18 +1,18 @@
 <?php
 /**
-* POOL (PHP Object Oriented Library): Component ist der gemeinsame Vorfahr aller Komponenten.
-*
-* Letzte aenderung am: $Date: 2006/12/01 09:08:54 $
-*
-* @version $Id: Component.class.php,v 1.7 2006/12/01 09:08:54 manhart Exp $
-* @version $Revision 1.0$
-* @version
-*
-* @since 2003-07-10
-* @author Alexander Manhart <alexander@manhart-it.de>
-* @link http://www.misterelsa.de
-* @package pool
-*/
+ * POOL (PHP Object Oriented Library): Component ist der gemeinsame Vorfahr aller Komponenten.
+ *
+ * Letzte aenderung am: $Date: 2006/12/01 09:08:54 $
+ *
+ * @version $Id: Component.class.php,v 1.7 2006/12/01 09:08:54 manhart Exp $
+ * @version $Revision 1.0$
+ * @version
+ *
+ * @since 2003-07-10
+ * @author Alexander Manhart <alexander@manhart-it.de>
+ * @link http://www.misterelsa.de
+ * @package pool
+ */
 
 /**
  * Component ist die Basisklasse fuer alle Komponenten. Komponenten sind persistente Objekte.
@@ -33,16 +33,15 @@ class Component extends PoolObject
      * Eigentuemer vom Typ Component
      *
      * @var Component|null $Owner
-     * @access public
      */
-    var ?Component $Owner=null;
+    protected ?Component $Owner = null;
 
     /**
-     * Array bestehend aus Objekten vom Typ Component
+     * contains all components
      *
-     * @var array $Components
+     * @var array<Component> $components
      */
-    private array $Components=[];
+    private array $components = [];
 
     /**
      * Unique Name
@@ -54,10 +53,9 @@ class Component extends PoolObject
     /**
      * Array als Zaehler, gewaehrleistet eindeutige Komponentennamen (fortlaufend)
      *
-     * @var array $Counter
-     * @access private
+     * @var array $uniqueNameCounter
      */
-    var $Counter=[];
+    private array $uniqueNameCounter = [];
 
     /**
      * Webanwendung
@@ -68,29 +66,30 @@ class Component extends PoolObject
 
     /**
      * Session
-     *
      * @var ISession|null $Session
      */
     public ?ISession $Session = null;
 
+    /**
+     * @var string directory that contains the class
+     */
     private string $classDirectory;
 
     /**
      * Der Konstruktor erhaelt als Parameter den Eigentuemer dieses Objekts. Der Eigent�mer muss vom Typ Component abgeleitet sein.
      *
-     * @access public
      * @param Component|null $Owner Der Eigentuemer erwartet ein Objekt vom Typ Component.
      */
-    function __construct(?Component $Owner)
+    public function __construct(?Component $Owner)
     {
-        if ($Owner instanceof Component) {
+        if($Owner instanceof Component) {
             $this->Owner = $Owner;
             $Owner->insertComponent($this);
 
             // for direct access to weblication!
-            if ($Owner instanceof Weblication) {
+            if($Owner instanceof Weblication) {
                 $this->Weblication = $Owner;
-                if ($this->Weblication->Session instanceof Input) {
+                if($this->Weblication->Session instanceof Input) {
                     $this->Session = $this->Weblication->Session;
                 }
             }
@@ -103,21 +102,18 @@ class Component extends PoolObject
     /**
      * Erzeugt einen eindeutigen Komponentennamen
      *
-     * @access public
      * @return string Eindeutiger Name
      */
-    function getUniqueName(): string
+    protected function getUniqueName(): string
     {
-        if ($this->Owner != null) {
-            $ClassName = $this->getClassName();
-            if (isset($this->Owner->Counter[$ClassName])) {
-                $sufix = ($this->Owner->Counter[$ClassName] + 1);
-            }
-            else {
-                $sufix = 1;
-            }
-            $new_name = $ClassName . $sufix;
-            $this->Owner->Counter[$ClassName] = $sufix;
+        if($this->Owner != null) {
+            $className = $this->getClassName();
+
+            $counter = $this->Owner->uniqueNameCounter[$className] ?? 0;
+            $counter++;
+            $this->Owner->uniqueNameCounter[$className] = $counter;
+
+            $new_name = $className . $counter;
         }
         else {
             $new_name = $this->getClassName();
@@ -138,7 +134,7 @@ class Component extends PoolObject
     public function setName(string $new_name): Component
     {
         if($this->name != $new_name) {
-            if ($this->validateName($new_name)) {
+            if($this->validateName($new_name)) {
                 $this->name = $new_name;
             }
         }
@@ -188,12 +184,12 @@ class Component extends PoolObject
     /**
      * Gibt das Objekt Weblication zurueck, falls der Eigentuemer vom Typ Weblication ist.
      *
-     * @see Weblication
      * @return Weblication|null Weblication
-     **/
+     **@see Weblication
+     */
     public function getWeblication(): ?Weblication
     {
-        if ($this->Owner instanceof Weblication){
+        if($this->Owner instanceof Weblication) {
             return $this->Owner;
         }
         else {
@@ -209,7 +205,7 @@ class Component extends PoolObject
      */
     private function validateName(string $NewName): bool
     {
-        if ($this->Owner != null){
+        if($this->Owner != null) {
             if($this->Owner->findComponent($NewName)) {
                 return false;
             }
@@ -225,38 +221,32 @@ class Component extends PoolObject
      */
     function findComponent(string $name): ?Component
     {
-        $result = null;
-        if($name == '') return null;
-
-        $max = count($this->Components);
-        for ($i = 0; $i < $max; $i++){
-            if (strcasecmp($this->Components[$i]->getName(), $name) == 0) {
-                $result = $this->Components[$i];
-                break;
+        foreach($this->components as $Component) {
+            if(strcasecmp($Component->getName(), $name) == 0) {
+                return $Component;
             }
         }
-        return $result;
+        return null;
     }
 
     /**
      * Ermittelt die Anzahl der Komponenten im Container.
      *
-     * @access public
      * @return integer Anzahl der Komponenten
      */
-    function getComponentCount(): int
+    public function getComponentCount(): int
     {
-        return count($this->Components);
+        return count($this->components);
     }
 
     /**
      * Fuegt dem internen Container eine weitere Komponente hinzu.
      *
-     * @param Component Einzuf�gende Komponente
+     * @param Component $Component Einzuf�gende Komponente
      */
     public function insertComponent(Component $Component)
     {
-        $this->Components[] = $Component;
+        $this->components[] = $Component;
     }
 
     /**
@@ -266,15 +256,15 @@ class Component extends PoolObject
      */
     public function removeComponent(Component $Component)
     {
-        $new_Components = Array();
+        $new_Components = [];
 
         // Rebuild Components
-        for ($i = 0; $i < count($this->Components); $i++) {
-            if ($Component != $this->Components[$i]) {
-                $new_Components[] = $this->Components[$i];
+        for($i = 0; $i < count($this->components); $i++) {
+            if($Component != $this->components[$i]) {
+                $new_Components[] = $this->components[$i];
             }
         }
 
-        $this->Components = $new_Components;
+        $this->components = $new_Components;
     }
 }

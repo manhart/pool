@@ -470,6 +470,14 @@ class Weblication extends Component
     }
 
     /**
+     * @return GUI_HeadData|null
+     */
+    public function getHead(): ?GUI_HeadData
+    {
+        return $this->getFrame()?->getHeadData();
+    }
+
+    /**
      * returns the main frame
      *
      * @return GUI_CustomFrame|null
@@ -1232,7 +1240,7 @@ class Weblication extends Component
 
         if($this->hasFrame()) {
             //Seitentitel (= Project)
-            $Header = $this->getFrame()->getHead();
+            $Header = $this->getFrame()->getHeadData();
 
             $Header->setTitle($this->title);
             $Header->setLanguage($this->language);
@@ -1285,6 +1293,15 @@ class Weblication extends Component
             $this->xdebug = extension_loaded('xdebug');
         }
         return $this->xdebug;
+    }
+
+    /**
+     * @return void
+     */
+    public function logout(): void
+    {
+        // reset the session
+        $this->Session->destroy();
     }
 
     /**

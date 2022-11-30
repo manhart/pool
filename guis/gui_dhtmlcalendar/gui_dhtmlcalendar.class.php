@@ -73,18 +73,18 @@ class GUI_DHtmlCalendar extends GUI_Module
         $file = $this->Weblication->findTemplate($template, $this->getClassName(), true);
         $this->Template->setFilePath('stdout', $file);
 
-        $Headerdata = $this->Weblication->findComponent('Headerdata');
-        if($Headerdata) {
+        $HeadData = $this->Weblication->getHead();
+        if($HeadData) {
             // prototype.js ben�tigt von date.js
             $jsfile = $this->Weblication->findJavaScript('prototype.js', $this->getClassName(), true);
-            $Headerdata->addJavaScript($jsfile);
+            $HeadData->addJavaScript($jsfile);
             // dhtmlcalendar.js ben�tigt von dhtmlcalendar.js
             $jsfile = $this->Weblication->findJavaScript('date.js', $this->getClassName(), true);
-            $Headerdata->addJavaScript($jsfile);
+            $HeadData->addJavaScript($jsfile);
             $jsfile = $this->Weblication->findJavaScript('dhtmlcalendar.js', $this->getClassName(), true);
-            $Headerdata->addJavaScript($jsfile);
+            $HeadData->addJavaScript($jsfile);
             $cssfile = $this->Weblication->findStyleSheet($css, $this->getClassName(), true);
-            $Headerdata->addStyleSheet($cssfile);
+            $HeadData->addStyleSheet($cssfile);
         }
     }
 
