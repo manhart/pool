@@ -30,11 +30,6 @@ class Translator extends \PoolObject
     const COMMENT_TAG_REGEX = '/<!-- (TRANSL) ([^>]+) -->(.*?)<!-- END \1 -->/s';
 
     /**
-     * @var Translator|null
-     */
-    private static ?Translator $Instance = null;
-
-    /**
      * @var bool Determines whether text-translations with args should be resolved<br>
      * Used in caching of template translations
      */
@@ -61,6 +56,17 @@ class Translator extends \PoolObject
      * @var TranslationProvider|null the default Provider for lang0<br>Used to override fallback behavior
      */
     private ?TranslationProvider $defaultProvider = null;
+    private TranslationProviderFactory $translationResource;
+
+    /**
+     * @param TranslationProviderFactory|null $translationResource
+     */
+    public function __construct(TranslationProviderFactory $translationResource = null)
+    {
+        parent::__construct();
+        if ($translationResource)
+            $this->addTranslationResource($translationResource);
+    }
 
     /**
      * @return TranslationProvider
@@ -87,6 +93,8 @@ class Translator extends \PoolObject
     {
         return $this->translationResources;
     }
+
+
 
     /**
      * @param TranslationProviderFactory $translationResource
@@ -115,23 +123,13 @@ class Translator extends \PoolObject
     }
 
     /**
-     * gets the instance via lazy initialization (created on first usage)
+     * @deprecated
+     * gets the instance <s>via lazy initialization (created on first usage)</s> stored by the Weblication
      */
     public static function getInstance(): Translator
     {
-        Translator::$Instance ??= new Translator();
-        return Translator::$Instance;
+        return \Weblication::getInstance()->getTranslator();
     }
-
-    /**
-     * It is not allowed to call from outside to prevent from creating multiple instances,
-     * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
-     */
-    private function __construct()
-    {
-        parent::__construct();
-    }
-
 
     /**
      * @return bool
@@ -295,7 +293,7 @@ class Translator extends \PoolObject
      * @param array $changes An array to store the translations in (tag => translation) for use with strtr(). New tags will be inserted present tags won't be fetched again
      * @return bool false on RegEx-failure
      */
-    private function translateWithRegEx(string $content, string $regEX, array &$changes): bool
+    public function translateWithRegEx(string $content, string $regEX, array &$changes): bool
     {
         //More specific copy of code from \TempCoreHandle::findPattern
         preg_match_all($regEX, $content, $matches, PREG_SET_ORDER);
