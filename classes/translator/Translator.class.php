@@ -201,11 +201,12 @@ class Translator extends \PoolObject
      */
     public function swapLangList(array|string|null $language): ?array
     {
-        if ($language ===null)
+        if ($language === null)
             return null;
         $newActiveLanguages = (array)$language;
+        if(array_is_list($newActiveLanguages)) $newActiveLanguages = array_flip($newActiveLanguages);
         foreach ($newActiveLanguages as $lang => &$provider){
-            if (!$provider){
+            if (!$provider instanceof TranslationProvider){
                 $loaded = $this->fetchLanguage($lang);
                 //get value of the language
                 $provider = reset($loaded)?:
@@ -251,12 +252,12 @@ class Translator extends \PoolObject
         $translatedContent = $this->parse($sourceContent, $lang, $countChanges);
         $this->suppressFormatting($defaultFormatDirective);
         //save translation
-        unlink($translatedFile);
+        @unlink($translatedFile);
         if ($countChanges)
             //save translation
             file_put_contents($translatedFile, $translatedContent);
         else //hardlink unchanged file
-            link($sourceFile, $translatedFile);
+            symlink("../$filename", $translatedFile);
         return $translatedFile;
     }
 
@@ -302,8 +303,8 @@ class Translator extends \PoolObject
             $fullMatchText = $match[0];
             //the handle part -> the key
             $handle = ($match[2]);
-            //the freeform-text part -> the default value
-            $tagContent = ($match[3]);
+            //the freeform-text part -> the default value (optional)
+            $tagContent = $match[3] ?? null;
             //skip repeating tags
             if (!isset($changes[$fullMatchText])) {
                 $value = $this->translateTag($handle, $tagContent);
@@ -323,6 +324,7 @@ class Translator extends \PoolObject
     public function translateTag(string $handle, ?string $tagContent):string{
         $key = strtok($handle, '(');
         $args = trim(strtok(''), ' ()');
+        $args = [];
         //TODO decode args
         return $this->getTranslation($key, $tagContent, $args);
     }
@@ -407,7 +409,7 @@ class Translator extends \PoolObject
      *
      * @param bool $all
      * @param string $defaultLocale
-     * @return array locale
+     * @return array<string, string> locale
      */
     public function parseLangHeader(bool $all = false, string $defaultLocale = 'en_US', ): array
     {
@@ -423,6 +425,7 @@ class Translator extends \PoolObject
             };
         }
         arsort($header);
+
         $languages = [];
         foreach ($header as $locale => $value) {
             //load language

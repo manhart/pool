@@ -1056,6 +1056,12 @@ class Weblication extends Component
 
         $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
 
+        $languages = $this->getTranslator()->parseLangHeader(false, $this->Settings->getVar('application.locale'));
+        $this->getTranslator()->swapLangList($languages);
+
+        $languages = Template::getTranslator()->parseLangHeader(false, $this->Settings->getVar('application.locale'));
+        Template::getTranslator()->swapLangList($languages);
+
         // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
         return $this;
     }

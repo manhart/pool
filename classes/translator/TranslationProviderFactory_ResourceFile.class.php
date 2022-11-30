@@ -61,9 +61,9 @@ class TranslationProviderFactory_ResourceFile extends TranslationProviderFactory
 
     /**
      * @param string $language
-     * @return bool
+     * @return string
      */
-    public function resourceFileName(string $language): bool
+    public function resourceFileName(string $language): string
     {
         return $this->directory . '/' . $language . $this->extension;
     }
