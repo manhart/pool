@@ -257,6 +257,11 @@ class Weblication extends Component
     }
 
     /**
+     * @var Translator
+     */
+    protected Translator $translator;
+
+    /**
      * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
      *
      * @param string $skin Ordner fuer die Designvorlagen (Html Templates) und Bilder. (Standardwert: default)
@@ -318,7 +323,12 @@ class Weblication extends Component
      */
     public function getTranslator(): Translator
     {
-        return Translator::getInstance();
+        return $this->translator;
+    }
+
+    public function setTranslator(Translator $translator):static{
+        $this->translator = $translator;
+        return $this;
     }
 
     /**

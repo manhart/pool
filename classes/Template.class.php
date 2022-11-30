@@ -471,7 +471,7 @@ class TempCoreHandle extends TempHandle
                     break;
 
                 case TEMP_TRANSL_IDENT:
-                    $value = Translator::getInstance()->translateTag($handle, $tagContent);
+                    $value = Template::getTranslator()->translateTag($handle, $tagContent);
                     break;
 
                 default:
@@ -516,8 +516,9 @@ class TempCoreHandle extends TempHandle
             $content = str_replace($search, $replace, $content, $count);
             $iterations++;
         }
-        //TODO translate {TRANSL } Tags
         $replace_pairs = [];
+        Template::getTranslator()->translateWithRegEx(
+            $content, Translator::CURLY_TAG_REGEX, $replace_pairs);
         foreach($this->BlockList as $Handle => $TempBlock) {
             if($TempBlock->allowParse()) {
                 $TempBlock->parse();
@@ -839,6 +840,9 @@ class TempScript extends TempFile
  **/
 class Template extends PoolObject
 {
+
+    private static Translator $translator;
+
     //@var string Verzeichnis zu den Templates
     private string $dir;
 
@@ -882,8 +886,19 @@ class Template extends PoolObject
      */
     function __construct(string $dir = './')
     {
+        parent::__construct();
         $this->FileList = [];
         $this->setDirectory($dir);
+    }
+
+    public static function getTranslator(): Translator
+    {
+        return static::$translator;
+    }
+
+    public static function setTranslator(Translator $translator): void
+    {
+        static::$translator = $translator;
     }
 
     /**
