@@ -10,6 +10,8 @@
 
 namespace pool\classes;
 
+use Exception;
+
 /**
  * A compliant implementation that works for every language and does nothing<br>
  *All queries will return Omitted and deliver a null result
@@ -17,11 +19,18 @@ namespace pool\classes;
 class TranslationProviderFactory_nop extends TranslationProviderFactory implements TranslationProvider
 {
     private string $lang;
+    private string $locale;
 
     function getLang(): string
     {
         return $this->lang;
     }
+
+    function getLocale(): string
+    {
+        return $this->locale;
+    }
+
 
     function getResult(): ?string
     {
@@ -33,22 +42,22 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
      */
     function query(string $key): int
     {
-        return 3;
+        return self::TranslationOmitted;
     }
 
-    function increaseMissCounter(?string $key = null): int
+    function increaseMissCounter(?string $key): int
     {
-        return -1;
+        return self::NotImplemented;
     }
 
-    function addTranslation(int $status, ?string $value, ?string $key = null): int
+    function alterTranslation(int $status, ?string $value, string $key): int
     {
-        return -1;
+        return -self::NotImplemented;
     }
 
-    function getErrorMessage(): string
+    function getError(): ?Exception
     {
-        return "";
+        return null;
     }
 
     function clearError(): void{}
@@ -65,9 +74,10 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
         return $proposed;
     }
 
-    function getProvider(string $language): TranslationProvider|null
+    function getProvider(string $language, string $locale): TranslationProvider
     {
         $provider = new self();
+        $provider->locale = $locale;
         $provider->lang = $language;
         return $provider;
     }
