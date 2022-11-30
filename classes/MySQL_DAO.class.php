@@ -150,7 +150,7 @@
 * @link https://alexander-manhart.de
 */
 
-use pool\classes\Translator;
+use pool\classes\translator\Translator;
 
 // Reservierte Wörter kompatibel mit MySQL 5.1 (und abwärts)
 $GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'ASENSITIVE',

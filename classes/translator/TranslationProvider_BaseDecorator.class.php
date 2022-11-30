@@ -2,13 +2,13 @@
 /*
  * g7system.local
  *
- * TranslationProvider_ToolDecorator.php created at 16.11.22, 14:56
+ * TranslationProvider_BaseDecorator.php created at 30.11.22, 13:21
  *
- * @author p.lehfeld <p.lehfeld@group-7.de>
+ * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
-namespace pool\classes;
+namespace pool\classes\translator;
 
 use Exception;
 

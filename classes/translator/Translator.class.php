@@ -2,14 +2,13 @@
 /*
  * g7system.local
  *
- * Translator.class.php created at 14.09.20, 14:01
+ * Translator.class.php created at 30.11.22, 13:21
  *
  * @author a.manhart <a.manhart@group-7.de>
- * @copyright Copyright (c) 2020, GROUP7 AG
- * @see https://www.i18next.com/
+ * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
-namespace pool\classes;
+namespace pool\classes\translator;
 
 
 use Exception;
