@@ -10,27 +10,43 @@
 
 namespace pool\classes;
 
+use Exception;
+
 Interface TranslationProvider
 {
+    public const NotImplemented = -2;
+    public const Error = -1;
+    public const OK = 0;
+    public const TranslationKnownMissing= 1;
+    public const TranslationInadequate = 2;
+    public const TranslationOmitted= 3;
+    public const TranslationNotExistent= 4;
 
 
     function getLang():string;
+    function getLocale():string;
     function getResult():?string;
 
     /**
      * @param string|null $key
-     * @return int status [-1 = nicht implementiert, 0 = OK, 1 = Fehlschlag, 2 = key fehlt, 3 = Translation nicht vorhanden]
+     * @return int status [NotImplemented, Error, OK, TranslationNotExistent]
      */
-    function increaseMissCounter(?string $key=null):int;
+    function increaseMissCounter(?string $key):int;
 
     /**
      * @param string $key
-     * @return int status[0 = OK, 1 = Fehlt, 2 = Fehlerhaft, 3 = Ausgelassen]
+     * @return int status[Error, OK,TranslationKnownMissing, TranslationInadequate, TranslationOmitted, TranslationNotExistent]
      */
     function query(string $key):int;
 
-    function addTranslation(int $status, ?string $value, ?string $key=null):int;
-    function getErrorMessage():string;
+    /**
+     * @param int $status
+     * @param string|null $value
+     * @param string $key
+     * @return int status[NotImplemented, Error, OK]
+     */
+    function alterTranslation(int $status, ?string $value, string $key):int;
+    function getError(): ?Exception;
     function clearError():void;
 
 }
