@@ -33,7 +33,7 @@
  */
 
 // Variablen Identifizierung
-use pool\classes\Translator;
+use pool\classes\translator\Translator;
 
 const TEMP_VAR_START = '{';
 const TEMP_VAR_END = '}';

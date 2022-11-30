@@ -23,7 +23,6 @@ require_once __DIR__.'/Configurable.trait.php';	// necessary
 require_once __DIR__.'/DAO.class.php';			// necessary
 require_once __DIR__.'/Resultset.class.php';		// necessary
 require_once __DIR__.'/Singleton.class.php';		// necessary
-require_once __DIR__.'/Translator.class.php';		// necessary
 //require_once__DIR__.'/Kontocheck.class.php');
 //require_once__DIR__.'/ActionHandler.class.php');
 //require_once__DIR__.'/TreeStructure.class.php');

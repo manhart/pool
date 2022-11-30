@@ -2,13 +2,13 @@
 /*
  * g7system.local
  *
- * TranslationProviderFactory_nop.php created at 15.11.22, 12:41
+ * TranslationProviderFactory_nop.php created at 30.11.22, 13:21
  *
- * @author p.lehfeld <p.lehfeld@group-7.de>
+ * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
-namespace pool\classes;
+namespace pool\classes\translator;
 
 use Exception;
 
