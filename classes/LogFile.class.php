@@ -115,7 +115,7 @@ class LogFile extends PoolObject
      */
     public function __construct()
     {
-        $this->sid = rand(0, 9999);
+        $this->sid = rant(0, 9999);
     }
 
     /**
