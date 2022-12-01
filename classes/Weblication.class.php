@@ -288,21 +288,11 @@ class Weblication extends Component
      * Sets the main language for the Page. It's used for html templates and images
      *
      * @param string $lang Country Code
-     * @param string $resourceDir Directory with translations e.g. de.php, en.php
-     * @param string $subDirTranslated Subdirectory for generated static translated templates during the deployment process
      * @return Weblication
-     * @throws Exception
      */
-    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subDirTranslated = ''): self
+    public function setLanguage(string $lang = 'de'): self
     {
         $this->language = $lang;
-
-        if($resourceDir) {
-            $resource = TranslationProviderFactory_ResourceFile::create($resourceDir);
-            $this->getTranslator()->addTranslationResource($resource)->swapLangList($lang);
-        }
-
-        $this->subdirTranslated = $subDirTranslated;
         return $this;
     }
 
@@ -323,10 +313,14 @@ class Weblication extends Component
      */
     public function getTranslator(): Translator
     {
+        if(!isset($this->translator)) {
+            $this->setTranslator(new Translator());
+        }
         return $this->translator;
     }
 
-    public function setTranslator(Translator $translator):static{
+    public function setTranslator(Translator $translator): static
+    {
         $this->translator = $translator;
         return $this;
     }
@@ -901,12 +895,13 @@ class Weblication extends Component
             //skin without language
             $file = buildFilePath($skinElementFolder, $filename);
             if(file_exists($file)) {
-                if ($translate)
+                if($translate)
                     try {
                         return Template::getTranslator()->translateFile($file, $language);
-                    } catch (Exception) {
-                        return $file;
                     }
+                    catch(Exception) {
+                    }
+                return $file;
             }
         }
 
@@ -933,10 +928,12 @@ class Weblication extends Component
                     // Language Ordner
                     return $translatedFile;
                 // GUI Ordner
-                if ($translate)
+                if($translate)
                     try {
                         return Template::getTranslator()->translateFile($file, $language);
-                    } catch (Exception) {}
+                    }
+                    catch(Exception) {
+                    }
                 return $file;
             }
         }
@@ -1057,11 +1054,27 @@ class Weblication extends Component
 
         $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
 
-        $languages = $this->getTranslator()->parseLangHeader(false, $this->Settings->getVar('application.locale'));
-        $this->getTranslator()->swapLangList($languages);
 
-        $languages = Template::getTranslator()->parseLangHeader(false, $this->Settings->getVar('application.locale'));
-        Template::getTranslator()->swapLangList($languages);
+        // setup Translator
+        $translatorResourceDir = $this->Settings->getVar('application.translatorResourceDir');
+        if($translatorResourceDir) {
+            $AppTranslator = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
+            $this->setTranslator($AppTranslator);
+        }
+
+        $TranslatorResource = $this->Settings->getVar('application.translatorResource');
+        if($TranslatorResource instanceof TranslationProviderFactory_ResourceFile) {
+            $AppTranslator = new Translator($TranslatorResource);
+            $this->setTranslator($AppTranslator);
+        }
+
+        $Translator = $this->Settings->getVar('application.translator');
+        if($Translator instanceof Translator) {
+            $this->setTranslator($Translator);
+        }
+
+        $languages = $this->getTranslator()->parseLangHeader(false, $this->Settings->getVar('application.locale', 'en_US'));
+        $this->getTranslator()->swapLangList($languages);
 
         // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
         return $this;
@@ -1112,6 +1125,15 @@ class Weblication extends Component
         $className = $this->Settings->getVar('application.sessionClassName', 'ISession');
         $this->Session = new $className($autoClose);
         return $this->Session;
+    }
+
+    /**
+     * @param string $key
+     * @return mixed
+     */
+    public function getSetting(string $key): mixed
+    {
+        return $this->Session->getVar($key);
     }
 
     /**
@@ -1262,7 +1284,7 @@ class Weblication extends Component
     protected function prepareContent(): void
     {
         $this->Main->provisionContent();
-        if (!$this->Main->isAjax()) {
+        if(!$this->Main->isAjax()) {
             $this->Main->prepareContent();
         }
     }
@@ -1270,6 +1292,7 @@ class Weblication extends Component
     /**
      * return finished HTML content
      * Error handling wrapper around finalizeContent of the Main-GUI
+     *
      * @return string website content
      *
      * @throws Exception
