@@ -130,18 +130,6 @@ class Translator extends \PoolObject
         return \Weblication::getInstance()->getTranslator();
     }
 
-    /**
-     * @return bool
-     * @throws Exception
-     * @deprecated
-     */
-    public function wasInitialized(): bool
-    {
-        throw new Exception("wasInitialized is deprecated");
-    }
-
-
-
     /**@deprecated merge with get
      * @throws Exception
      */
