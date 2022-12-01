@@ -922,7 +922,7 @@ SQL;
         if(isset($this->translateValues[$field])) {
             $tmp = 'case '.$field;
             foreach($this->translateValues[$field] as $key => $transl) {
-                $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->get($transl).'\'';
+                $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->getTranslation($transl, $transl).'\'';
             }
             $tmp .= ' else '.$field.' end';
             $field = $tmp;

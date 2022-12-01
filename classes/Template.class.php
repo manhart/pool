@@ -893,6 +893,9 @@ class Template extends PoolObject
 
     public static function getTranslator(): Translator
     {
+        if(!isset(static::$translator)) {
+            self::setTranslator(new Translator());
+        }
         return static::$translator;
     }
 
