@@ -563,6 +563,14 @@ class GUI_Module extends Module
     }
 
     /**
+     * Please override this method to register ajax calls
+     * @return void
+     */
+    protected function registerAjaxCalls(): void
+    {
+    }
+
+    /**
      * returns json encoded data of a method call of this object (intended use: ajax)
      *
      * @param string $requestedMethod
@@ -574,6 +582,7 @@ class GUI_Module extends Module
     {
         $result = '';
 
+        $this->registerAjaxCalls();
         $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
         $Closure = $ajaxMethod['method'] ?? null;
 
