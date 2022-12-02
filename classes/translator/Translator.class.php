@@ -130,14 +130,6 @@ class Translator extends \PoolObject
         return \Weblication::getInstance()->getTranslator();
     }
 
-    /**@deprecated merge with get
-     * @throws Exception
-     */
-    public function nget(string $key, int $n, ...$args)
-    {
-        throw new Exception("nget is deprecated");
-    }
-
     /**@deprecated
      * @return array|null
      */
