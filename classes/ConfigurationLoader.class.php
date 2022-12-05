@@ -17,11 +17,13 @@ abstract class ConfigurationLoader
 
     // FileDialog ja/nein? - Dialog ja/nein
     // DatabaseDialog ja/nein - Dialog ja/nein
-    protected bool $configureAutomatically;
+    protected bool $configureAutomatically = true;
 
-    public function __construct()
+    protected GUI_Module $ConfigurableModule;
+
+    public function __construct(GUI_Module $ConfigurableModule)
     {
-        $this->configureAutomatically = false;
+        $this->ConfigurableModule = $ConfigurableModule;
     }
 
     protected array $necessaryOptions = [];
@@ -29,13 +31,14 @@ abstract class ConfigurationLoader
     abstract public function setup(array $options);
     abstract public function loadConfiguration(): array;
     abstract public function saveConfiguration(array $config): bool;
+    abstract protected function autoConfiguration(): void;
     abstract public function configuration_exists(): bool;
     abstract static public function getDescription(): string;
 
-    public function configureAutomatically(bool $automatically): ConfigurationLoader
+    public function configureAutomatically(?bool $automatically = null): bool
     {
-        $this->configureAutomatically = $automatically;
-        return $this;
+        $this->configureAutomatically = $automatically ?? $this->configureAutomatically;
+        return $this->configureAutomatically;
     }
 
     public static function getStorageEngine(): int
