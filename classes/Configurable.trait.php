@@ -40,7 +40,7 @@ trait Configurable
     /**
      * @var array|string[] defines the supported configuration loaders
      */
-    protected array $supportedConfigurationLoader = ['JSONConfigurationLoader'];
+    protected array $supportedConfigurationLoader = ['DatabaseConfigurationLoader', 'JSONConfigurationLoader'];
 
     /**
      * @var ConfigurationLoader default configuration loader
@@ -74,7 +74,7 @@ trait Configurable
     public function getConfigurationLoader(): ConfigurationLoader
     {
         if(!isset($this->ConfigurationLoader)) {
-            $this->ConfigurationLoader = new JSONConfigurationLoader();
+            $this->ConfigurationLoader = new JSONConfigurationLoader($this);
 
             $this->ConfigurationLoader->setup([
                 'filePath' => $this->getConfigurationValue('moduleDirectory'),
@@ -84,7 +84,7 @@ trait Configurable
         return $this->ConfigurationLoader;
     }
 
-    public function setConfigurationLoader(ConfigurationLoader $ConfigurationLoader)
+    public function setConfigurationLoader(ConfigurationLoader $ConfigurationLoader): void
     {
         $this->ConfigurationLoader = $ConfigurationLoader;
     }
@@ -159,7 +159,7 @@ trait Configurable
      *
      * @param array $configuration
      */
-    public function setConfiguration(array $configuration)
+    public function setConfiguration(array $configuration): void
     {
         $this->configuration = $this->formatConfigurationValues($configuration, $this->getInspectorProperties());
 
@@ -183,9 +183,6 @@ trait Configurable
     public function provision(): void
     {
         // todo auto config
-
-//        if($this->getConfigurationLoader()->configureAutomatically()) {
-//
-//        }
+        $this->getConfigurationLoader()->autoConfiguration();
     }
 }
