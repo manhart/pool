@@ -7,7 +7,7 @@
  * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
-
+declare(strict_types=1);
 namespace pool\classes\translator;
 
 use Exception;
