@@ -7,7 +7,7 @@
  * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
-
+declare(strict_types=1);
 namespace pool\classes\translator;
 
 use Exception;
@@ -68,17 +68,17 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
         return true;
     }
 
-    function getBestLang(string $proposed, float &$fitness = 0): string|false
+    public function getProviderList(string $proposed, float &$fitness = 0): array
     {
         $fitness = 0;
-        return $proposed;
+        return [$proposed];
     }
 
-    function getProvider(string $language, string $locale): TranslationProvider
+    function getProvider(string $providerName, string $locale): TranslationProvider
     {
         $provider = new self();
         $provider->locale = $locale;
-        $provider->lang = $language;
+        $provider->lang = $providerName;
         return $provider;
     }
 }

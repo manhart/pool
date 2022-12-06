@@ -7,7 +7,7 @@
  * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
-
+declare(strict_types=1);
 namespace pool\classes\translator;
 
 abstract Class TranslationProviderFactory
@@ -18,13 +18,17 @@ abstract Class TranslationProviderFactory
     }
     protected function __construct(){}
     abstract function hasLang(string $language, float &$quality = 0):bool;
-    function getBestLang(string $proposed, float &$fitness = 0):string|false{
+    public function getProviderList(string $proposed, float &$fitness = 0): array
+    {
+        $list = [];
         if ($this->hasLang($proposed))
-            return $proposed;
+            $list[] = $proposed;
         $generic = Translator::getPrimaryLanguage($proposed);
-        if ($this->hasLang($generic))
-            return $generic;
-        return false;
+        if (!$generic = $proposed) {
+            if ($this->hasLang($generic))
+                $list[] = $generic;
+        }
+        return $list;
     }
-    abstract function getProvider(string $language, string $locale):TranslationProvider;
+    abstract function getProvider(string $providerName, string $locale):TranslationProvider;
 }
