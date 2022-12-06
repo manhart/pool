@@ -892,7 +892,7 @@ class Weblication extends Component
                 if(!NO_TRANSLATION_CACHE && file_exists($translatedFile)) {
                     // Language specific Ordner
                     $finds[] = $translatedFile;
-                } elseif ($translate) {
+                } elseif (!NO_TRANSLATION_CACHE && $translate) {
                     //Create Translated file and put it in the language folder
                     $finds[] = Template::attemptFileTranslation($file, $language);
                 } else {// generic Ordner
@@ -1144,7 +1144,7 @@ class Weblication extends Component
     public function setLocale(int $category = LC_ALL, ?string $locale = null): bool|string
     {
         if(is_null($locale)) {
-            $locale = $this->getTranslator()->parseLangHeader();
+            $locale = array_key_first($this->getTranslator()->parseLangHeader());
         }
         $this->locale = $locale;
         return setlocale($category, $locale);
