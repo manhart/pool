@@ -779,7 +779,7 @@ class Weblication extends Component
      * Sucht das uebergebene Template in einer fest vorgegebenen Verzeichnisstruktur.
      * Zuerst im Ordner skins, als naechstes im guis Ordner. Wird der Parameter baslib auf true gesetzt,
      * wird abschliessend noch in der baselib gesucht.<br>
-     * Reihenfolge: skin-translated+subdirTranslated common-skin skin-translated skin GUIs-Projekt+ GUIs-Common+ (GUIs-Baselib)
+     * Reihenfolge: <s>skin-translated+subdirTranslated</s> (<b>common-skin-translated</b> common-skin skin-translated skin) GUIs-Projekt+ <i>(..?skins of Projekt Common?..)</i> GUIs-Common+ ((..???..) GUIs-Baselib)
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
@@ -789,20 +789,8 @@ class Weblication extends Component
     public function findTemplate(string $filename, string $classFolder = '', bool $baselib = false): string
     {
         $language = $this->language;
-        $templates_subFolder = 'templates';
-        $skinTemplateFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $templates_subFolder);
-        //skin-translated+subdirTranslated
-        //static translation templates have priority
-        if($this->subdirTranslated) {
-            if($this->hasSkinFolder($templates_subFolder, $language, $this->subdirTranslated)) {
-                $translatedTemplate = buildFilePath($skinTemplateFolder, $language, $this->subdirTranslated, $filename);
-                if(file_exists($translatedTemplate)) {
-                    return $translatedTemplate;
-                }
-            }
-        }
-
-        $template = $this->findBestElement($templates_subFolder, $filename, $language, $classFolder, $baselib, true);
+        $elementSubFolder = 'templates';
+        $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baselib, false, true);
         if($template)
             return $template;
 
@@ -824,8 +812,8 @@ class Weblication extends Component
     /**
      * Sucht das uebergebene StyleSheet in einer fest vorgegebenen Verzeichnisstruktur.
      * Zuerst im Ordner skins, als naechstes im guis Ordner.<br>
-     * Reihenfolge: common-skin skin-translated skin GUIs-Projekt+ GUIs-Common+ (Baselib xor Common-common-skin)
-     *
+     * Reihenfolge: common-skin+ skin+ GUIs-Projekt+ (..? skins ?..) GUIs-Common+ (Baselib xor Common-common-skin)
+     * @see Weblication::findTemplate()
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param boolean $baselib Schau auch in die baselib
@@ -834,11 +822,12 @@ class Weblication extends Component
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baselib = false): string
     {
         $elementSubFolder = $this->cssFolder;
-
-        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $this->language, $classFolder, $baselib);
+        $language = $this->language;
+        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baselib, true);
         if($stylesheet)
             return $stylesheet;
 
+        //TODO Remove or define use of skins for included Projekts and merge with findBestElement
         if(!$baselib) {//Common-common-skin
             if(defined('DIR_COMMON_ROOT_REL')) {
                 $stylesheet = buildFilePath(
@@ -870,74 +859,50 @@ class Weblication extends Component
      * @param string $language
      * @param string $classFolder
      * @param bool $baselib
+     * @param bool $all
      * @param bool $translate
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib, bool $translate = false): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib, bool $all, bool $translate = false): string
     {
-        $skinElementFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
-
-
-        //common-skin
-        if($this->hasCommonSkinFolder($elementSubFolder)) {
-            $file = buildFilePath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-            if(file_exists($file))
-                return $file;//Translated version?
-        }
-
-        if($this->hasSkinFolder($elementSubFolder)) {
-            //skin-translated
-            if($this->hasSkinFolder($elementSubFolder, $language)) { // with language, more specific
-                $file = buildFilePath($skinElementFolder, $language, $filename);
-                if(file_exists($file))
-                    return $file;
-            }
-            //skin without language
-            $file = buildFilePath($skinElementFolder, $filename);
-            if(file_exists($file)) {
-                if($translate)
-                    try {
-                        return Template::getTranslator()->translateFile($file, $language);
-                    }
-                    catch(Exception) {
-                    }
-                return $file;
-            }
-        }
-
-        $gui_directories = [];
-        if($classFolder) {
+        $places = [];
+        //Getting list of Places to search
+        if($this->hasCommonSkinFolder($elementSubFolder)) //Project? -> Special common-skin
+            $places[] = buildDirPath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
+        if($this->hasSkinFolder($elementSubFolder)) //Project? -> Skin
+            $places[] = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
+        if($classFolder) {//Projects -> GUI
+            //Path from Project root to the specific GUI folder
             $folder_guis = buildDirPath(PWD_TILL_GUIS, $classFolder);
-            //Project-GUIs
-            $gui_directories[] = $folder_guis;
-            if(defined('DIR_COMMON_ROOT_REL')) {
-                //Common-GUIs
-                $gui_directories[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
-            }
-            if($baselib) {
-                //Baselib-GUIs
-                $gui_directories[] = buildDirPath($this->getRelativePathBaselib(PWD_TILL_GUIS), $classFolder);
-            }
+            //current Project
+            $places[] = $folder_guis;
+            //common Project
+            if(defined('DIR_COMMON_ROOT_REL'))
+                $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
+            //POOL Library Project
+            if($baselib)
+                $places[] = buildDirPath($this->getRelativePathBaselib(), $folder_guis);
         }
-
-        foreach($gui_directories as $folder_guis) {
+        $finds = [];
+        //Searching
+        foreach($places as $folder_guis) {
             $file = $folder_guis . $filename;
             if(file_exists($file)) {
                 $translatedFile = buildFilePath($folder_guis, $language, $filename);
-                if(file_exists($translatedFile))
-                    // Language Ordner
-                    return $translatedFile;
-                // GUI Ordner
-                if($translate)
-                    try {
-                        return Template::getTranslator()->translateFile($file, $language);
-                    }
-                    catch(Exception) {
-                    }
-                return $file;
+                if(!NO_TRANSLATION_CACHE && file_exists($translatedFile)) {
+                    // Language specific Ordner
+                    $finds[] = $translatedFile;
+                } elseif ($translate) {
+                    //Create Translated file and put it in the language folder
+                    $finds[] = Template::attemptFileTranslation($file, $language);
+                } else {// generic Ordner
+                    $finds[] = $file;
+                }//end decision which file to pick
+                if (!$all) break;//stop searching after first match
             }
         }
-        return "";
+        //grab first element for now
+        return reset($finds)?:"";
     }
 
     /**
