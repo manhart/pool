@@ -7,7 +7,7 @@
  * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
-
+declare(strict_types=1);
 namespace pool\classes\translator;
 
 use Exception;
@@ -74,15 +74,15 @@ class TranslationProviderFactory_ResourceFile extends TranslationProviderFactory
     }
 
     /**
-     * @param string $language
+     * @param string $providerName
      * @param string $locale
      * @return TranslationProvider
      * @throws Exception
      */
-    function getProvider(string $language, string $locale): TranslationProvider
+    function getProvider(string $providerName, string $locale): TranslationProvider
     {
         if(!$this->directory) throw new Exception("Provider has not been initialized");
-        $resourceFileName = $this->resourceFileName($language);
-        return new TranslationProvider_ResourceFile($language, $locale, $resourceFileName);
+        $resourceFileName = $this->resourceFileName($providerName);
+        return new TranslationProvider_ResourceFile($providerName, $locale, $resourceFileName);
     }
 }
