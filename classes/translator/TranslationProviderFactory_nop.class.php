@@ -32,7 +32,7 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
     }
 
 
-    function getResult(): ?string
+    function getResult(): ?Translation
     {
         return null;
     }
