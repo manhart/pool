@@ -671,6 +671,15 @@ class GUI_Module extends Module
     }
 
     /**
+     * checks if module is configurable (uses trait Configurable.trait.php; other solution would be via Reflections)
+     * @return bool
+     */
+    public function isConfigurable(): bool
+    {
+        return false;
+    }
+
+    /**
      * responds to an Ajax call
      *
      * @param mixed $result
