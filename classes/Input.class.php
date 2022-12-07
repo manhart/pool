@@ -680,16 +680,14 @@ class Input extends PoolObject
             }
 
             $arrParams = preg_split('/(?<!\\\)&/', $params);
-            //$arrParams = explode('&', $params);
-            $numParams = count($arrParams);
-            for ($i=0; $i < $numParams; $i++) {
-                $arrParams[$i] = str_replace('\&', '&', $arrParams[$i]);
-                $param = preg_split('/(?<!\\\)=/', $arrParams[$i]); // explode('=', $arrParams[$i]);
-                $param = str_replace('\=', '=', $param);
-                if (is_array($param) and isset($param[1])) {
-                    $this->setVar($param[0], str_replace('\n', "\n", $param[1]));
+            $arrParams = str_replace('\&', '&', $arrParams);
+            foreach ($arrParams as $paramPair) {
+                $paramPairArray = preg_split('/(?<!\\\)=/', $paramPair); // explode('=', $arrParams[$i]);
+                $paramPairArray = str_replace('\=', '=', $paramPairArray);
+                if (is_array($paramPairArray) && isset($paramPairArray[1])) {
+                    $this->setVar($paramPairArray[0], str_replace('\n', "\n", $paramPairArray[1]));
                 }
-                unset($param);
+                unset($paramPairArray);
             }
         }
     }
