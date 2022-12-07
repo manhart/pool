@@ -344,6 +344,27 @@ class Translator extends \PoolObject
         return $translatedMessage;
     }
 
+    /**gets Translations from one of the active languages, delivering all of them or nothing at all unless a default was specified for the Keys which were not found
+     * @param array $keyArray the query to fill [translationKey => default Translation]
+     * @param bool $noAlter Disables flagging of missing Translations useful if the key queried is potentially invalid
+     * @param string|array $language The list of languages to look in, will be set to the language the Translations were taken from
+     * @param Exception|null $exception last Exception produced
+     * @return bool Success of the query
+     */
+    public function getMessageSet(array &$keyArray, bool $noAlter = false, array|string &$language = "", ?Exception &$exception = null): bool
+    {
+        try {
+            $backupLangList = $this->swapLangList($language);
+            $language = "";
+            $success = $this->queryTranslations($keyArray, $noAlter, $language, $exception);
+            $this->swapLangList($backupLangList);
+            return $success;
+        }catch (Exception $e){
+            $exception = $e;
+            return false;
+        }
+    }
+
     /**@param string $key
      * @param mixed|null ...$args
      * @return string
@@ -364,14 +385,17 @@ class Translator extends \PoolObject
      */
     public function getTranslation(string $key, ?string $defaultMessage = null, ?array $args = null, ?string $locale = null): string
     {
-        $translationProvider = $this->queryTranslations([$key=>null])[$key];
-        $message = $translationProvider?->getResult() ?? $defaultMessage;
+        $keyArray = [$key => null];
+        $this->queryTranslations($keyArray);
+        $translation = $keyArray[$key];
+        assert($translation == null || $translation instanceof  Translation);
+        $message = $translation?->getMessage() ?? $defaultMessage;
         if ($message == null)
             return "String $key not found";
         if (!$args) {
             return $message;
         }else {
-            $locale ??= $translationProvider?->getLocale() ?? self::getPrimaryLocale();
+            $locale ??= $translation?->getProviderLocale() ?? self::getPrimaryLocale();
             $formatter = \MessageFormatter::create($locale, $message);
             $formattedTranslation = $formatter->format($args);
             if ($formattedTranslation===false)
@@ -435,49 +459,54 @@ class Translator extends \PoolObject
         return $language;
     }
 
-    /**TODO create Immutable result Class
-     * TODO only add missing Translations to the  last Provider of a language
-     * @param array $keyArray
-     * @param bool $noAlter
-     * @param string $language
-     * @return array|null
+    /**gets Translations from one of the active languages, delivering all of them or nothing at all unless a default was specified for the Keys which were not found
+     * @param array $keyArray the query to fill [translationKey => default Translation]
+     * @param bool $noAlter Disables flagging of missing Translations useful if the key queried is potentially invalid
+     * @param string $language reference which will be set to the language the result is taken from
+     * @param Exception|null $exception
+     * @return bool <p>[key => Translation]
      */
-    public function queryTranslations(array $keyArray, bool $noAlter = false, string &$language = ""): ?array
+    private function queryTranslations(array &$keyArray, bool $noAlter = false, string &$language = "", ?Exception &$exception = null): bool
     {
         foreach ($this->activeLanguages as  $language => $providerArray) {//Language F
-            foreach ($keyArray as $key => &$translationProvider) {//Key K
+            foreach ($keyArray as $key => &$translation) {//Key K
                 foreach ($providerArray as $provider) {//Provider P
+                    assert($provider instanceof  TranslationProvider);
                     switch ($provider->query($key)) {//Switch S
                         /** @noinspection PhpMissingBreakStatementInspection Stuff that finishes this Lookup */
                         case $provider::TranslationInadequate:
-                            $provider->increaseMissCounter($key);
+                            $noAlter || $provider->increaseMissCounter($key);//only executes when noAlter is false
                         case $provider::OK:
-                            $translationProvider = $provider;
+                            $translation = $provider->getResult();
                             //leave
                             continue 3;//K
-                        /** @noinspection PhpMissingBreakStatementInspection Things that require trying the next language on the list */
-                        case $provider::TranslationNotExistent:
-                            //add Translation with missing-status
-                            if ($noAlter) continue 2;//P
-                            $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
-                        //go on with handling the missing Translation
-                        /** @noinspection PhpMissingBreakStatementInspection */
+                        /** @noinspection PhpMissingBreakStatementInspection Things that require trying the next provider on the list*/
                         case $provider::TranslationKnownMissing:
-                            $provider->increaseMissCounter($key);
+                            $noAlter || $provider->increaseMissCounter($key);
+                        /** @noinspection PhpMissingBreakStatementInspection*/
+                        case $provider::TranslationNotExistent:
                         case $provider::TranslationOmitted:
                             //move on
                             continue 2;//P
-                        default:
-                            //TODO Errorhandling
-                            //$exception = $provider->getError();
+                        default://Error reporting
+                            $exception = $provider->getError();
                             continue 2;//P
                     }//END S
                 }//END P
+                if ($translation instanceof Translation) {//default specified
+                    continue;//K
+                }
+                //add Translation with missing-status
+                if (!$noAlter && isset($provider))
+                    $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
+                unset($provider);
                 continue 2;//F
             }//END K
-            return $keyArray;
+            return true;
         }//END F
-        return null;
+        $language = "";
+        $keyArray = null;
+        return false;
     }
 
 }

@@ -36,7 +36,7 @@ abstract class TranslationProvider_BaseDecorator implements TranslationProvider
     }
 
 
-    function getResult(): ?string
+    function getResult(): ?Translation
     {
         return $this->provider->getResult();
     }
