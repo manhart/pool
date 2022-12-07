@@ -66,7 +66,7 @@ trait Configurable
      * @param $property
      * @return mixed|string|null
      */
-    public function getConfigurationValue($property)
+    public function getConfigurationValue($property): mixed
     {
         return $this->getInspectorProperties()[$property]['value'] ?? null;
     }
@@ -98,8 +98,9 @@ trait Configurable
      * we mix the inspector property values into the defaults. Overrides the getDefaults method of Module.
      * we also write the moduleName in the inspector properties as default value.
      *
-     * @see Module::getDefaults()
      * @return Input
+     * @throws ReflectionException
+     * @see Module::getDefaults()
      */
     public function getDefaults(): Input
     {
@@ -180,9 +181,14 @@ trait Configurable
         return $this->configuration;
     }
 
+    public function isConfigurable(): bool
+    {
+        return true;
+    }
+
     public function provision(): void
     {
         // todo auto config
-        $this->getConfigurationLoader()->autoConfiguration();
+        $this->getConfigurationLoader()->attemptAutoloadConfiguration();
     }
 }

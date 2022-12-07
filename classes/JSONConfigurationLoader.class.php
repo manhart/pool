@@ -34,11 +34,6 @@ class JSONConfigurationLoader extends ConfigurationLoader
         }
     }
 
-    public function autoConfiguration(): void
-    {
-        // TODO: Implement autoConfiguration() method.
-    }
-
     public function loadConfiguration(): array
     {
         if(!$this->configuration_exists()) {
