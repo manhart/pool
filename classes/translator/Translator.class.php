@@ -14,9 +14,13 @@ namespace pool\classes\translator;
 
 use Exception;
 use Input;
+use MessageFormatter;
+use PoolObject;
+use Weblication;
+use function checkRegExOutcome;
 use function explode;
 
-class Translator extends \PoolObject
+class Translator extends PoolObject
 {
     /**
      *This perfectly readable regex Matches Blocks like <code>{TRANSL key[(args)][??<default>]}</code><br>
@@ -24,7 +28,7 @@ class Translator extends \PoolObject
      *The Content should avoid constructs like )?? )} in args and >} in default to avoid failure of the RegEx<br>
      *key and args are retrieved as handle in group 2<br>
      */
-    const CURLY_TAG_REGEX = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?>\?\?<((?>[^>]*(?>>(?!}))?)*)>)?}/su';
+    const CURLY_TAG_REGEX = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?>\?\?<((?>[^>]*(?>>(?!}))?)*)>)?}/u';
     /**
      *Matches Blocks like <code><!-- TRANSL handle -->freeform-text<!-- END handle --></code>
      */
@@ -57,7 +61,6 @@ class Translator extends \PoolObject
      * @var array<string, TranslationProvider>|null the default Provider for lang0<br>Used to override fallback behavior
      */
     private ?array $defaultLanguage = null;
-    private TranslationProviderFactory $translationResource;
 
     /**
      * @param TranslationProviderFactory|null $translationResource
@@ -128,7 +131,7 @@ class Translator extends \PoolObject
      */
     public static function getInstance(): Translator
     {
-        return \Weblication::getInstance()->getTranslator();
+        return Weblication::getInstance()->getTranslator();
     }
 
     /**@return array|null
@@ -153,7 +156,7 @@ class Translator extends \PoolObject
      * @param string $lang langauge to look for
      * @return array<string, TranslationProvider> languageLoaded => translation Provider
      */
-    private function fetchLanguage(string $lang, bool $dryrun = false): array
+    private function fetchLanguage(string $lang, bool $dryRun = false): array
     {
         //look in languages that are already loaded
         $providerArray = $this->loadedLanguages[$lang] ?? null;
@@ -166,16 +169,16 @@ class Translator extends \PoolObject
             //we could also check the fitness of this offer to decide for a factory
             if (sizeof($providerList) > 0) {
                 foreach ($providerList as $providerName) {
-                    if (!$dryrun) {
+                    if (!$dryRun) {
                         //if not loaded take this element
                         $providerArray[$providerName] = $factory->getProvider($providerName, $lang);
                     } else {
-                        //dryrun -> don't instantiate the provider as it won't be saved
+                        //dry-run -> don't instantiate the provider as it won't be saved
                         $providerArray[$providerName] = null;
                     }
                 }
                 //put the new thing on the list of loaded languages
-                if (!$dryrun) $this->loadedLanguages[$lang] = $providerArray;
+                if (!$dryRun) $this->loadedLanguages[$lang] = $providerArray;
                 return $providerArray;
             }
         }
@@ -298,7 +301,7 @@ class Translator extends \PoolObject
     {
         //More specific copy of code from \TempCoreHandle::findPattern
         preg_match_all($regEX, $content, $matches, PREG_SET_ORDER);
-        $outcome = \checkRegExOutcome($regEX, $content);
+        $outcome = checkRegExOutcome($regEX, $content);
         foreach ($matches as $match) {
             //the entire Comment Block
             $fullMatchText = $match[0];
@@ -401,7 +404,7 @@ class Translator extends \PoolObject
             return $message;
         } else {
             $locale ??= $translation?->getProviderLocale() ?? self::getPrimaryLocale();
-            $formatter = \MessageFormatter::create($locale, $message);
+            $formatter = MessageFormatter::create($locale, $message);
             $formattedTranslation = $formatter->format($args);
             if ($formattedTranslation === false)
                 return $formatter->getErrorMessage();
@@ -429,7 +432,7 @@ class Translator extends \PoolObject
                 $l = str_replace('-', '_', $l);
                 $q = (float)($temp[1] ?? 1);
                 $header[$l] = $q;
-            };
+            }
         }
         arsort($header);
 
