@@ -344,10 +344,10 @@ class Translator extends PoolObject
     /**
      * @throws Exception
      */
-    public function getWithLanguage(string $key, string|array $lang, ?string $defaultMessage = null, ?array $args = null, ?string $locale = null): string
+    public function getWithLanguage(string $key, string|array $lang, ?string $defaultMessage = null, ?array $args = null): string
     {
         $backupLangList = $this->swapLangList($lang);
-        $translatedMessage = $this->getTranslation($key, $defaultMessage, $args, $locale);
+        $translatedMessage = $this->getTranslation($key, $defaultMessage, $args);
         $this->swapLangList($backupLangList);
         return $translatedMessage;
     }
@@ -388,28 +388,34 @@ class Translator extends PoolObject
      * @param string $key
      * @param string|null $defaultMessage
      * @param array|null $args
-     * @param string|null $locale
+     * @param bool $noAlter
+     * @param bool $success
      * @return string
      */
-    public function getTranslation(string $key, ?string $defaultMessage = null, ?array $args = null, ?string $locale = null): string
+    public function getTranslation(string $key, ?string $defaultMessage = null, ?array $args = null, bool $noAlter = false, bool &$success = false): string
     {
         $keyArray = [$key => null];
-        $this->queryTranslations($keyArray);
+        $this->queryTranslations($keyArray, $noAlter);
         $translation = $keyArray[$key];
         assert($translation == null || $translation instanceof Translation);
         $message = $translation?->getMessage() ?? $defaultMessage;
-        if ($message == null)
+        if ($message == null) {
+            $success = false;
             return "String $key not found";
-        if (!$args) {
+        }elseif (!$args) {
+            $success = true;
             return $message;
         } else {
             $locale ??= $translation?->getProviderLocale() ?? self::getPrimaryLocale();
             $formatter = MessageFormatter::create($locale, $message);
             $formattedTranslation = $formatter->format($args);
-            if ($formattedTranslation === false)
+            if ($formattedTranslation === false) {
+                $success = false;
                 return $formatter->getErrorMessage();
-            else
+            }else {
+                $success = true;
                 return $formattedTranslation;
+            }
         }
     }
 
@@ -484,7 +490,7 @@ class Translator extends PoolObject
                 $provider = null;
                 foreach ($providerArray as $provider) {//Provider P
                     assert($provider instanceof TranslationProvider);
-                    switch ($provider->query($key)) {//Switch S
+                    switch ($queryResult = $provider->query($key)) {//Switch S
                         /** @noinspection PhpMissingBreakStatementInspection Stuff that finishes this Lookup */
                         case $provider::TranslationInadequate:
                             $noAlter || $provider->increaseMissCounter($key);//only executes when noAlter is false
@@ -507,12 +513,14 @@ class Translator extends PoolObject
                 }//END P
                 //No more Providers and key was not resolved -> add Translation to last Provider
                 assert($provider instanceof TranslationProvider);
+                assert(isset($queryResult));
+                $notMissing = $queryResult != $provider::TranslationNotExistent;
                 if (is_string($translation) && isNotEmptyString($translation)) {//default specified
-                    $noAlter || $provider->alterTranslation($provider::TranslationInadequate, $translation, $key);
+                    $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationInadequate, $translation, $key);
                     $translation = new Translation($provider->getLocale(), $translation);
                     //next iteration of K
                 } else {//no valid default
-                    $noAlter || $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
+                    $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
                     continue 2;//F
                 }
             }//END K

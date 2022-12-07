@@ -81,7 +81,7 @@ class TranslationProviderFactory_ResourceFile extends TranslationProviderFactory
      */
     function getProvider(string $providerName, string $locale): TranslationProvider
     {
-        if(!$this->directory) throw new Exception("Provider has not been initialized");
+        if(!$this->directory) throw new Exception("Factory has not been initialized");
         $resourceFileName = $this->resourceFileName($providerName);
         return new TranslationProvider_ResourceFile($providerName, $locale, $resourceFileName);
     }
