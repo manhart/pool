@@ -52,9 +52,9 @@ class TranslationProvider_ResourceFile implements TranslationProvider
         return $this->locale;
     }
 
-    function getResult(): ?string
+    function getResult(): ?Translation
     {
-        return $this->lastResult;
+        return new Translation($this->getLocale(), $this->lastResult);
     }
 
     /**
