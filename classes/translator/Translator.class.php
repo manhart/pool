@@ -15,12 +15,11 @@ namespace pool\classes\translator;
 use Exception;
 use Input;
 use MessageFormatter;
-use PoolObject;
 use Weblication;
 use function checkRegExOutcome;
 use function explode;
 
-class Translator extends PoolObject
+class Translator
 {
     /**
      *This perfectly readable regex Matches Blocks like <code>{TRANSL key[(args)][??<default>]}</code><br>
@@ -67,7 +66,6 @@ class Translator extends PoolObject
      */
     public function __construct(TranslationProviderFactory $translationResource = null)
     {
-        parent::__construct();
         if ($translationResource)
             $this->addTranslationResource($translationResource);
     }
@@ -132,14 +130,6 @@ class Translator extends PoolObject
     public static function getInstance(): Translator
     {
         return Weblication::getInstance()->getTranslator();
-    }
-
-    /**@return array|null
-     * @deprecated
-     */
-    public function getParseErrors(): ?array
-    {
-        return null;
     }
 
     public function getPrimaryLocale(): string
