@@ -248,10 +248,9 @@
 			/**
 			 * Liefert alle Felder der Tabelle.
 			 *
-			 * @access public
 			 * @return array Felder der Tabelle
-			 **/
-			function getFieldlist()
+			 */
+			public function getFieldlist(): array
 			{
 				if (count($this -> columns) == 0) {
 					$this -> init();
@@ -267,25 +266,28 @@
 				return array_flip($this->fields);
 			}
 
-			function getFieldType($fieldname)
+			public function getFieldType(string $fieldName): string
 			{
 				if(!$this->fields) $this->init();
 
 				foreach ($this->fields as $field) {
-					if($field['_FldName'] == $fieldname) {
+					if($field['_FldName'] == $fieldName) {
 						return $field['_FldType'];
 					}
 				}
-				return false;
+				return '';
 			}
 
-			/**
+            public function getFieldInfo(string $fieldName): array
+            {
+                return [];
+            }
+
+            /**
 			 * Das Ereignis onSetColumns tritt nachdem aufrufen von setColumns auf (virtuelle Methode).
 			 * Die gesetzten Spalten koennen hier fuer das jeweilige Speichermedium praepariert werden.
-			 *
-			 * @access private
-			 **/
-			function onSetColumns()
+			 */
+			protected function onSetColumns()
 			{
 				//$this->columns = $this->columns;
 			}
@@ -312,8 +314,7 @@
 				}
 
 				$keynr = 0;
-				$C16_Resultset = &$this->__createC16_Resultset($data, $keynr, 'insert');
-				return $C16_Resultset;
+                return $this->__createC16_Resultset($data, $keynr, 'insert');
 			}
 
 			/**
