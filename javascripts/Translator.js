@@ -67,38 +67,37 @@ class Translator {
      * @returns {*}
      */
     get(key, args) {
-        let translation = this.getTranslation(this.getLanguage());
-
-        if (typeof args == 'undefined') {
-            return translation[key];
-        }
-
-        let params = [];
-        if (typeof args == 'object') {
-            params = (Array.isArray(args)) ? args : Object.values(args) ;
-        }
-
-        if (typeof args == 'string' || typeof args == 'number') {
-            params = Object.values(arguments);
-            params.shift();
-        }
-
-        let str = translation[key];
-        if (Array.isArray(str)) {
+        let translationArray = this.getTranslation(this.getLanguage());
+        let message = translationArray[key];
+        if (Array.isArray(message)) {
             throw ('Exception was thrown because an array was accessed instead of a string. Probably you wanted to use nget().');
         }
-        params.forEach(function (param, i) {
-            let searchValue = null;
-            switch (typeof param) {
-                case 'string': searchValue = '%s';
-                    break;
-                case 'number': searchValue = '%d';
-                    break;
+        //formatting required
+        if (typeof args != 'undefined') {
+            //parse Args
+            debugger;
+            let params = [];
+            if (typeof args == 'object') {
+                params = (Array.isArray(args)) ? args : Object.values(args) ;
             }
-            str = str.replace(searchValue, param);
-        });
 
-        return str;
+            if (typeof args == 'string' || typeof args == 'number') {
+                params = Object.values(arguments);
+                params.shift();
+            }
+            //format message....
+            params.forEach(function (param, i) {
+                let searchValue = null;
+                switch (typeof param) {
+                    case 'string': searchValue = '%s';
+                        break;
+                    case 'number': searchValue = '%d';
+                        break;
+                }
+                message = message.replace(searchValue, param);
+            });//end format message
+        }//END formatting required
+        return message;
     }
 
     /**
