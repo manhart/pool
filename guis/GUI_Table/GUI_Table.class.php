@@ -7,6 +7,8 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+//use pool\classes\Configurable;
+
 class GUI_Table extends GUI_Module
 {
     use Configurable;
@@ -1229,7 +1231,7 @@ class GUI_Table extends GUI_Module
     /**
      * Load files
      *
-     * @throws ReflectionException|Exception
+     * @throws Exception
      */
     public function loadFiles()
     {
@@ -1248,38 +1250,6 @@ class GUI_Table extends GUI_Module
         $this->js_createGUIModule($this->getClassName(), false);
     }
 
-    /**
-     * @return array[]
-     */
-//    public function getJavaScriptFiles(): array
-//    {
-//        return [['GUI_Table.js', __CLASS__, true]] + parent::getJavaScriptFiles();
-//    }
-
-    //    public function setOptions(array $options): GUI_Table
-//    {
-//        foreach($options as $key => $value) {
-//            if($key == 'columns' and is_array($value)) {
-//                $this->setColumns($value);
-//                continue;
-//            }
-//
-//            if($value === 'true' or $value === 'false') {
-//                $value = string2bool($value);
-//            }
-//            if(isset($this->getInspectorProperties()[$key])) {
-//                if($this->getInspectorProperties()[$key]['value'] != $value) {
-//                    $this->options[$key] = $value;
-//                }
-//            }
-//            else {
-//                $this->poolOptions[$key] = $value;
-//            }
-//        }
-//
-//        return $this;
-//    }
-
 //    public function getInspectorProperties(): array
 //    {
 //        return $this->inspectorProperties + parent::getInspectorProperties();
@@ -1293,11 +1263,18 @@ class GUI_Table extends GUI_Module
         return $this->inspectorProperties + $this->getDefaultInspectorProperties();
     }
 
+    /**
+     * @return array
+     */
     public function getColumnsProperties(): array
     {
         return $this->getInspectorProperties()['columns']['properties'];
     }
 
+    /**
+     * @param string $property
+     * @return array
+     */
     public function getColumnProperty(string $property): array
     {
         return $this->getColumnsProperties()[$property];
@@ -1648,7 +1625,7 @@ class GUI_Table extends GUI_Module
                 $i = 0;
                 foreach($columnAttr as $attr) {
                     $attrValue = trim($attr);
-                    if(strpos($attrValue, '=') !== false) {
+                    if(str_contains($attrValue, '=')) {
                         $attr = explode('=', $attrValue);
                         $key = $attr[0];
                         $val = $attr[1];
