@@ -7,6 +7,8 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+//namespace pool\classes;
+
 trait Configurable
 {
     /**
@@ -71,6 +73,9 @@ trait Configurable
         return $this->getInspectorProperties()[$property]['value'] ?? null;
     }
 
+    /**
+     * @return ConfigurationLoader
+     */
     public function getConfigurationLoader(): ConfigurationLoader
     {
         if(!isset($this->ConfigurationLoader)) {
@@ -188,7 +193,6 @@ trait Configurable
 
     public function provision(): void
     {
-        // todo auto config
         $this->getConfigurationLoader()->attemptAutoloadConfiguration();
     }
 }
