@@ -245,7 +245,7 @@ if(!defined('CLASS_SESSIONHANDLER')) {
                 // update
                 $result = & $this -> dao -> updSession($sid, $expire, $data);
             }
-            return (bool)($result -> getLastError() == false);
+            return (bool)($result->getLastError());
         }
 
         /**
