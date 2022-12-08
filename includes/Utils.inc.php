@@ -707,26 +707,6 @@ function formatCurrency(string $value, $num_decimal_places = 2, string $currency
 }
 
 /**
- * Formatiert Datenbank Timestamp (z.B. bei MySQL Feldtyp:timestamp) in ein beliebiges Datumsformat.
- *
- * @param int $datetime Datenbank Timestamp im Format YYYYMMDDhhmmss
- * @param string $format
- * @return string formatiertes Datum
- * @throws Exception
- */
-function formatDBTimestampAsDatetime(int $datetime, string $format = 'd.m.Y H:i'): string
-{
-    $year = substr($datetime, 0, 4);
-    $mon = substr($datetime, 4, 2);
-    $day = substr($datetime, 6, 2);
-    $hour = substr($datetime, 8, 2);
-    $min = substr($datetime, 10, 2);
-    $sec = substr($datetime, 12, 2);
-
-    return formatDateTime(mktime($hour, $min, $sec, $mon, $day, $year), $format);
-}
-
-/**
  * Wandelt ein Array in das HTML Attribute Format um: name="Manhart" vorname="Alexander"
  *
  * @param array $array Array
