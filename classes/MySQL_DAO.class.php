@@ -295,10 +295,8 @@ class MySQL_DAO extends DAO
      * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
      * $this -> column_list fuer die Funktionen $this -> get und
      * $this -> getMultiple zusammen.
-     *
-     * @access private
-     **/
-    function onSetColumns($withAlias=false)
+     */
+    protected function onSetColumns($withAlias=false)
     {
         $column_list = '';
         $count = count($this->columns);
@@ -386,7 +384,7 @@ class MySQL_DAO extends DAO
      *
      * @param boolean $reInit Feldliste erneuern
      * @return array Felder der Tabelle
-     **/
+     */
     public function getFieldlist($reInit=false): array
     {
         if (count($this->columns) == 0 or $reInit) {
@@ -398,14 +396,14 @@ class MySQL_DAO extends DAO
     /**
      * Liefert den MySQL Datentypen des uebergebenen Feldes
      *
-     * @param string $fieldname Spaltenname
+     * @param string $fieldName Spaltenname
      * @return string Datentyp
      */
-    function getFieldType($fieldname)
+    public function getFieldType(string $fieldName): string
     {
         if(!$this->field_list) $this->init();
         foreach ($this->field_list as $field) {
-            if($field['Field'] == $fieldname) {
+            if($field['Field'] == $fieldName) {
                 $buf = explode(' ', $field['Type']);
                 $type = $buf[0];
                 if(($pos = strpos($type, '(')) !== false) {
@@ -414,15 +412,15 @@ class MySQL_DAO extends DAO
                 return $type;
             }
         }
-        return false;
+        return '';
     }
 
     /**
      * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
      *
-     * @param array $fieldName
+     * @param string $fieldName
      */
-    function getFieldInfo($fieldName): array
+    public function getFieldInfo(string $fieldName): array
     {
         if(!$this->field_list) $this->init();
         foreach ($this->field_list as $field) {
