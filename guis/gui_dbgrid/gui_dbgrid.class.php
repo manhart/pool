@@ -251,7 +251,7 @@ class GUI_DBGrid extends GUI_Module
         }
 
         if($Resultset==null) {
-            $Dao = DAO::createDAO($tabledefine, $interfaces, true);
+            $Dao = DAO::createDAO($tabledefine, $interfaces, );
             if(count($pk) == 0) {
                 $pk = $Dao -> getPrimaryKey();
             }
@@ -421,7 +421,7 @@ class GUI_DBGrid extends GUI_Module
                             if($cellValue != '') {
                                 if(count($cellFormat) == 2) {
                                     if(!array_key_exists($cellFormat[0], $DAO_cache)) {
-                                        $TestDao = DAO::createDAO($cellFormat[0], $interfaces, true);
+                                        $TestDao = DAO::createDAO($cellFormat[0], $interfaces, );
                                         $DAO_cache[$cellFormat[0]] = &$TestDao;
                                     }
                                     else {
