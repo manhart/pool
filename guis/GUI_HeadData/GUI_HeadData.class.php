@@ -350,14 +350,6 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Bereitet die Html Kopfdaten vor.
-     */
-    public function prepare()
-    {
-
-    }
-
-    /**
      * Gibt die fertigen Html Kopfdaten zurueck.
      *
      * @return string Content (Kopfdaten)
