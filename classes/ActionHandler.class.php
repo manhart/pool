@@ -201,7 +201,7 @@
 		function initialize($tabledefine='')
 		{
 			$interfaces = $this -> Weblication -> getInterfaces();
-			$this->DAO = DAO::createDAO($interfaces, (($tabledefine == '') ? $this -> tabledefine : $tabledefine), true);
+			$this->DAO = DAO::createDAO((($tabledefine == '') ? $this->tabledefine : $tabledefine), $interfaces, true);
 		}
 
 		/**

@@ -152,6 +152,12 @@ abstract class DAO extends PoolObject
     abstract public function getCount(): Resultset;
 
     /**
+     * fetches the columns automatically from the driver / interface
+     * @return void
+     */
+    public function fetchColumns(): self {}
+
+    /**
      * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
      *
      * @param string ...$columns columns
@@ -304,24 +310,23 @@ abstract class DAO extends PoolObject
     /**
      * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
      *
-     * @param array|DataInterface $interfaces Schnittstellen zu den Speichermedien (es kann auch ein objekt uebergeben werden, falls man sich sicher ist, dass nur eine Schnittstelle benoetigt wird)
      * @param string $tableDefine Tabellendefinition (siehe database.inc.php)
+     * @param null $interface
      * @param boolean $autoload_fields Automatisch Lesen der Spaltendefinitionen
      * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
      *
      * @throws DAOException
      */
-    public static function createDAO($interfaces, string $tableDefine, bool $autoload_fields=true): DAO
+    public static function createDAO(string $tableDefine, $interface = null, bool $autoFetchColumns = false): DAO
     {
         $type = $dbname = $table = '';
         self::extractTabledefine($tableDefine, $type, $dbname, $table);
 
         // Interface Objekt
-        if (is_array($interfaces)) {
-            $interface = $interfaces[$type];
-        }
-        else {
-            $interface = $interfaces;
+        $interface = $interface ?? Weblication::getInstance()->getInterfaces();
+
+        if (is_array($interface)) {
+            $interface = $interface[$type];
         }
 
         switch($type) {
@@ -334,13 +339,11 @@ abstract class DAO extends PoolObject
                 }
                 if($file_exists) {
                     /** @var MySQL_DAO $DAO */
-                    $DAO = new $table($interface, $dbname, $table, $autoload_fields);
+                    $DAO = new $table($interface, $dbname, $table, false);
                 }
                 else {
-                    $DAO = new CustomMySQL_DAO($interface, $dbname, $table, $autoload_fields);
+                    $DAO = new CustomMySQL_DAO($interface, $dbname, $table, false);
                 }
-
-                $DAO->setInterfaceType(DATAINTERFACE_MYSQL);
                 break;
 
             case DATAINTERFACE_CISAM:
@@ -351,12 +354,11 @@ abstract class DAO extends PoolObject
                 }
                 if($file_exists) {
                     /** @var CISAM_DAO $DAO */
-                    $DAO = new $table($interface, $table, $autoload_fields);
+                    $DAO = new $table($interface, $table, false);
                 }
                 else {
-                    $DAO = new CustomCISAM_DAO($interface, $table, $autoload_fields);
+                    $DAO = new CustomCISAM_DAO($interface, $table, false);
                 }
-                $DAO->setInterfaceType(DATAINTERFACE_CISAM);
                 break;
 
             case DATAINTERFACE_C16:
@@ -368,10 +370,10 @@ abstract class DAO extends PoolObject
                 if($file_exists) {
                     $class_table = str_replace(' ', '_', $table);
                     /** @var C16_DAO $DAO */
-                    $DAO = new $class_table($interface, $dbname, $table, $autoload_fields);
+                    $DAO = new $class_table($interface, $dbname, $table, false);
                 }
                 else {
-                    $DAO = new CustomC16_DAO($interface, $dbname, $table, $autoload_fields);
+                    $DAO = new CustomC16_DAO($interface, $dbname, $table, false);
                 }
 
                 break;
@@ -387,6 +389,9 @@ abstract class DAO extends PoolObject
                 throw new DAOException($msg, 1);
         }
         $DAO->setInterfaceType($type);
+        if($autoFetchColumns) {
+            $DAO->fetchColumns();
+        }
         return $DAO;
     }
 }
