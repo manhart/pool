@@ -250,7 +250,7 @@
 			 *
 			 * @return array Felder der Tabelle
 			 */
-			public function getFieldlist(): array
+			public function getFieldList(): array
 			{
 				if (count($this -> columns) == 0) {
 					$this -> init();

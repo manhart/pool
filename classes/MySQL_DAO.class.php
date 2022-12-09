@@ -253,9 +253,13 @@ class MySQL_DAO extends DAO
     /**
      * MySQL_DAO constructor.
      */
-    function __construct()
+    public function __construct(DataInterface $db, string $dbname, string $table)
     {
         parent::__construct();
+
+        $this->db = $db;
+        $this->dbname = $dbname;
+        $this->table = $table;
 
         // only if Translator needed
         if($this->translate) {
@@ -263,6 +267,32 @@ class MySQL_DAO extends DAO
         }
 
         $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
+
+        // Maybe there are columns in the "columns" property
+        // todo rework this shit
+        $this->rebuildColumnList();
+    }
+
+    /**
+     * rebuild column list
+     */
+    private function rebuildColumnList()
+    {
+        // Columns are predefined as property "columns".
+        if(count($this->columns) > 0) {
+            $table = '`'.$this->table.'`';
+            $glue = '`, '.$table.'.`';
+            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
+            $this->column_list = $column_list;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableName(): string
+    {
+        return $this->table;
     }
 
     /**
@@ -296,7 +326,7 @@ class MySQL_DAO extends DAO
      * $this -> column_list fuer die Funktionen $this -> get und
      * $this -> getMultiple zusammen.
      */
-    protected function onSetColumns($withAlias=false)
+    protected function onSetColumns(bool $withAlias=false)
     {
         $column_list = '';
         $count = count($this->columns);
@@ -311,9 +341,9 @@ class MySQL_DAO extends DAO
 
             if(strpos($column, ' ') !== false) { // column contains space
                 // complex column construct should not be masked
-                if(strpos($column, '(', 0) === false and
-                   strpos($column, '\'', 0) === false and
-                   strpos($column, '"', 0) === false and
+                if(!str_contains($column, '(') and
+                   !str_contains($column, '\'') and
+                   !str_contains($column, '"') and
                    stripos($column, 'as ', 0) === false) {
                     $custom_column = '`'.$column.'`'; // should be a column with space
                 }
@@ -385,7 +415,7 @@ class MySQL_DAO extends DAO
      * @param boolean $reInit Feldliste erneuern
      * @return array Felder der Tabelle
      */
-    public function getFieldlist($reInit=false): array
+    public function getFieldList(bool $reInit=false): array
     {
         if (count($this->columns) == 0 or $reInit) {
             $this->fetchColumns();
@@ -1288,54 +1318,5 @@ SQL;
  **/
 class CustomMySQL_DAO extends MySQL_DAO
 {
-    /**
-     * Konstruktor
-     *
-     * Sets up the object.
-     *
-     * @param DataInterface $db Datenbankhandle
-     * @param string $dbname Datenbank
-     * @param string $table Tabelle
-     * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
-     */
-    public function __construct(DataInterface $db, string $dbname, string $table, bool $autoload_fields=false)
-    {
-        parent::__construct();
 
-        $this->db = $db;
-        $this->dbname = $dbname;
-        $this->table = $table;
-
-        if ($autoload_fields) {
-            //$this -> column_list = '*';
-            //$this -> pk = 'id';
-            $this->fetchColumns();
-        }
-        else {
-            // Maybe there are columns in the "columns" property
-            $this->rebuildColumnList();
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getTableName(): string
-    {
-        return $this->table;
-    }
-
-    /**
-     * rebuild column list
-     */
-    private function rebuildColumnList()
-    {
-        // Columns are predefined as property "columns".
-        if(count($this->columns) > 0) {
-            $table = '`'.$this->table.'`';
-            $glue = '`, '.$table.'.`';
-            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
-            $this->column_list = $column_list;
-        }
-    }
 }

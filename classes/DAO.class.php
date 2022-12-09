@@ -217,7 +217,7 @@ abstract class DAO extends PoolObject
     /**
      * Liefert ein Array mit "allen" Spaltennamen zurueck
      */
-    abstract public function getFieldlist(): array;
+    abstract public function getFieldList(): array;
 
     /**
      * Liefert den Typ einer Spalte
@@ -312,7 +312,7 @@ abstract class DAO extends PoolObject
      *
      * @param string $tableDefine Tabellendefinition (siehe database.inc.php)
      * @param null $interface
-     * @param boolean $autoload_fields Automatisch Lesen der Spaltendefinitionen
+     * @param bool $autoFetchColumns
      * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
      *
      * @throws DAOException
@@ -339,10 +339,10 @@ abstract class DAO extends PoolObject
                 }
                 if($file_exists) {
                     /** @var MySQL_DAO $DAO */
-                    $DAO = new $table($interface, $dbname, $table, false);
+                    $DAO = new $table($interface, $dbname, $table);
                 }
                 else {
-                    $DAO = new CustomMySQL_DAO($interface, $dbname, $table, false);
+                    $DAO = new CustomMySQL_DAO($interface, $dbname, $table);
                 }
                 break;
 
@@ -354,10 +354,10 @@ abstract class DAO extends PoolObject
                 }
                 if($file_exists) {
                     /** @var CISAM_DAO $DAO */
-                    $DAO = new $table($interface, $table, false);
+                    $DAO = new $table($interface, $table);
                 }
                 else {
-                    $DAO = new CustomCISAM_DAO($interface, $table, false);
+                    $DAO = new CustomCISAM_DAO($interface, $table);
                 }
                 break;
 
@@ -375,7 +375,6 @@ abstract class DAO extends PoolObject
                 else {
                     $DAO = new CustomC16_DAO($interface, $dbname, $table, false);
                 }
-
                 break;
 
             default:
