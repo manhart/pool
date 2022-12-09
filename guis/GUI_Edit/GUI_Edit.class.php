@@ -96,7 +96,7 @@ class GUI_Edit extends GUI_InputElement
      **/
     function loadFiles()
     {
-        $file = $this->Weblication->findTemplate('tpl_edit.html', 'gui_edit', true);
+        $file = $this->Weblication->findTemplate('tpl_edit.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $file);
     }
     /**
