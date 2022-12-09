@@ -45,7 +45,7 @@ class GUI_Emoticons extends GUI_Module
             $this -> Weblication -> getMain() -> setActiveMenueItem('News');
         }
 
-        $dao_emoticons = DAO::createDAO($interfaces, $this -> Input -> getVar('tabledefine'));
+        $dao_emoticons = DAO::createDAO($this->Input->getVar('tabledefine'), $interfaces);
         $result_emoticons = $dao_emoticons->getMultiple(null, null, [], array('sort' => 'ASC'));
 
         $maxcols = (int)$this -> Input -> getVar('maxcols');
