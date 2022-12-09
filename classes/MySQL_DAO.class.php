@@ -276,18 +276,18 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * Initialisiert Objekteigenschaften: Die Funktion "init" liest automatisch alle Felder und
-     * Primaerschluessel der Tabelle ein.
+     * fetches the columns automatically from the driver / interface
      *
      * Beim Setzen der Spalten/Felder wird das Ereignis
      * $this -> onSetColumns() aufgerufen
      **/
-    public function init()
+    public function fetchColumns(): self
     {
-        $this->pk = array();
-        $this->columns = array();
+        $this->pk = [];
+        $this->columns = [];
         $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
         $this->onSetColumns();
+        return $this;
     }
 
     /**
@@ -388,7 +388,7 @@ class MySQL_DAO extends DAO
     public function getFieldlist($reInit=false): array
     {
         if (count($this->columns) == 0 or $reInit) {
-            $this->init();
+            $this->fetchColumns();
         }
         return $this->columns;
     }
@@ -401,7 +401,7 @@ class MySQL_DAO extends DAO
      */
     public function getFieldType(string $fieldName): string
     {
-        if(!$this->field_list) $this->init();
+        if(!$this->field_list) $this->fetchColumns();
         foreach ($this->field_list as $field) {
             if($field['Field'] == $fieldName) {
                 $buf = explode(' ', $field['Type']);
@@ -422,7 +422,7 @@ class MySQL_DAO extends DAO
      */
     public function getFieldInfo(string $fieldName): array
     {
-        if(!$this->field_list) $this->init();
+        if(!$this->field_list) $this->fetchColumns();
         foreach ($this->field_list as $field) {
             if($field['Field'] == $fieldName) {
                 return $field;
@@ -1298,7 +1298,7 @@ class CustomMySQL_DAO extends MySQL_DAO
      * @param string $table Tabelle
      * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
      */
-    public function __construct(DataInterface $db, string $dbname, string $table, bool $autoload_fields=true)
+    public function __construct(DataInterface $db, string $dbname, string $table, bool $autoload_fields=false)
     {
         parent::__construct();
 
@@ -1309,7 +1309,7 @@ class CustomMySQL_DAO extends MySQL_DAO
         if ($autoload_fields) {
             //$this -> column_list = '*';
             //$this -> pk = 'id';
-            $this->init();
+            $this->fetchColumns();
         }
         else {
             // Maybe there are columns in the "columns" property
@@ -1320,7 +1320,7 @@ class CustomMySQL_DAO extends MySQL_DAO
     /**
      * @return string
      */
-    public function getTableName()
+    public function getTableName(): string
     {
         return $this->table;
     }
