@@ -54,7 +54,7 @@
 
 			var $keynr = 0;
 
-			var $fields = array();
+			protected array $returnFields = [];
 
 			/**
 			 * Konstruktor
@@ -87,7 +87,7 @@
 				$this->fldval = $fldval;
 				$this->filenr = $filenr;
 				$this->keynr = $keynr;
-				$this->fields = $fields;
+				$this->returnFields = $fields;
 				$this->updval = $updval;
 			}
 
@@ -127,7 +127,7 @@
 
 				// Angeforderte Felder:
 				// Schlüssel mit Werte tauschen, muss so aussehen: $fields=array(['KundNr']=>'');
-				$fields = array_flip($this->fields);
+				$fields = array_flip($this->returnFields);
 				$escaped_fields = $this->db->escapeColumns($fields, true);
 
 				// Schlüsselfeld

@@ -201,7 +201,7 @@
 		function initialize($tabledefine='')
 		{
 			$interfaces = $this -> Weblication -> getInterfaces();
-			$this->DAO = DAO::createDAO($interfaces, (($tabledefine == '') ? $this -> tabledefine : $tabledefine), true);
+			$this->DAO = DAO::createDAO((($tabledefine == '') ? $this->tabledefine : $tabledefine), $interfaces, );
 		}
 
 		/**
@@ -476,7 +476,7 @@
 
 
 			#### Trenne Daten (Datenfelder <-> Muell)
-			$Input_filtered = $Input->filter($this->DAO->getFieldlist());
+			$Input_filtered = $Input->filter($this->DAO->getFieldList());
 
 			$bool = $this->pk_exists($pk, new Input(I_POST));
 
@@ -980,7 +980,7 @@
 		 **/
 		function getFieldlist($fields=array())
 		{
-			$arrResult = array_merge($this -> DAO -> getFieldlist(), $fields);;
+			$arrResult = array_merge($this -> DAO -> getFieldList(), $fields);;
 			return $arrResult;
 		}
 	}

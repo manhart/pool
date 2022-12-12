@@ -68,7 +68,7 @@ class GUI_DBLookupSelect extends GUI_Select
 
         $utf8 = $Input->getVar('utf8');
 
-        $DAO = DAO::createDAO($interfaces, $Input->getVar('tabledefine'));
+        $DAO = DAO::createDAO($Input->getVar('tabledefine'), $interfaces);
 
         # filter
         $filter = $Input->getVar('filter');

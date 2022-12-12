@@ -7,6 +7,8 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+//namespace pool\classes;
+
 trait Configurable
 {
     /**
@@ -40,7 +42,7 @@ trait Configurable
     /**
      * @var array|string[] defines the supported configuration loaders
      */
-    protected array $supportedConfigurationLoader = ['JSONConfigurationLoader'];
+    protected array $supportedConfigurationLoader = ['DatabaseConfigurationLoader', 'JSONConfigurationLoader'];
 
     /**
      * @var ConfigurationLoader default configuration loader
@@ -66,15 +68,18 @@ trait Configurable
      * @param $property
      * @return mixed|string|null
      */
-    public function getConfigurationValue($property)
+    public function getConfigurationValue($property): mixed
     {
         return $this->getInspectorProperties()[$property]['value'] ?? null;
     }
 
+    /**
+     * @return ConfigurationLoader
+     */
     public function getConfigurationLoader(): ConfigurationLoader
     {
         if(!isset($this->ConfigurationLoader)) {
-            $this->ConfigurationLoader = new JSONConfigurationLoader();
+            $this->ConfigurationLoader = new JSONConfigurationLoader($this);
 
             $this->ConfigurationLoader->setup([
                 'filePath' => $this->getConfigurationValue('moduleDirectory'),
@@ -84,7 +89,7 @@ trait Configurable
         return $this->ConfigurationLoader;
     }
 
-    public function setConfigurationLoader(ConfigurationLoader $ConfigurationLoader)
+    public function setConfigurationLoader(ConfigurationLoader $ConfigurationLoader): void
     {
         $this->ConfigurationLoader = $ConfigurationLoader;
     }
@@ -98,8 +103,9 @@ trait Configurable
      * we mix the inspector property values into the defaults. Overrides the getDefaults method of Module.
      * we also write the moduleName in the inspector properties as default value.
      *
-     * @see Module::getDefaults()
      * @return Input
+     * @throws ReflectionException
+     * @see Module::getDefaults()
      */
     public function getDefaults(): Input
     {
@@ -159,7 +165,7 @@ trait Configurable
      *
      * @param array $configuration
      */
-    public function setConfiguration(array $configuration)
+    public function setConfiguration(array $configuration): void
     {
         $this->configuration = $this->formatConfigurationValues($configuration, $this->getInspectorProperties());
 
@@ -180,13 +186,13 @@ trait Configurable
         return $this->configuration;
     }
 
+    public function isConfigurable(): bool
+    {
+        return true;
+    }
+
     public function provision(): void
     {
-        // todo auto config
-
-//        if($this->getConfigurationLoader()->configureAutomatically()) {
-//
-//        }
-        parent::provision();
+        $this->getConfigurationLoader()->attemptAutoloadConfiguration();
     }
 }
