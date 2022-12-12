@@ -481,6 +481,7 @@ class GUI_Module extends Module
         if(!$this->Weblication->hasFrame()) {
             return;
         }
+
         $className = $className ?: $this->getClassName();
 
         if($includeJS) {
@@ -562,6 +563,14 @@ class GUI_Module extends Module
     }
 
     /**
+     * Please override this method to register ajax calls
+     * @return void
+     */
+    protected function registerAjaxCalls(): void
+    {
+    }
+
+    /**
      * returns json encoded data of a method call of this object (intended use: ajax)
      *
      * @param string $requestedMethod
@@ -573,6 +582,7 @@ class GUI_Module extends Module
     {
         $result = '';
 
+        $this->registerAjaxCalls();
         $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
         $Closure = $ajaxMethod['method'] ?? null;
 
@@ -632,6 +642,7 @@ class GUI_Module extends Module
                         }
                     }
                 }
+
                 $args[] = $value;
             }
         }
@@ -648,6 +659,7 @@ class GUI_Module extends Module
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
             catch(\ReflectionException $e) {
+
                 echo $e->getMessage();
             }
         }
@@ -656,6 +668,15 @@ class GUI_Module extends Module
         ob_end_clean();
 
         return $this->respondToAjaxCall($result, $undefinedContent, $callingClassName.':'.$requestedMethod);
+    }
+
+    /**
+     * checks if module is configurable (uses trait Configurable.trait.php; other solution would be via Reflections)
+     * @return bool
+     */
+    public function isConfigurable(): bool
+    {
+        return false;
     }
 
     /**
@@ -835,6 +856,7 @@ class GUI_Module extends Module
             $this->Template->parse($handle);
             $content .= $this->Template->getContent($handle);
         }
+
         return $content;
     }
 }

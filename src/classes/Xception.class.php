@@ -365,7 +365,6 @@ class Xception
         return $this->backtrace;
     }
 
-
     /**
      * Liefert den Fehler-Modus
      *
@@ -463,7 +462,6 @@ class Xception
     }
 }
 
-
 class ExceptionHandler
 {
     /**
@@ -475,14 +473,23 @@ class ExceptionHandler
     var $mode = 0;
 
     var $logFile = '';
+
     var $mailAddress = array();
+
     var $from = 'ExceptionHandler';
+
     var $mailFrom = 'no-reply@yourdomain.de';
+
     var $mailFormat = 'HTML';
+
     var $mailSubject = 'PHP error_log message';
+
     var $displayFormat = 'HTML';
+
     var $logText = "{DATETIME} \"{MESSAGE}\" (DATEI: \"{FILE}\" ZEILE: \"{LINE}\" KLASSE: \"{CLASS}\" FUNCTION: \"{FUNCTION}\")\n";
+
     var $displayText = "Fehlermeldung: {MESSAGE}\nZeitstempel: {DATETIME}\n\nDatei: {FILE}\nZeile: {LINE}\nKlasse: {CLASS}\nFunktion {FUNCTION}\n\nProgrammspezifische Informationen\n{OTHER}\n\nDebug Backtrace\n{BACKTRACE}";
+
     var $displayHTML = '<table border="0" cellpadding="0" cellspacing="0" style="font-family: Times New Roman; color: #FF0000">
           <tr>
             <td>Fehlermeldung:</td>
@@ -535,8 +542,11 @@ class ExceptionHandler
      * @access private
      */
     var $callback = '';
+
     var $interfaces = null;
+
     var $tabledefine = '';
+
     var $additionalMagicInfo = array();
 
     var $old_error_handler;
@@ -677,9 +687,8 @@ class ExceptionHandler
         $errno = mysql_errno();
         if($errno >= 2000 and $errno <= 2055) return; // MySQL client error, e.g. connect failed, server has gone away...
 
-
         /* @var $ErroLog MySQL_DAO */
-        $ErroLog = @DAO::createDAO($this->interfaces, $this->tabledefine, true);
+        $ErroLog = @DAO::createDAO($this->tabledefine, $this->interfaces, );
 
         $interfaceType = $databaseName = $table = '';
         DAO::extractTabledefine($this->tabledefine, $interfaceType, $databaseName, $table);
@@ -694,7 +703,7 @@ class ExceptionHandler
             $Input = new Input(0);
             $Input->setData($E->getData());
             $Input->setVar('backtrace', substr(print_r($Input->getVar('backtrace'), true), 0, $E->maxBacktraceSize));
-            $Input = $Input->filter($ErroLog->getFieldlist());
+            $Input = $Input->filter($ErroLog->getFieldList());
 
             $type = $ErroLog->getFieldType('timestamp');
 
@@ -938,7 +947,6 @@ class ExceptionHandler
         return false;
     }
 }
-
 
 /**
  * Ermittelt ob noch nicht behandelte Exceptions im Stack liegen
