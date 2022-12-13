@@ -951,6 +951,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'caption' => 'Search Highlight'
         ],
+        'searchOnEnterKey' => [
+            'attribute' => 'data-search-on-enter-key',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'caption' => 'Search on enter',
+        ],
         'searchTimeOut' => [
             'attribute' => 'data-search-time-out',
             'type' => 'integer',
