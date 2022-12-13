@@ -34,7 +34,7 @@ function RequestPOOL(module, method, params, async)
 		return false;
 	}
 	if(SCRIPT_NAME == '{SCRIPT_NAME}') {
-		alert('Variable SCRIPT_NAME wird nicht gesetzt! Siehe {SCRIPT_NAME} im Frame. Einfach in [GUI_Url(eliminate=schema)] abï¿½ndern.');
+		alert('Variable SCRIPT_NAME wird nicht gesetzt! Siehe {SCRIPT_NAME} im Frame. Einfach in [GUI_Url(eliminate=schema)] abändern.');
 		return false;
 	}
 
