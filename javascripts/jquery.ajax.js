@@ -172,7 +172,7 @@ function RequestPOOL(module, method, params, async)
 				// log(data);
 				// jQuery 1.7.1 u. jQuery 1.7.2 scheinen beim Abbruch eines PHP Scripts trotzdem in die success Methode zu gehen
 
-				if(!data) {
+                if(!data) {
 					this.error(jqXHR, 0, 'Apache/PHP Script died: unknown error');
 					return false;
 				}
@@ -186,51 +186,51 @@ function RequestPOOL(module, method, params, async)
 				}
 
                 // expect POOL object with the properties "Result" and optionally "Error". If not, take it as it is.
-				var Result = data.Result ?? data;
-				let Error = data.Error;
+                let error = data.error ?? false;
+                data = data.data ?? data;
 
-				if(Error && Error.length > 0) {
-					this.error(jqXHR, 'pool_error_message', window.decodeURI(Error));
+				if(error && error.length > 0) {
+					this.error(jqXHR, 'pool_error_message', window.decodeURI(error));
 					return false;
 				}
 
 				if(typeof onRequestSuccess != 'undefined') {
 					try {
-						switch(typeof Result) {
+						switch(typeof data) {
 							case 'string':
 								if(typeof onRequestSuccess == 'string') {
-									eval(onRequestSuccess+'(\''+Result+'\');');
+									eval(onRequestSuccess+'(\''+data+'\');');
 								}
 								else if(typeof onRequestSuccess == 'function') {
 									var f=onRequestSuccess;
-									f(Result, textStatus, jqXHR);
+									f(data, textStatus, jqXHR);
 								}
 								break;
 
 							case 'object':
 								if(typeof onRequestSuccess == 'string') {
-									var Result = $H(Result).toJSON();
-									eval(onRequestSuccess+'('+Result+');');
+                                    data = $H(data).toJSON();
+                                    eval(onRequestSuccess+'('+data+');');
 								}
 								else if(typeof onRequestSuccess == 'function') {
 									var f = onRequestSuccess;
-									f(Result, textStatus, jqXHR);
+									f(data, textStatus, jqXHR);
 								}
 								break;
 
 							case 'number':
 							case 'boolean':
 								if(typeof onRequestSuccess == 'string') {
-									eval(onRequestSuccess+'('+Result+');');
+									eval(onRequestSuccess+'('+data+');');
 								}
 								else if(typeof onRequestSuccess == 'function') {
 									var f=onRequestSuccess;
-									f(Result, textStatus, jqXHR);
+									f(data, textStatus, jqXHR);
 								}
 								break;
 
 							default:
-								alert('Type of Result not defined in RequestPOOL: '+typeof Result);
+								alert('Type of data not defined in RequestPOOL: '+typeof data);
 						}
 					}
 					catch(e) {
