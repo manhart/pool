@@ -651,6 +651,7 @@ class GUI_Module extends Module
             //TODO check Authorisation
 
             // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
+            /** @var mixed $result */
             $result = $Closure(...$args);
         }
         else {
@@ -659,7 +660,6 @@ class GUI_Module extends Module
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
             catch(\ReflectionException $e) {
-
                 echo $e->getMessage();
             }
         }
@@ -682,20 +682,20 @@ class GUI_Module extends Module
     /**
      * responds to an Ajax call
      *
-     * @param mixed $result
+     * @param mixed $data
      * @param mixed $error
      * @param string $callingMethod optional; use __METHOD__
      * @return string
      * @throws Exception
      */
-    protected function respondToAjaxCall(mixed $result, mixed $error, string $callingMethod = ''): string
+    protected function respondToAjaxCall(mixed $data, mixed $error, string $callingMethod = ''): string
     {
         header('Content-type: application/json');
 
         $clientData = [];
 
         if ($this->plainJSON) {
-            $clientData = $result;
+            $clientData = $data;
 
             // strange behavior with xdebug; xdebug overrides error_get_last
             $last_error = $this->Weblication->isXdebugEnabled() ? null : error_get_last();
@@ -711,8 +711,17 @@ class GUI_Module extends Module
             }
         }
         else {
-            $clientData['Result'] = $result;
-            $clientData['Error'] = $error;
+            $success = !$error;
+            $errObj = null;
+            if(!$success) {
+                // so far only string is treated
+                $errObj = [];
+                $errObj['message'] = $error;
+            }
+            $clientData['data'] = $data;
+            $clientData['success'] = $success;
+            $clientData['error'] = $errObj;
+
         }
 
         $json = json_encode($clientData);
@@ -722,56 +731,7 @@ class GUI_Module extends Module
             return $json;
         }
 
-        if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-            $json_last_error_msg = json_last_error_msg();
-        }
-        else {
-            $json_last_error_msg = 'Unknown Error';
-            switch ($json_last_error) {
-                case JSON_ERROR_DEPTH:
-                    // $json_last_error_msg = 'Maximale Stacktiefe überschritten';
-                    $json_last_error_msg = 'The maximum stack depth has been exceeded';
-                    break;
-
-                case JSON_ERROR_STATE_MISMATCH:
-                    // $json_last_error_msg = 'Unterlauf oder Nichtübereinstimmung der Modi';
-                    $json_last_error_msg = 'Invalid or malformed JSON';
-                    break;
-
-                case JSON_ERROR_CTRL_CHAR:
-                    // $json_last_error_msg = 'Unerwartetes Steuerzeichen gefunden';
-                    $json_last_error_msg = 'Control character error, possibly incorrectly encoded';
-                    break;
-
-                case JSON_ERROR_SYNTAX:
-                    //                            $json_last_error_msg = 'Syntaxfehler, ungültiges JSON';
-                    $json_last_error_msg = 'Syntax error';
-                    break;
-
-                case JSON_ERROR_UTF8:
-                    //                            $json_last_error_msg = 'Missgestaltete UTF-8 Zeichen, möglicherweise fehlerhaft kodiert';
-                    $json_last_error_msg = 'Malformed UTF-8 characters, possibly incorrectly encoded';
-                    break;
-
-                case JSON_ERROR_RECURSION:
-                    $json_last_error_msg = 'One or more recursive references in the value to be encoded';
-                    break;
-
-                case JSON_ERROR_INF_OR_NAN:
-                    $json_last_error_msg = 'One or more NAN or INF values in the value to be encoded';
-                    break;
-
-                case JSON_ERROR_UNSUPPORTED_TYPE:
-                    $json_last_error_msg = 'A value of a type that cannot be encoded was given';
-                    break;
-
-                case JSON_ERROR_INVALID_PROPERTY_NAME:
-                    $json_last_error_msg = 'A property name that cannot be encoded was given';
-                    break;
-            }
-        }
-
-        return $json_last_error_msg . ' in ' . $callingMethod . ': ' . print_r($clientData, true);
+        return json_last_error_msg() . ' in ' . $callingMethod . ': ' . print_r($clientData, true);
     }
 
     /**
