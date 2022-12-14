@@ -1023,7 +1023,8 @@ class Weblication extends Component
         // setup Translator
         $translatorResourceDir = $this->Settings->getVar('application.translatorResourceDir');
         if($translatorResourceDir) {
-            $AppTranslator = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
+            $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
+            $AppTranslator = new Translator($TranslatorResource);
             $this->setTranslator($AppTranslator);
         }
 
