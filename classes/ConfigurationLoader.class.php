@@ -21,9 +21,9 @@ abstract class ConfigurationLoader
 
     protected GUI_Module $ConfigurableModule;
 
-    public function __construct(GUI_Module $ConfigurableModule)
+    public function __construct(?GUI_Module $ConfigurableModule = null)
     {
-        $this->ConfigurableModule = $ConfigurableModule;
+        if($ConfigurableModule) $this->ConfigurableModule = $ConfigurableModule;
     }
 
     protected array $necessaryOptions = [];
@@ -40,7 +40,7 @@ abstract class ConfigurationLoader
             return;
         }
 
-        $this->ConfigurableModule->setConfiguration($this->loadConfiguration());
+        $this->ConfigurableModule?->setConfiguration($this->loadConfiguration());
     }
     public function autoloadConfiguration(?bool $automatically = null): bool
     {
