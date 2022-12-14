@@ -1318,5 +1318,4 @@ SQL;
  **/
 class CustomMySQL_DAO extends MySQL_DAO
 {
-
 }
