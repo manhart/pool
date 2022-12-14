@@ -721,7 +721,6 @@ class GUI_Module extends Module
             $clientData['data'] = $data;
             $clientData['success'] = $success;
             $clientData['error'] = $errObj;
-
         }
 
         $json = json_encode($clientData);
