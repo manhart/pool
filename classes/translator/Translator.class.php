@@ -39,27 +39,28 @@ class Translator
      */
     private bool $formatMessages = true;
 
-    /**
+    /**Format: <code>array<string, TranslationProviderFactory></code>
      * @var array<string, TranslationProviderFactory> holds the TranslationProviderFactory's to use for loading a language
      */
     private array $translationResources = [];
 
     /**
-     * @var array<string, array<string, TranslationProvider>> holds the currently available languages and their associated translation-providers<br>
-     * in the format (lang => provider)
+     * Format: <code>array<string,TranslationProvider></code>
+     * @var array<string, TranslationProvider> holds the currently available languages and their associated translation-providers
      */
     private array $loadedLanguages = [];
 
     /**
-     * @var array<string, array<string, TranslationProvider> Stores a list of languages for use in translations.<br>
+     * Format: <code>array<string, TranslationProvider></code>
+     * @var array<string, TranslationProvider> Stores a list of languages for use in translations.<br>
      * Intended to hold a subset of $loadedLanguages which will be used to look up translation-keys
      */
     private array $activeLanguages = [];
 
     /**
-     * @var array<string, TranslationProvider>|null the default Provider for lang0<br>Used to override fallback behavior
+     * @var TranslationProvider|null the default Language<br>Used to override fallback behavior when out of options.
      */
-    private ?array $defaultLanguage = null;
+    private ?TranslationProvider $defaultLanguage = null;
 
     /**
      * @param TranslationProviderFactory|null $translationResource
@@ -69,20 +70,36 @@ class Translator
         if ($translationResource)
             $this->addTranslationResource($translationResource);
     }
+//maybe necessary
+    ///**
+    // * @param string $reply
+    // * @param bool $success
+    // * @param bool $noAlter
+    // * @param string $key
+    // * @param string|null $message
+    // * @param array|null $args
+    // * @param string|null $defaultMessage
+    // * @return string
+    // */
+    //private static function postprocessTranslation(string $reply, bool $success, bool $noAlter, string $key, ?string $message, ?array $args, ?string $defaultMessage): string
+    //{
+    //
+    //
+    //}
 
     /**
-     * @return array<string, TranslationProvider>
+     * @return TranslationProvider
      */
-    public function getDefaultLanguage(): array
+    public function getDefaultLanguage(): TranslationProvider
     {
         return $this->defaultLanguage;
     }
 
     /**
-     * @param array<string, TranslationProvider> $defaultLanguage
+     * @param TranslationProvider $defaultLanguage
      * @return Translator
      */
-    public function setDefaultLanguage(array $defaultLanguage): Translator
+    public function setDefaultLanguage(TranslationProvider $defaultLanguage): Translator
     {
         $this->defaultLanguage = $defaultLanguage;
         return $this;
@@ -134,55 +151,51 @@ class Translator
 
     public function getPrimaryLocale(): string
     {
-        foreach ($this->activeLanguages as $language) {
-            foreach ($language as $provider) {
-                return $provider->getLocale();
-            }
+        foreach ($this->activeLanguages as  $provider) {
+            return $provider->getLocale();
         }
         return '';
     }
 
-    /**Gets the first language that is loaded or offered by a registered TranslationProvider
+    /**Gets the first language that is loaded or offered by a registered TranslationProviderFactory
      * @param string $lang langauge to look for
-     * @return array<string, TranslationProvider> languageLoaded => translation Provider
+     * @param bool $dryRun whether the Provider found should be instantiated and added to the loaded languages
+     * @param mixed|null $provider set to the provider Found
+     * @return bool success
      */
-    private function fetchLanguage(string $lang, bool $dryRun = false): array
+    private function fetchLanguage(string $lang, bool $dryRun = false, mixed &$provider = null): bool
     {
         //look in languages that are already loaded
-        $providerArray = $this->loadedLanguages[$lang] ?? null;
-        if ($providerArray)//found it
-            return $providerArray;
+        $provider = $this->loadedLanguages[$lang] ?? null;
+        if ($provider)//found it
+            return true;
         //move through the list of translation-sources to load this language
         foreach ($this->translationResources as $factory) {
-            $providerArray = [];
-            $providerList = $factory->getProviderList($lang);
+            $provider = null;
+            $providerName = $factory->getBestProvider($lang);
             //we could also check the fitness of this offer to decide for a factory
-            if (sizeof($providerList) > 0) {
-                foreach ($providerList as $providerName) {
-                    if (!$dryRun) {
-                        //if not loaded take this element
-                        $providerArray[$providerName] = $factory->getProvider($providerName, $lang);
-                    } else {
-                        //dry-run -> don't instantiate the provider as it won't be saved
-                        $providerArray[$providerName] = null;
-                    }
+            if ($providerName != null) {
+                if (!$dryRun) {
+                    //take this element
+                    $provider = $factory->getProvider($providerName, $lang);
+                    //put the new thing on the list of loaded languages
+                    $this->loadedLanguages[$lang] = $provider;
                 }
-                //put the new thing on the list of loaded languages
-                if (!$dryRun) $this->loadedLanguages[$lang] = $providerArray;
-                return $providerArray;
+                return true;
             }
         }
         //nothing found and no factory made an offer
-        return [];
+        $provider = null;
+        return false;
     }
 
 
-    /** Sets a new active language list from the $language parameter and
-     * returns the active language list for later restore using this function again
-     * @param array|string|null $language A language list with language names as keys and optionally TranslationProviders as value<br>
+    /** Changes the list of active languages for this Translator
+     * @see Translator::$activeLanguages
+     * @param array|string|null $language A language list with language names or a Language-Array previously returned by this method<br>
      * or the name of the Language to use
-     * @param bool $softFail
-     * @return array|null
+     * @param bool $softFail Ignore languages that can't be found instead of throwing an Exception
+     * @return array|null The previously active Language-Array for later restore
      * @throws Exception missing TranslationProvider
      */
     public function swapLangList(array|string|null $language, bool $softFail = false): ?array
@@ -194,12 +207,10 @@ class Translator
         //insure the languages are the array keys
         if (array_is_list($newActiveLanguages)) $newActiveLanguages = array_flip($newActiveLanguages);
 
-        foreach ($newActiveLanguages as $lang => &$providerArray) {
-            if (!is_array($providerArray)) {//for this language no ProviderArray was passed
-                $loaded = $this->fetchLanguage($lang);
-                if (sizeof($loaded) != 0) {//fetch successful
-                    $providerArray = $loaded;
-                } else {//fetch failed
+        foreach ($newActiveLanguages as $lang => &$provider) {
+            if (!$provider instanceof TranslationProvider) {//for this language no ProviderArray was passed
+                $loaded = $this->fetchLanguage($lang, false, $provider);
+                if (!$loaded) {//fetch failed
                     if (!$softFail)
                         throw new Exception("Language $lang could not be loaded");
                     unset($newActiveLanguages[$lang]);
@@ -384,29 +395,32 @@ class Translator
      */
     public function getTranslation(string $key, ?string $defaultMessage = null, ?array $args = null, bool $noAlter = false, bool &$success = false): string
     {
+        $language = "";
         $keyArray = [$key => null];
-        $this->queryTranslations($keyArray, $noAlter);
-        $translation = $keyArray[$key];
+        $this->queryTranslations($keyArray, $noAlter, $language);
+        @$translation = $keyArray[$key];
         assert($translation == null || $translation instanceof Translation);
         $message = $translation?->getMessage() ?? $defaultMessage;
+        //message processing
         if ($message == null) {
             $success = false;
-            return "String $key not found";
+            $reply = "String $key not found";
         }elseif (!$args) {
             $success = true;
-            return $message;
+            $reply =  $message;
         } else {
             $locale ??= $translation?->getProviderLocale() ?? self::getPrimaryLocale();
             $formatter = MessageFormatter::create($locale, $message);
             $formattedTranslation = $formatter->format($args);
             if ($formattedTranslation === false) {
                 $success = false;
-                return $formatter->getErrorMessage();
+                $reply =  $formatter->getErrorMessage();
             }else {
                 $success = true;
-                return $formattedTranslation;
+                $reply =  $formattedTranslation;
             }
         }
+        return $reply;//static::postprocessTranslation($reply, $success, $noAlter, $key, $message, $args, $defaultMessage);
     }
 
 
@@ -435,7 +449,7 @@ class Translator
         $languages = [];
         foreach ($header as $locale => $irrelevant) {
             //Filter languages by availability
-            if ($all || sizeof($this->fetchLanguage($locale, true)) > 0) {
+            if ($all || $this->fetchLanguage($locale, true)) {
                 //get alias and save language. multiple locales for a Language are currently not being evaluated for quality instead the first one is chosen
                 $lang = /*array_key_first($fetched) ??*/
                     static::getPrimaryLanguage($locale);
@@ -473,49 +487,47 @@ class Translator
      */
     private function queryTranslations(array &$keyArray, bool $noAlter = false, string &$language = "", ?Exception &$exception = null): bool
     {
-        foreach ($this->activeLanguages as $language => $providerArray) {//Language F
-            if (sizeof($providerArray) == 0) //language has  no providers
+        foreach ($this->activeLanguages as $language => $provider) {//Language F
+            if ($provider == null) //language has  no provider
                 continue;//F skip
             foreach ($keyArray as $key => &$translation) {//Key K
-                $provider = null;
-                foreach ($providerArray as $provider) {//Provider P
-                    assert($provider instanceof TranslationProvider);
-                    switch ($queryResult = $provider->query($key)) {//Switch S
-                        /** @noinspection PhpMissingBreakStatementInspection Stuff that finishes this Lookup */
-                        case $provider::TranslationInadequate:
-                            $noAlter || $provider->increaseMissCounter($key);//only executes when noAlter is false
-                        case $provider::OK:
-                            $translation = $provider->getResult();
-                            //leave
-                            continue 3;//K
-                        /** @noinspection PhpMissingBreakStatementInspection Things that require trying the next provider on the list */
-                        case $provider::TranslationKnownMissing:
-                            $noAlter || $provider->increaseMissCounter($key);
-                        /** @noinspection PhpMissingBreakStatementInspection */
-                        case $provider::TranslationNotExistent:
-                        case $provider::TranslationOmitted:
-                            //move on
-                            continue 2;//P
-                        default://Error reporting
-                            $exception = $provider->getError();
-                            continue 2;//P
-                    }//END S
-                }//END P
-                //No more Providers and key was not resolved -> add Translation to last Provider
                 assert($provider instanceof TranslationProvider);
-                assert(isset($queryResult));
+                switch ($queryResult = $provider->query($key)) {//Switch S
+                    /** @noinspection PhpMissingBreakStatementInspection Stuff that finishes this Lookup */
+                    case $provider::TranslationInadequate:
+                        $noAlter || $provider->increaseMissCounter($key);//only executes when noAlter is false
+                    case $provider::OK:
+                        $translation = $provider->getResult();
+                        //Next key
+                        continue 2;//K
+                    /** @noinspection PhpMissingBreakStatementInspection Things that require trying the next provider on the list */
+                    case $provider::TranslationKnownMissing:
+                        $noAlter || $provider->increaseMissCounter($key);
+                    /** @noinspection PhpMissingBreakStatementInspection */
+                    case $provider::TranslationNotExistent:
+                    case $provider::TranslationOmitted:
+                        break;//S
+                    default://Error reporting
+                        $exception = $provider->getError();
+                        //assume the Provider is broken -> //Try next Language
+                        continue 3;//F
+                }//END S
+                //Key was not resolved -> add Translation to Provider
                 $notMissing = $queryResult != $provider::TranslationNotExistent;
-                if (is_string($translation) && isNotEmptyString($translation)) {//default specified
+                if (!(is_string($translation) && isNotEmptyString($translation))) {//no valid default
+                    $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
+                    //Try next Language
+                    continue 2;//F
+                } else {//default specified
                     $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationInadequate, $translation, $key);
                     $translation = new Translation($provider->getLocale(), $translation);
                     //next iteration of K
-                } else {//no valid default
-                    $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
-                    continue 2;//F
                 }
             }//END K
+            //all Keys successfully looked up or default was provided
             return true;
         }//END F
+        //lookup failed
         $language = "";
         $keyArray = null;
         return false;
