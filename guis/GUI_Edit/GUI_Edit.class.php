@@ -44,7 +44,8 @@ class GUI_Edit extends GUI_InputElement
             'value' => 'placeholder',
             'element' => 'input',
             'inputType' => 'text',
-            'caption' => 'Platzhalter'
+            'caption' => 'Platzhalter',
+            'configurable' => true,
         ]
     ];
 //
