@@ -17,8 +17,6 @@ abstract class ConfigurationLoader
 
     // FileDialog ja/nein? - Dialog ja/nein
     // DatabaseDialog ja/nein - Dialog ja/nein
-    protected bool $autoloadConfiguration = true;
-
     protected GUI_Module $ConfigurableModule;
 
     public function __construct(?GUI_Module $ConfigurableModule = null)
@@ -36,16 +34,7 @@ abstract class ConfigurationLoader
 
     public function attemptAutoloadConfiguration(): void
     {
-        if(!$this->autoloadConfiguration()) {
-            return;
-        }
-
         $this->ConfigurableModule?->setConfiguration($this->loadConfiguration());
-    }
-    public function autoloadConfiguration(?bool $automatically = null): bool
-    {
-        $this->autoloadConfiguration = $automatically ?? $this->autoloadConfiguration;
-        return $this->autoloadConfiguration;
     }
 
     public static function getStorageEngine(): int

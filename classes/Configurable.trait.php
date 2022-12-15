@@ -24,6 +24,7 @@ trait Configurable
             'inputType' => 'text',
             'mandatory' => true,
             'showTop' => true,
+            'configurable' => true,
         ],
         'moduleDirectory' => [
             'pool' => true,
@@ -31,8 +32,20 @@ trait Configurable
             'type' => 'string',
             'element' => 'input',
             'inputType' => 'hidden',
+            'configurable' => true,
+        ],
+        'configuratorSessionProperties' => [ // property for the module configurator. define properties to automatically write them into session
+            'pool' => true,
+            'value' => [],
+            'type' => 'array',
+            'configurable' => false, // todo maybe?
         ]
     ];
+
+    /**
+     * @var bool
+     */
+    protected bool $autoloadConfiguration = true;
 
     /**
      * @var array contains the actual configuration for the module
@@ -60,6 +73,14 @@ trait Configurable
     public function getDefaultInspectorProperties(): array
     {
         return $this->defaultInspectorProperties;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfiguratorSessionProperties(): array
+    {
+        return $this->getInspectorProperties()['configuratorSessionProperties']['value'] ?? [];
     }
 
     /**
@@ -114,7 +135,9 @@ trait Configurable
         // set default directory
         $this->defaultInspectorProperties['moduleDirectory']['value'] = $this->getClassDirectory();
 
-        foreach($this->getInspectorProperties() as $key => $property) {
+        $inspectorProperties = $this->getInspectorProperties();
+        foreach($inspectorProperties as $key => $property) {
+            if(!$property) continue;
             $this->Defaults->setVar($key, $property['value']);
         }
         return $this->Defaults;
@@ -191,8 +214,20 @@ trait Configurable
         return true;
     }
 
+    /**
+     * @param bool $autoloadConfiguration
+     * @return $this
+     */
+    public function autoloadConfiguration(bool $autoloadConfiguration): static
+    {
+        $this->autoloadConfiguration = $autoloadConfiguration;
+        return $this;
+    }
+
     public function provision(): void
     {
-        $this->getConfigurationLoader()->attemptAutoloadConfiguration();
+        if($this->autoloadConfiguration) {
+            $this->getConfigurationLoader()->attemptAutoloadConfiguration();
+        }
     }
 }
