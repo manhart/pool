@@ -147,6 +147,12 @@ class GUI_Module
     }
 
     /**
+     * should be used (overwritten) to redraw the corresponding html element (necessary for module configurator)
+     * @param options
+     */
+    redraw(options = {}) {}
+
+    /**
      * creates a new unique GUI_Module. Makes the module globally known with $ in front of the name
      *
      * @param {string} GUIClassName
