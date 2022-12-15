@@ -18,7 +18,7 @@ use Exception;
 abstract class TranslationProvider_BaseDecorator implements TranslationProvider
 {
 
-    private TranslationProvider $provider;
+    protected TranslationProvider $provider;
 
     public function __construct(TranslationProvider $provider)
     {
