@@ -1556,15 +1556,16 @@ class GUI_Table extends GUI_Module
         }
 
         if($columns = $this->getVar('columns')) {
+            $columnProperties = $this->getColumnsProperties();
             $this->Template->newBlock('js_row');
             foreach ($columns as $column) {
                 $ColumnBlock = $this->Template->newBlock('js_column');
                 foreach ($column as $optName => $attrValue) {
                     $type = '';
                     $clientside = false;
-                    if (isset($this->getColumnsProperties()[$optName])) {
-                        $type = $this->getColumnsProperties()[$optName]['type'];
-                        $clientside = $this->getColumnsProperties()[$optName]['clientside'] ?? false;
+                    if (isset($columnProperties[$optName])) {
+                        $type = $columnProperties[$optName]['type'];
+                        $clientside = $columnProperties[$optName]['clientside'] ?? false;
                     }
 
                     if(!$clientside) {
