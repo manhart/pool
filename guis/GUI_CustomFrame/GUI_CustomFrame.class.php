@@ -87,7 +87,8 @@ class GUI_CustomFrame extends GUI_Module
     public function loadFiles()
     {
         parent::loadFiles();
-
+        $this->HeadData->addStyleSheet($this->Weblication->findStyleSheet('translatorToolInline.css', '', false));
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('translatorToolInline.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
     }
