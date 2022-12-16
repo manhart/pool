@@ -14,7 +14,9 @@ namespace pool\classes\translator;
  */
 class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorator
 {
+    const KEYWORD = "trnsl";
     static ?array $postbox = null;
+    private string $lastKey;
 
     static function isActive(): bool
     {
@@ -26,7 +28,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
             return self::startSession();
     }
     static function startSession():bool{
-        return false;//TODO
+        return true;//TODO
         //read postbox
         //decide
         //(clear last Request)
@@ -42,6 +44,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
 
     public function query(string $key): int
     {
+        $this->lastKey = $key;
         $queryResult = parent::query($key);
         if ($queryResult != self::OK){
             //$this->provider->getLang()
@@ -53,8 +56,14 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     public function getResult(): ?Translation
     {
         $translation = parent::getResult();
+        if ($translation == null) return null;
         // TODO: wrap in markes (html tags?) and add to postbox (key, identifier?, provider lang, result)
-        return $translation;
+
+        $keyWord = self::KEYWORD;
+        $identifier = "$keyWord.$this->lastKey";
+        $message = "<a href='#$identifier', id='$identifier' class='$keyWord'>{$translation->getMessage()}</a>";
+        return new Translation($translation->getProviderLocale(),
+            $message);
     }
     //TODO Translator Tool
 }
