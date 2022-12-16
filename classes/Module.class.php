@@ -80,10 +80,10 @@ class Module extends Component
     protected int $superglobals = I_EMPTY;
 
     /**
-     * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
+     * Creates the Input Defaults. Stores internal parameters and calls the init method.
      *
      * @param Component|null $Owner Owner
-     * @param array $params fixed params
+     * @param array $params internal parameters
      * @throws Exception
      */
     function __construct(?Component $Owner, array $params = [])
@@ -108,9 +108,11 @@ class Module extends Component
         if(!isset($superglobals)) {
             $superglobals = $this->superglobals;
         }
+        // fill variable container input with external variables
         $this->Input = new Input($superglobals);
         // assigns also the module name
         $this->importInternalParams($this->internalParams);
+        // if the external variables are not defined ($this->Input), they are merged with the defaults.
         $this->mergeDefaults();
     }
 
