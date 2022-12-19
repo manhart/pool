@@ -80,24 +80,7 @@ class Subcode extends Module
     {
         $this->Input->mergeVars($Input, false);
     }
-
-    /**
-     * Subcode::setVar()
-     *
-     * @param string|array $key Schlussel oder Array Element
-     * @param string $value Wert
-     **/
-    function setVar($key, $value = ''): Module
-    {
-        if(is_array($key)) {
-            $this->Input->setVar($key);
-        }
-        else {
-            $this->Input->setVar($key, $value);
-        }
-        return $this;
-    }
-
+    
     /**
      * Fuehrt den Subcode (die Aufgabe) aus.
      * (muss ueberschrieben werden)
