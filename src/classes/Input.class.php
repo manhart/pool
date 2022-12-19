@@ -713,6 +713,7 @@ class Input extends PoolObject
      * Merges variables into their own container (Vars). But only if they are not yet set.
      *
      * @param Input $Input
+     * @throws Exception
      */
     public function mergeVarsIfNotSet(Input $Input): void
     {
