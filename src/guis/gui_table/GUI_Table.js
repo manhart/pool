@@ -418,6 +418,7 @@ class GUI_Table extends GUI_Module
 
     refresh(options = {}, silent = false)
     {
+        // console.debug(this.getName() + '.refresh');
         // todo stelle Seite wieder her
         if(!isEmpty(options) || this.forceRefreshOptions) {
             this.options = Object.assign({}, this.options, options);
@@ -433,6 +434,17 @@ class GUI_Table extends GUI_Module
             // console.debug(this.getName() + '.refreshed', params);
         }
         return this;
+    }
+
+    /**
+     * redraw html element
+     * @param options
+     */
+    redraw(options = {})
+    {
+        this.setColumns(options['columns']);
+        // this.forceRefreshOptions = true;
+        this.refresh(options);
     }
 
     /**
