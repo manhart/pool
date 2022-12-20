@@ -1253,7 +1253,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
  */
 function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = '/'): bool|string
 {
-    $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
+    $browserPath = getRealFile(dirname($_SERVER['SCRIPT_FILENAME']));
     $base ??= $browserPath;
     $here ??= $browserPath;
     //base relative paths and normalize
@@ -1270,8 +1270,14 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     }
     if(!($here&&$toThis))//normalization returned an invalid result
         return false;//fail
+
+    $differences = getPathDifferencesAfterFirstMatch($here, $toThis);
+    // Count the number of differences and use them to create the relative path
+    $numDifferences = count($differences);
+    return str_repeat('..'.$separator, $numDifferences) . implode($separator, $differences);
+
     //beginn
-    $hereArr = explode($separator,$here);
+/*    $hereArr = explode($separator,$here);
     $toThisArr = explode($separator, $toThis);
     $hereCount = count($hereArr);
     //cut out the common part
@@ -1285,7 +1291,46 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     //build path
     array_unshift($vectorArr, $stepOutString);
     $isDirectory = str_ends_with($toThis, $separator);
-    return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
+    return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));*/
+}
+
+/**
+ * Determines the differences between two paths after the first mismatch and returns them as an array.
+ *
+ * @param string $path1 The first path to compare
+ * @param string $path2 The second path to compare
+ * @param string $separator The directory separator (optional, default is DIRECTORY_SEPARATOR)
+ * @return string[] The array with the differences between the paths
+ */
+function getPathDifferencesAfterFirstMatch(string $path1, string $path2, string $separator = DIRECTORY_SEPARATOR): array
+{
+    $result = array();
+
+    // Explode the paths using the directory separator and store them as arrays
+    $parts1 = explode($separator, $path1);
+    $parts2 = explode($separator, $path2);
+
+    // Iterate over both arrays and compare the values at the index level
+    foreach ($parts1 as $index => $value) {
+        if (!isset($parts2[$index]) || strcmp($parts2[$index], $value) !== 0) {
+            // Once a difference is found or the index is not present, store all values from the difference as an array
+            $result = array_slice($parts2, $index);
+            break;
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Resolves symbolic links into real path.
+ *
+ * @param string $path
+ * @return string
+ */
+function getRealFile(string $path): string
+{
+    return is_link($path) ? realpath($path) : $path;
 }
 
 /**Determine if a path is absolute
