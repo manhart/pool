@@ -1278,17 +1278,20 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     $numDifferences = count($differences);
     return str_repeat('..'.$separator, $numDifferences) . ltrim(substr($toThis, strlen($docRoot)), '/');*/
 
-    $differences = getPathDifferencesAfterFirstMatch($here, $toThis);
-    // Count the number of differences and use them to create the relative path
-    $numDifferences = count($differences);
-    return str_repeat('..'.$separator, $numDifferences) . implode($separator, $differences);
+    //$differences = getPathDifferencesAfterFirstMatch($here, $toThis);
+    //// Count the number of differences and use them to create the relative path
+    //$numDifferences = count($differences);
+    //return str_repeat('..'.$separator, $numDifferences) . implode($separator, $differences);
 
     //beginn
-/*    $hereArr = explode($separator,$here);
-    $toThisArr = explode($separator, $toThis);
+    $hereArr = explode($separator,removeEndingSlash($here));
+    $toThisArr = explode($separator, removeEndingSlash($toThis));
     $hereCount = count($hereArr);
     //cut out the common part
-    $vectorArr = array_diff_assoc($toThisArr, $hereArr);
+    $tripped = 0;
+    $vectorArr = array_udiff_assoc($toThisArr, $hereArr, function($a,$b) use(&$tripped)
+    { return $tripped!=0?$tripped:$tripped = strcmp($a,$b);}
+    );
     //calculate the size of the common part not included in target
     $commonCount = count($toThisArr) - count($vectorArr);
     //get from here to the common base
@@ -1298,7 +1301,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     //build path
     array_unshift($vectorArr, $stepOutString);
     $isDirectory = str_ends_with($toThis, $separator);
-    return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));*/
+    return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
 }
 
 /**
