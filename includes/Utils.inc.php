@@ -1160,7 +1160,6 @@ function move_file(string $source, string $dest): bool
 function readFiles(string $path, bool $absolute = true, string $filePattern = '/.JPG/i', string $subDir = ''): array
 {
     $files = [];
-
     $path = addEndingSlash($path).($subDir = addEndingSlash($subDir));
     if ($handle = opendir($path)) {
         while (false !== ($fileName = readdir($handle))) {
@@ -1171,7 +1170,6 @@ function readFiles(string $path, bool $absolute = true, string $filePattern = '/
         }
         closedir($handle);
     }
-
     return $files;
 }
 
