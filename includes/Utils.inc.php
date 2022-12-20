@@ -1148,25 +1148,25 @@ function move_file(string $source, string $dest): bool
 }
 
 /**
- * Verzeichnis auslesen: erstellt Dateiliste
+ * Read out directory: creates file list
  *
- * @see glob()
- * @param string $path Stammverzeichnis
- * @param boolean $absolute Datei mit vollstaendigem Pfad zurückgeben andernfalls nur mit $subdir/$filename
- * @param string $filePattern Dateifilter
- * @param string $subdir auszulesendes Unterverzeichnis
+ * @param string $path root directory
+ * @param boolean $absolute return file with (absolute) full path otherwise only with relative $subDir/$filename
+ * @param string $filePattern filter files with regEx pattern
+ * @param string $subDir [optional] read this subdirectory
  * @return array file list
+ * @see glob()
  */
-function readFiles(string $path, bool $absolute = true, string $filePattern = '/.JPG/i', string $subdir = ''): array
+function readFiles(string $path, bool $absolute = true, string $filePattern = '/.JPG/i', string $subDir = ''): array
 {
     $files = [];
 
-    $path = addEndingSlash($path).($subdir = addEndingSlash($subdir));
+    $path = addEndingSlash($path).($subDir = addEndingSlash($subDir));
     if ($handle = opendir($path)) {
         while (false !== ($fileName = readdir($handle))) {
             $file = $path.$fileName;
             if (is_file($file) and preg_match($filePattern, $fileName)) {
-                $files[] = ($absolute) ? $file : $subdir.$fileName;
+                $files[] = ($absolute) ? $file : $subDir .$fileName;
             }
         }
         closedir($handle);
