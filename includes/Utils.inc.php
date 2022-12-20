@@ -1253,6 +1253,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
  */
 function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = '/'): bool|string
 {
+    // $docRoot = $_SERVER['DOCUMENT_ROOT'];
     $browserPath = getRealFile(dirname($_SERVER['SCRIPT_FILENAME']));
     $base ??= $browserPath;
     $here ??= $browserPath;
@@ -1270,6 +1271,12 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     }
     if(!($here&&$toThis))//normalization returned an invalid result
         return false;//fail
+
+
+/*    $differences = getPathDifferencesAfterFirstMatch($here, $toThis);
+    // Count the number of differences and use them to create the relative path
+    $numDifferences = count($differences);
+    return str_repeat('..'.$separator, $numDifferences) . ltrim(substr($toThis, strlen($docRoot)), '/');*/
 
     $differences = getPathDifferencesAfterFirstMatch($here, $toThis);
     // Count the number of differences and use them to create the relative path
@@ -1296,6 +1303,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
 
 /**
  * Determines the differences between two paths after the first mismatch and returns them as an array.
+ * The first path is always treated as the starting point for the relative path.
  *
  * @param string $path1 The first path to compare
  * @param string $path2 The second path to compare
@@ -1312,12 +1320,21 @@ function getPathDifferencesAfterFirstMatch(string $path1, string $path2, string 
 
     // Iterate over both arrays and compare the values at the index level
     foreach ($parts1 as $index => $value) {
-        if (!isset($parts2[$index]) || strcmp($parts2[$index], $value) !== 0) {
+        if (!isset($parts2[$index]) || strcmp($parts2[$index], $value) !== 0 || count($parts1) !== count($parts2)) {
             // Once a difference is found or the index is not present, store all values from the difference as an array
-            $result = array_slice($parts2, $index);
+            $result = array_merge($result, array_slice($parts2, $index));
             break;
         }
     }
+
+    // If the first path is the same as the second path, return an empty array
+/*    if (empty($result)) {
+        $result = array();
+    } else {
+        // If there is a difference, add the first difference to the result array
+        array_unshift($result, $parts1[0]);
+    }*/
+
 
     return $result;
 }
