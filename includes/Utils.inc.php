@@ -1272,7 +1272,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
         return false;//fail
 
     //beginn
-    $hereArr = explode($separator,removeEndingSlash($here));
+    $hereArr = explode($separator, removeEndingSlash($here));
     $toThisArr = explode($separator, removeEndingSlash($toThis));
     $hereCount = count($hereArr);
     //cut out the common part
@@ -1290,6 +1290,69 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     array_unshift($vectorArr, $stepOutString);
     $isDirectory = str_ends_with($toThis, $separator);
     return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
+}
+
+/**
+ * Calculates the relative paths from the source path to the target path, both serverside and clientside.
+ *
+ * @param string|null $here The absolute source path.
+ * @param string $toThis The absolute target path.
+ * @param string $separator The directory separator to use (optional, defaults to DIRECTORY_SEPARATOR).
+ *
+ * @return array An array containing the serverside and clientside relative paths.
+ */
+function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = DIRECTORY_SEPARATOR): array
+{
+    $scriptDir = dirname($_SERVER['SCRIPT_FILENAME']);
+    $base ??= $scriptDir;
+    $here ??= $scriptDir;
+
+    // Removing trailing slashes.
+    $here = rtrim($here, $separator);
+    $toThis = rtrim($toThis, $separator);
+
+    //base relative paths and normalize
+    if (!isAbsolutePath($here)) {
+        $here = addEndingSlash($base) . $here;
+        $here = normalizePath($here, separator: $separator);
+    }
+    elseif ($normalize)
+        $here = normalizePath($here, separator: $separator);
+    if (!isAbsolutePath($toThis)) {
+        $toThis = addEndingSlash($base) . $toThis;
+        $toThis = normalizePath($toThis, separator: $separator);
+    }
+    elseif ($normalize){
+        $toThis = normalizePath($toThis, separator: $separator);
+    }
+    if(!($here && $toThis))//normalization returned an invalid result
+        return false;//fail
+
+    // Split the paths into arrays of their individual components.
+    $sourcePathParts = explode($separator, $here);
+    $targetPathParts = explode($separator, $toThis);
+
+    // Find the number of common path components.
+    $commonPathComponents = 0;
+    while (isset($sourcePathParts[$commonPathComponents]) && isset($targetPathParts[$commonPathComponents]) &&
+            $sourcePathParts[$commonPathComponents] === $targetPathParts[$commonPathComponents]) {
+        $commonPathComponents++;
+    }
+
+    // Calculate the serverside relative path.
+    $serversideRelativePath = str_repeat('..' . $separator, count($sourcePathParts) - $commonPathComponents) . implode($separator, array_slice($targetPathParts, $commonPathComponents));
+
+    // Calculate the clientside relative path.
+    $clientsideRelativePathComponents = count(explode($separator, $_SERVER['DOCUMENT_ROOT']));
+    $commonPathComponents = min($clientsideRelativePathComponents, $commonPathComponents);
+    $clientsideRelativePath = str_repeat('..' . $separator, $clientsideRelativePathComponents - $commonPathComponents) .
+        implode($separator, array_slice($targetPathParts, $commonPathComponents));
+
+    // Return the relative paths.
+    return [
+        'serverside' => $serversideRelativePath,
+        'clientside' => $clientsideRelativePath,
+    ];
 }
 
 /**
