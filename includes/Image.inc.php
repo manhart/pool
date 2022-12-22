@@ -190,13 +190,13 @@ function readImageMetadata($file)
     if(!empty($iptc) or !empty($exif)) {
         foreach (array('title', 'caption', 'credit', 'copyright', 'camera', 'iso') as $key) {
             if ($meta[$key] && !seems_utf8($meta[$key])) {
-                $meta[$key] = utf8_encode($meta[$key]);
+                $meta[$key] = UConverter::transcode($meta[$key], 'UTF8', 'ISO-8859-1');
             }
         }
 
         foreach ($meta['keywords'] as $key => $keyword) {
             if (!seems_utf8($keyword)) {
-                $meta['keywords'][$key] = utf8_encode($keyword);
+                $meta['keywords'][$key] = UConverter::transcode($keyword, 'UTF8', 'ISO-8859-1');
             }
         }
 
