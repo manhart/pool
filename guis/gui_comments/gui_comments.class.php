@@ -186,7 +186,7 @@ class GUI_Comments extends GUI_Module
                     $this->Template->newBlock('COMMENT');
                     $this->Template->setVar('TEXT', nl2br($result_comments->getValue('text')));
                     $this->Template->setVar('AUTHOR', $result_comments->getValue('author'));
-                    $this->Template->setVar('DATETIME', strftime('%d.%m.%Y %H:%M', $result_comments->getValue('createdate')));
+                    $this->Template->setVar('DATETIME', date('d.m.Y H:i', $result_comments->getValue('createdate')));
                 }
                 else {
                     echo "Parameter (idComment) not found or specified!";
