@@ -4,6 +4,7 @@
  *
  * deprecated.php created at 13.05.22, 14:42
  *
+ * @deprecated
  * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
