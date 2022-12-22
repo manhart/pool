@@ -610,13 +610,14 @@ class Resultset extends PoolObject implements Countable
      * z.B.
      * function formatDate($row)
      * {
-     *        $row['date'] = strftime('%d.%m.%Y', $row['date']);
+     *        $row['date'] = date('d.m.Y', $row['date']);
      *        return $row;
      * }
      *
      * @access public
-     * @param string|array $callback_function
-     **/
+     * @param callable $callback_function
+     * @return Resultset
+     */
     public function uformat(callable $callback_function): static
     {
         $this->rowset = array_map($callback_function, $this->rowset);

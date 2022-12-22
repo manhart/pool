@@ -403,7 +403,7 @@ final class Translator extends \PoolObject
     }
 
     /**
-     * gets the weekday expression according to the weekday number (strftime('%w'))
+     * gets the weekday expression according to the weekday number
      *
      * @param int $weekday 0-6 = Sunday - Saturday
      * @return string
