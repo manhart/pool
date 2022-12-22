@@ -60,22 +60,6 @@ function convertENDateAndTimeToUnix($strDate, $strZeit, $delimiterD = '-', $deli
     return $time;
 }
 
-function win_to_utf8($str)
-{
-    $str = convert_cyr_string($str, 'w', 'i'); // w - windows-1251   to  i - iso8859-5
-    $str = utf8_encode($str); //  iso8859-5   to  utf8
-
-    return $str;
-}
-
-function utf8_to_win($str)
-{
-    $str = utf8_decode($str); //  utf8 to iso8859-5
-    $str = convert_cyr_string($str, 'i', 'w'); // w - windows-1251   to  i - iso8859-5
-
-    return $str;
-}
-
 /**
  * Wandelt OEM Zeichensatz in extended Ascii Zeichensatz um.
  *
