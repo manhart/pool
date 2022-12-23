@@ -71,7 +71,7 @@ class GUI_DBCount extends GUI_Module
         if ($tabledefine) {
             $count = 0;
             if ($Input -> getVar('fk_value') > 0) {
-                $DAO = DAO::createDAO($interfaces, $tabledefine);
+                $DAO = DAO::createDAO($tabledefine, $interfaces);
                 $Resultset = $DAO -> getCount(NULL, NULL, array(array($Input -> getVar('fk'), 'equal', $Input -> getVar('fk_value'))));
                 $count = $Resultset -> getValue('count');
             }

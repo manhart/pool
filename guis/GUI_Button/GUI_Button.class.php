@@ -33,7 +33,7 @@ class GUI_Button extends GUI_Universal
 
     public function loadFiles()
     {
-        $file = $this->Weblication->findTemplate('tpl_button.html', 'gui_button', true);
+        $file = $this->Weblication->findTemplate('tpl_button.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $file);
     }
 

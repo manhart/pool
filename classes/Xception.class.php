@@ -688,7 +688,7 @@ class ExceptionHandler
         if($errno >= 2000 and $errno <= 2055) return; // MySQL client error, e.g. connect failed, server has gone away...
 
         /* @var $ErroLog MySQL_DAO */
-        $ErroLog = @DAO::createDAO($this->interfaces, $this->tabledefine, true);
+        $ErroLog = @DAO::createDAO($this->tabledefine, $this->interfaces, );
 
         $interfaceType = $databaseName = $table = '';
         DAO::extractTabledefine($this->tabledefine, $interfaceType, $databaseName, $table);
@@ -703,7 +703,7 @@ class ExceptionHandler
             $Input = new Input(0);
             $Input->setData($E->getData());
             $Input->setVar('backtrace', substr(print_r($Input->getVar('backtrace'), true), 0, $E->maxBacktraceSize));
-            $Input = $Input->filter($ErroLog->getFieldlist());
+            $Input = $Input->filter($ErroLog->getFieldList());
 
             $type = $ErroLog->getFieldType('timestamp');
 

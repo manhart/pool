@@ -253,9 +253,13 @@ class MySQL_DAO extends DAO
     /**
      * MySQL_DAO constructor.
      */
-    function __construct()
+    public function __construct(DataInterface $db, string $dbname, string $table)
     {
         parent::__construct();
+
+        $this->db = $db;
+        $this->dbname = $dbname;
+        $this->table = $table;
 
         // only if Translator needed
         if($this->translate) {
@@ -263,6 +267,32 @@ class MySQL_DAO extends DAO
         }
 
         $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
+
+        // Maybe there are columns in the "columns" property
+        // todo rework this shit
+        $this->rebuildColumnList();
+    }
+
+    /**
+     * rebuild column list
+     */
+    private function rebuildColumnList()
+    {
+        // Columns are predefined as property "columns".
+        if(count($this->columns) > 0) {
+            $table = '`'.$this->table.'`';
+            $glue = '`, '.$table.'.`';
+            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
+            $this->column_list = $column_list;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableName(): string
+    {
+        return $this->table;
     }
 
     /**
@@ -276,18 +306,18 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * Initialisiert Objekteigenschaften: Die Funktion "init" liest automatisch alle Felder und
-     * Primaerschluessel der Tabelle ein.
+     * fetches the columns automatically from the driver / interface
      *
      * Beim Setzen der Spalten/Felder wird das Ereignis
      * $this -> onSetColumns() aufgerufen
      **/
-    public function init()
+    public function fetchColumns(): self
     {
-        $this->pk = array();
-        $this->columns = array();
+        $this->pk = [];
+        $this->columns = [];
         $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
         $this->onSetColumns();
+        return $this;
     }
 
     /**
@@ -295,10 +325,8 @@ class MySQL_DAO extends DAO
      * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
      * $this -> column_list fuer die Funktionen $this -> get und
      * $this -> getMultiple zusammen.
-     *
-     * @access private
-     **/
-    function onSetColumns($withAlias=false)
+     */
+    protected function onSetColumns(bool $withAlias=false)
     {
         $column_list = '';
         $count = count($this->columns);
@@ -313,9 +341,9 @@ class MySQL_DAO extends DAO
 
             if(strpos($column, ' ') !== false) { // column contains space
                 // complex column construct should not be masked
-                if(strpos($column, '(', 0) === false and
-                   strpos($column, '\'', 0) === false and
-                   strpos($column, '"', 0) === false and
+                if(!str_contains($column, '(') and
+                   !str_contains($column, '\'') and
+                   !str_contains($column, '"') and
                    stripos($column, 'as ', 0) === false) {
                     $custom_column = '`'.$column.'`'; // should be a column with space
                 }
@@ -386,11 +414,11 @@ class MySQL_DAO extends DAO
      *
      * @param boolean $reInit Feldliste erneuern
      * @return array Felder der Tabelle
-     **/
-    public function getFieldlist($reInit=false): array
+     */
+    public function getFieldList(bool $reInit=false): array
     {
         if (count($this->columns) == 0 or $reInit) {
-            $this->init();
+            $this->fetchColumns();
         }
         return $this->columns;
     }
@@ -398,14 +426,14 @@ class MySQL_DAO extends DAO
     /**
      * Liefert den MySQL Datentypen des uebergebenen Feldes
      *
-     * @param string $fieldname Spaltenname
+     * @param string $fieldName Spaltenname
      * @return string Datentyp
      */
-    function getFieldType($fieldname)
+    public function getFieldType(string $fieldName): string
     {
-        if(!$this->field_list) $this->init();
+        if(!$this->field_list) $this->fetchColumns();
         foreach ($this->field_list as $field) {
-            if($field['Field'] == $fieldname) {
+            if($field['Field'] == $fieldName) {
                 $buf = explode(' ', $field['Type']);
                 $type = $buf[0];
                 if(($pos = strpos($type, '(')) !== false) {
@@ -414,17 +442,17 @@ class MySQL_DAO extends DAO
                 return $type;
             }
         }
-        return false;
+        return '';
     }
 
     /**
      * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
      *
-     * @param array $fieldName
+     * @param string $fieldName
      */
-    function getFieldInfo($fieldName): array
+    public function getFieldInfo(string $fieldName): array
     {
-        if(!$this->field_list) $this->init();
+        if(!$this->field_list) $this->fetchColumns();
         foreach ($this->field_list as $field) {
             if($field['Field'] == $fieldName) {
                 return $field;
@@ -1290,54 +1318,4 @@ SQL;
  **/
 class CustomMySQL_DAO extends MySQL_DAO
 {
-    /**
-     * Konstruktor
-     *
-     * Sets up the object.
-     *
-     * @param DataInterface $db Datenbankhandle
-     * @param string $dbname Datenbank
-     * @param string $table Tabelle
-     * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
-     */
-    public function __construct(DataInterface $db, string $dbname, string $table, bool $autoload_fields=true)
-    {
-        parent::__construct();
-
-        $this->db = $db;
-        $this->dbname = $dbname;
-        $this->table = $table;
-
-        if ($autoload_fields) {
-            //$this -> column_list = '*';
-            //$this -> pk = 'id';
-            $this->init();
-        }
-        else {
-            // Maybe there are columns in the "columns" property
-            $this->rebuildColumnList();
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getTableName()
-    {
-        return $this->table;
-    }
-
-    /**
-     * rebuild column list
-     */
-    private function rebuildColumnList()
-    {
-        // Columns are predefined as property "columns".
-        if(count($this->columns) > 0) {
-            $table = '`'.$this->table.'`';
-            $glue = '`, '.$table.'.`';
-            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
-            $this->column_list = $column_list;
-        }
-    }
 }

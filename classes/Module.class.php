@@ -1,12 +1,14 @@
 <?php
 /**
- * POOL (PHP Object Oriented Library): Module sind baukastenartige Klassen.
+ * POOL (PHP Object Oriented Library)
  *
- * Sie enthalten Input (PHP Autoglobals), Standardwerte fuer nicht �bergebene Variablen,
+ * Module sind baukastenartige Klassen.
+ *
+ * Sie enthalten Input (PHP Autoglobals), Standardwerte fuer nicht übergebene Variablen,
  * Parametersteuerung (z.B. aus dem Template heraus), einem Modulnamen und Handoffs
  * (Variablenwerte werden durchgereicht).
  *
- * - Festlegen von Standardwerten zur Gew�hrleistung der Funktion des Moduls
+ * - Festlegen von Standardwerten zur Gewährleistung der Funktion des Moduls
  * - Module koennen auch deaktiviert / ausgeschaltet werden (enabled/disabled).
  * - Module enthalten 'Kinder'-Module (Childs) sowie ein 'Eltern'-Modul (Parent). Aus Template Sicht liegen Kinder-Module auf diesem Modul und dieses Modul auf dem Eltern-Modul.
  * - Durchschleifen von Variablen an die Kinder-Module (Childs)
@@ -21,13 +23,6 @@
  * @since 2003-07-10
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
- * @package pool
- */
-
-/**
- * Module sind baukastenartige Klassen (Features: Parametrisierung, Handoffs, Defaults, Enable/Disable).
- *
- * @author Alexander Manhart <alexander@manhart-it.de>
  * @package pool
  */
 class Module extends Component
@@ -74,10 +69,10 @@ class Module extends Component
     private bool $enabled = true;
 
     /**
-     * @var array fixed params
-     * @see Module::importParams()
+     * @var array Nothing else than internal (externally protected) parameters that are given when the module is created or defined via a template.
+     * @see Module::importInternalParams()
      */
-    private array $fixedParams = [];
+    private array $internalParams = [];
 
     /**
      * @var int filter that defines which superglobals are passed to input->vars
@@ -85,20 +80,19 @@ class Module extends Component
     protected int $superglobals = I_EMPTY;
 
     /**
-     * Instanzierung von Objekten. Aufruf der "init" Funktion und anschlie�end Abgleich fehlender Werte durch Standardwerte.
+     * Creates the Input Defaults. Stores internal parameters and calls the init method.
      *
      * @param Component|null $Owner Owner
-     * @param array $params fixed params
+     * @param array $params internal parameters
+     * @throws Exception
      */
     function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner);
-
         $this->childModules = [];
         $this->Handoff = [];
         $this->Defaults = new Input(I_EMPTY);
-        $this->fixedParams = $params;
-
+        $this->internalParams = $params;
         $this->init();
     }
 
@@ -106,17 +100,20 @@ class Module extends Component
      * set default values for external inputs
      *
      * @param int|null $superglobals Konstanten aus der Input.class.php
+     * @throws Exception
      * @see Input.class.php
-     **/
+     */
     public function init(?int $superglobals = null)
     {
         if(!isset($superglobals)) {
             $superglobals = $this->superglobals;
         }
+        // fill variable container input with external variables
         $this->Input = new Input($superglobals);
+        // assigns also the module name
+        $this->importInternalParams($this->internalParams);
+        // if the external variables are not defined ($this->Input), they are merged with the defaults.
         $this->mergeDefaults();
-        // assigns the module name
-        $this->importParams($this->fixedParams);
     }
 
     /**
@@ -131,7 +128,9 @@ class Module extends Component
 
     /**
      * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
-     **/
+     *
+     * @throws Exception
+     */
     private function mergeDefaults(): void
     {
         $this->Input->mergeVarsIfNotSet($this->getDefaults());
@@ -148,7 +147,6 @@ class Module extends Component
         if(count($Handoff) == 0) {
             return $this;
         }
-
         $this->addHandoffVar($Handoff);
         $this->Input->setVars($Handoff);
 
@@ -164,91 +162,57 @@ class Module extends Component
      *
      * @param array $params Im Format: key=value&key2=value2&
      * @return bool Erfolgsstatus
-     **@see Component::setName()
+     * @see Component::setName()
      * @see Module::disable()
      */
-    public function importParams(array $params): bool
+    public function importInternalParams(array $params): bool
     {
         $this->setVars($params);
-
         // set Component Name, if set by param
-        $moduleName = $this->Input->getVar('moduleName');
+        $moduleName = $this->getVar('moduleName');
 
-        // old crime / delict. Should be removed! @deprecated
-        if(($otherFixedName = $this->getFixedParam('modulename')) != null) {
-            $moduleName = $otherFixedName;
-        }
-
-        if($moduleName != null) {
+        if($moduleName) {
             $this->setName($moduleName);
         }
         return true;
     }
 
     /**
-     * exports fixed params as base64
+     * exports internal params as base64
      *
      * @return string params
      */
-    public function exportParams(array $otherParams = []): string
+    public function exportInternalParams(array $otherParams = []): string
     {
-        return base64url_encode(http_build_query(array_merge($otherParams, $this->fixedParams)));
+        return base64url_encode(http_build_query(array_merge($otherParams, $this->internalParams)));
     }
 
-    /**
-     * Setzt einen Parameter in einem vorhandenen Modul. Benutzt die Weblication Funktion "findComponent" zum Ermitteln des Moduls.
-     * Es werden nur Module gefunden, deren Eigent�mer Weblication zugewiesen wurde.
-     *
-     * @access public
-     * @param string $modulename Name des Moduls
-     * @param string $param Name des Parameters
-     * @param string $value Zu setzender Wert
-     * @return bool Erfolgsstatus
-     * @deprecated
-     */
-    function setParam(string $modulename, $param, $value = null)
-    {
-        $bResult = false;
-        $Module = $this->Weblication->findComponent($modulename);
-        if($Module instanceof Module) {
-            $Module->Input->setVar($param, $value);
-            $bResult = true;
-        }
-        else {
-            $this->raiseError(__FILE__, __LINE__,
-                sprintf('Cannot find Module "%s" (@setParam). Param "%s" not set.', $modulename, $param));
-        }
-        return $bResult;
-    }
-
-    /**
-     * get fixed param
-     *
-     * @param $param
-     * @return mixed
-     */
-    public function getFixedParam($param): mixed
-    {
-        return $this->fixedParams[$param] ?? null;
-    }
-
-    /**
-     * set fixed param
+    /** get internal param
      *
      * @param string $param
-     * @param $value
+     * @return mixed
+     */
+    public function getInternalParam(string $param): mixed
+    {
+        return $this->internalParams[$param] ?? null;
+    }
+
+    /**
+     * set internal param
+     *
+     * @param string $param
+     * @param mixed $value
      * @return Module
      */
-    public function setFixedParam(string $param, $value): Module
+    public function setInternalParam(string $param, mixed $value): Module
     {
-        $this->fixedParams[$param] = $value;
+        $this->internalParams[$param] = $value;
         return $this;
     }
 
     /**
      * Einf�gen von Variablen, die an die Kinder-Module (Childs) weitergereicht werden.
      *
-     * @access public
      * @param string $key Schluessel der Variable
      * @param string $value Wert der Variable
      * @return bool Erfolgsstatus
@@ -269,18 +233,11 @@ class Module extends Component
      *
      * @param string $key
      * @param mixed $value
-     * @return Module
+     * @return Input
      */
-    public function setVar($key, $value = ''): Module
+    public function setVar(string $key, mixed $value = ''): Input
     {
-        if(is_array($key)) {
-            // @deprecated
-            $this->Input->setVars($key);
-        }
-        else {
-            $this->Input->setVar($key, $value);
-        }
-        return $this;
+        return $this->Input->setVar($key, $value);
     }
 
     /**
@@ -318,7 +275,7 @@ class Module extends Component
     }
 
     /**
-     * Setzt das Eltern-Modul (Parent = wem gehoere ich?)
+     * set the parent module
      *
      * @param Module $Parent Klasse vom Typ Module
      */
@@ -328,7 +285,7 @@ class Module extends Component
     }
 
     /**
-     * Gibt das Eltern-Modul (Parent) zurueck.
+     * returns the parent module
      *
      * @return Module|null Ergebnis vom Typ Module
      */
@@ -338,7 +295,7 @@ class Module extends Component
     }
 
     /**
-     * Fuegt ein Modul in den internen Modul-Container ein.
+     * insert module as child
      *
      * @param Module $Module
      * @return Module
@@ -349,22 +306,20 @@ class Module extends Component
         return $this;
     }
 
-    /**
-     * Entfernt ein Modul
+    /** remove module
      *
      * @param Module $Module
      */
     public function removeModule(Module $Module)
     {
         $new_Modules = [];
-
-        // Rebuild Modules
+        // Haus?
+        // rebuild modules
         foreach($this->childModules as $SearchedModule) {
             if($Module != $SearchedModule) {
                 $new_Modules[] = $SearchedModule;
             }
         }
-
         $this->childModules = $new_Modules;
     }
 

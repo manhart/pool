@@ -39,7 +39,6 @@ class GUI_Toast extends GUI_Module
     public function prepare()
     {
         $this->Template->setVar('moduleName', $this->getName());
-        parent::prepare();
     }
 
     /**
