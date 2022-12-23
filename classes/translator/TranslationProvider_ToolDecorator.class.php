@@ -28,12 +28,13 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
             return self::startSession();
     }
     static function startSession():bool{
-        return true;//TODO
+
         //read postbox
         //decide
         //(clear last Request)
         //Disable Translation cache
-
+        @\Template::setCacheTranslations(false);
+        return true;//TODO
     }
 
     public function __construct(TranslationProvider $provider)
@@ -57,11 +58,11 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     {
         $translation = parent::getResult();
         if ($translation == null) return null;
-        // TODO: wrap in markes (html tags?) and add to postbox (key, identifier?, provider lang, result)
-
+        // TODO:  add to postbox (key, identifier?, provider lang, result)
+        $lang = $this->provider->getLang();
         $keyWord = self::KEYWORD;
         $identifier = "$keyWord.$this->lastKey";
-        $message = "<a href='#$identifier', id='$identifier' class='$keyWord'>{$translation->getMessage()}</a>";
+        $message = "<a href='#$identifier', id='$identifier' class='$keyWord', lang='$lang'>{$translation->getMessage()}</a>";
         return new Translation($translation->getProviderLocale(),
             $message);
     }

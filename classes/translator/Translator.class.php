@@ -70,22 +70,15 @@ class Translator
         if ($translationResource)
             $this->addTranslationResource($translationResource);
     }
-//maybe necessary
-    ///**
-    // * @param string $reply
-    // * @param bool $success
-    // * @param bool $noAlter
-    // * @param string $key
-    // * @param string|null $message
-    // * @param array|null $args
-    // * @param string|null $defaultMessage
-    // * @return string
-    // */
-    //private static function postprocessTranslation(string $reply, bool $success, bool $noAlter, string $key, ?string $message, ?array $args, ?string $defaultMessage): string
-    //{
-    //
-    //
-    //}
+
+    /**
+     * @return array<String, TranslationProvider>
+     */
+    public function removeLoadedTranslations():array{
+        $loaded = $this->loadedLanguages;
+        $this->loadedLanguages = [];
+        return $loaded;
+    }
 
     /**
      * @return TranslationProvider

@@ -790,7 +790,8 @@ class Weblication extends Component
     {
         $language = $this->language;
         $elementSubFolder = 'templates';
-        $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baselib, false, true);
+        $translate = (bool)Template::getTranslator();
+        $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baselib, false, $translate);
         if($template)
             return $template;
 
@@ -889,10 +890,10 @@ class Weblication extends Component
             $file = $folder_guis . $filename;
             if(file_exists($file)) {
                 $translatedFile = buildFilePath($folder_guis, $language, $filename);
-                if(!NO_TRANSLATION_CACHE && file_exists($translatedFile)) {
+                if(Template::isCacheTranslations() && file_exists($translatedFile)) {
                     // Language specific Ordner
                     $finds[] = $translatedFile;
-                } elseif (!NO_TRANSLATION_CACHE && $translate) {
+                } elseif ($translate && Template::isCacheTranslations()) {
                     //Create Translated file and put it in the language folder
                     $finds[] = Template::attemptFileTranslation($file, $language);
                 } else {// generic Ordner

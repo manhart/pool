@@ -844,8 +844,8 @@ class TempScript extends TempFile
  **/
 class Template extends PoolObject
 {
-
-    private static Translator $translator;
+    private static bool $cacheTranslations = true;
+    private static ?Translator $translator = null;
 
     //@var string Verzeichnis zu den Templates
     private string $dir;
@@ -895,11 +895,8 @@ class Template extends PoolObject
         $this->setDirectory($dir);
     }
 
-    public static function getTranslator(): Translator
+    public static function getTranslator(): ?Translator
     {
-        if(!isset(static::$translator)) {
-            self::setTranslator(new Translator());
-        }
         return static::$translator;
     }
 
@@ -915,6 +912,19 @@ class Template extends PoolObject
         } catch (Exception) {
             return $file;
         }
+    }
+
+    public static function isCacheTranslations(): bool
+    {
+        return static::getTranslator() != null ? static::$cacheTranslations : false;
+    }
+
+    /**
+     * @param bool $cacheTranslations
+     */
+    public static function setCacheTranslations(bool $cacheTranslations): void
+    {
+        self::$cacheTranslations = $cacheTranslations;
     }
 
     /**
