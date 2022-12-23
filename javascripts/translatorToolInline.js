@@ -39,7 +39,7 @@ class translatorToolInline{
                             const colour = langColour.substring(language.length+1);
                             const marker = this.translationMarker;
                             //set CSS style
-                            htmlStyleElement.innerHTML = `a.${marker}:lang(${language}){background-color:${colour}}`;
+                            htmlStyleElement.innerHTML = `a.${marker}:lang(${language}):not(#fakeID){background-color:${colour}}`;
                             i++;
                         }
                         //clear style elements that aren't needed
