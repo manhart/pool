@@ -8,7 +8,7 @@ declare(strict_types=1);
  *
  * Weblication.class.php
  *
- * Die Hauptklasse aller Webanwendungen. Jedes neue Projekt beginnt mit Weblication und wird davon instanziert.
+ * Die Hauptklasse aller Webanwendungen. Jedes neue Projekt beginnt mit Weblication und wird davon instanziiert.
  *
  * @version $Id: Weblication.class.php,v 1.16 2007/05/31 14:36:23 manhart Exp $
  * @version $Revision 1.0$
@@ -71,20 +71,13 @@ class Weblication extends Component
      */
     public Input $Input;
 
-    /**
-     * Benutzer Klasse (nicht realisiert)
-     *
-     * @var User
-     * @access private
-     */
-    // var $User = null;
 
     /**
      * Relativer Pfad zur Hauptbibliothek
      *
      * @var string
      */
-    private string $relativePathBaselib = '';
+    private string $relativePathBaseLib = '';
 
     /**
      * Skin / Theme (Designvorlage bzw. Bilderordner)
@@ -169,11 +162,6 @@ class Weblication extends Component
      * @var string
      */
     private string $locale = '';
-
-    /**
-     * @var string
-     */
-    private string $subdirTranslated = '';
 
     /**
      * @var string version of the application
@@ -372,7 +360,7 @@ class Weblication extends Component
     }
 
     /**
-     * Setzt die Programm ID
+     * Setzt die Programm-ID
      *
      * @param int $progId
      * @return Weblication
@@ -384,7 +372,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert die Programm ID
+     * Liefert die Programm-ID
      *
      * @return int|null
      */
@@ -454,7 +442,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert das Haupt-GUI (meistens erstes GUI, das im Startscript �bergeben wurde).
+     * Liefert das Haupt-GUI (meistens erstes GUI, das im Startscript uebergeben wurde).
      *
      * @return GUI_Module
      */
@@ -480,6 +468,7 @@ class Weblication extends Component
     {
         if(!$this->Frame) {
             if($this->hasFrame()) {
+                assert($this->Main instanceof GUI_CustomFrame);
                 $this->Frame = $this->Main;
             }
         }
@@ -530,7 +519,7 @@ class Weblication extends Component
         if($absolute) {
             $folder_skins = addEndingSlash(getcwd()) . $folder_skins;
         }
-        $folder_language = $folder_skins . addEndingSlash($this->language);;
+        $folder_language = $folder_skins . addEndingSlash($this->language);
         if($additionalDir != '') {
             $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
             $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
@@ -552,59 +541,6 @@ class Weblication extends Component
         }
 
         return $path;
-    }
-
-    /**
-     * Liefert den Pfad zu den Templates (abh�ngig vom Skin-Ordner und der gew�hlten Sprache).
-     *
-     * @param string $additionalDir Ordner werden an ermittelten Template Pfad geh�ngt
-     * @return string Pfad
-     */
-    public function getTemplatePath($additionalDir = ''/*, $baselib=false*/): string
-    {
-        $skin = addEndingSlash($this->skin);
-        $language = addEndingSlash($this->language);
-        $dir = 'templates';
-
-        # Ordner skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
-        $folder_dir = $folder_skins . $dir;
-        $folder_language = $folder_skins . $language . $dir;
-
-        /*if ($baselib) {
-            $path = addEndingSlash(PWD_TILL_GUIS) . $additionalDir;
-        }
-        else {*/
-        if(is_dir($folder_language)) { // Language Ordner
-            $path = $folder_language;
-        }
-        else if(is_dir($folder_dir)) { // Template Ordner
-            $path = $folder_dir;
-        }
-        /*}*/
-
-        if($additionalDir) {
-            $path = addEndingSlash($path) . $additionalDir;
-        }
-
-        if(!is_dir($path)) {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' not found (@getTemplatePath)!', $path));
-        }
-
-        return $path;
-    }
-
-    /**
-     * Checks if skin exists
-     *
-     * @param string $skin
-     * @return bool
-     */
-    function skin_exists(string $skin = ''): bool
-    {
-        $skin = addEndingSlash(($skin ? $skin : $this->skin));
-        $pathSkin = addEndingSlash(getcwd()) . addEndingSlash(PWD_TILL_SKINS) . $skin;
-        return file_exists($pathSkin);
     }
 
     /**
@@ -677,7 +613,7 @@ class Weblication extends Component
      * Sucht das uebergebene Image in einer fest vorgegebenen Verzeichnisstruktur. Nur im Ordner skins.
      *
      * @param string $filename Image Dateiname
-     * @return string Bei Erfolg Pfad und Dateiname des gefunden Templates. Im Fehlerfall ''.
+     * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
      **/
     function findImage(string $filename): string
     {
@@ -777,13 +713,13 @@ class Weblication extends Component
 
     /**
      * Sucht das uebergebene Template in einer fest vorgegebenen Verzeichnisstruktur.
-     * Zuerst im Ordner skins, als naechstes im guis Ordner. Wird der Parameter baslib auf true gesetzt,
-     * wird abschliessend noch in der baselib gesucht.<br>
+     * Zuerst im Ordner skins, als naechstes im guis Ordner. Wird der Parameter baseLib auf true gesetzt,
+     * wird abschliessend noch in der baseLib gesucht.<br>
      * Reihenfolge: <s>skin-translated+subdirTranslated</s> (<b>common-skin-translated</b> common-skin skin-translated skin) GUIs-Projekt+ <i>(..?skins of Projekt Common?..)</i> GUIs-Common+ ((..???..) GUIs-Baselib)
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baseLib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baeLib
      * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
      **/
     public function findTemplate(string $filename, string $classFolder = '', bool $baseLib = false): string
@@ -791,10 +727,10 @@ class Weblication extends Component
         $language = $this->language;
         $elementSubFolder = 'templates';
         $translate = (bool)Template::getTranslator();
-        $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baselib, false, $translate);
+        $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
         if($template)
             return $template;
-        }
+
 
         $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
         return '';
@@ -803,18 +739,18 @@ class Weblication extends Component
     /**
      * Sucht das uebergebene StyleSheet in einer fest vorgegebenen Verzeichnisstruktur.
      * Zuerst im Ordner skins, als naechstes im guis Ordner.<br>
-     * Reihenfolge: common-skin+ skin+ GUIs-Projekt+ (..? skins ?..) GUIs-Common+ (Baselib xor Common-common-skin)
+     * Reihenfolge: common-skin+ skin+ GUIs-Projekt+ (..? skins ?..) GUIs-Common+ (BaseLib xor Common-common-skin)
      * @see Weblication::findTemplate()
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baseLib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baeLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
-        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baselib, true);
+        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
         if($stylesheet)
             return $stylesheet;
 
@@ -837,12 +773,12 @@ class Weblication extends Component
      * @param string $filename
      * @param string $language
      * @param string $classFolder
-     * @param bool $baselib
+     * @param bool $baseLib
      * @param bool $all
      * @param bool $translate
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib, bool $all, bool $translate = false): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib, bool $all, bool $translate = false): string
     {
         $places = [];
         //Getting list of Places to search
@@ -859,8 +795,8 @@ class Weblication extends Component
             if(defined('DIR_COMMON_ROOT_REL'))
                 $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
             //POOL Library Project
-            if($baselib)
-                $places[] = buildDirPath($this->getRelativePathBaselib(), $folder_guis);
+            if($baseLib)
+                $places[] = buildDirPath($this->getRelativePathBaseLib(), $folder_guis);
         }
         $finds = [];
         //Searching
@@ -893,18 +829,18 @@ class Weblication extends Component
      *
      * @param string $filename JavaScript Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param bool $baselib
+     * @param bool $baeLib
      * @param bool $raiseError
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baselib = false, bool $raiseError = true): string
+    function findJavaScript(string $filename, string $classFolder = '', bool $baeLib = false, bool $raiseError = true): string
     {
         $folder_javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
         $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
-        //Ordner baselib -> look in POOL instead
-        if($baselib) {
-            $folder_javascripts = addEndingSlash($this->getRelativePathBaselib($folder_javascripts));
-            $folder_guis = addEndingSlash($this->getRelativePathBaselib($folder_guis));
+        //Ordner baeLib -> look in POOL instead
+        if($baeLib) {
+            $folder_javascripts = addEndingSlash($this->getRelativePathBaseLib($folder_javascripts));
+            $folder_guis = addEndingSlash($this->getRelativePathBaseLib($folder_guis));
         }
         $javaScriptFile = $folder_javascripts . $filename;
         if(file_exists($javaScriptFile))
@@ -926,20 +862,20 @@ class Weblication extends Component
     /**
      * @param string $path
      */
-    public function setRelativePathBaselib(string $path)
+    public function setRelativePathBaseLib(string $path)
     {
-        $this->relativePathBaselib = $path;
+        $this->relativePathBaseLib = $path;
     }
 
     /**
-     * Relativer Pfad zum Rootverzeichnis der Baselib
+     * Relativer Pfad zum Root Verzeichnis der BaseLib
      *
      * @param string $subDir
      * @return string path from project to library pool
      */
-    public function getRelativePathBaselib(string $subDir = ''): string
+    public function getRelativePathBaseLib(string $subDir = ''): string
     {
-        return $this->relativePathBaselib . '/' . $subDir;
+        return $this->relativePathBaseLib . '/' . $subDir;
     }
 
     /**
@@ -1086,7 +1022,7 @@ class Weblication extends Component
      *
      * @param string $tabledefine DAO Tabellendefinition.
      */
-    public function createSessionHandler($tabledefine)
+    public function createSessionHandler(string $tabledefine)
     {
         $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
         $this->Session = new ISession();
