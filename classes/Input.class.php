@@ -1,33 +1,33 @@
 <?php
 /**
-* -= Rapid Module Library (RML) =-
-*
-* Input.class.php
-*
-* Eine Klasse fuer die PHP "Superglobals". Die Klasse Input sammelt alle verfuegbaren Superglobals-Variablen, die von PHP geliefert werden.
-* Damit wird die Verwendung von "register_globals" unterbunden (Sicherheit geht vor)!
-* Ausserdem sorgt sich die Klasse automatisch um magic_quotes und vereinfacht den Zugriff auf Variablen.
-*
-* Weitere Features:
-* Xor Verschluesslung
-* Byte Streams
-* Referenz-Container
-*
-* Falls die PHP Entwickler auf den Gedanken kommen, $_GET $_POST etc. umzubenennen, hat man ein Leichtes, denn wir definieren folgende Konstanten:
-* INPUT_EMPTY, INPUT_COOKIE, INPUT_GET, INPUT_POST, INPUT_FILES, INPUT_ENV, INPUT_SERVER, INPUT_SESSION, INPUT_REQUEST, INPUT_ALL
-*
-* Zudem leiten wir von Input extra fuer jede Superglobale eine Klasse ab:
-* ICookie, IGet, IPost, IFiles, IEnv, IServer, ISession, IRequest
-*
-* @date $Date: 2007/08/06 12:18:23 $
-* @version $Id: Input.class.php,v 1.14 2007/08/06 12:18:23 manhart Exp $
-* @version $Revision 1.0$
-* @version
-*
-* @since 2003-07-10
-* @author Alexander Manhart <alexander@manhart-it.de>
-* @link https://alexander-manhart.de
-*/
+ * -= Rapid Module Library (RML) =-
+ *
+ * Input.class.php
+ *
+ * Eine Klasse fuer die PHP "Superglobals". Die Klasse Input sammelt alle verfuegbaren Superglobals-Variablen, die von PHP geliefert werden.
+ * Damit wird die Verwendung von "register_globals" unterbunden (Sicherheit geht vor)!
+ * Ausserdem sorgt sich die Klasse automatisch um magic_quotes und vereinfacht den Zugriff auf Variablen.
+ *
+ * Weitere Features:
+ * Xor Verschluesslung
+ * Byte Streams
+ * Referenz-Container
+ *
+ * Falls die PHP Entwickler auf den Gedanken kommen, $_GET $_POST etc. umzubenennen, hat man ein Leichtes, denn wir definieren folgende Konstanten:
+ * INPUT_EMPTY, INPUT_COOKIE, INPUT_GET, INPUT_POST, INPUT_FILES, INPUT_ENV, INPUT_SERVER, INPUT_SESSION, INPUT_REQUEST, INPUT_ALL
+ *
+ * Zudem leiten wir von Input extra fuer jede Superglobale eine Klasse ab:
+ * ICookie, IGet, IPost, IFiles, IEnv, IServer, ISession, IRequest
+ *
+ * @date $Date: 2007/08/06 12:18:23 $
+ * @version $Id: Input.class.php,v 1.14 2007/08/06 12:18:23 manhart Exp $
+ * @version $Revision 1.0$
+ * @version
+ *
+ * @since 2003-07-10
+ * @author Alexander Manhart <alexander@manhart-it.de>
+ * @link https://alexander-manhart.de
+ */
 
 // define PHP Superglobals
 const I_EMPTY = 0;
@@ -58,11 +58,9 @@ if($REQUEST_METHOD == 'POST' and $CONTENT_TYPE == 'application/json') {
 class Input extends PoolObject
 {
     /**
-     * Variablen Container
-     *
-     * @var array
+     * @var array variables container
      */
-    protected array $Vars = [];
+    protected array $vars = [];
 
     /**
      * @var int Superglobals
@@ -89,7 +87,7 @@ class Input extends PoolObject
      */
     public function __construct(int $superglobals = I_EMPTY)
     {
-        $this->Vars = [];
+        $this->vars = [];
         $this->init($superglobals);
         return parent::__construct();
     }
@@ -137,7 +135,7 @@ class Input extends PoolObject
         }
 
         if ($superglobals != I_ALL and $superglobals & I_SESSION) {
-            $this->Vars = &$_SESSION; // PHP Session Handling (see php manual)
+            $this->vars = &$_SESSION; // PHP Session Handling (see php manual)
             //$this -> addVar($_SESSION);
         }
     }
@@ -159,7 +157,7 @@ class Input extends PoolObject
      */
     public function count(): int
     {
-        return count($this->Vars);
+        return count($this->vars);
     }
 
     /**
@@ -170,7 +168,7 @@ class Input extends PoolObject
     function reInit()
     {
         /*$this->clear(); vermeiden, da clear sich auch in ISession beim Leeren der Session auswirkt */
-        $this->Vars = array();
+        $this->vars = array();
         $this->init($this->superglobals);
     }
 
@@ -182,7 +180,7 @@ class Input extends PoolObject
      **/
     public function exists(string $key): bool
     {
-        return array_key_exists($key, $this->Vars);
+        return array_key_exists($key, $this->vars);
     }
 
     /**
@@ -204,7 +202,7 @@ class Input extends PoolObject
             return false;
         }
         else {
-            return (!isset($this->Vars[$key]) or empty($this->Vars[$key]));
+            return (!isset($this->vars[$key]) or empty($this->vars[$key]));
         }
     }
 
@@ -215,7 +213,7 @@ class Input extends PoolObject
      */
     function isEmpty(): bool
     {
-        return $this->emptyVar(array_keys($this->Vars));
+        return $this->emptyVar(array_keys($this->vars));
     }
 
     /**
@@ -240,11 +238,11 @@ class Input extends PoolObject
 //            }
 
             // todo filter_var returns also false, if there is an error
-            $filteredVar = filter_var($this->Vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+            $filteredVar = filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
             if($filteredVar === false) {
                 throw new Exception('Incoming data with the key '.$key.' did not pass the filter.');
             }
-            $this->Vars[$key] = $filteredVar;
+            $this->vars[$key] = $filteredVar;
         }
     }
 
@@ -267,7 +265,7 @@ class Input extends PoolObject
     */
     public function getVar(string $key, mixed $default=null): mixed
     {
-        return $this->Vars[$key] ?? $default;
+        return $this->vars[$key] ?? $default;
     }
 
     /**
@@ -281,8 +279,8 @@ class Input extends PoolObject
     public function &getRef(string $key, $default=null)
     {
         $ref = $default;
-        if(isset($this->Vars[$key])) {
-            $ref = &$this->Vars[$key];
+        if(isset($this->vars[$key])) {
+            $ref = &$this->vars[$key];
         }
         return $ref;
     }
@@ -296,7 +294,7 @@ class Input extends PoolObject
      */
     public function setVar(string $key, mixed $value = ''): Input
     {
-        $this->Vars[$key] = $value;
+        $this->vars[$key] = $value;
         return $this;
     }
 
@@ -308,7 +306,7 @@ class Input extends PoolObject
      */
     public function setVars(array $assoc): Input
     {
-        $this->Vars = $assoc + $this->Vars;
+        $this->vars = $assoc + $this->vars;
         return $this;
     }
 
@@ -320,7 +318,7 @@ class Input extends PoolObject
     */
     function setRef(string $key, &$value)
     {
-        $this->Vars[$key] = &$value;
+        $this->vars[$key] = &$value;
     }
 
     /**
@@ -336,8 +334,8 @@ class Input extends PoolObject
     public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
     {
         if (!is_array($key)) {
-            if (!isset($this->Vars[$key])) {
-                $this->Vars[$key] = $value;
+            if (!isset($this->vars[$key])) {
+                $this->vars[$key] = $value;
             }
             if($filter) {
                 $this->filterRules[$key] = [$filter, $filterOptions];
@@ -358,7 +356,7 @@ class Input extends PoolObject
      */
     public function addVars(array $vars): self
     {
-        $this->Vars = $this->Vars + $vars;
+        $this->vars = $this->vars + $vars;
         return $this;
     }
 
@@ -381,7 +379,7 @@ class Input extends PoolObject
     public function delVar($key): self
     {
         if (!is_array($key)) {
-            unset($this->Vars[$key]);
+            unset($this->vars[$key]);
         }
         else {
             // @deprecated
@@ -397,7 +395,7 @@ class Input extends PoolObject
     public function delVars(array $assoc): Input
     {
         foreach($assoc as $key) {
-            unset($this->Vars[$key]);
+            unset($this->vars[$key]);
         }
         return $this;
     }
@@ -420,7 +418,7 @@ class Input extends PoolObject
     */
     public function getType(string $key): string
     {
-        return isset($this->Vars[$key]) ? gettype($this->Vars[$key]) : '';
+        return isset($this->vars[$key]) ? gettype($this->vars[$key]) : '';
     }
 
     /**
@@ -433,8 +431,8 @@ class Input extends PoolObject
     public function setType(string $key, string $type): bool
     {
         $result = false;
-        if (isset($this->Vars[$key])) {
-            $result = settype($this->Vars[$key], $type);
+        if (isset($this->vars[$key])) {
+            $result = settype($this->vars[$key], $type);
         }
         return $result;
     }
@@ -485,12 +483,12 @@ class Input extends PoolObject
         $new_prefix = ($removePrefix) ? '' : $prefix;
         foreach($keys_must_exists as $key) {
             // AM, 22.04.09, modified (isset nimmt kein NULL)
-            if(array_key_exists($prefix.$key, $this->Vars)) {
+            if(array_key_exists($prefix.$key, $this->vars)) {
                 if($filter) {
-                    $remove = call_user_func($filter, $this->Vars[$prefix.$key], $prefix.$key);
+                    $remove = call_user_func($filter, $this->vars[$prefix.$key], $prefix.$key);
                     if($remove) continue;
                 }
-                $Input->setVar($new_prefix.$key, $this->Vars[$prefix.$key]);
+                $Input->setVar($new_prefix.$key, $this->vars[$prefix.$key]);
             }
         }
         return $Input;
@@ -503,7 +501,7 @@ class Input extends PoolObject
      **/
     public function setData(array $data)
     {
-        $this->Vars = $data;
+        $this->vars = $data;
     }
 
     /**
@@ -513,7 +511,7 @@ class Input extends PoolObject
      **/
     public function getData(): array
     {
-        return $this->Vars;
+        return $this->vars;
     }
 
     /**
@@ -526,7 +524,7 @@ class Input extends PoolObject
     function getValuesAsString(string $delimiter): string
     {
         $result = '';
-        foreach ($this->Vars as $key => $val) {
+        foreach ($this->vars as $key => $val) {
             if($result != '') $result .= $delimiter;
             $result .= $val;
         }
@@ -542,7 +540,7 @@ class Input extends PoolObject
     function rename($keyname, $new_keyname)
     {
         if($this->exists($keyname)) {
-            $this->setVar($new_keyname, $this->Vars[$keyname]);
+            $this->setVar($new_keyname, $this->vars[$keyname]);
             $this->delVar($keyname);
         }
     }
@@ -567,7 +565,7 @@ class Input extends PoolObject
      */
     public function diff(array $array): array
     {
-        return array_diff($this->Vars, $array);
+        return array_diff($this->vars, $array);
     }
 
     /**
@@ -578,7 +576,7 @@ class Input extends PoolObject
      */
     public function diff_assoc(array $array): array
     {
-        return array_diff_assoc($this->Vars, $array);
+        return array_diff_assoc($this->vars, $array);
     }
 
     /**
@@ -622,7 +620,7 @@ class Input extends PoolObject
     */
     function getByteStream()
     {
-        return serialize($this->Vars);
+        return serialize($this->vars);
     }
 
     /**
@@ -652,7 +650,7 @@ class Input extends PoolObject
             $output = pray($this->getVar($key));
         }
         else {
-            $output = pray($this->Vars);
+            $output = pray($this->vars);
         }
 
         if ($print) {
@@ -701,10 +699,10 @@ class Input extends PoolObject
     public function mergeVars(Input $Input, bool $flip = false): Input
     {
         if ($flip) {
-            $this->Vars = array_merge($Input->Vars, $this->Vars);
+            $this->vars = array_merge($Input->vars, $this->vars);
         }
         else {
-            $this->Vars = array_merge($this->Vars, $Input->Vars);
+            $this->vars = array_merge($this->vars, $Input->vars);
         }
         return $this;
     }
@@ -713,6 +711,7 @@ class Input extends PoolObject
      * Merges variables into their own container (Vars). But only if they are not yet set.
      *
      * @param Input $Input
+     * @throws Exception
      */
     public function mergeVarsIfNotSet(Input $Input): void
     {
@@ -721,12 +720,12 @@ class Input extends PoolObject
         }
         $this->filterRules = $Input->getFilterRules();
 
-        $keys = array_keys($Input->Vars);
+        $keys = array_keys($Input->vars);
         $c = count($keys);
         for($i=0; $i < $c; $i++) {
             $key = $keys[$i];
-            if (!isset($this->Vars[$key])) {
-                $this->setVar($key, $Input->Vars[$key]);
+            if (!isset($this->vars[$key])) {
+                $this->setVar($key, $Input->vars[$key]);
             }
 
             $this->filterVar($key);
@@ -738,7 +737,7 @@ class Input extends PoolObject
     */
     public function clear()
     {
-        $this->Vars = [];
+        $this->vars = [];
     }
 
     /**
@@ -839,7 +838,7 @@ class ICookie extends Input
     */
     public function delCookie(string $cookiename, string $path = '/', string $domain = '', $secure = 0): bool
     {
-        if (isset($this -> Vars[$cookiename])) {
+        if (isset($this -> vars[$cookiename])) {
             $this -> delVar($cookiename);
         }
         return setcookie($cookiename, '', time() - 3600, $path, $domain, $secure);
@@ -891,9 +890,9 @@ class IGet extends Input
     function getQuery($query='', $ampersand='&')
     {
         $session_name = session_name();
-        foreach($this->Vars as $key => $value) {
-            if (isset($this->Vars[$key])) {
-                if (is_object($this->Vars[$key])) {
+        foreach($this->vars as $key => $value) {
+            if (isset($this->vars[$key])) {
+                if (is_object($this->vars[$key])) {
                     continue;
                 }
                 if ($key == $session_name) {

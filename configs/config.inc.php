@@ -34,11 +34,12 @@
 * ############################################################################################################################
 */
 
+// charset must be installed on system!
 const APP_INTERNAL_LOCALE = 'de_DE.UTF-8'; // for calculation
 
-$loc = setlocale(LC_TIME, APP_INTERNAL_LOCALE); // charset must be installed on system!
-$loc = setlocale(LC_COLLATE, APP_INTERNAL_LOCALE); // charset must be installed on system!
-$loc = setlocale(LC_CTYPE, APP_INTERNAL_LOCALE); // charset must be installed on system!
+$loc = setlocale(LC_TIME, APP_INTERNAL_LOCALE);
+$loc = setlocale(LC_COLLATE, APP_INTERNAL_LOCALE);
+$loc = setlocale(LC_CTYPE, APP_INTERNAL_LOCALE);
 
 /* check Servername und stelle die Weichen */
 switch($_SERVER['SERVER_NAME']) {
@@ -63,11 +64,11 @@ switch($_SERVER['SERVER_NAME']) {
         die ('Unknown server "' . $_SERVER['SERVER_NAME'] . '"! Please update configs.');
 }
 
-define('JAVA_PATH', '/usr/bin/java');
+const JAVA_PATH = '/usr/bin/java';
 // define('FOP_PATH', '/opt/fop/current/fop');
 
 // verwendet in der App
-define('DIR_POOL_ROOT', DIR_DOCUMENT_ROOT.'/pool/src');
+const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT . '/pool/src';
 // aus der App Sicht (für js from pool):
 define('DIR_POOL_ROOT_REL', '../../src'); // for webprojects it would be better to symlink javascripts folder
 

@@ -95,7 +95,7 @@ class GUI_Comments extends GUI_Module
             case 'answer':
                 $text = trim($Input->getVar('text'));
                 if($Input->getVar('post') and $text != '' and $tableid) {
-                    $dao_comments = DAO::createDAO($this->Weblication->getInterfaces(), 'Intranet_tbl_Comments');
+                    $dao_comments = DAO::createDAO('Intranet_tbl_Comments', $this->Weblication->getInterfaces());
                     $result_comments = $dao_comments->insert(array('author' => $userid, 'text' => $Input->getVar('text'),
                         'tablename' => $tablename, 'tableid' => $tableid, 'createdate' => time()));
                     if($result_comments->getValue('last_insert_id') > 0) {
@@ -126,7 +126,8 @@ class GUI_Comments extends GUI_Module
                 break;
 
             case 'update':
-                $daoComment = DAO::createDAO($this->Weblication->getInterfaces(), 'Intranet_tbl_Comments');
+                $daoComment = DAO::createDAO('Intranet_tbl_Comments', $this->Weblication->getInterfaces());
+                $daoComment->fetchColumns();
                 $idComment = $Input->getVar('idComment');
                 $text = trim($Input->getVar('text'));
 
@@ -146,7 +147,7 @@ class GUI_Comments extends GUI_Module
                 }
 
                 // anzeigen
-                $resComment = &$daoComment->get($idComment);
+                $resComment = $daoComment->get($idComment);
                 $Template->useFile('update');
                 $Template->setVar('TEXT', $resComment->getValue('text'));
                 $Template->setVar('idComment', $idComment);
@@ -158,7 +159,7 @@ class GUI_Comments extends GUI_Module
             case 'delete':
 
 
-                $daoComment = DAO::createDAO($this->Weblication->getInterfaces(), 'Intranet_tbl_Comments');
+                $daoComment = DAO::createDAO('Intranet_tbl_Comments', $this->Weblication->getInterfaces());
                 $idComment = $Input->getVar('idComment');
                 if(!empty($idComment)) {
                     $daoComment->delete($idComment);
@@ -177,14 +178,15 @@ class GUI_Comments extends GUI_Module
 
                 // nur einen bestimmten Kommentar anzeigen - anhand der �bergebenen id (idComment) .
                 $this->Template->useFile('comments');
-                $dao_comments = DAO::createDAO($this->Weblication->getInterfaces(), 'Intranet_tbl_Comments');
+                $dao_comments = DAO::createDAO('Intranet_tbl_Comments', $this->Weblication->getInterfaces());
+                $dao_comments->fetchColumns();
                 $result_comments = $dao_comments->get($Input->getVar('idComment'));
 
                 if($result_comments->count() == 1) {
                     $this->Template->newBlock('COMMENT');
                     $this->Template->setVar('TEXT', nl2br($result_comments->getValue('text')));
                     $this->Template->setVar('AUTHOR', $result_comments->getValue('author'));
-                    $this->Template->setVar('DATETIME', strftime('%d.%m.%Y %H:%M', $result_comments->getValue('createdate')));
+                    $this->Template->setVar('DATETIME', date('d.m.Y H:i', $result_comments->getValue('createdate')));
                 }
                 else {
                     echo "Parameter (idComment) not found or specified!";
@@ -197,7 +199,8 @@ class GUI_Comments extends GUI_Module
                 $boxTitle = 'Kommentare';
                 $this->Template->useFile('comments');
 
-                $dao_comments = DAO::createDAO($this->Weblication->getInterfaces(), 'Intranet_tbl_Comments');
+                $dao_comments = DAO::createDAO('Intranet_tbl_Comments', $this->Weblication->getInterfaces());
+                $dao_comments->fetchColumns();
                 $result_comments = $dao_comments->getMultiple(null, null, array(
                     0 => array('tableid', 'equal', $tableid),
                     1 => array('tablename', 'equal', $tablename)),

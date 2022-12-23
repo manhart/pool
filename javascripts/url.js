@@ -2,6 +2,7 @@
  * Url-Klasse
  *
  * @author Christian Schmidseder, Alexander Manhart
+ * @see https://ui.dev/get-current-url-javascript
  */
 function Url() {
 	this.params = new Object();
