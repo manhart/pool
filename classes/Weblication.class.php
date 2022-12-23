@@ -708,22 +708,22 @@ class Weblication extends Component
     /**
      * Does the project have a common skin folder?
      *
-     * @param string|null $subfolder
+     * @param string|null $subFolder
      * @return bool
      */
-    public function hasCommonSkinFolder(?string $subfolder = null): bool
+    public function hasCommonSkinFolder(?string $subFolder = null): bool
     {
         if(is_null($this->hasCommonSkinFolder)) {
             $this->hasCommonSkinFolder = [];
             $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder);
         }
-        if($subfolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
-            if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder] = null;
-            if(is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) {
-                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder] = [];
-                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $subfolder);
+        if($subFolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
+            if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = null;
+            if(is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) {
+                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = [];
+                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $subFolder);
             }
-            return $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder]['__exists'];
+            return $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'];
         }
         return $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'];
     }
@@ -783,10 +783,10 @@ class Weblication extends Component
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baselib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
      **/
-    public function findTemplate(string $filename, string $classFolder = '', bool $baselib = false): string
+    public function findTemplate(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $language = $this->language;
         $elementSubFolder = 'templates';
@@ -794,16 +794,6 @@ class Weblication extends Component
         $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baselib, false, $translate);
         if($template)
             return $template;
-
-        // Lowercase Workaround @deprecated
-        if(preg_match('/[A-Z]/', $filename . $classFolder)) {
-            // try lower case
-            // todo log buggy code
-            $recursionResult = $this->findTemplate(strtolower($filename), strtolower($classFolder), $baselib);
-            if((!empty($recursionResult)) && defined('IS_DEVELOP') && IS_DEVELOP) {
-                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find ' . $filename . ' in ' . $classFolder);
-            }
-            return $recursionResult;
         }
 
         $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
@@ -817,10 +807,10 @@ class Weblication extends Component
      * @see Weblication::findTemplate()
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baselib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
-    public function findStyleSheet(string $filename, string $classFolder = '', bool $baselib = false): string
+    public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
@@ -829,7 +819,7 @@ class Weblication extends Component
             return $stylesheet;
 
         //TODO Remove or define use of skins for included Projekts and merge with findBestElement
-        if(!$baselib) {//Common-common-skin
+        if(!$baseLib) {//Common-common-skin
             if(defined('DIR_COMMON_ROOT_REL')) {
                 $stylesheet = buildFilePath(
                     DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
@@ -838,19 +828,7 @@ class Weblication extends Component
             }
         }
 
-        // Lowercase Workaround:
-        if(preg_match('/[A-Z]/', $filename . $classFolder)) {
-            // try lower case
-            // todo log buggy code
-            $recursionResult = $this->findStyleSheet(strtolower($filename), strtolower($classFolder), $baselib);
-            if((!empty($recursionResult)) && defined('IS_DEVELOP') && IS_DEVELOP) {
-                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find ' . $filename . ' in ' . $classFolder);
-            }
-            return $recursionResult;
-        }
-        else {
-            $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
-        }
+        $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
         return '';
     }
 

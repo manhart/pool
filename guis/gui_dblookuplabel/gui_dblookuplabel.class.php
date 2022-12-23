@@ -69,7 +69,7 @@ class GUI_DBLookupLabel extends GUI_Label
 
         if ($Input -> getVar('keyvalue') != '') {
             if ($Input -> getVar('tabledefine')) {
-                $DAO = DAO::createDAO($interfaces, $Input -> getVar('tabledefine'));
+                $DAO = DAO::createDAO($Input->getVar('tabledefine'), $interfaces);
                 $Resultset = & $DAO -> get($Input -> getVar('keyvalue'), $Input -> getVar('keyfield'));
                 if ($Resultset -> count() == 1) {
                     $datavalue = $Resultset -> getValue($Input -> getVar('datafield'));

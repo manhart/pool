@@ -56,7 +56,7 @@ class GUI_Schema extends GUI_Module
      */
     private function loadSchemes(array $schemes = []): void
     {
-        $directory = $this->getFixedParam('directory');
+        $directory = $this->getInternalParam('directory');
         if($directory != null) {
             // test string for a constant
             if(defined($directory)) {
@@ -70,11 +70,11 @@ class GUI_Schema extends GUI_Module
         $directory = $directory . '/' . addEndingSlash(PWD_TILL_SCHEMES);
 
         // fixed param "category": Divides schemas into subdirectories
-        $category = $this->getFixedParam('category');
+        $category = $this->getInternalParam('category');
         if($category != null) $directory .= addEndingSlash($category);
 
         // fixed param "alternate": Switch to an alternative if the schema was not found in the folder.
-        $alternate = $this->getFixedParam('alternate');
+        $alternate = $this->getInternalParam('alternate');
 
         $numSchemes = count($schemes);
 

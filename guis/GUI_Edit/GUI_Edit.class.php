@@ -44,7 +44,8 @@ class GUI_Edit extends GUI_InputElement
             'value' => 'placeholder',
             'element' => 'input',
             'inputType' => 'text',
-            'caption' => 'Platzhalter'
+            'caption' => 'Platzhalter',
+            'configurable' => true,
         ]
     ];
 //
@@ -91,12 +92,10 @@ class GUI_Edit extends GUI_InputElement
 
     /**
      * Laedt Template "tpl_edit.html". Ist im projekteigenen Skinordner ueberschreibbar!
-     *
-     * @access public
-     **/
+     */
     function loadFiles()
     {
-        $file = $this->Weblication->findTemplate('tpl_edit.html', 'gui_edit', true);
+        $file = $this->Weblication->findTemplate('tpl_edit.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $file);
     }
     /**

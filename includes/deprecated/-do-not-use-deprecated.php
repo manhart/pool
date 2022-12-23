@@ -4,6 +4,7 @@
  *
  * deprecated.php created at 13.05.22, 14:42
  *
+ * @deprecated
  * @author a.manhart <a.manhart@group-7.de>
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
@@ -58,22 +59,6 @@ function convertENDateAndTimeToUnix($strDate, $strZeit, $delimiterD = '-', $deli
     }
 
     return $time;
-}
-
-function win_to_utf8($str)
-{
-    $str = convert_cyr_string($str, 'w', 'i'); // w - windows-1251   to  i - iso8859-5
-    $str = utf8_encode($str); //  iso8859-5   to  utf8
-
-    return $str;
-}
-
-function utf8_to_win($str)
-{
-    $str = utf8_decode($str); //  utf8 to iso8859-5
-    $str = convert_cyr_string($str, 'i', 'w'); // w - windows-1251   to  i - iso8859-5
-
-    return $str;
 }
 
 /**
@@ -2271,4 +2256,25 @@ function getWeekday(int $decimal_value = 0, string $locale = 'de_DE')
     else {
         return $result;
     }
+}
+
+
+/**
+ * Formatiert Datenbank Timestamp (z.B. bei MySQL Feldtyp:timestamp) in ein beliebiges Datumsformat.
+ *
+ * @param int $datetime Datenbank Timestamp im Format YYYYMMDDhhmmss
+ * @param string $format
+ * @return string formatiertes Datum
+ * @throws Exception
+ */
+function formatDBTimestampAsDatetime(int $datetime, string $format = 'd.m.Y H:i'): string
+{
+    $year = substr($datetime, 0, 4);
+    $mon = substr($datetime, 4, 2);
+    $day = substr($datetime, 6, 2);
+    $hour = substr($datetime, 8, 2);
+    $min = substr($datetime, 10, 2);
+    $sec = substr($datetime, 12, 2);
+
+    return formatDateTime(mktime($hour, $min, $sec, $mon, $day, $year), $format);
 }
