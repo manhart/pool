@@ -8,7 +8,7 @@ declare(strict_types=1);
  *
  * Weblication.class.php
  *
- * Die Hauptklasse aller Webanwendungen. Jedes neue Projekt beginnt mit Weblication und wird davon instanziert.
+ * The main class of all web applications. Every new project starts with Weblication and is instantiated from it.
  *
  * @version $Id: Weblication.class.php,v 1.16 2007/05/31 14:36:23 manhart Exp $
  * @version $Revision 1.0$
@@ -71,19 +71,11 @@ class Weblication extends Component
     public Input $Input;
 
     /**
-     * Benutzer Klasse (nicht realisiert)
-     *
-     * @var User
-     * @access private
-     */
-    // var $User = null;
-
-    /**
      * Relativer Pfad zur Hauptbibliothek
      *
      * @var string
      */
-    private string $relativePathBaselib = '';
+    private string $relativePathBaseLib = '';
 
     /**
      * Skin / Theme (Designvorlage bzw. Bilderordner)
@@ -107,7 +99,7 @@ class Weblication extends Component
     /**
      * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
      *
-     * @var array
+     * @var array<string, DataInterface>
      */
     private array $interfaces = [];
 
@@ -215,8 +207,6 @@ class Weblication extends Component
     /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
-     *
-     * @throws ReflectionException
      */
     private function __construct()
     {
@@ -261,9 +251,9 @@ class Weblication extends Component
     }
 
     /**
-     * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
+     * Changes the folder for the design templates (Html templates) and images.
      *
-     * @param string $skin Ordner fuer die Designvorlagen (Html Templates) und Bilder. (Standardwert: default)
+     * @param string $skin Folder for design templates (html templates) and images. (Default value: default)
      * @return Weblication
      */
     public function setSkin(string $skin = 'default'): Weblication
@@ -376,7 +366,7 @@ class Weblication extends Component
     }
 
     /**
-     * Setzt die Programm ID
+     * Set an application id
      *
      * @param int $progId
      * @return Weblication
@@ -388,7 +378,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert die Programm ID
+     * Get an application id (if set)
      *
      * @return int|null
      */
@@ -479,7 +469,7 @@ class Weblication extends Component
      * returns the main frame
      *
      * @return GUI_CustomFrame|null
-     **/
+     */
     public function getFrame(): ?GUI_CustomFrame
     {
         if(!$this->Frame) {
@@ -534,7 +524,7 @@ class Weblication extends Component
         if($absolute) {
             $folder_skins = addEndingSlash(getcwd()) . $folder_skins;
         }
-        $folder_language = $folder_skins . addEndingSlash($this->language);;
+        $folder_language = $folder_skins . addEndingSlash($this->language);
         if($additionalDir != '') {
             $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
             $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
@@ -559,46 +549,6 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert den Pfad zu den Templates (abh�ngig vom Skin-Ordner und der gew�hlten Sprache).
-     *
-     * @param string $additionalDir Ordner werden an ermittelten Template Pfad geh�ngt
-     * @return string Pfad
-     */
-    public function getTemplatePath($additionalDir = ''/*, $baselib=false*/): string
-    {
-        $skin = addEndingSlash($this->skin);
-        $language = addEndingSlash($this->language);
-        $dir = 'templates';
-
-        # Ordner skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
-        $folder_dir = $folder_skins . $dir;
-        $folder_language = $folder_skins . $language . $dir;
-
-        /*if ($baselib) {
-            $path = addEndingSlash(PWD_TILL_GUIS) . $additionalDir;
-        }
-        else {*/
-        if(is_dir($folder_language)) { // Language Ordner
-            $path = $folder_language;
-        }
-        else if(is_dir($folder_dir)) { // Template Ordner
-            $path = $folder_dir;
-        }
-        /*}*/
-
-        if($additionalDir) {
-            $path = addEndingSlash($path) . $additionalDir;
-        }
-
-        if(!is_dir($path)) {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' not found (@getTemplatePath)!', $path));
-        }
-
-        return $path;
-    }
-
-    /**
      * Checks if skin exists
      *
      * @param string $skin
@@ -606,7 +556,7 @@ class Weblication extends Component
      */
     function skin_exists(string $skin = ''): bool
     {
-        $skin = addEndingSlash(($skin ? $skin : $this->skin));
+        $skin = addEndingSlash(($skin ?: $this->skin));
         $pathSkin = addEndingSlash(getcwd()) . addEndingSlash(PWD_TILL_SKINS) . $skin;
         return file_exists($pathSkin);
     }
@@ -678,11 +628,11 @@ class Weblication extends Component
     }
 
     /**
-     * Sucht das uebergebene Image in einer fest vorgegebenen Verzeichnisstruktur. Nur im Ordner skins.
+     * Searches the given image in a fixed directory skins folder structure.
      *
-     * @param string $filename Image Dateiname
-     * @return string Bei Erfolg Pfad und Dateiname des gefunden Templates. Im Fehlerfall ''.
-     **/
+     * @param string $filename wanted image
+     * @return string File or empty string
+     */
     function findImage(string $filename): string
     {
         $skin = addEndingSlash($this->skin);
@@ -822,7 +772,7 @@ class Weblication extends Component
      *
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baseLib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false): string
@@ -851,10 +801,10 @@ class Weblication extends Component
      * @param string $filename
      * @param string $language
      * @param string $classFolder
-     * @param bool $baselib
+     * @param bool $baseLib
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib): string
     {
         $skinElementFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
 
@@ -888,9 +838,9 @@ class Weblication extends Component
                 //Common-GUIs
                 $gui_directories[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
             }
-            if($baselib) {
-                //Baselib-GUIs
-                $gui_directories[] = buildDirPath($this->getRelativePathBaselib(PWD_TILL_GUIS), $classFolder);
+            if($baseLib) {
+                //BaseLib-GUIs
+                $gui_directories[] = buildDirPath($this->getRelativePathBaseLib(PWD_TILL_GUIS), $classFolder);
             }
         }
 
@@ -917,20 +867,20 @@ class Weblication extends Component
      *
      * @param string $filename JavaScript Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param bool $baselib
+     * @param bool $baseLib
      * @param bool $raiseError
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baselib = false, bool $raiseError = true): string
+    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
     {
-        $folder_javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
+        $folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
         $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
-        //Ordner baselib -> look in POOL instead
-        if($baselib) {
-            $folder_javascripts = addEndingSlash($this->getRelativePathBaselib($folder_javascripts));
-            $folder_guis = addEndingSlash($this->getRelativePathBaselib($folder_guis));
+        //Ordner BaseLib -> look in POOL instead
+        if($baseLib) {
+            $folder_javaScripts = addEndingSlash($this->getRelativePathBaseLib($folder_javaScripts));
+            $folder_guis = addEndingSlash($this->getRelativePathBaseLib($folder_guis));
         }
-        $javaScriptFile = $folder_javascripts . $filename;
+        $javaScriptFile = $folder_javaScripts . $filename;
         if(file_exists($javaScriptFile))
             return $javaScriptFile;//found
         $javaScriptFile = $folder_guis . $filename;
@@ -950,20 +900,20 @@ class Weblication extends Component
     /**
      * @param string $path
      */
-    public function setRelativePathBaselib(string $path)
+    public function setRelativePathBaseLib(string $path)
     {
-        $this->relativePathBaselib = $path;
+        $this->relativePathBaseLib = $path;
     }
 
     /**
-     * Relativer Pfad zum Rootverzeichnis der Baselib
+     * Relativer Pfad zum Rootverzeichnis der BaseLib
      *
      * @param string $subDir
      * @return string path from project to library pool
      */
-    public function getRelativePathBaselib(string $subDir = ''): string
+    public function getRelativePathBaseLib(string $subDir = ''): string
     {
-        return $this->relativePathBaselib . '/' . $subDir;
+        return $this->relativePathBaseLib . '/' . $subDir;
     }
 
     /**
@@ -972,7 +922,7 @@ class Weblication extends Component
      *
      * @param DataInterface $DataInterface Einzufuegendes DataInterface
      * @return DataInterface Eingefuegtes DataInterface
-     **/
+     */
     public function addDataInterface(DataInterface $DataInterface): DataInterface
     {
         $this->interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
@@ -980,18 +930,18 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert ein Interface Objekt.
+     * returns a DataInterface
      *
      * @param string $interface_name
-     * @return DataInterface Interface Objekt
-     **/
-    public function getInterface(string $interface_name): DataInterface
+     * @return DataInterface|null Interface Objekt
+     */
+    public function getInterface(string $interface_name): ?DataInterface
     {
-        return $this->interfaces[$interface_name];
+        return $this->interfaces[$interface_name] ?? null;
     }
 
     /**
-     * Liefert alle Interface Objekte.
+     * Returns all DataInterface objects
      *
      * @return array Interface Objekte
      * @see DAO::createDAO()
@@ -1078,7 +1028,7 @@ class Weblication extends Component
      *
      * @param string $tabledefine DAO Tabellendefinition.
      */
-    public function createSessionHandler($tabledefine)
+    public function createSessionHandler(string $tabledefine)
     {
         $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
         $this->Session = new ISession();
@@ -1273,30 +1223,12 @@ class Weblication extends Component
     }
 
     /**
-     * Schliesst alle Verbindungen und loescht die Interface Objekte.
-     * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
+     * Closes all connections via DataInterfaces during Destroy.
      */
     public function destroy()
     {
-        if(defined('DATAINTERFACE_MYSQL')) {
-            if(isset($this->interfaces[DATAINTERFACE_MYSQL]) and is_a($this->interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
-                $this->interfaces[DATAINTERFACE_MYSQL]->close();
-                unset($this->interfaces[DATAINTERFACE_MYSQL]);
-            }
+        foreach($this->interfaces as $DataInterface) {
+            $DataInterface->close();
         }
-
-        if(defined('DATAINTERFACE_MYSQLI')) {
-            if(isset($this->interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
-                $this->interfaces[DATAINTERFACE_MYSQLI]->close();
-                unset($this->interfaces[DATAINTERFACE_MYSQLI]);
-            }
-        }
-        if(defined('DATAINTERFACE_C16')) {
-            if(isset($this->interfaces[DATAINTERFACE_C16]) and is_a($this->interfaces[DATAINTERFACE_C16], 'C16_Interface')) {
-                $this->interfaces[DATAINTERFACE_C16]->close();
-                unset($this->interfaces[DATAINTERFACE_C16]);
-            }
-        }
-        parent::destroy();
     }
 }
