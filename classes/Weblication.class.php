@@ -1225,7 +1225,7 @@ class Weblication extends Component
     /**
      * Closes all connections via DataInterfaces during Destroy.
      */
-    public function destroy()
+    public function close()
     {
         foreach($this->interfaces as $DataInterface) {
             $DataInterface->close();
