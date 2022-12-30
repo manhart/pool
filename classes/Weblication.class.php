@@ -181,7 +181,7 @@ class Weblication extends Component
     /**
      * locale unchanged / as is.
      */
-    const LOCALE_DEFAULT = 0;
+    const LOCALE_UNCHANGED = 0;
     /**
      * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
      */
@@ -1073,7 +1073,7 @@ class Weblication extends Component
      * @see Weblication::setLocale()
      * @see Translator::detectLocale()
      */
-    public function getLocale(int $type = self::LOCALE_DEFAULT): string
+    public function getLocale(int $type = self::LOCALE_UNCHANGED): string
     {
         if(!$this->locale) {
             // @todo replace with Translator::getInstance()->parseLangHeader() after merge with feature-translator
@@ -1081,7 +1081,7 @@ class Weblication extends Component
             $this->setLocale(Translator::detectLocale($this->defaultLocale));
         }
 
-        if($type == self::LOCALE_DEFAULT) {
+        if($type == self::LOCALE_UNCHANGED) {
             return $this->locale;
         }
 
