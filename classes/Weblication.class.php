@@ -1,6 +1,4 @@
-<?php
-declare(strict_types=1);
-
+<?php declare(strict_types=1);
 /**
  * POOL
  *
@@ -10,15 +8,12 @@ declare(strict_types=1);
  *
  * The main class of all web applications. Every new project starts with Weblication and is instantiated from it.
  *
- * @version $Id: Weblication.class.php,v 1.16 2007/05/31 14:36:23 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
  * @since 2003-07-10
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Language;
 use pool\classes\ModulNotFoundException;
 use pool\classes\Translator;
 
@@ -152,19 +147,24 @@ class Weblication extends Component
     private array $hasSkinFolder = array();
 
     /**
-     * @var string Country code
+     * @var string language code
      */
-    private string $language = 'de';
+    private string $language = '';
 
     /**
-     * @var string
+     * @var string an identifier used to get language, culture, or regionally-specific behavior
      */
     private string $locale = '';
 
     /**
+     * @var string used as fallback
+     */
+    private string $defaultLocale = 'en_US';
+
+    /**
      * @var string
      */
-    private string $subdirTranslated = '';
+    protected string $subDirTranslated = '';
 
     /**
      * @var string version of the application
@@ -179,6 +179,24 @@ class Weblication extends Component
     private ?ICookie $Cookie = null;
 
     /**
+     * locale unchanged / as is.
+     */
+    const LOCALE_DEFAULT = 0;
+    /**
+     * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
+     */
+    const LOCALE_FORCE_REGION = 1;
+    /**
+     * The application's charset is appended if no charset is attached to the locale.
+     */
+    const LOCALE_FORCE_CHARSET = 2;
+    /**
+     * Removes possible charsets.
+     */
+    const LOCALE_WITHOUT_CHARSET = 4;
+
+
+    /**
      * @var array all possible default formats
      */
     private array $formats = [
@@ -187,13 +205,13 @@ class Weblication extends Component
         'php.sec' => 's',
         'php.date.time' => 'd.m.Y H:i',
         'php.date.time.sec' => 'd.m.Y H:i:s',
-        'strftime.time' => '%H:%M',
-        'strftime.date' => '%d.%m.%Y',
-        'strftime.date.time' => '%d.%m.%Y %H:%M',
-        'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S',
-        'moment.date' => 'DD.MM.YYYY',
-        'moment.date.time' => 'DD.MM.YYYY HH:mm',
-        'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss',
+        'strftime.time' => '%H:%M', // needed in js
+        'strftime.date' => '%d.%m.%Y', // needed in js
+        'strftime.date.time' => '%d.%m.%Y %H:%M', // needed in js
+        'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S', // needed in js
+        'moment.date' => 'DD.MM.YYYY', // needed for moment js
+        'moment.date.time' => 'DD.MM.YYYY HH:mm', // needed for moment js
+        'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss', // needed for moment js
         'mysql.date_format.date' => '%d.%m%.%Y',
         'mysql.date_format.date.time' => '%d.%m%.%Y %H:%i',
         'mysql.date_format.date.time.sec' => '%d.%m%.%Y %T',
@@ -211,8 +229,7 @@ class Weblication extends Component
     private function __construct()
     {
         parent::__construct(null);
-
-        $this->Settings = new Input();
+        $this->Settings = new Input(I_EMPTY);
         return $this;
     }
 
@@ -271,37 +288,6 @@ class Weblication extends Component
     public function getSkin(): string
     {
         return $this->skin;
-    }
-
-    /**
-     * Sets the language for the Page. It's used for html templates and images
-     *
-     * @param string $lang Country Code
-     * @param string $resourceDir Directory with translations e.g. de.php, en.php
-     * @param string $subDirTranslated Subdirectory for generated static translated templates during the deployment process
-     * @return Weblication
-     * @throws Exception
-     */
-    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subDirTranslated = ''): self
-    {
-        $this->language = $lang;
-
-        if($resourceDir) {
-            Translator::getInstance()->setResourceDir($resourceDir)->setDefaultLanguage($lang);
-        }
-
-        $this->subdirTranslated = $subDirTranslated;
-        return $this;
-    }
-
-    /**
-     * Liefert die Sprache der Seite.
-     *
-     * @return string Sprache der Webseite
-     **/
-    public function getLanguage(): string
-    {
-        return $this->language; // $this->language;
     }
 
     /**
@@ -747,9 +733,9 @@ class Weblication extends Component
         $skinTemplateFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $templates_subFolder);
         //skin-translated+subdirTranslated
         //static translation templates have priority
-        if($this->subdirTranslated) {
-            if($this->hasSkinFolder($templates_subFolder, $language, $this->subdirTranslated)) {
-                $translatedTemplate = buildFilePath($skinTemplateFolder, $language, $this->subdirTranslated, $filename);
+        if($this->subDirTranslated) {
+            if($this->hasSkinFolder($templates_subFolder, $language, $this->subDirTranslated)) {
+                $translatedTemplate = buildFilePath($skinTemplateFolder, $language, $this->subDirTranslated, $filename);
                 if(file_exists($translatedTemplate)) {
                     return $translatedTemplate;
                 }
@@ -955,8 +941,14 @@ class Weblication extends Component
      * starts any session derived from the class ISession
      *
      * @param array $settings configuration parameters:
+     *   application.name
+     *   application.title
+     *   application.locale
      *   application.launchModule - sets the main module that is launched
-     *   application.sessionClassName - overrides default session class
+     *   application.session.className - overrides default session class
+     *   application.translator
+     *   application.translator.resourceDir
+     *   application.translator.resource
      * @return Weblication
      * @throws Exception
      */
@@ -964,12 +956,9 @@ class Weblication extends Component
     {
         $this->Settings->setVars($settings);
 
-        $applicationName = $this->Settings->getVar('application.name', $this->getName());
-        $this->setName($applicationName);
-
+        $this->setName($this->Settings->getVar('application.name', $this->getName()));
         $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
         $this->setCharset($this->Settings->getVar('application.charset', $this->getCharset()));
-
         $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
 
         // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
@@ -1018,7 +1007,7 @@ class Weblication extends Component
         if($isStatic) {
             return new ISession($autoClose);
         }
-        $className = $this->Settings->getVar('application.sessionClassName', 'ISession');
+        $className = $this->Settings->getVar('application.session.className', 'ISession');
         $this->Session = new $className($autoClose);
         return $this->Session;
     }
@@ -1057,27 +1046,86 @@ class Weblication extends Component
     }
 
     /**
-     * set locale
+     * set locale (the POOL is independent of the system locale, e.g. php's setlocale).
      *
-     * @param int $category
-     * @param string|null $locale
-     * @return bool|string
+     * @param string $locale
+     * @return Weblication
      */
-    public function setLocale(int $category = LC_ALL, ?string $locale = null): bool|string
+    public function setLocale(string $locale): self
     {
-        if(is_null($locale)) {
-            $locale = Translator::detectLocale();
-        }
         $this->locale = $locale;
-        return setlocale($category, $locale);
+        return $this;
     }
 
     /**
-     * @return string
+     * @return string returns the fallback locale
      */
-    public function getLocale(): string
+    protected function getDefaultLocale(): string
     {
-        return $this->locale;
+        return $this->defaultLocale;
+    }
+
+    /**
+     * Returns the determined locale (of the browser) if it has not been overwritten. Format: [language[_region][.charset][@modifier]]
+     *
+     * @param int $type
+     * @return string
+     * @see Weblication::setLocale()
+     * @see Translator::detectLocale()
+     */
+    public function getLocale(int $type = self::LOCALE_DEFAULT): string
+    {
+        if(!$this->locale) {
+            // @todo replace with Translator::getInstance()->parseLangHeader() after merge with feature-translator
+            // @todo maybe move it into constructor or setup (but setup does not necessarily have to be called)
+            $this->setLocale(Translator::detectLocale($this->defaultLocale));
+        }
+
+        if($type == self::LOCALE_DEFAULT) {
+            return $this->locale;
+        }
+
+        $locale = $this->locale;
+
+        // with region
+        if($type & self::LOCALE_FORCE_REGION && !str_contains($locale, '_')) {
+            $locale = Language::getBestLocale($this->locale, $this->defaultLocale);
+        }
+        // with charset
+        if($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {
+            $locale = "$locale.{$this->charset}";
+        }
+        // without charset
+        if($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {
+            $locale = substr($locale, 0, $pos);
+        }
+        return $locale;
+    }
+
+    /**
+     * Sets the language for the Page. It's used for html templates and images
+     *
+     * @param string $lang Country Code
+     * @return Weblication
+     */
+    public function setLanguage(string $lang): self
+    {
+        $this->language = $lang;
+        return $this;
+    }
+
+    /**
+     * returns the primary language based on the set locale
+     *
+     * @return string language code
+     */
+    public function getLanguage(): string
+    {
+        if(!$this->language) {
+            // @todo replace with Translator::getPrimaryLanguage() after merge with feature-translator
+            $this->setLanguage(Locale::getPrimaryLanguage($this->getLocale()));
+        }
+        return $this->language;
     }
 
     /**
@@ -1152,7 +1200,7 @@ class Weblication extends Component
 
         $mainGUI = GUI_Module::createGUIModule($className, $this, null, $params, true, false);
         $this->setMain($mainGUI);
-        //
+
         $mainGUI->searchGUIsInPreloadedContent();
 
         if($this->hasFrame()) {
@@ -1223,7 +1271,9 @@ class Weblication extends Component
     }
 
     /**
-     * Closes all connections via DataInterfaces during Destroy.
+     * Closes all connections via DataInterfaces. It's not necessary to close connections every time (except for persistent connections),
+     * PHP will check for open connections when the script is finished anyway.
+     * From a performance perspective, closing connections is pure overhead.
      */
     public function close()
     {
