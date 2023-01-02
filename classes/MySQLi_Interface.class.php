@@ -795,7 +795,7 @@ class MySQLi_Interface extends DataInterface
                 // todo faster way?
                 foreach($row as $col => $val) {
                     if(isset($metaData['columns'][$col])) {
-                        settype($row[$col], $metaData[$col]['phpType']);
+                        settype($row[$col], $metaData['columns'][$col]['phpType']);
                     }
                 }
             }
