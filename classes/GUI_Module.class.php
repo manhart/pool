@@ -732,7 +732,7 @@ class GUI_Module extends Module
             $clientData['error'] = $errObj;
         }
 
-        $json = json_encode($clientData);
+        $json = json_encode($clientData, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION);
 
         $json_last_error = json_last_error();
         if($json_last_error == JSON_ERROR_NONE) {
