@@ -775,11 +775,12 @@ class MySQLi_Interface extends DataInterface
     /**
      * Liefert einen Datensatz als assoziatives Array und numerisches Array
      *
-     * @param mysqli_result|false $query_result
+     * @param false|mysqli_result $query_result
      * @param callable|null $callbackOnFetchRow
+     * @param array $metaData
      * @return array Bei Erfolg ein Array mit allen Datensaetzen ($array[index]['feldname'])
      */
-    public function fetchrowset($query_result = false, ?callable $callbackOnFetchRow = null)
+    public function fetchrowset(false|mysqli_result $query_result = false, ?callable $callbackOnFetchRow = null, array $metaData = []): array
     {
         if (!$query_result) {
             if (isset($this->query_result)) {
@@ -788,13 +789,20 @@ class MySQLi_Interface extends DataInterface
         }
 
         $rowSet = [];
-        if ($query_result instanceof mysqli_result) {
-            while (($row = mysqli_fetch_assoc($query_result)) != null) {
-                if($callbackOnFetchRow)  {
-                    $row = call_user_func($callbackOnFetchRow, $row);
+        // todo faster way?
+        while (($row = mysqli_fetch_assoc($query_result)) != null) {
+            if($metaData) {
+                // todo faster way?
+                foreach($row as $col => $val) {
+                    if(isset($metaData['columns'][$col])) {
+                        settype($row[$col], $metaData[$col]['phpType']);
+                    }
                 }
-                $rowSet[] = $row;
             }
+            if($callbackOnFetchRow)  {
+                $row = call_user_func($callbackOnFetchRow, $row);
+            }
+            $rowSet[] = $row;
         }
         return $rowSet;
     }
@@ -804,9 +812,9 @@ class MySQLi_Interface extends DataInterface
      *
      * @param string $field Feldname
      * @param integer $rownum Feld-Offset
-     * @param integer $query_id Query Ergebnis-Kennung
+     * @param null $query_resource
      * @return string Wert eines Feldes
-     **/
+     */
     function fetchfield($field, $rownum = -1, $query_resource = null)
     {
         $result = false;
@@ -926,33 +934,49 @@ class MySQLi_Interface extends DataInterface
      * @access public
      * @param $table
      * @param $database
+     * @param $fields
+     * @param $pk
      * @return array Liste mit Feldern ($array['name'][index], etc.)
-     **/
-    function listfields($table, $database, &$fields, &$pk)
+     */
+    function listfields($table, $database, &$fields, &$pk): array
     {
-        $arr = array();
+        $rows = [];
 
-        $query = 'SHOW COLUMNS FROM `' . $table . '`';
-        $result = mysqli_query($this->__get_db_conid($database, SQL_READ), $query, MYSQLI_STORE_RESULT);
+        $sql = <<<SQL
+select
+    COLUMN_NAME,
+    DATA_TYPE,
+    COLUMN_TYPE,
+    COLUMN_KEY
+from information_schema.COLUMNS
+where TABLE_SCHEMA = '$database'
+  AND TABLE_NAME = '$table'
+SQL;
 
-        // @deprecated in PHP 5, 6.8.09, AM
-        # $fields = mysql_list_fields($database, $table, $this -> __get_db_conid($database, SQL_READ));
+        // $query = 'SHOW COLUMNS FROM `' . $table . '`';
+        $result = mysqli_query($this->__get_db_conid($database, SQL_READ), $sql, MYSQLI_USE_RESULT);
 
         if ($result !== false) {
-            if (mysqli_num_rows($result) > 0) {
-                $i = 0;
-                while ($row = mysqli_fetch_assoc($result)) {
-                    $arr[] = $row;
-                    $fields[] = $row['Field'];
-                    if ($row['Key'] == 'PRI') {
-                        $pk[] = $row['Field'];
-                    }
+            while ($row = mysqli_fetch_assoc($result)) {
+                $phpType = match ($row['DATA_TYPE']) {
+                    'int', 'tinyint', 'bigint', 'smallint', 'mediumint' => 'int',
+                    'decimal', 'double', 'float', 'number' => 'float',
+                    default => 'string',
+                };
+                if(str_starts_with($row['COLUMN_TYPE'], 'tinyint(1)')) {
+                    $phpType = 'bool';
+                }
+                $row['phpType'] = $phpType;
+                $rows[] = $row;
+                $fields[] = $row['COLUMN_NAME'];
+                if ($row['COLUMN_KEY'] == 'PRI') {
+                    $pk[] = $row['COLUMN_NAME'];
                 }
             }
             $this->freeresult($result);
         }
 
-        return $arr;
+        return $rows;
     }
 
     /**
