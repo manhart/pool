@@ -1292,7 +1292,7 @@ function loadJSON(url, opts = {}) {
  * @param str
  * @return {boolean}
  */
-function isStringJSON(str)
+function isJsonString(str)
 {
     try {
         let json = JSON.parse(str);
