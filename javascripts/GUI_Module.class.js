@@ -59,8 +59,17 @@ class GUI_Module
      */
     async parseAjaxResponse(response)
     {
-        // if a body response exists, parse anx extract the possible properties
-        const { data, error, success } = response.status !== 204 ? await response.json() : { success: true };
+        // if a body response exists, parse and extract the possible properties
+        let json;
+        let text = await response.text();
+        try {
+            json = JSON.parse(text);
+        }
+        catch(e) { // @todo only developers (box) should see the hole text/error
+            console.error(e, 'unparsed text', text);
+            throw e;
+        }
+        const { data, error, success } = response.status !== 204 ? json : { success: true };
 
         // trigger a new exception to capture later on request call site
         if (!success) throw new Error(error.message);
