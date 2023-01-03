@@ -82,11 +82,10 @@ class GUI_Module
     {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
         if(options.data) {
+            let key = 'query';
             if(options.method && options.method == 'POST')
-                options.body = data;
-            else
-                options.query = data;
-
+                key = 'body';
+            options[key] = options.data;
             delete options.data;
         }
 
@@ -112,7 +111,7 @@ class GUI_Module
 
         // if a body object is passed, automatically stringify it.
         if(body) {
-            if(isStringJSON(body)) {
+            if(typeof body == 'object') {
                 reqOptions.body = JSON.stringify(body);
             }
             else {
@@ -130,7 +129,24 @@ class GUI_Module
         let queryString = '';
         if (query) {
             // Convert to encoded string and prepend with ?
-            queryString = new URLSearchParams(query).toString();
+            let QueryURL = new URLSearchParams();
+
+            for(let [key, value] of Object.entries(query)) {
+                if(Array.isArray(value)) {
+                    value.forEach(innerValue => QueryURL.append(key, innerValue));
+                }
+                else if(typeof value === 'object') {
+                    for(let [innerKey, innerValue] of Object.entries(value)) {
+                        QueryURL.append(key + '[' + innerKey + ']', innerValue.toString());
+                    }
+                }
+                else {
+                    QueryURL.append(key, value.toString());
+                }
+            }
+
+            // queryString = new URLSearchParams(query).toString();
+            queryString = QueryURL.toString();
             queryString = queryString && `?${queryString}`;
         }
 
