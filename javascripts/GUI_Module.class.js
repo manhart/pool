@@ -111,7 +111,7 @@ class GUI_Module
 
         // if a body object is passed, automatically stringify it.
         if(body) {
-            if(typeof body == 'object') {
+            if(typeof body == 'object' && !body instanceof FormData) {
                 reqOptions.body = JSON.stringify(body);
             }
             else {
@@ -128,15 +128,14 @@ class GUI_Module
 
         let queryString = '';
         if (query) {
-            // Convert to encoded string and prepend with ?
             let QueryURL = new URLSearchParams();
 
-            for(let [key, value] of Object.entries(query)) {
+            for(const [key, value] of Object.entries(query)) {
                 if(Array.isArray(value)) {
                     value.forEach(innerValue => QueryURL.append(key, innerValue));
                 }
                 else if(typeof value === 'object') {
-                    for(let [innerKey, innerValue] of Object.entries(value)) {
+                    for(const [innerKey, innerValue] of Object.entries(value)) {
                         QueryURL.append(key + '[' + innerKey + ']', innerValue.toString());
                     }
                 }
@@ -145,7 +144,7 @@ class GUI_Module
                 }
             }
 
-            // queryString = new URLSearchParams(query).toString();
+            // Convert to encoded string and prepend with ?
             queryString = QueryURL.toString();
             queryString = queryString && `?${queryString}`;
         }
