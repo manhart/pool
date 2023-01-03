@@ -66,7 +66,7 @@ class GUI_Module
             json = JSON.parse(text);
         }
         catch(e) { // @todo only developers (box) should see the hole text/error
-            console.error(e, 'unparsed text', text);
+            console.error('Unparsed text', text);
             throw e;
         }
         const { data, error, success } = response.status !== 204 ? json : { success: true };
@@ -102,6 +102,7 @@ class GUI_Module
             headers,
             query = null,
             method = 'GET',
+            module = this.getClassName(),
             body,
             ...extraOpts
         } = options;
@@ -120,7 +121,8 @@ class GUI_Module
 
         // if a body object is passed, automatically stringify it.
         if(body) {
-            if(typeof body == 'object' && !body instanceof FormData) {
+            const types = [FormData, Blob, ArrayBuffer, URLSearchParams, DataView];
+            if(typeof body == 'object' && !(types.includes(body.constructor))) {
                 reqOptions.body = JSON.stringify(body);
             }
             else {
@@ -163,10 +165,10 @@ class GUI_Module
         } = window.location;
 
         let Endpoint = new URL(pathname + queryString, origin);
-        Endpoint.searchParams.set('module', this.getClassName());
+        Endpoint.searchParams.set('module', module);
         Endpoint.searchParams.set('method', ajaxMethod);
 
-        // console.debug(Endpoint.toString(), reqOptions);
+        // console.debug('fetch', Endpoint.toString(), reqOptions);
         return fetch(Endpoint, reqOptions).then(this.parseAjaxResponse);
     }
 
