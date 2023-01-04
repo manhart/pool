@@ -588,6 +588,9 @@ class GUI_Module extends Module
      */
     private function invokeAjaxMethod(string $requestedMethod): string
     {
+        // avoids unreadable error messages on the client side.
+        ini_set('html_errors', 0);
+
         $result = '';
 
         $this->registerAjaxCalls();
