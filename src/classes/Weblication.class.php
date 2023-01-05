@@ -1,6 +1,4 @@
-<?php
-declare(strict_types=1);
-
+<?php declare(strict_types=1);
 /**
  * POOL
  *
@@ -8,17 +6,14 @@ declare(strict_types=1);
  *
  * Weblication.class.php
  *
- * Die Hauptklasse aller Webanwendungen. Jedes neue Projekt beginnt mit Weblication und wird davon instanziert.
- *
- * @version $Id: Weblication.class.php,v 1.16 2007/05/31 14:36:23 manhart Exp $
- * @version $Revision 1.0$
- * @version
+ * The main class of all web applications. Every new project starts with Weblication and is instantiated from it.
  *
  * @since 2003-07-10
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Language;
 use pool\classes\ModulNotFoundException;
 use pool\classes\Translator;
 
@@ -71,19 +66,11 @@ class Weblication extends Component
     public Input $Input;
 
     /**
-     * Benutzer Klasse (nicht realisiert)
-     *
-     * @var User
-     * @access private
-     */
-    // var $User = null;
-
-    /**
      * Relativer Pfad zur Hauptbibliothek
      *
      * @var string
      */
-    private string $relativePathBaselib = '';
+    private string $relativePathBaseLib = '';
 
     /**
      * Skin / Theme (Designvorlage bzw. Bilderordner)
@@ -107,7 +94,7 @@ class Weblication extends Component
     /**
      * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
      *
-     * @var array
+     * @var array<string, DataInterface>
      */
     private array $interfaces = [];
 
@@ -160,19 +147,24 @@ class Weblication extends Component
     private array $hasSkinFolder = array();
 
     /**
-     * @var string Country code
+     * @var string language code
      */
-    private string $language = 'de';
+    private string $language = '';
 
     /**
-     * @var string
+     * @var string an identifier used to get language, culture, or regionally-specific behavior
      */
     private string $locale = '';
 
     /**
+     * @var string used as fallback
+     */
+    private string $defaultLocale = 'en_US';
+
+    /**
      * @var string
      */
-    private string $subdirTranslated = '';
+    protected string $subDirTranslated = '';
 
     /**
      * @var string version of the application
@@ -187,6 +179,24 @@ class Weblication extends Component
     private ?ICookie $Cookie = null;
 
     /**
+     * locale unchanged / as is.
+     */
+    const LOCALE_UNCHANGED = 0;
+    /**
+     * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
+     */
+    const LOCALE_FORCE_REGION = 1;
+    /**
+     * The application's charset is appended if no charset is attached to the locale.
+     */
+    const LOCALE_FORCE_CHARSET = 2;
+    /**
+     * Removes possible charsets.
+     */
+    const LOCALE_WITHOUT_CHARSET = 4;
+
+
+    /**
      * @var array all possible default formats
      */
     private array $formats = [
@@ -195,13 +205,13 @@ class Weblication extends Component
         'php.sec' => 's',
         'php.date.time' => 'd.m.Y H:i',
         'php.date.time.sec' => 'd.m.Y H:i:s',
-        'strftime.time' => '%H:%M',
-        'strftime.date' => '%d.%m.%Y',
-        'strftime.date.time' => '%d.%m.%Y %H:%M',
-        'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S',
-        'moment.date' => 'DD.MM.YYYY',
-        'moment.date.time' => 'DD.MM.YYYY HH:mm',
-        'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss',
+        'strftime.time' => '%H:%M', // needed in js
+        'strftime.date' => '%d.%m.%Y', // needed in js
+        'strftime.date.time' => '%d.%m.%Y %H:%M', // needed in js
+        'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S', // needed in js
+        'moment.date' => 'DD.MM.YYYY', // needed for moment js
+        'moment.date.time' => 'DD.MM.YYYY HH:mm', // needed for moment js
+        'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss', // needed for moment js
         'mysql.date_format.date' => '%d.%m%.%Y',
         'mysql.date_format.date.time' => '%d.%m%.%Y %H:%i',
         'mysql.date_format.date.time.sec' => '%d.%m%.%Y %T',
@@ -215,14 +225,11 @@ class Weblication extends Component
     /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
-     *
-     * @throws ReflectionException
      */
     private function __construct()
     {
         parent::__construct(null);
-
-        $this->Settings = new Input();
+        $this->Settings = new Input(I_EMPTY);
         return $this;
     }
 
@@ -261,9 +268,9 @@ class Weblication extends Component
     }
 
     /**
-     * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
+     * Changes the folder for the design templates (Html templates) and images.
      *
-     * @param string $skin Ordner fuer die Designvorlagen (Html Templates) und Bilder. (Standardwert: default)
+     * @param string $skin Folder for design templates (html templates) and images. (Default value: default)
      * @return Weblication
      */
     public function setSkin(string $skin = 'default'): Weblication
@@ -281,37 +288,6 @@ class Weblication extends Component
     public function getSkin(): string
     {
         return $this->skin;
-    }
-
-    /**
-     * Sets the language for the Page. It's used for html templates and images
-     *
-     * @param string $lang Country Code
-     * @param string $resourceDir Directory with translations e.g. de.php, en.php
-     * @param string $subDirTranslated Subdirectory for generated static translated templates during the deployment process
-     * @return Weblication
-     * @throws Exception
-     */
-    public function setLanguage(string $lang = 'de', string $resourceDir = '', string $subDirTranslated = ''): self
-    {
-        $this->language = $lang;
-
-        if($resourceDir) {
-            Translator::getInstance()->setResourceDir($resourceDir)->setDefaultLanguage($lang);
-        }
-
-        $this->subdirTranslated = $subDirTranslated;
-        return $this;
-    }
-
-    /**
-     * Liefert die Sprache der Seite.
-     *
-     * @return string Sprache der Webseite
-     **/
-    public function getLanguage(): string
-    {
-        return $this->language; // $this->language;
     }
 
     /**
@@ -376,7 +352,7 @@ class Weblication extends Component
     }
 
     /**
-     * Setzt die Programm ID
+     * Set an application id
      *
      * @param int $progId
      * @return Weblication
@@ -388,7 +364,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert die Programm ID
+     * Get an application id (if set)
      *
      * @return int|null
      */
@@ -479,7 +455,7 @@ class Weblication extends Component
      * returns the main frame
      *
      * @return GUI_CustomFrame|null
-     **/
+     */
     public function getFrame(): ?GUI_CustomFrame
     {
         if(!$this->Frame) {
@@ -534,7 +510,7 @@ class Weblication extends Component
         if($absolute) {
             $folder_skins = addEndingSlash(getcwd()) . $folder_skins;
         }
-        $folder_language = $folder_skins . addEndingSlash($this->language);;
+        $folder_language = $folder_skins . addEndingSlash($this->language);
         if($additionalDir != '') {
             $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
             $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
@@ -559,46 +535,6 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert den Pfad zu den Templates (abh�ngig vom Skin-Ordner und der gew�hlten Sprache).
-     *
-     * @param string $additionalDir Ordner werden an ermittelten Template Pfad geh�ngt
-     * @return string Pfad
-     */
-    public function getTemplatePath($additionalDir = ''/*, $baselib=false*/): string
-    {
-        $skin = addEndingSlash($this->skin);
-        $language = addEndingSlash($this->language);
-        $dir = 'templates';
-
-        # Ordner skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
-        $folder_dir = $folder_skins . $dir;
-        $folder_language = $folder_skins . $language . $dir;
-
-        /*if ($baselib) {
-            $path = addEndingSlash(PWD_TILL_GUIS) . $additionalDir;
-        }
-        else {*/
-        if(is_dir($folder_language)) { // Language Ordner
-            $path = $folder_language;
-        }
-        else if(is_dir($folder_dir)) { // Template Ordner
-            $path = $folder_dir;
-        }
-        /*}*/
-
-        if($additionalDir) {
-            $path = addEndingSlash($path) . $additionalDir;
-        }
-
-        if(!is_dir($path)) {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' not found (@getTemplatePath)!', $path));
-        }
-
-        return $path;
-    }
-
-    /**
      * Checks if skin exists
      *
      * @param string $skin
@@ -606,7 +542,7 @@ class Weblication extends Component
      */
     function skin_exists(string $skin = ''): bool
     {
-        $skin = addEndingSlash(($skin ? $skin : $this->skin));
+        $skin = addEndingSlash(($skin ?: $this->skin));
         $pathSkin = addEndingSlash(getcwd()) . addEndingSlash(PWD_TILL_SKINS) . $skin;
         return file_exists($pathSkin);
     }
@@ -678,11 +614,11 @@ class Weblication extends Component
     }
 
     /**
-     * Sucht das uebergebene Image in einer fest vorgegebenen Verzeichnisstruktur. Nur im Ordner skins.
+     * Searches the given image in a fixed directory skins folder structure.
      *
-     * @param string $filename Image Dateiname
-     * @return string Bei Erfolg Pfad und Dateiname des gefunden Templates. Im Fehlerfall ''.
-     **/
+     * @param string $filename wanted image
+     * @return string File or empty string
+     */
     function findImage(string $filename): string
     {
         $skin = addEndingSlash($this->skin);
@@ -712,22 +648,22 @@ class Weblication extends Component
     /**
      * Does the project have a common skin folder?
      *
-     * @param string|null $subfolder
+     * @param string|null $subFolder
      * @return bool
      */
-    public function hasCommonSkinFolder(?string $subfolder = null): bool
+    public function hasCommonSkinFolder(?string $subFolder = null): bool
     {
         if(is_null($this->hasCommonSkinFolder)) {
             $this->hasCommonSkinFolder = [];
             $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder);
         }
-        if($subfolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
-            if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder] = null;
-            if(is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder])) {
-                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder] = [];
-                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $subfolder);
+        if($subFolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
+            if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = null;
+            if(is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) {
+                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = [];
+                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $subFolder);
             }
-            return $this->hasCommonSkinFolder[$this->commonSkinFolder][$subfolder]['__exists'];
+            return $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'];
         }
         return $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'];
     }
@@ -787,38 +723,28 @@ class Weblication extends Component
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baselib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baselib
      * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
      **/
-    public function findTemplate(string $filename, string $classFolder = '', bool $baselib = false): string
+    public function findTemplate(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $language = $this->language;
         $templates_subFolder = 'templates';
         $skinTemplateFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $templates_subFolder);
         //skin-translated+subdirTranslated
         //static translation templates have priority
-        if($this->subdirTranslated) {
-            if($this->hasSkinFolder($templates_subFolder, $language, $this->subdirTranslated)) {
-                $translatedTemplate = buildFilePath($skinTemplateFolder, $language, $this->subdirTranslated, $filename);
+        if($this->subDirTranslated) {
+            if($this->hasSkinFolder($templates_subFolder, $language, $this->subDirTranslated)) {
+                $translatedTemplate = buildFilePath($skinTemplateFolder, $language, $this->subDirTranslated, $filename);
                 if(file_exists($translatedTemplate)) {
                     return $translatedTemplate;
                 }
             }
         }
 
-        $template = $this->findBestElement($templates_subFolder, $filename, $language, $classFolder, $baselib);
-        if($template)
+        $template = $this->findBestElement($templates_subFolder, $filename, $language, $classFolder, $baseLib);
+        if($template) {
             return $template;
-
-        // Lowercase Workaround @deprecated
-        if(preg_match('/[A-Z]/', $filename . $classFolder)) {
-            // try lower case
-            // todo log buggy code
-            $recursionResult = $this->findTemplate(strtolower($filename), strtolower($classFolder), $baselib);
-            if((!empty($recursionResult)) && defined('IS_DEVELOP') && IS_DEVELOP) {
-                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find ' . $filename . ' in ' . $classFolder);
-            }
-            return $recursionResult;
         }
 
         $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
@@ -832,18 +758,18 @@ class Weblication extends Component
      *
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baselib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
-    public function findStyleSheet(string $filename, string $classFolder = '', bool $baselib = false): string
+    public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $elementSubFolder = $this->cssFolder;
 
-        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $this->language, $classFolder, $baselib);
+        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $this->language, $classFolder, $baseLib);
         if($stylesheet)
             return $stylesheet;
 
-        if(!$baselib) {//Common-common-skin
+        if(!$baseLib) {//Common-common-skin
             if(defined('DIR_COMMON_ROOT_REL')) {
                 $stylesheet = buildFilePath(
                     DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
@@ -852,19 +778,7 @@ class Weblication extends Component
             }
         }
 
-        // Lowercase Workaround:
-        if(preg_match('/[A-Z]/', $filename . $classFolder)) {
-            // try lower case
-            // todo log buggy code
-            $recursionResult = $this->findStyleSheet(strtolower($filename), strtolower($classFolder), $baselib);
-            if((!empty($recursionResult)) && defined('IS_DEVELOP') && IS_DEVELOP) {
-                $this->raiseError(__FILE__, __LINE__, 'Please use strtolower in your project to find ' . $filename . ' in ' . $classFolder);
-            }
-            return $recursionResult;
-        }
-        else {
-            $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
-        }
+        $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
         return '';
     }
 
@@ -873,10 +787,10 @@ class Weblication extends Component
      * @param string $filename
      * @param string $language
      * @param string $classFolder
-     * @param bool $baselib
+     * @param bool $baseLib
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baselib): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib): string
     {
         $skinElementFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
 
@@ -910,9 +824,9 @@ class Weblication extends Component
                 //Common-GUIs
                 $gui_directories[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
             }
-            if($baselib) {
-                //Baselib-GUIs
-                $gui_directories[] = buildDirPath($this->getRelativePathBaselib(PWD_TILL_GUIS), $classFolder);
+            if($baseLib) {
+                //BaseLib-GUIs
+                $gui_directories[] = buildDirPath($this->getRelativePathBaseLib(PWD_TILL_GUIS), $classFolder);
             }
         }
 
@@ -939,20 +853,20 @@ class Weblication extends Component
      *
      * @param string $filename JavaScript Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param bool $baselib
+     * @param bool $baseLib
      * @param bool $raiseError
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baselib = false, bool $raiseError = true): string
+    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
     {
-        $folder_javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
+        $folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
         $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
-        //Ordner baselib -> look in POOL instead
-        if($baselib) {
-            $folder_javascripts = addEndingSlash($this->getRelativePathBaselib($folder_javascripts));
-            $folder_guis = addEndingSlash($this->getRelativePathBaselib($folder_guis));
+        //Ordner BaseLib -> look in POOL instead
+        if($baseLib) {
+            $folder_javaScripts = addEndingSlash($this->getRelativePathBaseLib($folder_javaScripts));
+            $folder_guis = addEndingSlash($this->getRelativePathBaseLib($folder_guis));
         }
-        $javaScriptFile = $folder_javascripts . $filename;
+        $javaScriptFile = $folder_javaScripts . $filename;
         if(file_exists($javaScriptFile))
             return $javaScriptFile;//found
         $javaScriptFile = $folder_guis . $filename;
@@ -972,20 +886,20 @@ class Weblication extends Component
     /**
      * @param string $path
      */
-    public function setRelativePathBaselib(string $path)
+    public function setRelativePathBaseLib(string $path)
     {
-        $this->relativePathBaselib = $path;
+        $this->relativePathBaseLib = $path;
     }
 
     /**
-     * Relativer Pfad zum Rootverzeichnis der Baselib
+     * Relativer Pfad zum Rootverzeichnis der BaseLib
      *
      * @param string $subDir
      * @return string path from project to library pool
      */
-    public function getRelativePathBaselib(string $subDir = ''): string
+    public function getRelativePathBaseLib(string $subDir = ''): string
     {
-        return $this->relativePathBaselib . '/' . $subDir;
+        return $this->relativePathBaseLib . '/' . $subDir;
     }
 
     /**
@@ -994,7 +908,7 @@ class Weblication extends Component
      *
      * @param DataInterface $DataInterface Einzufuegendes DataInterface
      * @return DataInterface Eingefuegtes DataInterface
-     **/
+     */
     public function addDataInterface(DataInterface $DataInterface): DataInterface
     {
         $this->interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
@@ -1002,18 +916,18 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert ein Interface Objekt.
+     * returns a DataInterface
      *
      * @param string $interface_name
-     * @return DataInterface Interface Objekt
-     **/
-    public function getInterface(string $interface_name): DataInterface
+     * @return DataInterface|null Interface Objekt
+     */
+    public function getInterface(string $interface_name): ?DataInterface
     {
-        return $this->interfaces[$interface_name];
+        return $this->interfaces[$interface_name] ?? null;
     }
 
     /**
-     * Liefert alle Interface Objekte.
+     * Returns all DataInterface objects
      *
      * @return array Interface Objekte
      * @see DAO::createDAO()
@@ -1027,8 +941,14 @@ class Weblication extends Component
      * starts any session derived from the class ISession
      *
      * @param array $settings configuration parameters:
+     *   application.name
+     *   application.title
+     *   application.locale
      *   application.launchModule - sets the main module that is launched
-     *   application.sessionClassName - overrides default session class
+     *   application.session.className - overrides default session class
+     *   application.translator
+     *   application.translator.resourceDir
+     *   application.translator.resource
      * @return Weblication
      * @throws Exception
      */
@@ -1036,9 +956,7 @@ class Weblication extends Component
     {
         $this->Settings->setVars($settings);
 
-        $applicationName = $this->Settings->getVar('application.name', $this->getName());
-        $this->setName($applicationName);
-
+        $this->setName($this->Settings->getVar('application.name', $this->getName()));
         $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
         $this->setCharset($this->Settings->getVar('application.charset', $this->getCharset()));
 
@@ -1090,7 +1008,7 @@ class Weblication extends Component
         if($isStatic) {
             return new ISession($autoClose);
         }
-        $className = $this->Settings->getVar('application.sessionClassName', 'ISession');
+        $className = $this->Settings->getVar('application.session.className', 'ISession');
         $this->Session = new $className($autoClose);
         return $this->Session;
     }
@@ -1100,7 +1018,7 @@ class Weblication extends Component
      *
      * @param string $tabledefine DAO Tabellendefinition.
      */
-    public function createSessionHandler($tabledefine)
+    public function createSessionHandler(string $tabledefine)
     {
         $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
         $this->Session = new ISession();
@@ -1129,27 +1047,86 @@ class Weblication extends Component
     }
 
     /**
-     * set locale
+     * set locale (the POOL is independent of the system locale, e.g. php's setlocale).
      *
-     * @param int $category
-     * @param string|null $locale
-     * @return bool|string
+     * @param string $locale
+     * @return Weblication
      */
-    public function setLocale(int $category = LC_ALL, ?string $locale = null): bool|string
+    public function setLocale(string $locale): self
     {
-        if(is_null($locale)) {
-            $locale = Translator::detectLocale();
-        }
         $this->locale = $locale;
-        return setlocale($category, $locale);
+        return $this;
     }
 
     /**
-     * @return string
+     * @return string returns the fallback locale
      */
-    public function getLocale(): string
+    protected function getDefaultLocale(): string
     {
-        return $this->locale;
+        return $this->defaultLocale;
+    }
+
+    /**
+     * Returns the determined locale (of the browser) if it has not been overwritten. Format: [language[_region][.charset][@modifier]]
+     *
+     * @param int $type
+     * @return string
+     * @see Weblication::setLocale()
+     * @see Translator::detectLocale()
+     */
+    public function getLocale(int $type = self::LOCALE_UNCHANGED): string
+    {
+        if(!$this->locale) {
+            // @todo replace with Translator::getInstance()->parseLangHeader() after merge with feature-translator
+            // @todo maybe move it into constructor or setup (but setup does not necessarily have to be called)
+            $this->setLocale(Translator::detectLocale($this->defaultLocale));
+        }
+
+        if($type == self::LOCALE_UNCHANGED) {
+            return $this->locale;
+        }
+
+        $locale = $this->locale;
+
+        // with region
+        if($type & self::LOCALE_FORCE_REGION && !str_contains($locale, '_')) {
+            $locale = Language::getBestLocale($this->locale, $this->defaultLocale);
+        }
+        // with charset
+        if($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {
+            $locale = "$locale.{$this->charset}";
+        }
+        // without charset
+        if($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {
+            $locale = substr($locale, 0, $pos);
+        }
+        return $locale;
+    }
+
+    /**
+     * Sets the language for the Page. It's used for html templates and images
+     *
+     * @param string $lang Country Code
+     * @return Weblication
+     */
+    public function setLanguage(string $lang): self
+    {
+        $this->language = $lang;
+        return $this;
+    }
+
+    /**
+     * returns the primary language based on the set locale
+     *
+     * @return string language code
+     */
+    public function getLanguage(): string
+    {
+        if(!$this->language) {
+            // @todo replace with Translator::getPrimaryLanguage() after merge with feature-translator
+            $this->setLanguage(Locale::getPrimaryLanguage($this->getLocale()));
+        }
+        return $this->language;
     }
 
     /**
@@ -1224,7 +1201,7 @@ class Weblication extends Component
 
         $mainGUI = GUI_Module::createGUIModule($className, $this, null, $params, true, false);
         $this->setMain($mainGUI);
-        //
+
         $mainGUI->searchGUIsInPreloadedContent();
 
         if($this->hasFrame()) {
@@ -1295,30 +1272,14 @@ class Weblication extends Component
     }
 
     /**
-     * Schliesst alle Verbindungen und loescht die Interface Objekte.
-     * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
+     * Closes all connections via DataInterfaces. It's not necessary to close connections every time (except for persistent connections),
+     * PHP will check for open connections when the script is finished anyway.
+     * From a performance perspective, closing connections is pure overhead.
      */
-    public function destroy()
+    public function close()
     {
-        if(defined('DATAINTERFACE_MYSQL')) {
-            if(isset($this->interfaces[DATAINTERFACE_MYSQL]) and is_a($this->interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
-                $this->interfaces[DATAINTERFACE_MYSQL]->close();
-                unset($this->interfaces[DATAINTERFACE_MYSQL]);
-            }
+        foreach($this->interfaces as $DataInterface) {
+            $DataInterface->close();
         }
-
-        if(defined('DATAINTERFACE_MYSQLI')) {
-            if(isset($this->interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
-                $this->interfaces[DATAINTERFACE_MYSQLI]->close();
-                unset($this->interfaces[DATAINTERFACE_MYSQLI]);
-            }
-        }
-        if(defined('DATAINTERFACE_C16')) {
-            if(isset($this->interfaces[DATAINTERFACE_C16]) and is_a($this->interfaces[DATAINTERFACE_C16], 'C16_Interface')) {
-                $this->interfaces[DATAINTERFACE_C16]->close();
-                unset($this->interfaces[DATAINTERFACE_C16]);
-            }
-        }
-        parent::destroy();
     }
 }

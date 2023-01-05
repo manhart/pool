@@ -34,12 +34,12 @@
 * ############################################################################################################################
 */
 
-// charset must be installed on system!
-const APP_INTERNAL_LOCALE = 'de_DE.UTF-8'; // for calculation
-
-$loc = setlocale(LC_TIME, APP_INTERNAL_LOCALE);
-$loc = setlocale(LC_COLLATE, APP_INTERNAL_LOCALE);
-$loc = setlocale(LC_CTYPE, APP_INTERNAL_LOCALE);
+// Default for old partly deprecated PHP dependent functions.
+// Default for system responses (used in conjunction with the extension intl)
+// @see https://php.watch/versions/8.0/float-to-string-locale-independent
+if(!setLocale(LC_ALL, $locale = 'en_US.UTF-8')) {
+    throw new Exception("Server error: the locale $locale is not installed.");
+}
 
 /* check Servername und stelle die Weichen */
 switch($_SERVER['SERVER_NAME']) {
@@ -70,25 +70,25 @@ const JAVA_PATH = '/usr/bin/java';
 // verwendet in der App
 const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT . '/pool/src';
 // aus der App Sicht (für js from pool):
-define('DIR_POOL_ROOT_REL', '../../src'); // for webprojects it would be better to symlink javascripts folder
+const DIR_POOL_ROOT_REL = '../../src'; // for webprojects it would be better to symlink javascripts folder
 
 // This constant points to the root directory of the configuration files, which is the directory I am currently in.
 // The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
-define('DIR_CONFIGS_ROOT', __DIR__);
+const DIR_CONFIGS_ROOT = __DIR__;
 
 // This constant points to the common directory, where global code, e.g. company-specific GUI modules are located.
-define('DIR_COMMON_ROOT', DIR_DOCUMENT_ROOT . '/pool/examples/common');
-define('DIR_COMMON_ROOT_REL', '../common');
+const DIR_COMMON_ROOT = DIR_DOCUMENT_ROOT . '/pool/examples/common';
+const DIR_COMMON_ROOT_REL = '../common';
 
 // falls benoetigt, anpassen:
 //define('DIR_DATA_ROOT', DIR_DOCUMENT_ROOT . 'data');
 //define('DIR_RELATIVE_DATA_ROOT', DIR_RELATIVE_DOCUMENT_ROOT . 'data');
 //define('DIR_PROJECT_TO_DATA_ROOT', '../../data');
 
-define('DIR_DAOS_ROOT', DIR_DOCUMENT_ROOT.'/pool/examples/daos');
+const DIR_DAOS_ROOT = DIR_DOCUMENT_ROOT . '/pool/examples/daos';
 // define('DIR_RELATIVE_DAOS_ROOT', DIR_RELATIVE_LIB_ROOT . '/examples/daos'); wird nie benötigt
 
-define('DIR_SUBCODES_ROOT', DIR_DOCUMENT_ROOT.'/pool/examples/subcodes');
+const DIR_SUBCODES_ROOT = DIR_DOCUMENT_ROOT . '/pool/examples/subcodes';
 //	define('DIR_RELATIVE_SUBCODES_ROOT', DIR_RELATIVE_LIB_ROOT . '/subcodes');
 
 //define('DIR_BASELIB_ROOT', DIR_LIB_ROOT);
@@ -97,4 +97,4 @@ define('DIR_SUBCODES_ROOT', DIR_DOCUMENT_ROOT.'/pool/examples/subcodes');
 //define('DIR_PUBLIC_ROOT', DIR_DOCUMENT_ROOT . 'public/');
 //define('DIR_RELATIVE_PUBLIC_ROOT', DIR_RELATIVE_DOCUMENT_ROOT . 'public/');
 
-define('DIR_RELATIVE_3RDPARTY_ROOT', '../3rdParty');
+const DIR_RELATIVE_3RDPARTY_ROOT = '../3rdParty';
