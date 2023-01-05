@@ -416,8 +416,16 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
-    refresh(options = {}, silent = false)
+    refresh(options = {}, silent = false, onLoadSuccess = null)
     {
+        if(onLoadSuccess !== null) {
+            const eventLoadSuccess = function() {
+                $(this).off('load-success.bs.table', eventLoadSuccess)
+                onLoadSuccess();
+            }
+            $(this.getTable()).on('load-success.bs.table', eventLoadSuccess);
+        }
+
         // console.debug(this.getName() + '.refresh');
         // todo stelle Seite wieder her
         if(!isEmpty(options) || this.forceRefreshOptions) {
@@ -567,6 +575,7 @@ class GUI_Table extends GUI_Module
 
     /**
      * get selected unique ids
+     * @return {*|*[]}
      */
     getSelectedUniqueIds()
     {
@@ -576,8 +585,17 @@ class GUI_Table extends GUI_Module
         }
 
         return this.getSelections().map(function(row) {
-            return row[uniqueId]
+            return row[uniqueId];
         })
+    }
+    /**
+     * get selected unique id
+     * @return {*|null}
+     */
+    getSelectedUniqueId()
+    {
+        let uniqueIds = this.getSelectedUniqueIds();
+        return uniqueIds[0] ? uniqueIds[0] : null;
     }
 
     /**

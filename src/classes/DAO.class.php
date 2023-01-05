@@ -70,6 +70,13 @@ abstract class DAO extends PoolObject
     protected string $interfaceType = '';
 
     /**
+     * table meta data
+     *
+     * @var array
+     */
+    protected array $metaData = [];
+
+    /**
      * columns of table
      *
      * @var array|string[]
@@ -332,7 +339,7 @@ abstract class DAO extends PoolObject
         switch($type) {
             case DATAINTERFACE_MYSQL:
             case DATAINTERFACE_MYSQLI:
-                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_MYSQL).'/'.$dbname.'/'.utf8_encode($table).'.class.php';
+                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_MYSQL)."$dbname/$table.class.php";
                 $file_exists = file_exists($include);
                 if (!class_exists($table, false) and $file_exists) {
                     require_once $include;
@@ -347,7 +354,7 @@ abstract class DAO extends PoolObject
                 break;
 
             case DATAINTERFACE_CISAM:
-                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_CISAM).'/'.utf8_encode($table).'.class.php';
+                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_CISAM)."/$table.class.php";
                 $file_exists = file_exists($include);
                 if (!class_exists($table, false) and $file_exists) {
                     require_once $include;
@@ -362,7 +369,7 @@ abstract class DAO extends PoolObject
                 break;
 
             case DATAINTERFACE_C16:
-                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_C16).$dbname.'/'.utf8_encode($table).'.class.php';
+                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_C16)."$dbname/$table.class.php";
                 $file_exists = file_exists($include);
                 if (!class_exists($table, false) and $file_exists) {
                     require_once $include;
