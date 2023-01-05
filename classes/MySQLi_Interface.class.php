@@ -782,10 +782,8 @@ class MySQLi_Interface extends DataInterface
      */
     public function fetchrowset(false|mysqli_result $query_result = false, ?callable $callbackOnFetchRow = null, array $metaData = []): array
     {
-        if (!$query_result) {
-            if (isset($this->query_result)) {
-                $query_result = $this->query_result;
-            }
+        if (!$query_result && isset($this->query_result)) {
+            $query_result = $this->query_result;
         }
 
         $rowSet = [];
@@ -799,7 +797,7 @@ class MySQLi_Interface extends DataInterface
                     }
                 }
             }
-            if($callbackOnFetchRow)  {
+            if($callbackOnFetchRow) {
                 $row = call_user_func($callbackOnFetchRow, $row);
             }
             $rowSet[] = $row;
