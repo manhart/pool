@@ -610,13 +610,14 @@ class Resultset extends PoolObject implements Countable
      * z.B.
      * function formatDate($row)
      * {
-     *        $row['date'] = strftime('%d.%m.%Y', $row['date']);
+     *        $row['date'] = date('d.m.Y', $row['date']);
      *        return $row;
      * }
      *
      * @access public
-     * @param string|array $callback_function
-     **/
+     * @param callable $callback_function
+     * @return Resultset
+     */
     public function uformat(callable $callback_function): static
     {
         $this->rowset = array_map($callback_function, $this->rowset);
@@ -1064,21 +1065,11 @@ class Resultset extends PoolObject implements Countable
                         $xml .= $val;
                     }
                     else {
-                        $xml .= '<![CDATA[' . str_replace('&', '&amp;', ($encode) ? utf8_encode($val) : $val) . ']]>';
+                        // Any encoding to UTF-8 using mbstring: mb_convert_encoding($string, 'UTF-8', mb_list_encodings());
+                        $xml .= '<![CDATA[' . str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val) . ']]>';
                     }
                     $xml .= '</cell>';
                 }
-                /*						foreach ($row as $key => $val) {
-                                        if($without_pk and in_array($key, $pk)) continue;
-                                        $xml .= '<cell>';
-                                        if(is_numeric($val)) {
-                                            $xml .= $val;
-                                        }
-                                        else {
-                                            $xml .= '<![CDATA['.str_replace('&', '&amp;', ($encode) ? utf8_encode($val) : $val).']]>';
-                                        }
-                                        $xml .= '</cell>';
-                                    }*/
 
                 $xml .= '</row>' . chr(10);
                 $z++;
