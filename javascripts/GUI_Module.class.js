@@ -6,8 +6,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-'use strict';
-
 class GUI_Module
 {
     name = '';
