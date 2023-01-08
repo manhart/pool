@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\ModulNotFoundException;
+
 /**
  * -= Rapid Module Library (RML) =-
  *
@@ -69,7 +72,7 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * @param Component|null $Owner
      * @param array $params
-     * @throws \pool\classes\ModulNotFoundException
+     * @throws ModulNotFoundException
      */
     function __construct(?Component $Owner, array $params = [])
     {
@@ -182,6 +185,12 @@ class GUI_CustomFrame extends GUI_Module
         }
 
         $scriptWhenReady = count($this->scriptWhenReady) ? implode(';', $this->scriptWhenReady) : '';
+
+
+        // no templates assigned
+        if(!$this->Template->countFileList()) {
+            return '';
+        }
 
         $this->Template->setVars([
             'ScriptWhenReady' => $scriptWhenReady,
