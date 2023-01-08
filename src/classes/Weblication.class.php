@@ -747,7 +747,12 @@ class Weblication extends Component
             return $template;
         }
 
-        $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
+        $msg = "Template $filename in ".__METHOD__." not found!";
+        if(!$this->relativePathBaseLib and $baseLib) {
+            // if nothing was found, we give a hint to uninformed useres that the path has not been set.
+            $msg .= ' You need to set the path to the pool with Weblication->setRelativePathBaseLib().';
+        }
+        $this->raiseError(__FILE__, __LINE__, $msg);
         return '';
     }
 
