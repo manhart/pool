@@ -1094,7 +1094,7 @@ class Weblication extends Component
         $locale = $this->locale;
 
         // with region
-        if($type & self::LOCALE_FORCE_REGION && !str_contains($locale, '_')) {
+        if($type & self::LOCALE_FORCE_REGION && !(str_contains($locale, '_') || str_contains($locale, '-'))) {
             $locale = Language::getBestLocale($this->locale, $this->defaultLocale);
         }
         // with charset
