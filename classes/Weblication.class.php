@@ -230,6 +230,7 @@ class Weblication extends Component
     {
         parent::__construct(null);
         $this->Settings = new Input(I_EMPTY);
+        $this->relativePathBaseLib = makeRelativePathsFrom(__DIR__, DIR_POOL_ROOT)['clientside'];
         return $this;
     }
 
