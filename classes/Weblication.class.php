@@ -1129,7 +1129,7 @@ class Weblication extends Component
     {
         if(!$this->language) {
             // @todo replace with Translator::getPrimaryLanguage() after merge with feature-translator
-            $this->setLanguage(Locale::getPrimaryLanguage($this->getLocale()));
+            $this->setLanguage(Locale::getPrimaryLanguage($this->getLocale(self::LOCALE_FORCE_REGION)));
         }
         return $this->language;
     }
