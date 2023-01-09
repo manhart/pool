@@ -448,8 +448,17 @@ class GUI_Module extends Module
             $this->Template->setFilePath($handle, $template);
         }
 
-        if(!$this->getWeblication()->hasFrame()) return $this;
-        $Frame = $this->getWeblication()->getFrame();
+        $hasFrame = $this->getWeblication()->hasFrame();
+        if($hasFrame) {
+            $Frame = $this->getWeblication()->getFrame();
+        }
+        else {
+            $hasFrame = $this instanceof GUI_CustomFrame;
+            if(!$hasFrame) {
+                return $this;
+            }
+            $Frame = $this;
+        }
 
         foreach($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
