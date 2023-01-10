@@ -1,6 +1,4 @@
-<?php
-declare(strict_types=1);
-
+<?php declare(strict_types=1);
 /**
  * POOL
  *
@@ -8,17 +6,14 @@ declare(strict_types=1);
  *
  * Weblication.class.php
  *
- * Die Hauptklasse aller Webanwendungen. Jedes neue Projekt beginnt mit Weblication und wird davon instanziiert.
- *
- * @version $Id: Weblication.class.php,v 1.16 2007/05/31 14:36:23 manhart Exp $
- * @version $Revision 1.0$
- * @version
+ * The main class of all web applications. Every new project starts with Weblication and is instantiated from it.
  *
  * @since 2003-07-10
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Language;
 use pool\classes\ModulNotFoundException;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
@@ -101,7 +96,7 @@ class Weblication extends Component
     /**
      * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
      *
-     * @var array
+     * @var array<string, DataInterface>
      */
     private array $interfaces = [];
 
@@ -154,14 +149,19 @@ class Weblication extends Component
     private array $hasSkinFolder = array();
 
     /**
-     * @var string Country code
+     * @var string language code
      */
-    private string $language = 'de';
+    private string $language = '';
 
     /**
-     * @var string
+     * @var string an identifier used to get language, culture, or regionally-specific behavior
      */
     private string $locale = '';
+
+    /**
+     * @var string used as fallback
+     */
+    private string $defaultLocale = 'en_US';
 
     /**
      * @var string version of the application
@@ -176,6 +176,24 @@ class Weblication extends Component
     private ?ICookie $Cookie = null;
 
     /**
+     * locale unchanged / as is.
+     */
+    const LOCALE_UNCHANGED = 0;
+    /**
+     * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
+     */
+    const LOCALE_FORCE_REGION = 1;
+    /**
+     * The application's charset is appended if no charset is attached to the locale.
+     */
+    const LOCALE_FORCE_CHARSET = 2;
+    /**
+     * Removes possible charsets.
+     */
+    const LOCALE_WITHOUT_CHARSET = 4;
+
+
+    /**
      * @var array all possible default formats
      */
     private array $formats = [
@@ -184,13 +202,13 @@ class Weblication extends Component
         'php.sec' => 's',
         'php.date.time' => 'd.m.Y H:i',
         'php.date.time.sec' => 'd.m.Y H:i:s',
-        'strftime.time' => '%H:%M',
-        'strftime.date' => '%d.%m.%Y',
-        'strftime.date.time' => '%d.%m.%Y %H:%M',
-        'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S',
-        'moment.date' => 'DD.MM.YYYY',
-        'moment.date.time' => 'DD.MM.YYYY HH:mm',
-        'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss',
+        'strftime.time' => '%H:%M', // needed in js
+        'strftime.date' => '%d.%m.%Y', // needed in js
+        'strftime.date.time' => '%d.%m.%Y %H:%M', // needed in js
+        'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S', // needed in js
+        'moment.date' => 'DD.MM.YYYY', // needed for moment js
+        'moment.date.time' => 'DD.MM.YYYY HH:mm', // needed for moment js
+        'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss', // needed for moment js
         'mysql.date_format.date' => '%d.%m%.%Y',
         'mysql.date_format.date.time' => '%d.%m%.%Y %H:%i',
         'mysql.date_format.date.time.sec' => '%d.%m%.%Y %T',
@@ -208,8 +226,8 @@ class Weblication extends Component
     private function __construct()
     {
         parent::__construct(null);
-
-        $this->Settings = new Input();
+        $this->Settings = new Input(I_EMPTY);
+        $this->relativePathBaseLib = makeRelativePathsFrom(__DIR__, DIR_POOL_ROOT)['clientside'];
         return $this;
     }
 
@@ -250,9 +268,9 @@ class Weblication extends Component
     protected Translator $translator;
 
     /**
-     * Aendert den Ordner fuer die Designvorlagen (Html Templates) und Bilder.
+     * Changes the folder for the design templates (Html templates) and images.
      *
-     * @param string $skin Ordner fuer die Designvorlagen (Html Templates) und Bilder. (Standardwert: default)
+     * @param string $skin Folder for design templates (html templates) and images. (Default value: default)
      * @return Weblication
      */
     public function setSkin(string $skin = 'default'): Weblication
@@ -360,7 +378,7 @@ class Weblication extends Component
     }
 
     /**
-     * Setzt die Programm-ID
+     * Set an application id
      *
      * @param int $progId
      * @return Weblication
@@ -372,7 +390,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert die Programm-ID
+     * Get an application id (if set)
      *
      * @return int|null
      */
@@ -463,7 +481,7 @@ class Weblication extends Component
      * returns the main frame
      *
      * @return GUI_CustomFrame|null
-     **/
+     */
     public function getFrame(): ?GUI_CustomFrame
     {
         if(!$this->Frame) {
@@ -544,6 +562,19 @@ class Weblication extends Component
     }
 
     /**
+     * Checks if skin exists
+     *
+     * @param string $skin
+     * @return bool
+     */
+    function skin_exists(string $skin = ''): bool
+    {
+        $skin = addEndingSlash(($skin ?: $this->skin));
+        $pathSkin = addEndingSlash(getcwd()) . addEndingSlash(PWD_TILL_SKINS) . $skin;
+        return file_exists($pathSkin);
+    }
+
+    /**
      * Liefert einen Pfad zum Skin-Verzeichnis zurück. Wenn der Parameter $additionalDir gef�llt wird, wird er an das Skin-Verzeichnis dran geh�ngt.
      *
      * @param string $additionalDir Unterverzeichnis vom Skin-Verzeichnis
@@ -610,11 +641,11 @@ class Weblication extends Component
     }
 
     /**
-     * Sucht das uebergebene Image in einer fest vorgegebenen Verzeichnisstruktur. Nur im Ordner skins.
+     * Searches the given image in a fixed directory skins folder structure.
      *
-     * @param string $filename Image Dateiname
-     * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
-     **/
+     * @param string $filename wanted image
+     * @return string Filename or empty string in case of failure
+     */
     function findImage(string $filename): string
     {
         $skin = addEndingSlash($this->skin);
@@ -732,7 +763,12 @@ class Weblication extends Component
             return $template;
 
 
-        $this->raiseError(__FILE__, __LINE__, sprintf('Template \'%s\' not found (@Weblication->findTemplate)!', $filename));
+        $msg = "Template $filename in ".__METHOD__." not found!";
+        if(!$this->relativePathBaseLib and $baseLib) {
+            // if nothing was found, we give a hint to uninformed useres that the path has not been set.
+            $msg .= ' You need to set the path to the pool with Weblication->setRelativePathBaseLib().';
+        }
+        $this->raiseError(__FILE__, __LINE__, $msg);
         return '';
     }
 
@@ -743,7 +779,7 @@ class Weblication extends Component
      * @see Weblication::findTemplate()
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baseLib Schau auch in die baeLib
+     * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false): string
@@ -829,20 +865,20 @@ class Weblication extends Component
      *
      * @param string $filename JavaScript Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param bool $baeLib
+     * @param bool $baseLib
      * @param bool $raiseError
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baeLib = false, bool $raiseError = true): string
+    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
     {
-        $folder_javascripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
+        $folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
         $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
-        //Ordner baeLib -> look in POOL instead
-        if($baeLib) {
-            $folder_javascripts = addEndingSlash($this->getRelativePathBaseLib($folder_javascripts));
+        //Ordner BaseLib -> look in POOL instead
+        if($baseLib) {
+            $folder_javaScripts = addEndingSlash($this->getRelativePathBaseLib($folder_javaScripts));
             $folder_guis = addEndingSlash($this->getRelativePathBaseLib($folder_guis));
         }
-        $javaScriptFile = $folder_javascripts . $filename;
+        $javaScriptFile = $folder_javaScripts . $filename;
         if(file_exists($javaScriptFile))
             return $javaScriptFile;//found
         $javaScriptFile = $folder_guis . $filename;
@@ -884,7 +920,7 @@ class Weblication extends Component
      *
      * @param DataInterface $DataInterface Einzufuegendes DataInterface
      * @return DataInterface Eingefuegtes DataInterface
-     **/
+     */
     public function addDataInterface(DataInterface $DataInterface): DataInterface
     {
         $this->interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
@@ -892,18 +928,18 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert ein Interface Objekt.
+     * returns a DataInterface
      *
      * @param string $interface_name
-     * @return DataInterface Interface Objekt
-     **/
-    public function getInterface(string $interface_name): DataInterface
+     * @return DataInterface|null Interface Objekt
+     */
+    public function getInterface(string $interface_name): ?DataInterface
     {
-        return $this->interfaces[$interface_name];
+        return $this->interfaces[$interface_name] ?? null;
     }
 
     /**
-     * Liefert alle Interface Objekte.
+     * Returns all DataInterface objects
      *
      * @return array Interface Objekte
      * @see DAO::createDAO()
@@ -917,8 +953,14 @@ class Weblication extends Component
      * starts any session derived from the class ISession
      *
      * @param array $settings configuration parameters:
+     *   application.name
+     *   application.title
+     *   application.locale
      *   application.launchModule - sets the main module that is launched
-     *   application.sessionClassName - overrides default session class
+     *   application.session.className - overrides default session class
+     *   application.translator
+     *   application.translator.resourceDir
+     *   application.translator.resource
      * @return Weblication
      * @throws Exception
      */
@@ -926,12 +968,9 @@ class Weblication extends Component
     {
         $this->Settings->setVars($settings);
 
-        $applicationName = $this->Settings->getVar('application.name', $this->getName());
-        $this->setName($applicationName);
-
+        $this->setName($this->Settings->getVar('application.name', $this->getName()));
         $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
         $this->setCharset($this->Settings->getVar('application.charset', $this->getCharset()));
-
         $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
 
 
@@ -1003,7 +1042,7 @@ class Weblication extends Component
         if($isStatic) {
             return new ISession($autoClose);
         }
-        $className = $this->Settings->getVar('application.sessionClassName', 'ISession');
+        $className = $this->Settings->getVar('application.session.className', 'ISession');
         $this->Session = new $className($autoClose);
         return $this->Session;
     }
@@ -1051,27 +1090,86 @@ class Weblication extends Component
     }
 
     /**
-     * set locale
+     * set locale (the POOL is independent of the system locale, e.g. php's setlocale).
      *
-     * @param int $category
-     * @param string|null $locale
-     * @return bool|string
+     * @param string $locale
+     * @return Weblication
      */
-    public function setLocale(int $category = LC_ALL, ?string $locale = null): bool|string
+    public function setLocale(string $locale): self
     {
-        if(is_null($locale)) {
-            $locale = array_key_first($this->getTranslator()->parseLangHeader());
-        }
         $this->locale = $locale;
-        return setlocale($category, $locale);
+        return $this;
     }
 
     /**
-     * @return string
+     * @return string returns the fallback locale
      */
-    public function getLocale(): string
+    protected function getDefaultLocale(): string
     {
-        return $this->locale;
+        return $this->defaultLocale;
+    }
+
+    /**
+     * Returns the determined locale (of the browser) if it has not been overwritten. Format: [language[_region][.charset][@modifier]]
+     *
+     * @param int $type
+     * @return string
+     * @see Weblication::setLocale()
+     * @see Translator::detectLocale()
+     */
+    public function getLocale(int $type = self::LOCALE_UNCHANGED): string
+    {
+        if(!$this->locale) {
+            // @todo replace with Translator::getInstance()->parseLangHeader() after merge with feature-translator
+            // @todo maybe move it into constructor or setup (but setup does not necessarily have to be called)
+            $this->setLocale(Translator::detectLocale($this->defaultLocale));
+        }
+
+        if($type == self::LOCALE_UNCHANGED) {
+            return $this->locale;
+        }
+
+        $locale = $this->locale;
+
+        // with region
+        if($type & self::LOCALE_FORCE_REGION && !(str_contains($locale, '_') || str_contains($locale, '-'))) {
+            $locale = Language::getBestLocale($this->locale, $this->defaultLocale);
+        }
+        // with charset
+        if($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {
+            $locale = "$locale.{$this->charset}";
+        }
+        // without charset
+        if($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {
+            $locale = substr($locale, 0, $pos);
+        }
+        return $locale;
+    }
+
+    /**
+     * Sets the language for the Page. It's used for html templates and images
+     *
+     * @param string $lang Country Code
+     * @return Weblication
+     */
+    public function setLanguage(string $lang): self
+    {
+        $this->language = $lang;
+        return $this;
+    }
+
+    /**
+     * returns the primary language based on the set locale
+     *
+     * @return string language code
+     */
+    public function getLanguage(): string
+    {
+        if(!$this->language) {
+            // @todo replace with Translator::getPrimaryLanguage() after merge with feature-translator
+            $this->setLanguage(Locale::getPrimaryLanguage($this->getLocale(self::LOCALE_FORCE_REGION)));
+        }
+        return $this->language;
     }
 
     /**
@@ -1145,7 +1243,7 @@ class Weblication extends Component
 
         $mainGUI = GUI_Module::createGUIModule($className, $this, null, $params, true, false);
         $this->setMain($mainGUI);
-        //
+
         $mainGUI->searchGUIsInPreloadedContent();
 
         if($this->hasFrame()) {
@@ -1216,30 +1314,14 @@ class Weblication extends Component
     }
 
     /**
-     * Schliesst alle Verbindungen und loescht die Interface Objekte.
-     * Bitte bei der Erstellung von Interface Objekten sicherheitshalber immer abschliessend mit destroy() alle Verbindungen trennen!
+     * Closes all connections via DataInterfaces. It's not necessary to close connections every time (except for persistent connections),
+     * PHP will check for open connections when the script is finished anyway.
+     * From a performance perspective, closing connections is pure overhead.
      */
-    public function destroy()
+    public function close()
     {
-        if(defined('DATAINTERFACE_MYSQL')) {
-            if(isset($this->interfaces[DATAINTERFACE_MYSQL]) and is_a($this->interfaces[DATAINTERFACE_MYSQL], 'MySQL_Interface')) {
-                $this->interfaces[DATAINTERFACE_MYSQL]->close();
-                unset($this->interfaces[DATAINTERFACE_MYSQL]);
-            }
+        foreach($this->interfaces as $DataInterface) {
+            $DataInterface->close();
         }
-
-        if(defined('DATAINTERFACE_MYSQLI')) {
-            if(isset($this->interfaces[DATAINTERFACE_MYSQLI]) and is_a($this->interfaces[DATAINTERFACE_MYSQLI], 'MySQLi_Interface')) {
-                $this->interfaces[DATAINTERFACE_MYSQLI]->close();
-                unset($this->interfaces[DATAINTERFACE_MYSQLI]);
-            }
-        }
-        if(defined('DATAINTERFACE_C16')) {
-            if(isset($this->interfaces[DATAINTERFACE_C16]) and is_a($this->interfaces[DATAINTERFACE_C16], 'C16_Interface')) {
-                $this->interfaces[DATAINTERFACE_C16]->close();
-                unset($this->interfaces[DATAINTERFACE_C16]);
-            }
-        }
-        parent::destroy();
     }
 }

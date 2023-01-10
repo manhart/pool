@@ -70,6 +70,13 @@ abstract class DAO extends PoolObject
     protected string $interfaceType = '';
 
     /**
+     * table meta data
+     *
+     * @var array
+     */
+    protected array $metaData = [];
+
+    /**
      * columns of table
      *
      * @var array|string[]

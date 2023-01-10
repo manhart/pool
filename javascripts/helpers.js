@@ -972,7 +972,7 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
 
                 // todo 20.12.21, AM, rework fillControls, first loop over controls!
                 if (autoSearchControlsWithinContainer == false || hasControls) {
-                    if (Ctrl.attr('name') != field && Ctrl.id != field && !(Ctrl.attr('name') == field + '[]' && Ctrl.val() == value)) return;
+                    if (Ctrl.attr('name') != field && Ctrl.attr('id') != field && !(Ctrl.attr('name') == field + '[]' && Ctrl.val() == value)) return;
                 }
 
                 //log('HTMLElement: '+Ctrl.attr('id')+'='+value);
@@ -1292,7 +1292,7 @@ function loadJSON(url, opts = {}) {
  * @param str
  * @return {boolean}
  */
-function isStringJSON(str)
+function isJsonString(str)
 {
     try {
         let json = JSON.parse(str);

@@ -191,7 +191,7 @@ class MySQL_DAO extends DAO
     /**
      * MySQL_Interface
      *
-     * @var MySQL_Interface
+     * @var DataInterface|null
      */
     protected ?DataInterface $db = null;
 
@@ -279,12 +279,14 @@ class MySQL_DAO extends DAO
     private function rebuildColumnList()
     {
         // Columns are predefined as property "columns".
-        if(count($this->columns) > 0) {
-            $table = '`'.$this->table.'`';
-            $glue = '`, '.$table.'.`';
-            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
-            $this->column_list = $column_list;
-        }
+        if(!$this->columns) return;
+
+        $columns = $this->getColumns();
+
+        $table = '`'.$this->table.'`';
+        $glue = '`, '.$table.'.`';
+        $column_list = $table.'.`' . implode($glue, $columns).'`';
+        $this->column_list = $column_list;
     }
 
     /**
@@ -328,18 +330,19 @@ class MySQL_DAO extends DAO
      */
     protected function onSetColumns(bool $withAlias=false)
     {
+        $columns = $this->getColumns();
         $column_list = '';
-        $count = count($this->columns);
+        $count = count($columns);
         $alias = '';
         if($withAlias and $this->tableAlias) {
             $alias = $this->tableAlias.'.';
         }
         for($i=0; $i < $count; $i++) {
-            $column = trim($this->columns[$i]);
+            $column = trim($columns[$i]);
 
             $custom_column = $alias.$column;
 
-            if(strpos($column, ' ') !== false) { // column contains space
+            if(str_contains($column, ' ')) { // column contains space
                 // complex column construct should not be masked
                 if(!str_contains($column, '(') and
                    !str_contains($column, '\'') and
@@ -417,10 +420,10 @@ class MySQL_DAO extends DAO
      */
     public function getFieldList(bool $reInit=false): array
     {
-        if (count($this->columns) == 0 or $reInit) {
+        if (count($this->getColumns()) == 0 or $reInit) {
             $this->fetchColumns();
         }
-        return $this->columns;
+        return $this->getColumns();
     }
 
     /**
@@ -433,8 +436,8 @@ class MySQL_DAO extends DAO
     {
         if(!$this->field_list) $this->fetchColumns();
         foreach ($this->field_list as $field) {
-            if($field['Field'] == $fieldName) {
-                $buf = explode(' ', $field['Type']);
+            if($field['COLUMN_NAME'] == $fieldName) {
+                $buf = explode(' ', $field['COLUMN_TYPE']);
                 $type = $buf[0];
                 if(($pos = strpos($type, '(')) !== false) {
                     $type = substr($type, 0, $pos);
@@ -449,12 +452,13 @@ class MySQL_DAO extends DAO
      * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
      *
      * @param string $fieldName
+     * @return array
      */
     public function getFieldInfo(string $fieldName): array
     {
         if(!$this->field_list) $this->fetchColumns();
         foreach ($this->field_list as $field) {
-            if($field['Field'] == $fieldName) {
+            if($field['COLUMN_NAME'] == $fieldName) {
                 return $field;
             }
         }
@@ -465,7 +469,7 @@ class MySQL_DAO extends DAO
      * get enumerable values from field
      *
      * @param string $fieldName
-     * @return array|false|string[]
+     * @return array|string[]
      */
     public function getFieldEnumValues(string $fieldName)
     {
@@ -482,98 +486,98 @@ class MySQL_DAO extends DAO
      *
      * @param array $data Daten z.B. aus Input, Resultset, etc.
      */
-    function formatData(&$data)
-    {
-        foreach ($data as $fieldname => $fieldvalue) {
-            $colinfo = $this->getFieldInfo($fieldname);
-
-            $coltype = array();
-            $enclosure = '\'';
-            $delim = ' ';
-            $fldcount = 0;
-            $fldval = '';
-            $enclosed = false;
-            $coltype_mysql = $colinfo['Type'];
-            for($i=0, $len=strlen($coltype_mysql); $i<$len; $i++) {
-                $chr = $coltype_mysql[$i];
-                switch($chr) {
-                    case $enclosure:
-                        if($enclosed && $coltype_mysql[$i+1] == $enclosure) {
-                            $fldval .= $chr;
-                            ++$i; //skip next char
-                        }
-                        else $enclosed = !$enclosed;
-                        break;
-
-                    case $delim:
-                        if(!$enclosed) {
-                            $coltype[$fldcount++] = $fldval;
-                            $fldval = '';
-                        }
-                        else $fldval .= $chr;
-                        break;
-
-                    default:
-                        $fldval .= $chr;
-                }
-            }
-            if($fldval) $coltype[$fldcount] = $fldval;
-
-            $typeinfo = array_shift($coltype);
-            $len = null;
-            // $enum_values = array();
-            if(($pos = strpos($typeinfo, '(')) !== false) {
-                $type = substr($typeinfo, 0, $pos);
-                if($type != 'enum') {
-                    $len = substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2);
-                }
-                //else {
-                //    $enum_values = explode(',', substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2));
-                //}
-            }
-            else $type = $typeinfo;
-
-
-
-            //echo $type.' mit len:'.$len.'<br>';
-            switch ($type) {
-                case 'int':
-                    if($fieldvalue == '') $data[$fieldname] = '0';
-                    if(in_array('zerofill', $coltype)) {
-                        $data[$fieldname] = sprintf('%0'.$len.'d', $fieldvalue);
-                    }
-                    break;
-
-                case 'varchar':
-                case 'enum':
-                    break;
-
-                case 'integer': // tinyint, smallint, mediumint, int, bigint, integer
-                    break;
-
-                case 'boolean': // boolean, bool
-                    break;
-
-                case 'double': // float, double, decimal, real, dec, numeric, fixed
-                    #$data[$fieldname] = number_format($fieldvalue, $locale[''])
-                    // floatde_2php hier nicht, wenn dann mit pr�fung auf . als tausender!
-                    $data[$fieldname] = floatval(str_replace(',', '.', $fieldvalue));
-                    break;
-
-                case 'decimal':
-                    $len = explode(',', $len);
-                    $fieldvalue = floatval(str_replace(',', '.', $fieldvalue));
-                    if(isset($len[1])) {
-                        $data[$fieldname] = sprintf('%01.'.$len[1].'f', $fieldvalue);
-                    }
-                    else $data[$fieldname] = $fieldvalue;
-                    break;
-
-                case 'date':
-                    break;
-            }
-        }
-    }
+//    function formatData(&$data)
+//    {
+//        foreach ($data as $fieldname => $fieldvalue) {
+//            $colinfo = $this->getFieldInfo($fieldname);
+//
+//            $coltype = array();
+//            $enclosure = '\'';
+//            $delim = ' ';
+//            $fldcount = 0;
+//            $fldval = '';
+//            $enclosed = false;
+//            $coltype_mysql = $colinfo['Type'];
+//            for($i=0, $len=strlen($coltype_mysql); $i<$len; $i++) {
+//                $chr = $coltype_mysql[$i];
+//                switch($chr) {
+//                    case $enclosure:
+//                        if($enclosed && $coltype_mysql[$i+1] == $enclosure) {
+//                            $fldval .= $chr;
+//                            ++$i; //skip next char
+//                        }
+//                        else $enclosed = !$enclosed;
+//                        break;
+//
+//                    case $delim:
+//                        if(!$enclosed) {
+//                            $coltype[$fldcount++] = $fldval;
+//                            $fldval = '';
+//                        }
+//                        else $fldval .= $chr;
+//                        break;
+//
+//                    default:
+//                        $fldval .= $chr;
+//                }
+//            }
+//            if($fldval) $coltype[$fldcount] = $fldval;
+//
+//            $typeinfo = array_shift($coltype);
+//            $len = null;
+//            // $enum_values = array();
+//            if(($pos = strpos($typeinfo, '(')) !== false) {
+//                $type = substr($typeinfo, 0, $pos);
+//                if($type != 'enum') {
+//                    $len = substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2);
+//                }
+//                //else {
+//                //    $enum_values = explode(',', substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2));
+//                //}
+//            }
+//            else $type = $typeinfo;
+//
+//
+//
+//            //echo $type.' mit len:'.$len.'<br>';
+//            switch ($type) {
+//                case 'int':
+//                    if($fieldvalue == '') $data[$fieldname] = '0';
+//                    if(in_array('zerofill', $coltype)) {
+//                        $data[$fieldname] = sprintf('%0'.$len.'d', $fieldvalue);
+//                    }
+//                    break;
+//
+//                case 'varchar':
+//                case 'enum':
+//                    break;
+//
+//                case 'integer': // tinyint, smallint, mediumint, int, bigint, integer
+//                    break;
+//
+//                case 'boolean': // boolean, bool
+//                    break;
+//
+//                case 'double': // float, double, decimal, real, dec, numeric, fixed
+//                    #$data[$fieldname] = number_format($fieldvalue, $locale[''])
+//                    // floatde_2php hier nicht, wenn dann mit pr�fung auf . als tausender!
+//                    $data[$fieldname] = floatval(str_replace(',', '.', $fieldvalue));
+//                    break;
+//
+//                case 'decimal':
+//                    $len = explode(',', $len);
+//                    $fieldvalue = floatval(str_replace(',', '.', $fieldvalue));
+//                    if(isset($len[1])) {
+//                        $data[$fieldname] = sprintf('%01.'.$len[1].'f', $fieldvalue);
+//                    }
+//                    else $data[$fieldname] = $fieldvalue;
+//                    break;
+//
+//                case 'date':
+//                    break;
+//            }
+//        }
+//    }
 
     function setTableAlias($alias)
     {
@@ -587,7 +591,7 @@ class MySQL_DAO extends DAO
      */
     public function getColumnsWithTableAlias(): array
     {
-        return array_map(function($val) { return $this->tableAlias . '.'.$val; }, $this->columns);
+        return array_map(function($val) { return $this->tableAlias . '.'.$val; }, $this->getColumns());
     }
 
     /**
@@ -904,7 +908,7 @@ SQL;
     protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
     {
         $MySQL_ResultSet = new MySQL_Resultset($this->db);
-        $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow']);
+        $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow'], $this->metaData);
         return $MySQL_ResultSet;
     }
 
