@@ -448,8 +448,17 @@ class GUI_Module extends Module
             $this->Template->setFilePath($handle, $template);
         }
 
-        if(!$this->getWeblication()->hasFrame()) return $this;
-        $Frame = $this->getWeblication()->getFrame();
+        $hasFrame = $this->getWeblication()->hasFrame();
+        if($hasFrame) {
+            $Frame = $this->getWeblication()->getFrame();
+        }
+        else {
+            $hasFrame = $this instanceof GUI_CustomFrame;
+            if(!$hasFrame) {
+                return $this;
+            }
+            $Frame = $this;
+        }
 
         foreach($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
@@ -588,6 +597,9 @@ class GUI_Module extends Module
      */
     private function invokeAjaxMethod(string $requestedMethod): string
     {
+        // avoids unreadable error messages on the client side.
+        ini_set('html_errors', 0);
+
         $result = '';
 
         $this->registerAjaxCalls();
@@ -732,7 +744,7 @@ class GUI_Module extends Module
             $clientData['error'] = $errObj;
         }
 
-        $json = json_encode($clientData);
+        $json = json_encode($clientData, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION);
 
         $json_last_error = json_last_error();
         if($json_last_error == JSON_ERROR_NONE) {
