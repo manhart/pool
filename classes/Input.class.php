@@ -74,12 +74,6 @@ class Input extends PoolObject
     private array $filterRules = [];
 
     /**
-     * you ain't gonna need it
-     */
-    // const FILTER_SANITIZE_STRIP_TAGS = 1;
-
-
-    /**
      * Input constructor. Initialization of the superglobals.
      *
      * @param int $superglobals Select a predefined constant: INPUT_GET, INPUT_POST, INPUT_REQUEST, INPUT_SERVER, INPUT_FILES, INPUT_COOKIE
@@ -106,37 +100,44 @@ class Input extends PoolObject
         }
         $this->superglobals = $superglobals;
 
+        // @see https://www.php.net/manual/en/reserved.variables.environment.php
         if ($superglobals & I_ENV) { // I_ENV
             $this->addVar($_ENV);
         }
 
+        // @see https://www.php.net/manual/en/reserved.variables.server.php
         if ($superglobals & I_SERVER) { // I_SERVER
             $this->addVar($_SERVER);
         }
 
-        if ($superglobals & I_REQUEST) {
-            $this->addVar($_REQUEST);
-        }
-
+        // @see https://www.php.net/manual/en/reserved.variables.files.php
         if ($superglobals & I_FILES) {
             $this->addVar($_FILES);
         }
 
+        // @see https://www.php.net/manual/en/reserved.variables.request.php
+        if ($superglobals & I_REQUEST) {
+            $this->addVar($_REQUEST);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.post.php
         if ($superglobals & I_POST) {
             $this->addVar($_POST);
         }
 
+        // @see https://www.php.net/manual/en/reserved.variables.get.php
         if ($superglobals & I_GET) {
             $this->addVar($_GET);
         }
 
+        // @see https://www.php.net/manual/en/reserved.variables.cookies.php
         if ($superglobals & I_COOKIE) {
             $this->addVar($_COOKIE);
         }
 
-        if ($superglobals != I_ALL and $superglobals & I_SESSION) {
+        // @see https://www.php.net/manual/en/reserved.variables.session.php
+        if ($superglobals != I_ALL and $superglobals & I_SESSION) { // only $_SESSION assigned directly (not combinable)
             $this->vars = &$_SESSION; // PHP Session Handling (see php manual)
-            //$this -> addVar($_SESSION);
         }
     }
 

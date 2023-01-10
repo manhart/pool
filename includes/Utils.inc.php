@@ -1293,7 +1293,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
 }
 
 /**
- * Calculates the relative paths from the source path to the target path, both serverside and clientside.
+ * Calculates the relative paths from the source path to the target path, both serverside and clientside. It is faster than makeRelativePathFrom.
  *
  * @param string|null $here The absolute source path.
  * @param string $toThis The absolute target path.

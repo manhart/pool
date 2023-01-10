@@ -6,8 +6,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-'use strict';
-
 class GUI_Module
 {
     name = '';
@@ -59,8 +57,17 @@ class GUI_Module
      */
     async parseAjaxResponse(response)
     {
-        // if a body response exists, parse anx extract the possible properties
-        const { data, error, success } = response.status !== 204 ? await response.json() : { success: true };
+        // if a body response exists, parse and extract the possible properties
+        let json;
+        let text = await response.text();
+        try {
+            json = JSON.parse(text);
+        }
+        catch(e) { // @todo only developers (box) should see the hole text/error
+            console.error('Unparsed text', text);
+            throw e;
+        }
+        const { data, error, success } = response.status !== 204 ? json : { success: true };
 
         // trigger a new exception to capture later on request call site
         if (!success) throw new Error(error.message);
@@ -82,11 +89,10 @@ class GUI_Module
     {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
         if(options.data) {
+            let key = 'query';
             if(options.method && options.method == 'POST')
-                options.body = data;
-            else
-                options.query = data;
-
+                key = 'body';
+            options[key] = options.data;
             delete options.data;
         }
 
@@ -94,6 +100,7 @@ class GUI_Module
             headers,
             query = null,
             method = 'GET',
+            module = this.getClassName(),
             body,
             ...extraOpts
         } = options;
@@ -112,7 +119,8 @@ class GUI_Module
 
         // if a body object is passed, automatically stringify it.
         if(body) {
-            if(isStringJSON(body)) {
+            const types = [FormData, Blob, ArrayBuffer, URLSearchParams, DataView];
+            if(typeof body == 'object' && !(types.includes(body.constructor))) {
                 reqOptions.body = JSON.stringify(body);
             }
             else {
@@ -129,8 +137,24 @@ class GUI_Module
 
         let queryString = '';
         if (query) {
+            let QueryURL = new URLSearchParams();
+
+            for(const [key, value] of Object.entries(query)) {
+                if(Array.isArray(value)) {
+                    value.forEach(innerValue => QueryURL.append(key, innerValue));
+                }
+                else if(typeof value === 'object') {
+                    for(const [innerKey, innerValue] of Object.entries(value)) {
+                        QueryURL.append(key + '[' + innerKey + ']', innerValue.toString());
+                    }
+                }
+                else {
+                    QueryURL.append(key, value.toString());
+                }
+            }
+
             // Convert to encoded string and prepend with ?
-            queryString = new URLSearchParams(query).toString();
+            queryString = QueryURL.toString();
             queryString = queryString && `?${queryString}`;
         }
 
@@ -139,10 +163,10 @@ class GUI_Module
         } = window.location;
 
         let Endpoint = new URL(pathname + queryString, origin);
-        Endpoint.searchParams.set('module', this.getClassName());
+        Endpoint.searchParams.set('module', module);
         Endpoint.searchParams.set('method', ajaxMethod);
 
-        // console.debug(Endpoint.toString(), reqOptions);
+        // console.debug('fetch', Endpoint.toString(), reqOptions);
         return fetch(Endpoint, reqOptions).then(this.parseAjaxResponse);
     }
 
