@@ -290,27 +290,6 @@ class Weblication extends Component
         return $this->skin;
     }
 
-    /**
-     * Sets the main language for the Page. It's used for html templates and images
-     *
-     * @param string $lang Country Code
-     * @return Weblication
-     */
-    public function setLanguage(string $lang = 'de'): self
-    {
-        $this->language = $lang;
-        return $this;
-    }
-
-    /**
-     * Liefert die Sprache der Seite.
-     *
-     * @return string Sprache der Webseite
-     **/
-    public function getLanguage(): string
-    {
-        return $this->language; // $this->language;
-    }
 
     /**
      * Get translator
@@ -750,7 +729,7 @@ class Weblication extends Component
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baseLib Schau auch in die baeLib
+     * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
      **/
     public function findTemplate(string $filename, string $classFolder = '', bool $baseLib = false): string
