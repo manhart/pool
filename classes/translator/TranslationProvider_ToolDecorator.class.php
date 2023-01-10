@@ -9,6 +9,8 @@
  */
 declare(strict_types=1);
 namespace pool\classes\translator;
+use Template;
+
 /**
  * A decorator that adds functionality for interacting with the Translator tool
  */
@@ -33,7 +35,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
         //decide
         //(clear last Request)
         //Disable Translation cache
-        @\Template::setCacheTranslations(false);
+        @Template::setCacheTranslations(false);
         return true;//TODO
     }
 
@@ -62,7 +64,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
         $lang = $this->provider->getLang();
         $keyWord = self::KEYWORD;
         $identifier = "$keyWord.$this->lastKey";
-        $message = "<a href='#$identifier', id='$identifier' class='$keyWord', lang='$lang'>{$translation->getMessage()}</a>";
+        $message = "<a href='#$identifier' id='$identifier' class='$keyWord' lang='$lang'>{$translation->getMessage()}</a>";
         return new Translation($translation->getProviderLocale(),
             $message);
     }
