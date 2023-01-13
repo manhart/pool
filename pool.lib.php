@@ -34,12 +34,11 @@ if(!defined('DIR_POOL_ROOT')) {
 # Bindet die jeweiligen Includes (.lib.php) der Unterverzeichnisse mit ein.
 require __DIR__.'/'.PWD_TILL_INCLUDES.'/includes.lib.php';
 require __DIR__.'/'.PWD_TILL_CLASSES.'/classes.lib.php';
-//require (PWD_TILL_GUIS.'/guis.lib.php');
 //require (PWD_TILL_3RDPARTY.'/3rdparty.lib.php');
 
-if (defined('DIR_SUBCODES_ROOT') and is_dir(DIR_SUBCODES_ROOT)) {
-    include_once __DIR__.'/'.DIR_SUBCODES_ROOT.'/subcodes.lib.php';
-}
+//if (defined('DIR_SUBCODES_ROOT') and is_dir(DIR_SUBCODES_ROOT)) {
+//    include_once __DIR__.'/'.DIR_SUBCODES_ROOT.'/subcodes.lib.php';
+//}
 
 require_once('autoload.inc.php');
 PoolAutoloader::getLoader()->register();

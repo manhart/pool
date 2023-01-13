@@ -75,10 +75,10 @@ class MySQL_Resultset extends Resultset
      * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
      * @see Resultset::getLastError()
      */
-    public function execute(string $sql, string $dbname='', ?callable $callbackOnFetchRow = null): bool
+    public function execute(string $sql, string $dbname='', ?callable $callbackOnFetchRow = null, array $metaData = []): bool
     {
         $bResult = false;
-        $this->rowset = array();
+        $this->rowset = [];
 
         $result = false;
         if (!$this->db instanceof DataInterface) {
@@ -106,7 +106,7 @@ class MySQL_Resultset extends Resultset
             #echo $cmd.'<br>';
             if ($cmd == 'SELECT' or $cmd == 'SHOW' or $cmd == 'DESCRIBE' or $cmd == 'EXPLAIN' /* or substr($cmd, 0, 1) == '('*/) { // ( z.B. UNION
                 if ($this->db->numrows($result) > 0) {
-                    $this->rowset = $this->db->fetchrowset($result, $callbackOnFetchRow);
+                    $this->rowset = $this->db->fetchrowset($result, $callbackOnFetchRow, $metaData);
                     $this->reset();
                 }
                 $this->db->freeresult($result);

@@ -10,6 +10,8 @@
  * @link https://alexander-manhart.de
  */
 
-class DAOException extends Exception
+namespace pool\classes;
+
+class DAOException extends \Exception
 {
 }

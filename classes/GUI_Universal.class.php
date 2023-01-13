@@ -13,14 +13,6 @@
  * @link https://alexander-manhart.de
  */
 
-/**
- * Class GUI_Universal
- *
- * @package pool
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @version $Id: GUI_Universal.class.php,v 1.5 2007/02/27 10:36:31 hoesl Exp $
- * @access public
- **/
 class GUI_Universal extends GUI_Module
 {
     /**
@@ -84,7 +76,7 @@ class GUI_Universal extends GUI_Module
         #### Bindet gui_....css ein:
         if($this->Weblication->hasFrame()) {
             $cssFile = @$this->Weblication->findStyleSheet($this->getClassName().'.css', $this->getClassName(), true);
-            $this->Weblication->getFrame()->getHeaderdata()->addStyleSheet($cssFile);
+            $this->Weblication->getFrame()->getHeadData()->addStyleSheet($cssFile);
         }
 
         $this->id = $this->Input->getVar('id');

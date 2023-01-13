@@ -34,7 +34,7 @@ class GUI_Emoticons extends GUI_Module
         $this -> Template -> setFilePath('emoticons', $file_emoticons);
 
         $file_javascript = $this -> Weblication -> findJavascript('emoticon.js', $this -> getClassName(), true);
-        $this -> Weblication -> getFrame() -> Headerdata -> addJavaScript($file_javascript);
+        $this -> Weblication -> getFrame() -> getHeadData() -> addJavaScript($file_javascript);
     }
 
     function prepare ()
@@ -45,7 +45,7 @@ class GUI_Emoticons extends GUI_Module
             $this -> Weblication -> getMain() -> setActiveMenueItem('News');
         }
 
-        $dao_emoticons = DAO::createDAO($interfaces, $this -> Input -> getVar('tabledefine'));
+        $dao_emoticons = DAO::createDAO($this->Input->getVar('tabledefine'), $interfaces);
         $result_emoticons = $dao_emoticons->getMultiple(null, null, [], array('sort' => 'ASC'));
 
         $maxcols = (int)$this -> Input -> getVar('maxcols');
