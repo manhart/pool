@@ -6,8 +6,10 @@
  * @since 2009-07-15
  * @author Alexander Manhart <alexander.manhart@gmx.de>
  */
+'use strict';
+
 let REQUEST_METHOD;
-let REQUEST_PARAM_MODULENAME;
+let REQUEST_SCHEMA;
 let REQUEST_CONTENTTYPE;
 let REQUEST_PROCESSDATA;
 let REQUEST_DATATYPE;
@@ -16,7 +18,7 @@ resetGlobalsOfRequestPOOL();
 function resetGlobalsOfRequestPOOL()
 {
     REQUEST_METHOD = undefined;
-    REQUEST_PARAM_MODULENAME = 'requestModule';
+    REQUEST_SCHEMA = null;
     REQUEST_CONTENTTYPE = 'application/x-www-form-urlencoded; charset=UTF-8';
     REQUEST_PROCESSDATA = true;
     REQUEST_DATATYPE = '';
@@ -32,7 +34,7 @@ function RequestPOOL(module, method, params, async)
 		return false;
 	}
 	if(SCRIPT_NAME == '{SCRIPT_NAME}') {
-		alert('Variable SCRIPT_NAME wird nicht gesetzt! Siehe {SCRIPT_NAME} im Frame. Einfach in [GUI_Url(eliminate=schema)] abï¿½ndern.');
+		alert('Variable SCRIPT_NAME wird nicht gesetzt! Siehe {SCRIPT_NAME} im Frame. Einfach in [GUI_Url(eliminate=schema)] abändern.');
 		return false;
 	}
 
@@ -41,38 +43,39 @@ function RequestPOOL(module, method, params, async)
 	}
 
 	if(typeof params == 'undefined') {
-		var params = new Array();
+		params = [];
 	}
 
 	if(typeof async == 'undefined') {
-		var async = false;
+		async = false;
 	}
 
-	let RequestUrl = new Url();
+	const RequestUrl = new Url();
 	RequestUrl.setScript(SCRIPT_NAME);
+    if(REQUEST_SCHEMA != null) RequestUrl.setParam('schema', REQUEST_SCHEMA);
 	if(module != null) RequestUrl.setParam('module', module);
 	RequestUrl.setParam('method', method);
 
 
 	// Weitere Parameter
-	if(RequestPOOL.arguments.length > 4) {
-		var onRequestSuccess = RequestPOOL.arguments[4];
+	if(arguments.length > 4) {
+		var onRequestSuccess = arguments[4];
 	}
 
-	if(RequestPOOL.arguments.length > 5) {
-		var onRequestComplete = RequestPOOL.arguments[5];
+	if(arguments.length > 5) {
+		var onRequestComplete = arguments[5];
 	}
 
 	// if(RequestPOOL.arguments.length > 6) {
 	// 	var onPhpFailure = RequestPOOL.arguments[6];
 	// }
 
-	if(RequestPOOL.arguments.length > 6) {
-		var onRequestFailure = RequestPOOL.arguments[6];
+	if(arguments.length > 6) {
+		var onRequestFailure = arguments[6];
 	}
 
-	if(RequestPOOL.arguments.length > 7) {
-		var onBeforeSend = RequestPOOL.arguments[7];
+	if(arguments.length > 7) {
+		var onBeforeSend = arguments[7];
 	}
 
 	// if(RequestPOOL.arguments.length > 8) {
@@ -169,7 +172,7 @@ function RequestPOOL(module, method, params, async)
 				// log(data);
 				// jQuery 1.7.1 u. jQuery 1.7.2 scheinen beim Abbruch eines PHP Scripts trotzdem in die success Methode zu gehen
 
-				if(!data) {
+                if(!data) {
 					this.error(jqXHR, 0, 'Apache/PHP Script died: unknown error');
 					return false;
 				}
@@ -183,51 +186,51 @@ function RequestPOOL(module, method, params, async)
 				}
 
                 // expect POOL object with the properties "Result" and optionally "Error". If not, take it as it is.
-				var Result = data.Result ?? data;
-				let Error = data.Error;
+                let error = data.error ?? false;
+                data = data.data ?? data;
 
-				if(Error && Error.length > 0) {
-					this.error(jqXHR, 'pool_error_message', window.decodeURI(Error));
+				if(error && error.length > 0) {
+					this.error(jqXHR, 'pool_error_message', window.decodeURI(error));
 					return false;
 				}
 
 				if(typeof onRequestSuccess != 'undefined') {
 					try {
-						switch(typeof Result) {
+						switch(typeof data) {
 							case 'string':
 								if(typeof onRequestSuccess == 'string') {
-									eval(onRequestSuccess+'(\''+Result+'\');');
+									eval(onRequestSuccess+'(\''+data+'\');');
 								}
 								else if(typeof onRequestSuccess == 'function') {
 									var f=onRequestSuccess;
-									f(Result, textStatus, jqXHR);
+									f(data, textStatus, jqXHR);
 								}
 								break;
 
 							case 'object':
 								if(typeof onRequestSuccess == 'string') {
-									var Result = $H(Result).toJSON();
-									eval(onRequestSuccess+'('+Result+');');
+                                    data = $H(data).toJSON();
+                                    eval(onRequestSuccess+'('+data+');');
 								}
 								else if(typeof onRequestSuccess == 'function') {
 									var f = onRequestSuccess;
-									f(Result, textStatus, jqXHR);
+									f(data, textStatus, jqXHR);
 								}
 								break;
 
 							case 'number':
 							case 'boolean':
 								if(typeof onRequestSuccess == 'string') {
-									eval(onRequestSuccess+'('+Result+');');
+									eval(onRequestSuccess+'('+data+');');
 								}
 								else if(typeof onRequestSuccess == 'function') {
 									var f=onRequestSuccess;
-									f(Result, textStatus, jqXHR);
+									f(data, textStatus, jqXHR);
 								}
 								break;
 
 							default:
-								alert('Type of Result not defined in RequestPOOL: '+typeof Result);
+								alert('Type of data not defined in RequestPOOL: '+typeof data);
 						}
 					}
 					catch(e) {

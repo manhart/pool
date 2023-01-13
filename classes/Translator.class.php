@@ -399,15 +399,11 @@ final class Translator extends \PoolObject
      */
     private function getLanguage(): string
     {
-        $language = $this->defaultLanguage;
-        if ($this->defaultLanguage != $this->language) {
-            $language = $this->language ?: $this->defaultLanguage;
-        }
-        return $language;
+        return ($this->language ?: $this->defaultLanguage);
     }
 
     /**
-     * gets the weekday expression according to the weekday number (strftime('%w'))
+     * gets the weekday expression according to the weekday number
      *
      * @param int $weekday 0-6 = Sunday - Saturday
      * @return string
@@ -507,6 +503,7 @@ final class Translator extends \PoolObject
     /**
      * @param string $content
      * @return string
+     * @throws Exception
      */
     public function parse(string $content): string
     {

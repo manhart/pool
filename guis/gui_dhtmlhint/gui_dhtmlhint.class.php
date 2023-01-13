@@ -32,7 +32,7 @@ class GUI_DHtmlHint extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals = I_EMPTY)
     {
         parent::init($superglobals);
     }
@@ -46,35 +46,28 @@ class GUI_DHtmlHint extends GUI_Module
      **/
     function loadFiles()
     {
-        $template = $this -> Weblication -> findTemplate('tpl_dhtmlhint.html', $this -> getClassName(), true);
-        $this -> Template -> setFilePath('stdout', $template);
+        $template = $this->Weblication->findTemplate('tpl_dhtmlhint.html', $this->getClassName(), true);
+        $this->Template->setFilePath('stdout', $template);
     }
 
     /**
-     * GUI_DHtmlHint::prepare()
-     *
      * Template vorbereiten
      *
      * @access public
      **/
     function prepare()
     {
-        $interfaces = & $this -> Weblication -> getInterfaces();
-        $Template = & $this -> Template;
-        $Session = & $this -> Session;
-        $Input = & $this -> Input;
         /* @var $Frame GUI_CustomFrame */
-        $Frame = &$this -> Weblication -> getFrame();
+        $Frame = $this->Weblication->getFrame();
 
-        $jsfile = $this -> Weblication -> findJavaScript('dhtmlhint.js', $this -> getClassName(), true);
-        if (is_a($Frame, 'GUI_CustomFrame') and is_a($Frame -> getHeaderdata(), 'GUI_Headerdata')) {
-            $Headerdata = &$Frame -> getHeaderdata();
-            $Headerdata -> addJavaScript($jsfile);
+        $jsfile = $this->Weblication->findJavaScript('dhtmlhint.js', $this->getClassName(), true);
+        if($this->Weblication->hasFrame()) {
+            $this->Weblication->getHead()->addJavaScript($jsfile);
         }
 
-        if (is_a($Frame, 'GUI_CustomFrame')) {
-            $Frame -> addBodyMousemove('MousePosition.detect(event)');
-            $Frame -> addBodyMousemove('DHtmlHintObject.doMouseMove(event)');
+        if(is_a($Frame, 'GUI_CustomFrame')) {
+            $Frame->addBodyEvent('onmousemove', 'MousePosition.detect(event)');
+            $Frame->addBodyEvent('onmousemove', 'DHtmlHintObject.doMouseMove(event)');
         }
     }
 
@@ -87,7 +80,7 @@ class GUI_DHtmlHint extends GUI_Module
      **/
     function finalize(): string
     {
-        $this -> Template -> parse('stdout');
-        return $this -> Template -> getContent('stdout');
+        $this->Template->parse('stdout');
+        return $this->Template->getContent('stdout');
     }
 }

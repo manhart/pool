@@ -68,7 +68,7 @@ class GUI_DBLookupSelect extends GUI_Select
 
         $utf8 = $Input->getVar('utf8');
 
-        $DAO = DAO::createDAO($interfaces, $Input->getVar('tabledefine'));
+        $DAO = DAO::createDAO($Input->getVar('tabledefine'), $interfaces);
 
         # filter
         $filter = $Input->getVar('filter');
@@ -133,8 +133,8 @@ class GUI_DBLookupSelect extends GUI_Select
                     $option = shorten($option, $shorten, 1, false);
                 }
                 $value = $record[$datafield];
-                $options[] = ($utf8) ? utf8_encode($option) : $option;
-                $values[] = ($utf8) ? utf8_encode($value) : $value;
+                $options[] = ($utf8) ? UConverter::transcode($option, 'UTF8', 'ISO-8859-1') : $option;
+                $values[] = ($utf8) ? UConverter::transcode($value, 'UTF8', 'ISO-8859-1') : $value;
             }
         }
         $defaultOptions = $Input -> getVar('options');
