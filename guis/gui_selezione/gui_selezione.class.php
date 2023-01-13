@@ -65,34 +65,34 @@ class GUI_Selezione extends GUI_Module
         $this->Template->setFilePath('stdout', $file);
 
         if(!isAjax()) {
-            $Headerdata = &$this->Weblication->findComponent('Headerdata');
-            if($Headerdata) {
+            $HeadData = $this->Weblication->getHead();
+            if($HeadData) {
                 switch ($jsLib) {
                     case 'prototype':
                         // prototype.js benoetigt
                         $jsfile = $this->Weblication->findJavaScript('prototype.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('ajax.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('url.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('selezione.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
                         break;
 
                     case 'jquery':
                         // jquery wird im moment von der software aufgrund der version selbst eingebunden (TODO)
                         $jsfile = $this->Weblication->findJavaScript('jquery.ajax.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('url.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
 
                         $jsfile = $this->Weblication->findJavaScript('jquery.selezione.js', $this->getClassName(), true);
-                        $Headerdata->addJavaScript($jsfile);
+                        $HeadData->addJavaScript($jsfile);
                         break;
                 }
             }
@@ -231,7 +231,7 @@ class GUI_Selezione extends GUI_Module
         $row = array();
         $selectionColumns = $this->getSelectionColumns();
         foreach($selectionColumns as $column) {
-            $row[$column] = utf8_decode($this->getVar($column));
+            $row[$column] = $this->getVar($column);
         }
         $this->addSelection($row, $this->getVar('URL_SELEZIONE_KEY'));
 
@@ -250,7 +250,7 @@ class GUI_Selezione extends GUI_Module
      */
     function remove1()
     {
-        $PK = utf8_decode($this->getVar('URL_SELEZIONE_KEY'));
+        $PK = $this->getVar('URL_SELEZIONE_KEY');
         unset($this->selectionRows[$PK]);
         $this->storeSelection();
 
@@ -268,16 +268,14 @@ class GUI_Selezione extends GUI_Module
      */
     function &_renderSelectionList()
     {
-        $BlockSelectionList = &$this->Template->newBlock('bSelectionList'); /* @var BlockSelectionList TempBlock */
+        $BlockSelectionList = $this->Template->newBlock('bSelectionList'); /* @var BlockSelectionList TempBlock */
 
         foreach ($this->selectionRows as $row) {
-            $BlockSelectionRow = &$this->Template->newBlock('bSelectionRow');
+            $BlockSelectionRow = $this->Template->newBlock('bSelectionRow');
             if($callback = $this->callback_formatSelectionList) {
                 $row = $callback[0]->$callback[1]($row);
             }
 
-            #$BlockSelectionRow->setVar(utf8_decode(urldecode($row)));
-            #$BlockSelectionRow->setVar(str_replace('%20', ' ', $row));
 
             $BlockSelectionRow->setVar(/*sonder2umlauts*/($row));
 

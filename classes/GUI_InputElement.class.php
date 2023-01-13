@@ -267,6 +267,6 @@ class GUI_InputElement extends GUI_Universal
             $value = $Input -> getVar('defaultvalue');
         }
 
-        $Template->setVar('VALUE', $value, Template::ENCODE_HTMLSPECIALCHARS);
+        $Template->setVar('VALUE', $value, Template::CONVERT_HTMLSPECIALCHARS);
     }
 }
