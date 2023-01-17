@@ -80,6 +80,13 @@ class Module extends Component
     protected int $superglobals = I_EMPTY;
 
     /**
+     * data for the client
+     *
+     * @var array
+     */
+    private array $clientVars = [];
+
+    /**
      * Creates the Input Defaults. Stores internal parameters and calls the init method.
      *
      * @param Component|null $Owner Owner
@@ -249,6 +256,38 @@ class Module extends Component
     public function setVars(array $assoc): Input
     {
         return $this->Input->setVars($assoc);
+    }
+
+    /**
+     * passes data to the client
+     *
+     * @param string $key
+     * @param mixed $value
+     *
+     * @return $this
+     */
+    public function setClientVar(string $key, mixed $value): self
+    {
+        $this->clientVars[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * passes data to the client
+     *
+     * @param array $vars
+     *
+     * @return $this
+     */
+    public function setClientVars(array $vars): self
+    {
+        $this->clientVars = $vars + $this->clientVars;
+        return $this;
+    }
+
+    public function getClientVars(): array
+    {
+        return $this->clientVars;
     }
 
     /**

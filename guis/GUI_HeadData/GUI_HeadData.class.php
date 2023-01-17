@@ -35,10 +35,6 @@ class GUI_HeadData extends GUI_Module
     // @access private
     var $Expires = 0;
 
-    // @var string Sprache des Dateiinhalts (HTTP 1.0 und RFC1766)
-    // @access private
-    var $ContentLanguage = 'de';
-
     // @var boolean Anweisung an den Browser: keinen Cache benutzen, sondern von Originalseite laden
     // @access private
     var $BrowserNoCache = true;
@@ -59,8 +55,7 @@ class GUI_HeadData extends GUI_Module
     private string $title = 'Unknown page title';
 
     // @var string Beschreibung des Html Dokuments (Seite)
-    // @access private
-    var $Description = '';
+    private string $description = '';
 
     // @var string Suchmaschinenen-Robot Anweisungen
     private string $robots = self::ROBOTS_NOFOLLOW;
@@ -123,6 +118,13 @@ class GUI_HeadData extends GUI_Module
     private $addFileFct = null;
 
     /**
+     * data for the client
+     *
+     * @var array
+     */
+    private array $clientData = [];
+
+    /**
      * Konstruktor
      *
      * @param object $Owner Besitzer vom Typ Component
@@ -133,11 +135,6 @@ class GUI_HeadData extends GUI_Module
         parent::__construct($Owner, $params);
 
         $this->baseHref = $_SERVER['PHP_SELF'];
-
-        $php_default_charset = ini_get('default_charset');
-        if($php_default_charset) {
-            $this->charset = strtoupper($php_default_charset);
-        }
     }
 
     /**
@@ -155,7 +152,7 @@ class GUI_HeadData extends GUI_Module
      *
      * @access public
      * @param integer $expire Anzahl in Sekunden. 0 bedeutet der Browser muss immer von der Originaldatei laden
-     **/
+     */
     public function setExpires($expire)
     {
         $this->Expires = $expire;
@@ -165,7 +162,7 @@ class GUI_HeadData extends GUI_Module
      * Teilt dem Browser mit, dass er keinen Cache verwenden soll (je nach Browserinterpretation gleich zu expire=0)
      *
      * @param boolean $bValue Wahr NoCache, Falsch mit Cache
-     **/
+     */
     function setBrowserNoCache($bValue)
     {
         $this->BrowserNoCache = $bValue;
@@ -175,7 +172,7 @@ class GUI_HeadData extends GUI_Module
      * Teilt einem Proxy mit, dass er keinen Cache verwenden soll (pragma)
      *
      * @param boolean $bValue Wahr NoCache, Falsch mit Cache
-     **/
+     */
     function setProxyNoCache($bValue)
     {
         $this->ProxyNoCache = $bValue;
@@ -184,11 +181,21 @@ class GUI_HeadData extends GUI_Module
     /**
      * Setzt den Seitentitel und MetaTags!
      *
-     * @param string $sTitle Titel (darf nicht leer sein; Titel muss vorhanden sein)
-     **/
-    function setTitle(string $sTitle)
+     * @param string $title Titel (darf nicht leer sein; Titel muss vorhanden sein)
+     */
+    public function setTitle(string $title)
     {
-        $this->title = $sTitle;
+        $this->title = $title;
+    }
+
+    /**
+     * @param string $description
+     *
+     * @return void
+     */
+    public function setDescription(string $description)
+    {
+        $this->description = $description;
     }
 
     /**
@@ -196,7 +203,7 @@ class GUI_HeadData extends GUI_Module
      *
      * @param string $charset Zeichensatz
      */
-    function setCharset(string $charset)
+    public function setCharset(string $charset)
     {
         $this->charset = $charset;
     }
@@ -209,16 +216,6 @@ class GUI_HeadData extends GUI_Module
     public function getTitle(): string
     {
         return $this->title;
-    }
-
-    /**
-     * Setzt einen Beschreibungstext fuer Suchmaschinen
-     *
-     * @param string $sDescription
-     **/
-    function setDescription(string $sDescription)
-    {
-        $this->Description = $sDescription;
     }
 
     /**
@@ -340,6 +337,21 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
+     * @param Module $Module
+     *
+     * @return GUI_HeadData
+     */
+    public function setClientData(Module $Module): self
+    {
+        if($Module->getClientVars()) {
+            $clientVars = $Module->getClientVars();
+            $clientVars['className'] = $Module::class;
+            $this->clientData[$Module->getName()] = $clientVars;
+        }
+        return $this;
+    }
+
+    /**
      * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
      *
      * @param string $xuaCompatible
@@ -361,13 +373,16 @@ class GUI_HeadData extends GUI_Module
         $this->Template->setVars(
             array(
                 'EXPIRES' => $this->Expires,
-                'LANGUAGE' => $this->ContentLanguage,
+                'LANGUAGE' => $this->Weblication->getLanguage(),
                 'TITLE' => $this->title,
-                'DESCRIPTION' => $this->Description,
+                'DESCRIPTION' => $this->description,
                 'ROBOTS' => $this->robots,
                 'BASE_HREF' => $this->baseHref,
                 'BASE_TARGET' => $this->baseTarget,
                 'CHARSET' => $this->charset,
+                'KEYWORDS' => '',
+                'AUTHOR' => '',
+                'CLIENT-DATA' => base64_encode(json_encode($this->clientData, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION)),
                 'SCRIPT' => $Url->getUrl()
             )
         );
@@ -387,7 +402,7 @@ class GUI_HeadData extends GUI_Module
             $this->Template->newBlock('PROXYNOCACHE');
         }
 
-        if(count($this->metaRefresh) > 0) {
+        if($this->metaRefresh) {
             $this->Template->newBlock('METAREFRESH');
             $this->setVar('REFRESH', $this->metaRefresh['seconds']);
             $this->setVar('URL', $this->metaRefresh['url']);
