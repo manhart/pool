@@ -66,11 +66,18 @@ class Weblication extends Component
     public Input $Input;
 
     /**
-     * Relativer Pfad zur Hauptbibliothek
+     * client-side path to the pool
      *
      * @var string
      */
-    private string $relativePathBaseLib = '';
+    private string $poolClientSideRelativePath = 'pool';
+
+    /**
+     * server-side path to the pool
+     *
+     * @var string
+     */
+    private string $poolServerSideRelativePath = 'pool';
 
     /**
      * Skin / Theme (Designvorlage bzw. Bilderordner)
@@ -230,7 +237,8 @@ class Weblication extends Component
     {
         parent::__construct(null);
         $this->Settings = new Input(I_EMPTY);
-        $this->relativePathBaseLib = makeRelativePathsFrom(__DIR__, DIR_POOL_ROOT)['clientside'];
+        $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
+        $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         return $this;
     }
 
@@ -749,9 +757,9 @@ class Weblication extends Component
         }
 
         $msg = "Template $filename in ".__METHOD__." not found!";
-        if(!$this->relativePathBaseLib and $baseLib) {
+        if(!$this->getPoolClientSideRelativePath() and $baseLib) {
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
-            $msg .= ' You need to set the path to the pool with Weblication->setRelativePathBaseLib().';
+            $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
         }
         $this->raiseError(__FILE__, __LINE__, $msg);
         return '';
@@ -832,7 +840,7 @@ class Weblication extends Component
             }
             if($baseLib) {
                 //BaseLib-GUIs
-                $gui_directories[] = buildDirPath($this->getRelativePathBaseLib(PWD_TILL_GUIS), $classFolder);
+                $gui_directories[] = buildDirPath($this->getPoolServerSideRelativePath(PWD_TILL_GUIS), $classFolder);
             }
         }
 
@@ -869,8 +877,8 @@ class Weblication extends Component
         $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
         //Ordner BaseLib -> look in POOL instead
         if($baseLib) {
-            $folder_javaScripts = addEndingSlash($this->getRelativePathBaseLib($folder_javaScripts));
-            $folder_guis = addEndingSlash($this->getRelativePathBaseLib($folder_guis));
+            $folder_javaScripts = addEndingSlash($this->getPoolServerSideRelativePath($folder_javaScripts));
+            $folder_guis = addEndingSlash($this->getPoolServerSideRelativePath($folder_guis));
         }
         $javaScriptFile = $folder_javaScripts . $filename;
         if(file_exists($javaScriptFile))
@@ -890,22 +898,34 @@ class Weblication extends Component
     }
 
     /**
-     * @param string $path
+     * @param string $clientSidePath
+     * @param string $serverSidePath
      */
-    public function setRelativePathBaseLib(string $path)
+    public function setPoolRelativePath(string $clientSidePath, string $serverSidePath)
     {
-        $this->relativePathBaseLib = $path;
+        $this->poolClientSideRelativePath = $clientSidePath;
+        $this->poolServerSideRelativePath = $serverSidePath;
     }
 
     /**
-     * Relativer Pfad zum Rootverzeichnis der BaseLib
+     * client-side relative path to the pool root directory
      *
      * @param string $subDir
-     * @return string path from project to library pool
+     * @return string path from the application to the pool
      */
-    public function getRelativePathBaseLib(string $subDir = ''): string
+    public function getPoolClientSideRelativePath(string $subDir = ''): string
     {
-        return $this->relativePathBaseLib . '/' . $subDir;
+        return $this->poolClientSideRelativePath . ($subDir ? '/' : '') .  $subDir;
+    }
+
+    /**
+     * server-side relative path to the pool root directory
+     * @param string $subDir
+     * @return string path from the application to the pool
+     */
+    public function getPoolServerSideRelativePath(string $subDir = ''): string
+    {
+        return $this->poolServerSideRelativePath . ($subDir ? '/' : '') .  $subDir;
     }
 
     /**
