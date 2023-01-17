@@ -74,7 +74,7 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
         return $proposed;
     }
 
-    function getProviderInternal(string $providerName, string $locale): TranslationProvider
+    protected function getProviderInternal(string $providerName, string $locale): TranslationProvider
     {
         $provider = new self();
         $provider->locale = $locale;
