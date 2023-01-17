@@ -63,7 +63,7 @@ class GUI_Module
         try {
             json = JSON.parse(text);
         }
-        catch(e) { // @todo only developers (box) should see the hole text/error
+        catch(e) {
             console.error('Unparsed text', text);
             throw e;
         }

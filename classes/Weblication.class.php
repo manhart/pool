@@ -15,6 +15,8 @@
 
 use pool\classes\Language;
 use pool\classes\ModulNotFoundException;
+use pool\classes\translator\TranslationProviderFactory;
+use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
 
@@ -298,9 +300,6 @@ class Weblication extends Component
      */
     public function getTranslator(): Translator
     {
-        if(!isset($this->translator)) {
-            $this->setTranslator(new Translator());
-        }
         return $this->translator;
     }
 
@@ -947,33 +946,43 @@ class Weblication extends Component
     {
         $this->Settings->setVars($settings);
 
+        //set well known setting
         $this->setName($this->Settings->getVar('application.name', $this->getName()));
         $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
         $this->setCharset($this->Settings->getVar('application.charset', $this->getCharset()));
         $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
 
-
-        // setup Translator
-        $translatorResourceDir = $this->Settings->getVar('application.translatorResourceDir');
-        if($translatorResourceDir) {
-            $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
-            $AppTranslator = new Translator($TranslatorResource);
-            $this->setTranslator($AppTranslator);
-        }
-
+        // setup AppTranslator
+        $defaultLocale = $this->Settings->getVar('application.locale', 'en_US');
+        $AppTranslator = $this->Settings->getVar('application.translator');
         $TranslatorResource = $this->Settings->getVar('application.translatorResource');
-        if($TranslatorResource instanceof TranslationProviderFactory_ResourceFile) {
-            $AppTranslator = new Translator($TranslatorResource);
-            $this->setTranslator($AppTranslator);
+        $translatorResourceDir = $this->Settings->getVar('application.translatorResourceDir');
+        if(!$AppTranslator instanceof Translator)
+        $AppTranslator = new Translator();
+        if(!$TranslatorResource instanceof TranslationProviderFactory) {
+            if ($translatorResourceDir)//make a ressource from a given file
+            $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
+        elseif (sizeof($AppTranslator->getTranslationResources()) > 0)//Translator is already loaded
+            $TranslatorResource = null;
+        else//add Fallback or throw
+            $TranslatorResource = TranslationProviderFactory_nop::create();
         }
+        if ($TranslatorResource != null)
+        $AppTranslator->addTranslationResource($TranslatorResource);
+        //Setup Languages (for Application)
+        $AppLanguages = $this->Settings->getVar('application.languages');
+        //Get defaults from browser
+        $AppLanguages ??= $AppTranslator->parseLangHeader(false, $defaultLocale);
+        //Try to load the required languages
+        $AppTranslator->swapLangList($AppLanguages);
+        $this->setTranslator($AppTranslator);
 
-        $Translator = $this->Settings->getVar('application.translator');
-        if($Translator instanceof Translator) {
-            $this->setTranslator($Translator);
-        }
-
-        $languages = $this->getTranslator()->parseLangHeader(false, $this->Settings->getVar('application.locale', 'en_US'));
-        $this->getTranslator()->swapLangList($languages);
+        //setup TemplateTranslator
+        $staticResource = TranslationProviderFactory_ResourceFile::create(DIR_RESOURCES_ROOT.'/dict/static');
+        $TemplateTranslator = new Translator($staticResource);
+        //Try to load the required languages
+        $TemplateTranslator->swapLangList($AppLanguages);
+        Template::setTranslator($TemplateTranslator);
 
         // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
         return $this;
@@ -1094,14 +1103,12 @@ class Weblication extends Component
      * @param int $type
      * @return string
      * @see Weblication::setLocale()
-     * @see Translator::detectLocale()
+     * @see Translator::getPrimaryLocale()
      */
     public function getLocale(int $type = self::LOCALE_UNCHANGED): string
     {
         if(!$this->locale) {
-            // @todo replace with Translator::getInstance()->parseLangHeader() after merge with feature-translator
-            // @todo maybe move it into constructor or setup (but setup does not necessarily have to be called)
-            $this->setLocale(Translator::detectLocale($this->defaultLocale));
+            $this->setLocale($this->getTranslator()->getPrimaryLocale());
         }
 
         if($type == self::LOCALE_UNCHANGED) {
@@ -1112,7 +1119,7 @@ class Weblication extends Component
 
         // with region
         if($type & self::LOCALE_FORCE_REGION && !(str_contains($locale, '_') || str_contains($locale, '-'))) {
-            $locale = Language::getBestLocale($this->locale, $this->defaultLocale);
+            $locale = Language::getBestLocale($locale, $this->getDefaultLocale());
         }
         // with charset
         if($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {

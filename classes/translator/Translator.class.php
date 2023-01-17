@@ -395,7 +395,7 @@ class Translator
         assert($translation == null || $translation instanceof Translation);
         $message = $translation?->getMessage() ?? $defaultMessage;
         //message processing
-        if ($message == null) {
+        if ($message === null) {
             $success = false;
             $reply = "String $key not found";
         }elseif (!$args) {
