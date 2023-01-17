@@ -98,6 +98,25 @@ class Weblication
     {
         return this.#modules;
     }
+
+    run()
+    {
+        const clientData = JSON.parse(window.atob(document.head.querySelector('meta[name=client-data]').content));
+
+        for(const moduleName in clientData) {
+            const className = clientData[moduleName].className;
+            delete clientData[moduleName].className;
+            const options = clientData[moduleName];
+            window['$'+moduleName] = GUI_Module.createGUIModule(className, moduleName);
+
+            if(!this.module_exists(moduleName)) continue;
+
+            const $Module = this.getModule(moduleName);
+            if(typeof $Module.init === 'function') {
+                $Module.init(options);
+            }
+        }
+    }
 }
 const $Weblication = Weblication.getInstance();
 
