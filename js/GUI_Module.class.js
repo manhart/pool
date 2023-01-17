@@ -9,7 +9,7 @@
 class GUI_Module
 {
     name = '';
-    className = what(this);
+    className = this.constructor.name;
 
     /**
      * @param {string} name of module
@@ -17,7 +17,6 @@ class GUI_Module
     constructor(name)
     {
         this.name = name;
-        this.className = what(this);
 
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
         if(typeof this.className == 'undefined') {
