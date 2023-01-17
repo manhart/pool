@@ -482,15 +482,16 @@ class GUI_Module extends Module
      * @param string $className
      * @param bool $includeJS
      * @param bool $global
-     * @return void
+     *
+     * @return bool
      */
-    protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $global = true): void
+    protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $global = true): bool
     {
         if(!$this->js_createGUIModule) {
-            return;
+            return false;
         }
         if(!$this->Weblication->hasFrame()) {
-            return;
+            return false;
         }
 
         $className = $className ?: $this->getClassName();
@@ -498,18 +499,19 @@ class GUI_Module extends Module
         if($includeJS) {
             $js = $this->Weblication->findJavaScript($className . '.js', $className, false, false);
             if(!$js) {
-                return;
+                return false;
             }
 
             $this->Weblication->getFrame()->getHeadData()->addJavaScript($js);
         }
 
-        $windowCode = '';
-        if($global) {
-            $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
-        }
-        $this->Weblication->getFrame()->getHeadData()->addScriptCode($this->getName(),
-            $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
+//        $windowCode = '';
+//        if($global) {
+//            $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
+//        }
+//        $this->Weblication->getFrame()->getHeadData()->addScriptCode($this->getName(),
+//            $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
+        return true;
     }
 
     /**
@@ -564,6 +566,10 @@ class GUI_Module extends Module
     {
         $this->prepare();
         $this->prepareChildren();
+
+        if($this->js_createGUIModule($this->getClassName()) && $Head = $this->Weblication->getHead()) {
+            $Head->setClientData($this);
+        }
     }
 
     /**

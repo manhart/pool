@@ -93,6 +93,7 @@ class GUI_CustomFrame extends GUI_Module
 
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
+        $this->addScriptFileAtTheEnd($this->Weblication->findJavaScript('run.class.js', '', true));
     }
 
     /**
