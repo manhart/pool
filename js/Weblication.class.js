@@ -6,8 +6,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-'use strict';
-
 class Weblication
 {
     #modules = [];
@@ -35,13 +33,12 @@ class Weblication
     /**
      * register class
      *
-     * @param className
      * @param Class
      * @returns {Weblication}
      */
-    static registerClass(className, Class)
+    static registerClass(Class)
     {
-        Weblication.classesMapping[className] = Class;
+        Weblication.classesMapping[Class.name] = Class;
         return this;
     }
 
@@ -84,7 +81,7 @@ class Weblication
     getModule(moduleName)
     {
         if(!this.module_exists(moduleName)) {
-            throw new Error('Module '+ moduleName + ' is not registered!');
+            throw new Error('Module with Name ' + moduleName + ' was not found!');
         }
         return this.#modules[moduleName];
     }
@@ -99,25 +96,43 @@ class Weblication
         return this.#modules;
     }
 
+    /**
+     * Create all JavaScript modules with the options passed by the server
+     */
     run()
     {
-        const clientData = JSON.parse(window.atob(document.head.querySelector('meta[name=client-data]').content));
+        const clientDataElement = document.head.querySelector('meta[name=client-data]');
+        if(!clientDataElement) {
+            console.debug('no client-data tag');
+            return;
+        }
+
+        let clientData = window.atob(clientDataElement.content);
+        if(!isJsonString(clientData)) {
+            console.debug('client-data content is not compatible with json');
+            return;
+        }
+
+        clientData = JSON.parse(clientData);
+        console.debug('client-data', clientData);
 
         for(const moduleName in clientData) {
             const className = clientData[moduleName].className;
-            delete clientData[moduleName].className;
-            const options = clientData[moduleName];
-            window['$'+moduleName] = GUI_Module.createGUIModule(className, moduleName);
+            try {
+                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName);
+            }
+            catch(e) {
+                console.error(e.toString());
+            }
 
             if(!this.module_exists(moduleName)) continue;
-
             const $Module = this.getModule(moduleName);
-            if(typeof $Module.init === 'function') {
-                $Module.init(options);
-            }
+
+            const initOptions = clientData[moduleName].initOptions ?? [];
+            ready(() => $Module.init(initOptions));
         }
     }
 }
-const $Weblication = Weblication.getInstance();
 
+const $Weblication = Weblication.getInstance();
 console.debug('Weblication.class.js loaded');

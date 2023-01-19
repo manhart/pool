@@ -31,6 +31,11 @@ class GUI_Module
     }
 
     /**
+     * @abstract
+     */
+    init() {}
+
+    /**
      * returns the name of the module
      *
      * @returns {string}
@@ -84,16 +89,13 @@ class GUI_Module
      * @param {object} options
      * @return {Promise<*>}
      */
-    request(ajaxMethod, options = {})
+    request(ajaxMethod, data, options = {})
     {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
-        if(options.data) {
-            let key = 'query';
-            if(options.method && options.method == 'POST')
-                key = 'body';
-            options[key] = options.data;
-            delete options.data;
-        }
+        let key = 'query';
+        if(options.method && options.method == 'POST')
+            key = 'body';
+        options[key] = data;
 
         const {
             headers,
@@ -193,6 +195,9 @@ class GUI_Module
             myClass = GUIClassName;
         }
         else {
+            if(!Weblication.classesMapping[GUIClassName]) {
+                throw new Error('Class ' + GUIClassName + ' is not registered.');
+            }
             myClass = Weblication.classesMapping[GUIClassName];
         }
 
