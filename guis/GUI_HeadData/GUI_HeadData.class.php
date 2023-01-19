@@ -336,18 +336,25 @@ class GUI_HeadData extends GUI_Module
         return $this;
     }
 
+
+
     /**
      * @param Module $Module
      *
      * @return GUI_HeadData
      */
-    public function setClientData(Module $Module): self
+//    public function setClientData(Module $Module): self
+//    {
+//        $clientVars = $Module->getClientVars();
+//        $clientVars['className'] = $Module::class;
+//        $this->clientData[$Module->getName()] = $clientVars;
+//        return $this;
+//    }
+    public function setClientData(Module $Module, ?array $initOptions = null): self
     {
-        if($Module->getClientVars()) {
-            $clientVars = $Module->getClientVars();
-            $clientVars['className'] = $Module::class;
-            $this->clientData[$Module->getName()] = $clientVars;
-        }
+        $clientData = $this->clientData[$Module->getName()] ?? ['className' => $Module::class];
+        if($initOptions) $clientData['initOptions'] = array_merge($clientData['initOptions'] ?? [], $initOptions);
+        $this->clientData[$Module->getName()] = $clientData;
         return $this;
     }
 
@@ -432,6 +439,7 @@ class GUI_HeadData extends GUI_Module
         }
 
         if(count($this->scriptCode) > 0) {
+            $this->Template->newBlock('INLINE_SCRIPT_CODE');
             foreach($this->scriptCode as $name => $code) {
                 $ScriptBlock = $this->Template->newBlock('SCRIPT_CODE');
                 if($ScriptBlock) {

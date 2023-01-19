@@ -437,6 +437,10 @@ class GUI_Module extends Module
         $this->enabledBox = false;
     }
 
+    /**
+     * autoload templates, css- and js-files
+     * @return $this
+     */
     public function loadFiles()
     {
         if(!$this->getWeblication()) return $this;

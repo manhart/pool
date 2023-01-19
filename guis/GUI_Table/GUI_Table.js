@@ -6,8 +6,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-'use strict';
-
 // 09.12.2021, AM, override default filterDatepickerOptions, because the default is undefined
 jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
     'autclose': true,
@@ -17,8 +15,6 @@ jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
     'language': document.documentElement.lang
 }
 
-// $.BootstrapTable = class extends $.BootstrapTable {
-// }
 class GUI_Table extends GUI_Module
 {
     /* > ES7
@@ -1080,11 +1076,4 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('clearFilterControl');
     }
 }
-
-/*
-$.extend($.fn.bootstrapTable.defaults.icons, {
-    clearSearch: 'fa-undo'
-});
-*/
-
-console.debug('GUI_Table.js loaded');
+Weblication.registerClass(GUI_Table);
