@@ -497,7 +497,7 @@ class GUI_Module extends Module
         $className = $className ?: $this->getClassName();
 
         if($includeJS) {
-            $js = $this->Weblication->findJavaScript($className . '.js', $className, false, false);
+            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isBasicLibrary(), false);
             if(!$js) {
                 return false;
             }
