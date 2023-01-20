@@ -91,6 +91,7 @@ class GUI_CustomFrame extends GUI_Module
     {
         parent::loadFiles();
 
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('helpers.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
     }
@@ -166,6 +167,18 @@ class GUI_CustomFrame extends GUI_Module
     {
         $this->addFileFct = $addFileFct;
         return $this;
+    }
+
+    /**
+     * calls Weblication->run on the client
+     *
+     * @return void
+     */
+    public function prepareContent()
+    {
+        parent::prepareContent();
+
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('run.js', '', true));
     }
 
     /**
