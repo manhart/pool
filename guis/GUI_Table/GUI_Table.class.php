@@ -1091,7 +1091,7 @@ class GUI_Table extends GUI_Module
         $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
         $Frame->getHeadData()->addJavaScript($jsFile);
 
-        $this->js_createGUIModule($this->getClassName(), false);
+        // $this->js_createGUIModule($this->getClassName(), false);
     }
 
 //    public function getInspectorProperties(): array

@@ -9,7 +9,7 @@
 class GUI_Module
 {
     name = '';
-    className = what(this);
+    className = this.constructor.name;
 
     /**
      * @param {string} name of module
@@ -17,7 +17,6 @@ class GUI_Module
     constructor(name)
     {
         this.name = name;
-        this.className = what(this);
 
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
         if(typeof this.className == 'undefined') {
@@ -30,6 +29,11 @@ class GUI_Module
 
         Weblication.getInstance().registerModule(this);
     }
+
+    /**
+     * @abstract
+     */
+    init() {}
 
     /**
      * returns the name of the module
@@ -85,16 +89,13 @@ class GUI_Module
      * @param {object} options
      * @return {Promise<*>}
      */
-    request(ajaxMethod, options = {})
+    request(ajaxMethod, data, options = {})
     {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
-        if(options.data) {
-            let key = 'query';
-            if(options.method && options.method == 'POST')
-                key = 'body';
-            options[key] = options.data;
-            delete options.data;
-        }
+        let key = 'query';
+        if(options.method && options.method == 'POST')
+            key = 'body';
+        options[key] = data;
 
         const {
             headers,
@@ -194,6 +195,9 @@ class GUI_Module
             myClass = GUIClassName;
         }
         else {
+            if(!Weblication.classesMapping[GUIClassName]) {
+                throw new Error('Class ' + GUIClassName + ' is not registered.');
+            }
             myClass = Weblication.classesMapping[GUIClassName];
         }
 
