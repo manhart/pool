@@ -35,10 +35,6 @@ class GUI_HeadData extends GUI_Module
     // @access private
     var $Expires = 0;
 
-    // @var string Sprache des Dateiinhalts (HTTP 1.0 und RFC1766)
-    // @access private
-    var $ContentLanguage = 'de';
-
     // @var boolean Anweisung an den Browser: keinen Cache benutzen, sondern von Originalseite laden
     // @access private
     var $BrowserNoCache = true;
@@ -59,8 +55,7 @@ class GUI_HeadData extends GUI_Module
     private string $title = 'Unknown page title';
 
     // @var string Beschreibung des Html Dokuments (Seite)
-    // @access private
-    var $Description = '';
+    private string $description = '';
 
     // @var string Suchmaschinenen-Robot Anweisungen
     private string $robots = self::ROBOTS_NOFOLLOW;
@@ -103,7 +98,7 @@ class GUI_HeadData extends GUI_Module
      *
      * @var string
      */
-    var $xuaCompatible = '';
+    private string $xuaCompatible = '';
 
     /**
      * Zeichensatz im Header einer HTML Datei
@@ -123,21 +118,22 @@ class GUI_HeadData extends GUI_Module
     private $addFileFct = null;
 
     /**
+     * data for the client
+     *
+     * @var array
+     */
+    private array $clientData = [];
+
+    /**
      * Konstruktor
      *
-     * @param object $Owner Besitzer vom Typ Component
+     * @param Component|null $Owner Besitzer vom Typ Component
      * @param array $params
      */
-    function __construct($Owner, array $params = [])
+    function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
-
         $this->baseHref = $_SERVER['PHP_SELF'];
-
-        $php_default_charset = ini_get('default_charset');
-        if($php_default_charset) {
-            $this->charset = strtoupper($php_default_charset);
-        }
     }
 
     /**
@@ -150,12 +146,22 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
+     * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
+     *
+     * @param string $xuaCompatible
+     */
+    public function setXuaCompatible(string $xuaCompatible)
+    {
+        $this->xuaCompatible = $xuaCompatible;
+    }
+
+    /**
      * Setzt die Sekunden, wann der Browser die Datei von der Originaldatei laden soll (und nicht aus dem Cache).
      * z.B. 12 Stunden = 43200; (vertraegt auch String siehe Selfhtml)
      *
      * @access public
      * @param integer $expire Anzahl in Sekunden. 0 bedeutet der Browser muss immer von der Originaldatei laden
-     **/
+     */
     public function setExpires($expire)
     {
         $this->Expires = $expire;
@@ -165,7 +171,7 @@ class GUI_HeadData extends GUI_Module
      * Teilt dem Browser mit, dass er keinen Cache verwenden soll (je nach Browserinterpretation gleich zu expire=0)
      *
      * @param boolean $bValue Wahr NoCache, Falsch mit Cache
-     **/
+     */
     function setBrowserNoCache($bValue)
     {
         $this->BrowserNoCache = $bValue;
@@ -175,7 +181,7 @@ class GUI_HeadData extends GUI_Module
      * Teilt einem Proxy mit, dass er keinen Cache verwenden soll (pragma)
      *
      * @param boolean $bValue Wahr NoCache, Falsch mit Cache
-     **/
+     */
     function setProxyNoCache($bValue)
     {
         $this->ProxyNoCache = $bValue;
@@ -184,11 +190,21 @@ class GUI_HeadData extends GUI_Module
     /**
      * Setzt den Seitentitel und MetaTags!
      *
-     * @param string $sTitle Titel (darf nicht leer sein; Titel muss vorhanden sein)
-     **/
-    function setTitle(string $sTitle)
+     * @param string $title Titel (darf nicht leer sein; Titel muss vorhanden sein)
+     */
+    public function setTitle(string $title)
     {
-        $this->title = $sTitle;
+        $this->title = $title;
+    }
+
+    /**
+     * @param string $description
+     *
+     * @return void
+     */
+    public function setDescription(string $description): void
+    {
+        $this->description = $description;
     }
 
     /**
@@ -196,7 +212,7 @@ class GUI_HeadData extends GUI_Module
      *
      * @param string $charset Zeichensatz
      */
-    function setCharset(string $charset)
+    public function setCharset(string $charset)
     {
         $this->charset = $charset;
     }
@@ -212,22 +228,12 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Setzt einen Beschreibungstext fuer Suchmaschinen
-     *
-     * @param string $sDescription
-     **/
-    function setDescription(string $sDescription)
-    {
-        $this->Description = $sDescription;
-    }
-
-    /**
      * Gibt Suchmaschinen Robots Anweisungen, was er auf dieser Seite tun soll. Siehe head.class.php Konstanten im oberen Bereich!!
      * z.b. Indexierung oder keine Indexierung, Follow etc.
      *
      * @param string $sRobots Uebergabe von ROBOT_ Konstanten
      **/
-    function setRobots($sRobots)
+    function setRobots(string $sRobots)
     {
         $this->robots = $sRobots;
     }
@@ -340,13 +346,17 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
+     * @param Module $Module
+     * @param array|null $initOptions
      *
-     * @param string $xuaCompatible
+     * @return GUI_HeadData
      */
-    function setXuaCompatible(string $xuaCompatible)
+    public function setClientData(Module $Module, ?array $initOptions = null): self
     {
-        $this->xuaCompatible = $xuaCompatible;
+        $clientData = $this->clientData[$Module->getName()] ?? ['className' => $Module::class];
+        if($initOptions) $clientData['initOptions'] = array_merge($clientData['initOptions'] ?? [], $initOptions);
+        $this->clientData[$Module->getName()] = $clientData;
+        return $this;
     }
 
     /**
@@ -361,13 +371,16 @@ class GUI_HeadData extends GUI_Module
         $this->Template->setVars(
             array(
                 'EXPIRES' => $this->Expires,
-                'LANGUAGE' => $this->ContentLanguage,
+                'LANGUAGE' => $this->Weblication->getLanguage(),
                 'TITLE' => $this->title,
-                'DESCRIPTION' => $this->Description,
+                'DESCRIPTION' => $this->description,
                 'ROBOTS' => $this->robots,
                 'BASE_HREF' => $this->baseHref,
                 'BASE_TARGET' => $this->baseTarget,
                 'CHARSET' => $this->charset,
+                'KEYWORDS' => '',
+                'AUTHOR' => '',
+                'CLIENT-DATA' => base64_encode(json_encode($this->clientData, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION)),
                 'SCRIPT' => $Url->getUrl()
             )
         );
@@ -387,7 +400,7 @@ class GUI_HeadData extends GUI_Module
             $this->Template->newBlock('PROXYNOCACHE');
         }
 
-        if(count($this->metaRefresh) > 0) {
+        if($this->metaRefresh) {
             $this->Template->newBlock('METAREFRESH');
             $this->setVar('REFRESH', $this->metaRefresh['seconds']);
             $this->setVar('URL', $this->metaRefresh['url']);
@@ -417,6 +430,7 @@ class GUI_HeadData extends GUI_Module
         }
 
         if(count($this->scriptCode) > 0) {
+            $this->Template->newBlock('INLINE_SCRIPT_CODE');
             foreach($this->scriptCode as $name => $code) {
                 $ScriptBlock = $this->Template->newBlock('SCRIPT_CODE');
                 if($ScriptBlock) {
@@ -436,6 +450,6 @@ class GUI_HeadData extends GUI_Module
         }
 
         $this->Template->parse();
-        return $this->Template->getContent();
+        return rtrim($this->Template->getContent());
     }
 }
