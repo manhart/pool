@@ -80,7 +80,7 @@ class GUI_Module extends Module
      *
      * @var string
      */
-    private string $ajaxMethod = '';
+    private string $ajaxMethod;
 
     /**
      * Pass result unchanged as JSON string through
@@ -92,11 +92,6 @@ class GUI_Module extends Module
      */
     protected bool $js_createGUIModule = true;
 
-    /**
-     * Options for the module-inspector
-     *
-     * @var array|array[]
-     */
     //    private array $inspectorProperties = [
     //        'moduleName' => [ // pool
     //            'pool' => true,
@@ -135,6 +130,8 @@ class GUI_Module extends Module
      *
      * @param Component|null $Owner Besitzer vom Typ Component
      * @param array $params additional parameters
+     *
+     * @throws Exception
      */
     public function __construct(?Component $Owner, array $params = [])
     {
@@ -485,11 +482,10 @@ class GUI_Module extends Module
      *
      * @param string $className
      * @param bool $includeJS
-     * @param bool $global
      *
      * @return bool
      */
-    protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $global = true): bool
+    protected function js_createGUIModule(string $className = '', bool $includeJS = true/*, bool $global = true*/): bool
     {
         if(!$this->js_createGUIModule) {
             return false;
@@ -581,10 +577,10 @@ class GUI_Module extends Module
      **/
     private function prepareChildren()
     {
-        foreach($this->childModules as $module) {
-            /** @var GUI_Module $module */
-            $module->importHandoff($this->Handoff);
-            $module->prepareContent();
+        /** @var GUI_Module $Module */
+        foreach($this->childModules as $Module) {
+            $Module->importHandoff($this->handoff);
+            $Module->prepareContent();
         }
     }
 
@@ -627,7 +623,7 @@ class GUI_Module extends Module
             $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $requestedMethod);
             $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
         }
-        catch(\ReflectionException $e) {
+        catch(ReflectionException) {
             $Xception = new Xception('Error calling method ' . $requestedMethod . ' on ' . $this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
             $Xception->raiseError();
             return '';
@@ -689,7 +685,7 @@ class GUI_Module extends Module
                 $result = $ReflectionMethod->invokeArgs($this, $args);
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
-            catch(\ReflectionException $e) {
+            catch(ReflectionException $e) {
                 echo $e->getMessage();
             }
         }
@@ -832,6 +828,7 @@ class GUI_Module extends Module
     private function pasteChildren(string $content): string
     {
         $replace_pairs = [];
+        /** @var GUI_Module $GUI */
         foreach($this->childModules as $GUI) {
             $replace_pairs[$GUI->getMarker()] = $GUI->finalContent;
         }

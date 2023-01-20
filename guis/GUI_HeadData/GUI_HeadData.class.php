@@ -98,7 +98,7 @@ class GUI_HeadData extends GUI_Module
      *
      * @var string
      */
-    var $xuaCompatible = '';
+    private string $xuaCompatible = '';
 
     /**
      * Zeichensatz im Header einer HTML Datei
@@ -127,13 +127,12 @@ class GUI_HeadData extends GUI_Module
     /**
      * Konstruktor
      *
-     * @param object $Owner Besitzer vom Typ Component
+     * @param Component|null $Owner Besitzer vom Typ Component
      * @param array $params
      */
-    function __construct($Owner, array $params = [])
+    function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
-
         $this->baseHref = $_SERVER['PHP_SELF'];
     }
 
@@ -144,6 +143,16 @@ class GUI_HeadData extends GUI_Module
     {
         $file = $this->Weblication->findTemplate('tpl_headData.html', __CLASS__, true);
         $this->Template->setFilePath('head', $file);
+    }
+
+    /**
+     * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
+     *
+     * @param string $xuaCompatible
+     */
+    public function setXuaCompatible(string $xuaCompatible)
+    {
+        $this->xuaCompatible = $xuaCompatible;
     }
 
     /**
@@ -193,7 +202,7 @@ class GUI_HeadData extends GUI_Module
      *
      * @return void
      */
-    public function setDescription(string $description)
+    public function setDescription(string $description): void
     {
         $this->description = $description;
     }
@@ -224,7 +233,7 @@ class GUI_HeadData extends GUI_Module
      *
      * @param string $sRobots Uebergabe von ROBOT_ Konstanten
      **/
-    function setRobots($sRobots)
+    function setRobots(string $sRobots)
     {
         $this->robots = $sRobots;
     }
@@ -336,36 +345,18 @@ class GUI_HeadData extends GUI_Module
         return $this;
     }
 
-
-
     /**
      * @param Module $Module
+     * @param array|null $initOptions
      *
      * @return GUI_HeadData
      */
-//    public function setClientData(Module $Module): self
-//    {
-//        $clientVars = $Module->getClientVars();
-//        $clientVars['className'] = $Module::class;
-//        $this->clientData[$Module->getName()] = $clientVars;
-//        return $this;
-//    }
     public function setClientData(Module $Module, ?array $initOptions = null): self
     {
         $clientData = $this->clientData[$Module->getName()] ?? ['className' => $Module::class];
         if($initOptions) $clientData['initOptions'] = array_merge($clientData['initOptions'] ?? [], $initOptions);
         $this->clientData[$Module->getName()] = $clientData;
         return $this;
-    }
-
-    /**
-     * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
-     *
-     * @param string $xuaCompatible
-     */
-    function setXuaCompatible(string $xuaCompatible)
-    {
-        $this->xuaCompatible = $xuaCompatible;
     }
 
     /**
@@ -459,6 +450,6 @@ class GUI_HeadData extends GUI_Module
         }
 
         $this->Template->parse();
-        return $this->Template->getContent();
+        return rtrim($this->Template->getContent());
     }
 }
