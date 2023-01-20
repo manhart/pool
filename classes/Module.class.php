@@ -56,10 +56,9 @@ class Module extends Component
     /**
      * Variablen/Parameter, die an die Kinder-Module (Childs) weitergereicht werden sollen.
      *
-     * @var array $Handoff
-     * @access private
+     * @var array $handoff
      */
-    var $Handoff = null;
+    protected array $handoff;
 
     /**
      * Merker, ob das Modul aktiv ist / eingebunden wird.
@@ -72,7 +71,7 @@ class Module extends Component
      * @var array Nothing else than internal (externally protected) parameters that are given when the module is created or defined via a template.
      * @see Module::importInternalParams()
      */
-    private array $internalParams = [];
+    private array $internalParams;
 
     /**
      * @var int filter that defines which superglobals are passed to input->vars
@@ -97,7 +96,7 @@ class Module extends Component
     {
         parent::__construct($Owner);
         $this->childModules = [];
-        $this->Handoff = [];
+        $this->handoff = [];
         $this->Defaults = new Input(I_EMPTY);
         $this->internalParams = $params;
         $this->init();
@@ -146,16 +145,17 @@ class Module extends Component
     /**
      * Importiert Variablen vom Elternmodul (durchschleifen von Variablen).
      *
-     * @param array $Handoff Liste bestehend aus Variablen
+     * @param array $handoff Liste bestehend aus Variablen
+     *
      * @return Module Erfolgsstatus
      */
-    function importHandoff(array $Handoff): self
+    protected function importHandoff(array $handoff): self
     {
-        if(count($Handoff) == 0) {
+        if(count($handoff) == 0) {
             return $this;
         }
-        $this->addHandoffVar($Handoff);
-        $this->Input->setVars($Handoff);
+        $this->addHandoffVar($handoff);
+        $this->Input->setVars($handoff);
 
         return $this;
     }
@@ -222,17 +222,15 @@ class Module extends Component
      *
      * @param string $key Schluessel der Variable
      * @param string $value Wert der Variable
-     * @return bool Erfolgsstatus
      */
     function addHandoffVar($key, $value = '')
     {
         if(!is_array($key)) {
-            $this->Handoff[$key] = $value;
+            $this->handoff[$key] = $value;
         }
         else {
-            $this->Handoff = array_merge($key, $this->Handoff);
+            $this->handoff = array_merge($key, $this->handoff);
         }
-        return true;
     }
 
     /**
@@ -283,10 +281,13 @@ class Module extends Component
     public function setClientVars(array $vars): self
     {
         $this->Weblication->getHead()->setClientData($this, $vars);
-//        $this->clientVars = $vars + $this->clientVars;
         return $this;
     }
 
+    /**
+     * returns client data
+     * @return array
+     */
     public function getClientVars(): array
     {
         return $this->clientVars;
