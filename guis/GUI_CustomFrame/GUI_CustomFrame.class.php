@@ -205,11 +205,15 @@ class GUI_CustomFrame extends GUI_Module
             return '';
         }
 
-        $this->Template->setVars([
-            'ScriptWhenReady' => $scriptWhenReady,
-            'ScriptAtTheEnd' => $scriptAtTheEnd,
-            'ScriptFilesAtTheEnd' => $scriptFilesAtTheEnd
-        ]);
+        if($scriptWhenReady || $scriptAtTheEnd) {
+            $InlineScriptBlock = $this->Template->newBlock('INLINE-SCRIPT');
+            $InlineScriptBlock->setVars([
+                'ScriptWhenReady' => $scriptWhenReady,
+                'ScriptAtTheEnd' => $scriptAtTheEnd,
+            ]);
+            $this->Template->leaveBlock();
+        }
+        $this->Template->setVar('ScriptFilesAtTheEnd', $scriptFilesAtTheEnd);
 
         $vars = array_map(function($functions) {
             // concatenating javascript functions
