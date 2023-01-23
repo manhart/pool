@@ -11,6 +11,7 @@ class GUI_Toast extends GUI_Module
 {
     /**
      * @param int|null $superglobals
+     * @throws Exception
      */
     public function init(?int $superglobals = I_EMPTY)
     {
@@ -23,6 +24,7 @@ class GUI_Toast extends GUI_Module
      */
     public function loadFiles()
     {
+        parent::loadFiles();
         $fw = $this->getVar('framework');
         $tpl = $this->Weblication->findTemplate('tpl_toast_'.$fw.'.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $tpl);
