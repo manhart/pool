@@ -207,7 +207,7 @@ class GUI_CustomFrame extends GUI_Module
 
         if($scriptWhenReady || $scriptAtTheEnd) {
             $InlineScriptBlock = $this->Template->newBlock('INLINE-SCRIPT');
-            $InlineScriptBlock->setVars([
+            $InlineScriptBlock?->setVars([
                 'ScriptWhenReady' => $scriptWhenReady,
                 'ScriptAtTheEnd' => $scriptAtTheEnd,
             ]);
