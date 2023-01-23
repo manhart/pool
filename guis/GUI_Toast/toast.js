@@ -6,17 +6,17 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-'use strict';
-
 /* Styles */
-const TOAST_DEFAULT = 'toast',
+const
+    TOAST_DEFAULT = 'toast',
     TOAST_ERROR = 'error',
     TOAST_INFO = 'info',
     TOAST_SUCCESS = 'success',
     TOAST_WARNING = 'warning'
 ;
 
-class Toast {
+class Toast
+{
     /* > ES7
     static const STYLE_DEFAULT = 'toast';
     static const STYLE_ERROR = 'error';
@@ -30,13 +30,10 @@ class Toast {
     Toast = null;
     pauseOnHover = true;
 
-    /**
-     * Defaults
-     *
-     * @constructor
-     */
-    constructor()
+
+    constructor(name = 'Toast')
     {
+        this.name = name;
     }
 
     static get DEFAULT_DELAY() {
@@ -231,7 +228,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
         }
 
         this.Toast.on('hidden.bs.toast', () => {
-            $(this).remove();
+            $('#'+id).remove();
             if(dateUpdateHandler) {
                 clearInterval(dateUpdateHandler);
             }
@@ -295,7 +292,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      */
     static showInfo(title, message, delay = Toast.DEFAULT_DELAY)
     {
-        let $Toast = new Toast().setDelay(delay);
+        let $Toast = (new Toast()).setDelay(delay);
         $Toast.show(Toast.TOAST_INFO, title, message);
     }
 
@@ -308,7 +305,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      */
     static showSuccess(title, message, delay = Toast.DEFAULT_DELAY)
     {
-        let $Toast = new Toast().setDelay(delay);
+        let $Toast = (new Toast()).setDelay(delay);
         $Toast.show(Toast.TOAST_SUCCESS, title, message);
     }
 
@@ -321,16 +318,17 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      */
     static showWarning(title, message, delay = Toast.DEFAULT_DELAY)
     {
-        let $Toast = new Toast().setDelay(delay);
+        let $Toast = (new Toast()).setDelay(delay);
         $Toast.show(Toast.TOAST_WARNING, title, message);
     }
 }
+// Weblication.registerClass(Toast);
 
 /**
  * Example e.g. for testing:
  *
  * */
-ready(function () {
+// ready(function () {
     // Toast.showSuccess('Speichern', 'Die Daten wurden erfolgreich gespeichert', 3000);
     // Toast.showInfo('Info', 'Sie haben eine neue Benachrichtigung', 2000);
     // Toast.showError('Fehler', 'Es ist ein schwerwiegender Fehler aufgetreten!', 0);
@@ -369,6 +367,4 @@ ready(function () {
     //     $(this).remove();
     // });
     // $('.toast').toast('show');
-});
-
-console.debug('toast.js loaded');
+// });
