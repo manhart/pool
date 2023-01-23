@@ -33,7 +33,7 @@ class GUI_Module
     /**
      * @abstract
      */
-    init() {}
+    init(options = {}) {}
 
     /**
      * returns the name of the module
