@@ -1261,19 +1261,7 @@ class Weblication extends Component
      */
     protected function finalizeContent(): string
     {
-        $content = $this->Main->finalizeContent();
-
-        // Odd, there were outputs written?
-        if(headers_sent()) {
-            $error = error_get_last();
-            // error was triggered (old method)
-            if($this->isXdebugEnabled()) {
-                // we suppress the output of the application @todo redirect to an error page?
-                if($error) return '';
-            }
-        }
-
-        return $content;
+        return $this->Main->finalizeContent();
     }
 
     /**
