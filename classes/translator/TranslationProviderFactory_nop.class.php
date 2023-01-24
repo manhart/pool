@@ -62,6 +62,11 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
 
     function clearError(): void{}
 
+    function getFactory(): TranslationProviderFactory
+    {
+        return self::$instance;
+    }
+
     function hasLang(string $language, float &$quality = 0): bool
     {
         $quality = 0;
@@ -80,5 +85,10 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
         $provider->locale = $locale;
         $provider->lang = $providerName;
         return $provider;
+    }
+
+    function identity(): string
+    {
+        return md5(self::class);
     }
 }

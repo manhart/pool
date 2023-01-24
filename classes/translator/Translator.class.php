@@ -391,10 +391,11 @@ class Translator
         $language = "";
         $keyArray = [$key => null];
         $this->queryTranslations($keyArray, $noAlter, $language);
-        @$translation = $keyArray[$key];
+        $translation = $keyArray[$key]??null;
         assert($translation == null || $translation instanceof Translation);
         $message = $translation?->getMessage() ?? $defaultMessage;
         //message processing
+        @TranslationProvider_ToolDecorator::writeQueryToPostbox($key, default:$defaultMessage, args:$args, noAlter:$noAlter);
         if ($message === null) {
             $success = false;
             $reply = "String $key not found";
@@ -402,7 +403,7 @@ class Translator
             $success = true;
             $reply =  $message;
         } else {
-            $locale ??= $translation?->getProviderLocale() ?? self::getPrimaryLocale();
+            $locale ??= $translation?->getProvider()->getLocale() ?? self::getPrimaryLocale();
             $formatter = MessageFormatter::create($locale, $message);
             $formattedTranslation = $formatter->format($args);
             if ($formattedTranslation === false) {
@@ -513,7 +514,7 @@ class Translator
                     continue 2;//F
                 } else {//default specified
                     $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationInadequate, $translation, $key);
-                    $translation = new Translation($provider->getLocale(), $translation);
+                    $translation = new Translation($provider, $translation, $key);
                     //next iteration of K
                 }
             }//END K

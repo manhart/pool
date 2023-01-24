@@ -26,6 +26,7 @@ Interface TranslationProvider
     function getLang():string;
     function getLocale():string;
     function getResult(): ?Translation;
+    function getFactory(): TranslationProviderFactory;
 
     /**
      * @param string|null $key
