@@ -380,7 +380,7 @@ class GUI_HeadData extends GUI_Module
                 'CHARSET' => $this->charset,
                 'KEYWORDS' => '',
                 'AUTHOR' => '',
-                'CLIENT-DATA' => base64_encode(json_encode($this->clientData, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION)),
+                'CLIENT-DATA' => base64_encode(json_encode($this->clientData, JSON_FORCE_OBJECT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION)),
                 'SCRIPT' => $Url->getUrl()
             )
         );
