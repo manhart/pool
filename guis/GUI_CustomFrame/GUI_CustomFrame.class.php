@@ -92,6 +92,7 @@ class GUI_CustomFrame extends GUI_Module
         parent::loadFiles();
         $this->HeadData->addStyleSheet($this->Weblication->findStyleSheet('translatorToolInline.css', '', false));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('translatorToolInline.js', '', true));
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('helpers.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
     }
@@ -170,6 +171,18 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
+     * calls Weblication->run on the client
+     *
+     * @return void
+     */
+    public function prepareContent()
+    {
+        parent::prepareContent();
+
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('run.js', '', true));
+    }
+
+    /**
      * puts javascript code into the template
      *
      * @return string parsed content
@@ -193,11 +206,15 @@ class GUI_CustomFrame extends GUI_Module
             return '';
         }
 
-        $this->Template->setVars([
-            'ScriptWhenReady' => $scriptWhenReady,
-            'ScriptAtTheEnd' => $scriptAtTheEnd,
-            'ScriptFilesAtTheEnd' => $scriptFilesAtTheEnd
-        ]);
+        if($scriptWhenReady || $scriptAtTheEnd) {
+            $InlineScriptBlock = $this->Template->newBlock('INLINE-SCRIPT');
+            $InlineScriptBlock?->setVars([
+                'ScriptWhenReady' => $scriptWhenReady,
+                'ScriptAtTheEnd' => $scriptAtTheEnd,
+            ]);
+            $this->Template->leaveBlock();
+        }
+        $this->Template->setVar('ScriptFilesAtTheEnd', $scriptFilesAtTheEnd);
 
         $vars = array_map(function($functions) {
             // concatenating javascript functions
