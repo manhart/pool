@@ -66,4 +66,10 @@ abstract class TranslationProvider_BaseDecorator implements TranslationProvider
     {
         $this->provider->clearError();
     }
+
+    function getFactory(): TranslationProviderFactory
+    {
+        return $this->provider->getFactory();
+    }
+
 }

@@ -83,6 +83,11 @@ class TranslationProviderFactory_ResourceFile extends TranslationProviderFactory
     {
         if(!$this->directory) throw new Exception("Factory has not been initialized");
         $resourceFileName = $this->resourceFileName($providerName);
-        return new TranslationProvider_ResourceFile($providerName, $locale, $resourceFileName);
+        return new TranslationProvider_ResourceFile($this, $providerName, $locale, $resourceFileName);
+    }
+
+    function identity(): string
+    {
+        return md5(self::class.$this->directory.$this->extension);
     }
 }
