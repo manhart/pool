@@ -25,12 +25,15 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     private ?Exception $error = null;
 
     private ?string $lastResult = null;
+    private TranslationProviderFactory_ResourceFile $factory;
+    private $lastKey;
 
     /**
      * @throws Exception
      */
-    public function __construct(string $lang, string $locale, string $resourceFileName)
+    public function __construct(TranslationProviderFactory_ResourceFile $factory, string $lang, string $locale, string $resourceFileName)
     {
+        $this->factory = $factory;
         $this->lang = $lang;
         $this->locale = $locale;
         $this->resourceFile = $resourceFileName;
@@ -54,7 +57,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
 
     function getResult(): ?Translation
     {
-        return new Translation($this->getLocale(), $this->lastResult);
+        return new Translation($this, $this->lastResult, $this->lastKey);
     }
 
     /**
@@ -70,6 +73,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
      */
     function query(string $key): int
     {
+        $this->lastKey = $key;
         if(!isset($this->translations[$key]))
             return self::TranslationNotExistent;
         $result = $this->translations[$key];
@@ -108,5 +112,10 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     function clearError(): void
     {
         $this->error = null;
+    }
+
+    function getFactory(): TranslationProviderFactory_ResourceFile
+    {
+        return $this->factory;
     }
 }

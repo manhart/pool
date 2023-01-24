@@ -12,25 +12,28 @@ namespace pool\classes\translator;
 
 class Translation
 {
-    private string $providerLocale;
+    private TranslationProvider $provider;
     private string $message;
+    private string $key;
 
     /**
-     * @param string $providerLocale
+     * @param TranslationProvider $provider
      * @param string $message
+     * @param string $key
      */
-    public function __construct(string $providerLocale, string $message)
+    public function __construct(TranslationProvider $provider, string $message, string $key)
     {
-        $this->providerLocale = $providerLocale;
+        $this->provider = $provider;
         $this->message = $message;
+        $this->key = $key;
     }
 
     /**
-     * @return string
+     * @return TranslationProvider
      */
-    public function getProviderLocale(): string
+    public function getProvider(): TranslationProvider
     {
-        return $this->providerLocale;
+        return $this->provider;
     }
 
     /**
@@ -39,6 +42,11 @@ class Translation
     public function getMessage(): string
     {
         return $this->message;
+    }
+
+    public function getKey():string
+    {
+        return $this->key;
     }
 
 }

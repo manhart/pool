@@ -17,6 +17,11 @@ abstract Class TranslationProviderFactory
         return static::$instance ?? static::$instance= new static();
     }
     protected function __construct(){}
+
+    /**
+     * @return string a md5-hash to identify a resource across Sessions
+     */
+    abstract function identity():string;
     abstract function hasLang(string $language, float &$quality = 0):bool;
     public function getBestProvider(string $proposed, float &$fitness = 0): ?string
     {
