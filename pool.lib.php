@@ -23,7 +23,7 @@ const PWD_TILL_CLASSES = 'classes';
 const PWD_TILL_GUIS = 'guis';
 const PWD_TILL_SCHEMES = 'schemes';
 const PWD_TILL_SKINS = 'skins';
-const PWD_TILL_JAVASCRIPTS = 'javascripts';
+const PWD_TILL_JAVASCRIPTS = 'js';
 // const PWD_TILL_3RDPARTY = '3rdparty';
 const PWD_TILL_SUBCODES = 'subcodes';
 
