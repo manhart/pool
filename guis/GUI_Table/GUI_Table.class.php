@@ -1345,10 +1345,10 @@ class GUI_Table extends GUI_Module
         if($columns = $this->getVar('columns')) {
             $clientColumns = [];
             $columnProperties = $this->getColumnsProperties();
-            $this->Template->newBlock('js_row');
+            // $this->Template->newBlock('js_row');
             $c = 0;
             foreach ($columns as $column) {
-                $ColumnBlock = $this->Template->newBlock('js_column');
+                // $ColumnBlock = $this->Template->newBlock('js_column');
                 foreach ($column as $optName => $attrValue) {
                     $type = '';
                     $clientside = false;
@@ -1374,31 +1374,31 @@ class GUI_Table extends GUI_Module
                     }
                     $clientColumns[$c][$optName] = $attrValue;
 
-                    switch ($type) {
-                        case 'boolean':
-                            $attrValue = bool2string($attrValue);
-                            break;
+//                    switch ($type) {
+//                        case 'boolean':
+//                            $attrValue = bool2string($attrValue);
+//                            break;
+//
+//                        case 'function':
+//                        case 'json':
+//                            break;
+//
+//                        case 'auto':
+//                            if(is_array($attrValue)) {
+//                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
+//                                break;
+//                            }
+//
+//                        default:
+//                            $attrValue = '\'' . $attrValue . '\'';
+//                    }
 
-                        case 'function':
-                        case 'json':
-                            break;
 
-                        case 'auto':
-                            if(is_array($attrValue)) {
-                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
-                                break;
-                            }
-
-                        default:
-                            $attrValue = '\'' . $attrValue . '\'';
-                    }
-
-
-                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
-                    $ColumnAttributeBlock?->setVar([
-                        'key' => $optName,
-                        'value' => $attrValue
-                    ]);
+//                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
+//                    $ColumnAttributeBlock?->setVar([
+//                        'key' => $optName,
+//                        'value' => $attrValue
+//                    ]);
                 }
                 $c++;
             }
@@ -1446,18 +1446,18 @@ class GUI_Table extends GUI_Module
         $this->Template->leaveBlock();
 
         // render table
-        $render_immediately = $render_ondomloaded = '';
-        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
-            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
-        }
-        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
-            $render_immediately = '.render()';
-        }
+//        $render_immediately = $render_ondomloaded = '';
+//        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
+//            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
+//        }
+//        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
+//            $render_immediately = '.render()';
+//        }
         $this->setClientVar('render', (int)$this->getVar('render'));
-        $this->Template->setVar([
-            'RENDER_IMMEDIATELY' => $render_immediately,
-            'RENDER_ONDOMLOADED' => $render_ondomloaded
-        ]);
+//        $this->Template->setVar([
+//            'RENDER_IMMEDIATELY' => $render_immediately,
+//            'RENDER_ONDOMLOADED' => $render_ondomloaded
+//        ]);
         parent::prepare();
     }
 
