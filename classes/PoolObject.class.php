@@ -161,7 +161,8 @@ class PoolObject extends stdClass
     public function isBasicLibrary(): bool
     {
         if(is_null($this->isBasicLibrary)) {
-            $this->isBasicLibrary = substr_compare($this->getClassFilename(), DIR_POOL_ROOT, 0, strlen(DIR_POOL_ROOT)) === 0;
+            $poolRealpath = realpath(DIR_POOL_ROOT);
+            $this->isBasicLibrary = substr_compare($this->getClassFilename(), $poolRealpath, 0, strlen($poolRealpath)) === 0;
         }
         return $this->isBasicLibrary;
     }
