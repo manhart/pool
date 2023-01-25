@@ -68,6 +68,9 @@ class GUI_Table extends GUI_Module
 
     scrollPosition;
 
+    static RENDER_IMMEDIATELY = 1;
+    static RENDER_ONDOMLOADED = 2;
+
     // poolColumnOptions = {}; // poolOptions
 
     /**
@@ -99,6 +102,21 @@ class GUI_Table extends GUI_Module
 
         //this.table.bootstrapTable('refreshOptions', options);
         return this;
+    }
+
+    init(options = {})
+    {
+        console.debug(this.getName()+'init', options);
+        this.setConfiguration({'poolOptions': options.poolOptions}).setColumns(options.columns);
+        switch(options.render) {
+            case GUI_Table.RENDER_IMMEDIATELY:
+                this.render();
+                break;
+
+            case GUI_Table.RENDER_ONDOMLOADED:
+                ready(() => this.render());
+                break;
+        }
     }
 
     /**
