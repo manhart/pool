@@ -266,8 +266,8 @@ class Module extends Component
      */
     public function setClientVar(string $key, mixed $value): self
     {
-        $this->Weblication->getHead()->setClientData($this, [$key => $value]);
-        //$this->clientVars[$key] = $value;
+//        $this->Weblication->getHead()->setClientData($this, [$key => $value]);
+        $this->clientVars[$key] = $value;
         return $this;
     }
 
@@ -280,7 +280,8 @@ class Module extends Component
      */
     public function setClientVars(array $vars): self
     {
-        $this->Weblication->getHead()->setClientData($this, $vars);
+        $this->clientVars = array_merge($this->clientVars, $vars);
+//        $this->Weblication->getHead()->setClientData($this, $vars);
         return $this;
     }
 
