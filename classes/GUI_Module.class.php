@@ -568,7 +568,7 @@ class GUI_Module extends Module
         $this->prepareChildren();
 
         if($this->js_createGUIModule($this->getClassName()) && $Head = $this->Weblication->getHead()) {
-            $Head->setClientData($this);
+            $Head->setClientData($this, $this->getClientVars());
         }
     }
 
