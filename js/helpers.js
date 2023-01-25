@@ -1451,12 +1451,21 @@ function isElementInViewport(element)
     );
 }
 
-// function isElementInFront(element)
-// {
-//     let pseudo = document.elementFromPoint(element.offsetLeft, element.offsetTop);
-//     if(pseudo){
-//         if(pseudo.id == element.id)
-//             return true;
-//     }
-//     return false;
-// }
+/**
+ * compares arrays if they are equal without considering the order
+ *
+ * @param a
+ * @param b
+ * @return {boolean}
+ */
+const areArraysEqual = (a, b) =>
+{
+    if (a.length !== b.length) return false;
+    const uniqueValues = new Set([...a, ...b]);
+    for (const v of uniqueValues) {
+        const aCount = a.filter(e => e === v).length;
+        const bCount = b.filter(e => e === v).length;
+        if (aCount !== bCount) return false;
+    }
+    return true;
+}
