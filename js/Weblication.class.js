@@ -137,3 +137,8 @@ class Weblication
 
 const $Weblication = Weblication.getInstance();
 console.debug('Weblication.class.js loaded');
+
+// Must be removed if not necessary anymore
+// @deprecated
+var MODULE_FUNCTIONS={}
+MODULE_FUNCTIONS.lang = document.documentElement.lang;
