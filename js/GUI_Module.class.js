@@ -33,7 +33,10 @@ class GUI_Module
     /**
      * @abstract
      */
-    init(options = {}) {}
+    init(options = {})
+    {
+        // console.debug(this.getName()+'.init called');
+    }
 
     /**
      * returns the name of the module

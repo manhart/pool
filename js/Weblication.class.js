@@ -124,6 +124,7 @@ class Weblication
             catch(e) {
                 console.error(e.toString());
             }
+            // console.debug('GUI_Module.createGUIModule ' + moduleName + ' created');
 
             if(!this.module_exists(moduleName)) continue;
             const $Module = this.getModule(moduleName);
