@@ -7,6 +7,8 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+//use pool\classes\Configurable;
+
 class GUI_Table extends GUI_Module
 {
     use Configurable;
@@ -29,14 +31,14 @@ class GUI_Table extends GUI_Module
             'value' => '{}',
             'element' => 'input',
             'inputType' => 'text',
-            'caption' => 'Buttons'
         ],
         'buttonsClass' => [
             'attribute' => 'data-buttons-class',
             'type' => 'string',
             'value' => 'secondary',
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'configurable' => true,
         ],
         'cache' => [
             'attribute' => 'data-cache',
@@ -44,7 +46,6 @@ class GUI_Table extends GUI_Module
             'value' => true,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Cache AJAX'
         ],
         'checkOnInit' => [ // extension: mobile
             'attribute' => 'data-check-on-init',
@@ -52,11 +53,15 @@ class GUI_Table extends GUI_Module
             'value' => true,
             'element' => 'input',
             'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'classes' => [
             'attribute' => 'data-classes',
             'type' => 'string',
-            'value' => 'table table-bordered table-hover'
+            'value' => 'table table-bordered table-hover',
+            'element' => 'input',
+            'inputType' => 'text',
+            'configurable' => true,
         ],
         'clickToSelect' => [
             'attribute' => 'data-click-to-select',
@@ -64,217 +69,14 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Click to Select'
+            'configurable' => true,
         ],
         'columns' => [
             'attribute' => '',
             'type' => 'array',
             'value' => [],
             'element' => 'tableEditor',
-//            'options' => [ // defaultColumnOptions
-//                'align' => [
-//                    'attribute' => 'data-align',
-//                    'type' => 'string',
-//                    'value' => null,
-//                    'element' => 'select', //
-//                    'options' => ['', 'left', 'right', 'center']
-//                ],
-//                'cardVisible' => [
-//                    'attribute' => 'data-card-visible',
-//                    'type' => 'boolean',
-//                    'value' => true,
-//                ],
-//                'cellStyle' => [
-//                    'attribute' => 'data-cell-style',
-//                    'type' => 'function',
-//                    'value' => null
-//                ],
-//                'checkbox' => [
-//                    'attribute' => 'data-checkbox',
-//                    'type' => 'boolean',
-//                    'value' => false,
-//                    'element' => 'input',
-//                    'inputType' => 'checkbox',
-//                ],
-//                'checkboxEnabled' => [
-//                    'attribute' => 'data-checkbox-enabled',
-//                    'type' => 'boolean',
-//                    'value' => true,
-//                ],
-//                'class' => [
-//                    'attribute' => 'data-class',
-//                    'type' => 'string',
-//                    'value' => null,
-//                ],
-//                'clickToSelect' => [
-//                    'attribute' => 'data-click-to-select',
-//                    'type' => 'boolean',
-//                    'value' => false,
-//                ],
-//                'colspan' => [
-//                    'attribute' => 'data-colspan',
-//                    'type' => 'number',
-//                    'value' => null,
-//                ],
-//                'detailFormatter' => [
-//                    'attribute' => 'data-detail-formatter',
-//                    'type' => 'function',
-//                    'value' => 'function(index, row, $element) { return \'\' }',
-//                ],
-//                'escape' => [
-//                    'attribute' => 'data-escape',
-//                    'type' => 'boolean',
-//                    'value' => false,
-//                    'element' => 'input', // tableEditor
-//                    'inputType' => 'checkbox', // tableEditor
-//                ],
-//                'falign' => [
-//                    'attribute' => 'data-falign',
-//                    'type' => 'string',
-//                    'value' => null,
-//                ],
-//                'field' => [
-//                    'attribute' => 'data-field',
-//                    'type' => 'string',
-//                    'value' => null,
-//                    'element' => 'input', // tableEditor
-//                    'inputType' => 'text', // tableEditor
-//                    'unique' => true, // tableEditor
-//                    'required' => true, // tableEditor
-//                    'showColumn' => 0 // tableEditor order
-//                ],
-//                'footerFormatter' => [
-//                    'attribute' => 'data-footer-formatter',
-//                    'type' => 'function',
-//                    'value' => null,
-//                ],
-//                'formatter' => [
-//                    'attribute' => 'data-formatter',
-//                    'type' => 'function',
-//                    'value' => null,
-//                    'element' => 'textarea',
-//                ],
-//                'halign' => [
-//                    'attribute' => 'data-halign',
-//                    'type' => 'string',
-//                    'value' => null,
-//                ],
-//                'order' => [
-//                    'attribute' => 'data-order',
-//                    'type' => 'string',
-//                    'value' => 'asc',
-//                    'element' => 'select',
-//                    'options' => ['asc', 'desc']
-//                ],
-//                'poolFormat' => [
-//                    'attribute' => 'data-pool-format',
-//                    'type' => 'string',
-//                    'element' => 'input',
-//                    'inputType' => 'text',
-//                    'value' => '',
-//                    'pool' => true,
-//                ],
-//                'poolType' => [
-//                    'attribute' => 'data-pool-type',
-//                    'type' =>  'string',
-//                    'element' => 'select',
-//                    'value' => '',
-//                    'options' => ['', 'date', 'time', 'date.time', 'number'],
-//                    'pool' => true,
-//                ],
-//                'radio' => [
-//                    'attribute' => 'data-radio',
-//                    'type' => 'boolean',
-//                    'value' => false
-//                ],
-//                'rowspan' => [
-//                    'attribute' => 'data-rowspan',
-//                    'type' => 'number',
-//                    'value' => null,
-//                ],
-//                'searchable' => [
-//                    'attribute' => 'data-searchable',
-//                    'type' => 'boolean',
-//                    'value' => true,
-//                    'element' => 'input', // tableEditor
-//                    'inputType' => 'checkbox',
-//                    'showColumn' => 3
-//                ],
-//                'searchFormatter' => [
-//                    'attribute' => 'data-search-formatter',
-//                    'type' => 'boolean',
-//                    'value' => true,
-//                ],
-//                'searchHighlightFormatter' => [
-//                    'attribute' => 'data-search-highlight-formatter',
-//                    'type' => 'boolean', // could also be |function
-//                    'value' => true,
-//                ],
-//                'showSelectTitle' => [
-//                    'attribute' => 'data-show-select-title',
-//                    'type' => 'boolean',
-//                    'value' => false
-//                ],
-//                'sortable' => [
-//                    'attribute' => 'data-sortable',
-//                    'type' => 'boolean',
-//                    'value' => false,
-//                    'element' => 'input', // tableEditor
-//                    'inputType' => 'checkbox',
-//                ],
-//                'sorter' => [
-//                    'attribute' => 'data-sorter',
-//                    'type' => 'function',
-//                    'value' => null
-//                ],
-//                'sortName' => [
-//                    'attribute' => 'data-sort-name',
-//                    'type' => 'string',
-//                    'value' => null,
-//                ],
-//                'switchable' => [
-//                    'attribute' => 'data-switchable',
-//                    'type' => 'boolean',
-//                    'value' => true,
-//                ],
-//                'title' => [
-//                    'attribute' => 'data-title',
-//                    'type' => 'string',
-//                    'value' => null,
-//                    'element' => 'input', // tableEditor
-//                    'inputType' => 'text', // tableEditor
-//                    'showColumn' => 1, // tableEditor
-//                    'required' => true, // tableEditor mandatory field
-//                ],
-//                'titleTooltip' => [
-//                    'attribute' => 'data-title-tooltip',
-//                    'type' => 'string',
-//                    'value' => null,
-//                ],
-//                'valign' => [
-//                    'attribute' => 'data-valign',
-//                    'type' => 'string',
-//                    'value' => null,
-//                ],
-//                'visible' => [
-//                    'attribute' => 'data-visible',
-//                    'type' => 'boolean',
-//                    'value' => true,
-//                    'element' => 'input', // tableEditor
-//                    'inputType' => 'checkbox', // tableEditor
-//                    'showColumn' => 2 // tableEditor
-//                ],
-//                'width' => [
-//                    'attribute' => 'data-with',
-//                    'type' => 'number',
-//                    'value' => null,
-//                ],
-//                'widthUnit' => [
-//                    'attribute' => 'data-with-unit',
-//                    'type' => 'string',
-//                    'value' => 'px'
-//                ]
-//            ],
+            'configurable' => true,
             'properties' => [ // columnsProperties
                 'align' => [
                     'attribute' => 'data-align',
@@ -303,6 +105,7 @@ class GUI_Table extends GUI_Module
                     'element' => 'input',
                     'inputType' => 'checkbox',
                     'clientside' => true,
+                    'configurable' => true,
                 ],
                 'checkboxEnabled' => [
                     'attribute' => 'data-checkbox-enabled',
@@ -315,6 +118,9 @@ class GUI_Table extends GUI_Module
                     'type' => 'string',
                     'value' => null,
                     'clientside' => true,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                    'configurable' => true,
                 ],
                 'clickToSelect' => [
                     'attribute' => 'data-click-to-select',
@@ -536,6 +342,7 @@ class GUI_Table extends GUI_Module
                     'element' => 'input', // tableEditor
                     'inputType' => 'checkbox',
                     'clientside' => true,
+                    'configurable' => true,
                 ],
                 'sorter' => [
                     'attribute' => 'data-sorter',
@@ -554,6 +361,9 @@ class GUI_Table extends GUI_Module
                     'type' => 'boolean',
                     'value' => true,
                     'clientside' => true,
+                    'element' => 'input',
+                    'inputType' => 'checkbox',
+                    'configurable' => true,
                 ],
                 'title' => [
                     'attribute' => 'data-title',
@@ -562,8 +372,9 @@ class GUI_Table extends GUI_Module
                     'element' => 'input', // tableEditor
                     'inputType' => 'text', // tableEditor
                     'showColumn' => 1, // tableEditor
-                    'required' => true, // tableEditor mandatory field
+                    'required' => false, // tableEditor mandatory field
                     'clientside' => true,
+                    'configurable' => true,
                 ],
                 'titleTooltip' => [
                     'attribute' => 'data-title-tooltip',
@@ -606,58 +417,62 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Use cookies'
+            'caption' => 'Use cookies',
         ],
         'cookieIdTable' => [
             'attribute' => 'data-cookie-id-table',
             'type' => 'string',
             'value' => '',
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
         ],
         'customSearch' => [
             'attribute' => 'data-custom-search',
             'type' => 'function',
-            'value' => null // undefined
+            'value' => null, // undefined
         ],
         'customSort' => [
             'attribute' => 'data-custom-sort',
             'type' => 'function',
-            'value' => null // undefined
+            'value' => null, // undefined
         ],
         'detailFormatter' => [
             'attribute' => 'data-detail-formatter',
             'type' => 'function',
             'value' => 'function(index, row, element) { return \'\' }',
-            'clientside' => true
+            'clientside' => true,
         ],
         'detailView' => [
             'attribute' => 'data-detail-view',
             'type' => 'boolean',
             'value' => false,
             'element'   => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'detailViewAlign' => [
             'attribute' => 'data-detail-view-align',
             'type' => 'string',
             'value' => 'left',
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'configurable' => true,
         ],
         'detailViewByClick' => [
             'attribute' => 'data-detail-view-by-click',
             'type'  => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'detailViewIcon' => [
             'attribute' => 'data-detail-view-icon',
             'type'  => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'exportDataType' => [
             'attribute' => 'data-export-data-type',
@@ -677,48 +492,49 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Filter Control'
+            'caption' => 'Filter Control',
+            'configurable' => true,
         ],
         'groupBy' => [
             'attribute' => 'data-group-by',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
         ],
         'groupByField' => [
             'attribute' => 'data-group-by-field',
             'type' => 'array',
             'value' => [],
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
         ],
         'groupByToggle' => [
             'attribute' => 'data-group-by-toggle',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
         ],
         'groupByShowToggleIcon' => [
             'attribute' => 'data-group-by-show-toggle-icon',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
         ],
         'groupByCollapsedGroups' => [
             'attribute' => 'data-group-by-collapsed-groups',
             'type' => 'array',
             'value' => [],
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
         ],
         'groupByFormatter' => [
             'attribute' => 'data-group-by-formatter',
             'type' => 'function',
             'value' => 'function(value, idx, data) { return \'\' }',
-            'clientside' => true
+            'clientside' => true,
         ],
         'height' => [
             'attribute' => 'data-height',
@@ -726,6 +542,15 @@ class GUI_Table extends GUI_Module
             'value' => null,
             'element' => 'input',
             'inputType' => 'number',
+            'configurable' => true,
+        ],
+        'heightThreshold' => [ // extension: mobile
+            'attribute' => 'data-height-threshold',
+            'type' => 'integer',
+            'value' => 100,
+            'element' => 'input',
+            'inputType' => 'number',
+            'configurable' => true,
         ],
         'icons' => [
             'attribute' => 'data-icons',
@@ -745,7 +570,7 @@ class GUI_Table extends GUI_Module
                 'minus' => 'fa-minus'
             ],
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
         ],
         'iconSize' => [
             'attribute' => 'data-icon-size',
@@ -753,6 +578,7 @@ class GUI_Table extends GUI_Module
             'value' => null, // undefined
             'element' => 'select',
             'options' => [null, 'lg', 'sm'],
+            'configurable' => true,
         ],
         'iconsPrefix' => [
             'attribute' => 'data-icons-prefix',
@@ -760,6 +586,7 @@ class GUI_Table extends GUI_Module
             'value' => 'fa',
             'element' => 'input',
             'inputType' => 'text',
+            'configurable' => true,
         ],
         'idField' => [
             'attribute' => 'data-icons-id-field',
@@ -767,14 +594,15 @@ class GUI_Table extends GUI_Module
             'value' => null,
             'element' => 'input',
             'inputType' => 'text',
+            'configurable' => true,
         ],
         'maintainMetaData' => [
             'attribute' => 'data-maintain-meta-data',
             'type' => 'boolean',
             'value' => false,
-            'caption' => 'Maintain Metadata',
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'method' => [
             'attribute' => 'data-method',
@@ -782,21 +610,21 @@ class GUI_Table extends GUI_Module
             'value' => 'get',
             'element' => 'select',
             'options' => ['get', 'post'],
-            'caption' => 'Method',
+            'configurable' => true,
         ],
         'minHeight' => [ // extension: mobile
             'attribute' => 'data-min-height',
             'type' => 'integer',
             'value' => null,
             'element' => 'input',
-            'inputType' => 'number'
+            'inputType' => 'number',
         ],
         'minWidth' => [ // extension: mobile
             'attribute' => 'data-min-width',
             'type' => 'integer',
             'value' => 562,
             'element' => 'input',
-            'inputType' => 'number'
+            'inputType' => 'number',
         ],
         'mobileResponsive' => [ // extension: mobile
             'attribute' => 'data-mobile-responsive',
@@ -804,6 +632,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'multiSortStrictSort' => [ // ext: multiple sort
             'attribute' => 'data-multi-sort-strict-sort',
@@ -893,24 +722,24 @@ class GUI_Table extends GUI_Module
             'attribute' => 'data-pagination',
             'type' => 'boolean',
             'value' => false,
-            'caption' => 'Pagination',
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'paginationLoop' => [
             'attribute' => 'data-pagination-loop',
             'type' => 'boolean',
             'value' => true,
-            'caption' => 'Pagination Loop',
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'reorderableRows' => [
             'attribute' => 'data-reorderable-rows',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
         ],
         'resizable' => [
             'attribute' => 'data-resizable',
@@ -925,6 +754,15 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
+        'searchAccentNeutralise' => [
+            'attribute' => 'data-search-accent-neutralise',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'searchAlign' => [
             'attribute' => 'data-search-align',
@@ -932,7 +770,7 @@ class GUI_Table extends GUI_Module
             'value' => 'right',
             'element' => 'select',
             'options' => ['left', 'right'],
-            'caption' => 'Search Align'
+            'configurable' => true,
         ],
         'searchHighlight' => [
             'attribute' => 'data-search-highlight',
@@ -940,7 +778,15 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Search Highlight'
+            'configurable' => true,
+        ],
+        'searchOnEnterKey' => [
+            'attribute' => 'data-search-on-enter-key',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'searchTimeOut' => [
             'attribute' => 'data-search-time-out',
@@ -948,7 +794,7 @@ class GUI_Table extends GUI_Module
             'value' => 500,
             'element' => 'input',
             'inputType' => 'number',
-            'caption' => 'Search TimeOut'
+            'configurable' => true,
         ],
         'selectItemName' => [
             'attribute' => 'data-select-item-name',
@@ -956,6 +802,7 @@ class GUI_Table extends GUI_Module
             'value' => 'btSelectItem',
             'element' => 'input',
             'inputType' => 'text',
+            'configurable' => true,
         ],
         'smartDisplay' => [
             'attribute' => 'data-smart-display',
@@ -963,7 +810,7 @@ class GUI_Table extends GUI_Module
             'value' => true,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Smart Display'
+            'configurable' => true,
         ],
         'showColumns' => [
             'attribute' => 'data-show-columns',
@@ -971,7 +818,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show Columns'
+            'configurable' => true,
         ],
         'showExport' => [
             'attribute' => 'data-show-export',
@@ -979,7 +826,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Export'
+            'configurable' => true,
         ],
         'showFilterControlSwitch' => [
             'attribute' => 'data-show-filter-control-switch',
@@ -987,21 +834,23 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show Filter Control Switch'
+            'configurable' => true,
         ],
         'showMultiSort' => [
             'attribute' => 'data-show-multi-sort',
             'type' => 'boolean',
             'value' => false,
+            'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show MultiSort'
+            'configurable' => true,
         ],
         'showMultiSortButton' => [
             'attribute' => 'data-show-multi-sort-button',
             'type' => 'boolean',
             'value' => true,
+            'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show MultiSortButton'
+            'configurable' => true,
         ],
         'showSearchClearButton' => [
             'attribute' => 'data-show-search-clear-button',
@@ -1009,7 +858,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show Search Clear Button'
+            'configurable' => true,
         ],
         'showFullscreen' => [
             'attribute' => 'data-show-fullscreen',
@@ -1017,7 +866,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show FullScreen'
+            'configurable' => true,
         ],
         'showRefresh' => [
             'attribute' => 'data-show-refresh',
@@ -1025,7 +874,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show Refresh'
+            'configurable' => true,
         ],
         'showPrint' => [
             'attribute' => 'data-show-print',
@@ -1033,7 +882,6 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Print',
         ],
         'showToggle' => [
             'attribute' => 'data-show-toggle',
@@ -1041,7 +889,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Show Cardview'
+            'configurable' => true,
         ],
         'singleSelect' => [
             'attribute' => 'data-single-select',
@@ -1049,14 +897,15 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Single Select'
+            'configurable' => true,
         ],
         'sortName' => [
             'attribute' => 'data-sort-name',
             'type' => 'string',
             'value' => '',
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'configurable' => true,
         ],
         'sortOrder' => [
             'attribute' => 'data-sort-order',
@@ -1064,14 +913,14 @@ class GUI_Table extends GUI_Module
             'value' => null,
             'element' => 'select',
             'options' => [null, 'asc', 'desc'],
-            'caption' => 'Sort Direction'
+            'configurable' => true,
         ],
         'sortPriority' => [ // ext: multiple sort
             'attribute' => 'data-sort-priority',
             'type' => 'array',
             'value' => null,
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
         ],
         'sortReset' => [
             'attribute' => 'data-sort-reset',
@@ -1079,6 +928,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'sortable' => [
             'attribute' => 'data-sortable',
@@ -1087,6 +937,7 @@ class GUI_Table extends GUI_Module
             'caption' => 'Sortable',
             'element' => 'input',
             'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'stickyHeader' => [
             'attribute' => 'data-sticky-header',
@@ -1115,7 +966,7 @@ class GUI_Table extends GUI_Module
             'value' => 'client',
             'element' => 'select',
             'options' => ['client', 'server'],
-            'caption' => 'Side Pagination'
+            'configurable' => true,
         ],
         'theadClasses' => [
             'attribute' => 'data-thead-classes',
@@ -1129,21 +980,23 @@ class GUI_Table extends GUI_Module
             'type' => 'string',
             'value' => null,
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
+            'configurable' => true,
         ],
         'uniqueId' => [
             'attribute' => 'data-unique-id',
             'type'  => 'string',
             'element'   => 'input',
             'inputType' => 'text',
-            'value' => null // undefined
+            'value' => null, // undefined
+            'configurable' => true,
         ],
         'paginationParts' => [
             'attribute' => 'data-pagination-parts',
             'type'  => 'array',
             'element'   => 'input',
             'inputType' => 'text',
-            'value' => ['pageInfo', 'pageSize', 'pageList']
+            'value' => ['pageInfo', 'pageSize', 'pageList'],
         ],
         'url' => [
             'attribute' => 'data-url',
@@ -1151,7 +1004,8 @@ class GUI_Table extends GUI_Module
             'value' => null, // undefined
             'element' => 'input',
             'inputType' => 'text',
-            'caption' => 'Data Url'
+            'caption' => 'Url',
+            'configurable' => true,
         ],
         'virtualScrollItemHeight' => [
             'attribute' => 'data-virtual-scroll-item-height',
@@ -1165,7 +1019,8 @@ class GUI_Table extends GUI_Module
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
 
     ];
@@ -1220,7 +1075,7 @@ class GUI_Table extends GUI_Module
     /**
      * Load files
      *
-     * @throws ReflectionException|Exception
+     * @throws Exception
      */
     public function loadFiles()
     {
@@ -1234,42 +1089,10 @@ class GUI_Table extends GUI_Module
 
         $Frame = $this->Weblication->getFrame();
         $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
-        $Frame->getHeaderdata()->addJavaScript($jsFile);
+        $Frame->getHeadData()->addJavaScript($jsFile);
 
-        $this->js_createGUIModule($this->getClassName());
+        // $this->js_createGUIModule($this->getClassName(), false);
     }
-
-    /**
-     * @return array[]
-     */
-//    public function getJavaScriptFiles(): array
-//    {
-//        return [['GUI_Table.js', __CLASS__, true]] + parent::getJavaScriptFiles();
-//    }
-
-    //    public function setOptions(array $options): GUI_Table
-//    {
-//        foreach($options as $key => $value) {
-//            if($key == 'columns' and is_array($value)) {
-//                $this->setColumns($value);
-//                continue;
-//            }
-//
-//            if($value === 'true' or $value === 'false') {
-//                $value = string2bool($value);
-//            }
-//            if(isset($this->getInspectorProperties()[$key])) {
-//                if($this->getInspectorProperties()[$key]['value'] != $value) {
-//                    $this->options[$key] = $value;
-//                }
-//            }
-//            else {
-//                $this->poolOptions[$key] = $value;
-//            }
-//        }
-//
-//        return $this;
-//    }
 
 //    public function getInspectorProperties(): array
 //    {
@@ -1284,11 +1107,18 @@ class GUI_Table extends GUI_Module
         return $this->inspectorProperties + $this->getDefaultInspectorProperties();
     }
 
+    /**
+     * @return array
+     */
     public function getColumnsProperties(): array
     {
         return $this->getInspectorProperties()['columns']['properties'];
     }
 
+    /**
+     * @param string $property
+     * @return array
+     */
     public function getColumnProperty(string $property): array
     {
         return $this->getColumnsProperties()[$property];
@@ -1479,6 +1309,7 @@ class GUI_Table extends GUI_Module
             'className' => $this->getClassName(),
             'poolOptions' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
         ]);
+        $this->setClientVar('poolOptions', $this->poolOptions);
 
 
         $this->Template->newBlock('tableAttributes');
@@ -1512,15 +1343,18 @@ class GUI_Table extends GUI_Module
         }
 
         if($columns = $this->getVar('columns')) {
-            $this->Template->newBlock('js_row');
+            $clientColumns = [];
+            $columnProperties = $this->getColumnsProperties();
+            // $this->Template->newBlock('js_row');
+            $c = 0;
             foreach ($columns as $column) {
-                $ColumnBlock = $this->Template->newBlock('js_column');
+                // $ColumnBlock = $this->Template->newBlock('js_column');
                 foreach ($column as $optName => $attrValue) {
                     $type = '';
                     $clientside = false;
-                    if (isset($this->getColumnsProperties()[$optName])) {
-                        $type = $this->getColumnsProperties()[$optName]['type'];
-                        $clientside = $this->getColumnsProperties()[$optName]['clientside'] ?? false;
+                    if (isset($columnProperties[$optName])) {
+                        $type = $columnProperties[$optName]['type'];
+                        $clientside = $columnProperties[$optName]['clientside'] ?? false;
                     }
 
                     if(!$clientside) {
@@ -1529,38 +1363,46 @@ class GUI_Table extends GUI_Module
 
                     // translate title
                     if($optName == 'title') {
-                        if(strpos($attrValue, '.') !== false) {
+                        if(str_contains($attrValue, '.')) {
                             $attrValue = $this->Weblication->getTranslator()->get($attrValue) ?: $attrValue;
                         }
                     }
 
-                    switch ($type) {
-                        case 'boolean':
-                            $attrValue = bool2string($attrValue);
-                            break;
-
-                        case 'function':
-                        case 'json':
-                            break;
-
-                        case 'auto':
-                            if(is_array($attrValue)) {
-                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
-                                break;
-                            }
-
-                        default:
-                            $attrValue = '\'' . $attrValue . '\'';
+                    switch($type) {
+                        case 'string':
+                            $attrValue = strtr($attrValue, ['{modulename}' => $this->getName()]);
                     }
+                    $clientColumns[$c][$optName] = $attrValue;
+
+//                    switch ($type) {
+//                        case 'boolean':
+//                            $attrValue = bool2string($attrValue);
+//                            break;
+//
+//                        case 'function':
+//                        case 'json':
+//                            break;
+//
+//                        case 'auto':
+//                            if(is_array($attrValue)) {
+//                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
+//                                break;
+//                            }
+//
+//                        default:
+//                            $attrValue = '\'' . $attrValue . '\'';
+//                    }
 
 
-                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
-                    $ColumnAttributeBlock->setVar([
-                        'key' => $optName,
-                        'value' => str_replace('{modulename}', $this->getName(), $attrValue)
-                    ]);
+//                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
+//                    $ColumnAttributeBlock?->setVar([
+//                        'key' => $optName,
+//                        'value' => $attrValue
+//                    ]);
                 }
+                $c++;
             }
+            $this->setClientVar('columns', $clientColumns);
         }
 
 //        foreach($this->configuration as $optName => $attrValue) {
@@ -1604,17 +1446,18 @@ class GUI_Table extends GUI_Module
         $this->Template->leaveBlock();
 
         // render table
-        $render_immediately = $render_ondomloaded = '';
-        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
-            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
-        }
-        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
-            $render_immediately = '.render()';
-        }
-        $this->Template->setVar([
-            'RENDER_IMMEDIATELY' => $render_immediately,
-            'RENDER_ONDOMLOADED' => $render_ondomloaded
-        ]);
+//        $render_immediately = $render_ondomloaded = '';
+//        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
+//            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
+//        }
+//        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
+//            $render_immediately = '.render()';
+//        }
+        $this->setClientVar('render', (int)$this->getVar('render'));
+//        $this->Template->setVar([
+//            'RENDER_IMMEDIATELY' => $render_immediately,
+//            'RENDER_ONDOMLOADED' => $render_ondomloaded
+//        ]);
         parent::prepare();
     }
 
@@ -1639,7 +1482,7 @@ class GUI_Table extends GUI_Module
                 $i = 0;
                 foreach($columnAttr as $attr) {
                     $attrValue = trim($attr);
-                    if(strpos($attrValue, '=') !== false) {
+                    if(str_contains($attrValue, '=')) {
                         $attr = explode('=', $attrValue);
                         $key = $attr[0];
                         $val = $attr[1];

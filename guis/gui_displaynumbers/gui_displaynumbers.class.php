@@ -27,10 +27,10 @@ class GUI_DisplayNumbers extends GUI_Module
 {
     var $returnValue = '';
 
-    public function __construct(&$Owner, $autoLoadFiles = false, array $params = [])
-    {
-        parent::__construct($Owner, $autoLoadFiles, $params);
-    }
+    /**
+     * @var bool
+     */
+    protected bool $autoLoadFiles = false;
 
     /**
      * Default Werte setzen. Input initialisieren.

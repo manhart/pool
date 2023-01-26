@@ -178,804 +178,895 @@ $GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 
     'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHEN', 'WHERE', 'WHILE', 'WITH', 'WRITE', 'X509', 'XOR', 'YEAR_MONTH',
     'ZEROFILL', 'DATE_FORMAT', 'LAST_DAY', 'POINT', 'POINTFROMTEXT', 'ST_POINTFROMTEXT'));
 
-if(!defined('CLASS_MYSQLDAO')) {
 
-    #### Prevent multiple loading
-    define('CLASS_MYSQLDAO', 1);
+/**
+ * MySQL_DAO
+ *
+ * @package pool
+ * @author Alexander Manhart <alexander@manhart-it.de>
+ * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
+ **/
+class MySQL_DAO extends DAO
+{
+    /**
+     * MySQL_Interface
+     *
+     * @var DataInterface|null
+     */
+    protected ?DataInterface $db = null;
 
+    //@var string Datenbankname
+    //@access protected
+    var $dbname = '';
 
+    //@var string Spalten einer Tabelle, getrennt mit Komma
+    //@access protected
+    var $column_list;
+
+    //@var string Tabellenname
+    //@access protected
+    var $table;
+
+    var $tableAlias = '';
+
+    var $reserved_words = array();
+
+    private array $MySQL_trans = array(
+        'equal'	=> '=',
+        'unequal' => '!=',
+        'greater' => '>',
+        'greater than' => '>=',
+        'less' => '<',
+        'less than' => '<=',
+        'in' => 'in',
+        'not in' => 'not in',
+        'is' => 'is'
+    );
 
     /**
-     * MySQL_DAO
+     * columns to translate
      *
-     * @package pool
-     * @author Alexander Manhart <alexander@manhart-it.de>
-     * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
-     **/
-    class MySQL_DAO extends DAO
+     * @var array
+     */
+    protected array $translate = [];
+
+    /**
+     * translates field values within filter / sorting methods
+     *
+     * @var array|string[][]
+     */
+    protected array $translateValues = [];
+
+    /**
+     * @var array
+     */
+    private array $cache = [
+        'translatedValues' => [],
+        'translate' => []
+    ];
+
+    /**
+     * @var Translator
+     */
+    protected Translator $Translator;
+
+    /**
+     * MySQL_DAO constructor.
+     */
+    public function __construct(DataInterface $db, string $dbname, string $table)
     {
-        /**
-         * MySQL_Interface
-         *
-         * @var MySQL_Interface
-         */
-        protected ?DataInterface $db = null;
+        parent::__construct();
 
-        //@var string Datenbankname
-        //@access protected
-        var $dbname = '';
+        $this->db = $db;
+        $this->dbname = $dbname;
+        $this->table = $table;
 
-        //@var string Spalten einer Tabelle, getrennt mit Komma
-        //@access protected
-        var $column_list;
-
-        //@var string Tabellenname
-        //@access protected
-        var $table;
-
-        var $tableAlias = '';
-
-        var $reserved_words = array();
-
-        private array $MySQL_trans = array(
-            'equal'	=> '=',
-            'unequal' => '!=',
-            'greater' => '>',
-            'greater than' => '>=',
-            'less' => '<',
-            'less than' => '<=',
-            'in' => 'in',
-            'not in' => 'not in',
-            'is' => 'is'
-        );
-
-        /**
-         * columns to translate
-         *
-         * @var array
-         */
-        protected array $translate = [];
-
-        /**
-         * translates field values within filter / sorting methods
-         *
-         * @var array|string[][]
-         */
-        protected array $translateValues = [];
-
-        /**
-         * @var array
-         */
-        private array $cache = [
-            'translatedValues' => [],
-            'translate' => []
-        ];
-
-        /**
-         * @var Translator
-         */
-        protected Translator $Translator;
-
-        /**
-         * MySQL_DAO constructor.
-         */
-        function __construct()
-        {
-            parent::__construct();
-
-            // only if Translator needed
-            if($this->translate) {
-                $this->Translator = Translator::getInstance();
-            }
-
-            $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
+        // only if Translator needed
+        if($this->translate) {
+            $this->Translator = Translator::getInstance();
         }
 
-        /**
-         * return DataInterface e.g. MySQL-Connection like MySQLi_Interface
-         *
-         * @return DataInterface
-         */
-        public function getDataInterface(): DataInterface
-        {
-            return $this->db;
+        $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
+
+        // Maybe there are columns in the "columns" property
+        // todo rework this shit
+        $this->rebuildColumnList();
+    }
+
+    /**
+     * rebuild column list
+     */
+    private function rebuildColumnList()
+    {
+        // Columns are predefined as property "columns".
+        if(!$this->columns) return;
+
+        $columns = $this->getColumns();
+
+        $table = '`'.$this->table.'`';
+        $glue = '`, '.$table.'.`';
+        $column_list = $table.'.`' . implode($glue, $columns).'`';
+        $this->column_list = $column_list;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableName(): string
+    {
+        return $this->table;
+    }
+
+    /**
+     * return DataInterface e.g. MySQL-Connection like MySQLi_Interface
+     *
+     * @return DataInterface
+     */
+    public function getDataInterface(): DataInterface
+    {
+        return $this->db;
+    }
+
+    /**
+     * fetches the columns automatically from the driver / interface
+     *
+     * Beim Setzen der Spalten/Felder wird das Ereignis
+     * $this -> onSetColumns() aufgerufen
+     **/
+    public function fetchColumns(): self
+    {
+        $this->pk = [];
+        $this->columns = [];
+        $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
+        $this->onSetColumns();
+        return $this;
+    }
+
+    /**
+     * Das Ereignis "onSetColumns" wird immer nachdem setzen der Columns
+     * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
+     * $this -> column_list fuer die Funktionen $this -> get und
+     * $this -> getMultiple zusammen.
+     */
+    protected function onSetColumns(bool $withAlias=false)
+    {
+        $columns = $this->getColumns();
+        $column_list = '';
+        $count = count($columns);
+        $alias = '';
+        if($withAlias and $this->tableAlias) {
+            $alias = $this->tableAlias.'.';
         }
+        for($i=0; $i < $count; $i++) {
+            $column = trim($columns[$i]);
 
-        /**
-         * Initialisiert Objekteigenschaften: Die Funktion "init" liest automatisch alle Felder und
-         * Primaerschluessel der Tabelle ein.
-         *
-         * Beim Setzen der Spalten/Felder wird das Ereignis
-         * $this -> onSetColumns() aufgerufen
-         **/
-        public function init()
-        {
-            $this->pk = array();
-            $this->columns = array();
-            $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
-            $this->onSetColumns();
-        }
+            $custom_column = $alias.$column;
 
-        /**
-         * Das Ereignis "onSetColumns" wird immer nachdem setzen der Columns
-         * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
-         * $this -> column_list fuer die Funktionen $this -> get und
-         * $this -> getMultiple zusammen.
-         *
-         * @access private
-         **/
-        function onSetColumns($withAlias=false)
-        {
-            $column_list = '';
-            $count = count($this->columns);
-            $alias = '';
-            if($withAlias and $this->tableAlias) {
-                $alias = $this->tableAlias.'.';
-            }
-            for($i=0; $i < $count; $i++) {
-                $column = trim($this->columns[$i]);
-
-                $custom_column = $alias.$column;
-
-                if(strpos($column, ' ') !== false) { // column contains space
-                    // complex column construct should not be masked
-                    if(strpos($column, '(', 0) === false and
-                       strpos($column, '\'', 0) === false and
-                       strpos($column, '"', 0) === false and
-                       stripos($column, 'as ', 0) === false) {
-                        $custom_column = '`'.$column.'`'; // should be a column with space
-                    }
-                }
-                elseif(array_key_exists(strtoupper($column), $this->reserved_words)) { // column name is reserved word
-                    $custom_column = '`'.$column.'`';
-                }
-                //$column_list .=  /*(($this -> table) ? $this -> table . '.' : '') . */$column;
-                $column_list .= $custom_column;
-
-                if ($i < ($count - 1)) {
-                    $column_list .= ', ';
+            if(str_contains($column, ' ')) { // column contains space
+                // complex column construct should not be masked
+                if(!str_contains($column, '(') and
+                   !str_contains($column, '\'') and
+                   !str_contains($column, '"') and
+                   stripos($column, 'as ', 0) === false) {
+                    $custom_column = '`'.$column.'`'; // should be a column with space
                 }
             }
-
-            $this->column_list = $column_list;
-        }
-
-        /**
-         * Sets columns to be translated
-         *
-         * @param array $columns
-         */
-        public function setTranslationColumns(array $columns)
-        {
-            $this->translate = $columns;
-        }
-
-        /**
-         * enables auto translation of the columns defined in the property $translate
-         *
-         * @return $this
-         */
-        public function enableTranslation(): MySQL_DAO
-        {
-            $this->translateValues = $this->cache['translatedValues'] ?: $this->translateValues;
-            $this->translate = $this->cache['translate'] ?: $this->translate;
-            return $this;
-        }
-
-        /**
-         * disables auto translation of the columns defined in the property $translate
-         *
-         * @return $this
-         */
-        public function disableTranslation(): MySQL_DAO
-        {
-            $this->cache['translate'] = $this->translate;
-            $this->cache['translatedValues'] = $this->translateValues;
-
-            $this->translate = [];
-            $this->translateValues = [];
-            return $this;
-        }
-
-        /**
-         * returns columns comma separated
-         *
-         * @return string
-         */
-        public function getColumnList(): string
-        {
-            return $this->column_list;
-        }
-
-        /**
-         * Liefert alle Felder der Tabelle.
-         *
-         * @param boolean $reInit Feldliste erneuern
-         * @return array Felder der Tabelle
-         **/
-        public function getFieldlist($reInit=false): array
-        {
-            if (count($this->columns) == 0 or $reInit) {
-                $this->init();
+            elseif(array_key_exists(strtoupper($column), $this->reserved_words)) { // column name is reserved word
+                $custom_column = '`'.$column.'`';
             }
-            return $this->columns;
-        }
+            //$column_list .=  /*(($this -> table) ? $this -> table . '.' : '') . */$column;
+            $column_list .= $custom_column;
 
-        /**
-         * Liefert den MySQL Datentypen des uebergebenen Feldes
-         *
-         * @param string $fieldname Spaltenname
-         * @return string Datentyp
-         */
-        function getFieldType($fieldname)
-        {
-            if(!$this->field_list) $this->init();
-            foreach ($this->field_list as $field) {
-                if($field['Field'] == $fieldname) {
-                    $buf = explode(' ', $field['Type']);
-                    $type = $buf[0];
-                    if(($pos = strpos($type, '(')) !== false) {
-                        $type = substr($type, 0, $pos);
-                    }
-                    return $type;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
-         *
-         * @param array $fieldName
-         */
-        function getFieldInfo($fieldName): array
-        {
-            if(!$this->field_list) $this->init();
-            foreach ($this->field_list as $field) {
-                if($field['Field'] == $fieldName) {
-                    return $field;
-                }
-            }
-            return [];
-        }
-
-        /**
-         * get enumerable values from field
-         *
-         * @param string $fieldName
-         * @return array|false|string[]
-         */
-        public function getFieldEnumValues(string $fieldName)
-        {
-            $fieldInfo = $this->db->listfield($this->dbname, $this->table, $fieldName);
-            if(!isset($fieldInfo['Type'])) return [];
-            $type = substr($fieldInfo['Type'], 0, 4);
-            if($type != 'enum') return [];
-            $buf = substr($fieldInfo['Type'], 5, -1);
-            return explode('\',\'', substr($buf, 1, -1));
-        }
-
-        /**
-         * Formatiert eingehende Benutzerdaten �ber ein Formular oder sogar MySQL Ergebnisse einheitlich um. Praktisch im Einsatz mit array_diff_assoc
-         *
-         * @param array $data Daten z.B. aus Input, Resultset, etc.
-         */
-        function formatData(&$data)
-        {
-            foreach ($data as $fieldname => $fieldvalue) {
-                $colinfo = $this->getFieldInfo($fieldname);
-
-                $coltype = array();
-                $enclosure = '\'';
-                $delim = ' ';
-                $fldcount = 0;
-                $fldval = '';
-                $enclosed = false;
-                $coltype_mysql = $colinfo['Type'];
-                for($i=0, $len=strlen($coltype_mysql); $i<$len; $i++) {
-                    $chr = $coltype_mysql[$i];
-                    switch($chr) {
-                        case $enclosure:
-                            if($enclosed && $coltype_mysql[$i+1] == $enclosure) {
-                                $fldval .= $chr;
-                                ++$i; //skip next char
-                            }
-                            else $enclosed = !$enclosed;
-                            break;
-
-                        case $delim:
-                            if(!$enclosed) {
-                                $coltype[$fldcount++] = $fldval;
-                                $fldval = '';
-                            }
-                            else $fldval .= $chr;
-                            break;
-
-                        default:
-                            $fldval .= $chr;
-                    }
-                }
-                if($fldval) $coltype[$fldcount] = $fldval;
-
-                $typeinfo = array_shift($coltype);
-                $len = null;
-                // $enum_values = array();
-                if(($pos = strpos($typeinfo, '(')) !== false) {
-                    $type = substr($typeinfo, 0, $pos);
-                    if($type != 'enum') {
-                        $len = substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2);
-                    }
-                    //else {
-                    //    $enum_values = explode(',', substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2));
-                    //}
-                }
-                else $type = $typeinfo;
-
-
-
-                //echo $type.' mit len:'.$len.'<br>';
-                switch ($type) {
-                    case 'int':
-                        if($fieldvalue == '') $data[$fieldname] = '0';
-                        if(in_array('zerofill', $coltype)) {
-                            $data[$fieldname] = sprintf('%0'.$len.'d', $fieldvalue);
-                        }
-                        break;
-
-                    case 'varchar':
-                    case 'enum':
-                        break;
-
-                    case 'integer': // tinyint, smallint, mediumint, int, bigint, integer
-                        break;
-
-                    case 'boolean': // boolean, bool
-                        break;
-
-                    case 'double': // float, double, decimal, real, dec, numeric, fixed
-                        #$data[$fieldname] = number_format($fieldvalue, $locale[''])
-                        // floatde_2php hier nicht, wenn dann mit pr�fung auf . als tausender!
-                        $data[$fieldname] = floatval(str_replace(',', '.', $fieldvalue));
-                        break;
-
-                    case 'decimal':
-                        $len = explode(',', $len);
-                        $fieldvalue = floatval(str_replace(',', '.', $fieldvalue));
-                        if(isset($len[1])) {
-                            $data[$fieldname] = sprintf('%01.'.$len[1].'f', $fieldvalue);
-                        }
-                        else $data[$fieldname] = $fieldvalue;
-                        break;
-
-                    case 'date':
-                        break;
-                }
+            if ($i < ($count - 1)) {
+                $column_list .= ', ';
             }
         }
 
-        function setTableAlias($alias)
-        {
-            $this->tableAlias = $alias;
-        }
+        $this->column_list = $column_list;
+    }
 
-        /**
-         * get columns with table alias
-         *
-         * @return array
-         */
-        public function getColumnsWithTableAlias(): array
-        {
-            return array_map(function($val) { return $this->tableAlias . '.'.$val; }, $this->columns);
-        }
+    /**
+     * Sets columns to be translated
+     *
+     * @param array $columns
+     */
+    public function setTranslationColumns(array $columns)
+    {
+        $this->translate = $columns;
+    }
 
-        /**
-         * Die Funktion "insert" fuegt einen neuen Datensatz in die MySQL Tabelle ein.
-         *
-         * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "last_insert_id"! Sie kann
-         * ueber MySQL_Resultset::getValue('last_insert_id') ausgegeben werden.
-         *
-         * @access public
-         * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
-         * Feldname und als Wert/Value den einzufuegenden Feldwert
-         * @return MySQL_Resultset
-         * @see MySQL_Resultset
-         **/
-        public function insert($data): Resultset
-        {
-            $keys = '';
-            $values = '';
-            foreach($data as $field => $value) {
-                $keys .= sprintf('`%s`,', $field);
-                // 18.06.2018, AM @deprecated $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
-                if(is_null($value)) {
-                    $values .= 'NULL,';
+    /**
+     * enables auto translation of the columns defined in the property $translate
+     *
+     * @return $this
+     */
+    public function enableTranslation(): MySQL_DAO
+    {
+        $this->translateValues = $this->cache['translatedValues'] ?: $this->translateValues;
+        $this->translate = $this->cache['translate'] ?: $this->translate;
+        return $this;
+    }
+
+    /**
+     * disables auto translation of the columns defined in the property $translate
+     *
+     * @return $this
+     */
+    public function disableTranslation(): MySQL_DAO
+    {
+        $this->cache['translate'] = $this->translate;
+        $this->cache['translatedValues'] = $this->translateValues;
+
+        $this->translate = [];
+        $this->translateValues = [];
+        return $this;
+    }
+
+    /**
+     * returns columns comma separated
+     *
+     * @return string
+     */
+    public function getColumnList(): string
+    {
+        return $this->column_list;
+    }
+
+    /**
+     * Liefert alle Felder der Tabelle.
+     *
+     * @param boolean $reInit Feldliste erneuern
+     * @return array Felder der Tabelle
+     */
+    public function getFieldList(bool $reInit=false): array
+    {
+        if (count($this->getColumns()) == 0 or $reInit) {
+            $this->fetchColumns();
+        }
+        return $this->getColumns();
+    }
+
+    /**
+     * Liefert den MySQL Datentypen des uebergebenen Feldes
+     *
+     * @param string $fieldName Spaltenname
+     * @return string Datentyp
+     */
+    public function getFieldType(string $fieldName): string
+    {
+        if(!$this->field_list) $this->fetchColumns();
+        foreach ($this->field_list as $field) {
+            if($field['COLUMN_NAME'] == $fieldName) {
+                $buf = explode(' ', $field['COLUMN_TYPE']);
+                $type = $buf[0];
+                if(($pos = strpos($type, '(')) !== false) {
+                    $type = substr($type, 0, $pos);
                 }
-                elseif(is_int($value) or (is_float($value))) {
-                    $values .= (string)$value.',';
-                }
-                elseif(is_bool($value)) {
-                    $values .= bool2string($value).',';
-                }
-                elseif(is_array($value)) {
-                    $values .= is_null($value[0]) ? 'NULL,' : $value[0].',';
-                }
-                else {
-                    $values .= sprintf('\'%s\',', $this->db->escapestring($value, $this->dbname));
-                }
+                return $type;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
+     *
+     * @param string $fieldName
+     * @return array
+     */
+    public function getFieldInfo(string $fieldName): array
+    {
+        if(!$this->field_list) $this->fetchColumns();
+        foreach ($this->field_list as $field) {
+            if($field['COLUMN_NAME'] == $fieldName) {
+                return $field;
+            }
+        }
+        return [];
+    }
+
+    /**
+     * get enumerable values from field
+     *
+     * @param string $fieldName
+     * @return array|string[]
+     */
+    public function getFieldEnumValues(string $fieldName)
+    {
+        $fieldInfo = $this->db->listfield($this->dbname, $this->table, $fieldName);
+        if(!isset($fieldInfo['Type'])) return [];
+        $type = substr($fieldInfo['Type'], 0, 4);
+        if($type != 'enum') return [];
+        $buf = substr($fieldInfo['Type'], 5, -1);
+        return explode('\',\'', substr($buf, 1, -1));
+    }
+
+    /**
+     * Formatiert eingehende Benutzerdaten �ber ein Formular oder sogar MySQL Ergebnisse einheitlich um. Praktisch im Einsatz mit array_diff_assoc
+     *
+     * @param array $data Daten z.B. aus Input, Resultset, etc.
+     */
+//    function formatData(&$data)
+//    {
+//        foreach ($data as $fieldname => $fieldvalue) {
+//            $colinfo = $this->getFieldInfo($fieldname);
+//
+//            $coltype = array();
+//            $enclosure = '\'';
+//            $delim = ' ';
+//            $fldcount = 0;
+//            $fldval = '';
+//            $enclosed = false;
+//            $coltype_mysql = $colinfo['Type'];
+//            for($i=0, $len=strlen($coltype_mysql); $i<$len; $i++) {
+//                $chr = $coltype_mysql[$i];
+//                switch($chr) {
+//                    case $enclosure:
+//                        if($enclosed && $coltype_mysql[$i+1] == $enclosure) {
+//                            $fldval .= $chr;
+//                            ++$i; //skip next char
+//                        }
+//                        else $enclosed = !$enclosed;
+//                        break;
+//
+//                    case $delim:
+//                        if(!$enclosed) {
+//                            $coltype[$fldcount++] = $fldval;
+//                            $fldval = '';
+//                        }
+//                        else $fldval .= $chr;
+//                        break;
+//
+//                    default:
+//                        $fldval .= $chr;
+//                }
+//            }
+//            if($fldval) $coltype[$fldcount] = $fldval;
+//
+//            $typeinfo = array_shift($coltype);
+//            $len = null;
+//            // $enum_values = array();
+//            if(($pos = strpos($typeinfo, '(')) !== false) {
+//                $type = substr($typeinfo, 0, $pos);
+//                if($type != 'enum') {
+//                    $len = substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2);
+//                }
+//                //else {
+//                //    $enum_values = explode(',', substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2));
+//                //}
+//            }
+//            else $type = $typeinfo;
+//
+//
+//
+//            //echo $type.' mit len:'.$len.'<br>';
+//            switch ($type) {
+//                case 'int':
+//                    if($fieldvalue == '') $data[$fieldname] = '0';
+//                    if(in_array('zerofill', $coltype)) {
+//                        $data[$fieldname] = sprintf('%0'.$len.'d', $fieldvalue);
+//                    }
+//                    break;
+//
+//                case 'varchar':
+//                case 'enum':
+//                    break;
+//
+//                case 'integer': // tinyint, smallint, mediumint, int, bigint, integer
+//                    break;
+//
+//                case 'boolean': // boolean, bool
+//                    break;
+//
+//                case 'double': // float, double, decimal, real, dec, numeric, fixed
+//                    #$data[$fieldname] = number_format($fieldvalue, $locale[''])
+//                    // floatde_2php hier nicht, wenn dann mit pr�fung auf . als tausender!
+//                    $data[$fieldname] = floatval(str_replace(',', '.', $fieldvalue));
+//                    break;
+//
+//                case 'decimal':
+//                    $len = explode(',', $len);
+//                    $fieldvalue = floatval(str_replace(',', '.', $fieldvalue));
+//                    if(isset($len[1])) {
+//                        $data[$fieldname] = sprintf('%01.'.$len[1].'f', $fieldvalue);
+//                    }
+//                    else $data[$fieldname] = $fieldvalue;
+//                    break;
+//
+//                case 'date':
+//                    break;
+//            }
+//        }
+//    }
+
+    function setTableAlias($alias)
+    {
+        $this->tableAlias = $alias;
+    }
+
+    /**
+     * get columns with table alias
+     *
+     * @return array
+     */
+    public function getColumnsWithTableAlias(): array
+    {
+        return array_map(function($val) { return $this->tableAlias . '.'.$val; }, $this->getColumns());
+    }
+
+    /**
+     * Die Funktion "insert" fuegt einen neuen Datensatz in die MySQL Tabelle ein.
+     *
+     * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "last_insert_id"! Sie kann
+     * ueber MySQL_Resultset::getValue('last_insert_id') ausgegeben werden.
+     *
+     * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
+     * Feldname und als Wert/Value den einzufuegenden Feldwert
+     * @return MySQL_Resultset
+     * @see MySQL_Resultset
+     **/
+    public function insert(array $data): Resultset
+    {
+        $columns = '';
+        $values = '';
+
+        foreach($data as $field => $value) {
+            // key concatenation
+            if($columns == '') {
+                $columns = "`$field`";
+            }
+            else {
+                $columns = "$columns,`$field`";
             }
 
-            if ('' == $keys) {
+            // value concatenating
+            if(is_null($value)) {
+                $value = 'NULL';
+            }
+            elseif(is_bool($value)) {
+                $value = bool2string($value);
+            }
+            elseif(is_array($value)) {
+                $value = is_null($value[0]) ? 'NULL' : $value[0];
+            }
+            elseif(!is_int($value) && !is_float($value)) {
+                $value = $this->db->escapestring($value, $this->dbname);
+                $value = "'$value'";
+            }
+
+            if($values == '') {
+                $values = $value;
+            }
+            else {
+                $values = "$values,$value";
+            }
+        }
+
+        if ('' == $columns) {
+            $ResultSet = new Resultset();
+            $ResultSet->addError('MySQL_DAO::insert failed. No fields stated!');
+            return $ResultSet;
+        }
+
+        $sql = <<<SQL
+INSERT INTO `{$this->table}`
+    ($columns)
+VALUES
+    ($values)
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Die Funktion "update" aendert einen Datensatz. Ein Datensatz kann nur geaendert
+     * werden, wenn auch der entsprechende Primaerschluessel mituebergeben wurde!! Der
+     * Schluessel wird automatisch erkannt und die Daten landen in den richtigen Datensatz.
+     * Der Primaerschluessel ist nicht aenderbar!
+     *
+     * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "affected_rows"! Sie kann
+     * ueber MySQL_Resultset::getValue('affected_rows') ausgegeben werden.
+     *
+     * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
+     * Feldname und als Wert/Value den einzufuegenden Feldwert
+     * @return Resultset
+     * @see MySQL_Resultset
+     **/
+    public function update(array $data): Resultset
+    {
+        $sizeof = count($this->pk);
+        $pk = [];
+        for ($i=0; $i<$sizeof; $i++) {
+            if(!isset($data[$this->pk[$i]])) {
                 $ResultSet = new Resultset();
-                $ResultSet->addError('MySQL_DAO::insert failed. No fields stated!');
+                $ResultSet->addError('Update is wrong. No primary key found.');
                 return $ResultSet;
             }
-
-            $sql = sprintf('INSERT INTO `%s` (%s) VALUES (%s)', $this->table,
-                substr($keys, 0, -1), substr($values, 0, -1));
-            return $this->__createMySQL_Resultset($sql);
-        }
-
-        /**
-         * Die Funktion "update" aendert einen Datensatz. Ein Datensatz kann nur geaendert
-         * werden, wenn auch der entsprechende Primaerschluessel mituebergeben wurde!! Der
-         * Schluessel wird automatisch erkannt und die Daten landen in den richtigen Datensatz.
-         * Der Primaerschluessel ist nicht aenderbar!
-         *
-         * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "affected_rows"! Sie kann
-         * ueber MySQL_Resultset::getValue('affected_rows') ausgegeben werden.
-         *
-         * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
-         * Feldname und als Wert/Value den einzufuegenden Feldwert
-         * @return Resultset
-         * @see MySQL_Resultset
-         **/
-        public function update($data): Resultset
-        {
-            $sizeof = sizeof($this->pk);
-            for ($i=0; $i<$sizeof; $i++) {
-                if(!isset($data[$this->pk[$i]])) {
-                    $ResultSet = new Resultset();
-                    $ResultSet->addError('Update is wrong. No primary key found.');
-                    return $ResultSet;
+            else {
+                $pkValue = $data[$this->pk[$i]];
+                if(is_array($pkValue)) {
+                    $pk[] = $pkValue[0];
+                    $data[$this->pk[$i]] = $pkValue[1];
                 }
                 else {
-                    $pkValue = $data[$this->pk[$i]];
-                    if(is_array($pkValue)) {
-                        $pk[] = $pkValue[0];
-                        $data[$this->pk[$i]] = $pkValue[1];
+                    $pk[] = $pkValue;
+                    unset($data[$this->pk[$i]]);
+                }
+            }
+        }
+
+        $set = '';
+        foreach ($data as $field => $value) {
+            if (is_null($value)) {
+                $value = 'NULL';
+            }
+            elseif(is_bool($value)) {
+                $value = bool2string($value);
+            }
+            elseif($value instanceof \Commands) {
+                // reserved keywords don't need to be masked
+                $expression = $this->commands[$value->name];
+                if($expression instanceof Closure) {
+                    $value = $expression($field);
+                }
+                else {
+                    $value = $expression;
+                }
+            }
+            elseif(!is_int($value) && !is_float($value)) {
+                $value = "'{$this->db->escapestring($value, $this->dbname)}'";
+            }
+            if($set == '') $set = "`$field`=$value";
+            $set = "$set,`$field`=$value";
+        }
+
+        if (!$set) {
+            return new MySQL_Resultset($this->db);
+        }
+
+        $where = $this->__buildWhere($pk, $this->pk);
+        if ($where == '1') {
+            $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this->table;
+            $this->raiseError(__FILE__, __LINE__, $error_msg);
+            die($error_msg);
+        }
+
+        $sql = <<<SQL
+UPDATE `{$this->table}`
+SET
+    $set
+WHERE
+    $where
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Die Funktion "delete" loescht einen Datensatz! Dabei muss der Primaerschluessel
+     * (z.B. id) uebergeben werden. Es kann pro Aufruf nur ein Datensatz geloescht werden.
+     *
+     * @param integer $id Eindeutige ID eines Datensatzes (Primaerschluessel!!)
+     * @return Resultset
+     * @see MySQL_Resultset
+     **/
+    public function delete($id): Resultset
+    {
+        $where = $this->__buildWhere($id, $this->pk);
+        if ($where == '1') {
+            $error_msg = 'Delete maybe wrong! Do you really want to delete all records in the table: '. $this -> table;
+            $this->raiseError(__FILE__, __LINE__, $error_msg);
+            die($error_msg);
+        }
+
+        $sql = <<<SQL
+DELETE
+FROM `{$this->table}`
+WHERE
+    $where
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * L�scht einen oder mehrere Datens�tze anhand des �bergebenen Filters! Achtung: immer auf korrekte Filter-Syntax achten.
+     *
+     * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
+     * @return Resultset Ergebnismenge
+     * @see MySQL_Resultset
+     * @see MySQL_DAO::__buildFilter
+     */
+    public function deleteMultiple(array $filter_rules=[]): Resultset
+    {
+        $where = $this->__buildFilter($filter_rules, 'and', true);
+        $sql = <<<SQL
+DELETE
+FROM `{$this->table}`
+WHERE
+    $where
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Holt einen Datensatz anhand der uebergebenen ID aus einer Tabelle.
+     * Wenn ein anderer unique Index abgefragt werden soll und nicht standardmaessig
+     * der Primaer Schluessel, kann dieser Feldname (/Spaltenname) ueber den
+     * 2. Parameter "$key" gesetzt werden.
+     *
+     * @param mixed $id Eindeutige Wert (z.B. ID) eines Datensatzes
+     * @param mixed $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
+     * @return Resultset Ergebnismenge
+     * @see MySQL_Resultset
+     **/
+    public function get($id, $key=NULL): Resultset
+    {
+        $id = $id ?? 0;
+        $where = $this->__buildWhere($id, $key);
+
+        $sql = <<<SQL
+SELECT {$this->column_list}
+FROM `{$this->table}`
+WHERE
+    $where
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Liefert mehrere Datensaetze anhand uebergebener ID's, Filter-Regeln.
+     *
+     * @param mixed|null $id ID's (array oder integer)
+     * @param mixed|null $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
+     * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
+     * @param array $sorting Sortierung (siehe MySQL_DAO::__buildSorting())
+     * @param array $limit Limit -> array(Position, Anzahl Datensaetze)
+     * @param array $groupBy Gruppierung
+     * @param array $having Filter Regeln auf die Gruppierung
+     * @param array $options Optionale Parameter in der Select-Anweisung
+     * @return Resultset Ergebnismenge
+     * @see MySQL_Resultset
+     * @see MySQL_DAO::__buildFilter
+     * @see MySQL_DAO::__buildSorting
+     * @see MySQL_DAO::__buildLimit
+     * @see MySQL_DAO::__buildGroupby
+     *
+     * @throws Exception
+     */
+    public function getMultiple(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
+                                array $groupBy=[], array $having=[], array $options=[]): Resultset
+    {
+        $options = implode(' ', $options);
+
+        $where = $this->__buildWhere($id, $key);
+        $filter = $this->__buildFilter($filter_rules);
+        $groupBy = $this->__buildGroupby($groupBy);
+        $having = $this->__buildHaving($having);
+        $sorting = $this->__buildSorting($sorting);
+        $limit = $this->__buildLimit($limit);
+
+        $sql = <<<SQL
+SELECT $options {$this->column_list}
+FROM `{$this->table}`
+WHERE
+    $where
+    $filter
+    $groupBy
+    $having
+    $sorting
+    $limit
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Liefert die Anzahl getroffener Datensaetze
+     *
+     * @param mixed|null $id ID's (array oder integer)
+     * @param mixed|null $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
+     * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
+     * @return Resultset Ergebnismenge
+     * @see MySQL_Resultset
+     * @see MySQL_DAO::__buildFilter
+     **/
+    public function getCount(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[]): Resultset
+    {
+        $where = $this->__buildWhere($id, $key);
+        $filter = $this->__buildFilter($filter_rules);
+        $sql = <<<SQL
+SELECT COUNT(*) AS `count`
+FROM `{$this->table}`{$this->tableAlias}
+WHERE
+    $where
+    $filter
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurück
+     *
+     * @return int
+     */
+    public function foundRows(): int
+    {
+        return $this->db->foundRows();
+    }
+
+    /**
+     * executes sql statement and returns resultset
+     *
+     * @param string $sql sql statement to execute
+     * @param callable|null $customCallback
+     * @return MySQL_Resultset
+     */
+    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
+    {
+        $MySQL_ResultSet = new MySQL_Resultset($this->db);
+        $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow'], $this->metaData);
+        return $MySQL_ResultSet;
+    }
+
+    /**
+     * fetching rows
+     *
+     * @param array $row
+     * @return array
+     * @throws Exception
+     */
+    public function fetchingRow(array $row): array
+    {
+        if($this->translate) {
+            return $this->translate($row);
+        }
+        return $row;
+    }
+
+    /**
+     * translate table content
+     *
+     * @param array $row
+     * @return array
+     * @throws Exception
+     */
+    protected function translate(array $row): array
+    {
+        foreach($this->translate as $key) {
+            if(isset($row[$key])) {
+                $row[$key] = $this->Translator->get($row[$key]) ?: $row[$key];
+            }
+        }
+        return $row;
+    }
+
+    /**
+     * @param string $field
+     * @return string
+     * @throws Exception
+     */
+    protected function translateValues(string $field): string
+    {
+        if(isset($this->translateValues[$field])) {
+            $tmp = 'case '.$field;
+            foreach($this->translateValues[$field] as $key => $transl) {
+                $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->get($transl).'\'';
+            }
+            $tmp .= ' else '.$field.' end';
+            $field = $tmp;
+        }
+        return $field;
+    }
+
+    /**
+     * checks value for subquery
+     *
+     * @param $op
+     * @param $value
+     * @return bool
+     */
+    private function __isSubQuery($op, $value): bool
+    {
+        return (str_contains($value, '(SELECT ')/* and ($op == 'IN' or $op == 'ANY' or $op == 'SOME' or $op == 'ALL')*/);
+    }
+
+    /**
+     * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
+     *
+     * Verfuegbare Regeln:
+     * equal : '='
+     * unequal : '!='
+     * greater : '>'
+     * less : '<'
+     * in : 'in' erwartet ein Array aus Werten (Sonderbehandlung)
+     * not in : 'not in' erwartet ein Array aus Werten (Sonderbehandlung)
+     *
+     * @access private
+     * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
+     * @param string $operator MySQL Operator AND/OR
+     * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
+     * @return string Teil eines SQL Queries
+     **/
+    protected function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false): string
+    {
+        $query = '';
+        $z = -1;
+        foreach($filter_rules as $record) {
+            $z++;
+            if(!is_array($record)) { // operator or something manual
+                // where 1 xxx fehlendes and
+                if($z==0 and strtolower($record) != 'or') {
+                    $query .= ' and';
+                }
+                // Verknuepfungen or, and
+                $query .= ' ' . $record . ' ';
+                $skip_first_operator = true;
+                continue;
+            }
+            if($skip_first_operator) {
+                $skip_first_operator = false;
+            }
+            else {
+                $query .= ' ' . $operator . ' ';
+            }
+
+            if(is_array($record[0])) { // nesting
+                $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
+                continue;
+            }
+
+            // 24.07.2012, Anfuehrungszeichen steuerbar
+            $noQuotes = false;
+            $noEscape = false;
+            if(isset($record[3])) { // Optionen
+                $noQuotes = ($record[3] & DAO_NO_QUOTES);
+                $noEscape = ($record[3] & DAO_NO_ESCAPE);
+            }
+
+            if($this->translateValues) {
+                $record[0] = $this->translateValues($record[0]);
+            }
+
+            // Sonderregel "in", "not in"
+            if(isset($record[2]) and is_array($record[2])) {
+                $first = true;
+                $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
+                foreach ($record[2] as $value) {
+                    if (!$first) {
+                        $query .= ', ';
+                    }
+                    if(is_integer($value) or is_float($value)) {
+                        $query .= ' ' . $value;
                     }
                     else {
-                        $pk[] = $pkValue;
-                        unset($data[$this->pk[$i]]);
+                        if(!$noEscape) $value = $this->db->escapestring($value, $this->dbname);
+                        if(!$noQuotes) $value = '\''.$value.'\'';
+                        $query .= $value;
                     }
+                    $first = false;
                 }
+                $query .= ')';
             }
-
-            $update = '';
-            foreach ($data as $field => $value) {
-                if (is_null($value)) {
-                    $value = 'NULL';
+            else {
+                $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
+                if (is_null($record[2])) {
+                    $query .= ' NULL';
                 }
-                elseif(is_int($value) or (is_float($value))) {
-                    $value = (string)$value;
+                elseif(is_bool($record[2])) {
+                    $query .= ' ' . bool2string($record[2]);
                 }
-                elseif(is_bool($value)) {
-                    $value = bool2string($value);
-                }
-                elseif(in_array(strtoupper($value) , array('NOW()', 'CURRENT_DATE()', 'CURRENT_TIMESTAMP()'))) {
-                    // reserved keywords don't need to be masked
+                elseif(is_int($record[2]) or is_float($record[2]) or
+                        $this->__isSubQuery($record[1], $record[2])) {
+                    $query .= ' ' . $record[2];
                 }
                 else {
-                    $value = '\''.$this->db->escapestring($value, $this->dbname).'\'';
-                }
-                $update .= '`'.$field.'`='.$value.',';
-            }
-
-            if (!$update) {
-                return new MySQL_Resultset($this->db);
-            }
-
-            $where = $this->__buildWhere($pk, $this->pk);
-            if ($where == '1') {
-                $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this -> table;
-                $this -> raiseError(__FILE__, __LINE__, $error_msg);
-                die($error_msg);
-            }
-            $sql = sprintf('update `%s` set %s where %s', $this->table, substr($update, 0, -1), $where);
-            return $this->__createMySQL_Resultset($sql);
-        }
-
-        /**
-         * Die Funktion "delete" loescht einen Datensatz! Dabei muss der Primaerschluessel
-         * (z.B. id) uebergeben werden. Es kann pro Aufruf nur ein Datensatz geloescht werden.
-         *
-         * @param integer $id Eindeutige ID eines Datensatzes (Primaerschluessel!!)
-         * @return Resultset
-         * @see MySQL_Resultset
-         **/
-        public function delete($id): Resultset
-        {
-            // $query = sprintf('update %s set _removed=1, _modified=now() where %s="%s"', $this -> table, $this -> pk, addslashes($id));
-            $where = $this -> __buildWhere($id, $this -> pk);
-            if ($where == '1') {
-                $error_msg = 'Delete maybe wrong! Do you really want to delete all records in the table: '. $this -> table;
-                $this -> raiseError(__FILE__, __LINE__, $error_msg);
-                die($error_msg);
-            }
-            $sql = sprintf('delete from `%s` where %s', $this -> table, $where);
-            return $this->__createMySQL_Resultset($sql);
-        }
-
-        /**
-         * L�scht einen oder mehrere Datens�tze anhand des �bergebenen Filters! Achtung: immer auf korrekte Filter-Syntax achten.
-         *
-         * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
-         * @return Resultset Ergebnismenge
-         * @see MySQL_Resultset
-         * @see MySQL_DAO::__buildFilter
-         */
-        public function deleteMultiple(array $filter_rules=[]): Resultset
-        {
-            $sql = sprintf('DELETE FROM `%s` WHERE %s', $this->table, $this->__buildFilter($filter_rules, 'and', true));
-            return $this->__createMySQL_Resultset($sql);
-        }
-
-        /**
-         * Holt einen Datensatz anhand der uebergebenen ID aus einer Tabelle.
-         * Wenn ein anderer unique Index abgefragt werden soll und nicht standardmaessig
-         * der Primaer Schluessel, kann dieser Feldname (/Spaltenname) ueber den
-         * 2. Parameter "$key" gesetzt werden.
-         *
-         * @param mixed $id Eindeutige Wert (z.B. ID) eines Datensatzes
-         * @param mixed $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
-         * @return Resultset Ergebnismenge
-         * @see MySQL_Resultset
-         **/
-        public function get($id, $key=NULL): Resultset
-        {
-            // Bugfix Alexander M.; ^^ansonsten liefert __buildWhere alle Datensätze like getMultiple
-            if(is_null($id)) $id = 0;
-
-            #echo 'id: '.$id.' key:'.$key.'<br>';
-            $sql = sprintf('select %s from `%s` where %s', $this->column_list, $this->table, $this->__buildWhere($id, $key));
-            #echo "get: ".$sql."<br>";
-
-            return $this->__createMySQL_Resultset($sql);
-        }
-
-        /**
-         * Liefert mehrere Datensaetze anhand uebergebener ID's, Filter-Regeln.
-         *
-         * @param mixed $id ID's (array oder integer)
-         * @param mixed $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
-         * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
-         * @param array $sorting Sortierung (siehe MySQL_DAO::__buildSorting())
-         * @param array $limit Limit -> array(Position, Anzahl Datensaetze)
-         * @param array $groupBy Gruppierung
-         * @param array $having Filter Regeln auf die Gruppierung
-         * @param array $options Optionale Parameter in der Select-Anweisung
-         * @return Resultset Ergebnismenge
-         * @see MySQL_Resultset
-         * @see MySQL_DAO::__buildFilter
-         * @see MySQL_DAO::__buildSorting
-         * @see MySQL_DAO::__buildLimit
-         * @see MySQL_DAO::__buildGroupby
-         *
-         * @throws Exception
-         */
-        public function getMultiple($id=NULL, $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
-                                    array $groupBy=[], array $having=[], array $options=[]): Resultset
-        {
-            $sql = sprintf('SELECT %s %s FROM `%s` WHERE %s %s%s%s%s%s',
-                implode(' ', $options),
-                $this->column_list,
-                $this->table,
-                $this->__buildWhere($id, $key),
-                $this->__buildFilter($filter_rules),
-                $this->__buildGroupby($groupBy),
-                $this->__buildHaving($having),
-                $this->__buildSorting($sorting),
-                $this->__buildLimit($limit)
-            );
-
-            return $this->__createMySQL_Resultset($sql);
-        }
-
-        /**
-         * Liefert die Anzahl getroffener Datensaetze
-         *
-         * @param mixed $id ID's (array oder integer)
-         * @param mixed $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
-         * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
-         * @return Resultset Ergebnismenge
-         * @see MySQL_Resultset
-         * @see MySQL_DAO::__buildFilter
-         **/
-        public function getCount($id=NULL, $key=NULL, array $filter_rules=[]): Resultset
-        {
-            $sql = sprintf('SELECT COUNT(%s) AS `count` FROM `%s`%s WHERE %s %s',
-                '*',
-                $this->table,
-                $this->tableAlias,
-                $this->__buildWhere($id, $key),
-                $this->__buildFilter($filter_rules)
-            );
-
-            return $this->__createMySQL_Resultset($sql);
-        }
-
-        /**
-         * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurück
-         *
-         * @return int
-         */
-        public function foundRows(): int
-        {
-            return $this->db->foundRows();
-        }
-
-        /**
-         * executes sql statement and returns resultset
-         *
-         * @param string $sql sql statement to execute
-         * @param callable|null $customCallback
-         * @return MySQL_Resultset
-         */
-        protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
-        {
-            $MySQL_ResultSet = new MySQL_Resultset($this->db);
-            $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow']);
-            return $MySQL_ResultSet;
-        }
-
-        /**
-         * fetching rows
-         *
-         * @param array $row
-         * @return array
-         * @throws Exception
-         */
-        public function fetchingRow(array $row): array
-        {
-            if($this->translate) {
-                return $this->translate($row);
-            }
-            return $row;
-        }
-
-        /**
-         * translate table content
-         *
-         * @param array $row
-         * @return array
-         * @throws Exception
-         */
-        protected function translate(array $row): array
-        {
-            foreach($this->translate as $key) {
-                if(isset($row[$key])) {
-                    $row[$key] = $this->Translator->get($row[$key]) ?: $row[$key];
-                }
-            }
-            return $row;
-        }
-
-        /**
-         * @param string $field
-         * @return string
-         * @throws Exception
-         */
-        protected function translateValues(string $field): string
-        {
-            if(isset($this->translateValues[$field])) {
-                $tmp = 'case '.$field;
-                foreach($this->translateValues[$field] as $key => $transl) {
-                    $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->get($transl).'\'';
-                }
-                $tmp .= ' else '.$field.' end';
-                $field = $tmp;
-            }
-            return $field;
-        }
-
-        private function __isSubQuery($op, $value): bool
-        {
-            return (strpos($value, '(SELECT ') !== false/* and ($op == 'IN' or $op == 'ANY' or $op == 'SOME' or $op == 'ALL')*/);
-        }
-
-        /**
-         * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
-         *
-         * Verfuegbare Regeln:
-         * equal : '='
-         * unequal : '!='
-         * greater : '>'
-         * less : '<'
-         * in : 'in' erwartet ein Array aus Werten (Sonderbehandlung)
-         * not in : 'not in' erwartet ein Array aus Werten (Sonderbehandlung)
-         *
-         * @access private
-         * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
-         * @param string $operator MySQL Operator AND/OR
-         * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
-         * @return string Teil eines SQL Queries
-         **/
-        function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false)
-        {
-            $query = '';
-            $z = -1;
-            foreach($filter_rules as $record) {
-                $z++;
-                if(!is_array($record)) { // operator or something manual
-                    // where 1 xxx fehlendes and
-                    if($z==0 and strtolower($record) != 'or') {
-                        $query .= ' and';
-                    }
-                    // Verknuepfungen or, and
-                    $query .= ' ' . $record . ' ';
-                    $skip_first_operator = true;
-                    continue;
-                }
-                if($skip_first_operator) {
-                    $skip_first_operator = false;
-                }
-                else {
-                    $query .= ' ' . $operator . ' ';
-                }
-
-                if(is_array($record[0])) { // nesting
-                    $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
-                    continue;
-                }
-
-                // 24.07.2012, Anfuehrungszeichen steuerbar
-                $noQuotes = false;
-                $noEscape = false;
-                if(isset($record[3])) { // Optionen
-                    $noQuotes = ($record[3] & DAO_NO_QUOTES);
-                    $noEscape = ($record[3] & DAO_NO_ESCAPE);
-                }
-
-                if($this->translateValues) {
-                    $record[0] = $this->translateValues($record[0]);
-                }
-
-                // Sonderregel "in", "not in"
-                if(isset($record[2]) and is_array($record[2])) {
-                    $first = true;
-                    $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
-                    foreach ($record[2] as $value) {
-                        if (!$first) {
-                            $query .= ', ';
-                        }
-                        if(is_integer($value) or is_float($value)) {
-                            $query .= ' ' . $value;
-                        }
-                        else {
-                            if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
-                            if($noQuotes == false) $value = '\''.$value.'\'';
-                            $query .= $value;
-                        }
-                        $first = false;
-                    }
-                    $query .= ')';
-                }
-                else {
-                    $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
-                    if (is_null($record[2])) {
-                        $query .= ' NULL';
-                    }
-                    elseif(is_bool($record[2])) {
-                        $query .= ' ' . bool2string($record[2]);
-                    }
-                    elseif(is_integer($record[2]) or is_float($record[2]) or
-                            $this->__isSubQuery($record[1], $record[2])) {
-                        $query .= ' ' . $record[2];
-                    }
-                    else {
-                        $value = $record[2];
-                        if($noEscape == false) $value = $this->db->escapestring($value, $this->dbname);
-                        if($noQuotes == false) $value = '\''.$value.'\'';
+                    $value = $record[2];
+                    if(!$noEscape) $value = $this->db->escapestring($value, $this->dbname);
+                    if(!$noQuotes) $value = '\''.$value.'\'';
 
 //									if(mb_detect_encoding($value, array('UTF-8', 'ISO-8859-1'), true) == 'ISO-8859-1') {
 //										if(strpos($value, '_latin1') === false) {
@@ -983,235 +1074,232 @@ if(!defined('CLASS_MYSQLDAO')) {
 //										}
 //									}
 
-                        $query .= ' '.$value;
-                    }
+                    $query .= ' '.$value;
                 }
             }
-            if($z == -1 and $skip_first_operator) { // kein Durchlauf stattgefunden
-                return 1;
-            }
-            return $query;
         }
+        if($z == -1 and $skip_first_operator) { // kein Durchlauf stattgefunden
+            return '1';
+        }
+        return $query;
+    }
 
-        /**
-         * make filter rules based on search string or defined search keywords
-         *
-         * @param array $columns
-         * @param string $searchString
-         * @param array $definedSearchKeywords
-         * @return array
-         */
-        public function makeFilter(array $columns = [], string $searchString = '', array $definedSearchKeywords = []): array
-        {
-            $filter = [];
-            $hasSearchString = ($searchString != '');
-            if(!$hasSearchString and !count($definedSearchKeywords)) {
-                return $filter;
-            }
-
-            $searchString = '%'.$searchString.'%';
-
-            $defined_filter = [];
-            $isAssoc = null;
-            $i = 0;
-            foreach($columns as $column) {
-                if(is_null($isAssoc)) $isAssoc = is_array($column);
-
-                $alias = $isAssoc ? $column['alias'] : $column;
-                $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
-                $type = $isAssoc ? $column['type'] : '';
-                $operator = 'like';
-
-                // $format = $isAssoc ? $column['format'] : '';
-
-                $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
-
-                $isDateTime = $type == 'date.time';
-                $isDate = $type == 'date';
-                if($isDate or $isDateTime) {
-                    $expr = 'DATE_FORMAT('.$expr.', "'.Weblication::getInstance()->getDefaultFormat('mysql.date_format.' . $type).'")';
-                }
-
-                if($hasDefinedFilter) {
-                    $filterByValue = $definedSearchKeywords[$alias];
-                    $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $expr) : $expr;
-                    $filterControl = $isAssoc ? ($column['filterControl'] ?: 'input') : 'input';
-                    if($filterControl == 'select') {
-                        $operator = 'equal';
-                    }
-                    elseif($filterControl == 'datepicker') {
-                        if($filterByValue) {
-                            $date = date_parse($filterByValue); // is date?
-                            if($date['error_count'] == 0 and $date['warning_count'] == 0 and
-                                $date['year'] and $date['month'] and $date['day']) {
-                                // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
-                                $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $orig_expr) : $orig_expr;
-                                $filterByValue = $date['year'];
-                                $filterByValue .= '-'.str_pad($date['month'], 2, '0', STR_PAD_LEFT);
-                                $filterByValue .= '-'.str_pad($date['day'], 2, '0', STR_PAD_LEFT);
-
-                                if($date['hour'] and $date['minute']) {
-                                    $filterByValue .= ' '.str_pad($date['hour'], 2, '0', STR_PAD_LEFT).
-                                        ':'.str_pad($date['minute'], 2, '0', STR_PAD_LEFT);
-                                    if($date['second']) {
-                                        $filterByValue .= ':'.str_pad($date['second'], 2, '0', STR_PAD_LEFT);
-                                    }
-                                }
-                            }
-                        }
-                        $filterByValue = $filterByValue.'%';
-                    }
-                    else {
-                        $filterByValue = '%'.$filterByValue.'%';
-                    }
-                    $condition = [$filterByColumn, $operator, $filterByValue];
-                    $defined_filter[] = $condition;
-                }
-
-                if(!$hasSearchString) continue;
-
-                if($i > 0) $filter[] = 'or';
-                $i++;
-                $condition = [$expr, $operator, $searchString];
-                $filter[] = $condition;
-            }
-
-            if($defined_filter) {
-                if($hasSearchString) $filter = array_merge(['('], $filter, [')'], ['and'], $defined_filter);
-                else $filter = $defined_filter;
-            }
-
+    /**
+     * make filter rules based on search string or defined search keywords
+     *
+     * @param array $columns
+     * @param string $searchString
+     * @param array $definedSearchKeywords
+     * @return array
+     */
+    public function makeFilter(array $columns = [], string $searchString = '', array $definedSearchKeywords = []): array
+    {
+        $filter = [];
+        $hasSearchString = ($searchString != '');
+        if(!$hasSearchString and !count($definedSearchKeywords)) {
             return $filter;
         }
 
-        /**
-         * Filter-Regeln fuer die Gruppierung
-         *
-         * @param array $filter_rules Filter Regeln (siehe __buildFilter)
-         * @return string SQL-Abfrage
-         */
-        function __buildHaving($filter_rules): string
-        {
-            $query = ltrim($this->__buildFilter($filter_rules, 'and', true));
-            $beginningAnd = (substr($query, 0, 3) == 'and');
-            if($query != '') $query = ' HAVING '.($beginningAnd ? '1 ' : '').$query;
-            return $query;
-        }
+        $searchString = '%'.$searchString.'%';
 
-        /**
-         * Erstellung einer Sortierung fuer ein SQL Statement
-         *
-         * @param array|null $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
-         * @return string ORDER eines SQL Statements
-         * @throws Exception
-         */
-        protected function __buildSorting(?array $sorting): string
-        {
-            $sql = '';
-            if (is_array($sorting) and count($sorting)) {
-                $alias = '';
-                if($this->tableAlias) $alias = $this->tableAlias.'.';
+        $defined_filter = [];
+        $isAssoc = null;
+        $i = 0;
+        foreach($columns as $column) {
+            if(is_null($isAssoc)) $isAssoc = is_array($column);
 
-                foreach ($sorting as $column => $sort) {
-                    if ($sql == '') {
-                        $sql = ' ORDER BY ';
-                    }
-                    else {
-                        $sql .= ', ';
-                    }
+            $alias = $isAssoc ? $column['alias'] : $column;
+            $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
+            $type = $isAssoc ? $column['type'] : '';
+            $operator = 'like';
 
-                    $column = $alias.$column;
-                    if($this->translateValues) {
-                        $column = $this->translateValues($column);
-                    }
-                    $sql .= $column.' '.$sort;
+            // $format = $isAssoc ? $column['format'] : '';
+
+            $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
+
+            $isDateTime = $type == 'date.time';
+            $isDate = $type == 'date';
+            if($isDate or $isDateTime) {
+                $expr = 'DATE_FORMAT('.$expr.', "'.Weblication::getInstance()->getDefaultFormat('mysql.date_format.' . $type).'")';
+            }
+
+            if($hasDefinedFilter) {
+                $filterByValue = $definedSearchKeywords[$alias];
+                $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $expr) : $expr;
+                $filterControl = $isAssoc ? ($column['filterControl'] ?: 'input') : 'input';
+                if($filterControl == 'select') {
+                    $operator = 'equal';
                 }
-            }
-            return $sql;
-        }
+                elseif($filterControl == 'datepicker') {
+                    if($filterByValue) {
+                        $date = date_parse($filterByValue); // is date?
+                        if($date['error_count'] == 0 and $date['warning_count'] == 0 and
+                            $date['year'] and $date['month'] and $date['day']) {
+                            // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
+                            $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $orig_expr) : $orig_expr;
+                            $filterByValue = $date['year'];
+                            $filterByValue .= '-'.str_pad($date['month'], 2, '0', STR_PAD_LEFT);
+                            $filterByValue .= '-'.str_pad($date['day'], 2, '0', STR_PAD_LEFT);
 
-        /**
-         * @access private
-         * @param array $limit Array im Format $array([offset], max). Beispiel $array(5) oder auch $array(0, 5)
-         * @return string LIMIT eines SQL Statements
-         **/
-        function __buildLimit($limit)
-        {
-            $sql = '';
-            if (is_array($limit) and count($limit)) {
-                $sql = ' LIMIT ' . implode(', ', $limit);
-            }
-            return $sql;
-        }
-
-        /**
-         * Erstelle Gruppierung fuer das SQL-Statement
-         *
-         * @param array $groupby
-         * @return string SQL-Statement
-         */
-        function __buildGroupby($groupby)
-        {
-            // GROUP BY a.test ASC WITH ROLLUP
-            // array('test' => 'ASC', 'WITH ROLLUP');
-            $sql = '';
-            if (is_array($groupby) and count($groupby)) {
-                $alias = '';
-                if($this->tableAlias) $alias = $this->tableAlias.'.';
-
-                foreach ($groupby as $column => $sort) {
-                    if ($sql == '') {
-                        $sql = ' GROUP BY ';
+                            if($date['hour'] and $date['minute']) {
+                                $filterByValue .= ' '.str_pad($date['hour'], 2, '0', STR_PAD_LEFT).
+                                    ':'.str_pad($date['minute'], 2, '0', STR_PAD_LEFT);
+                                if($date['second']) {
+                                    $filterByValue .= ':'.str_pad($date['second'], 2, '0', STR_PAD_LEFT);
+                                }
+                            }
+                        }
                     }
-                    elseif($column == 'WITH ROLLUP') {
-                        $sql .= ' '.$column;
-                        break;
-                    }
-                    else {
-                        $sql .= ', ';
-                    }
-                    $sql .= $alias.$column.' '.$sort;
+                    $filterByValue = $filterByValue.'%';
                 }
+                else {
+                    $filterByValue = '%'.$filterByValue.'%';
+                }
+                $condition = [$filterByColumn, $operator, $filterByValue];
+                $defined_filter[] = $condition;
             }
-            return $sql;
+
+            if(!$hasSearchString) continue;
+
+            if($i > 0) $filter[] = 'or';
+            $i++;
+            $condition = [$expr, $operator, $searchString];
+            $filter[] = $condition;
         }
 
-        /**
-         * Erstellt die Abfrage auf Primaer Schluessel (Indexes, Unique Keys etc.).
-         *
-         * @access private
-         * @param mixed $id integer oder array (ID's)
-         * @param mixed $key integer oder array (Spalten)
-         * @return string Teil eines SQL Queries
-         **/
-        function __buildWhere($id, $key)
-        {
-            $result='';
-            if (is_null($id)) {
-                return '1';
-            }
+        if($defined_filter) {
+            if($hasSearchString) $filter = array_merge(['('], $filter, [')'], ['and'], $defined_filter);
+            else $filter = $defined_filter;
+        }
+
+        return $filter;
+    }
+
+    /**
+     * Filter-Regeln fuer die Gruppierung
+     *
+     * @param array $filter_rules Filter Regeln (siehe __buildFilter)
+     * @return string SQL-Abfrage
+     */
+    protected function __buildHaving(array $filter_rules): string
+    {
+        $query = ltrim($this->__buildFilter($filter_rules, 'and', true));
+        $beginningAnd = (substr($query, 0, 3) == 'and');
+        if($query != '') $query = ' HAVING '.($beginningAnd ? '1 ' : '').$query;
+        return $query;
+    }
+
+    /**
+     * Erstellung einer Sortierung fuer ein SQL Statement
+     *
+     * @param array|null $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
+     * @return string ORDER eines SQL Statements
+     * @throws Exception
+     */
+    protected function __buildSorting(?array $sorting): string
+    {
+        $sql = '';
+        if (is_array($sorting) and count($sorting)) {
             $alias = '';
-            if($this->tableAlias) $alias = $this->tableAlias.'.'; // besser w�re gleich bei setTableAlias den . (Punkt) dazu; zu viele code stellen
-            if (is_null($key)) {
-                $key = $this->pk;
-            }
-            if (is_array($key)) {
-                if (!is_array($id)) {
-                    $id = array($id);
+            if($this->tableAlias) $alias = $this->tableAlias.'.';
+
+            foreach ($sorting as $column => $sort) {
+                if ($sql == '') {
+                    $sql = ' ORDER BY ';
                 }
-                $count = count($key);
-                for ($i=0; $i<$count; $i++) {
-                    $keyName = $key[$i];
-                    $result .= sprintf('%s="%s"', $alias.$keyName, $this->db->escapestring($id[$i], $this->dbname));
-                    if(!isset($id[$i+1])) break;
-                    $result .= ' and ';
+                else {
+                    $sql .= ', ';
                 }
+
+                $column = $alias.$column;
+                if($this->translateValues) {
+                    $column = $this->translateValues($column);
+                }
+                $sql .= $column.' '.$sort;
             }
-            else {
-                $result = sprintf('%s="%s"', $alias.$key, $this->db->escapestring($id, $this->dbname));
-            }
-            return $result;
         }
+        return $sql;
+    }
+
+    /**
+     * @param array $limit Array im Format $array([offset], max). Beispiel $array(5) oder auch $array(0, 5)
+     * @return string LIMIT eines SQL Statements
+     **/
+    protected function __buildLimit($limit): string
+    {
+        $sql = '';
+        if (is_array($limit) and count($limit)) {
+            $sql = ' LIMIT ' . implode(', ', $limit);
+        }
+        return $sql;
+    }
+
+    /**
+     * Erstelle Gruppierung fuer das SQL-Statement
+     *
+     * @param array $groupby
+     * @return string SQL-Statement
+     */
+    protected function __buildGroupby($groupby): string
+    {
+        // GROUP BY a.test ASC WITH ROLLUP
+        // array('test' => 'ASC', 'WITH ROLLUP');
+        $sql = '';
+        if (is_array($groupby) and count($groupby)) {
+            $alias = '';
+            if($this->tableAlias) $alias = $this->tableAlias.'.';
+
+            foreach ($groupby as $column => $sort) {
+                if ($sql == '') {
+                    $sql = ' GROUP BY ';
+                }
+                elseif($column == 'WITH ROLLUP') {
+                    $sql .= ' '.$column;
+                    break;
+                }
+                else {
+                    $sql .= ', ';
+                }
+                $sql .= $alias.$column.' '.$sort;
+            }
+        }
+        return $sql;
+    }
+
+    /**
+     * Erstellt die Abfrage auf Primaer Schluessel (Indexes, Unique Keys etc.).
+     *
+     * @param mixed $id integer oder array (ID's)
+     * @param mixed $key integer oder array (Spalten)
+     * @return string Teil eines SQL Queries
+     **/
+    protected function __buildWhere($id, $key): string
+    {
+        $result = '';
+        if (is_null($id)) {
+            return '1';
+        }
+        $alias = '';
+        if($this->tableAlias) $alias = $this->tableAlias.'.'; // besser w�re gleich bei setTableAlias den . (Punkt) dazu; zu viele code stellen
+        if (is_null($key)) {
+            $key = $this->pk;
+        }
+        if (is_array($key)) {
+            if (!is_array($id)) {
+                $id = array($id);
+            }
+            $count = count($key);
+            for ($i=0; $i<$count; $i++) {
+                $keyName = $key[$i];
+                $result = "$result$alias$keyName=\"{$this->db->escapestring($id[$i], $this->dbname)}\"";
+                if(!isset($id[$i+1])) break;
+                $result .= ' and ';
+            }
+        }
+        else {
+            $result = "$alias$key=\"{$this->db->escapestring($id, $this->dbname)}\"";
+        }
+        return $result;
     }
 }
 
@@ -1234,54 +1322,4 @@ if(!defined('CLASS_MYSQLDAO')) {
  **/
 class CustomMySQL_DAO extends MySQL_DAO
 {
-    /**
-     * Konstruktor
-     *
-     * Sets up the object.
-     *
-     * @param DataInterface $db Datenbankhandle
-     * @param string $dbname Datenbank
-     * @param string $table Tabelle
-     * @param boolean $autoload_fields Felder/Spaltennamen der Tabelle automatisch ermitteln
-     */
-    public function __construct(DataInterface $db, string $dbname, string $table, bool $autoload_fields=true)
-    {
-        parent::__construct();
-
-        $this->db = $db;
-        $this->dbname = $dbname;
-        $this->table = $table;
-
-        if ($autoload_fields) {
-            //$this -> column_list = '*';
-            //$this -> pk = 'id';
-            $this->init();
-        }
-        else {
-            // Maybe there are columns in the "columns" property
-            $this->rebuildColumnList();
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function getTableName()
-    {
-        return $this->table;
-    }
-
-    /**
-     * rebuild column list
-     */
-    private function rebuildColumnList()
-    {
-        // Columns are predefined as property "columns".
-        if(count($this->columns) > 0) {
-            $table = '`'.$this->table.'`';
-            $glue = '`, '.$table.'.`';
-            $column_list = $table.'.`' . implode($glue, $this->columns).'`';
-            $this->column_list = $column_list;
-        }
-    }
 }

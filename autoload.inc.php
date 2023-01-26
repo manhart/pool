@@ -5,14 +5,14 @@
  */
 class PoolAutoloader
 {
-    private static $PoolLoader;
+    private static PoolAutoloader $PoolLoader;
 
     /**
      * @return PoolAutoloader
      */
-    static function getLoader()
+    static function getLoader(): PoolAutoloader
     {
-        if(null !== self::$PoolLoader) {
+        if(isset(self::$PoolLoader)) {
             return self::$PoolLoader;
         }
         self::$PoolLoader = new PoolAutoloader();
@@ -22,7 +22,7 @@ class PoolAutoloader
     /**
      * Register autloader for Classes and GUIs
      */
-    public function register()
+    public function register(): void
     {
         spl_autoload_register(array($this, 'loadClass'));
     }
@@ -33,9 +33,9 @@ class PoolAutoloader
      * @param string $class
      * @throws ReflectionException
      */
-    public function loadClass($class): bool
+    public function loadClass(string $class): bool
     {
-        $isGUI = (strpos($class, 'GUI') === 0);
+        $isGUI = (str_starts_with($class, 'GUI'));
         if($isGUI) {
             return GUI_Module::autoloadGUIModule($class, null);
         }
