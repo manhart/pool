@@ -107,7 +107,7 @@ class Weblication
             return;
         }
 
-        let clientData = window.atob(clientDataElement.content);
+        let clientData = b64DecodeUnicode(clientDataElement.content);
         if(!isJsonString(clientData)) {
             console.debug('client-data content is not compatible with json');
             return;
