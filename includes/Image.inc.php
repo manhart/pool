@@ -190,13 +190,13 @@ function readImageMetadata($file)
     if(!empty($iptc) or !empty($exif)) {
         foreach (array('title', 'caption', 'credit', 'copyright', 'camera', 'iso') as $key) {
             if ($meta[$key] && !seems_utf8($meta[$key])) {
-                $meta[$key] = utf8_encode($meta[$key]);
+                $meta[$key] = UConverter::transcode($meta[$key], 'UTF8', 'ISO-8859-1');
             }
         }
 
         foreach ($meta['keywords'] as $key => $keyword) {
             if (!seems_utf8($keyword)) {
-                $meta['keywords'][$key] = utf8_encode($keyword);
+                $meta['keywords'][$key] = UConverter::transcode($keyword, 'UTF8', 'ISO-8859-1');
             }
         }
 
@@ -269,7 +269,7 @@ function resizeImageToWidth($im, $max_width)
  * @param int $max_height
  * @return false|resource
  */
-function resizeImageToBestFit($im, $max_width, $max_height)
+function resizeImageToBestFit($im, int $max_width, int $max_height)
 {
     $originalWidth = imagesx($im);
     $originalHeight = imagesy($im);
@@ -282,10 +282,10 @@ function resizeImageToBestFit($im, $max_width, $max_height)
 
     $ratio = $originalHeight / $originalWidth;
     $width = $max_width;
-    $height = $width * $ratio;
+    $height = intval($width * $ratio);
     if ($height > $max_height) {
         $height = $max_height;
-        $width = $height / $ratio;
+        $width = intval($height / $ratio);
     }
 
     return resizeImage($im, $width, $height);
