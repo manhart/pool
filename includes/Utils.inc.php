@@ -440,9 +440,8 @@ function file_extension(string $file = ""): string
  **/
 function remove_extension(string $file = ''): string
 {
-    return substr($file, 0, (strrpos($file, '.') ? strrpos($file, '.') : strlen($file)));
+    return substr($file, 0, (strrpos($file, '.') ?: strlen($file)));
 }
-
 
 /**
  * Verkuerzt einen Text auf eine bestimme Laenge. Beim Abschneiden geht die Funktion jedoch bis zum letzten Leerzeichen zurueck, damit
@@ -674,12 +673,8 @@ function getBrowserFingerprint(bool $withClientIP=true): string
     $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-    $hash = md5($data);
-    return $hash;
+    return md5($data);
 }
-
-
-
 
 /**
  * Holt sich den Inhalt von PHP Skripten und gibt ihn per return Wert zurueck.
@@ -709,26 +704,6 @@ function getContentFromInclude(string $includeFile): string
 function formatCurrency(string $value, $num_decimal_places = 2, string $currency = '&#8364;'): string
 {
     return number_format(floatval($value), (int)$num_decimal_places, ',', '.').$currency;
-}
-
-/**
- * Formatiert Datenbank Timestamp (z.B. bei MySQL Feldtyp:timestamp) in ein beliebiges Datumsformat.
- *
- * @param int $datetime Datenbank Timestamp im Format YYYYMMDDhhmmss
- * @param string $format
- * @return string formatiertes Datum
- * @throws Exception
- */
-function formatDBTimestampAsDatetime(int $datetime, string $format = 'd.m.Y H:i'): string
-{
-    $year = substr($datetime, 0, 4);
-    $mon = substr($datetime, 4, 2);
-    $day = substr($datetime, 6, 2);
-    $hour = substr($datetime, 8, 2);
-    $min = substr($datetime, 10, 2);
-    $sec = substr($datetime, 12, 2);
-
-    return formatDateTime(mktime($hour, $min, $sec, $mon, $day, $year), $format);
 }
 
 /**
@@ -1173,30 +1148,28 @@ function move_file(string $source, string $dest): bool
 }
 
 /**
- * Verzeichnis auslesen: erstellt Dateiliste
+ * Read out directory: creates file list
  *
- * @see glob()
- * @param string $path Stammverzeichnis
- * @param boolean $absolute Datei mit vollstaendigem Pfad zurückgeben andernfalls nur mit $subdir/$filename
- * @param string $filePattern Dateifilter
- * @param string $subdir auszulesendes Unterverzeichnis
+ * @param string $path root directory
+ * @param boolean $absolute return file with (absolute) full path otherwise only with relative $subDir/$filename
+ * @param string $filePattern filter files with regEx pattern
+ * @param string $subDir [optional] read this subdirectory
  * @return array file list
+ * @see glob()
  */
-function readFiles(string $path, bool $absolute = true, string $filePattern = '/.JPG/i', string $subdir = ''): array
+function readFiles(string $path, bool $absolute = true, string $filePattern = '/.JPG/i', string $subDir = ''): array
 {
     $files = [];
-
-    $path = addEndingSlash($path).($subdir = addEndingSlash($subdir));
+    $path = addEndingSlash($path).($subDir = addEndingSlash($subDir));
     if ($handle = opendir($path)) {
         while (false !== ($fileName = readdir($handle))) {
             $file = $path.$fileName;
             if (is_file($file) and preg_match($filePattern, $fileName)) {
-                $files[] = ($absolute) ? $file : $subdir.$fileName;
+                $files[] = ($absolute) ? $file : $subDir .$fileName;
             }
         }
         closedir($handle);
     }
-
     return $files;
 }
 
@@ -1231,23 +1204,29 @@ function buildFilePath(...$elements): string
  */
 function normalizePath(string $path, bool $noFailOnRoot = false, string $separator ='/'): bool|string
 {
-    $pathArr = array();
+    $bufferOutput = array();
     $stepsOut = 0;
-    foreach (explode($separator, $path) as $part){
+
+    $bufferInput = explode($separator, $path);
+    //jump to last position
+    end($bufferInput);
+    //loop backwards through the parts of the path
+    while (false !== ($part = current($bufferInput))){
         //ignore self-references and separator errors
-        if ($part === '' || $part === '.')
-            continue;
+        if ($part === '' || $part === '.');
         //normal element -> add to buffer
-        if ($part !== '..'){
-            $pathArr[] = $part;
-        }
-        //wanna go up
-        elseif (count($pathArr) > 0){
-            array_pop($pathArr);
-        }else//hit the root
+        elseif ($part !== '..'){
+            if ($stepsOut>0)//element was stepped out of again later in the Path
+                $stepsOut--;
+            else            //append on the beginning of the buffer
+                array_unshift($bufferOutput, $part);
+        } else //go up
             $stepsOut++;
+        //set pointer to previous element of the Array
+        prev($bufferInput);
     }
-    $normalizedPath = implode($separator, $pathArr);
+
+    $normalizedPath = implode($separator, $bufferOutput);
     //re-add the original paths beginning slash or any necessary steps out
     if($prefix = isAbsolutePath($path)) {
         //absolute path -> check for illegal steps out of root
@@ -1291,12 +1270,16 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     }
     if(!($here&&$toThis))//normalization returned an invalid result
         return false;//fail
+
     //beginn
-    $hereArr = explode($separator,$here);
-    $toThisArr = explode($separator, $toThis);
+    $hereArr = explode($separator, removeEndingSlash($here));
+    $toThisArr = explode($separator, removeEndingSlash($toThis));
     $hereCount = count($hereArr);
     //cut out the common part
-    $vectorArr = array_diff_assoc($toThisArr, $hereArr);
+    $tripped = 0;
+    $vectorArr = array_udiff_assoc($toThisArr, $hereArr, function($a,$b) use(&$tripped)
+    { return $tripped!=0?$tripped:$tripped = strcmp($a,$b);}
+    );
     //calculate the size of the common part not included in target
     $commonCount = count($toThisArr) - count($vectorArr);
     //get from here to the common base
@@ -1307,6 +1290,80 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     array_unshift($vectorArr, $stepOutString);
     $isDirectory = str_ends_with($toThis, $separator);
     return ($isDirectory? buildDirPath(...$vectorArr) : buildFilePath(...$vectorArr));
+}
+
+/**
+ * Calculates the relative paths from the source path to the target path, both serverside and clientside. It is faster than makeRelativePathFrom.
+ *
+ * @param string|null $here The absolute source path.
+ * @param string $toThis The absolute target path.
+ * @param string $separator The directory separator to use (optional, defaults to DIRECTORY_SEPARATOR).
+ *
+ * @return array An array containing the serverside and clientside relative paths.
+ */
+function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = DIRECTORY_SEPARATOR): array
+{
+    $scriptDir = dirname($_SERVER['SCRIPT_FILENAME']);
+    $base ??= $scriptDir;
+    $here ??= $scriptDir;
+
+    // Removing trailing slashes.
+    $here = rtrim($here, $separator);
+    $toThis = rtrim($toThis, $separator);
+
+    //base relative paths and normalize
+    if (!isAbsolutePath($here)) {
+        $here = addEndingSlash($base) . $here;
+        $here = normalizePath($here, separator: $separator);
+    }
+    elseif ($normalize)
+        $here = normalizePath($here, separator: $separator);
+    if (!isAbsolutePath($toThis)) {
+        $toThis = addEndingSlash($base) . $toThis;
+        $toThis = normalizePath($toThis, separator: $separator);
+    }
+    elseif ($normalize){
+        $toThis = normalizePath($toThis, separator: $separator);
+    }
+    if(!($here && $toThis))//normalization returned an invalid result
+        return false;//fail
+
+    // Split the paths into arrays of their individual components.
+    $sourcePathParts = explode($separator, $here);
+    $targetPathParts = explode($separator, $toThis);
+
+    // Find the number of common path components.
+    $commonPathComponents = 0;
+    while (isset($sourcePathParts[$commonPathComponents]) && isset($targetPathParts[$commonPathComponents]) &&
+            $sourcePathParts[$commonPathComponents] === $targetPathParts[$commonPathComponents]) {
+        $commonPathComponents++;
+    }
+
+    // Calculate the serverside relative path.
+    $serversideRelativePath = str_repeat('..' . $separator, count($sourcePathParts) - $commonPathComponents) . implode($separator, array_slice($targetPathParts, $commonPathComponents));
+
+    // Calculate the clientside relative path.
+    $clientsideRelativePathComponents = count(explode($separator, $_SERVER['DOCUMENT_ROOT']));
+    $commonPathComponents = min($clientsideRelativePathComponents, $commonPathComponents);
+    $clientsideRelativePath = str_repeat('..' . $separator, $clientsideRelativePathComponents - $commonPathComponents) .
+        implode($separator, array_slice($targetPathParts, $commonPathComponents));
+
+    // Return the relative paths.
+    return [
+        'serverside' => $serversideRelativePath,
+        'clientside' => $clientsideRelativePath,
+    ];
+}
+
+/**
+ * Resolves symbolic links into real path.
+ *
+ * @param string $path
+ * @return string
+ */
+function getRealFile(string $path): string
+{
+    return is_link($path) ? realpath($path) : $path;
 }
 
 /**Determine if a path is absolute
@@ -1390,6 +1447,31 @@ function readFilesRecursive(string $path, bool $absolute = true, string $filePat
 function readDirs(string $path)
 {
     return glob(addEndingSlash($path).'*', GLOB_ONLYDIR);
+}
+
+/**Checks the Error code of the PCRE (RegEx engine) and logs any Errors
+ * @param string $regEX the executed expression for logging
+ * @param string $content the content that was processed
+ * @return bool Outcome is ok
+ */
+function checkRegExOutcome(string $regEX, string $content): bool
+{
+    if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
+        $errormessage = preg_last_error_message($lastErrorCode);
+        $errormessage = "RegularExpression $regEX failed with error code $lastErrorCode :$errormessage";
+        $detailsFile = '';
+        try {
+            $detailsFile = \Log::makeDetailsFile(
+                "$errormessage\nParsed string:\n$content"
+            );
+        } catch (Exception $e) {
+        }
+        if (!empty($detailsFile))
+            $errormessage .= ' Details have been saved to: ' . $detailsFile;
+        error_log($errormessage, 0);
+        return false;
+    } else
+        return true;
 }
 
 /**
@@ -1964,9 +2046,9 @@ function base64url_encode($data)
  * Decodes a base64 URL token back into a string.
  *
  * @param $token
- * @return bool|false|string
+ * @return false|string
  */
-function base64url_decode($token)
+function base64url_decode($token): bool|string
 {
     $length = strlen($token);
     if($length == 0) return false;

@@ -6,8 +6,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-'use strict';
-
 // 09.12.2021, AM, override default filterDatepickerOptions, because the default is undefined
 jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
     'autclose': true,
@@ -17,8 +15,6 @@ jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
     'language': document.documentElement.lang
 }
 
-// $.BootstrapTable = class extends $.BootstrapTable {
-// }
 class GUI_Table extends GUI_Module
 {
     /* > ES7
@@ -72,6 +68,8 @@ class GUI_Table extends GUI_Module
 
     scrollPosition;
 
+    static RENDER_IMMEDIATELY = 1;
+    static RENDER_ONDOMLOADED = 2;
 
     // poolColumnOptions = {}; // poolOptions
 
@@ -104,6 +102,21 @@ class GUI_Table extends GUI_Module
 
         //this.table.bootstrapTable('refreshOptions', options);
         return this;
+    }
+
+    init(options = {})
+    {
+        console.debug(this.getName()+'init', options);
+        this.setConfiguration({'poolOptions': options.poolOptions}).setColumns(options.columns);
+        switch(options.render) {
+            case GUI_Table.RENDER_IMMEDIATELY:
+                this.render();
+                break;
+
+            case GUI_Table.RENDER_ONDOMLOADED:
+                ready(() => this.render());
+                break;
+        }
     }
 
     /**
@@ -416,8 +429,17 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
-    refresh(options = {}, silent = false)
+    refresh(options = {}, silent = false, onLoadSuccess = null)
     {
+        if(onLoadSuccess !== null) {
+            const eventLoadSuccess = function() {
+                $(this).off('load-success.bs.table', eventLoadSuccess)
+                onLoadSuccess();
+            }
+            $(this.getTable()).on('load-success.bs.table', eventLoadSuccess);
+        }
+
+        // console.debug(this.getName() + '.refresh');
         // todo stelle Seite wieder her
         if(!isEmpty(options) || this.forceRefreshOptions) {
             this.options = Object.assign({}, this.options, options);
@@ -433,6 +455,17 @@ class GUI_Table extends GUI_Module
             // console.debug(this.getName() + '.refreshed', params);
         }
         return this;
+    }
+
+    /**
+     * redraw html element
+     * @param options
+     */
+    redraw(options = {})
+    {
+        this.setColumns(options['columns']);
+        // this.forceRefreshOptions = true;
+        this.refresh(options);
     }
 
     /**
@@ -555,6 +588,7 @@ class GUI_Table extends GUI_Module
 
     /**
      * get selected unique ids
+     * @return {*|*[]}
      */
     getSelectedUniqueIds()
     {
@@ -564,8 +598,18 @@ class GUI_Table extends GUI_Module
         }
 
         return this.getSelections().map(function(row) {
-            return row[uniqueId]
+            return row[uniqueId];
         })
+    }
+
+    /**
+     * get selected unique id
+     * @return {*|null}
+     */
+    getSelectedUniqueId()
+    {
+        let uniqueIds = this.getSelectedUniqueIds();
+        return uniqueIds[0] ? uniqueIds[0] : null;
     }
 
     /**
@@ -1050,11 +1094,4 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('clearFilterControl');
     }
 }
-
-/*
-$.extend($.fn.bootstrapTable.defaults.icons, {
-    clearSearch: 'fa-undo'
-});
-*/
-
-console.debug('GUI_Table.js loaded');
+Weblication.registerClass(GUI_Table);

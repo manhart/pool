@@ -220,11 +220,6 @@ if(!defined('CISAM_LAYER'))
 								continue;
 							}
 
-	//						fwrite($fp, $line . "\n");
-							//$line = utf8_encode($line);
-							//$line = iconv("ISO-8859-1","UTF-8",$line);
-							//$line = $this -> convertChars($line);
-
 							$record = explode(';', $line);
 							if (!is_array($record)) {
 								continue;
@@ -263,7 +258,7 @@ if(!defined('CISAM_LAYER'))
 		{
 			$line = str_replace(
 				array(chr(63)),
-					array('ü'), $line);
+					array('?'), $line);
 			return $line;
 		}
 
