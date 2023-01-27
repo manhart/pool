@@ -19,7 +19,7 @@ class PoolError extends Error {
     }
 
     /**
-     * return cause
+     * return cause. reference to the original error
      * @return {unknown}
      */
     getCause()
@@ -34,16 +34,20 @@ class PoolAjaxResponseError extends PoolError {
      *
      * @param message
      * @param cause origin Error or null
-     * @param type custom type
+     * @param serverSideType custom serverside error type
      */
-    constructor(message, cause, type = '')
+    constructor(message, cause, serverSideType = '')
     {
         super(message, cause);
-        this.type = type;
+        this.serverSideType = serverSideType;
     }
 
-    getType()
+    /**
+     * custom serverside error
+     * @return {string}
+     */
+    getServerSideType()
     {
-        return this.type;
+        return this.serverSideType;
     }
 }
