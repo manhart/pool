@@ -71,10 +71,7 @@ class GUI_Module
             json = JSON.parse(text);
         }
         catch(e) {
-            if(e instanceof SyntaxError) {
-                // ? should the framework handle this error
-            }
-            throw e
+            throw new PoolAjaxResponseError('Syntax Error', e);
         }
         const { data, error, success } = response.status !== 204 ? json : { success: true };
 
