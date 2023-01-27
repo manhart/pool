@@ -17,6 +17,15 @@ class PoolError extends Error {
         this.name = this.constructor.name;
         this.cause = cause;
     }
+
+    /**
+     * return cause
+     * @return {unknown}
+     */
+    getCause()
+    {
+        return this.cause;
+    }
 }
 
 class PoolAjaxResponseError extends PoolError {
