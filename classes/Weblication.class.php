@@ -20,6 +20,11 @@ use pool\classes\Translator;
 class Weblication extends Component
 {
     /**
+     * Is this request an ajax call
+     */
+    static public $isAjax = false;
+
+    /**
      * Titel der Weblication
      *
      * @var string
@@ -236,6 +241,7 @@ class Weblication extends Component
     private function __construct()
     {
         parent::__construct(null);
+        self::$isAjax = isAjax();
         $this->Settings = new Input(I_EMPTY);
         $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
@@ -380,6 +386,16 @@ class Weblication extends Component
     function getProgId(): ?int
     {
         return $this->progId;
+    }
+
+    /**
+     * Is this request an ajax call
+     *
+     * @return bool
+     */
+    static public function isAjax(): bool
+    {
+        return self::$isAjax;
     }
 
     /**
@@ -1072,6 +1088,26 @@ class Weblication extends Component
     }
 
     /**
+     * return requested ajax module
+     *
+     * @return string
+     */
+    static public function getRequestedAjaxModule(): string
+    {
+        return $_REQUEST[REQUEST_PARAM_MODULE] ?? '';
+    }
+
+    /**
+     * return requested ajax method
+     *
+     * @return string
+     */
+    static public function getRequestedAjaxMethod(): string
+    {
+        return $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
+    }
+
+    /**
      * set locale (the POOL is independent of the system locale, e.g. php's setlocale).
      *
      * @param string $locale
@@ -1218,9 +1254,10 @@ class Weblication extends Component
         }
 
         // TODO Get Parameter frame
-        // TODO Subcode :: createSubCode()
+        // TODO Subcode::createSubCode()?
+        // TODO Security hole params
         $params = $_REQUEST['params'] ?? '';
-        if(isNotEmpty($params) and isAjax()) {
+        if(isNotEmpty($params) and $this->isAjax()) {
             $params = base64url_decode($params) ?: "";
         }
 
