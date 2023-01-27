@@ -8,10 +8,22 @@
 
 class Weblication
 {
+    /**
+     * all registered modules
+     *
+     * @type {[]}
+     */
     #modules = [];
 
-    static classesMapping = {};
+    /**
+     * class mapping
+     * @type {{}}
+     */
+    static classMapping = {};
 
+    /**
+     * Singleton
+     */
     constructor()
     {
         Weblication._instance = this;
@@ -38,7 +50,7 @@ class Weblication
      */
     static registerClass(Class)
     {
-        Weblication.classesMapping[Class.name] = Class;
+        Weblication.classMapping[Class.name] = Class;
         return this;
     }
 
@@ -86,11 +98,21 @@ class Weblication
         return this.#modules[moduleName];
     }
 
+    /**
+     * checks if module exists
+     *
+     * @param moduleName
+     * @return {boolean}
+     */
     module_exists(moduleName)
     {
         return (moduleName in this.#modules);
     }
 
+    /**
+     * returns an array of all modules
+     * @return {*[]}
+     */
     getModules()
     {
         return this.#modules;
