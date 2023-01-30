@@ -1246,7 +1246,7 @@ class Weblication extends Component
      *
      * @throws ModulNotFoundException|Exception
      */
-    public function run(string $className = 'GUI_CustomFrame'): self
+    public function run(string $className = GUI_CustomFrame::class): self
     {
         // An application name is required. For example, the application name is used for creating directories in the data folder.
         if($this->getName() == '') {
