@@ -8,10 +8,22 @@
 
 class Weblication
 {
+    /**
+     * all registered modules
+     *
+     * @type {[]}
+     */
     #modules = [];
 
-    static classesMapping = {};
+    /**
+     * class mapping
+     * @type {{}}
+     */
+    static classMapping = {};
 
+    /**
+     * Singleton
+     */
     constructor()
     {
         Weblication._instance = this;
@@ -38,7 +50,7 @@ class Weblication
      */
     static registerClass(Class)
     {
-        Weblication.classesMapping[Class.name] = Class;
+        Weblication.classMapping[Class.name] = Class;
         return this;
     }
 
@@ -52,7 +64,7 @@ class Weblication
     {
         let moduleName = Module.getName();
         if((moduleName in this.#modules)) {
-            throw new Error('Module with Name ' + moduleName + ' already exists. Registration not possible!');
+            throw new PoolError('Module with Name ' + moduleName + ' already exists. Registration not possible!');
         }
         this.#modules[moduleName] = Module;
         // console.debug('Weblication has Module "' + moduleName + '" registered');
@@ -81,16 +93,26 @@ class Weblication
     getModule(moduleName)
     {
         if(!this.module_exists(moduleName)) {
-            throw new Error('Module with Name ' + moduleName + ' was not found!');
+            throw new PoolError('Module with Name ' + moduleName + ' was not found!');
         }
         return this.#modules[moduleName];
     }
 
+    /**
+     * checks if module exists
+     *
+     * @param moduleName
+     * @return {boolean}
+     */
     module_exists(moduleName)
     {
         return (moduleName in this.#modules);
     }
 
+    /**
+     * returns an array of all modules
+     * @return {*[]}
+     */
     getModules()
     {
         return this.#modules;
