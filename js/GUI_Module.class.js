@@ -70,14 +70,16 @@ class GUI_Module
         try {
             json = JSON.parse(text);
         }
-        catch(e) { // @todo only developers (box) should see the hole text/error
-            console.error('Unparsed text', text);
-            throw e;
+        catch(e) {
+            throw new PoolAjaxResponseError('Syntax Error', e);
         }
         const { data, error, success } = response.status !== 204 ? json : { success: true };
 
         // trigger a new exception to capture later on request call site
-        if (!success) throw new Error(error.message);
+        if (!success) {
+            // notice: the pool responses with an error.type and error.message
+            throw new PoolAjaxResponseError(error.message, null, error.type);
+        }
         // Otherwise, simply resolve the received data
         return data;
     }
@@ -198,10 +200,10 @@ class GUI_Module
             myClass = GUIClassName;
         }
         else {
-            if(!Weblication.classesMapping[GUIClassName]) {
+            if(!Weblication.classMapping[GUIClassName]) {
                 throw new Error('Class ' + GUIClassName + ' is not registered.');
             }
-            myClass = Weblication.classesMapping[GUIClassName];
+            myClass = Weblication.classMapping[GUIClassName];
         }
 
         return new myClass(name);
