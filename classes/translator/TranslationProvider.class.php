@@ -49,5 +49,6 @@ Interface TranslationProvider
     function alterTranslation(int $status, ?string $value, string $key):int;
     function getError(): ?Exception;
     function clearError():void;
+    function getAllTranslations():array;
 
 }

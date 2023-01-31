@@ -62,6 +62,12 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
 
     function clearError(): void{}
 
+    function getAllTranslations(): array
+    {
+        return [];
+    }
+
+
     function getFactory(): TranslationProviderFactory
     {
         return self::$instance;

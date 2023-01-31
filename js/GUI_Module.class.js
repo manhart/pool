@@ -196,7 +196,7 @@ class GUI_Module
         }
         else {
             if(!Weblication.classesMapping[GUIClassName]) {
-                throw new Error('Class ' + GUIClassName + ' is not registered.');
+                throw new Error('Class ' + GUIClassName + ' is not registered. Please make sure to register your Module.');
             }
             myClass = Weblication.classesMapping[GUIClassName];
         }

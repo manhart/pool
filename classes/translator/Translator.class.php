@@ -395,7 +395,8 @@ class Translator
         assert($translation == null || $translation instanceof Translation);
         $message = $translation?->getMessage() ?? $defaultMessage;
         //message processing
-        @TranslationProvider_ToolDecorator::writeQueryToPostbox($key, default:$defaultMessage, args:$args, noAlter:$noAlter);
+        if (@TranslationProvider_ToolDecorator::isActive())
+            @TranslationProvider_ToolDecorator::writeQueryToPostbox(self::getTranslationResources(), $key, default:$defaultMessage, args:$args, noAlter:$noAlter);
         if ($message === null) {
             $success = false;
             $reply = "String $key not found";

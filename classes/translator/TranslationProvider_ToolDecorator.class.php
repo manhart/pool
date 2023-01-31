@@ -38,7 +38,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     static function startSession(): bool
     {
         //decide
-        if (!($id = $_REQUEST[self::KEYWORD])) {
+        if (!($id = $_REQUEST[self::KEYWORD]??false)) {
             self::$postbox = false;
             return false;
         } else {
@@ -60,8 +60,12 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     private static function getPostboxPath(?string $id): string
     {
         $id ??= self::$sessionID;
-        if (preg_match("/\w*/", $id))
-            return buildDirPath(sys_get_temp_dir(), 'postbox', $id);
+        if (preg_match("/^\w*$/", $id)) {
+            $dirPath = buildDirPath(sys_get_temp_dir(), 'postbox');
+            if (!is_dir($dirPath))
+                mkdir($dirPath);
+            return $dirPath .$id;
+        }
         else
             throw new Exception('Invalid sessionID');
     }
@@ -70,11 +74,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     {
         $this->lastKey = $key;
         $queryResult = parent::query($key);
-        if ($queryResult != self::OK) {
-            //$this->provider->getLang()
-            // TODO: add to postbox (key, provider lang, result)
-            $this->writeToPostbox($this->provider, $key, status:$queryResult);
-        }
+        $this->writeToPostbox($this->provider, $key);
         return $queryResult;
     }
 
@@ -82,8 +82,6 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     {
         $translation = parent::getResult();
         if ($translation == null) return null;
-        $key = $translation->getKey();
-        $this->writeToPostbox($this->provider, $key, message:$translation->getMessage());
         $lang = $this->provider->getLang();
         $keyWord = self::KEYWORD;
         $identifier = "$keyWord.$this->lastKey";
@@ -98,7 +96,8 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     public static function writePostbox(string $id = null): void
     {
         $file = self::getPostboxPath($id);
-        file_put_contents($file, var_export(self::$postbox));
+
+        file_put_contents($file, '<?php return '.var_export(self::$postbox, true).';?>');
     }
 
     /**
@@ -107,32 +106,40 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     public static function readPostbox(string $id = null): void
     {
         $file = self::getPostboxPath($id);
-        self::$postbox = include $file;
+        $postbox = include $file;
+        if (!is_array($postbox))
+            $postbox = [];
+        self::$postbox = $postbox;
     }
 
-    /**
+    /**Creates an entry for the key-request in the postbox
      * @param TranslationProvider $provider
      * @param string $key
-     * @param mixed ...$content
      * @return void
      */
-    public static function writeToPostbox(TranslationProvider $provider, string $key, ...$content): void
+    public static function writeToPostbox(TranslationProvider $provider, string $key): void
     {
-        $content['lang'] = $provider->getLang();
-        $content['locale'] = $provider->getLocale();
         $resourceIdentity = $provider->getFactory()->identity();
-        $resourcePostbox = self::$postbox[$resourceIdentity] ?? [];
-        $resourceRequestPostbox = $resourcePostbox[self::$requestTime] ?? [];
-        $translationPostbox = $resourceRequestPostbox[$key] ?? [];
-        $translationPostbox = array_merge($translationPostbox, $content);
-        self::$postbox[$resourceIdentity][self::$requestTime][$key] = $translationPostbox;
+        self::$postbox[$resourceIdentity] ??= [];
+        self::$postbox[$resourceIdentity][self::$requestTime] ??= [];
+        self::$postbox[$resourceIdentity][self::$requestTime][$key] ??= [];
+
     }
-    public static function writeQueryToPostbox(string $key, ...$vars): void
+
+    /**Called by Translator after querying a Translation and adds more Data about each translation request
+     * @param TranslationProviderFactory[] $resources
+     * @param string $key
+     * @param ...$details
+     * @return void
+     */
+    public static function writeQueryToPostbox(array $resources, string $key, ...$details): void
     {
-        $queryPostbox = self::$postbox['query'] ?? [];
-        $queryRequestPostbox = $queryPostbox[self::$requestTime] ?? [];
-        $keyQueryPostbox = $queryRequestPostbox[$key] ?? [];
-        $keyQueryPostbox[] = $vars;
-        self::$postbox['query'][self::$requestTime][$key] = $keyQueryPostbox;
+        foreach ($resources as $resource) {
+            $resourceIdentity = $resource->identity();
+            //check that resource has been queried
+            if (!isset(self::$postbox[$resourceIdentity][self::$requestTime][$key]))
+                continue;
+            self::$postbox[$resourceIdentity][self::$requestTime][$key][] = $details;
+        }
     }
 }
