@@ -53,7 +53,7 @@ class translatorToolInline{
             );
         }
         //request setup
-        window.opener?.postMessage('setup', origin);
+        window.opener?.postMessage('requestSetup:', origin);
         window.addEventListener('hashchange', () => {
                 if (location.hash.startsWith(this.translationMarkerHash)){
                     let key = location.hash.substring(this.translationMarkerHash.length);

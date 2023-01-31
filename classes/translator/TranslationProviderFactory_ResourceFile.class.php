@@ -19,7 +19,7 @@ class TranslationProviderFactory_ResourceFile extends TranslationProviderFactory
      */
     static function create(string $resourceDir = null):static{
         $new =  new static();
-        $new->setResourceDir($resourceDir);
+        $new->setResourceDir(addEndingSlash($resourceDir));
         return $new;
     }
     /**
