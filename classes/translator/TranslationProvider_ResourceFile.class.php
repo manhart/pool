@@ -26,7 +26,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
 
     private ?string $lastResult = null;
     private TranslationProviderFactory_ResourceFile $factory;
-    private $lastKey;
+    private ?string $lastKey;
 
     /**
      * @throws Exception
@@ -86,6 +86,11 @@ class TranslationProvider_ResourceFile implements TranslationProvider
 
     function alterTranslation(int $status, ?string $value, string $key): int
     {
+        if (!preg_match('/^[A-Za-z.]*$/', $key)){
+            //invalid key
+            $this->error = new Exception("Invalid Key $key");
+            return self::Error;
+        }
         try {
             //refresh
             $this->translations = include($this->resourceFile);
@@ -113,6 +118,12 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     {
         $this->error = null;
     }
+
+    function getAllTranslations():array
+    {
+        return $this->translations;
+    }
+
 
     function getFactory(): TranslationProviderFactory_ResourceFile
     {

@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 declare(strict_types=1);
+
 namespace pool\classes\translator;
 
 use Exception;
@@ -66,6 +67,12 @@ abstract class TranslationProvider_BaseDecorator implements TranslationProvider
     {
         $this->provider->clearError();
     }
+
+    function getAllTranslations(): array
+    {
+        return $this->provider->getAllTranslations();
+    }
+
 
     function getFactory(): TranslationProviderFactory
     {
