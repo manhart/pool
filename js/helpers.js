@@ -1457,12 +1457,34 @@ function isElementInViewport(element)
     );
 }
 
-// function isElementInFront(element)
-// {
-//     let pseudo = document.elementFromPoint(element.offsetLeft, element.offsetTop);
-//     if(pseudo){
-//         if(pseudo.id == element.id)
-//             return true;
-//     }
-//     return false;
-// }
+/**
+ * compares arrays if they are equal without considering the order
+ *
+ * @param a
+ * @param b
+ * @return {boolean}
+ */
+const areArraysEqual = (a, b) =>
+{
+    if (a.length !== b.length) return false;
+    const uniqueValues = new Set([...a, ...b]);
+    for (const v of uniqueValues) {
+        const aCount = a.filter(e => e === v).length;
+        const bCount = b.filter(e => e === v).length;
+        if (aCount !== bCount) return false;
+    }
+    return true;
+}
+
+/**
+ * @see https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
+ * @param str
+ * @return {string}
+ */
+const b64DecodeUnicode = (str) =>
+{
+    // Going backwards: from bytestream, to percent-encoding, to original string.
+    return decodeURIComponent(atob(str).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+}

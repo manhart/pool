@@ -87,12 +87,22 @@ class Input extends PoolObject
     }
 
     /**
-    * Initialisiert gewaehlte Superglobals und schreibt die Variablen in den internen Variablen Container.
-    * Falls Magic Quotes eingestellt sind, werden bei den $_GET und $_POST Superglobals alle Escape Zeichen entfernt.
-    * Aussnahme: Session! Die Superglobale Variable $_SESSION wird zum internen Container referenziert!
-    *
-    * @param int $superglobals Einzulesende Superglobals (siehe Konstanten)
-    */
+     * get superglobals
+     *
+     * @return int
+     */
+    public function getSuperglobals(): int
+    {
+        return $this->superglobals;
+    }
+
+    /**
+     * Initialisiert gewaehlte Superglobals und schreibt die Variablen in den internen Variablen Container.
+     * Falls Magic Quotes eingestellt sind, werden bei den $_GET und $_POST Superglobals alle Escape Zeichen entfernt.
+     * Aussnahme: Session! Die Superglobale Variable $_SESSION wird zum internen Container referenziert!
+     *
+     * @param int $superglobals Einzulesende Superglobals (siehe Konstanten)
+     */
     protected function init(int $superglobals = I_EMPTY): void
     {
         if ($superglobals == 0) {
@@ -142,13 +152,13 @@ class Input extends PoolObject
     }
 
     /**
-     * get superglobals
-     *
-     * @return int
+     * reinitialize superglobals.
      */
-    public function getSuperglobals(): int
+    public function reInit()
     {
-        return $this->superglobals;
+        /*$this->clear(); vermeiden, da clear sich auch in ISession beim Leeren der Session auswirkt */
+        $this->vars = [];
+        $this->init($this->superglobals);
     }
 
     /**
@@ -159,18 +169,6 @@ class Input extends PoolObject
     public function count(): int
     {
         return count($this->vars);
-    }
-
-    /**
-    * Reinitialisiert Superglobals.
-    *
-    * @access public
-    */
-    function reInit()
-    {
-        /*$this->clear(); vermeiden, da clear sich auch in ISession beim Leeren der Session auswirkt */
-        $this->vars = array();
-        $this->init($this->superglobals);
     }
 
     /**
@@ -1003,15 +1001,7 @@ class ISession extends Input
     }
 
     /**
-     * @param $autoClose
-     */
-    function setAutoClose($autoClose)
-    {
-        $this->autoClose = $autoClose;
-    }
-
-    /**
-     * Session wird initiiert
+     * Starts Session
      */
     function start()
     {
@@ -1022,6 +1012,14 @@ class ISession extends Input
             @session_start(); // reopen session
             $this->reInit();
         }
+    }
+
+    /**
+     * @param $autoClose
+     */
+    function setAutoClose($autoClose)
+    {
+        $this->autoClose = $autoClose;
     }
 
     /**

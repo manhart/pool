@@ -1307,6 +1307,7 @@ class GUI_Table extends GUI_Module
             'className' => $this->getClassName(),
             'poolOptions' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
         ]);
+        $this->setClientVar('poolOptions', $this->poolOptions);
 
 
         $this->Template->newBlock('tableAttributes');
@@ -1340,10 +1341,12 @@ class GUI_Table extends GUI_Module
         }
 
         if($columns = $this->getVar('columns')) {
+            $clientColumns = [];
             $columnProperties = $this->getColumnsProperties();
-            $this->Template->newBlock('js_row');
+            // $this->Template->newBlock('js_row');
+            $c = 0;
             foreach ($columns as $column) {
-                $ColumnBlock = $this->Template->newBlock('js_column');
+                // $ColumnBlock = $this->Template->newBlock('js_column');
                 foreach ($column as $optName => $attrValue) {
                     $type = '';
                     $clientside = false;
@@ -1363,33 +1366,41 @@ class GUI_Table extends GUI_Module
                         }
                     }
 
-                    switch ($type) {
-                        case 'boolean':
-                            $attrValue = bool2string($attrValue);
-                            break;
-
-                        case 'function':
-                        case 'json':
-                            break;
-
-                        case 'auto':
-                            if(is_array($attrValue)) {
-                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
-                                break;
-                            }
-
-                        default:
-                            $attrValue = '\'' . $attrValue . '\'';
+                    switch($type) {
+                        case 'string':
+                            $attrValue = strtr($attrValue, ['{modulename}' => $this->getName()]);
                     }
+                    $clientColumns[$c][$optName] = $attrValue;
+
+//                    switch ($type) {
+//                        case 'boolean':
+//                            $attrValue = bool2string($attrValue);
+//                            break;
+//
+//                        case 'function':
+//                        case 'json':
+//                            break;
+//
+//                        case 'auto':
+//                            if(is_array($attrValue)) {
+//                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
+//                                break;
+//                            }
+//
+//                        default:
+//                            $attrValue = '\'' . $attrValue . '\'';
+//                    }
 
 
-                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
-                    $ColumnAttributeBlock->setVar([
-                        'key' => $optName,
-                        'value' => str_replace('{modulename}', $this->getName(), $attrValue)
-                    ]);
+//                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
+//                    $ColumnAttributeBlock?->setVar([
+//                        'key' => $optName,
+//                        'value' => $attrValue
+//                    ]);
                 }
+                $c++;
             }
+            $this->setClientVar('columns', $clientColumns);
         }
 
 //        foreach($this->configuration as $optName => $attrValue) {
@@ -1433,17 +1444,18 @@ class GUI_Table extends GUI_Module
         $this->Template->leaveBlock();
 
         // render table
-        $render_immediately = $render_ondomloaded = '';
-        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
-            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
-        }
-        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
-            $render_immediately = '.render()';
-        }
-        $this->Template->setVar([
-            'RENDER_IMMEDIATELY' => $render_immediately,
-            'RENDER_ONDOMLOADED' => $render_ondomloaded
-        ]);
+//        $render_immediately = $render_ondomloaded = '';
+//        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
+//            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
+//        }
+//        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
+//            $render_immediately = '.render()';
+//        }
+        $this->setClientVar('render', (int)$this->getVar('render'));
+//        $this->Template->setVar([
+//            'RENDER_IMMEDIATELY' => $render_immediately,
+//            'RENDER_ONDOMLOADED' => $render_ondomloaded
+//        ]);
         parent::prepare();
     }
 
