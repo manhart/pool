@@ -23,6 +23,11 @@ use pool\classes\translator\Translator;
 class Weblication extends Component
 {
     /**
+     * Is this request an ajax call
+     */
+    static public $isAjax = false;
+
+    /**
      * Titel der Weblication
      *
      * @var string
@@ -235,6 +240,7 @@ class Weblication extends Component
     private function __construct()
     {
         parent::__construct(null);
+        self::$isAjax = isAjax();
         $this->Settings = new Input(I_EMPTY);
         $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
@@ -383,6 +389,16 @@ class Weblication extends Component
     function getProgId(): ?int
     {
         return $this->progId;
+    }
+
+    /**
+     * Is this request an ajax call
+     *
+     * @return bool
+     */
+    static public function isAjax(): bool
+    {
+        return self::$isAjax;
     }
 
     /**
@@ -1052,6 +1068,7 @@ class Weblication extends Component
         }
         $className = $this->Settings->getVar('application.session.className', 'ISession');
         $this->Session = new $className($autoClose);
+
         return $this->Session;
     }
 
@@ -1095,6 +1112,26 @@ class Weblication extends Component
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    /**
+     * return requested ajax module
+     *
+     * @return string
+     */
+    static public function getRequestedAjaxModule(): string
+    {
+        return $_REQUEST[REQUEST_PARAM_MODULE] ?? '';
+    }
+
+    /**
+     * return requested ajax method
+     *
+     * @return string
+     */
+    static public function getRequestedAjaxMethod(): string
+    {
+        return $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
     }
 
     /**
@@ -1234,7 +1271,7 @@ class Weblication extends Component
      *
      * @throws ModulNotFoundException|Exception
      */
-    public function run(string $className = 'GUI_CustomFrame'): self
+    public function run(string $className = GUI_CustomFrame::class): self
     {
         // An application name is required. For example, the application name is used for creating directories in the data folder.
         if($this->getName() == '') {
@@ -1242,8 +1279,9 @@ class Weblication extends Component
         }
 
         // TODO Get Parameter frame
+        // TODO Security hole params
         $params = $_REQUEST['params'] ?? '';
-        if(isNotEmpty($params) and isAjax()) {
+        if(isNotEmpty($params) and $this->isAjax()) {
             $params = base64url_decode($params) ?: "";
         }
 
@@ -1284,19 +1322,7 @@ class Weblication extends Component
      */
     protected function finalizeContent(): string
     {
-        $content = $this->Main->finalizeContent();
-
-        // Odd, there were outputs written?
-        if(headers_sent()) {
-            $error = error_get_last();
-            // error was triggered (old method)
-            if($this->isXdebugEnabled()) {
-                // we suppress the output of the application @todo redirect to an error page?
-                if($error) return '';
-            }
-        }
-
-        return $content;
+        return $this->Main->finalizeContent();
     }
 
     /**
