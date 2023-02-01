@@ -1051,6 +1051,7 @@ class Weblication extends Component
         }
         $className = $this->Settings->getVar('application.session.className', 'ISession');
         $this->Session = new $className($autoClose);
+
         return $this->Session;
     }
 
