@@ -364,7 +364,7 @@ class Resultset extends PoolObject implements Countable
     public function getValueAsInt(string $key, ?int $default = 0): ?int
     {
         $value = $this->getValue($key, $default);
-        if($default === null && $value === null) return null;
+        if($value === null) return $default;
         return (int)$value;
     }
 
@@ -378,7 +378,7 @@ class Resultset extends PoolObject implements Countable
     public function getValueAsFloat(string $key, ?float $default = 0.00): ?float
     {
         $value = $this->getValue($key, $default);
-        if($default === null && $value === null) return null;
+        if($value === null) return $default;
         return (float)$value;
     }
 
