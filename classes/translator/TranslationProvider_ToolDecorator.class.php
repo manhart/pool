@@ -106,7 +106,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     public static function readPostbox(string $id = null): void
     {
         $file = self::getPostboxPath($id);
-        $postbox = include $file;
+        @$postbox = include $file;
         if (!is_array($postbox))
             $postbox = [];
         self::$postbox = $postbox;
