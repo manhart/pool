@@ -938,7 +938,7 @@ SQL;
     {
         foreach($this->translate as $key) {
             if(isset($row[$key])) {
-                $row[$key] = $this->Translator->getTranslation($row[$key], $row[$key]);
+                $row[$key] = $this->Translator->getTranslation($row[$key], $row[$key], noAlter: true);
             }
         }
         return $row;
