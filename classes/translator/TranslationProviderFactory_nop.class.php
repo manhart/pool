@@ -20,6 +20,7 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
 {
     private string $lang;
     private string $locale;
+    private string $lastKey;
 
     function getLang(): string
     {
@@ -34,7 +35,8 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
 
     function getResult(): ?Translation
     {
-        return null;
+        $key = $this->lastKey;
+        return new Translation($this, "0*$key",$key);
     }
 
     /**
@@ -42,7 +44,8 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
      */
     function query(string $key): int
     {
-        return self::TranslationOmitted;
+        $this->lastKey = $key;
+        return self::TranslationInadequate;
     }
 
     function increaseMissCounter(?string $key): int
@@ -52,7 +55,7 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
 
     function alterTranslation(int $status, ?string $value, string $key): int
     {
-        return -self::NotImplemented;
+        return self::NotImplemented;
     }
 
     function getError(): ?Exception
