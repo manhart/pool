@@ -1474,6 +1474,19 @@ function checkRegExOutcome(string $regEX, string $content): bool
         return true;
 }
 
+/**Produces a key-value array of variables given as parameters
+ * @param Closure $closure fn()=>[varX.varY...]
+ * @param mixed ...$namedValues optional named Arguments that get merged with the variables
+ * @return array The resulting array keyed by the variable/parameter names
+ * @throws ReflectionException
+ */
+function packArray(Closure $closure, ... $namedValues ):array{
+    return array_merge(
+        (new ReflectionFunction($closure))->getClosureUsedVariables(),
+        $namedValues);
+}
+
+
 /**
  * Sortiert mehrere oder multidimensionale Arrays
  *
