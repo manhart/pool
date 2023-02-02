@@ -802,6 +802,12 @@ function UnknowClassException(message) {
 }
 
 /**
+ * shorthand of document.getElementById
+ * @param elementId
+ */
+getByID = document.getElementById.bind(document);
+
+/**
  * Calls function (fn) after DOM content is loaded
  *
  * @param function fn

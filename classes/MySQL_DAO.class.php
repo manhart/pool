@@ -150,7 +150,7 @@
 * @link https://alexander-manhart.de
 */
 
-use pool\classes\Translator;
+use pool\classes\translator\Translator;
 
 // Reservierte Wörter kompatibel mit MySQL 5.1 (und abwärts)
 $GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'ASENSITIVE',
@@ -938,7 +938,7 @@ SQL;
     {
         foreach($this->translate as $key) {
             if(isset($row[$key])) {
-                $row[$key] = $this->Translator->get($row[$key]) ?: $row[$key];
+                $row[$key] = $this->Translator->getTranslation($row[$key], $row[$key], noAlter: true);
             }
         }
         return $row;
@@ -954,7 +954,7 @@ SQL;
         if(isset($this->translateValues[$field])) {
             $tmp = 'case '.$field;
             foreach($this->translateValues[$field] as $key => $transl) {
-                $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->get($transl).'\'';
+                $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->getTranslation($transl, $transl).'\'';
             }
             $tmp .= ' else '.$field.' end';
             $field = $tmp;
