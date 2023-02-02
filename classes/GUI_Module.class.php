@@ -586,8 +586,8 @@ class GUI_Module extends Module
 
     /**
      * Please override this method to register ajax calls
-     *
      * @return void
+     * @see GUI_Module::registerAjaxMethod()
      */
     protected function registerAjaxCalls(): void
     {
