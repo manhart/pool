@@ -1010,14 +1010,14 @@ class Weblication extends Component
         //Get defaults from browser
         $AppLanguages ??= $AppTranslator->parseLangHeader(false, $defaultLocale);
         //Try to load the required languages
-        $AppTranslator->swapLangList($AppLanguages);
+        $AppTranslator->swapLangList($AppLanguages, true);
         $this->setTranslator($AppTranslator);
 
         //setup TemplateTranslator
         $staticResource = TranslationProviderFactory_ResourceFile::create(DIR_RESOURCES_ROOT.'/dict/static');
         $TemplateTranslator = new Translator($staticResource);
         //Try to load the required languages
-        $TemplateTranslator->swapLangList($AppLanguages);
+        $TemplateTranslator->swapLangList($AppLanguages, true);
         Template::setTranslator($TemplateTranslator);
 
         // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
