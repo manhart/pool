@@ -33,6 +33,8 @@
  */
 
 // Variablen Identifizierung
+use pool\classes\translator\Translator;
+
 const TEMP_VAR_START = '{';
 const TEMP_VAR_END = '}';
 
@@ -469,8 +471,10 @@ class TempCoreHandle extends TempHandle
                     break;
 
                 case TEMP_TRANSL_IDENT:
-                    $value = $tagContent; // so that the code continues to work temporarily
-                    //TODO Translate
+                    if ($translator = Template::getTranslator())
+                        $value = $translator->translateTag($handle, $tagContent);
+                    else
+                        $value  = $tagContent;
                     break;
 
                 default:
@@ -515,8 +519,10 @@ class TempCoreHandle extends TempHandle
             $content = str_replace($search, $replace, $content, $count);
             $iterations++;
         }
-        //TODO translate {TRANSL } Tags
         $replace_pairs = [];
+        if ($translator = Template::getTranslator())
+            $translator->translateWithRegEx(
+                $content, Translator::CURLY_TAG_REGEX, $replace_pairs);
         foreach($this->BlockList as $Handle => $TempBlock) {
             if($TempBlock->allowParse()) {
                 $TempBlock->parse();
@@ -838,6 +844,9 @@ class TempScript extends TempFile
  **/
 class Template extends PoolObject
 {
+    private static bool $cacheTranslations = true;
+    private static ?Translator $translator = null;
+
     //@var string Verzeichnis zu den Templates
     private string $dir;
 
@@ -881,8 +890,41 @@ class Template extends PoolObject
      */
     function __construct(string $dir = './')
     {
+        parent::__construct();
         $this->FileList = [];
         $this->setDirectory($dir);
+    }
+
+    public static function getTranslator(): ?Translator
+    {
+        return static::$translator;
+    }
+
+    public static function setTranslator(Translator $translator): void
+    {
+        static::$translator = $translator;
+    }
+
+    public static function attemptFileTranslation(string $file, string $language): string
+    {
+        try {
+            return Template::getTranslator()->translateFile($file, $language);
+        } catch (Exception) {
+            return $file;
+        }
+    }
+
+    public static function isCacheTranslations(): bool
+    {
+        return static::getTranslator() != null ? static::$cacheTranslations : false;
+    }
+
+    /**
+     * @param bool $cacheTranslations
+     */
+    public static function setCacheTranslations(bool $cacheTranslations): void
+    {
+        self::$cacheTranslations = $cacheTranslations;
     }
 
     /**

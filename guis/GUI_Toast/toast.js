@@ -193,79 +193,131 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
     }
 
     /**
-     * Show toast notification
-     *
-     * @param type
-     * @param title
-     * @param message
-     * @param subtitle
-     * @returns Toast
+     * Schedule a Toast to be displayed
+     * @param type The category of the Message e.g. Error determines the look of the Created Toast
+     * @param title The name of this Toast (Optional). Expects a String or an array [translationKey, default] <br>
+     * Defaults based on  the type are Provided.
+     * @param message  The content of this Toast. Expects a String or an array [translationKey, default]
+     * @param subtitle Additional information displayed instead of the Toasts age
+     * @returns void
      */
     show = (type, title, message, subtitle = null) =>
     {
+        this.showAsync(type, title, message, subtitle).catch(
+            (e)  => {
+                if (e instanceof Error)
+                    console.error(e);
+                    window.alert('Displaying Notification failed: '+ message +'\n---------\n'+e.message );
+            }
+        );
+
+    }
+    /**
+     * Schedule a Toast to be displayed
+     * @param type The category of the Message e.g. Error determines the look of the Created Toast
+     * @param title The name of this Toast (Optional). Expects a String or an array [translationKey, default] <br>
+     * Defaults based on  the type are Provided.
+     * @param message  The content of this Toast. Expects a String or an array [translationKey, default]
+     * @param subtitle Additional information displayed instead of the Toasts age
+     * @returns {Promise<Toast>}
+     */
+    showAsync = async (type, title, message, subtitle) => {
+        let translationError = null;
+        let fallbackAvailable = 1;
+        do {//this may run a second time
+            if (isArray(title)) {//Translatable Set
+                try {
+                    Transl.get(title[0])//fetch this key
+                } catch (error) {
+                    translationError = error;
+                    title = title[1] ?? null;//use default provided by caller or fallback
+                }
+            }
+            if (isString(title)) break;//work with the valid Title
+            switch (type){//Decide wich fallback to use based on type of the Toast
+                case Toast.TOAST_ERROR:
+                    title = ['global.errormessage', 'Achtung'];
+                    break;
+                case Toast.TOAST_WARNING:
+                    title = ['global.warningmessage', 'Warnung'];
+                    break;
+                case Toast.TOAST_INFO:
+                    title = ['global.statusmessage', 'Info'];
+                    break;
+                case Toast.TOAST_SUCCESS:
+                    title = ['global.message', 'Erfolg'];
+                    break;
+                case Toast.TOAST_DEFAULT:
+                    title = ['global.hint', 'Hinweis'];
+                    break;
+                default:
+                    title = null;
+            }
+        }while (0 < fallbackAvailable--)//prevent infinite loops alt. fallbackAvailable && !(fallbackAvailable = false);
+        //Check whether we can continue
+        if (!isString(title)) throw new Error("Unable to get titel for Toast-type: " + type, translationError)
+        //start creation
         let id = Toast.create(type, Toast.name, title, (subtitle) ? subtitle : this.gettext('justNow'),
             message, (this.pauseOnHover ? false : this.autohide), this.delay, this.position);
+        //get newly created Object from the DOM
         this.Toast = $('#'+id);
-
-        let dateUpdateHandler = null;
-        if(!subtitle) {
-            dateUpdateHandler = setInterval(() => {
-                let secondsbehind, minutesbehind = null;
+        //Update handler...
+        if(!subtitle) {//Only necessary when the time isn't overridden by a subtitle
+            //Create update intervall of 1s
+            let dateUpdateIntervall = setInterval(() => {
+                //produce a message...
+                let secondsBehind, minutesBehind = null;
 
                 let created = parseInt(this.Toast.data('created'), 10);
-                secondsbehind = Math.round((Date.now() - created) / 1000);
+                secondsBehind = Math.round((Date.now() - created) / 1000);
 
-                if(secondsbehind > 59) {
-                    minutesbehind = Math.round(secondsbehind / 60);
+                if(secondsBehind > 59) {
+                    minutesBehind = Math.round(secondsBehind / 60);
                 }
 
-                let subtitle = (minutesbehind ?
-                    this.gettext('minutesBehind', minutesbehind) :
-                    this.gettext('secondsBehind', secondsbehind)
+                subtitle = (minutesBehind ?
+                        this.gettext('minutesBehind', minutesBehind) :
+                        this.gettext('secondsBehind', secondsBehind)
                 );
+                //inject new value directly into the DOM
                 document.querySelector('#'+id+' .toast-header .text-muted').innerHTML = subtitle;
             }, 1000);
+            //add a handler to stop the intervall when the Toast is hidden
+            this.Toast.on('hidden.bs.toast', () => clearInterval(dateUpdateIntervall));
         }
-
-        this.Toast.on('hidden.bs.toast', () => {
-            $('#'+id).remove();
-            if(dateUpdateHandler) {
-                clearInterval(dateUpdateHandler);
-            }
-
-        });
-
+        //add a handler that removes the Toast from the DOM when it is hidden
+        this.Toast.on('hidden.bs.toast', () => $('#'+id).remove());
+        //start displaying
         this.Toast.toast('show');
-
-        if(this.autohide == false) {
-            return this;
+        //check whether handlers for auto-hiding are required
+        if(this.autohide === false) {
+            return this;//No handlers to attach
         }
-
-        // pause on hover
+        //start countdown
         this.paused = false;
         setTimeout(() => {
-            if(this.paused == false) {
+            if(this.paused === false) {
                 if(this.Toast.length > 0) {
                     this.Toast.toast('hide');
                 }
             }
         }, this.delay)
-
+        //add more Handlers
+        // pause on hover
         this.Toast.on('mouseover', () => {
             this.paused = true;
         });
-
+        //resume on mouseleave
         this.Toast.on('mouseleave', () => {
             const current = Math.floor(Date.now() / 1000),
                 future = parseInt(this.Toast.data('hideAfter'));
 
             this.paused = false;
 
-            // console.debug('mouseleave', current, future);
             if (current >= future) {
                 this.Toast.toast('hide');
             }
-        })
+        });
         return this;
     }
 

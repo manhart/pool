@@ -67,43 +67,43 @@ class Translator {
      * @returns {*}
      */
     get(key, args) {
-        let translation = this.getTranslation(this.getLanguage());
-
-        if (typeof args == 'undefined') {
-            return translation[key];
+        let translationArray = this.getTranslation(this.getLanguage());
+        let message = translationArray[key];
+        if (Array.isArray(message)) {//really anything except a String is problematic e.g. undefined, null, array, int...
+            //we could have an undefined key be looked up and added to the 'dictionary' (ajaxCall to translate.php) -> and then reload the dictionary async...
+            //null shows us that it isn't set and defaults or handling has to be used
+            //arrays are currently not supposed to be a leaf of the 'dictionary', but handling could be more graceful
+            throw ('Exception was thrown because an array was accessed instead of a string. Please correct the translation.');
         }
-
-        let params = [];
-        if (typeof args == 'object') {
-            params = (Array.isArray(args)) ? args : Object.values(args) ;
-        }
-
-        if (typeof args == 'string' || typeof args == 'number') {
-            params = Object.values(arguments);
-            params.shift();
-        }
-
-        let str = translation[key];
-        if (Array.isArray(str)) {
-            throw ('Exception was thrown because an array was accessed instead of a string. Probably you wanted to use nget().');
-        }
-        params.forEach(function (param, i) {
-            let searchValue = null;
-            switch (typeof param) {
-                case 'string': searchValue = '%s';
-                    break;
-                case 'number': searchValue = '%d';
-                    break;
+        //formatting required
+        if (typeof args != 'undefined') {
+            let params;
+            if (typeof args == 'object') {
+                //normalize to an array
+                params = (Array.isArray(args)) ? args : Object.values(args) ;
+            } else {//"variadic" signature
+                //grab all arguments (magic) except the key (first)
+                params = Object.values(arguments);
+                params.shift();
             }
-            str = str.replace(searchValue, param);
-        });
-
-        return str;
+            //format message.... TODO message-formatter
+            params.forEach(function (param, i) {
+                let searchValue = null;
+                switch (typeof param) {
+                    case 'string': searchValue = '%s';
+                        break;
+                    case 'number': searchValue = '%d';
+                        break;
+                }
+                message = message.replace(searchValue, param);
+            });//end format message
+        }//END formatting required
+        return message;
     }
 
     /**
      * get plural translation
-     *
+     * @deprecated just use get with arguments and adapt the translation
      * @param key
      * @param n
      * @param args
@@ -178,24 +178,22 @@ class Translator {
     /**
      * get translations for a language
      *
-     * @param string $language language code/country code
+     * @param language language code/country code
      * @return array
-     * @throws \Exception
+     * @throws String
      */
     getTranslation(language)
     {
         if (!this.hasTranslation(language)) {
-            let translationFile = this.directory + '/' + language + '.' + this.extension;
-
             // error handling
             if (typeof this['directory'] == 'undefined') {
-                throw Exception('No directory was specified for the resources.');
+                throw 'No directory was specified for the resources.';
             }
-
             if (typeof language == 'undefined') {
-                throw Exception('No language was specified.');
-            }
 
+                throw 'No language was specified.';
+            }
+            let translationFile = this.directory + '/' + language + '.' + this.extension;
             this.setTranslation(language, loadJSON(translationFile));
         }
         return this.translation[language];
