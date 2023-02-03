@@ -994,10 +994,10 @@ class Weblication extends Component
         $TranslatorResource = $this->Settings->getVar('application.translatorResource');
         $translatorResourceDir = $this->Settings->getVar('application.translatorResourceDir');
         if(!$AppTranslator instanceof Translator)
-        $AppTranslator = new Translator();
+            $AppTranslator = new Translator();
         if(!$TranslatorResource instanceof TranslationProviderFactory) {
             if ($translatorResourceDir)//make a ressource from a given file
-            $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
+                $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
         elseif (sizeof($AppTranslator->getTranslationResources()) > 0)//Translator is already loaded
             $TranslatorResource = null;
         else//add Fallback or throw
