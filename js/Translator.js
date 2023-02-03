@@ -7,8 +7,21 @@
  * @copyright Copyright (c) 2020, GROUP7 AG
  */
 class Translator {
-    constructor() {
+
+    translation = [];
+    /**
+     * @todo receive data from server-side
+     * @type {string}
+     */
+    directory = '/resources/dict/runtime';
+
+    /**
+     *
+     */
+    constructor()
+    {
         this.extension = 'json';
+        this.setDefaultLanguage(document.documentElement.lang);
     }
 
     /**
@@ -18,7 +31,6 @@ class Translator {
      * @returns {Translator}
      */
     setResourceDir(directory) {
-        this.translation = [];
         this.directory = directory;
         return this;
     }
@@ -344,3 +356,5 @@ class Translator {
             return index;
     }
 }
+
+const Transl = new Translator();
