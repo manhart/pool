@@ -405,7 +405,7 @@ class Log
         }
     }
 
-    public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): self
+    public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON)
     {
         $message = $text;
         self::$facilities[$configurationName][self::OUTPUT_FILE]['LogFile']->addLine($message);
