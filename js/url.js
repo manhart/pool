@@ -3,8 +3,11 @@
  *
  * @author Christian Schmidseder, Alexander Manhart
  * @see https://ui.dev/get-current-url-javascript
+ *
+ * @todo redevelop this class to use the URL API
  */
-function Url() {
+function Url()
+{
 	this.params = new Object();
 	//
 	// Fix POOL clone function (not needed in this context)
@@ -78,3 +81,12 @@ Url.prototype.delParam = function(key) {
 Url.prototype.restartUrl = function() {
 	location.href = this.getUrl();
 }
+/**
+ * SCRIPT_SCHEMA contains the current schema. If the schema parameter is not set, we use no schema.
+ * @type {string|string}
+ */
+const SCRIPT_SCHEMA = location.search.split('schema=')[1] || '';
+/**
+ * SCRIPT_NAME contains the current script name with protocol, host and path. It is used to redirect to the start page. The query parameters are not included, except the schema parameter.
+ */
+const SCRIPT_NAME = location.protocol + '//' + location.host + location.pathname + (SCRIPT_SCHEMA ? '?schema=' + SCRIPT_SCHEMA : '');
