@@ -110,8 +110,6 @@ class LogFile extends PoolObject
 
     /**
      * Konstruktor
-     *
-     * @access public
      */
     public function __construct()
     {
