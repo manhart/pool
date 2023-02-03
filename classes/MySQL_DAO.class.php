@@ -938,6 +938,8 @@ SQL;
     {
         foreach($this->translate as $key) {
             if(isset($row[$key])) {
+                // another idea to handle columns which should be translated
+                // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
                 $row[$key] = $this->Translator->getTranslation($row[$key], $row[$key], noAlter: true);
             }
         }
