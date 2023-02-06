@@ -789,16 +789,14 @@ class Weblication extends Component
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
         $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
-        if($stylesheet)
-            return $stylesheet;
+        if($stylesheet) return $stylesheet;
 
         //TODO Remove or define use of skins for included Projekts and merge with findBestElement
         if(!$baseLib) {//Common-common-skin
             if(defined('DIR_COMMON_ROOT_REL')) {
                 $stylesheet = buildFilePath(
                     DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-                if(file_exists($stylesheet))
-                    return $stylesheet;
+                if(file_exists($stylesheet)) return $stylesheet;
             }
         }
 
@@ -824,6 +822,7 @@ class Weblication extends Component
             $places[] = buildDirPath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
         if($this->hasSkinFolder($elementSubFolder)) //Project? -> Skin
             $places[] = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
+        $places[] = buildDirPath($elementSubFolder);
         if($classFolder) {//Projects -> GUI
             //Path from Project root to the specific GUI folder
             $folder_guis = buildDirPath(PWD_TILL_GUIS, $classFolder);
