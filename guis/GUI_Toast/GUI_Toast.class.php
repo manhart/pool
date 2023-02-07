@@ -13,7 +13,7 @@ class GUI_Toast extends GUI_Module
      * @param int|null $superglobals
      * @throws Exception
      */
-    public function init(?int $superglobals = I_EMPTY)
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
         parent::init($superglobals);

@@ -49,14 +49,14 @@ class GUI_DBCount extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('tabledefine', '');
         $this -> Defaults -> addVar('fk', '');
         $this -> Defaults -> addVar('fk_value', '');
         $this -> Defaults -> addVar('text', '');
 
-        parent :: init(I_GET);
+        parent :: init(Input::INPUT_GET);
     }
 
     /**

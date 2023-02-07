@@ -73,7 +73,7 @@ class GUI_Splitter extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('type', 'digits');
         $this -> Defaults -> addVar('query', '');
@@ -131,7 +131,7 @@ class GUI_Splitter extends GUI_Module
         );
         $this->Defaults->addVar('jsClick', '');
 
-        parent::init(I_GET);
+        parent::init(Input::INPUT_GET);
     }
 
     /**

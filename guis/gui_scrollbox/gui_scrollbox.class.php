@@ -60,7 +60,7 @@ class GUI_Scrollbox extends GUI_Module
      * @access public
      * @param integer|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(

@@ -30,12 +30,7 @@
  * @link https://www.manhart-it.de
  */
 
-if (defined('DBACCESSFILE')) {
-    $dbaccessfile = constant('DBACCESSFILE');
-    if (file_exists($dbaccessfile)) {
-        require_once $dbaccessfile;
-    }
-}
+use pool\classes;
 
 if (!defined('SQL_READ')) define('SQL_READ', 'READ');
 if (!defined('SQL_WRITE')) define('SQL_WRITE', 'WRITE');
@@ -165,7 +160,7 @@ class MySQLi_Interface extends DataInterface
      **/
     public function setOptions(array $Packet): bool
     {
-        $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
+        // $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
         $this->force_backend_read = array_key_exists('force_backend_read', $Packet) ? $Packet['force_backend_read'] : false;
 
         if (!array_key_exists('host', $Packet)) {
@@ -272,46 +267,46 @@ class MySQLi_Interface extends DataInterface
             sizeof($this->available_hosts[$mode]));
     }
 
+
+    private array $authentications = [];
+
     /**
      * MySQL_Interface::__get_auth()
      *
      * Liest die Authentication-Daten aus Array und gibt sie als Array zurueck
      *
-     * @param $mode constant Beschreibt den Zugriffsmodus Schreib-Lesevorgang
+     * @param string $mode constant Beschreibt den Zugriffsmodus Schreib-Lesevorgang
      * @return Array mit Key username und password
-     *
-     * @access private
      */
-    function __get_auth($mode)
+    private function __get_auth(string $mode)
     {
         $name_of_array = $this->auth;
-        //				echo $name_of_array;
-        //				echo pray($GLOBALS);
-        $auth = false;
-        if (isset($GLOBALS[$name_of_array])) {
-            $auth = $GLOBALS[$name_of_array];
-        }
-        #				echo ' auth:'.pray($auth);
-        #				global $$name_of_array;
-        #				$auth = $$name_of_array;
 
-        $authentication = array();
-        if (is_array($auth)) {
-            if ($mode == SQL_READ) {
-                if (array_key_exists($this->host[SQL_READ], $auth)) {
-                    $authentication = $auth[$this->host[SQL_READ]];
+        if(!isset($this->authentications[$name_of_array])) {
+            $authFile = constant('DBACCESSFILE');
+            if (file_exists($authFile)) {
+                include $authFile;
+                if(isset($$name_of_array)) {
+                    $this->authentications[$name_of_array] = $$name_of_array;
                 }
             }
-            else {
-                if (array_key_exists($this->host[SQL_READ], $auth)) {
-                    $authentication = $auth[$this->host[SQL_WRITE]];
-                }
+        }
+
+        $authentication = $this->authentications[$name_of_array] ?? [];
+
+        if ($mode == SQL_READ) {
+            if (array_key_exists($this->host[SQL_READ], $authentication)) {
+                return $authentication[$this->host[SQL_READ]];
             }
         }
         else {
-            $this->raiseError(__FILE__, __LINE__, 'MySQL access denied! No authentication data available ' .
-                '(Database: ' . $this->host[$mode] . ' Mode: ' . $mode . ').');
+            if (array_key_exists($this->host[SQL_READ], $authentication)) {
+                return $authentication[$this->host[SQL_WRITE]];
+            }
         }
+
+        $this->raiseError(__FILE__, __LINE__, 'MySQL access denied! No authentication data available ' .
+            '(Database: ' . $this->host[$mode] . ' Mode: ' . $mode . ').');
         return $authentication;
     }
 

@@ -158,7 +158,7 @@ class DBSession extends PoolObject
      **/
     function initialize()
     {
-        $this->Input = new Input(I_EMPTY);
+        $this->Input = new Input(Input::INPUT_EMPTY);
 
         $data = $this->DAO_Session->getData($this->sid);
         if ($data === false) {

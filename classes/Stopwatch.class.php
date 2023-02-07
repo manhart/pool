@@ -44,16 +44,6 @@ if(!defined('CLASS_STOPWATCH')) {
         var $precision = 5;
 
         /**
-         * Konstruktor
-         *
-         * @access public
-         **/
-        function __construct()
-        {
-            parent::__construct();
-        }
-
-        /**
          * StopWatch::setPrecision()
          *
          * Rundet auf "precision" Stellen auf oder ab.

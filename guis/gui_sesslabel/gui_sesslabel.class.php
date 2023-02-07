@@ -40,7 +40,7 @@
 		 *
 		 * @access public
 		 **/
-		function init(?int $superglobals=I_EMPTY)
+		function init(?int $superglobals= Input::INPUT_EMPTY)
 		{
 			$this -> Defaults -> addVar('sess_key', '');
 			$this -> Defaults -> addVar('array_key', '');

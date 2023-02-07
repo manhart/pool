@@ -18,14 +18,14 @@
 */
 class GUI_Emoticons extends GUI_Module
 {
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('memo', '');
         $this -> Defaults -> addVar('maxcols', 5);
         $this -> Defaults -> addVar('tabledefine', '');
 
 
-        parent :: init(I_EMPTY);
+        parent :: init(Input::INPUT_EMPTY);
     }
 
     function loadFiles()

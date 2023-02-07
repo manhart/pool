@@ -7,9 +7,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
-namespace pool\classes;
-
-class DAOException extends \Exception
+class InputRequest extends Input
 {
+    function __construct(int $superglobals = Input::INPUT_REQUEST)
+    {
+        parent::__construct($superglobals);
+    }
 }

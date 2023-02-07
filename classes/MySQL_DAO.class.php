@@ -1310,24 +1310,3 @@ SQL;
         return $result;
     }
 }
-
-
-/* -------------------------- */
-####### CustomMySQL_DAO ########
-/* -------------------------- */
-
-
-/**
- * CustomMySQL_DAO
- *
- * Globales uebergreifendes MySQL Data Access Objects. Sofern kein spezielles Data Access Object fuer eine Tabelle existiert, wird
- * eine Instanz der Klasse CustomMySQL_DAO angelegt.
- *
- * @package pool
- * @author Alexander Manhart <alexander.manhart@gmx.de>
- * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
- * @access public
- **/
-class CustomMySQL_DAO extends MySQL_DAO
-{
-}

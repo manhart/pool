@@ -15,7 +15,7 @@ class GUI_Selectionlist extends GUI_Module
      */
     protected bool $autoLoadFiles = false;
 
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(
@@ -46,7 +46,7 @@ class GUI_Selectionlist extends GUI_Module
                 'class' => array('style_row_1', 'style_row_2')
             )
         );
-        parent:: init(I_REQUEST);
+        parent:: init(Input::INPUT_REQUEST);
     }
 
     function loadFiles()
