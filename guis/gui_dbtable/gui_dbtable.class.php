@@ -12,7 +12,7 @@ class GUI_DBTable extends GUI_Table
     /**
      * @param int|null $superglobals
      */
-    public function init(?int $superglobals = I_EMPTY)
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('tabledefine', '');
         parent::init($superglobals);

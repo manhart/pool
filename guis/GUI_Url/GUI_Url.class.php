@@ -30,7 +30,7 @@ class GUI_Url extends GUI_Module
      *
      * @param int|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    public function init(?int $superglobals=I_EMPTY)
+    public function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('script', '');
         $this->Defaults->addVar('params', '');
@@ -46,7 +46,7 @@ class GUI_Url extends GUI_Module
     public function prepare()
     {
         $empty = (int)$this->Input->getVar('empty');
-        $Url = new Url($empty ? I_EMPTY : I_GET);
+        $Url = new Url($empty ? Input::INPUT_EMPTY : Input::INPUT_GET);
 
         $script = trim($this->Input->getVar('script'));
         if ($script != '') {
@@ -66,7 +66,7 @@ class GUI_Url extends GUI_Module
 
         $passThrough = trim($this->Input->getVar('passthrough'));
         if ($passThrough != '') {
-            $IGet = new Input(I_GET);
+            $IGet = new Input(Input::INPUT_GET);
             $passThrough = explode(';', $passThrough);
             foreach($passThrough as $param) {
                 $Url->setParam($param, $IGet -> getVar($param));

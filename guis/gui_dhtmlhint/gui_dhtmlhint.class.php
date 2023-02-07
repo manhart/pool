@@ -32,7 +32,7 @@ class GUI_DHtmlHint extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         parent::init($superglobals);
     }

@@ -107,7 +107,7 @@ if(!defined('CLASS_SESSIONHANDLER')) {
             );
 
             # input object
-            $this -> Input = new Input(I_REQUEST|I_SERVER);
+            $this -> Input = new Input(Input::INPUT_REQUEST | Input::INPUT_SERVER);
 
             if ($this -> db -> connect($this -> dbname)) {
                 $this -> dao = DAO::createDAO($this->tabledefine, $this->db);

@@ -13,6 +13,7 @@
  * @link https://alexander-manhart.de
  */
 
+//use pool\classes\Input;
 use pool\classes\Language;
 use pool\classes\ModulNotFoundException;
 use pool\classes\translator\TranslationProviderFactory;
@@ -54,9 +55,9 @@ class Weblication extends Component
     /**
      * PHP Session gekapselt in ISession
      *
-     * @var ISession|null $Session
+     * @var InputSession|null $Session
      */
-    public ?ISession $Session = null;
+    public ?InputSession $Session = null;
 
     /**
      * @var Weblication|null
@@ -66,7 +67,7 @@ class Weblication extends Component
     /**
      * @var int filter that defines which superglobals are passed to input->vars
      */
-    private int $superglobals = I_EMPTY;
+    private int $superglobals = Input::INPUT_EMPTY;
 
     /**
      * @var Input
@@ -185,9 +186,9 @@ class Weblication extends Component
     /**
      * Cookie for the application
      *
-     * @var ICookie|null
+     * @var InputCookie|null
      */
-    private ?ICookie $Cookie = null;
+    private ?InputCookie $Cookie = null;
 
     /**
      * locale unchanged / as is.
@@ -246,7 +247,7 @@ class Weblication extends Component
     {
         parent::__construct(null);
         self::$isAjax = isAjax();
-        $this->Settings = new Input(I_EMPTY);
+        $this->Settings = new Input(Input::INPUT_EMPTY);
         $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         return $this;
@@ -1043,11 +1044,11 @@ class Weblication extends Component
      * @param integer $use_cookies Verwende Cookies (Default: 1)
      * @param integer $use_only_cookies Verwende nur Cookies (Default: 0)
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
-     * @return ISession|null
+     * @return InputSession|null
      * @throws Exception
      */
     public function startPHPSession(string $session_name = 'PHPSESSID', int $use_trans_sid = 0, int $use_cookies = 1,
-        int $use_only_cookies = 0, bool $autoClose = true): ?ISession
+        int $use_only_cookies = 0, bool $autoClose = true): ?InputSession
     {
         switch(session_status()) {
             case PHP_SESSION_DISABLED:
@@ -1074,9 +1075,9 @@ class Weblication extends Component
 
         $isStatic = !(isset($this)); // TODO static calls or static AppSettings
         if($isStatic) {
-            return new ISession($autoClose);
+            return new InputSession($autoClose);
         }
-        $className = $this->Settings->getVar('application.session.className', 'ISession');
+        $className = $this->Settings->getVar('application.session.className', InputSession::class);
         $this->Session = new $className($autoClose);
 
         return $this->Session;
@@ -1099,7 +1100,7 @@ class Weblication extends Component
     public function createSessionHandler(string $tabledefine)
     {
         $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
-        $this->Session = new ISession();
+        $this->Session = new InputSession();
     }
 
     /**
@@ -1228,12 +1229,12 @@ class Weblication extends Component
     /**
      * returns cookie for this application
      *
-     * @return ICookie
+     * @return InputCookie
      */
-    public function getCookie(): ICookie
+    public function getCookie(): InputCookie
     {
         if(!$this->Cookie) {
-            $this->Cookie = new ICookie();
+            $this->Cookie = new InputCookie();
         }
         return $this->Cookie;
     }
@@ -1305,7 +1306,6 @@ class Weblication extends Component
             $Header = $this->getFrame()->getHeadData();
 
             $Header->setTitle($this->title);
-            $Header->setLanguage($this->language);
             if($this->charset) $Header->setCharset($this->charset);
         }
         return $this;

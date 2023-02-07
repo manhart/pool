@@ -36,7 +36,7 @@ class GUI_Schema extends GUI_Module
     /**
      * @param int|null $superglobals takes parameter schema from request
      */
-    public function init(?int $superglobals = I_REQUEST)
+    public function init(?int $superglobals = Input::INPUT_REQUEST)
     {
         $this->Defaults->addVar('schema');
         parent::init($superglobals);

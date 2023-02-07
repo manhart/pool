@@ -36,7 +36,7 @@ class GUI_Select extends GUI_Universal
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -67,7 +67,7 @@ class GUI_Select extends GUI_Universal
             )
         );
 
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     function loadFiles()
@@ -124,7 +124,7 @@ class GUI_Select extends GUI_Universal
         // save value into session
         $selected = '';
         $buf_save = $Input -> getVar('save');
-        if (is_a($Session, 'ISession') and $Input -> getVar('use_session') == 1) {
+        if (is_a($Session, 'InputSession') and $Input -> getVar('use_session') == 1) {
             if (empty($buf_save) == false and $Input -> getVar($buf_save) == 1) {
                 $Session -> setVar($session_var, $Input -> getVar('selected') == ''  ? $valueByName : $Input -> getVar('selected'));
             }
@@ -298,7 +298,7 @@ class GUI_Option extends GUI_Universal
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(
@@ -311,7 +311,7 @@ class GUI_Option extends GUI_Universal
             )
         );
 
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     function loadFiles()

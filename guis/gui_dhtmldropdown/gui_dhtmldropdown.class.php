@@ -34,7 +34,7 @@ class GUI_DHTMLDropdown extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(
@@ -53,7 +53,7 @@ class GUI_DHTMLDropdown extends GUI_Module
                 'value' => ''
             )
         );
-        parent:: init(I_GET | I_POST);
+        parent:: init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     /**

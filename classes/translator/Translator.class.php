@@ -1,16 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Translator.class.php created at 30.11.22, 13:21
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author a.manhart <a.manhart@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
-declare(strict_types=1);
 
 namespace pool\classes\translator;
-
 
 use Exception;
 use Input;
@@ -328,7 +326,7 @@ class Translator
         } else {
             $key = substr($handle, 0, $keyLength);
             $args = substr($handle, $keyLength, -1);
-            $Params = new Input(I_EMPTY);
+            $Params = new Input(Input::INPUT_EMPTY);
             $Params->setParams($args);
             $args = $Params->getData();
         }

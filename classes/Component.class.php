@@ -1,32 +1,13 @@
-<?php
-/**
- * POOL (PHP Object Oriented Library): Component ist der gemeinsame Vorfahr aller Komponenten.
+<?php declare(strict_types=1);
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Letzte aenderung am: $Date: 2006/12/01 09:08:54 $
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @version $Id: Component.class.php,v 1.7 2006/12/01 09:08:54 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
- * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link http://www.misterelsa.de
- * @package pool
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
-/**
- * Component ist die Basisklasse fuer alle Komponenten. Komponenten sind persistente Objekte.
- *
- * Komponenten sind persistente Objekte, die ueber das folgende Verhalten verfuegen:
- * - Eigentuemerschaft: Sie koennen als Eigentuemer andere Komponenten verwalten. Z.B. wenn die Komponente A der
- * - Eigentuemer der Komponente B ist, dann ist A fuer die Freigabe von B verantwortlich, wenn A freigegeben wird.
- * - Eindeutige Objektnamen
- *
- * Eine Komponente (= Eigentuemer) dient als Container vieler anderer Komponenten.
- *
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @package pool
- **/
 class Component extends PoolObject
 {
     /**
@@ -66,9 +47,10 @@ class Component extends PoolObject
 
     /**
      * Session
-     * @var ISession|null $Session
+     *
+     * @var InputSession|null $Session
      */
-    public ?ISession $Session = null;
+    public ?InputSession $Session = null;
 
     /**
      * @var string directory that contains the class
@@ -96,7 +78,6 @@ class Component extends PoolObject
         }
 
         $this->name = $this->getUniqueName();
-        return parent::__construct();
     }
 
     /**

@@ -8,14 +8,14 @@
  */
 class GUI_Checkbox extends GUI_InputElement
 {
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('type', 'checkbox');
 
         $this -> Defaults -> addVar('array', 0);
         $this -> Defaults -> addVar('label', '');
 
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     function loadFiles()
