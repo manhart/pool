@@ -74,7 +74,7 @@ class Module extends Component
     private array $internalParams;
 
     /**
-     * @var int filter that defines which superglobals are passed to input->vars
+     * @var int defines which superglobals should be used in this module. Superglobal variables are passed to superglobals in the Input class.
      */
     protected int $superglobals = I_EMPTY;
 
