@@ -31,8 +31,6 @@ const DAO_NO_ESCAPE = 2;
 // const DAO_IS_EXPRESSION = 4;
 
 const PWD_TILL_DAOS_MYSQL = 'mysql';
-const PWD_TILL_DAOS_CISAM = 'cisam';
-const PWD_TILL_DAOS_C16 = 'c16';
 const PWD_TILL_DAOS_POSTGRESQL = 'postgresql';
 const PWD_TILL_DAOS_MSSQL = 'mssql';
 const PWD_TILL_DAOS_INFORMIX = 'informix';
@@ -41,11 +39,9 @@ const PWD_TILL_DAOS_INFORMIX = 'informix';
 if(!defined('DATAINTERFACE_MYSQL')) define('DATAINTERFACE_MYSQL', 'MySQL_Interface');
 if(!defined('DATAINTERFACE_MYSQLI')) define('DATAINTERFACE_MYSQLI', 'MySQLi_Interface');
 if(!defined('DATAINTERFACE_MARIADB')) define('DATAINTERFACE_MARIADB', 'MySQLi_Interface');
-if(!defined('DATAINTERFACE_CISAM')) define('DATAINTERFACE_CISAM', 'CISAM_Interface');
 if(!defined('DATAINTERFACE_MSSQL')) define('DATAINTERFACE_MSSQL', 'MSSQL_Interface');
 if(!defined('DATAINTERFACE_INFORMIX')) define('DATAINTERFACE_INFORMIX', 'Informix_Interface');
 if(!defined('DATAINTERFACE_POSQL')) define('DATAINTERFACE_POSQL', 'PostgreSQL_Interface');
-if(!defined('DATAINTERFACE_C16')) define('DATAINTERFACE_C16', 'C16_Interface');
 
 /**
  * define general commands for DAO's
@@ -351,37 +347,6 @@ abstract class DAO extends PoolObject
                 }
                 else {
                     $DAO = new CustomMySQL_DAO($interface, $dbname, $table);
-                }
-                break;
-
-            case DATAINTERFACE_CISAM:
-                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_CISAM)."/$table.class.php";
-                $file_exists = file_exists($include);
-                if (!class_exists($table, false) and $file_exists) {
-                    require_once $include;
-                }
-                if($file_exists) {
-                    /** @var CISAM_DAO $DAO */
-                    $DAO = new $table($interface, $table);
-                }
-                else {
-                    $DAO = new CustomCISAM_DAO($interface, $table);
-                }
-                break;
-
-            case DATAINTERFACE_C16:
-                $include = addEndingSlash(DIR_DAOS_ROOT).addEndingSlash(PWD_TILL_DAOS_C16)."$dbname/$table.class.php";
-                $file_exists = file_exists($include);
-                if (!class_exists($table, false) and $file_exists) {
-                    require_once $include;
-                }
-                if($file_exists) {
-                    $class_table = str_replace(' ', '_', $table);
-                    /** @var C16_DAO $DAO */
-                    $DAO = new $class_table($interface, $dbname, $table, false);
-                }
-                else {
-                    $DAO = new CustomC16_DAO($interface, $dbname, $table, false);
                 }
                 break;
 

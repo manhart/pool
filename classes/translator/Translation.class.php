@@ -1,13 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Translation.class.php created at 06.12.22, 15:47
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author p.lehfeld <p.lehfeld@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
-declare(strict_types=1);
+
 namespace pool\classes\translator;
 
 class Translation

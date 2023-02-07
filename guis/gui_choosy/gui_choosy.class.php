@@ -172,7 +172,7 @@ class GUI_Choosy extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(
@@ -227,7 +227,7 @@ class GUI_Choosy extends GUI_Module
                 'submitFChoosy' => 0
             )
         );
-        parent:: init(I_REQUEST);
+        parent:: init(Input::INPUT_REQUEST);
     }
 
     function loadFiles()

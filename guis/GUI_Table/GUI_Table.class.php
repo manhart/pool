@@ -1038,7 +1038,7 @@ class GUI_Table extends GUI_Module
     /**
      * @param int|null $superglobals
      */
-    public function init(?int $superglobals = I_EMPTY)
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
         $this->Defaults->addVar('render', self::RENDER_ONDOMLOADED);

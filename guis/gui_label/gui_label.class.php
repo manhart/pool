@@ -32,7 +32,7 @@ class GUI_Label extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('id', $this -> getName());
         $this -> Defaults -> addVar('name', $this -> getName());
@@ -72,7 +72,7 @@ class GUI_Label extends GUI_Module
 
         // $this -> Defaults -> addVar('gap', 0);
 
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     function loadFiles()

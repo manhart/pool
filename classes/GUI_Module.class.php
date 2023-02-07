@@ -276,7 +276,7 @@ class GUI_Module extends Module
         }
 
         if($class_exists) {
-            $Params = new Input(I_EMPTY);
+            $Params = new Input(Input::INPUT_EMPTY);
             $Params->setParams($params);
             //TODO check authorisation
             $GUI = new $GUIClassName($Owner, $Params->getData());
@@ -497,7 +497,7 @@ class GUI_Module extends Module
         $className = $className ?: $this->getClassName();
 
         if($includeJS) {
-            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isBasicLibrary(), false);
+            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isPOOL(), false);
             if(!$js) {
                 return false;
             }

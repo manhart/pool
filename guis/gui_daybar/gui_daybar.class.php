@@ -28,7 +28,7 @@ class GUI_DayBar extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(
@@ -43,7 +43,7 @@ class GUI_DayBar extends GUI_Module
                 'pathToImages' => 'eingabemaske'
             )
         );
-        parent:: init(I_GET);
+        parent:: init(Input::INPUT_GET);
     }
 
     /**

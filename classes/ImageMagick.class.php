@@ -176,7 +176,7 @@ class ImageMagick extends PoolObject
      *
      * @access public
      * @param object $Session ISession
-     * @see ISession
+     * @see InputSession
      * @return boolean Erfolgsstatus
      **/
     function saveIntoSession(& $Session)

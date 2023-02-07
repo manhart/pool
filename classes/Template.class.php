@@ -88,8 +88,6 @@ class TempHandle extends PoolObject
      */
     function __construct(string $type)
     {
-        parent::__construct();
-
         $this->setType($type);
     }
 
@@ -890,7 +888,6 @@ class Template extends PoolObject
      */
     function __construct(string $dir = './')
     {
-        parent::__construct();
         $this->FileList = [];
         $this->setDirectory($dir);
     }
