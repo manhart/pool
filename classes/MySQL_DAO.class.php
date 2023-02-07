@@ -952,15 +952,22 @@ SQL;
      */
     protected function translateValues(string $field): string
     {
-        if(isset($this->translateValues[$field])) {
-            $tmp = 'case '.$field;
-            foreach($this->translateValues[$field] as $key => $transl) {
-                $tmp .= ' when \''.$transl.'\' then \''.$this->Translator->getTranslation($transl, $transl).'\'';
-            }
-            $tmp .= ' else '.$field.' end';
-            $field = $tmp;
+        if(!Weblication::getInstance()->hasTranslator()) {
+            return $field;
         }
-        return $field;
+
+        if(!isset($this->translateValues[$field])) {
+            return $field;
+        }
+
+        $Translator = Weblication::getInstance()->getTranslator();
+
+        $tmp = 'case '.$field;
+        foreach($this->translateValues[$field] as $key => $transl) {
+            $tmp .= ' when \''.$transl.'\' then \''.$Translator->getTranslation($transl, $transl).'\'';
+        }
+        $tmp .= ' else '.$field.' end';
+        return $tmp;
     }
 
     /**
