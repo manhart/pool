@@ -234,6 +234,11 @@ class Weblication extends Component
     ];
 
     /**
+     * @var Translator
+     */
+    protected Translator $translator;
+
+    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -261,7 +266,7 @@ class Weblication extends Component
      */
     public static function hasInstance(): bool
     {
-        return (static::$Instance !== null);
+        return static::$Instance !== null;
     }
 
     /**
@@ -277,11 +282,6 @@ class Weblication extends Component
     public function __wakeup()
     {
     }
-
-    /**
-     * @var Translator
-     */
-    protected Translator $translator;
 
     /**
      * Changes the folder for the design templates (Html templates) and images.
@@ -300,12 +300,11 @@ class Weblication extends Component
      * (wird derzeit fuer die Bilder und Html Templates missbraucht)
      *
      * @return string Name des Designs (Skin)
-     **/
+     */
     public function getSkin(): string
     {
         return $this->skin;
     }
-
 
     /**
      * Get translator
@@ -317,10 +316,22 @@ class Weblication extends Component
         return $this->translator;
     }
 
+    /**
+     * @param Translator $translator
+     * @return $this
+     */
     public function setTranslator(Translator $translator): static
     {
         $this->translator = $translator;
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTranslator(): bool
+    {
+        return isset($this->translator);
     }
 
     /**
