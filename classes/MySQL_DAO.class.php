@@ -261,11 +261,6 @@ class MySQL_DAO extends DAO
         $this->dbname = $dbname;
         $this->table = $table;
 
-        // only if Translator needed
-        if($this->translate) {
-            $this->Translator = Translator::getInstance();
-        }
-
         $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
 
         // Maybe there are columns in the "columns" property
@@ -936,12 +931,16 @@ SQL;
      */
     protected function translate(array $row): array
     {
+        if(!Weblication::getInstance()->hasTranslator()) {
+            return $row;
+        }
+
+        $Translator = Weblication::getInstance()->getTranslator();
         foreach($this->translate as $key) {
-            if(isset($row[$key])) {
-                // another idea to handle columns which should be translated
-                // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
-                $row[$key] = $this->Translator->getTranslation($row[$key], $row[$key], noAlter: true);
-            }
+            if(!isset($row[$key])) continue;
+            // another idea to handle columns which should be translated
+            // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
+            $row[$key] = $Translator->getTranslation($row[$key], $row[$key], noAlter: true);
         }
         return $row;
     }
