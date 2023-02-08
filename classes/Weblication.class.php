@@ -766,16 +766,14 @@ class Weblication extends Component
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
-     **/
+     */
     public function findTemplate(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $language = $this->language;
         $elementSubFolder = 'templates';
         $translate = (bool)Template::getTranslator();
         $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
-        if($template)
-            return $template;
-
+        if($template) return $template;
 
         $msg = "Template $filename in ".__METHOD__." not found!";
         if(!$this->getPoolClientSideRelativePath() and $baseLib) {

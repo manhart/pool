@@ -32,7 +32,6 @@
  * @link https://alexander-manhart.de
  */
 
-// Variablen Identifizierung
 use pool\classes\translator\Translator;
 
 const TEMP_VAR_START = '{';
@@ -219,7 +218,7 @@ class TempCoreHandle extends TempHandle
     /**
      * @var array(TempCoreHandle) container for files (key, content of file)
      */
-    protected array $FileList = [];
+    protected array $fileList = [];
 
     /**
      * @var string directory to the templates
@@ -246,7 +245,7 @@ class TempCoreHandle extends TempHandle
 
         $this->setDirectory($directory);
         $this->BlockList = [];
-        $this->FileList = [];
+        $this->fileList = [];
         $this->VarList = [];
     }
 
@@ -282,7 +281,7 @@ class TempCoreHandle extends TempHandle
     function createFile(string $handle, string $dir, string $filename, string $charset): TempFile
     {
         $obj = new TempFile($handle, $dir, $filename, $charset);
-        $this->FileList[$handle] = $obj;
+        $this->fileList[$handle] = $obj;
         return $obj;
     }
 
@@ -301,7 +300,7 @@ class TempCoreHandle extends TempHandle
     function createScript(string $handle, string $dir, string $filename, string $charset): TempScript
     {
         $obj = new TempScript($handle, $dir, $filename, $charset);
-        $this->FileList[$handle] = $obj;
+        $this->fileList[$handle] = $obj;
         return $obj;
     }
 
@@ -437,7 +436,7 @@ class TempCoreHandle extends TempHandle
         $reg = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*?)<!-- END \2 -->/s';
         preg_match_all($reg, $templateContent, $matches, PREG_SET_ORDER);
         checkRegExOutcome($reg, $templateContent);
-        $changes = array();
+        $changes = [];
         foreach ($matches as $match) {
             //the entire Comment Block
             $fullMatchText = $match[0];
@@ -535,7 +534,7 @@ class TempCoreHandle extends TempHandle
             unset($TempBlock);
         }
 
-        foreach($this->FileList as $Handle => $TempFile) {
+        foreach($this->fileList as $Handle => $TempFile) {
             /**@var TempCoreHandle $TempFile*/
             $TempFile->parse();
             $parsedContent = $TempFile->getParsedContent();
@@ -579,11 +578,11 @@ class TempCoreHandle extends TempHandle
      */
     public function findFile(string $handle): ?TempFile
     {
-        $keys = array_keys($this->FileList);
+        $keys = array_keys($this->fileList);
         $numFiles = count($keys);
         for($i = 0; $i < $numFiles; $i++) {
             /** @var TempCoreHandle $TempHandle */
-            $TempHandle = $this->FileList[$keys[$i]];
+            $TempHandle = $this->fileList[$keys[$i]];
             if($keys[$i] == $handle && $TempHandle->getType() == 'FILE') {
                 return $TempHandle;
             }
@@ -705,9 +704,10 @@ class TempBlock extends TempCoreHandle
  **/
 class TempFile extends TempCoreHandle
 {
-    //@var string Dateiname
-    //@access private
-    var $Filename;
+    /**
+     * @var string filename
+     */
+    private string $filename;
 
     /**
      * Ruft die Funktion zum Laden der Datei auf.
@@ -721,23 +721,31 @@ class TempFile extends TempCoreHandle
         parent::__construct('FILE', $directory, $charset);
 
         $this->setHandle($handle);
-        $this->Filename = $filename;
+        $this->filename = $filename;
         $this->loadFile();
     }
 
     /**
-     * Laedt eine Datei (verwendet die Eigenschaft "filename") und setzt den Inhalt in die Eigenschaft "content"
+     * @return string filename
+     */
+    public function getFilename(): string
+    {
+        return $this->filename;
+    }
+
+    /**
+     * loads the template file
      */
     private function loadFile()
     {
         $content = '';
-        $fp = fopen($this->getDirectory() . $this->Filename, 'r');
+        $fp = fopen($this->getDirectory() . $this->filename, 'r');
         if(!$fp) {
             $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',//TODO Exeption
-                $this->getDirectory() . $this->Filename));
+                $this->getDirectory() . $this->filename));
             return;
         }
-        $size = filesize($this->Directory . $this->Filename);
+        $size = filesize($this->Directory . $this->filename);
         if($size > 0) {
             $content = fread($fp, $size);
         }
@@ -749,22 +757,22 @@ class TempFile extends TempCoreHandle
     /**
      * Sucht nach allen inkludierten TempFiles und gibt die Instanzen in einem Array zurueck (Rekursion).
      *
-     * @return array Liste aus TempFile
+     * @return array<int, TempFile> list of TempFile
      * @see TempFile
      */
     public function getFiles(): array
     {
         $files = [];
 
-        $keys = array_keys($this->FileList);
-        for($i = 0; $i < SizeOf($keys); $i++) {
-            $TempFile = &$this->FileList[$keys[$i]];
+        $keys = array_keys($this->fileList);
+        $sizeOf = count($keys);
+        for($i = 0; $i < $sizeOf; $i++) {
+            $TempFile = $this->fileList[$keys[$i]];
             $files[] = $TempFile;
             $more_files = $TempFile->getFiles();
-            if(count($more_files) > 0) {
+            if($more_files) {
                 $files = array_merge($files, $more_files);
             }
-            unset($TempFile, $more_files);
         }
 
         return $files;
@@ -970,14 +978,7 @@ class Template extends PoolObject
      */
     public function setFile(string $handle, string $filename = '')
     {
-//        if(!is_array($handle)) {
         $this->addFile($handle, $filename);
-//        }
-//        else {
-//            foreach($handle as $filehandle => $filename) {
-//                $this->addFile($filehandle, $filename);
-//            }
-//        }
     }
 
     /**
@@ -988,16 +989,8 @@ class Template extends PoolObject
      */
     public function setFilePath(string $handle, string $filename = '')
     {
-//        if(!is_array($handle)) {
         $this->setDirectory(dirname($filename));
         $this->addFile($handle, basename($filename));
-        /*}
-        else {
-            foreach($handle as $filehandle => $filename) {
-                $this->setDirectory(dirname($filename));
-                $this->addFile($filehandle, basename($filename));
-            }
-        }*/
     }
 
     /**
@@ -1097,7 +1090,7 @@ class Template extends PoolObject
     /**
      * Liefert ein Array mit allen TempFile Objekten (auch TempScript).
      *
-     * @return array Liste aus TempFile Objekten
+     * @return array<int, TempFile> Liste aus TempFile Objekten
      */
     public function getFiles(): array
     {

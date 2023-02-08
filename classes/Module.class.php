@@ -35,7 +35,7 @@ class Module extends Component
     private Module $Parent;
 
     /**
-     * @var array{Module} $childModules contains all children modules
+     * @var array<Module> $childModules contains all children modules
      */
     protected array $childModules = [];
 
@@ -220,10 +220,10 @@ class Module extends Component
     /**
      * Einf�gen von Variablen, die an die Kinder-Module (Childs) weitergereicht werden.
      *
-     * @param string $key Schluessel der Variable
-     * @param string $value Wert der Variable
+     * @param mixed $key Schluessel der Variable
+     * @param mixed $value Wert der Variable
      */
-    function addHandoffVar($key, $value = '')
+    function addHandoffVar(mixed $key, mixed $value = '')
     {
         if(!is_array($key)) {
             $this->handoff[$key] = $value;

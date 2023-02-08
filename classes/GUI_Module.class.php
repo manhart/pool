@@ -310,9 +310,7 @@ class GUI_Module extends Module
     {
         $TemplateFiles = $this->Template->getFiles();
         foreach($TemplateFiles as $TemplateFile) {
-            /**@var TempCoreHandle $TemplateFile */
             //pump content through searchGUIs
-
             $content = $TemplateFile->getContent();
             $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
             $TemplateFile->setContent($newContent, false);
@@ -485,7 +483,7 @@ class GUI_Module extends Module
      *
      * @return bool
      */
-    protected function js_createGUIModule(string $className = '', bool $includeJS = true/*, bool $global = true*/): bool
+    protected function js_createGUIModule(string $className = '', bool $includeJS = true): bool
     {
         if(!$this->js_createGUIModule) {
             return false;
@@ -504,13 +502,6 @@ class GUI_Module extends Module
 
             $this->Weblication->getFrame()->getHeadData()->addJavaScript($js);
         }
-
-//        $windowCode = '';
-//        if($global) {
-//            $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
-//        }
-//        $this->Weblication->getFrame()->getHeadData()->addScriptCode($this->getName(),
-//            $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
         return true;
     }
 
@@ -577,7 +568,6 @@ class GUI_Module extends Module
      **/
     private function prepareChildren()
     {
-        /** @var GUI_Module $Module */
         foreach($this->childModules as $Module) {
             $Module->importHandoff($this->handoff);
             $Module->prepareContent();
@@ -824,7 +814,7 @@ class GUI_Module extends Module
      *
      * @param string $content Eigener Content
      * @return string Eigener Content samt dem Content der Child GUIs
-     **/
+     */
     private function pasteChildren(string $content): string
     {
         $replace_pairs = [];
@@ -837,7 +827,7 @@ class GUI_Module extends Module
 
     /**
      * returns the contents of the module
-     **/
+     */
     protected function finalize(): string
     {
         $content = '';
