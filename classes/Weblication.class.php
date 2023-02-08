@@ -1,16 +1,11 @@
 <?php declare(strict_types=1);
-/**
- * POOL
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Weblication.class.php
- *
- * The main class of all web applications. Every new project starts with Weblication and is instantiated from it.
- *
- * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 //use pool\classes\Input;
