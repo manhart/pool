@@ -89,7 +89,7 @@ class PoolObject
     public function getClassName(): string
     {
         if($this->className == '') {
-            $this->className = (new \ReflectionClass($this))->getShortName();
+            $this->className = (new ReflectionClass($this))->getShortName();
         }
         return $this->className;
     }
@@ -102,7 +102,7 @@ class PoolObject
     public function getClassFilename(): string
     {
         if($this->classFilename == '') {
-            $this->classFilename = (new \ReflectionClass($this))->getFileName();
+            $this->classFilename = (new ReflectionClass($this))->getFileName();
         }
         return $this->classFilename;
     }
@@ -191,52 +191,5 @@ class PoolObject
         $error .= ' in class ' . $this->getClassName() . ', file ' . $file . ', line ' . $line;
 
         trigger_error($error);
-    }
-
-    /**
-     * Wirft eine Xception am Bildschirm aus oder schreibt sie in das PHP Logfile aus.
-     *
-     * Wohin die Xception Ihre Fehlermeldung sendet (Bildschirm, Logfile, Mail), wird in der Xception Klasse festgelegt.
-     *
-     * @deprecated
-     * @param Xception $Xception Die Xception oder null, falls es sich bei diesem Objekt selbst um eine Xception handelt.
-     */
-    public function throwException($Xception = null)
-    {
-        if(is_null($Xception) and $this instanceof Xception) {
-            $Xception = &$this;
-        }
-        if($Xception) {
-            /* @var $Xception Xception */
-            $Xception->raiseError();
-        }
-        else {
-            echo 'Fatal exception error in Object::throwException!';
-            die('Script terminated');
-        }
-    }
-
-    /**
-     * Ueberprueft Parameter $data, ob es sich um eine Xception handelt.
-     *
-     * @deprecated
-     * @param Xception $data Wert, der ueberprueft wird, ob es sich um eine Xception handelt.
-     * @param int $code Wenn $data eine Xception ist, wird true zurueckgeben; aber wenn der Parameter $code ein String ist und $obj->getMessage() == $code oder $code ist ein integer und $obj->getCode() == $code
-     * @return bool true wenn es sich bei dem Parameter um eine Xception handelt.
-     **/
-    public function isError($data, $code = null): bool
-    {
-        if($data instanceof Xception) {
-            if(is_null($code)) {
-                return true;
-            }
-            elseif(is_string($code)) {
-                return ($data->getMessage() == $code);
-            }
-            else {
-                return ($data->getCode() == $code);
-            }
-        }
-        return false;
     }
 }
