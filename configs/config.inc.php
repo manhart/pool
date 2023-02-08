@@ -34,6 +34,12 @@
 * ############################################################################################################################
 */
 
+// Default application charset
+const APP_CHARSET = 'UTF-8';
+
+// Default internal domain name
+const INTERNAL_DOMAIN = 'local';
+
 // Default for old partly deprecated PHP dependent functions.
 // Default for system responses (used in conjunction with the extension intl)
 // @see https://php.watch/versions/8.0/float-to-string-locale-independent
@@ -64,7 +70,7 @@ switch($_SERVER['SERVER_NAME']) {
         die ('Unknown server "' . $_SERVER['SERVER_NAME'] . '"! Please update configs.');
 }
 
-const JAVA_PATH = '/usr/bin/java';
+//const JAVA_PATH = '/usr/bin/java';
 // define('FOP_PATH', '/opt/fop/current/fop');
 
 // verwendet in der App
@@ -98,3 +104,24 @@ const DIR_SUBCODES_ROOT = DIR_DOCUMENT_ROOT . '/pool/examples/subcodes';
 //define('DIR_RELATIVE_PUBLIC_ROOT', DIR_RELATIVE_DOCUMENT_ROOT . 'public/');
 
 const DIR_RELATIVE_3RDPARTY_ROOT = '../3rdParty';
+
+if(extension_loaded('mbstring')) {
+    mb_detect_order(GROUP7_APP_CHARSET . ',ISO-8859-1');
+}
+
+// measure page speed (@todo ajax requests?)
+$measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
+if($measurePageSpeed) {
+    $pageSpeedMeasurement = function() {
+        $pageSpeedStart = microtime(true);
+        register_shutdown_function(function() use ($pageSpeedStart) {
+            if(!isAjax()) {
+                $timeSpent = microtime(true) - $pageSpeedStart;
+                $pageSpeed = 'Page was generated in ' . $timeSpent . ' sec.';
+                $color = $timeSpent > 0.2 ? 'red' : 'green';
+                echo "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">$pageSpeed</p></footer>";
+            }
+        });
+    };
+    $pageSpeedMeasurement();
+}
