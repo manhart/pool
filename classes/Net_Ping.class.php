@@ -135,13 +135,10 @@ class Net_Ping extends PoolObject
     */
     function factory()
     {
-        $ping_path = '';
-
         $sysname = Net_Ping::_setSystemName();
 
         if (($ping_path = Net_Ping::_setPingPath($sysname)) == NET_PING_CANT_LOCATE_PING_BINARY) {
-        	$Xception = new Xception(NET_PING_CANT_LOCATE_PING_BINARY_MSG, NET_PING_CANT_LOCATE_PING_BINARY);
-            return $Xception;
+        	throw new Exception(NET_PING_CANT_LOCATE_PING_BINARY_MSG, NET_PING_CANT_LOCATE_PING_BINARY);
         } else {
             return new Net_Ping($ping_path, $sysname);
         }
@@ -200,8 +197,7 @@ class Net_Ping extends PoolObject
     function setArgs($args)
     {
         if (!is_array($args)) {
-        	$Xception = new Xception(NET_PING_INVALID_ARGUMENTS_MSG, NET_PING_INVALID_ARGUMENTS);
-            return $Xception;
+        	throw new Exception(NET_PING_INVALID_ARGUMENTS_MSG, NET_PING_INVALID_ARGUMENTS);
         }
 
         $this->_setNoArgs($args);
@@ -362,12 +358,11 @@ class Net_Ping extends PoolObject
     * Execute ping
     *
     * @param  string    $host   hostname
-    * @return mixed  String on error or array with the result
+    * @return Net_Ping_Result  String on error or array with the result
     * @access public
     */
     function ping($host)
     {
-
         if($this->_noArgs) {
             $this->setArgs(array('count' => 3));
         }
@@ -384,13 +379,11 @@ class Net_Ping extends PoolObject
         exec($cmd, $this->_result);
 
         if (!is_array($this->_result)) {
-        	$Xception = new Xception(NET_PING_FAILED_MSG, NET_PING_FAILED);
-            return $Xception;
+        	throw new Exception(NET_PING_FAILED_MSG, NET_PING_FAILED);
         }
 
         if (count($this->_result) == 0) {
-        	$Xception = new Xception(NET_PING_HOST_NOT_FOUND_MSG, NET_PING_HOST_NOT_FOUND);
-            return $Xception;
+        	throw new Exception(NET_PING_HOST_NOT_FOUND_MSG, NET_PING_HOST_NOT_FOUND);
         }
         else {
             // Here we pass $this->_sysname to the factory(), but it is
@@ -421,8 +414,9 @@ class Net_Ping extends PoolObject
                              "deadline" => 10
                              )
                        );
-        $res = $this->ping($host);
-        if ($this->isError($res)) {
+        try {
+            $res = $this->ping($host);
+        } catch (Exception $e) {
             return false;
         }
         if (!preg_match_all('|\d+|', $res[3], $matches) || count($matches[0]) < 3) {

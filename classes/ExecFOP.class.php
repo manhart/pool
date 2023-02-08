@@ -35,7 +35,7 @@ if(!defined('CLASS_EXECFOP')) {
     class ExecFOP extends PoolObject
     {
         var $progressBar = null;
-        
+
         /**
          * fo-Datei
          * @access private
@@ -185,7 +185,7 @@ if(!defined('CLASS_EXECFOP')) {
 
                 $success = ($returnVal==1) ? false : true ;
                 $return = array( 'success' => $success, 'errors' => $output);
-                
+
                 return $return;
             }
             else {
@@ -205,7 +205,7 @@ if(!defined('CLASS_EXECFOP')) {
                 }
                 pclose($handle);
                 $return = array('success' => file_exists($outputFile), 'errors' => 'Fehler sind aufgetreten!');
-                
+
                 return $return;
             }
         }
@@ -237,7 +237,7 @@ if(!defined('CLASS_EXECFOP')) {
             $this->setFoFile($fo);
             $result = $this->run($outputFile);
             @unlink($fo);
-            
+
             return $result;
         }
 
@@ -252,7 +252,7 @@ if(!defined('CLASS_EXECFOP')) {
        function runFromFoFile($foFile, $outputFile = '')
         {
             $this -> setFoFile($foFile);
-            
+
             return $this -> run($outputFile);
         }
 
@@ -325,9 +325,7 @@ if(!defined('CLASS_EXECFOP')) {
                     break;
 
                 default:
-                    $Xception = new Xception('Render type: "' . $renderer . '" undefined!');
-                    PoolObject::throwException($Xception);
-                    break;
+                    throw new Exception('Render type: "' . $renderer . '" undefined!');
              }
         }
 
