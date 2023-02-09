@@ -40,6 +40,11 @@ const APP_CHARSET = 'UTF-8';
 // Default internal domain name
 const INTERNAL_DOMAIN = 'local';
 
+// check if we are in command line mode
+if(!defined('IS_CLI')) {
+    define('IS_CLI', php_sapi_name() == 'cli');
+}
+
 // Default for old partly deprecated PHP dependent functions.
 // Default for system responses (used in conjunction with the extension intl)
 // @see https://php.watch/versions/8.0/float-to-string-locale-independent
@@ -117,9 +122,17 @@ if($measurePageSpeed) {
         register_shutdown_function(function() use ($pageSpeedStart) {
             if(!isAjax()) {
                 $timeSpent = microtime(true) - $pageSpeedStart;
-                $pageSpeed = 'Page was generated in ' . $timeSpent . ' sec.';
-                $color = $timeSpent > 0.2 ? 'red' : 'green';
-                echo "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">$pageSpeed</p></footer>";
+                $htmlStartTags = $htmlCloseTags = '';
+                if(IS_CONSOLE) {
+                    $what = 'Script';
+                }
+                else {
+                    $what = 'Page';
+                    $color = $timeSpent > 0.2 ? 'red' : 'green';
+                    $htmlStartTags = "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">";
+                    $htmlCloseTags = '</p></footer>';
+                }
+                echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
             }
         });
     };
