@@ -21,7 +21,7 @@ class Weblication extends Component
     /**
      * Is this request an ajax call
      */
-    static public $isAjax = false;
+    static public bool $isAjax = false;
 
     /**
      * Titel der Weblication
@@ -233,6 +233,11 @@ class Weblication extends Component
      * @var Translator
      */
     protected Translator $translator;
+
+    /**
+     * @var SessionHandler
+     */
+    private SessionHandler $SessionHandler;
 
     /**
      * is not allowed to call from outside to prevent from creating multiple instances,
@@ -982,7 +987,7 @@ class Weblication extends Component
      * @return Weblication
      * @throws Exception
      */
-    public function setup(array $settings = []): self
+    public function setup(array $settings = []): static
     {
         $this->Settings->setVars($settings);
 
@@ -1144,7 +1149,7 @@ class Weblication extends Component
      * @param string $locale
      * @return Weblication
      */
-    public function setLocale(string $locale): self
+    public function setLocale(string $locale): static
     {
         $this->locale = $locale;
         return $this;
@@ -1199,7 +1204,7 @@ class Weblication extends Component
      * @param string $lang Country Code
      * @return Weblication
      */
-    public function setLanguage(string $lang): self
+    public function setLanguage(string $lang): static
     {
         $this->language = $lang;
         return $this;
@@ -1236,7 +1241,7 @@ class Weblication extends Component
      * @param string $launchModule
      * @return $this
      */
-    public function setLaunchModule(string $launchModule): self
+    public function setLaunchModule(string $launchModule): static
     {
         $this->launchModule = $launchModule;
         return $this;
@@ -1275,7 +1280,7 @@ class Weblication extends Component
      *
      * @throws ModulNotFoundException|Exception
      */
-    public function run(string $className = GUI_CustomFrame::class): self
+    public function run(string $className = GUI_CustomFrame::class): static
     {
         // An application name is required. For example, the application name is used for creating directories in the data folder.
         if($this->getName() == '') {
