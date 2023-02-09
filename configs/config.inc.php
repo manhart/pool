@@ -34,6 +34,8 @@
 * ############################################################################################################################
 */
 
+define('POOL_START', microtime(true));
+
 // Default application charset
 const APP_CHARSET = 'UTF-8';
 
@@ -52,15 +54,31 @@ if(!setLocale(LC_ALL, $locale = 'en_US.UTF-8')) {
     throw new Exception("Server error: the locale $locale is not installed.");
 }
 
+
 /* check Servername und stelle die Weichen */
-switch($_SERVER['SERVER_NAME']) {
-    case 'develop.localhost':
-    # VM develop.manhart.xx
-    case 'develop.manhart.xx':
+switch($_SERVER['SERVER_NAME'] ?? gethostname()) {
+    case 'g7system':
+    case 'g7system.local':
+    case 'dev':
+    case 'dev.manhart.xx': // VM dev.manhart.xx
         define('DIR_DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']);
         define('DIR_RELATIVE_DOCUMENT_ROOT', '/');
         define('MYSQL_HOST', 'localhost');
+
+        define('IS_DEVELOP', true);
         define('IS_TESTSERVER', true);
+        define('IS_STAGING', false);
+        define('IS_PRODUCTION', false);
+    break;
+
+    case 'stage.manhart.xx': // VM stage.manhart.xx
+        define('DIR_DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']);
+        define('DIR_RELATIVE_DOCUMENT_ROOT', '/');
+        define('MYSQL_HOST', 'localhost');
+
+        define('IS_DEVELOP', false);
+        define('IS_STAGING', true);
+        define('IS_PRODUCTION', false);
         break;
 
     # VM prod.manhart.xx
@@ -68,20 +86,25 @@ switch($_SERVER['SERVER_NAME']) {
         define('DIR_DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT']);
         define('DIR_RELATIVE_DOCUMENT_ROOT', '/');
         define('MYSQL_HOST', 'localhost');
-        define('IS_TESTSERVER', false);
+
+        define('IS_DEVELOP', false);
+        define('IS_STAGING', false);
+        define('IS_PRODUCTION', true);
         break;
 
     default:
         die ('Unknown server "' . $_SERVER['SERVER_NAME'] . '"! Please update configs.');
 }
 
+const IS_TESTSERVER = (IS_DEVELOP || IS_STAGING);
+
 //const JAVA_PATH = '/usr/bin/java';
 // define('FOP_PATH', '/opt/fop/current/fop');
 
 // verwendet in der App
-const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT . '/pool/src';
+const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT . '/pool';
 // aus der App Sicht (für js from pool):
-const DIR_POOL_ROOT_REL = '../../src'; // for webprojects it would be better to symlink javascripts folder
+const DIR_POOL_ROOT_REL = '../../'; // for webprojects it would be better to symlink javascripts folder
 
 // This constant points to the root directory of the configuration files, which is the directory I am currently in.
 // The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
@@ -102,28 +125,24 @@ const DIR_DAOS_ROOT = DIR_DOCUMENT_ROOT . '/pool/examples/daos';
 const DIR_SUBCODES_ROOT = DIR_DOCUMENT_ROOT . '/pool/examples/subcodes';
 //	define('DIR_RELATIVE_SUBCODES_ROOT', DIR_RELATIVE_LIB_ROOT . '/subcodes');
 
-//define('DIR_BASELIB_ROOT', DIR_LIB_ROOT);
-//define('DIR_RELATIVE_BASELIB_ROOT', DIR_RELATIVE_LIB_ROOT);
-
 //define('DIR_PUBLIC_ROOT', DIR_DOCUMENT_ROOT . 'public/');
 //define('DIR_RELATIVE_PUBLIC_ROOT', DIR_RELATIVE_DOCUMENT_ROOT . 'public/');
 
 const DIR_RELATIVE_3RDPARTY_ROOT = '../3rdParty';
 
 if(extension_loaded('mbstring')) {
-    mb_detect_order(GROUP7_APP_CHARSET . ',ISO-8859-1');
+    mb_detect_order(APP_CHARSET . ',ISO-8859-1');
 }
 
 // measure page speed (@todo ajax requests?)
-$measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
-if($measurePageSpeed) {
+$measureAppSpeed = IS_TESTSERVER || ($_REQUEST['measureAppSpeed'] ?? 0);
+if($measureAppSpeed) {
     $pageSpeedMeasurement = function() {
-        $pageSpeedStart = microtime(true);
-        register_shutdown_function(function() use ($pageSpeedStart) {
+        register_shutdown_function(function() {
             if(!isAjax()) {
-                $timeSpent = microtime(true) - $pageSpeedStart;
+                $timeSpent = microtime(true) - POOL_START;
                 $htmlStartTags = $htmlCloseTags = '';
-                if(IS_CONSOLE) {
+                if(IS_CLI) {
                     $what = 'Script';
                 }
                 else {
