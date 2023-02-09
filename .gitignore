@@ -1,7 +1,7 @@
-/.settings/
+/.settings
 /.buildpath
 /.project
-/vendor/
+/vendor
 composer.lock
 #Die templates in den maschinell übersetzten Ordneren
 /guis/*/*/*.html
