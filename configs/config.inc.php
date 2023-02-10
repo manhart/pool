@@ -66,7 +66,6 @@ switch($_SERVER['SERVER_NAME'] ?? gethostname()) {
         define('MYSQL_HOST', 'localhost');
 
         define('IS_DEVELOP', true);
-        define('IS_TESTSERVER', true);
         define('IS_STAGING', false);
         define('IS_PRODUCTION', false);
     break;
