@@ -65,7 +65,7 @@ class TranslationProviderFactory_ResourceFile extends TranslationProviderFactory
      */
     public function resourceFileName(string $language): string
     {
-        return $this->directory . '/' . $language . $this->extension;
+        return buildFilePath($this->directory, $language . $this->extension);
     }
 
     function hasLang(string $language, float &$quality = -1): bool
