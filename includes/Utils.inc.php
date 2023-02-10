@@ -1173,6 +1173,32 @@ function readFiles(string $path, bool $absolute = true, string $filePattern = '/
     return $files;
 }
 
+/**
+ * Gets the reference to a value in a nested array by its key. If a Branch doesn't exist it gets created
+ * @param array $arr the nested array
+ * @param array $keys a String of keys sep. All keys are treated as strings
+ * @return mixed a reference to the value if there was no such branch it will be set to null
+ * @throws Exception
+ */
+function &getNestedArrayValueReference(array &$arr, array $keys): mixed
+{
+    //go through each key in the access string
+    foreach ($keys as $key) {
+        if ($arr != null && !is_array($arr)){
+            $subtree = implode('.', $keys);
+            assert(isset($lastKey));
+            throw new Exception("Tried to access subtree of value: '{$arr}' accessing: $subtree @$lastKey");
+        }
+        $lastKey=$key;
+        //expand branch if necessary this will crate an array if necessary
+        $arr[$key]??= null;
+        //and get the reference to the next level
+        $arr = &$arr[$key];
+    }
+    //return the reference
+    return $arr;
+}
+
 /** Build a path by concatenating parts and adding '/' between them and adding an ending slash
  * @param ...$elements
  * @return string The assembled path with an ending slash
