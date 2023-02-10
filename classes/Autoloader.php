@@ -45,7 +45,7 @@ class Autoloader
      */
     public function loadClass(string $class): bool
     {
-        $isGUI = (str_starts_with($class, 'GUI'));
+        $isGUI = str_starts_with($class, 'GUI');
         if($isGUI) {
             return GUI_Module::autoloadGUIModule($class);
         }
