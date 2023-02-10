@@ -739,13 +739,23 @@ class TempFile extends TempCoreHandle
     private function loadFile()
     {
         $content = '';
-        $fp = fopen($this->getDirectory() . $this->filename, 'r');
+        $dir = $this->getDirectory();
+        $filename = $this->filename;
+        $filePath = buildFilePath($dir, $filename);
+        if (!file_exists($filePath)){
+            //trying parent directory to compensate for translated templates including templates until Template engine gets fixed
+            $filePath = buildFilePath($dir, '..', $filename);//
+            if (Template::isCacheTranslations() && file_exists($filePath))
+                //Create Translated file and put it in the language folder
+                $filePath = Template::attemptFileTranslation($filePath, Weblication::getInstance()->getLanguage());
+        }
+        $fp = fopen($filePath, 'r');
         if(!$fp) {
             $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',//TODO Exeption
-                $this->getDirectory() . $this->filename));
+                $filePath));
             return;
         }
-        $size = filesize($this->Directory . $this->filename);
+        $size = filesize($filePath);
         if($size > 0) {
             $content = fread($fp, $size);
         }
