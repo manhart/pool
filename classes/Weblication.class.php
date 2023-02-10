@@ -848,7 +848,7 @@ class Weblication extends Component
         $finds = [];
         //Searching
         foreach($places as $folder_guis) {
-            $file = $folder_guis . $filename;
+            $file = buildFilePath($folder_guis, $filename);
             if(file_exists($file)) {
                 $translatedFile = buildFilePath($folder_guis, $language, $filename);
                 if(Template::isCacheTranslations() && file_exists($translatedFile)) {
