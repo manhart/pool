@@ -10,6 +10,8 @@
 
 namespace pool\classes\translator;
 
+use Exception;
+
 abstract Class TranslationProviderFactory
 {
     protected static TranslationProviderFactory $instance;
@@ -40,13 +42,17 @@ abstract Class TranslationProviderFactory
      * taken from the returned Provider, gets formatted.<br>
      * To get the name of Providers to use one may employ the getProviderList() method. Although this work is best left to the Translator class.<br>
      * Wraps the call to the child implementing the actual function and adds Decorators as Requested by the Client
-     * @param string $providerName Name of the Provider to get
+     * @param string|null $providerName Name of the Provider to get
      * @param string $locale Locale to use for formatting
      * @return TranslationProvider
-     *@see  TranslationProviderFactory::getBestProvider() Provides the Names of Providers
-     * @see Translator::swapLangList() End Users should proabably use this function instead of getting providers themselve
+     * @throws Exception
+     * @see  Translator::swapLangList() End Users should proabably use this function instead of getting providers themselve
+     * @see  TranslationProviderFactory::getBestProvider() Provides the Names of Providers
      */
-    public final function getProvider(string $providerName, string $locale):TranslationProvider{
+    public final function getProvider(?string $providerName, string $locale):TranslationProvider{
+        if (!$providerName){
+            throw new Exception("No provider was specified. You provided the locale '$locale'");
+        }
         $translationProvider = $this->getProviderInternal($providerName, $locale);
         //decorate
         if (@TranslationProvider_ToolDecorator::isActive())

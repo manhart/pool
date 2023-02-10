@@ -37,12 +37,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
         $this->lang = $lang;
         $this->locale = $locale;
         $this->resourceFile = $resourceFileName;
-        try {
-            $this->translations = include($resourceFileName);
-        }
-        catch(Exception) {
-            throw new Exception("Failed to load Translation-Ressource for $lang");
-        }
+        $this->loadTranslations();
     }
 
     function getLang(): string
@@ -78,22 +73,32 @@ class TranslationProvider_ResourceFile implements TranslationProvider
             return self::TranslationNotExistent;
         $result = $this->translations[$key];
         $this->lastResult = $result;
-        if($result === null)
-            return self::TranslationKnownMissing;
-        else
+        if (is_string($result))
             return self::OK;
+        elseif ($result === null)
+            return self::TranslationKnownMissing;
+        else {
+            $this->lastResult = print_r($this->lastResult, true);
+            return self::TranslationInadequate;
+        }
     }
 
     function alterTranslation(int $status, ?string $value, string $key): int
     {
-        if (!preg_match('/^[A-Za-z.]*$/', $key)){
+        //Validate key format
+        //pattern xxx.xyz a period with text left and right
+        if (!preg_match('/^[A-Za-z0-9-_]+\.[A-Za-z.0-9-_]+$/', $key)) {
             //invalid key
-            $this->error = new Exception("Invalid Key $key");
+            if ($value != null) {
+                $value = htmlspecialchars(print_r($value, true));
+                $this->error = new Exception("Invalid Key '$key' trying to write {$value}");
+            } else
+                $this->error = new Exception("Invalid Key '$key' trying to insert empty translation");
             return self::Error;
         }
         try {
             //refresh
-            $this->translations = include($this->resourceFile);
+            $this->loadTranslations();
             //manipulate Translations
             $this->translations[$key] = $value;
             $code = var_export($this->translations, true);
@@ -124,9 +129,44 @@ class TranslationProvider_ResourceFile implements TranslationProvider
         return $this->translations;
     }
 
+    /**recursively flattens out an array
+     * @param array $nested
+     * @param array $flat
+     * @param array $keyStack
+     * @return void
+     */
+    function flattenArray(array &$nested, array &$flat, array &$keyStack = []): void
+    {
+        foreach ($nested as $subKey => &$subValue) {
+            $keyStack[] = $subKey;
+            if (is_array($subValue))
+                $this->flattenArray($subValue, $flat, $keyStack);
+            else
+                $flat[implode('.', $keyStack)] = $subValue;
+            array_pop($keyStack);
+        }
+    }
 
     function getFactory(): TranslationProviderFactory_ResourceFile
     {
         return $this->factory;
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    public function loadTranslations(): void
+    {
+        try {
+            $this->translations = include($this->resourceFile);
+        } catch (Exception $e) {
+            throw new Exception("Failed to load Translation-Ressource for {$this->lang}", previous: $e);
+        } catch (\TypeError) {
+            if (IS_DEVELOP)
+                $this->translations = [];//Initialize the resource. It's likely a new file
+            else//Let Upstream know this resource is bad to not make it harder than necessary to trace the problem back
+                throw new Exception("Failed to load Translation-Ressource for {$this->lang}. Bad Format");
+        }
     }
 }
