@@ -1,13 +1,11 @@
 <?php
 /*
- * POOL
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * TranslatorMissingFileException.class.php created at 17.10.22, 15:36
- *
- * @author A.Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 class TranslatorMissingFileException extends Exception
