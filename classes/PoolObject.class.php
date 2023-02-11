@@ -8,29 +8,13 @@
  * file that was distributed with this source code.
  */
 
+
 class PoolObject
 {
     /**
      * @constant string the extension of the class files
      */
-    const CLASS_EXTENSION = '.class.php';
-
-    /**
-     * @constant int unknown operating system
-     */
-    const OS_UNKNOWN = 1;
-    /**
-     * @constant int Linux operating system
-     */
-    const OS_LINUX = 2;
-    /**
-     * @constant int MacOS operating system
-     */
-    const OS_MACOS = 3;
-    /**
-     * @constant int Windows operating system
-     */
-    const OS_WINDOWS = 4;
+    public const CLASS_EXTENSION = '.class.php';
 
     /**
      * @var string the full name of the class of the object
@@ -51,21 +35,6 @@ class PoolObject
      * @var bool|null determines whether the class is the POOL base library
      */
     private ?bool $isPOOL = null;
-
-    /**
-     * get server-side operating system
-     *
-     * @return int
-     */
-    public static function getSystemOS(): int
-    {
-        return match (PHP_OS) {
-            'Linux' => self::OS_LINUX,
-            'Darwin' => self::OS_MACOS,
-            'WINNT', 'WIN32', 'Windows' => self::OS_WINDOWS,
-            default => self::OS_UNKNOWN,
-        };
-    }
 
     /**
      * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
@@ -150,7 +119,7 @@ class PoolObject
         }
         else {
             $classRootDirs = [
-                getcwd() . '/' . PWD_TILL_CLASSES
+                DIR_POOL_ROOT . '/' . PWD_TILL_CLASSES
             ];
             if(defined('DIR_POOL_ROOT')) {
                 $classRootDirs[] = DIR_POOL_ROOT . '/' . PWD_TILL_CLASSES;
@@ -163,8 +132,16 @@ class PoolObject
         foreach($classRootDirs as $classRootDir) {
             $classRootDir = addEndingSlash($classRootDir);
 
+            // old style
             $filename = $classRootDir . $className . PoolObject::CLASS_EXTENSION;
 
+            if(file_exists($filename)) {
+                require_once $filename;
+                return true;
+            }
+
+            // PSR-4 style
+            $filename = $classRootDir . $className . '.php';
             if(file_exists($filename)) {
                 require_once $filename;
                 return true;
@@ -193,3 +170,4 @@ class PoolObject
         trigger_error($error);
     }
 }
+
