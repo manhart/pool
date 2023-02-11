@@ -13,6 +13,9 @@
     "ext-intl": "*",
     "ext-gd": "*"
   },
+  "suggest": {
+    "ext-mysqli": "*"
+  },
   "autoload-dev": {
     "psr-4": {
       "Tests\\": "tests/"
