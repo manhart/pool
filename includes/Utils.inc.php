@@ -2308,3 +2308,26 @@ function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $E
     if($DateTime1 > $DateTime2) $days *= -1;
     return $days;
 }
+
+/**
+ * determines if the current content-type is text/html
+ * @return bool
+ */
+function isHtmlContentTypeHeaderSet(): bool
+{
+    $headers = headers_list();
+
+    $i = count($headers);
+    while($i) {
+        if (str_starts_with($headers[--$i], 'content-type: text/html')) {
+            return true;
+        }
+    }
+//    foreach ($headers as $header) {
+//        if (str_starts_with($header, 'content-type: text/html')) {
+//            return true;
+//        }
+//    }
+
+    return false;
+}
