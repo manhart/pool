@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+    <Headerdata></Headerdata>
+    <script>
+        var SCRIPT_NAME = '[GUI_Url(empty=1&passthrough=progSID)]';
+        var LOGGEDIN = false;
+    </script>
+</head>
+<body>
+
+<header>
+    <h1>myApp</h1>
+    <nav>
+        <ul>
+            <li><a href="[GUI_Url(eliminate=schema)]">Home</a></li>
+            <li><a href="[GUI_Url(params=schema:impressum)]">Impressum</a></li>
+        </ul>
+    </nav>
+</header>
+
+[GUI_Login]
+
+<div class="schema">
+    [GUI_Schema]
+</div>
+
+<div>
+   [GUI_AlertBox(modulename=alertbox)]
+   <button id="btnOpenAlertBox">Open AlertBox</button>
+   <script>
+    $('#btnOpenAlertBox').on('click', function() {
+        alertbox.open('Important note', 'This GUI_AlertBox uses bootstrap4 modal!', function() {
+            alert('This callback function is called after closing the AlertBox!');
+        });
+    });
+   </script>
+</div>
+
+<footer>
+    <p>© 2019 by Alexander Manhart</p>
+</footer>
+
+</body>
+</html>

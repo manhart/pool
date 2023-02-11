@@ -1,0 +1,47 @@
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<!-- BLOCK ButtonAnswer -->
+  <tr>
+    <td width="100%" align="right">
+    <a href="{URL_ANSWER}"><button>Antworten</button></a><br>
+    <img src="images/pl.gif" height="5" width="5"></td>
+  </tr>
+<!-- END ButtonAnswer -->
+<!-- BLOCK NOCOMMENT -->
+  <tr>
+    <td width="100%" align="center"><font class="commentDefault">Es gibt noch keine Kommentare!</font></td>
+  </tr>
+<!-- END NOCOMMENT -->
+</table>
+<table border="1" cellpadding="3" cellspacing="1" style="border-collapse: collapse" bordercolor="#7E7E93" width="100%">
+<!-- BLOCK COMMENT -->
+  <tr>
+    <td class="commentInfo" width="110" valign="top"><img src="images/pl.gif" width="110" height="1"><br><b class="commentDate">{DATETIME}</b><br>
+    <br>
+    <font class="commentAuthor">[GUI_DBLookupLabel(tabledefine=Intranet_tbl_Kontakt&amp;keyfield=id&amp;keyvalue={AUTHOR}&amp;datafield=vorname)]&nbsp;[GUI_DBLookupLabel(tabledefine=Intranet_tbl_Kontakt&amp;keyfield=id&amp;keyvalue={AUTHOR}&amp;datafield=nachname)]</font></td>
+    <td width="100%" valign="top">
+      <p align="justify" style="text-align:justify" style="line-height: 106%"><font class="commentDefault">{TEXT}</font></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="100%" colspan="2" valign="top">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="50%" align="left" height="17"><img src="images/pl.gif" height="15" width="10"><a href="#top"><img border="0" src="images/arrow/pfeiloben.gif" width="15" height="15" alt="nach oben" style="cursor:pointer"></a></td>
+          <td width="50%" align="right" height="17"><a href="#top"><img border="0" src="images/arrow/pfeiloben.gif" width="15" height="15" alt="nach oben" style="cursor:pointer"></a><img src="images/pl.gif" height="15" width="10"></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+<!-- END COMMENT -->
+</table>
+<!-- BLOCK ANSWER -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td width="100%" align="right">
+    <img src="images/pl.gif" height="5" width="5"><br>
+    <button>Antworten</button>
+    <!-- <img border="0" src="images/btnantworten_def.gif" width="115" height="22" style="cursor:pointer"> -->
+    </td>
+  </tr>
+</table>
+<!-- END ANSWER -->
