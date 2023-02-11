@@ -1,0 +1,11 @@
+<section id="loginSection">
+    <div class="logged-out">
+        [GUI_Edit(id=username&placeholder=Username&title=Verwende: 'user')] [GUI_Edit(id=password&placeholder=Password&title=Verwende: 'go')] [GUI_Button(id=Send&content=Login&onclick=login())]
+    </div>
+    <div class="logged-in">
+        eingeloggt als <!-- SESSION sessUsername -->username<!-- END sessUsername --> | [GUI_Button(id=Logout&content=Logout&onclick=logout())]
+    </div>
+    <script>
+        renderLoginSection({LOGGEDIN});
+    </script>
+</section>

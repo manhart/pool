@@ -1,0 +1,263 @@
+<!-->
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<!-->
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%" bordercolorlight="#C0C0C0" bordercolordark="#FFFFFF" bgcolor="#E6E6E6">
+  <tr>
+    <td width="100%" height="20">
+    <table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%" bordercolorlight="#FFFFFF" bordercolordark="#C0C0C0" height="20">
+      <tr>
+        <td width="100%" align="middle"><font id="calendarTitle">{TITLE}</font></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+
+  <tr>
+        <td width="100%" valign="top">
+        <table cellpadding="2" width="100%" border="0" style="border-collapse: collapse" bordercolor="#DCDCDC" cellspacing="1" background="images/calendar/listbox_back.gif" bgcolor="#BEBEC8">
+          <tr>
+            <td colspan="7">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td width="10"><a href="javascript:{USER_FUNCTION_CHANGEMONTH}(-1, {NAME});">
+                <img src="images/calendar/pfeil_links.gif" border="0" align="absmiddle"></a></td>
+                <td width="45%" align="center"><b id="t3">
+                <span id="{NAME}control_monat" jump="1">-</span></b></td>
+                <td width="10"><a href="javascript:{USER_FUNCTION_CHANGEMONTH}(+1, {NAME});">
+                <img src="images/calendar/pfeil_rechts.gif" border="0" align="absmiddle"></a></td>
+                <td width="5%"><img src="images/pl.gif" width="5" height="5"></td>
+                <td width="10"><a href="javascript:{USER_FUNCTION_CHANGEMONTH}(-12, {NAME});">
+                <img src="images/calendar/pfeil_links.gif" border="0"></a></td>
+                <td width="45%" align="center"><b id="t3">
+                <span id="{NAME}control_jahr" jump="1">-</span></b></td>
+                <td width="10"><a href="javascript:{USER_FUNCTION_CHANGEMONTH}(+12, {NAME});">
+                <img src="images/calendar/pfeil_rechts.gif" border="0"></a></td>
+              </tr>
+            </table>
+            </td>
+          </tr>
+        </table>
+        </td>
+      </tr>
+  <tr>
+        <td><img src="images/pl.gif" height="8" width="5"></td>
+  </tr>
+
+  <tr>
+    <td width="100%">
+    <table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%" bordercolorlight="#808080" bordercolordark="#E6E6E6" height="100%">
+      <tr>
+        <td width="100%" valign="top"><span id="Span{NAME}">
+        <table cellpadding="2" width="100%" border="0" style="border-collapse: collapse" bordercolor="#DCDCDC" cellspacing="1" background="images/calendar/listbox_back.gif" bgcolor="#BEBEC8">
+          <tr>
+            <td colspan="7">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td width="10"></td>
+                <td width="45%" align="right"><font id="calendarMonth"><span id="{NAME}_monat" jump="1">-</span></font></td>
+                <td width="10"></td>
+                <td width="10%"><img src="images/pl.gif" width="5" height="5"></td>
+                <td width="10"></td>
+                <td width="45%" align="left"><font id="calendarYear"><span id="{NAME}_jahr" jump="1">-</span></font></td>
+                <td width="10"></td>
+              </tr>
+            </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1; border-top-style: solid; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center">
+            <font id="calendarDayCaption">Mo</font></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-style: solid; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center">
+            <font id="calendarDayCaption">Di</font></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-style: solid; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center">
+            <font id="calendarDayCaption">Mi</font></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-style: solid; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center">
+            <font id="calendarDayCaption">Do</font></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-style: solid; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center">
+            <font id="calendarDayCaption">Fr</font></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-style: solid; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center">
+            <font id="calendarDayCaption">Sa</font></td>
+            <td style="border-left-width: 1; border-right-width: 1; border-top-style: solid; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center">
+            <font id="calendarDayCaption">So</font></td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1; border-bottom-style: dotted; border-bottom-width: 1;" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day0"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1;" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day1"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1;" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day2"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1;" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day3"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1;" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day4"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1;" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day5"></span></b></td>
+            <td style="border-left-width: 1; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day6"></span></b></td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day7"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day8"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day9"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day10"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day11"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day12"></span></b></td>
+            <td style="border-left-width: 1; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day13"></span></b></td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day14"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day15"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day16"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day17"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day18"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day19"></span></b></td>
+            <td style="border-left-width: 1; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day20"></span></b></td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day21"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day22"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day23"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day24"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day25"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day26"></span></b></td>
+            <td style="border-left-width: 1; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day27"></span></b></td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day28"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day29"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day30"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day31"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day32"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day33"></span></b></td>
+            <td style="border-left-width: 1; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day34"></span></b></td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day35"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day36"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day37"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day38"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day39"></span></b></td>
+            <td style="border-left-width: 1; border-right-style: dotted; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day40"></span></b></td>
+            <td style="border-left-width: 1; border-right-width: 1; border-top-width: 1; border-bottom-style: dotted; border-bottom-width: 1" align="center" onmouseover="{NAME}.cellMouseOver(this);" onmouseout="{NAME}.cellMouseOut(this);" onclick="{NAME}.cellClick(this)" height="21" width="26">
+            <b id="t4"><span id="{NAME}_day41"></span></b></td>
+          </tr>
+          <tr>
+            <td style="border-right-style: dotted; border-right-width: 1" align="center">
+            </td>
+            <td style="border-right-style: dotted; border-right-width: 1; border-top-width: 1" align="center">
+            </td>
+            <td style="border-right-style: dotted; border-right-width: 1; border-top-width: 1" align="center">
+            </td>
+            <td style="border-right-style: dotted; border-right-width: 1; border-top-width: 1" align="center">
+            </td>
+            <td style="border-right-style: dotted; border-right-width: 1; border-top-width: 1" align="center">
+            </td>
+            <td style="border-right-style: dotted; border-right-width: 1; border-top-width: 1" align="center">
+            </td>
+            <td align="center"></td>
+          </tr>
+        </table>
+        </span></td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
+    </table>
+    </td>
+  </tr>
+</table>
+<script language="JavaScript" type="text/javascript">
+<!--
+	var Options = new Array();
+
+	// Zelle Hintergrundfarbe Kalender (Markierung und Hover)
+	Options['SELECTED_BGCOLOR'] = "#86A9D8";
+
+	// Zelle Hintergrundfarbe Kalender (für heutigen Tag)
+	Options['TODAY_BGCOLOR'] = "#DCDCDC";
+
+	// Font (Markierung und Hover)
+	Options['SELECTED_FONT'] = "t6";
+
+	// Font (klickbares Datum - Zukunft)
+	Options['ACTIVE_FONT'] = "t3";
+
+	// Font (nicht klickbar - Vergangenheit)
+	Options['INACTIVE_FONT'] = "t4";
+
+	// Mouse Cursor (klickbare Zellen)
+	Options['CR_HANDPOINT'] = "pointer";
+
+	// Mouse Cursor (standard cursor)
+	Options['CR_DEFAULT'] = "default";
+
+	// Termin innerhalb eines Tages
+	Options['BG_SRC_HALF'] = "images/calendar/hotspot.gif";
+
+	// Termin streckt sich über diesen Tag
+	Options['BG_SRC_FULL'] = "images/calendar/hotspot_day.gif";
+
+	Options['BG_POSITION'] = 'left';
+
+	// Deaktiviert Kalender Tagauswahl
+	Options['DISALLOW_MOVING_KALENDER'] = 0;
+
+	// vorausgewaehlter Tag (falls notwendig z.B. wenn PHP
+	// entscheidet welcher Tag ausgewaehlt werden soll)
+	Options['SELECTED_DAY'] = {SELECTED_DAY};
+	Options['SELECTED_MONTH'] = {SELECTED_MONTH};
+	Options['SELECTED_YEAR'] = {SELECTED_YEAR};
+
+	// 1 = alle Tage klickbar
+	// 2 = vergangene Tage nicht klickbar, heutiger Tag und zukuenftige klickbar
+	// 3 = nur Termine klickbar
+	Options['CLICKABLE'] = {CLICKABLE};
+
+	// Beim Klick auf einer Kalenderzelle (=Tag) wird diese benutzerdefinierte Funktion aufgerufen:
+	Options['USER_FUNCTION_CELLCLICK'] = '{USER_FUNCTION_CELLCLICK}';
+
+
+	// ****** Kalender Instanz ****** //
+    var {NAME} = new Calendar({SKIPMONTH}, "{NAME}", {OBJFOLLOW}, Options);
+
+    // ****** Kalender Termine ****** //
+    <!-- BLOCK CalDate -->
+    {NAME}.addCalendarDate(new CalendarDate({TAG}, {MONAT}, {JAHR}, {STARTZEIT}, {ENDZEIT}, '{IMAGEFULL}', '{IMAGEHALF}', '{VALUE}', '{HINT}'));
+    <!-- END CalDate -->
+// -->
+</script>
