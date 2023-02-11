@@ -9,7 +9,9 @@
  */
 
 	#### Konstanten fuer alle Aktionen
-	define('ACTION_SELECT', 	'selektieren');
+use pool\classes\Database\DAO;
+
+define('ACTION_SELECT', 	'selektieren');
 	define('ACTION_SEARCH', 	'suchen');
 	define('ACTION_DELETE', 	'entfernen');
 	define('ACTION_SAVE',   	'speichern');

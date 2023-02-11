@@ -11,6 +11,9 @@
 /**
  * Erzwingt Fehler mittels PHP trigger_error.
  */
+
+use pool\classes\Database\DAO;
+
 const POOL_ERROR_LOGFILE = 2;
 /**
  * Erzwingt Fehlerausgabe am Bildschirm.

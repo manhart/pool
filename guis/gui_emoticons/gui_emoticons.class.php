@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\Database\DAO;
+
 /**
  * Class GUI_Emoticons
  *

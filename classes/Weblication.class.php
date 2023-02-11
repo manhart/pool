@@ -9,6 +9,8 @@
  */
 
 //use pool\classes\Input;
+use pool\classes\Database\DAO;
+use pool\classes\Database\DataInterface;
 use pool\classes\Language;
 use pool\classes\ModulNotFoundException;
 use pool\classes\translator\TranslationProviderFactory;
@@ -946,7 +948,7 @@ class Weblication extends Component
      */
     public function addDataInterface(DataInterface $DataInterface): DataInterface
     {
-        $this->interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
+        $this->interfaces[$DataInterface::class] = $DataInterface;
         return $DataInterface;
     }
 
