@@ -8,8 +8,10 @@
  * file that was distributed with this source code.
  */
 
-namespace pool\classes;
+namespace pool\classes\Exception;
 
-class DAOException extends \Exception
+use RuntimeException as PhpRuntimeException;
+
+class DAOException extends PhpRuntimeException implements PoolExceptionInterface
 {
 }
