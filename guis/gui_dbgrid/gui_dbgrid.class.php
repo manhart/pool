@@ -72,7 +72,7 @@ class GUI_DBGrid extends GUI_Module
     /**
      * Resultset
      *
-     * @var Resultset
+     * @var ResultSet
      */
     var $Resultset = null;
 
@@ -288,14 +288,14 @@ class GUI_DBGrid extends GUI_Module
                 // Callback Funktion
             }
 
-            /* @var $Set Resultset */
+            /* @var $Set ResultSet */
             $CountSet = $Dao->$countFunction(null, null, $filter_rules);
             $this->numRecords = (int)$CountSet->getValue('count');
 
             $numVisibleRecords = $Set->count();
         }
         else {
-            $Set=$Resultset; /* @var $Set Resultset */
+            $Set=$Resultset; /* @var $Set ResultSet */
             $this->numRecords=$Resultset->count();
             $Set->seek($splitterPos);
             //$numVisibleRecords = $Set->count()-$splitterPos;
@@ -545,7 +545,7 @@ class GUI_DBGrid extends GUI_Module
     /**
      * Liefert das erstellte Resultset
      *
-     * @return Resultset
+     * @return ResultSet
      */
     function &getResultset()
     {

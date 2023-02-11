@@ -119,41 +119,41 @@ abstract class DAO extends PoolObject
     /**
      * Einen Datensatz einfuegen (virtuelle Methode).
      */
-    abstract public function insert(array $data): Resultset;
+    abstract public function insert(array $data): ResultSet;
 
     /**
      * Einen Datensatz aendern (virtuelle Methode).
      */
-    abstract public function update(array $data): Resultset;
+    abstract public function update(array $data): ResultSet;
 
     /**
      * Einen Datensatz loeschen (virtuelle Methode).
      */
-    abstract public function delete($id): Resultset;
+    abstract public function delete($id): ResultSet;
 
     /**
-     * @return Resultset
+     * @return ResultSet
      */
-    abstract public function deleteMultiple(): Resultset;
+    abstract public function deleteMultiple(): ResultSet;
 
     /**
      * Einen Datensatz zurueck geben (virtuelle Methode).
      * Datensaetze werden als Objekt Resultset zurueck gegeben.
      */
-    abstract public function get($id, $key=NULL): Resultset;
+    abstract public function get($id, $key=NULL): ResultSet;
 
     /**
      * Mehrere Datensaetze zurueck geben (virtuelle Methode).
      * Datensaetze werden als Objekt Resultset zurueck gegeben.
      */
-    abstract public function getMultiple(): Resultset;
+    abstract public function getMultiple(): ResultSet;
 
     /**
      * Liefert die Anzahl gefundener Datensaete zurueck (virtuelle Methode).
      * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
      * sondern nur die Anzahl.
      */
-    abstract public function getCount(): Resultset;
+    abstract public function getCount(): ResultSet;
 
     /**
      * fetches the columns automatically from the driver / interface
