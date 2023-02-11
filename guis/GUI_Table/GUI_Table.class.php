@@ -1513,7 +1513,7 @@ class GUI_Table extends GUI_Module
     /**
      * Creates data format for the bootstrap table (clientside transfer format)
      */
-    static function getRowSetAsArray(Resultset $ResultSet, int $total): array
+    static function getRowSetAsArray(ResultSet $ResultSet, int $total): array
     {
         $return = [];
         $return['total'] = $total;

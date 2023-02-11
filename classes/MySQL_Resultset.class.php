@@ -37,7 +37,7 @@
  * @author Alexander Manhart <alexander.manhart@gmx.de>
  * @version $Id: MySQL_Resultset.class.php,v 1.13 2007/03/29 09:20:18 manhart Exp $
  **/
-class MySQL_Resultset extends Resultset
+class MySQL_ResultSet extends ResultSet
 {
     /**
      * Database Interface for MySQL
@@ -73,7 +73,7 @@ class MySQL_Resultset extends Resultset
      * @param string $dbname database name
      * @param callable|null $callbackOnFetchRow
      * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
-     * @see Resultset::getLastError()
+     * @see ResultSet::getLastError()
      */
     public function execute(string $sql, string $dbname='', ?callable $callbackOnFetchRow = null, array $metaData = []): bool
     {

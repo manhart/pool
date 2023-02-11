@@ -597,10 +597,10 @@ class MySQL_DAO extends DAO
      *
      * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
      * Feldname und als Wert/Value den einzufuegenden Feldwert
-     * @return MySQL_Resultset
-     * @see MySQL_Resultset
+     * @return MySQL_ResultSet
+     * @see MySQL_ResultSet
      **/
-    public function insert(array $data): Resultset
+    public function insert(array $data): ResultSet
     {
         $columns = '';
         $values = '';
@@ -638,7 +638,7 @@ class MySQL_DAO extends DAO
         }
 
         if ('' == $columns) {
-            $ResultSet = new Resultset();
+            $ResultSet = new ResultSet();
             $ResultSet->addError('MySQL_DAO::insert failed. No fields stated!');
             return $ResultSet;
         }
@@ -664,16 +664,16 @@ SQL;
      *
      * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
      * Feldname und als Wert/Value den einzufuegenden Feldwert
-     * @return Resultset
-     * @see MySQL_Resultset
+     * @return ResultSet
+     * @see MySQL_ResultSet
      **/
-    public function update(array $data): Resultset
+    public function update(array $data): ResultSet
     {
         $sizeof = count($this->pk);
         $pk = [];
         for ($i=0; $i<$sizeof; $i++) {
             if(!isset($data[$this->pk[$i]])) {
-                $ResultSet = new Resultset();
+                $ResultSet = new ResultSet();
                 $ResultSet->addError('Update is wrong. No primary key found.');
                 return $ResultSet;
             }
@@ -716,7 +716,7 @@ SQL;
         }
 
         if (!$set) {
-            return new MySQL_Resultset($this->db);
+            return new MySQL_ResultSet($this->db);
         }
 
         $where = $this->__buildWhere($pk, $this->pk);
@@ -742,10 +742,10 @@ SQL;
      * (z.B. id) uebergeben werden. Es kann pro Aufruf nur ein Datensatz geloescht werden.
      *
      * @param integer $id Eindeutige ID eines Datensatzes (Primaerschluessel!!)
-     * @return Resultset
-     * @see MySQL_Resultset
+     * @return ResultSet
+     * @see MySQL_ResultSet
      **/
-    public function delete($id): Resultset
+    public function delete($id): ResultSet
     {
         $where = $this->__buildWhere($id, $this->pk);
         if ($where == '1') {
@@ -768,11 +768,11 @@ SQL;
      * L�scht einen oder mehrere Datens�tze anhand des �bergebenen Filters! Achtung: immer auf korrekte Filter-Syntax achten.
      *
      * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
-     * @return Resultset Ergebnismenge
-     * @see MySQL_Resultset
+     * @return ResultSet Ergebnismenge
+     * @see MySQL_ResultSet
      * @see MySQL_DAO::__buildFilter
      */
-    public function deleteMultiple(array $filter_rules=[]): Resultset
+    public function deleteMultiple(array $filter_rules=[]): ResultSet
     {
         $where = $this->__buildFilter($filter_rules, 'and', true);
         $sql = <<<SQL
@@ -793,10 +793,10 @@ SQL;
      *
      * @param mixed $id Eindeutige Wert (z.B. ID) eines Datensatzes
      * @param mixed $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
-     * @return Resultset Ergebnismenge
-     * @see MySQL_Resultset
+     * @return ResultSet Ergebnismenge
+     * @see MySQL_ResultSet
      **/
-    public function get($id, $key=NULL): Resultset
+    public function get($id, $key=NULL): ResultSet
     {
         $id = $id ?? 0;
         $where = $this->__buildWhere($id, $key);
@@ -822,8 +822,8 @@ SQL;
      * @param array $groupBy Gruppierung
      * @param array $having Filter Regeln auf die Gruppierung
      * @param array $options Optionale Parameter in der Select-Anweisung
-     * @return Resultset Ergebnismenge
-     * @see MySQL_Resultset
+     * @return ResultSet Ergebnismenge
+     * @see MySQL_ResultSet
      * @see MySQL_DAO::__buildFilter
      * @see MySQL_DAO::__buildSorting
      * @see MySQL_DAO::__buildLimit
@@ -832,7 +832,7 @@ SQL;
      * @throws Exception
      */
     public function getMultiple(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
-                                array $groupBy=[], array $having=[], array $options=[]): Resultset
+                                array $groupBy=[], array $having=[], array $options=[]): ResultSet
     {
         $options = implode(' ', $options);
 
@@ -864,11 +864,11 @@ SQL;
      * @param mixed|null $id ID's (array oder integer)
      * @param mixed|null $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
      * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
-     * @return Resultset Ergebnismenge
-     * @see MySQL_Resultset
+     * @return ResultSet Ergebnismenge
+     * @see MySQL_ResultSet
      * @see MySQL_DAO::__buildFilter
      **/
-    public function getCount(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[]): Resultset
+    public function getCount(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[]): ResultSet
     {
         $where = $this->__buildWhere($id, $key);
         $filter = $this->__buildFilter($filter_rules);
@@ -898,11 +898,11 @@ SQL;
      *
      * @param string $sql sql statement to execute
      * @param callable|null $customCallback
-     * @return MySQL_Resultset
+     * @return MySQL_ResultSet
      */
-    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_Resultset
+    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_ResultSet
     {
-        $MySQL_ResultSet = new MySQL_Resultset($this->db);
+        $MySQL_ResultSet = new MySQL_ResultSet($this->db);
         $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow'], $this->metaData);
         return $MySQL_ResultSet;
     }
