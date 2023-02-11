@@ -32,7 +32,7 @@
  * @version $Id: Resultset.class.php,v 1.34 2007/08/06 11:59:39 manhart Exp $
  * @access public
  */
-class Resultset extends PoolObject implements Countable
+class ResultSet extends PoolObject implements Countable
 {
     /**
      * @var array records
@@ -495,7 +495,7 @@ class Resultset extends PoolObject implements Countable
      * @param mixed $value value
      * @return $this
      */
-    public function setValue(string $key, $value): Resultset
+    public function setValue(string $key, $value): ResultSet
     {
         if($this->count() == 0) {
             return $this->addValue($key, $value);
@@ -510,7 +510,7 @@ class Resultset extends PoolObject implements Countable
      * @param array $assoc
      * @return $this
      */
-    public function setValues(array $assoc): Resultset
+    public function setValues(array $assoc): ResultSet
     {
         if($this->count() == 0) {
             return $this->addValues($assoc);
@@ -546,7 +546,7 @@ class Resultset extends PoolObject implements Countable
      * @param string $key Schluessel (bzw. Name des Feldes)
      * @param mixed $value Wert der Variable
      */
-    public function addValue(string $key, $value): Resultset
+    public function addValue(string $key, $value): ResultSet
     {
         $this->rowset[$this->count()][$key] = $value;
         $this->index = $this->count() - 1;
@@ -555,9 +555,9 @@ class Resultset extends PoolObject implements Countable
 
     /**
      * @param array $assoc
-     * @return Resultset
+     * @return ResultSet
      */
-    public function addValues(array $assoc): Resultset
+    public function addValues(array $assoc): ResultSet
     {
         $this->rowset[$this->count()] = $assoc;
         $this->index = $this->count() - 1;
@@ -568,7 +568,7 @@ class Resultset extends PoolObject implements Countable
      * Loescht ein Feld (Key) inkl. Inhalt (Value) aus dem Datensatz
      *
      * @param string $key
-     * @return Resultset
+     * @return ResultSet
      */
     public function delKey(string $key): static
     {
@@ -616,7 +616,7 @@ class Resultset extends PoolObject implements Countable
      *
      * @access public
      * @param callable $callback_function
-     * @return Resultset
+     * @return ResultSet
      */
     public function uformat(callable $callback_function): static
     {
@@ -629,7 +629,7 @@ class Resultset extends PoolObject implements Countable
      *
      * @param string $key Schlüssel
      * @param string $value Wert
-     * @return Resultset true
+     * @return ResultSet true
      */
     public function fillValues(string $key, string $value): static
     {
@@ -697,7 +697,7 @@ class Resultset extends PoolObject implements Countable
      *
      * @access public
      * @param array $rowSet
-     * @return Resultset
+     * @return ResultSet
      */
     public function setRowset(array $rowSet): static
     {
@@ -710,7 +710,7 @@ class Resultset extends PoolObject implements Countable
      * Fügt ein anderes Resultset an das eigene Resultset an. Satzzeiger wird nicht beeinflusst.
      *
      * @param array $rowSet
-     * @return Resultset
+     * @return ResultSet
      */
     public function addRowset(array $rowSet): static
     {
@@ -829,10 +829,10 @@ class Resultset extends PoolObject implements Countable
     /**
      * Vergleicht ein Resultset, ob es identisch ist. Ist das Resultset nicht identisch, bleibt der Satzzeiger auf diesem stehen.
      *
-     * @param Resultset $ResultSet
+     * @param ResultSet $ResultSet
      * @return boolean
      */
-    public function isEqual(Resultset $ResultSet): bool
+    public function isEqual(ResultSet $ResultSet): bool
     {
         if($this->count() != $ResultSet->count()) return false;
         $this->first();

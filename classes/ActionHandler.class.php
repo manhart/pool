@@ -404,7 +404,7 @@
 				}
 
 //				if($this -> optimized) {
-				$MyResultset = new Resultset();
+				$MyResultset = new ResultSet();
 			    $MyResultset->addValue($record);
 				$this->after_select($MyResultset);
 				$record = $MyResultset->getRow();
@@ -558,7 +558,7 @@
 
                     if ($numRecords == 1) {
                         $select_nr = 0;
-						$Resultset = new Resultset();
+						$Resultset = new ResultSet();
 						$Resultset->addValue($list[$select_nr]);
 						$this->after_select($Resultset);
 						$record = $list[$select_nr];
@@ -745,7 +745,7 @@
 		 * @param string $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
 		 * @return object MySQL_Resultset
 		 * @see MySQL_DAO::get
-		 * @see MySQL_Resultset
+		 * @see MySQL_ResultSet
 		 **/
 		function &get($id, $key=NULL)
 		{
@@ -764,7 +764,7 @@
 		 * @param array $limit Limit -> array(Position, Anzahl Datensaetze)
 		 * @return object MySQL_Resultset
 		 * @see MySQL_DAO::getMultiple
-		 * @see MySQL_Resultset
+		 * @see MySQL_ResultSet
 		 * @see MySQL_DAO::__buildFilter
 		 * @see MySQL_DAO::__buildSorting
 		 * @see MySQL_DAO::__buildLimit

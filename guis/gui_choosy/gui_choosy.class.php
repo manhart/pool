@@ -413,7 +413,7 @@ class GUI_Choosy extends GUI_Module
                     $limit = array($splitterPos, $maxRecordsPerPage);
                     $sql = $Resultset_Choosy->getValue('input');
 
-                    $MySQL_Resultset = new MySQL_Resultset($interfaces[constant('DATAINTERFACE_MYSQL')]);
+                    $MySQL_Resultset = new MySQL_ResultSet($interfaces[constant('DATAINTERFACE_MYSQL')]);
 
                     $this->getSQLSearchstring($sql, $searchfields);
                     $MySQL_Resultset->execute($sql, $database);
