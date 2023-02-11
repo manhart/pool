@@ -1,16 +1,15 @@
 <?php
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * ModulNotFoundExeption.php created at 17.11.22, 15:11
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author p.lehfeld <p.lehfeld@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace pool\classes;
 
 class ModulNotFoundException extends \Exception
 {
-
 }

@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Database\DAO;
+
 /**
  * DBSelect steuert eine Dropdown- und Multiselect Box.
  *

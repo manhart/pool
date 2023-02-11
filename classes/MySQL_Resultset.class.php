@@ -28,6 +28,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Database\DataInterface;
+
 /**
  * MySQL_Resultset
  *

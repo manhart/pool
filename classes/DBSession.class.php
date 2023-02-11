@@ -31,6 +31,8 @@
 * @link http://www.misterelsa.de
 */
 
+use pool\classes\Database\DAO;
+
 
 /**
  * DBSession

@@ -13,6 +13,8 @@
 
 use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
+use pool\classes\Database\DAO;
+use pool\classes\Database\DataInterface;
 
 class Log
 {
