@@ -150,6 +150,9 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Database\Commands;
+use pool\classes\Database\DAO;
+use pool\classes\Database\DataInterface;
 use pool\classes\translator\Translator;
 
 // Reservierte Wörter kompatibel mit MySQL 5.1 (und abwärts)
@@ -253,11 +256,9 @@ class MySQL_DAO extends DAO
     /**
      * MySQL_DAO constructor.
      */
-    public function __construct(DataInterface $db, string $dbname, string $table)
+    public function __construct(DataInterface $DataInterface, string $dbname, string $table)
     {
-        parent::__construct();
-
-        $this->db = $db;
+        $this->db = $DataInterface;
         $this->dbname = $dbname;
         $this->table = $table;
 
@@ -308,7 +309,7 @@ class MySQL_DAO extends DAO
      * Beim Setzen der Spalten/Felder wird das Ereignis
      * $this -> onSetColumns() aufgerufen
      **/
-    public function fetchColumns(): self
+    public function fetchColumns(): static
     {
         $this->pk = [];
         $this->columns = [];
@@ -625,7 +626,7 @@ class MySQL_DAO extends DAO
                 $value = is_null($value[0]) ? 'NULL' : $value[0];
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = $this->db->escapestring($value, $this->dbname);
+                $value = $this->db->escapeString($value, $this->dbname);
                 $value = "'$value'";
             }
 
@@ -698,7 +699,7 @@ SQL;
             elseif(is_bool($value)) {
                 $value = bool2string($value);
             }
-            elseif($value instanceof \Commands) {
+            elseif($value instanceof Commands) {
                 // reserved keywords don't need to be masked
                 $expression = $this->commands[$value->name];
                 if($expression instanceof Closure) {
@@ -709,7 +710,7 @@ SQL;
                 }
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->db->escapestring($value, $this->dbname)}'";
+                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
             }
             if($set == '') $set = "`$field`=$value";
             $set = "$set,`$field`=$value";
@@ -1031,8 +1032,8 @@ SQL;
             $noQuotes = false;
             $noEscape = false;
             if(isset($record[3])) { // Optionen
-                $noQuotes = ($record[3] & DAO_NO_QUOTES);
-                $noEscape = ($record[3] & DAO_NO_ESCAPE);
+                $noQuotes = ($record[3] & DAO::DAO_NO_QUOTES);
+                $noEscape = ($record[3] & DAO::DAO_NO_ESCAPE);
             }
 
             if($this->translateValues) {
@@ -1051,7 +1052,7 @@ SQL;
                         $query .= ' ' . $value;
                     }
                     else {
-                        if(!$noEscape) $value = $this->db->escapestring($value, $this->dbname);
+                        if(!$noEscape) $value = $this->db->escapeString($value, $this->dbname);
                         if(!$noQuotes) $value = '\''.$value.'\'';
                         $query .= $value;
                     }
@@ -1073,7 +1074,7 @@ SQL;
                 }
                 else {
                     $value = $record[2];
-                    if(!$noEscape) $value = $this->db->escapestring($value, $this->dbname);
+                    if(!$noEscape) $value = $this->db->escapeString($value, $this->dbname);
                     if(!$noQuotes) $value = '\''.$value.'\'';
 
 //									if(mb_detect_encoding($value, array('UTF-8', 'ISO-8859-1'), true) == 'ISO-8859-1') {
@@ -1299,13 +1300,13 @@ SQL;
             $count = count($key);
             for ($i=0; $i<$count; $i++) {
                 $keyName = $key[$i];
-                $result = "$result$alias$keyName=\"{$this->db->escapestring($id[$i], $this->dbname)}\"";
+                $result = "$result$alias$keyName=\"{$this->db->escapeString($id[$i], $this->dbname)}\"";
                 if(!isset($id[$i+1])) break;
                 $result .= ' and ';
             }
         }
         else {
-            $result = "$alias$key=\"{$this->db->escapestring($id, $this->dbname)}\"";
+            $result = "$alias$key=\"{$this->db->escapeString($id, $this->dbname)}\"";
         }
         return $result;
     }
