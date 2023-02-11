@@ -71,14 +71,14 @@ class GUI_Module
             json = JSON.parse(text);
         }
         catch(e) {
-            throw new PoolAjaxResponseError('Syntax Error', e);
+            throw new PoolAjaxResponseError('Syntax Error', e, '', text);
         }
         const { data, error, success } = response.status !== 204 ? json : { success: true };
 
         // trigger a new exception to capture later on request call site
         if (!success) {
             // notice: the pool responses with an error.type and error.message
-            throw new PoolAjaxResponseError(error.message, null, error.type);
+            throw new PoolAjaxResponseError(error.message, null, error.type, text);
         }
         // Otherwise, simply resolve the received data
         return data;
