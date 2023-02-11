@@ -30,7 +30,7 @@
  * @link https://www.manhart-it.de
  */
 
-use pool\classes;
+use pool\classes\Database\DataInterface;
 
 if (!defined('SQL_READ')) define('SQL_READ', 'READ');
 if (!defined('SQL_WRITE')) define('SQL_WRITE', 'WRITE');
@@ -146,6 +146,14 @@ class MySQLi_Interface extends DataInterface
     const MAX_DATETIME = '9999-12-31 23:59:59';
 
     /**
+     * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access objects
+     */
+    public static function getDriverName(): string
+    {
+        return 'mysql';
+    }
+
+    /**
      * Sets up the object.
      *
      * Einstellungen:
@@ -155,39 +163,39 @@ class MySQLi_Interface extends DataInterface
      * database = (string) Standard Datenbank
      * auth = (array) Authentication Array, Default 'mysql_auth' (siehe access.inc.php)
      *
-     * @param array $Packet Einstellungen
+     * @param array $connectionOptions Einstellungen
      * @return boolean Erfolgsstatus
      **/
-    public function setOptions(array $Packet): bool
+    public function setOptions(array $connectionOptions): bool
     {
         // $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
-        $this->force_backend_read = array_key_exists('force_backend_read', $Packet) ? $Packet['force_backend_read'] : false;
+        $this->force_backend_read = array_key_exists('force_backend_read', $connectionOptions) ? $connectionOptions['force_backend_read'] : false;
 
-        if (!array_key_exists('host', $Packet)) {
+        if (!array_key_exists('host', $connectionOptions)) {
             $this->raiseError(__FILE__, __LINE__, 'MySQL_Interface::setOptions Bad Packet: no key "host"');
             return false;
         }
-        $this->available_hosts = $Packet['host'];
+        $this->available_hosts = $connectionOptions['host'];
 
-        if (!array_key_exists('database', $Packet)) {
+        if (!array_key_exists('database', $connectionOptions)) {
             $this->raiseError(__FILE__, __LINE__, 'MySQL_Interface::setOptions Bad Packet: no key "database"');
             return false;
         }
-        $this->default_database = $Packet['database'];
+        $this->default_database = $connectionOptions['database'];
 
-        if (array_key_exists('port', $Packet)) {
-            $this->port = $Packet['port'];
+        if (array_key_exists('port', $connectionOptions)) {
+            $this->port = $connectionOptions['port'];
         }
 
-        if (array_key_exists('auth', $Packet)) {
-            $this->auth = $Packet['auth'];
+        if (array_key_exists('auth', $connectionOptions)) {
+            $this->auth = $connectionOptions['auth'];
         }
         else {
             $this->auth = 'mysql_auth'; // verwendet zentrale, globale Authentifizierung
         }
 
-        if (array_key_exists('charset', $Packet)) {
-            $this->default_charset = $Packet['charset'];
+        if (array_key_exists('charset', $connectionOptions)) {
+            $this->default_charset = $connectionOptions['charset'];
         }
 
         $this->__findHostForConnection();
@@ -1083,11 +1091,11 @@ SQL;
      *
      * @param string $string Text
      * @return string Maskierter Text
-     **/
-    function escapestring($string, $database = '')
+     */
+    public function escapeString(string $string, $database = ''): string
     {
-        $conid = $this->__get_db_conid($database, SQL_READ);
-        return mysqli_real_escape_string($conid, $string);
+        $connection = $this->__get_db_conid($database, SQL_READ);
+        return mysqli_real_escape_string($connection, $string);
     }
 
     /**
