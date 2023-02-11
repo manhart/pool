@@ -10,14 +10,9 @@
 
 // base classes
 require_once __DIR__ . '/PoolObject.class.php';
-require_once __DIR__ . '/Component.class.php';
-require_once __DIR__ . '/Module.class.php';
 require_once __DIR__ . '/GUI_Module.class.php';
-require_once __DIR__ . '/Configurable.trait.php';
-require_once __DIR__ . '/DAO.class.php';
-require_once __DIR__ . '/Resultset.class.php';
+require_once __DIR__ . '/Configurable.php';
 require_once __DIR__ . '/Singleton.class.php';
-require_once __DIR__ . '/Xception.class.php';
 
 // derived from GUI_Module
 require_once __DIR__ . '/GUI_Universal.class.php';
