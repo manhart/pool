@@ -69,6 +69,8 @@
  * @see GUI_Choosy::init()
  */
 
+use pool\classes\Database\DAO;
+
 define('CHOOSY_TRANSFER_FILE', 'transfer_by_file');
 define('CHOOSY_TRANSFER_DBCHOOSY', 'transfer_by_db_choosy');
 define('CHOOSY_TRANSFER_DB', 'transfer_by_db');

@@ -28,6 +28,8 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Database\DAO;
+
 if(!defined('CLASS_SESSIONHANDLER')) {
 
     define('CLASS_SESSIONHANDLER', 1); 	// Prevent multiple loading

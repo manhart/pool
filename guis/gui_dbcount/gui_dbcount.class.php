@@ -18,6 +18,8 @@
  *
  */
 
+use pool\classes\Database\DAO;
+
 /**
  * GUI_DBCount
  *
