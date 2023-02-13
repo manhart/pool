@@ -1,2 +1,2 @@
 # pool
-PHP Object Oriented Library
+PHP Object-Oriented Library
