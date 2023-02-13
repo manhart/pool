@@ -10,7 +10,6 @@
 
 namespace pool\classes\Database;
 
-use MySQLi_Interface;
 use PoolObject;
 
 /**
@@ -18,16 +17,6 @@ use PoolObject;
  */
 abstract class DataInterface extends PoolObject
 {
-    /**
-     * @todo remove interface types
-     * @var string interface types
-     */
-    public const DATAINTERFACE_MYSQLI = MySQLi_Interface::class;
-//    public const DATAINTERFACE_MARIADB = 'MySQLi_Interface';
-//    public const DATAINTERFACE_MSSQL = 'MSSQL_Interface';
-//    public const DATAINTERFACE_INFORMIX = 'Informix_Interface';
-//    public const DATAINTERFACE_POSQL = 'PostgreSQL_Interface';
-
 
     /**
      * set options for the interface e.g. connection data

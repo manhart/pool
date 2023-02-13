@@ -268,10 +268,10 @@ abstract class DAO extends PoolObject
             $interface = $interface[$type];
         }
 
+        // @todo remove switch
         switch($type) {
             case MySQLi_Interface::class:
-            case DataInterface::DATAINTERFACE_MYSQLI:
-                $driver = MySQLi_Interface::getDriverName();
+                $driver = $type::getDriverName();
                 $include = addEndingSlash(DIR_DAOS_ROOT) . "$driver/$dbname/$table.class.php";
                 $file_exists = file_exists($include);
                 if(!class_exists($table, false) and $file_exists) {
@@ -282,6 +282,8 @@ abstract class DAO extends PoolObject
                     $DAO = new $table($interface, $dbname, $table);
                 }
                 else {
+                    // @todo use $driver
+                    // $className = 'Custom'.$driver.'_DAO';
                     $DAO = new CustomMySQL_DAO($interface, $dbname, $table);
                 }
                 break;
