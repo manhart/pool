@@ -134,24 +134,27 @@ if(extension_loaded('mbstring')) {
 }
 
 // measure page speed (@todo ajax requests?)
-$measureAppSpeed = IS_TESTSERVER || ($_REQUEST['measureAppSpeed'] ?? 0);
-if($measureAppSpeed) {
+$measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
+if($measurePageSpeed) {
     $pageSpeedMeasurement = function() {
         register_shutdown_function(function() {
-            if(!isAjax()) {
-                $timeSpent = microtime(true) - POOL_START;
-                $htmlStartTags = $htmlCloseTags = '';
-                if(IS_CLI) {
-                    $what = 'Script';
-                }
-                else {
-                    $what = 'Page';
-                    $color = $timeSpent > 0.2 ? 'red' : 'green';
-                    $htmlStartTags = "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">";
-                    $htmlCloseTags = '</p></footer>';
-                }
-                echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
+            // print only when html content type is set
+            if(!isHtmlContentTypeHeaderSet()) {
+                return;
             }
+
+            $timeSpent = microtime(true) - POOL_START;
+            $htmlStartTags = $htmlCloseTags = '';
+            if(IS_CONSOLE) {
+                $what = 'Script';
+            }
+            else {
+                $what = 'Page';
+                $color = $timeSpent > 0.2 ? 'red' : 'green';
+                $htmlStartTags = "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">";
+                $htmlCloseTags = '</p></footer>';
+            }
+            echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
         });
     };
     $pageSpeedMeasurement();
