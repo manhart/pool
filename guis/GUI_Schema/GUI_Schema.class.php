@@ -156,7 +156,7 @@ class GUI_Schema extends GUI_Module
      * Der gesamte Inhalt wird zurueck gegeben.
      *
      * @return string Content
-     **/
+     */
     public function finalize(): string
     {
         $content = '';
