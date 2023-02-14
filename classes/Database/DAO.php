@@ -271,10 +271,12 @@ abstract class DAO extends PoolObject
         // @todo remove switch
         switch($type) {
             case MySQLi_Interface::class:
+                $class_exists = class_exists($table, false);
+
                 $driver = $type::getDriverName();
                 $include = addEndingSlash(DIR_DAOS_ROOT) . "$driver/$dbname/$table.class.php";
                 $file_exists = file_exists($include);
-                if(!class_exists($table, false) and $file_exists) {
+                if(!$class_exists && $file_exists) {
                     require_once $include;
                 }
                 if($file_exists) {
