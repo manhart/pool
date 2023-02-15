@@ -8,6 +8,10 @@
  * file that was distributed with this source code.
  */
 
-class TranslatorMissingFileException extends Exception
+namespace pool\classes\Exception;
+
+use LogicException as PhpLogicException;
+
+class ModulNotFoundException extends PhpLogicException implements PoolExceptionInterface
 {
 }
