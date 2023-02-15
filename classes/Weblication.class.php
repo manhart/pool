@@ -12,7 +12,7 @@
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Language;
-use pool\classes\ModulNotFoundException;
+use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;

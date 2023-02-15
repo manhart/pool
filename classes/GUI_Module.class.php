@@ -19,7 +19,7 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\ModulNotFoundException;
+use pool\classes\Exception\ModulNotFoundException;
 
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';

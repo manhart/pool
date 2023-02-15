@@ -166,7 +166,7 @@ class Component extends PoolObject
      * Gibt das Objekt Weblication zurueck, falls der Eigentuemer vom Typ Weblication ist.
      *
      * @return Weblication|null Weblication
-     **@see Weblication
+     * @see Weblication
      */
     public function getWeblication(): ?Weblication
     {
