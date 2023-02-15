@@ -34,7 +34,7 @@ class PoolObject
     /**
      * @var bool|null determines whether the class is the POOL base library
      */
-    private ?bool $isPOOL = null;
+    private bool $isPOOL;
 
     /**
      * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
@@ -83,7 +83,7 @@ class PoolObject
      */
     protected function isPOOL(): bool
     {
-        if(is_null($this->isPOOL)) {
+        if(!isset($this->isPOOL)) {
             $poolRealpath = realpath(DIR_POOL_ROOT);
             $this->isPOOL = substr_compare($this->getClassFilename(), $poolRealpath, 0, strlen($poolRealpath)) === 0;
         }
@@ -159,7 +159,7 @@ class PoolObject
      * @param int $line Zeilennummer
      * @param string $msg Fehlermeldung (Setzt sich zusammen aus: Fehler in der Klasse -Platzhalter-, Datei -Platzhalter-, Zeile -Platzhalter- Meldung: -Fehlermeldung-
      */
-    protected function raiseError(string $file, int $line, string $msg): void
+    protected function raiseError(string $file, int $line, string $msg, $error_level = E_USER_NOTICE): void
     {
         if(error_reporting() == 0) {
             return;
@@ -167,7 +167,7 @@ class PoolObject
         $error = $msg;
         $error .= ' in class ' . $this->getClassName() . ', file ' . $file . ', line ' . $line;
 
-        trigger_error($error);
+        trigger_error($error, $error_level);
     }
 }
 

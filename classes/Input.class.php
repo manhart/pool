@@ -194,10 +194,10 @@ class Input extends PoolObject
      * Prueft, ob eine Variable einen Wert enthaelt.
      * Diese Funktion liefert TRUE, wenn eine Variable nicht definiert, leer oder gleich 0 ist, ansonsten FALSE
      *
-     * @param mixed $key Name der Variable
+     * @param string|array $key Name der Variable
      * @return boolean True=ja; False=nein
-     **/
-    public function emptyVar($key): bool
+     */
+    public function emptyVar(string|array $key): bool
     {
         if(is_array($key)) {
             if(sizeof($key) == 0) return true;

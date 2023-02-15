@@ -46,7 +46,7 @@ class MySQL_ResultSet extends ResultSet
      *
      * @var DataInterface|null
      */
-    private ?DataInterface $db = null;
+    private ?DataInterface $db;
 
     /**
      * Erwartet Datenbank Layer als Parameter.
