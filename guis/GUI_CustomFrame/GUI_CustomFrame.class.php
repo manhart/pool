@@ -77,8 +77,9 @@ class GUI_CustomFrame extends GUI_Module
     function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
-
-        $this->HeadData = GUI_Module::createGUIModule(GUI_HeadData::class, $this->Weblication, $this);
+        $GUI_Module = GUI_Module::createGUIModule(GUI_HeadData::class, $this->Weblication, $this);
+        assert($GUI_Module instanceof GUI_HeadData);
+        $this->HeadData = $GUI_Module;
         $this->HeadData->setName('HeadData');
         $this->HeadData->setMarker('<headdata></headdata>');
         $this->insertModule($this->HeadData);
