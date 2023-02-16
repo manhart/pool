@@ -41,7 +41,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
             self::$postbox = false;
             return false;
         } else {
-            self::$requestTime = microtime();
+            self::$requestTime = strval((int)(microtime(true)*1000));
             self::$sessionID = $id;
             self::readPostbox();
             register_shutdown_function(self::writePostbox(...));
