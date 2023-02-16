@@ -11,8 +11,8 @@
 //use pool\classes\Input;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
-use pool\classes\Language;
 use pool\classes\Exception\ModulNotFoundException;
+use pool\classes\Language;
 use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
@@ -435,16 +435,6 @@ class Weblication extends Component
     public function getDefaultSchema(): string
     {
         return $this->schema;
-    }
-
-    /**
-     * determines current schema/layout
-     *
-     * @return string
-     */
-    public function getSchema(): string
-    {
-        return (isset($_REQUEST['schema']) and $_REQUEST['schema'] != '') ? $_REQUEST['schema'] : $this->getDefaultSchema();
     }
 
     /**
@@ -1289,14 +1279,8 @@ class Weblication extends Component
             throw new Exception('The application name must be defined.');
         }
 
-        // TODO Get Parameter frame
-        // TODO Security hole params
-        $params = $_REQUEST['params'] ?? '';
-        if(isNotEmpty($params) and $this->isAjax()) {
-            $params = base64url_decode($params) ?: "";
-        }
-
-        $mainGUI = GUI_Module::createGUIModule($className, $this, null, $params, true, false);
+        $mainGUI = GUI_Module::createGUIModule($className, $this, null, '', true, false);
+        //maybe an Ajax Call could run here and return its result
         $this->setMain($mainGUI);
 
         $mainGUI->searchGUIsInPreloadedContent();

@@ -538,7 +538,8 @@ class GUI_Module extends Module
     {
         $this->provision();
         foreach($this->childModules as $modul) {
-            $modul->provisionContent();
+            if ($modul instanceof GUI_Module)
+                $modul->provisionContent();
         }
     }
 
