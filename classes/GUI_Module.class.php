@@ -676,6 +676,7 @@ class GUI_Module extends Module
 
         if($Closure) {
             //TODO check Authorisation
+            //TODO check arg types -> code 400
 
             // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
             /** @var mixed $result */
