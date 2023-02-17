@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace pool\classes\Core;
+namespace pool\classes\Utils;
 
 enum System: int
 {
