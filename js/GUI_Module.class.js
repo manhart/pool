@@ -98,10 +98,10 @@ class GUI_Module
         if (!success) {
             // notice: the pool responds with an error.type and error.message
             switch (error.type) {
-                case 'time-out':
+                case 'time-out'://401
                     location.reload();
                     return undefined;
-                case 'access-denied':
+                case 'access-denied'://403 (Modul)/405 (Method e.g. save)
                     Toast.showWarning(['global.error.accessDenied', 'Kein Zugriff'], error.message)
                     return undefined;
             }
