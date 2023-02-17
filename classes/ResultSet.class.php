@@ -21,6 +21,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Exception\InvalidJsonException;
+
 /**
  * Resultset
  *
@@ -352,6 +354,23 @@ class ResultSet extends PoolObject implements Countable
     public function getValueAsString(string $key, string $default = ''): string
     {
         return (string)$this->getValue($key, $default);
+    }
+
+    /**
+     * Returns a value of a field of the current record as a decoded json
+     *
+     * @param string $key
+     * @param string $defaultJson
+     * @return string
+     * @throws InvalidJsonException
+     */
+    public function getValueAsJson(string $key, string $defaultJson = '{}'): mixed
+    {
+        $json = (string)$this->getValue($key, $defaultJson) ?: $defaultJson;
+        if(!isValidJSON($json)) {
+            throw new InvalidJsonException();
+        }
+        return json_decode($json, true);
     }
 
     /**
