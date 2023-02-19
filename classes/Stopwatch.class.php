@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_STOPWATCH')) {
 
     define('CLASS_STOPWATCH', 1); 	// Prevent multiple loading

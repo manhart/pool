@@ -36,6 +36,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_SESSIONLISTER')) {
 
     #### Prevent multiple loading

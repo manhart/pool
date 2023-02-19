@@ -17,6 +17,8 @@
 * @package pool
 */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_PROGRESSBAR')) {
     /**
      * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)

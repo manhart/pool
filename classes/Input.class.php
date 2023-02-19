@@ -11,6 +11,8 @@
 //namespace pool\classes;
 
 // 05.01.22, AM, POST Requests with JSON-Data
+use pool\classes\Core\PoolObject;
+
 $REQUEST_METHOD = $_SERVER['REQUEST_METHOD'] ?? '';
 $CONTENT_TYPE = $_SERVER['CONTENT_TYPE'] ?? '';
 if($REQUEST_METHOD == 'POST' and $CONTENT_TYPE == 'application/json') {

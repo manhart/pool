@@ -11,7 +11,7 @@
 namespace pool\classes;
 
 use GUI_Module;
-use PoolObject;
+use pool\classes\Core\PoolObject;
 
 class Autoloader
 {

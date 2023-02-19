@@ -32,6 +32,7 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
 use pool\classes\translator\Translator;
 
 const TEMP_VAR_START = '{';

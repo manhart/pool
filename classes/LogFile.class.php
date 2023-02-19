@@ -14,6 +14,8 @@
  * @package pool
  */
 
+use pool\classes\Core\PoolObject;
+
 /**
  * Die Grundklasse, der Uhrahn aller Objekte.
  *

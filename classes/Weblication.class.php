@@ -9,6 +9,7 @@
  */
 
 //use pool\classes\Input;
+use pool\classes\Core\Component;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\ModulNotFoundException;
@@ -1005,7 +1006,7 @@ class Weblication extends Component
             $TranslatorResource = TranslationProviderFactory_nop::create();
         }
         if ($TranslatorResource != null)
-        $AppTranslator->addTranslationResource($TranslatorResource);
+            $AppTranslator->addTranslationResource($TranslatorResource);
         //Setup Languages (for Application)
         $AppLanguages = $this->Settings->getVar('application.languages');
         //Get defaults from browser
@@ -1015,11 +1016,14 @@ class Weblication extends Component
         $this->setTranslator($AppTranslator);
 
         //setup TemplateTranslator
-        $staticResource = TranslationProviderFactory_ResourceFile::create(DIR_RESOURCES_ROOT.'/dict/static');
-        $TemplateTranslator = new Translator($staticResource);
-        //Try to load the required languages
-        $TemplateTranslator->swapLangList($AppLanguages, true);
-        Template::setTranslator($TemplateTranslator);
+        $translatorStaticResourceDir = $this->Settings->getVar('application.translatorStaticResourceDir');
+        if($translatorStaticResourceDir) {
+            $staticResource = TranslationProviderFactory_ResourceFile::create($translatorStaticResourceDir);
+            $TemplateTranslator = new Translator($staticResource);
+            //Try to load the required languages
+            $TemplateTranslator->swapLangList($AppLanguages, true);
+            Template::setTranslator($TemplateTranslator);
+        }
 
         // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
         return $this;

@@ -62,6 +62,8 @@ Version History:
 =======================================================================
 */
 
+use pool\classes\Core\PoolObject;
+
 class Tar extends PoolObject {
 	// Unprocessed Archive Information
 	var $filename;

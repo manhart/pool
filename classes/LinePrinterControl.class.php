@@ -14,6 +14,8 @@
 * @package pool
 */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_LPC')) {
     /**
      * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)

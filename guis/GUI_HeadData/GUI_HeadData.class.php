@@ -8,6 +8,9 @@
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
+use pool\classes\Core\Component;
+use pool\classes\Core\Module;
+
 /**
  * -= Rapid Module Library (RML) =-
  *

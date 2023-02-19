@@ -21,6 +21,7 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
 use pool\classes\Exception\InvalidJsonException;
 
 /**

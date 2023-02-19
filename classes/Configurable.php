@@ -10,6 +10,8 @@
 
 //namespace pool\classes;
 
+use pool\classes\Core\Component;
+
 trait Configurable
 {
     /**

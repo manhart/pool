@@ -22,6 +22,8 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Core\PoolObject;
+
 /**
  * ImageMagick
  *

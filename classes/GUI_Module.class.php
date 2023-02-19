@@ -19,6 +19,9 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
+use pool\classes\Core\Component;
+use pool\classes\Core\Module;
 use pool\classes\Exception\ModulNotFoundException;
 
 const REQUEST_PARAM_MODULE = 'module';
