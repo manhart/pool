@@ -8,7 +8,6 @@
  * file that was distributed with this source code.
  */
 
-//use pool\classes\Input;
 use pool\classes\Core\Component;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
@@ -71,7 +70,6 @@ class Weblication extends Component
      * @var Input
      */
     public Input $Input;
-
 
     /**
      * client-side path to the pool
@@ -259,10 +257,9 @@ class Weblication extends Component
     /**
      * gets the instance via lazy initialization (created on first usage)
      */
-    public static function getInstance(): Weblication
+    public static function getInstance(): static
     {
-        static::$Instance ??= new static();
-        return static::$Instance;
+        return static::$Instance ??= new static;
     }
 
     /**
@@ -1185,7 +1182,7 @@ class Weblication extends Component
         }
         // with charset
         if($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {
-            $locale = "$locale.{$this->charset}";
+            $locale = "$locale.$this->charset";
         }
         // without charset
         if($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {
