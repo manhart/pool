@@ -9,7 +9,7 @@
  */
 
 // base classes
-require_once __DIR__ . '/PoolObject.class.php';
+require_once __DIR__ . '/Core/PoolObject.php';
 require_once __DIR__ . '/GUI_Module.class.php';
 require_once __DIR__ . '/Configurable.php';
 require_once __DIR__ . '/Singleton.class.php';

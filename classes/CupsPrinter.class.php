@@ -8,6 +8,8 @@
  * file that was distributed with this source code.
  */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_CUPSPRINTER')) {
     /**
      * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)

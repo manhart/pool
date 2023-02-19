@@ -1,34 +1,22 @@
-<?php
-/**
- * POOL (PHP Object Oriented Library)
+<?php declare(strict_types=1);
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Module sind baukastenartige Klassen.
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Sie enthalten Input (PHP Autoglobals), Standardwerte fuer nicht übergebene Variablen,
- * Parametersteuerung (z.B. aus dem Template heraus), einem Modulnamen und Handoffs
- * (Variablenwerte werden durchgereicht).
- *
- * - Festlegen von Standardwerten zur Gewährleistung der Funktion des Moduls
- * - Module koennen auch deaktiviert / ausgeschaltet werden (enabled/disabled).
- * - Module enthalten 'Kinder'-Module (Childs) sowie ein 'Eltern'-Modul (Parent). Aus Template Sicht liegen Kinder-Module auf diesem Modul und dieses Modul auf dem Eltern-Modul.
- * - Durchschleifen von Variablen an die Kinder-Module (Childs)
- * - Spezielle Erweiterungen zur Parametrisierung (siehe Methode setParams)
- *
- * Letzte aenderung am: $Date: 2007/05/31 14:34:06 $
- *
- * @version $Id: Module.class.php,v 1.10 2007/05/31 14:34:06 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
- * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
- * @package pool
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+namespace pool\classes\Core;
+
+use Exception;
+use Input;
+
 class Module extends Component
 {
     /**
-     * Eltern-Objekt (Parent)->auf wem sitze ich fest?
+     * Parent module
      *
      * @var Module $Parent
      */
@@ -40,28 +28,28 @@ class Module extends Component
     protected array $childModules = [];
 
     /**
-     * Standardwerte sollten gew�hrleisten, dass das Modul auch ohne Parametrisierung l�uft. Die Standardwerte werden in der Funktion "init" festgelegt und bestimmen das normale Verhalten des Moduls.
+     * Default values should ensure that the module runs even without parameterization. The default values are set in the 'init' function and determine the normal behavior of the module.
      *
      * @var Input $Defaults
      */
     protected Input $Defaults;
 
     /**
-     * Superglobals. Alle Parameter-/Variablen�bergaben, sei es �ber Url (Get) oder Formular (Post) werden im Objekt Input festgehalten. Fehlen wichtige Parameter�bergaben, werden diese durch vorhandene Standardwerte ausgeglichen.
+     * Input contains the external input parameters/values. Which parameters are imported is defined by the superglobals.
      *
      * @var Input $Input
      */
     public Input $Input;
 
     /**
-     * Variablen/Parameter, die an die Kinder-Module (Childs) weitergereicht werden sollen.
+     * Variables/parameters to be passed to the child modules.
      *
      * @var array $handoff
      */
     protected array $handoff;
 
     /**
-     * Merker, ob das Modul aktiv ist / eingebunden wird.
+     * states whether the module is enabled or not
      *
      * @var bool $enabled
      */
@@ -143,7 +131,7 @@ class Module extends Component
     }
 
     /**
-     * Importiert Variablen vom Elternmodul (durchschleifen von Variablen).
+     * Imports variables from the parent module.
      *
      * @param array $handoff Liste bestehend aus Variablen
      *
@@ -161,11 +149,10 @@ class Module extends Component
     }
 
     /**
-     * Importiert Parameter in das Modul (bzw. �bergibt sie dem Input Objekt).
+     * Imports internal parameters into the module
      *
-     * Spezielle Parameternamen:
-     * - ModuleName: setzt den Komponentennamen
-     * - ModuleDisabled: deaktiviert das Modul
+     * special treated parameters:
+     *   moduleName: sets the module name
      *
      * @param array $params Im Format: key=value&key2=value2&
      * @return bool Erfolgsstatus
@@ -218,10 +205,10 @@ class Module extends Component
     }
 
     /**
-     * Einf�gen von Variablen, die an die Kinder-Module (Childs) weitergereicht werden.
+     * Inserting variables that are passed to the child modules.
      *
-     * @param mixed $key Schluessel der Variable
-     * @param mixed $value Wert der Variable
+     * @param mixed $key name of the variable
+     * @param mixed $value value of the variable
      */
     function addHandoffVar(mixed $key, mixed $value = '')
     {
@@ -266,7 +253,6 @@ class Module extends Component
      */
     public function setClientVar(string $key, mixed $value): self
     {
-//        $this->Weblication->getHead()->setClientData($this, [$key => $value]);
         $this->clientVars[$key] = $value;
         return $this;
     }
@@ -275,13 +261,11 @@ class Module extends Component
      * passes data to the client
      *
      * @param array $vars
-     *
      * @return $this
      */
     public function setClientVars(array $vars): self
     {
         $this->clientVars = array_merge($this->clientVars, $vars);
-//        $this->Weblication->getHead()->setClientData($this, $vars);
         return $this;
     }
 
@@ -343,7 +327,7 @@ class Module extends Component
      * @param Module $Module
      * @return Module
      */
-    public function insertModule(Module $Module): self
+    public function insertModule(Module $Module): static
     {
         $this->childModules[] = $Module;
         return $this;
@@ -356,7 +340,6 @@ class Module extends Component
     public function removeModule(Module $Module)
     {
         $new_Modules = [];
-        // Haus?
         // rebuild modules
         foreach($this->childModules as $SearchedModule) {
             if($Module != $SearchedModule) {
@@ -385,7 +368,7 @@ class Module extends Component
     }
 
     /**
-     * deactivates module
+     * disables module
      */
     public function disable()
     {
@@ -401,7 +384,7 @@ class Module extends Component
     }
 
     /**
-     * Returns that the module is enabled
+     * Returns the enabled state of the module
      *
      * @return bool
      */

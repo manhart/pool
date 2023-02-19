@@ -28,6 +28,7 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Core\PoolObject;
 use pool\classes\Database\DAO;
 
 if(!defined('CLASS_SESSIONHANDLER')) {

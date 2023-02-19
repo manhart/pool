@@ -16,6 +16,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
+
 const URL_TARGET_BLANK = '_blank';    # um den Verweis in einem neuen Fenster zu öffnen
 const URL_TARGET_SELF = '_self';        # um den Verweis im aktuellen Fenster zu öffnen
 const URL_TARGET_PARENT = '_parent';    # um bei verschachtelten Framesets das aktuelle Frameset zu sprengen

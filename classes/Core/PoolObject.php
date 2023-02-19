@@ -8,6 +8,9 @@
  * file that was distributed with this source code.
  */
 
+namespace pool\classes\Core;
+
+use ReflectionClass;
 
 class PoolObject
 {
@@ -170,4 +173,3 @@ class PoolObject
         trigger_error($error, $error_level);
     }
 }
-

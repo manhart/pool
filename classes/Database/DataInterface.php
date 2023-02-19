@@ -10,7 +10,7 @@
 
 namespace pool\classes\Database;
 
-use PoolObject;
+use pool\classes\Core\PoolObject;
 
 /**
  * @abstract abstract Data Interface

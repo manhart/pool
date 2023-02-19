@@ -13,10 +13,10 @@ namespace pool\classes\Database;
 
 use CustomMySQL_DAO;
 use MySQLi_Interface;
+use pool\classes\Core\PoolObject;
 use pool\classes\Exception\DAOException;
 
 use Weblication;
-use PoolObject;
 use ResultSet;
 use MySQL_DAO;
 

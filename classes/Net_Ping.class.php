@@ -24,6 +24,8 @@
 
 /*require_once "OS/Guess.php";*/
 
+use pool\classes\Core\PoolObject;
+
 define('NET_PING_FAILED_MSG',                     'execution of ping failed'        );
 define('NET_PING_HOST_NOT_FOUND_MSG',             'unknown host'                    );
 define('NET_PING_INVALID_ARGUMENTS_MSG',          'invalid argument array'          );

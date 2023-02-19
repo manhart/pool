@@ -1,5 +1,6 @@
 <?php
 
+use pool\classes\Core\Component;
 use pool\classes\Exception\ModulNotFoundException;
 
 /**

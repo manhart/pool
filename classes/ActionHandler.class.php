@@ -9,6 +9,7 @@
  */
 
 	#### Konstanten fuer alle Aktionen
+use pool\classes\Core\Component;
 use pool\classes\Database\DAO;
 
 define('ACTION_SELECT', 	'selektieren');

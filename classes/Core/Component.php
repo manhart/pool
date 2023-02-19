@@ -8,6 +8,14 @@
  * file that was distributed with this source code.
  */
 
+namespace pool\classes\Core;
+
+use Input;
+use InputSession;
+use ReflectionClass;
+use ReflectionException;
+use Weblication;
+
 class Component extends PoolObject
 {
     /**
