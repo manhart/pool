@@ -219,6 +219,13 @@ class GUI_Module extends Module
                 return true;
             }
 
+            // PSR-4 style
+            $filename = $GUIRootDir . $GUIClassName . '/' . $GUIClassName . '.php';
+            if(file_exists($filename)) {
+                require_once $filename;
+                return true;
+            }
+
             if($ParentGUI instanceof Module) {
                 // verschachtelte GUI's
                 $parent_directory = '';

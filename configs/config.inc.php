@@ -96,6 +96,9 @@ switch($_SERVER['SERVER_NAME'] ?? gethostname()) {
 }
 
 const IS_TESTSERVER = (IS_DEVELOP || IS_STAGING);
+// This constant points to the root directory of the configuration files, which is the directory I am currently in.
+// The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
+const DIR_CONFIGS_ROOT = __DIR__;
 
 //const JAVA_PATH = '/usr/bin/java';
 // define('FOP_PATH', '/opt/fop/current/fop');
@@ -105,9 +108,7 @@ const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT . '/pool';
 // aus der App Sicht (für js from pool):
 const DIR_POOL_ROOT_REL = '../../'; // for webprojects it would be better to symlink javascripts folder
 
-// This constant points to the root directory of the configuration files, which is the directory I am currently in.
-// The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
-const DIR_CONFIGS_ROOT = __DIR__;
+
 
 // This constant points to the common directory, where global code, e.g. company-specific GUI modules are located.
 const DIR_COMMON_ROOT = DIR_DOCUMENT_ROOT . '/pool/examples/common';
@@ -145,7 +146,7 @@ if($measurePageSpeed) {
 
             $timeSpent = microtime(true) - POOL_START;
             $htmlStartTags = $htmlCloseTags = '';
-            if(IS_CONSOLE) {
+            if(IS_CLI) {
                 $what = 'Script';
             }
             else {

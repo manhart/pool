@@ -971,9 +971,10 @@ class Weblication extends Component
      *   application.locale
      *   application.launchModule - sets the main module that is launched
      *   application.session.className - overrides default session class
-     *   application.translator
-     *   application.translator.resourceDir
-     *   application.translator.resource
+     *   application.translator Instance of Translator
+     *   application.translatorResource Instance of TranslationProviderFactory
+     *   application.translatorResourceDir Directory where translation files are stored
+     *
      * @return Weblication
      * @throws Exception
      */
@@ -1014,7 +1015,7 @@ class Weblication extends Component
 
         //setup TemplateTranslator
         $translatorStaticResourceDir = $this->Settings->getVar('application.translatorStaticResourceDir');
-        if($translatorStaticResourceDir) {
+        if ($translatorStaticResourceDir) {
             $staticResource = TranslationProviderFactory_ResourceFile::create($translatorStaticResourceDir);
             $TemplateTranslator = new Translator($staticResource);
             //Try to load the required languages
