@@ -1017,7 +1017,7 @@ class Weblication extends Component
 
         //setup TemplateTranslator
         $translatorStaticResourceDir = $this->Settings->getVar('application.translatorStaticResourceDir');
-        if($translatorStaticResourceDir) {
+        if ($translatorStaticResourceDir) {
             $staticResource = TranslationProviderFactory_ResourceFile::create($translatorStaticResourceDir);
             $TemplateTranslator = new Translator($staticResource);
             //Try to load the required languages
