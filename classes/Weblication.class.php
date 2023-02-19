@@ -974,9 +974,10 @@ class Weblication extends Component
      *   application.locale
      *   application.launchModule - sets the main module that is launched
      *   application.session.className - overrides default session class
-     *   application.translator
-     *   application.translator.resourceDir
-     *   application.translator.resource
+     *   application.translator Instance of Translator
+     *   application.translatorResource Instance of TranslationProviderFactory
+     *   application.translatorResourceDir Directory where translation files are stored
+     *
      * @return Weblication
      * @throws Exception
      */
@@ -1185,7 +1186,7 @@ class Weblication extends Component
         }
         // with charset
         if($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {
-            $locale = "$locale.{$this->charset}";
+            $locale = "$locale.$this->charset";
         }
         // without charset
         if($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {

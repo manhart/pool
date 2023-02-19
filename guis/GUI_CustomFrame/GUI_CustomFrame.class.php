@@ -20,7 +20,6 @@ use pool\classes\Exception\ModulNotFoundException;
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link http://www.misterelsa.de
  */
-
 class GUI_CustomFrame extends GUI_Module
 {
     /**
@@ -73,6 +72,7 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * @param Component|null $Owner
      * @param array $params
+     *
      * @throws ModulNotFoundException
      */
     function __construct(?Component $Owner, array $params = [])
@@ -116,13 +116,17 @@ class GUI_CustomFrame extends GUI_Module
      * Adds a window event to the html body
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body?retiredLocale=de
+     *
      * @param string $event an event like onload
      * @param string $function
+     *
      * @return GUI_CustomFrame
      */
     public function addBodyEvent(string $event, string $function): self
     {
-        if(!isset($this->events[$event])) $this->events[$event] = [];
+        if(!isset($this->events[$event])) {
+            $this->events[$event] = [];
+        }
 
         if(!in_array($function, $this->events[$event])) {
             $this->events[$event][] = $function;
@@ -136,9 +140,11 @@ class GUI_CustomFrame extends GUI_Module
      * @param string $jsFile
      * @param null $position (not yet implemented, should control position)
      */
-    public function addScriptFileAtTheEnd(string $jsFile, $position=null)
+    public function addScriptFileAtTheEnd(string $jsFile, $position = null)
     {
-        if($this->addFileFct) $jsFile = call_user_func($this->addFileFct, $jsFile);
+        if($this->addFileFct) {
+            $jsFile = call_user_func($this->addFileFct, $jsFile);
+        }
         array_unshift($this->scriptFilesAtTheEnd, $jsFile);
     }
 
@@ -166,6 +172,7 @@ class GUI_CustomFrame extends GUI_Module
      * set callable for event on add file
      *
      * @param callable $addFileFct
+     *
      * @return GUI_CustomFrame
      * @see GUI_CustomFrame::addScriptFileAtTheEnd()
      */
@@ -199,7 +206,7 @@ class GUI_CustomFrame extends GUI_Module
         $scriptFilesAtTheEnd = '';
         if(count($this->scriptFilesAtTheEnd)) {
             foreach($this->scriptFilesAtTheEnd as $scriptFile) {
-                $scriptFilesAtTheEnd .= '<script src="' . $scriptFile . '"></script>'.chr(10);
+                $scriptFilesAtTheEnd .= '<script src="' . $scriptFile . '"></script>' . chr(10);
             }
         }
 
