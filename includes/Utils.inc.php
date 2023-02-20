@@ -2060,14 +2060,14 @@ function nextFreeFilename(string $dir, string $filename, string $delimiter='-'):
  * Encodes a string into its base 64 digit equivalent string representation suitable for transmission in the URL.
  *
  * @param $data
- * @return bool|false|string
+ * @return string
  */
-function base64url_encode($data)
+function base64url_encode($data): string
 {
     $data = base64_encode($data);
 
     $length = strlen($data);
-    if($length == 0) return false;
+    if($length == 0) return '';
 
     $numPaddingChars = 0;
     while($data[$length-1] == '=') {
