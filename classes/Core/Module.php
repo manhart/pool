@@ -178,10 +178,20 @@ class Module extends Component
      */
     public function exportInternalParams(array $otherParams = []): string
     {
-        return base64url_encode(http_build_query(array_merge($otherParams, $this->internalParams)));
+        return base64url_encode(http_build_query(array_merge($otherParams, $this->getInternalParams())));
     }
 
-    /** get internal param
+    /**
+     * get all internal params
+     * @return array
+     */
+    public function getInternalParams(): array
+    {
+        return $this->internalParams;
+    }
+
+    /**
+     * get internal param
      *
      * @param string $param
      * @return mixed
