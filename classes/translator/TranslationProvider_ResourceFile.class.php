@@ -77,9 +77,10 @@ class TranslationProvider_ResourceFile implements TranslationProvider
             return self::OK;
         elseif ($result === null)
             return self::TranslationKnownMissing;
-        else {
+        elseif ($result === false)
+            return self::TranslationOmitted;
+        else
             return self::TranslationInadequate;
-        }
     }
 
     function alterTranslation(int $status, ?string $value, string $key): int
