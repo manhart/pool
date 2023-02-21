@@ -69,18 +69,18 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     function query(string $key): int
     {
         $this->lastKey = $key;
-        if(!isset($this->translations[$key]))
+        $result = $this->translations[$key] ?? null;
+        $this->lastResult = print_r($result, true);
+        if (!array_key_exists($key, $this->translations))
             return self::TranslationNotExistent;
-        $result = $this->translations[$key];
-        $this->lastResult = $result;
-        if (is_string($result))
+        elseif (is_string($result))
             return self::OK;
         elseif ($result === null)
             return self::TranslationKnownMissing;
-        else {
-            $this->lastResult = print_r($this->lastResult, true);
+        elseif ($result === false)
+            return self::TranslationOmitted;
+        else
             return self::TranslationInadequate;
-        }
     }
 
     function alterTranslation(int $status, ?string $value, string $key): int
@@ -105,8 +105,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
             $newContent = "<?php return $code;";
             //write generated resource to disk
             file_put_contents($this->resourceFile, $newContent);
-        }
-        catch(Exception $e) {
+        } catch (Exception $e) {
             //failed
             $this->error = $e;
             return self::Error;
@@ -124,7 +123,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
         $this->error = null;
     }
 
-    function getAllTranslations():array
+    function getAllTranslations(): array
     {
         return $this->translations;
     }

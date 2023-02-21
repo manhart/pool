@@ -23,6 +23,14 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     static string $sessionID = '';
     static string $requestTime = '';
     private string $lastKey;
+    private string $identity;
+
+    public function __construct(TranslationProvider $provider)
+    {
+        parent::__construct($provider);
+        $this->identity = substr($provider->getFactory()->identity(),0,8);
+        //$this->identity = $provider->getFactory()->identity();
+    }
 
     static function isActive(): bool
     {
@@ -83,7 +91,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
         if ($translation == null) return null;
         $lang = $this->provider->getLang();
         $keyWord = self::KEYWORD;
-        $identifier = "$keyWord.$this->lastKey";
+        $identifier = "$keyWord.$this->identity.$this->lastKey";
         $message = "<a href='#$identifier' id='$identifier' class='$keyWord' lang='$lang'>{$translation->getMessage()}</a>";
         return new Translation($translation->getProvider(),
             $message, $translation->getKey());

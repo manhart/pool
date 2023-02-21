@@ -149,9 +149,10 @@ class GUI_Module
                 if(Array.isArray(value)) {
                     value.forEach(innerValue => QueryURL.append(key, innerValue));
                 }
+                    //doesn't work with empty Objects
                 else if(typeof value === 'object') {
                     for(const [innerKey, innerValue] of Object.entries(value)) {
-                        QueryURL.append(key + '[' + innerKey + ']', innerValue.toString());
+                        QueryURL.append(key + '[' + innerKey + ']',String(innerValue));
                     }
                 }
                 else {
