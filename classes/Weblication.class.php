@@ -203,7 +203,6 @@ class Weblication extends Component
      */
     const LOCALE_WITHOUT_CHARSET = 4;
 
-
     /**
      * @var array all possible default formats
      */
