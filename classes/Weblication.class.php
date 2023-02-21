@@ -215,6 +215,7 @@ class Weblication extends Component
         'strftime.time' => '%H:%M', // needed in js
         'strftime.date' => '%d.%m.%Y', // needed in js
         'strftime.date.time' => '%d.%m.%Y %H:%M', // needed in js
+        'strftime.date.time.short' => '%d.%m.%y %H:%M', // needed in js
         'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S', // needed in js
         'moment.date' => 'DD.MM.YYYY', // needed for moment js
         'moment.date.time' => 'DD.MM.YYYY HH:mm', // needed for moment js
