@@ -804,6 +804,19 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * Get the count of loaded data of table at the moment that this method is called
+     * @param useCurrentPage
+     * @param includeHiddenRows
+     * @param unfiltered
+     * @param formatted
+     * @return {*}
+     */
+    getCount(useCurrentPage = false, includeHiddenRows = true, unfiltered = false, formatted = false)
+    {
+        return this.getData(useCurrentPage, includeHiddenRows, unfiltered, formatted).length;
+    }
+
+    /**
      * Get data from table, the row that contains the id passed by parameter.
      *
      * @param id
