@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 /**
  * POOL
  *
@@ -19,9 +28,9 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\Core\PoolObject;
 use pool\classes\Core\Component;
 use pool\classes\Core\Module;
+use pool\classes\Core\PoolObject;
 use pool\classes\Exception\ModulNotFoundException;
 
 const REQUEST_PARAM_MODULE = 'module';
@@ -167,19 +176,19 @@ class GUI_Module extends Module
     {
         $Parent = $this->getParent();
         $parent_directory = '';
-        if($lookInside and $Parent != null) {
+        if ($lookInside and $Parent != null) {
             do {
-                if($Parent instanceof GUI_Schema) {
+                if ($Parent instanceof GUI_Schema) {
                     $Parent = $Parent->getParent();
                     continue;
                 }
-                if($without_frame and $Parent instanceof GUI_CustomFrame) {
+                if ($without_frame and $Parent instanceof GUI_CustomFrame) {
                     $Parent = $Parent->getParent();
                     continue;
                 }
                 $parent_directory = $Parent->getClassName() . '/' . $parent_directory;
                 $Parent = $Parent->getParent();
-            } while($Parent != null);
+            } while ($Parent != null);
         }
         return $parent_directory . $this->getClassName();
     }
@@ -196,25 +205,25 @@ class GUI_Module extends Module
         $GUIRootDirs = array(
             getcwd()
         );
-        if(defined('DIR_POOL_ROOT')) {
+        if (defined('DIR_POOL_ROOT')) {
             $GUIRootDirs[] = DIR_POOL_ROOT;
         }
-        if(defined('DIR_COMMON_ROOT')) {
+        if (defined('DIR_COMMON_ROOT')) {
             $GUIRootDirs[] = DIR_COMMON_ROOT;
         }
 
         // try to load class
-        foreach($GUIRootDirs as $GUIRootDir) {
+        foreach ($GUIRootDirs as $GUIRootDir) {
             $GUIRootDir = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS);
 
             $filename = $GUIRootDir . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
-            if(file_exists($filename)) {
+            if (file_exists($filename)) {
                 require_once $filename;
                 return true;
             }
 
             $filename = $GUIRootDir . $GUIClassName . '/' . $GUIClassName . PoolObject::CLASS_EXTENSION;
-            if(file_exists($filename)) {
+            if (file_exists($filename)) {
                 require_once $filename;
                 return true;
             }
@@ -226,30 +235,30 @@ class GUI_Module extends Module
                 return true;
             }
 
-            if($ParentGUI instanceof Module) {
+            if ($ParentGUI instanceof Module) {
                 // verschachtelte GUI's
                 $parent_directory = '';
                 $parent_directory_without_frame = '';
                 do {
-                    if($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
+                    if ($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
                         $ParentGUI = $ParentGUI->getParent();
                         continue;
                     }
-                    if(!$ParentGUI instanceof GUI_CustomFrame) {
+                    if (!$ParentGUI instanceof GUI_CustomFrame) {
                         $parent_directory_without_frame = $ParentGUI->getClassName() . '/' . $parent_directory_without_frame;
                     }
                     $parent_directory = $ParentGUI->getClassName() . '/' . $parent_directory;
                     $ParentGUI = $ParentGUI->getParent();
-                } while($ParentGUI != null);
+                } while ($ParentGUI != null);
 
                 $filename = $GUIRootDir . $parent_directory . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
-                if(file_exists($filename)) {
+                if (file_exists($filename)) {
                     require_once $filename;
                     return true;
                 }
 
                 $filename = $GUIRootDir . strtolower($parent_directory_without_frame . $GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
-                if(file_exists($filename)) {
+                if (file_exists($filename)) {
                     require_once $filename;
                     return true;
                 }
@@ -274,34 +283,35 @@ class GUI_Module extends Module
      * @see GUI_Module::searchGUIsInPreloadedContent()
      */
     public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
-        bool $autoLoadFiles = true, bool $search = true): GUI_Module
+                                           bool   $autoLoadFiles = true, bool $search = true): GUI_Module
     {
         $class_exists = class_exists($GUIClassName, false);
 
-        if(!$class_exists) {
+        if (!$class_exists) {
             GUI_Module::autoloadGUIModule($GUIClassName, $ParentGUI);
 
             // retest
             $class_exists = class_exists($GUIClassName, false);
         }
 
-        if($class_exists) {
+        if ($class_exists) {
             $Params = new Input(Input::INPUT_EMPTY);
             $Params->setParams($params);
-            //TODO check authorisation
-            $GUI = new $GUIClassName($Owner, $Params->getData());
+
             /* @var $GUI GUI_Module */
-            if($ParentGUI instanceof Module) {
+            $GUI = new $GUIClassName($Owner, $Params->getData());
+            //TODO check authorisation
+            //$GUI->disable();
+            if ($ParentGUI instanceof Module) {
                 $GUI->setParent($ParentGUI);
             }
-            if($autoLoadFiles && $GUI->autoLoadFiles) {
+            if ($autoLoadFiles && $GUI->autoLoadFiles) {
                 $GUI->loadFiles();
-                if($search)
+                if ($search)
                     $GUI->searchGUIsInPreloadedContent();
             }
             return $GUI;
-        }
-        else {//Class not found
+        } else {//Class not found
             throw new ModulNotFoundException("Fehler beim Erzeugen der Klasse '$GUIClassName'");
         }
     }
@@ -319,7 +329,7 @@ class GUI_Module extends Module
     public function searchGUIsInPreloadedContent(bool $recurse = true, bool $autoLoadFiles = true): void
     {
         $TemplateFiles = $this->Template->getFiles();
-        foreach($TemplateFiles as $TemplateFile) {
+        foreach ($TemplateFiles as $TemplateFile) {
             //pump content through searchGUIs
             $content = $TemplateFile->getContent();
             $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
@@ -339,12 +349,12 @@ class GUI_Module extends Module
         $reg = '/\[(GUI_.*)(\((.*)\)|)]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 
-        if(!$bResult)//no GUIs
+        if (!$bResult)//no GUIs
             return $content;
         else {//GUIs found
             $newContent = [];
             $caret = 0;
-            foreach($matches as $match) {
+            foreach ($matches as $match) {
                 $pattern = $match[0];
                 $guiName = $match[1];
                 $params = $match[3] ?? '';
@@ -423,13 +433,12 @@ class GUI_Module extends Module
     public function enableBox(string $title = '', string $template = 'tpl_box.html')
     {
         $file = $this->Weblication->findTemplate($template, $this->getClassName());
-        if($file) {
+        if ($file) {
             $this->TemplateBox = new Template();
             $this->TemplateBox->setFilePath('stdout', $file);
             $this->TemplateBox->setVar('TITLE', $title);
             $this->enabledBox = true;
-        }
-        else {
+        } else {
             $this->enabledBox = false;
         }
     }
@@ -448,33 +457,32 @@ class GUI_Module extends Module
      */
     public function loadFiles()
     {
-        if(!$this->getWeblication()) return $this;
+        if (!$this->getWeblication()) return $this;
 
         $className = $this->getClassName();
 
-        foreach($this->templates as $handle => $file) {
+        foreach ($this->templates as $handle => $file) {
             $template = $this->Weblication->findTemplate($file, $className);
             $this->Template->setFilePath($handle, $template);
         }
 
         $hasFrame = $this->getWeblication()->hasFrame();
-        if($hasFrame) {
+        if ($hasFrame) {
             $Frame = $this->getWeblication()->getFrame();
-        }
-        else {
+        } else {
             $hasFrame = $this instanceof GUI_CustomFrame;
-            if(!$hasFrame) {
+            if (!$hasFrame) {
                 return $this;
             }
             $Frame = $this;
         }
 
-        foreach($this->cssFiles as $cssFile) {
+        foreach ($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
             $Frame->getHeadData()->addStyleSheet($cssFile);
         }
 
-        foreach($this->jsFiles as $jsFile) {
+        foreach ($this->jsFiles as $jsFile) {
             $jsFile = $this->getWeblication()->findJavaScript($jsFile, $className);
             $Frame->getHeadData()->addJavaScript($jsFile);
         }
@@ -495,18 +503,18 @@ class GUI_Module extends Module
      */
     protected function js_createGUIModule(string $className = '', bool $includeJS = true): bool
     {
-        if(!$this->js_createGUIModule) {
+        if (!$this->js_createGUIModule) {
             return false;
         }
-        if(!$this->Weblication->hasFrame()) {
+        if (!$this->Weblication->hasFrame()) {
             return false;
         }
 
         $className = $className ?: $this->getClassName();
 
-        if($includeJS) {
+        if ($includeJS) {
             $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isPOOL(), false);
-            if(!$js) {
+            if (!$js) {
                 return false;
             }
 
@@ -517,16 +525,18 @@ class GUI_Module extends Module
 
     /**
      * Adds a closed method (Closure) as an Ajax call. Only Ajax methods are callable by the client.
-     *
+     * @see GUI_Module::registerAjaxCalls()
      * @param string $alias name of the method
      * @param Closure $method class for anonymous function
+     * @param bool $noFormat
      * @param mixed ...$meta
      * @return GUI_Module
      */
-    protected function registerAjaxMethod(string $alias, Closure $method, ...$meta): self
+    protected function registerAjaxMethod(string $alias, Closure $method, bool $noFormat = false, ...$meta): self
     {
         $meta['alias'] = $alias;
         $meta['method'] = $method;
+        $meta['noFormat'] = $noFormat;
         $this->ajaxMethods[$alias] = $meta;
         return $this;
     }
@@ -547,7 +557,7 @@ class GUI_Module extends Module
     public function provisionContent(): void
     {
         $this->provision();
-        foreach($this->childModules as $modul) {
+        foreach ($this->childModules as $modul) {
             if ($modul instanceof GUI_Module)
                 $modul->provisionContent();
         }
@@ -569,7 +579,7 @@ class GUI_Module extends Module
         $this->prepare();
         $this->prepareChildren();
 
-        if($this->js_createGUIModule($this->getClassName()) && $Head = $this->Weblication->getHead()) {
+        if ($this->js_createGUIModule($this->getClassName()) && $Head = $this->Weblication->getHead()) {
             $Head->setClientData($this, $this->getClientVars());
         }
     }
@@ -579,7 +589,7 @@ class GUI_Module extends Module
      **/
     private function prepareChildren()
     {
-        foreach($this->childModules as $Module) {
+        foreach ($this->childModules as $Module) {
             $Module->importHandoff($this->handoff);
             $Module->prepareContent();
         }
@@ -608,14 +618,20 @@ class GUI_Module extends Module
         ini_set('html_errors', 0);
 
         $result = '';
-
+        if (!$this->enabled()) {
+            $this->respondToAjaxCall(null, 'GUI '.self::class.' is not enabled', __METHOD__, 'access-denied', 403);
+        }
         $this->registerAjaxCalls();
         $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
         $Closure = $ajaxMethod['method'] ?? null;
 
         // 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
-        if(!($Closure || is_callable([$this, $requestedMethod]))) {
-            throw new Exception('The method "' . $requestedMethod . '" in the class ' . $this->getClassName() . ' is not callable');
+        if ($Closure) {
+            $this->plainJSON = $ajaxMethod['noFormat'];
+        } elseif (!is_callable([$this, $requestedMethod])) {
+            return $this->respondToAjaxCall(null,
+                "The method '$requestedMethod' in the class {$this->getClassName()} is not callable",
+                __METHOD__, 'not-callable');
         }
 
         // @todo validate parameters?
@@ -623,16 +639,14 @@ class GUI_Module extends Module
         try {
             $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $requestedMethod);
             $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
-        }
-        catch(ReflectionException) {
-            $Xception = new Xception('Error calling method ' . $requestedMethod . ' on ' . $this->getClassName(), 0, [], POOL_ERROR_DISPLAY);
-            $Xception->raiseError();
-            return '';
+        } catch (ReflectionException) {
+            return $this->respondToAjaxCall(null, "Error calling method {$requestedMethod} on {$this->getClassName()}",
+                __METHOD__, 'reflection');
         }
 
-        // collect every ajax calls that are not closures
-        if(!$Closure) {
-            Log::info('The method ' . $this->getClassName() . ':' . $requestedMethod . ' is not used as Closure ', ['className' => $this->getClassName(),
+        // collect succeeding ajax calls that are not closures
+        if (!$Closure) {
+            Log::info("The method {$this->getClassName()}:{$requestedMethod} is not used as Closure ", ['className' => $this->getClassName(),
                 'method' => $requestedMethod], 'ajaxCallLog');
         }
 
@@ -640,16 +654,15 @@ class GUI_Module extends Module
 
         ob_start();
 
-        $callingClassName = $this->getClassName();
 
         $args = [];
-        if($numberOfParameters) {
+        if ($numberOfParameters) {
             $parameters = $ReflectionMethod->getParameters();
-            foreach($parameters as $Parameter) {
+            foreach ($parameters as $Parameter) {
                 $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
-                if(is_string($value)) {
-                    if($Parameter->getType()) {
-                        switch($Parameter->getType()->getName()) {
+                if (is_string($value)) {
+                    if ($Parameter->getType()) {
+                        switch ($Parameter->getType()->getName()) {
                             case 'float':
                                 $value = (float)$value;
                                 break;
@@ -662,10 +675,9 @@ class GUI_Module extends Module
                                 $value = string2bool($value);
                                 break;
                         }
-                    }
-                    else {
-                        if($value === 'true' or $value === 'false') {
-                            $value = string2bool($value);
+                    } else {
+                        if ($value === 'true' or $value === 'false') {
+                            $value = (bool)$value;
                         }
                     }
                 }
@@ -673,29 +685,29 @@ class GUI_Module extends Module
                 $args[] = $value;
             }
         }
+        $callingClassName = $this->getClassName();
+        try {
+            if ($Closure) {
+                //TODO check Authorisation
+                //if (!$accessGranted)
+                //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
+                //setup Handler for aborting/crashing Ajax methods?? register_shutdown_function();
 
-        if($Closure) {
-            //TODO check Authorisation
-            //TODO check arg types -> code 400
-
-            // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
-            /** @var mixed $result */
-            $result = $Closure(...$args);
-        }
-        else {
-            try {
+                // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
+                /** @var mixed $result */
+                $result = $Closure(...$args);
+            } else {
                 $result = $ReflectionMethod->invokeArgs($this, $args);
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
-            catch(ReflectionException $e) {
-                echo $e->getMessage();
-            }
+        } catch (Throwable $e) {
+            echo $e->getMessage();
         }
 
         $undefinedContent = ob_get_contents();
         ob_end_clean();
-
-        return $this->respondToAjaxCall($result, $undefinedContent, $callingClassName . ':' . $requestedMethod);
+        return $this->respondToAjaxCall($result, $undefinedContent,
+            "{$callingClassName}:{$requestedMethod}", 'user');
     }
 
     /**
@@ -709,62 +721,36 @@ class GUI_Module extends Module
     }
 
     /**
-     * responds to an Ajax call
+     * Creates a response to an Ajax call handling client format and encoding
      *
-     * @param mixed $data
+     * @param mixed $clientData
      * @param mixed $error
      * @param string $callingMethod optional; use __METHOD__
+     * @param string $errorType
+     * @param int $statusCode
      * @return string
-     * @throws Exception
      */
-    protected function respondToAjaxCall(mixed $data, mixed $error, string $callingMethod = ''): string
+    protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType='', int $statusCode = 200): string
     {
-        header('Content-type: application/json');
-
-        $clientData = [];
-
-        if($this->plainJSON) {
-            $clientData = $data;
-
-            // strange behavior with xdebug; xdebug overrides error_get_last
-            $last_error = $this->Weblication->isXdebugEnabled() ? null : error_get_last();
-            if($last_error != null) {
-                if(IS_DEVELOP) { // only for developers, to have a notice
-                    $message = $last_error['message'] . ' in ' . $callingMethod . ' in file ' . $last_error['file'] . ' on line ' . $last_error['line'];
-                    throw new Exception($message, $last_error['type']);
-                }
-                // error_log($message);
-                // syslog(LOG_WARNING, $message);
-
-                error_clear_last();
-            }
-        }
-        else {
-            $success = !$error;
-            $errObj = null;
-            if(!$success) {
-                // so far only string is treated
-                $errObj = [];
-                $errObj['message'] = $error;
-            }
-            $clientData['data'] = $data;
-            $clientData['success'] = $success;
-            $clientData['error'] = $errObj;
-        }
-
-        $json = json_encode($clientData, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION);
-
-        $json_last_error = json_last_error();
-        if($json_last_error == JSON_ERROR_NONE) {
-            return $json;
-        }
-
-        return json_last_error_msg() . ' in ' . $callingMethod . ': ' . print_r($clientData, true);
+        header('Content-type: application/json', true, $statusCode);
+        if (!$this->plainJSON) $clientData = [//standard client data-format
+            'data' => $clientData,
+            'success' => !$error,
+            'error' => ($error ? ['message' => $error, 'type'=>$errorType] : null)
+        ];
+        //encode data
+        $json = json_encode($clientData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
+        if (json_last_error() == JSON_ERROR_NONE) return $json;
+        //encoding error handling
+        $error = json_last_error_msg() . ' in ' . $callingMethod . ': ' . print_r($clientData, true);
+        $clientData = ['data' => [], 'success' => false, 'error' => ['message' => $error, 'type' => 'syntax']];
+        return json_encode($clientData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
     }
 
     /**
      * enable plain JSON return (without change by the POOL)
-     *
+     * @deprecated Set this in the Metadata when registering your method.
+     * @see GUI_Module::registerAjaxMethod()
      * @param bool $activate
      * @return GUI_Module
      */
@@ -783,17 +769,16 @@ class GUI_Module extends Module
      */
     public function finalizeContent(): string
     {
-        if($this->enabled()) {
+        if ($this->enabled()) {
             $this->finalizeChildren();
-            if($this->isAjax) {//GUI is target of the Ajax-Call
+            if ($this->isAjax) {//GUI is target of the Ajax-Call
                 //Start the Ajax Method -> returns JSON
                 $content = $this->invokeAjaxMethod($this->ajaxMethod);
-            }
-            else {
+            } else {
                 //Parse Templates or get the finished Content from a specific implementation
                 $content = $this->finalize();
                 //Wrap a GUI_Box around the content
-                if($this->enabledBox) {
+                if ($this->enabledBox) {
                     $this->TemplateBox->setVar('CONTENT', $content);
                     $this->TemplateBox->parse('stdout');
                     $content = $this->TemplateBox->getContent('stdout');
@@ -801,8 +786,7 @@ class GUI_Module extends Module
                 }
             }
             return $this->pasteChildren($content);
-        }
-        else {
+        } else {
             return "";
         }
     }
@@ -815,8 +799,8 @@ class GUI_Module extends Module
     private function finalizeChildren()
     {
         /** @var GUI_Module $GUI */
-        foreach($this->childModules as $GUI) {
-            if(!$GUI->enabled()) continue;
+        foreach ($this->childModules as $GUI) {
+            if (!$GUI->enabled()) continue;
             $GUI->finalContent = $GUI->finalizeContent();
         }
     }
@@ -831,7 +815,7 @@ class GUI_Module extends Module
     {
         $replace_pairs = [];
         /** @var GUI_Module $GUI */
-        foreach($this->childModules as $GUI) {
+        foreach ($this->childModules as $GUI) {
             $replace_pairs[$GUI->getMarker()] = $GUI->finalContent;
         }
         return strtr($content, $replace_pairs);
@@ -843,11 +827,8 @@ class GUI_Module extends Module
     protected function finalize(): string
     {
         $content = '';
-        foreach($this->templates as $handle => $tplFile) {
-            $this->Template->parse($handle);
-            $content .= $this->Template->getContent($handle);
-        }
-
+        foreach ($this->templates as $handle => $tplFile)
+            $content .= $this->Template->parse($handle)->getContent($handle);
         return $content;
     }
 }

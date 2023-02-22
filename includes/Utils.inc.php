@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 /**
  * Utils.inc.php
  *
@@ -1200,7 +1209,7 @@ function &getNestedArrayValueReference(array &$arr, array $keys): mixed
 }
 
 /** Build a path by concatenating parts and adding '/' between them and adding an ending slash
- * @param ...$elements
+ * @param string ...$elements
  * @return string The assembled path with an ending slash
  */
 function buildDirPath(...$elements): string

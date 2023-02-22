@@ -15,16 +15,14 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-class GUI_Module
-{
+class GUI_Module {
     name = '';
     className = this.constructor.name;
 
     /**
      * @param {string} name of module
      */
-    constructor(name)
-    {
+    constructor(name) {
         this.name = name;
 
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
@@ -42,8 +40,7 @@ class GUI_Module
     /**
      * @abstract
      */
-    init(options = {})
-    {
+    init(options = {}) {
         // console.debug(this.getName()+'.init called');
     }
 
@@ -52,8 +49,7 @@ class GUI_Module
      *
      * @returns {string}
      */
-    getName()
-    {
+    getName() {
         return this.name;
     }
 
@@ -62,8 +58,7 @@ class GUI_Module
      *
      * @returns {string}
      */
-    getClassName()
-    {
+    getClassName() {
         return this.className;
     }
 
@@ -71,52 +66,48 @@ class GUI_Module
      * @param {Response} response
      * @return {Promise<*>}
      */
-    async parseAjaxResponse(response)
-    {
-        // if a body response exists, parse and extract the possible properties
-        let json;
+    async parseAjaxResponse(response) {
         const status = response.status;
-        if (500 <= status && status <600){
+        if (500 <= status && status < 600) {
             //Server error
+            throw new PoolAjaxResponseError(await response.text(), null);
         }
         switch (status) {
+            case 200: {
+                // if a body response exists, parse and extract the possible properties
+                const {data, error, success} = await this.parseJSON(response);
+                if (!success) // trigger a new exception to capture later on request call site
+                    // notice: the pool responds with an error.type and error.message
+                    throw new PoolAjaxResponseError(error.message, data, error.type);
+                else // Otherwise, simply resolve the received data
+                    return data;
+            }
             case 204:
                 //No-Content Header
                 return undefined;
+            case 401://(Re)authorization required
+                location.reload();//could be replaced with a password prompt
+                return undefined;
+            case 404:
+                console.error(`Ajax-Method at ${response.url} not found`)
+                return undefined;
+            case 403://Access denied (Modul)
+            case 405://Access denied (Method e.g. save)
+                const error = await this.parseJSON(response).error//maybe its best to add an async handler method that the Module e.g.G7Module can override to get the desired behavior
+                Toast.showWarning(['global.error.accessDenied', 'Kein Zugriff'], error.message)
+                return undefined;
         }
-        //TODO Status-codes 200 404
+    }
+
+    async parseJSON(response) {
+        let json;
         let text = await response.text();
         try {
             json = JSON.parse(text);
+        } catch (e) {
+            throw new PoolAjaxResponseError('Invalid server response: \n'+text, e);
         }
-        catch(e) {
-            throw new PoolAjaxResponseError('Syntax Error', e, '', text);
-        }
-        const {data, error, success} = json;
-
-        // trigger a new exception to capture later on request call site
-        if (!success) {
-            // notice: the pool responds with an error.type and error.message
-            switch (error.type) {
-                case 'time-out'://401
-                    location.reload();
-                    return undefined;
-                case 'access-denied'://403 (Modul)/405 (Method e.g. save)
-                    Toast.showWarning(['global.error.accessDenied', 'Kein Zugriff'], error.message)
-                    return undefined;
-            }
-            switch (error.type) {
-                case 'time-out'://401
-                    location.reload();
-                    return undefined;
-                case 'access-denied'://403 (Modul)/405 (Method e.g. save)
-                    Toast.showWarning(['global.error.accessDenied', 'Kein Zugriff'], error.message)
-                    return undefined;
-            }
-            throw new PoolAjaxResponseError(error.message, null, error.type, text);
-        }
-        // Otherwise, simply resolve the received data
-        return data;
+        return json;
     }
 
     /**
@@ -159,7 +150,7 @@ class GUI_Module
         let defaultContentType = 'application/json';
 
         // if a body object is passed, automatically stringify it.
-        if(body) {
+        if (body) {
             const types = [FormData, Blob, ArrayBuffer, URLSearchParams, DataView];
             if (typeof body == 'object' && !(types.includes(body.constructor))) {
                 reqOptions.body = JSON.stringify(body);
@@ -182,11 +173,9 @@ class GUI_Module
             for (const [key, value] of Object.entries(query)) {
                 if (Array.isArray(value)) {
                     value.forEach(innerValue => QueryURL.append(key, innerValue));
-                }
-                    //doesn't work with empty Objects
-                else if(typeof value === 'object') {
-                    for(const [innerKey, innerValue] of Object.entries(value)) {
-                        QueryURL.append(key + '[' + innerKey + ']',String(innerValue));
+                } else if (typeof value === 'object') {
+                    for (const [innerKey, innerValue] of Object.entries(value)) {
+                        QueryURL.append(key + '[' + innerKey + ']', innerValue.toString());
                     }
                 } else {
                     QueryURL.append(key, value.toString());
@@ -214,7 +203,8 @@ class GUI_Module
      * should be used (overwritten) to redraw the corresponding html element (necessary for module configurator)
      * @param options
      */
-    redraw(options = {}) {}
+    redraw(options = {}) {
+    }
 
     /**
      * creates a new unique GUI_Module. Makes the module globally known with $ in front of the name
@@ -223,8 +213,7 @@ class GUI_Module
      * @param {string} name
      * @returns {GUI_Module}
      */
-    static createGUIModule(GUIClassName, name)
-    {
+    static createGUIModule(GUIClassName, name) {
         if (Weblication.getInstance().module_exists(name)) {
             return Weblication.getInstance().getModule(name);
         }
