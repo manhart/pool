@@ -227,7 +227,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
         do {//this may run a second time
             if (isArray(title)) {//Translatable Set
                 try {
-                    Transl.get(title[0])//fetch this key
+                    title = Transl.get(title[0])//fetch this key
                 } catch (error) {
                     translationError = error;
                     title = title[1] ?? null;//use default provided by caller or fallback
