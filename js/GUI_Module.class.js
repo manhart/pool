@@ -70,7 +70,7 @@ class GUI_Module {
         const status = response.status;
         if (500 <= status && status < 600) {
             //Server error
-            throw new PoolAjaxResponseError(await response.text(), null);
+            throw new PoolAjaxResponseError(await response.text(), null, 'internal');
         }
         switch (status) {
             case 200: {
@@ -90,10 +90,10 @@ class GUI_Module {
                 return undefined;
             case 404:
                 console.error(`Ajax-Method at ${response.url} not found`)
-                return undefined;
+                return false;
             case 403://Access denied (Modul)
             case 405://Access denied (Method e.g. save)
-                const error = await this.parseJSON(response).error//maybe its best to add an async handler method that the Module e.g.G7Module can override to get the desired behavior
+                const error = await this.parseJSON(response).error//maybe it's best to add an async handler method that the Module e.g. G7Module can override to get the desired behavior
                 Toast.showWarning(['global.error.accessDenied', 'Kein Zugriff'], error.message)
                 return undefined;
         }
