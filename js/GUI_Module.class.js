@@ -24,7 +24,8 @@ class GUI_Module {
      */
     constructor(name) {
         this.name = name;
-
+        //TODO fix/automate
+        this.parseAjaxResponse = this.parseAjaxResponse.bind(this)
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
         if (typeof this.className == 'undefined') {
             if (!window['pool_GUI_Module_unknown_className']) {
@@ -62,70 +63,42 @@ class GUI_Module {
         return this.className;
     }
 
-    /**
-     * @param {Response} response
-     * @return {Promise<*>}
-     */
-    async parseAjaxResponse(response) {
-        const status = response.status;
-        if (500 <= status && status < 600) {
-            //Server error
-            throw new PoolAjaxResponseError(await response.text(), null, 'internal');
-        }
-        switch (status) {
-            case 200: {
-                // if a body response exists, parse and extract the possible properties
-                const {data, error, success} = await this.parseJSON(response);
-                if (!success) // trigger a new exception to capture later on request call site
-                    // notice: the pool responds with an error.type and error.message
-                    throw new PoolAjaxResponseError(error.message, data, error.type);
-                else // Otherwise, simply resolve the received data
-                    return data;
-            }
-            case 204:
-                //No-Content Header
-                return undefined;
-            case 401://(Re)authorization required
-                location.reload();//could be replaced with a password prompt
-                return undefined;
-            case 404:
-                console.error(`Ajax-Method at ${response.url} not found`)
-                return false;
-            case 403://Access denied (Modul)
-            case 405://Access denied (Method e.g. save)
-                const error = await this.parseJSON(response).error//maybe it's best to add an async handler method that the Module e.g. G7Module can override to get the desired behavior
-                Toast.showWarning(['global.error.accessDenied', 'Kein Zugriff'], error.message)
-                return undefined;
-        }
-    }
-
     async parseJSON(response) {
         let json;
         let text = await response.text();
         try {
             json = JSON.parse(text);
         } catch (e) {
-            throw new PoolAjaxResponseError('Invalid server response: \n'+text, e);
+            throw new PoolAjaxResponseError('Invalid server response: \n' + text, e);
         }
         return json;
     }
 
     /**
-     * promise-based ajax request to server-side GUI-Modul
-     *
+     * promise-based ajax request to server-side GUI-Modul<br>
+     * Formats the Parameters and calls the fetch-API
      * @see https://developer.mozilla.org/en-US/docs/Web/API/fetch
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
      * @see https://blog.openreplay.com/ajax-battle-xmlhttprequest-vs-the-fetch-api
      * @param {string} ajaxMethod Alias name of the method to call
      * @param data Object containing parameters passed to server method
-     * @param {object} options Request options
+     * @param {object} options Request options e.g. {method:'POST'}
      * @return {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
      */
     request(ajaxMethod, data, options = {}) {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
         let key = 'query';
-        if (options.method && options.method === 'POST')
-            key = 'body';
+        if (options.method) {
+            switch (options.method) {
+                case 'GET':
+                    break;
+                case 'POST':
+                    key = 'body';
+                    break;
+                default:
+                    throw new Error('Unrecognized request Method ' + options.method);
+            }
+        }
         options[key] = data;
 
         const {
@@ -173,9 +146,11 @@ class GUI_Module {
             for (const [key, value] of Object.entries(query)) {
                 if (Array.isArray(value)) {
                     value.forEach(innerValue => QueryURL.append(key, innerValue));
-                } else if (typeof value === 'object') {
+                }
+                //doesn't work with empty Objects
+                else if (typeof value === 'object') {
                     for (const [innerKey, innerValue] of Object.entries(value)) {
-                        QueryURL.append(key + '[' + innerKey + ']', innerValue.toString());
+                        QueryURL.append(key + '[' + innerKey + ']', String(innerValue));
                     }
                 } else {
                     QueryURL.append(key, value.toString());
@@ -196,8 +171,76 @@ class GUI_Module {
         Endpoint.searchParams.set('method', ajaxMethod);
 
         // console.debug('fetch', Endpoint.toString(), reqOptions);
-        return fetch(Endpoint, reqOptions).then(this.parseAjaxResponse, () => Toast.showError(null, ['global.error.network', 'Netzwerkfehler']));
+        let promise = fetch(Endpoint, reqOptions).then(this.parseAjaxResponse, this.onFetchNetworkError);
+        //add a default handler
+        promise.then= this.getThenMod(this.onAjax_UnhandledException).bind(promise);
+        return promise;
     }
+
+    onFetchNetworkError = () => alert('Netzwerkfehler');
+    onAjax_UnhandledException = e => {
+        if (e instanceof PoolAjaxResponseError) {
+            console.warn('Caught unhandled Ajax Error of Server-type: ' + e.serverSideType);
+            if (e.cause) console.warn(e.cause)
+        }
+        else
+            console.warn('Caught Unhandled Error during handling an ajax-request')
+        console.warn(e);
+    }
+
+    getThenMod = (handler) => {
+        const thenMod = function (onFullfilled, onRejected) {
+            console.debug('modded')
+            onRejected ??= e => {//place delegate handler
+                if (newPromise.onRejected)//closure magic!
+                    return newPromise.onRejected(e);
+                else
+                    handler(e);
+            }
+            this.onRejected = onRejected;//personal reference
+            const newPromise = this['__proto__'].then.apply(this, [onFullfilled, onRejected]);//official reference
+            newPromise.then = thenMod.bind(newPromise);//more closure magic
+            console.debug('mod complete')
+            return newPromise;
+        };
+        return thenMod;
+    }
+    /**
+     * @param {Response} response
+     * @return {Promise<*>}
+     */
+async parseAjaxResponse (response) {
+        const status = response.status;
+        if (500 <= status && status < 600)//Server error
+            throw new PoolAjaxResponseError(await response.text(), null, 'internal');
+        switch (status) {
+            case 200: {
+                // if a body response exists, parse and extract the possible properties
+                const {data, error, success} = await this.parseJSON(response);
+                if (!success) // trigger a new exception to capture later on request call site
+                    // notice: the pool responds with an error.type and error.message
+                    throw new PoolAjaxResponseError(error.message, data, error.type);
+                else // Otherwise, simply resolve the received data
+                    return data;
+            }
+            case 204://No-Content Header
+                return undefined;
+            case 401://(Re)authorization required
+                return await this.onAjax_ReAuthorizationRequired(response);
+            case 404:
+                return await this.onAjax_404(response);
+            case 403://Access denied (Modul)
+                return await this.onAjax_ModuleAccessDenied(response);
+            case 405://Access denied (Method e.g. save)
+                return await this.onAjax_MethodAccessDenied(response);
+        }
+    };
+
+    onAjax_ReAuthorizationRequired = async response => alert('Session expired');
+    onAjax_404 = async response => console.error(`Ajax-Method at ${response.url} not found`);
+    /**should be rare as this module was fetched beforehand to be able to make this call*/
+    onAjax_ModuleAccessDenied = async response => alert('Access to Module denied');
+    onAjax_MethodAccessDenied = async response => alert('Access to Method denied');
 
     /**
      * should be used (overwritten) to redraw the corresponding html element (necessary for module configurator)

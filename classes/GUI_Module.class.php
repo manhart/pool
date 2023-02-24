@@ -701,13 +701,19 @@ class GUI_Module extends Module
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
         } catch (Throwable $e) {
-            echo $e->getMessage();
         }
 
-        $undefinedContent = ob_get_contents();
+        $errorText = ob_get_contents();
         ob_end_clean();
-        return $this->respondToAjaxCall($result, $undefinedContent,
-            "{$callingClassName}:{$requestedMethod}", 'user');
+
+        if (isset($e)){//ups
+            $result = IS_DEVELOP ? $e->getTraceAsString() : '';
+            $errorText = $e->getMessage();
+            $errorType = $e::class;
+        } else
+            $errorType = 'undefined';
+        return $this->respondToAjaxCall($result, $errorText,
+            "{$callingClassName}:{$requestedMethod}", $errorType);
     }
 
     /**
