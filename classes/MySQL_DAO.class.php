@@ -709,6 +709,9 @@ SQL;
                     $value = $expression;
                 }
             }
+            elseif($value instanceof DateTimeInterface) {
+                $value = "'{$value->format('Y-m-d H:i:s')}'";
+            }
             elseif(!is_int($value) && !is_float($value)) {
                 $value = "'{$this->db->escapeString($value, $this->dbname)}'";
             }
