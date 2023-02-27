@@ -625,6 +625,19 @@ class MySQL_DAO extends DAO
             elseif(is_array($value)) {
                 $value = is_null($value[0]) ? 'NULL' : $value[0];
             }
+            elseif($value instanceof Commands) {
+                // reserved keywords don't need to be masked
+                $expression = $this->commands[$value->name];
+                if($expression instanceof Closure) {
+                    $value = $expression($field);
+                }
+                else {
+                    $value = $expression;
+                }
+            }
+            elseif($value instanceof DateTimeInterface) {
+                $value = "'{$value->format('Y-m-d H:i:s')}'";
+            }
             elseif(!is_int($value) && !is_float($value)) {
                 $value = $this->db->escapeString($value, $this->dbname);
                 $value = "'$value'";
