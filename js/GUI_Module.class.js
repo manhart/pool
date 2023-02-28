@@ -191,15 +191,18 @@ class GUI_Module {
     getThenMod = (handler) => {
         const thenMod = function (onFullfilled, onRejected) {
             console.debug('modded')
-            onRejected ??= e => {//place delegate handler
-                if (newPromise.onRejected)//closure magic!
-                    return newPromise.onRejected(e);
-                else
+            onRejected ??= e=>{//create delegating handler
+                //handle rejection
+                if (newPromise.hasNext)//closure magic!
+                    throw e//pass on to the next promise in the chain
+                else//end of chain -> default Handler
                     handler(e);
             }
-            this.onRejected = onRejected;//personal reference
-            const newPromise = this['__proto__'].then.apply(this, [onFullfilled, onRejected]);//official reference
-            newPromise.then = thenMod.bind(newPromise);//more closure magic
+            //Execute default and inject delegating handler
+            const newPromise = this['__proto__'].then.apply(this, [onFullfilled, onRejected]);
+            this.hasNext = true;
+            //Pass the modification on to the next Promise in the chain
+            newPromise.then= thenMod.bind(newPromise);//more closure magic
             console.debug('mod complete')
             return newPromise;
         };
