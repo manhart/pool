@@ -15,6 +15,9 @@ jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
     'language': document.documentElement.lang
 }
 
+/**
+ * @typedef {GUI_Module} GUI_Table
+ */
 class GUI_Table extends GUI_Module
 {
     /* > ES7
