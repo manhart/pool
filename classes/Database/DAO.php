@@ -157,34 +157,36 @@ abstract class DAO extends PoolObject
     public function setColumns(string ...$columns): DAO
     {
         $this->columns = $columns;
-        $this->onSetColumns();
+        $this->onSetColumns($columns);
         return $this;
     }
 
     /**
      * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
      *
-     * @param string $cols Spalten
+     * @param string $columns columns as string with separator
      * @param string $separator Trenner (Spaltentrenner im String)
      **/
-    public function setColumnsAsString(string $cols, string $separator = ';'): DAO
+    public function setColumnsAsString(string $columns, string $separator = ';'): DAO
     {
-        $this->columns = explode($separator, $cols);
-        $this->columns = array_map('trim', $this->columns);
-        $this->onSetColumns();
+        $columns = explode($separator, $columns);
+        $this->columns = array_map('trim', $columns);
+//        $columns = explode($separator, $columns);
+//        $columns = array_map('trim', $columns);
+        $this->onSetColumns($columns);
         return $this;
     }
 
     /**
      * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
      *
-     * @param array $cols Spalten
+     * @param array $columns Spalten
      * @return DAO
      */
-    public function setColumnsAsArray(array $cols): DAO
+    public function setColumnsAsArray(array $columns): DAO
     {
-        $this->columns = $cols;
-        $this->onSetColumns();
+        $this->columns = $columns;
+        $this->onSetColumns($columns);
         return $this;
     }
 
@@ -201,7 +203,7 @@ abstract class DAO extends PoolObject
     /**
      * event is triggered when the columns are set
      */
-    abstract protected function onSetColumns();
+    abstract protected function onSetColumns(array $columns);
 
     /**
      * Liefert ein Array mit "allen" Spaltennamen zurueck
