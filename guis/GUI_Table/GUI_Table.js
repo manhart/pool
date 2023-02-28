@@ -890,6 +890,9 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
+    /**
+     * remove all rows
+     */
     removeAll()
     {
         this.pageIds = [];
