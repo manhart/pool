@@ -693,20 +693,6 @@ function getContentFromInclude(string $includeFile): string
 }
 
 /**
- * Formatiert eine Zahl als Waehrung.
- * @deprecated
- * @param string $value Wert
- * @param mixed $num_decimal_places Dezimalstellen
- * @param string $currency Waehrungssymbol
- * @return string Zahl formatiert als Waehrung
- * @see NumberFormatter::formatCurrency()
- */
-function formatCurrency(string $value, $num_decimal_places = 2, string $currency = '&#8364;'): string
-{
-    return number_format(floatval($value), (int)$num_decimal_places, ',', '.').$currency;
-}
-
-/**
  * Wandelt ein Array in das HTML Attribute Format um: name="Manhart" vorname="Alexander"
  *
  * @param array $array Array
