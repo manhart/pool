@@ -258,6 +258,8 @@ class MySQL_DAO extends DAO
      */
     public function __construct(DataInterface $DataInterface, string $dbname, string $table)
     {
+        parent::__construct();
+
         $this->db = $DataInterface;
         $this->dbname = $dbname;
         $this->table = $table;
@@ -308,13 +310,13 @@ class MySQL_DAO extends DAO
      *
      * Beim Setzen der Spalten/Felder wird das Ereignis
      * $this -> onSetColumns() aufgerufen
-     **/
+     */
     public function fetchColumns(): static
     {
         $this->pk = [];
         $this->columns = [];
         $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
-        $this->onSetColumns();
+        $this->onSetColumns($this->columns);
         return $this;
     }
 
@@ -324,15 +326,15 @@ class MySQL_DAO extends DAO
      * $this -> column_list fuer die Funktionen $this -> get und
      * $this -> getMultiple zusammen.
      */
-    protected function onSetColumns(bool $withAlias=false)
+    protected function onSetColumns(array $columns)
     {
-        $columns = $this->getColumns();
+//        $columns = $this->getColumns();
         $column_list = '';
         $count = count($columns);
         $alias = '';
-        if($withAlias and $this->tableAlias) {
-            $alias = $this->tableAlias.'.';
-        }
+//        if($withAlias and $this->tableAlias) {
+//            $alias = $this->tableAlias.'.';
+//        }
         for($i=0; $i < $count; $i++) {
             $column = trim($columns[$i]);
 
@@ -467,7 +469,7 @@ class MySQL_DAO extends DAO
      * @param string $fieldName
      * @return array|string[]
      */
-    public function getFieldEnumValues(string $fieldName)
+    public function getFieldEnumValues(string $fieldName): array
     {
         $fieldInfo = $this->db->listfield($this->dbname, $this->table, $fieldName);
         if(!isset($fieldInfo['Type'])) return [];
@@ -658,7 +660,7 @@ class MySQL_DAO extends DAO
         }
 
         $sql = <<<SQL
-INSERT INTO `{$this->table}`
+INSERT INTO `$this->table`
     ($columns)
 VALUES
     ($values)
@@ -744,7 +746,7 @@ SQL;
         }
 
         $sql = <<<SQL
-UPDATE `{$this->table}`
+UPDATE `$this->table`
 SET
     $set
 WHERE
@@ -773,7 +775,7 @@ SQL;
 
         $sql = <<<SQL
 DELETE
-FROM `{$this->table}`
+FROM `$this->table`
 WHERE
     $where
 SQL;
@@ -786,15 +788,16 @@ SQL;
      *
      * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
      * @return ResultSet Ergebnismenge
-     * @see MySQL_ResultSet
+     * @throws Exception
      * @see MySQL_DAO::__buildFilter
+     * @see MySQL_ResultSet
      */
     public function deleteMultiple(array $filter_rules=[]): ResultSet
     {
         $where = $this->__buildFilter($filter_rules, 'and', true);
         $sql = <<<SQL
 DELETE
-FROM `{$this->table}`
+FROM `$this->table`
 WHERE
     $where
 SQL;
@@ -819,8 +822,8 @@ SQL;
         $where = $this->__buildWhere($id, $key);
 
         $sql = <<<SQL
-SELECT {$this->column_list}
-FROM `{$this->table}`
+SELECT $this->column_list
+FROM `$this->table`
 WHERE
     $where
 SQL;
@@ -844,7 +847,7 @@ SQL;
      * @see MySQL_DAO::__buildFilter
      * @see MySQL_DAO::__buildSorting
      * @see MySQL_DAO::__buildLimit
-     * @see MySQL_DAO::__buildGroupby
+     * @see MySQL_DAO::__buildGroupBy
      *
      * @throws Exception
      */
@@ -855,14 +858,14 @@ SQL;
 
         $where = $this->__buildWhere($id, $key);
         $filter = $this->__buildFilter($filter_rules);
-        $groupBy = $this->__buildGroupby($groupBy);
+        $groupBy = $this->__buildGroupBy($groupBy);
         $having = $this->__buildHaving($having);
         $sorting = $this->__buildSorting($sorting);
         $limit = $this->__buildLimit($limit);
 
         $sql = <<<SQL
-SELECT $options {$this->column_list}
-FROM `{$this->table}`
+SELECT $options $this->column_list
+FROM `$this->table`
 WHERE
     $where
     $filter
@@ -884,14 +887,16 @@ SQL;
      * @return ResultSet Ergebnismenge
      * @see MySQL_ResultSet
      * @see MySQL_DAO::__buildFilter
-     **/
+     *
+     * @throws Exception
+     */
     public function getCount(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[]): ResultSet
     {
         $where = $this->__buildWhere($id, $key);
         $filter = $this->__buildFilter($filter_rules);
         $sql = <<<SQL
 SELECT COUNT(*) AS `count`
-FROM `{$this->table}`{$this->tableAlias}
+FROM `$this->table`$this->tableAlias
 WHERE
     $where
     $filter
@@ -980,7 +985,7 @@ SQL;
         $Translator = Weblication::getInstance()->getTranslator();
 
         $tmp = 'case '.$field;
-        foreach($this->translateValues[$field] as $key => $transl) {
+        foreach($this->translateValues[$field] as $transl) {
             $tmp .= ' when \''.$transl.'\' then \''.$Translator->getTranslation($transl, $transl).'\'';
         }
         $tmp .= ' else '.$field.' end';
@@ -1015,7 +1020,9 @@ SQL;
      * @param string $operator MySQL Operator AND/OR
      * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
      * @return string Teil eines SQL Queries
-     **/
+     *
+     * @throws Exception
+     */
     protected function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false): string
     {
         $query = '';
@@ -1205,11 +1212,12 @@ SQL;
      *
      * @param array $filter_rules Filter Regeln (siehe __buildFilter)
      * @return string SQL-Abfrage
+     * @throws Exception
      */
     protected function __buildHaving(array $filter_rules): string
     {
         $query = ltrim($this->__buildFilter($filter_rules, 'and', true));
-        $beginningAnd = (substr($query, 0, 3) == 'and');
+        $beginningAnd = (str_starts_with($query, 'and'));
         if($query != '') $query = ' HAVING '.($beginningAnd ? '1 ' : '').$query;
         return $query;
     }
@@ -1250,10 +1258,10 @@ SQL;
      * @param array $limit Array im Format $array([offset], max). Beispiel $array(5) oder auch $array(0, 5)
      * @return string LIMIT eines SQL Statements
      **/
-    protected function __buildLimit($limit): string
+    protected function __buildLimit(array $limit): string
     {
         $sql = '';
-        if (is_array($limit) and count($limit)) {
+        if ($limit) {
             $sql = ' LIMIT ' . implode(', ', $limit);
         }
         return $sql;
@@ -1262,31 +1270,31 @@ SQL;
     /**
      * Erstelle Gruppierung fuer das SQL-Statement
      *
-     * @param array $groupby
+     * @param array $groupBy
      * @return string SQL-Statement
      */
-    protected function __buildGroupby($groupby): string
+    protected function __buildGroupBy(array $groupBy): string
     {
+        if(!$groupBy) return '';
+
         // GROUP BY a.test ASC WITH ROLLUP
         // array('test' => 'ASC', 'WITH ROLLUP');
         $sql = '';
-        if (is_array($groupby) and count($groupby)) {
-            $alias = '';
-            if($this->tableAlias) $alias = $this->tableAlias.'.';
+        $alias = '';
+        if($this->tableAlias) $alias = $this->tableAlias.'.';
 
-            foreach ($groupby as $column => $sort) {
-                if ($sql == '') {
-                    $sql = ' GROUP BY ';
-                }
-                elseif($column == 'WITH ROLLUP') {
-                    $sql .= ' '.$column;
-                    break;
-                }
-                else {
-                    $sql .= ', ';
-                }
-                $sql .= $alias.$column.' '.$sort;
+        foreach ($groupBy as $column => $sort) {
+            if ($sql == '') {
+                $sql = ' GROUP BY ';
             }
+            elseif($column == 'WITH ROLLUP') {
+                $sql .= ' '.$column;
+                break;
+            }
+            else {
+                $sql .= ', ';
+            }
+            $sql .= $alias.$column.' '.$sort;
         }
         return $sql;
     }
