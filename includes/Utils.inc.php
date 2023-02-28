@@ -738,13 +738,22 @@ function emptyString(): string
  *
  * @see https://stackoverflow.com/questions/2021624/string-sanitizer-for-filename
  * @param string $filename $file without path
+ * @param bool $lowerCase
  * @return string
  */
-function sanitizeFilename(string $filename): string
+function sanitizeFilename(string $filename, bool $lowerCase = true): string
 {
+    $filename = umlauts($filename);
+    $pattern = '/[^a-z0-9\-\. _]+/';
+
     // lowercase for windows/unix interoperability http://support.microsoft.com/kb/100625
-    $filename = mb_strtolower($filename, mb_detect_encoding($filename));
-    $filename = preg_replace( '/[^a-z0-9\-\. _]+/', '-', $filename);
+    if($lowerCase) {
+        $filename = mb_strtolower($filename, mb_detect_encoding($filename));
+    }
+    else {
+        $pattern = '/[^a-zA-Z0-9\-\. _]+/';
+    }
+    $filename = preg_replace( $pattern, '-', $filename);
     $filename = preg_replace(
         array(
             // "file   name.zip" becomes "file-name.zip"
@@ -2316,4 +2325,25 @@ function isHtmlContentTypeHeaderSet(): bool
 //    }
 
     return false;
+}
+
+/**
+ * Convert umlauts to long form and vice versa
+ */
+function umlauts(string $string, bool $reverse = false): string
+{
+    $umlauts = [
+        'ä' => 'ae',
+        'ö' => 'oe',
+        'ü' => 'ue',
+        'Ä' => 'Ae',
+        'Ö' => 'Oe',
+        'Ü' => 'Ue',
+        'ß' => 'ss',
+    ];
+
+    if($reverse) {
+        $umlauts = array_flip($umlauts);
+    }
+    return strtr($string, $umlauts);
 }
