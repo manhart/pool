@@ -111,7 +111,8 @@ abstract class DAO extends PoolObject
      * Mehrere Datensaetze zurueck geben (virtuelle Methode).
      * Datensaetze werden als Objekt ResultSet zurueck gegeben.
      */
-    abstract public function getMultiple(): ResultSet;
+    abstract public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules=[], array $sorting=[], array $limit=[],
+        array $groupBy=[], array $having=[], array $options=[]): ResultSet;
 
     /**
      * Liefert die Anzahl gefundener Datensaete zurueck (virtuelle Methode).
