@@ -211,6 +211,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             }
         );
     }
+
     /**
      * Schedule a Toast to be displayed
      * @param type The category of the Message e.g. Error determines the look of the Created Toast
@@ -319,6 +320,21 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             }
         });
         return this;
+    }
+
+    /**
+     * Show a Toast with individual type and dynamic content
+     *
+     * @param type @see Toast.TOAST_* constants
+     * @param title
+     * @param message
+     * @param delay
+     */
+    static show = (type, title, message, delay = Toast.DEFAULT_DELAY) =>
+    {
+        let $Toast = new Toast();
+        $Toast.setDelay(delay);
+        $Toast.show(type, title, message);
     }
 
     /**
