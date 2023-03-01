@@ -1200,7 +1200,7 @@ function &getNestedArrayValueReference(array &$arr, array $keys): mixed
  */
 function buildDirPath(...$elements): string
 {
-    $result = "";
+    $result = '';
     foreach ($elements as $element){
         $result .= addEndingSlash($element);
     }
