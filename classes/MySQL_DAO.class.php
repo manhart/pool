@@ -1063,25 +1063,29 @@ SQL;
                 $record[0] = $this->translateValues($record[0]);
             }
 
-            // Sonderregel "in", "not in"
+            // Sonderregel "in", "not in", "between"
             if(isset($record[2]) and is_array($record[2])) {
-                $first = true;
-                $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
-                foreach ($record[2] as $value) {
-                    if (!$first) {
-                        $query .= ', ';
-                    }
-                    if(is_integer($value) or is_float($value)) {
-                        $query .= ' ' . $value;
-                    }
-                    else {
-                        if(!$noEscape) $value = $this->db->escapeString($value, $this->dbname);
-                        if(!$noQuotes) $value = '\''.$value.'\'';
-                        $query .= $value;
-                    }
-                    $first = false;
+                if($record[1] == 'between') {
+                    $query .= $record[0].' between ';
+                    $min = $record[2][0];
+                    $max = $record[2][1];
+
+                    $query = $this->addWhereConditionValue($min, $query, $noEscape, $noQuotes);
+                    $query .= ' and ';
+                    $query = $this->addWhereConditionValue($max, $query, $noEscape, $noQuotes);
                 }
-                $query .= ')';
+                else { // in, not in
+                    $first = true;
+                    $query .= $record[0] . ' ' . $record[1] . ' (';
+                    foreach($record[2] as $value) {
+                        if(!$first) {
+                            $query .= ', ';
+                        }
+                        $query = $this->addWhereConditionValue($value, $query, $noEscape, $noQuotes);
+                        $first = false;
+                    }
+                    $query .= ')';
+                }
             }
             else {
                 $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
@@ -1100,12 +1104,6 @@ SQL;
                     if(!$noEscape) $value = $this->db->escapeString($value, $this->dbname);
                     if(!$noQuotes) $value = '\''.$value.'\'';
 
-//									if(mb_detect_encoding($value, array('UTF-8', 'ISO-8859-1'), true) == 'ISO-8859-1') {
-//										if(strpos($value, '_latin1') === false) {
-//											if($noQuotes == false) $value = '_latin1'.$value;
-//										}
-//									}
-
                     $query .= ' '.$value;
                 }
             }
@@ -1113,6 +1111,24 @@ SQL;
         if($z == -1 and $skip_first_operator) { // kein Durchlauf stattgefunden
             return '1';
         }
+        return $query;
+    }
+
+    /**
+     * add value to where condition
+     * @param mixed $value
+     * @param string $query
+     * @param false|int $noEscape
+     * @param false|int $noQuotes
+     * @return string
+     */
+    private function addWhereConditionValue(mixed $value, string $query, false|int $noEscape, false|int $noQuotes): string
+    {
+        if(!is_int($value) and !is_float($value)) {
+            if(!$noEscape) $value = $this->db->escapeString($value, $this->dbname);
+            if(!$noQuotes) $value = '\'' . $value . '\'';
+        }
+        $query .= $value;
         return $query;
     }
 
