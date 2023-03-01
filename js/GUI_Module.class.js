@@ -199,7 +199,7 @@ class GUI_Module {
                     handler(e);
             }
             //Execute default and inject delegating handler
-            const newPromise = this['__proto__'].then.apply(this, [onFullfilled, onRejected]);
+            const newPromise = Object.getPrototypeOf(this).then.apply(this, [onFullfilled, onRejected]);
             this.hasNext = true;
             //Pass the modification on to the next Promise in the chain
             newPromise.then= thenMod.bind(newPromise);//more closure magic
