@@ -731,7 +731,7 @@ SQL;
                 $value = "'{$this->db->escapeString($value, $this->dbname)}'";
             }
             if($set == '') $set = "`$field`=$value";
-            $set = "$set,`$field`=$value";
+            else $set = "$set,`$field`=$value";
         }
 
         if (!$set) {
@@ -739,6 +739,65 @@ SQL;
         }
 
         $where = $this->__buildWhere($pk, $this->pk);
+        if ($where == '1') {
+            $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this->table;
+            $this->raiseError(__FILE__, __LINE__, $error_msg);
+            die($error_msg);
+        }
+
+        $sql = <<<SQL
+UPDATE `$this->table`
+SET
+    $set
+WHERE
+    $where
+SQL;
+
+        return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Update multiple records at once
+     * @param array $data
+     * @param array $filter_rules
+     * @return ResultSet
+     * @throws Exception
+     */
+    public function updateMultiple(array $data, array $filter_rules): ResultSet
+    {
+        $set = '';
+        foreach ($data as $field => $value) {
+            if (is_null($value)) {
+                $value = 'NULL';
+            }
+            elseif(is_bool($value)) {
+                $value = bool2string($value);
+            }
+            elseif($value instanceof Commands) {
+                // reserved keywords don't need to be masked
+                $expression = $this->commands[$value->name];
+                if($expression instanceof Closure) {
+                    $value = $expression($field);
+                }
+                else {
+                    $value = $expression;
+                }
+            }
+            elseif($value instanceof DateTimeInterface) {
+                $value = "'{$value->format('Y-m-d H:i:s')}'";
+            }
+            elseif(!is_int($value) && !is_float($value)) {
+                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
+            }
+            if($set == '') $set = "`$field`=$value";
+            else $set = "$set,`$field`=$value";
+        }
+
+        if (!$set) {
+            return new MySQL_ResultSet($this->db);
+        }
+
+        $where = $this->__buildFilter($filter_rules, 'and', true);
         if ($where == '1') {
             $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this->table;
             $this->raiseError(__FILE__, __LINE__, $error_msg);
