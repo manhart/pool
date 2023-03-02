@@ -24,8 +24,6 @@ class GUI_Module {
      */
     constructor(name) {
         this.name = name;
-        //TODO fix/automate
-        this.parseAjaxResponse = this.parseAjaxResponse.bind(this)
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
         if (typeof this.className == 'undefined') {
             if (!window['pool_GUI_Module_unknown_className']) {
@@ -171,9 +169,9 @@ class GUI_Module {
         Endpoint.searchParams.set('method', ajaxMethod);
 
         // console.debug('fetch', Endpoint.toString(), reqOptions);
-        let promise = fetch(Endpoint, reqOptions).then(this.parseAjaxResponse, this.onFetchNetworkError);
+        let promise = fetch(Endpoint, reqOptions).then(this.parseAjaxResponse.bind(this), this.onFetchNetworkError);
         //add a default handler
-        promise.then= this.getThenMod(this.onAjax_UnhandledException).bind(promise);
+        promise.then = this.getThenMod(this.onAjax_UnhandledException).bind(promise);
         return promise;
     }
 
@@ -182,8 +180,7 @@ class GUI_Module {
         if (e instanceof PoolAjaxResponseError) {
             console.warn('Caught unhandled Ajax Error of Server-type: ' + e.serverSideType);
             if (e.cause) console.warn(e.cause)
-        }
-        else
+        } else
             console.warn('Caught Unhandled Error during handling an ajax-request')
         console.warn(e);
     }
@@ -191,7 +188,7 @@ class GUI_Module {
     getThenMod = (handler) => {
         const thenMod = function (onFullfilled, onRejected) {
             console.debug('modded')
-            onRejected ??= e=>{//create delegating handler
+            onRejected ??= e => {//create delegating handler
                 //handle rejection
                 if (newPromise.hasNext)//closure magic!
                     throw e//pass on to the next promise in the chain
@@ -202,17 +199,18 @@ class GUI_Module {
             const newPromise = Object.getPrototypeOf(this).then.apply(this, [onFullfilled, onRejected]);
             this.hasNext = true;
             //Pass the modification on to the next Promise in the chain
-            newPromise.then= thenMod.bind(newPromise);//more closure magic
+            newPromise.then = thenMod.bind(newPromise);//more closure magic
             console.debug('mod complete')
             return newPromise;
         };
         return thenMod;
     }
+
     /**
      * @param {Response} response
      * @return {Promise<*>}
      */
-async parseAjaxResponse (response) {
+    async parseAjaxResponse(response) {
         const status = response.status;
         if (500 <= status && status < 600)//Server error
             throw new PoolAjaxResponseError(await response.text(), null, 'internal');

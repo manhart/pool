@@ -691,7 +691,6 @@ class GUI_Module extends Module
                 //TODO check Authorisation
                 //if (!$accessGranted)
                 //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
-                //setup Handler for aborting/crashing Ajax methods?? register_shutdown_function();
 
                 // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
                 /** @var mixed $result */
