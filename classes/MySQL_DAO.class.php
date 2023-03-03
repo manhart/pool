@@ -1133,9 +1133,9 @@ SQL;
                     $query .= ' and ';
                     $query = $this->addWhereConditionValue($max, $query, $noEscape, $noQuotes);
                 }
-                else { // in, not in
+                else { // in, not in or equal with one value
                     $first = true;
-                    $query .= $record[0] . ' ' . $record[1] . ' (';
+                    $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
                     foreach($record[2] as $value) {
                         if(!$first) {
                             $query .= ', ';
