@@ -616,6 +616,16 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * get selected row
+     * @return {*|*[]}
+     */
+    getSelectedRow()
+    {
+        let selections = this.getSelections();
+        return selections[0] ? selections[0] : [];
+    }
+
+    /**
      * Check a row by array of values
      *
      * @param field name of the field used to find records (ID column)
