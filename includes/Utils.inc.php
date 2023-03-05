@@ -693,20 +693,6 @@ function getContentFromInclude(string $includeFile): string
 }
 
 /**
- * Formatiert eine Zahl als Waehrung.
- * @deprecated
- * @param string $value Wert
- * @param mixed $num_decimal_places Dezimalstellen
- * @param string $currency Waehrungssymbol
- * @return string Zahl formatiert als Waehrung
- * @see NumberFormatter::formatCurrency()
- */
-function formatCurrency(string $value, $num_decimal_places = 2, string $currency = '&#8364;'): string
-{
-    return number_format(floatval($value), (int)$num_decimal_places, ',', '.').$currency;
-}
-
-/**
  * Wandelt ein Array in das HTML Attribute Format um: name="Manhart" vorname="Alexander"
  *
  * @param array $array Array
@@ -752,13 +738,22 @@ function emptyString(): string
  *
  * @see https://stackoverflow.com/questions/2021624/string-sanitizer-for-filename
  * @param string $filename $file without path
+ * @param bool $lowerCase
  * @return string
  */
-function sanitizeFilename(string $filename): string
+function sanitizeFilename(string $filename, bool $lowerCase = true): string
 {
+    $filename = umlauts($filename);
+    $pattern = '/[^a-z0-9\-\. _]+/';
+
     // lowercase for windows/unix interoperability http://support.microsoft.com/kb/100625
-    $filename = mb_strtolower($filename, mb_detect_encoding($filename));
-    $filename = preg_replace( '/[^a-z0-9\-\. _]+/', '-', $filename);
+    if($lowerCase) {
+        $filename = mb_strtolower($filename, mb_detect_encoding($filename));
+    }
+    else {
+        $pattern = '/[^a-zA-Z0-9\-\. _]+/';
+    }
+    $filename = preg_replace( $pattern, '-', $filename);
     $filename = preg_replace(
         array(
             // "file   name.zip" becomes "file-name.zip"
@@ -1173,13 +1168,39 @@ function readFiles(string $path, bool $absolute = true, string $filePattern = '/
     return $files;
 }
 
+/**
+ * Gets the reference to a value in a nested array by its key. If a Branch doesn't exist it gets created
+ * @param array $arr the nested array
+ * @param array $keys a String of keys sep. All keys are treated as strings
+ * @return mixed a reference to the value if there was no such branch it will be set to null
+ * @throws Exception
+ */
+function &getNestedArrayValueReference(array &$arr, array $keys): mixed
+{
+    //go through each key in the access string
+    foreach ($keys as $key) {
+        if ($arr != null && !is_array($arr)){
+            $subtree = implode('.', $keys);
+            assert(isset($lastKey));
+            throw new Exception("Tried to access subtree of value: '{$arr}' accessing: $subtree @$lastKey");
+        }
+        $lastKey=$key;
+        //expand branch if necessary this will crate an array if necessary
+        $arr[$key]??= null;
+        //and get the reference to the next level
+        $arr = &$arr[$key];
+    }
+    //return the reference
+    return $arr;
+}
+
 /** Build a path by concatenating parts and adding '/' between them and adding an ending slash
  * @param ...$elements
  * @return string The assembled path with an ending slash
  */
 function buildDirPath(...$elements): string
 {
-    $result = "";
+    $result = '';
     foreach ($elements as $element){
         $result .= addEndingSlash($element);
     }
@@ -1473,6 +1494,19 @@ function checkRegExOutcome(string $regEX, string $content): bool
     } else
         return true;
 }
+
+/**Produces a key-value array of variables given as parameters
+ * @param Closure $closure fn()=>[varX.varY...]
+ * @param mixed ...$namedValues optional named Arguments that get merged with the variables
+ * @return array The resulting array keyed by the variable/parameter names
+ * @throws ReflectionException
+ */
+function packArray(Closure $closure, ... $namedValues ):array{
+    return array_merge(
+        (new ReflectionFunction($closure))->getClosureUsedVariables(),
+        $namedValues);
+}
+
 
 /**
  * Sortiert mehrere oder multidimensionale Arrays
@@ -2021,14 +2055,14 @@ function nextFreeFilename(string $dir, string $filename, string $delimiter='-'):
  * Encodes a string into its base 64 digit equivalent string representation suitable for transmission in the URL.
  *
  * @param $data
- * @return bool|false|string
+ * @return string
  */
-function base64url_encode($data)
+function base64url_encode($data): string
 {
     $data = base64_encode($data);
 
     $length = strlen($data);
-    if($length == 0) return false;
+    if($length == 0) return '';
 
     $numPaddingChars = 0;
     while($data[$length-1] == '=') {
@@ -2268,4 +2302,48 @@ function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $E
     }
     if($DateTime1 > $DateTime2) $days *= -1;
     return $days;
+}
+
+/**
+ * determines if the current content-type is text/html
+ * @return bool
+ */
+function isHtmlContentTypeHeaderSet(): bool
+{
+    $headers = headers_list();
+
+    $i = count($headers);
+    while($i) {
+        if (str_starts_with($headers[--$i], 'content-type: text/html')) {
+            return true;
+        }
+    }
+//    foreach ($headers as $header) {
+//        if (str_starts_with($header, 'content-type: text/html')) {
+//            return true;
+//        }
+//    }
+
+    return false;
+}
+
+/**
+ * Convert umlauts to long form and vice versa
+ */
+function umlauts(string $string, bool $reverse = false): string
+{
+    $umlauts = [
+        'ä' => 'ae',
+        'ö' => 'oe',
+        'ü' => 'ue',
+        'Ä' => 'Ae',
+        'Ö' => 'Oe',
+        'Ü' => 'Ue',
+        'ß' => 'ss',
+    ];
+
+    if($reverse) {
+        $umlauts = array_flip($umlauts);
+    }
+    return strtr($string, $umlauts);
 }

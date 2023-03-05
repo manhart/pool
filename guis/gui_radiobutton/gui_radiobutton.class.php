@@ -7,13 +7,13 @@
  */
 class GUI_Radiobutton extends GUI_InputElement
 {
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('type', 'radio');
 
         $this -> Defaults -> addVar('label', '');
 
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     function loadFiles()

@@ -14,6 +14,9 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\Component;
+use pool\classes\Core\Module;
+
 /**
  * Subcode
  *
@@ -80,7 +83,7 @@ class Subcode extends Module
     {
         $this->Input->mergeVars($Input, false);
     }
-    
+
     /**
      * Fuehrt den Subcode (die Aufgabe) aus.
      * (muss ueberschrieben werden)

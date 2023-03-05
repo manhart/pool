@@ -14,6 +14,8 @@
  * @package pool
  */
 
+use pool\classes\Core\PoolObject;
+
 /**
  * Die Grundklasse, der Uhrahn aller Objekte.
  *
@@ -110,8 +112,6 @@ class LogFile extends PoolObject
 
     /**
      * Konstruktor
-     *
-     * @access public
      */
     public function __construct()
     {

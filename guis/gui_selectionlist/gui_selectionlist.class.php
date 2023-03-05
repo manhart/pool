@@ -4,6 +4,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Database\DAO;
+
 define('CHOOSY_TRANSFER_FILE', 'transfer_by_file');
 define('CHOOSY_TRANSFER_DBCHOOSY', 'transfer_by_db_choosy');
 define('CHOOSY_TRANSFER_DB', 'transfer_by_db');
@@ -15,7 +17,7 @@ class GUI_Selectionlist extends GUI_Module
      */
     protected bool $autoLoadFiles = false;
 
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(
@@ -46,7 +48,7 @@ class GUI_Selectionlist extends GUI_Module
                 'class' => array('style_row_1', 'style_row_2')
             )
         );
-        parent:: init(I_REQUEST);
+        parent:: init(Input::INPUT_REQUEST);
     }
 
     function loadFiles()

@@ -28,6 +28,9 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Core\PoolObject;
+use pool\classes\Database\DAO;
+
 if(!defined('CLASS_SESSIONHANDLER')) {
 
     define('CLASS_SESSIONHANDLER', 1); 	// Prevent multiple loading
@@ -107,7 +110,7 @@ if(!defined('CLASS_SESSIONHANDLER')) {
             );
 
             # input object
-            $this -> Input = new Input(I_REQUEST|I_SERVER);
+            $this -> Input = new Input(Input::INPUT_REQUEST | Input::INPUT_SERVER);
 
             if ($this -> db -> connect($this -> dbname)) {
                 $this -> dao = DAO::createDAO($this->tabledefine, $this->db);

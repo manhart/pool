@@ -1,130 +1,18 @@
 <?php
-	/**
-	* # PHP Object Oriented Library (POOL) #
-	*
-	* Class ActionHandler ist eine abstrakte Basisklasse.
-	* Sie vereinfacht Datenbank Aktionen wie z.B. Loeschen,
-	* Anlegen eines Datensatzes.
-	*
-	* Folgende Konstanten / Aktionen sind erlaubt:
-	*
-	* ACTION_SELECT : Selektion eines Datensatzes
-	* ACTION_SEARCH : Auswahl mehrerer Datensaetze
-	* ACTION_DELETE : Loeschen eines Datensatzes
-	* ACTION_SAVE : Speichern (Anlegen / Aendern) eines Datensatzes
-	* ACTION_CLEAR : Zuruecksetzen des ActionHandlers
-	* ACTION_DRUCKEN : ausdruchen einer liste
-	*
-	*
-	* $Log: ActionHandler.class.php,v $
-	* Revision 1.16  2006/09/18 10:21:41  manhart
-	* Fix Partner/Verlage l�schen
-	*
-	* Revision 1.15  2006/09/15 13:05:39  manhart
-	* Fix in Partner/Verlage - doppelte Listeneintr�ge
-	*
-	* Revision 1.14  2006/09/15 12:42:50  manhart
-	* Beschleunigung durch foreach
-	*
-	* Revision 1.13  2006/07/05 15:21:35  manhart
-	* beim Selektieren wird autoamatisch der selektierte Datensatz aktualisiert (vor Selektion!), dabei wird after_search aufgerufen um die Listenformatierungen zu �bernehmen...
-	*
-	* Revision 1.12  2006/02/02 13:12:31  manhart
-	* nur Kommentare
-	*
-	* Revision 1.11  2006/01/30 12:25:05  manhart
-	* comment
-	*
-	* Revision 1.10  2005/12/06 13:17:59  manhart
-	* L�schen nur, falls keine Auftr�ge existieren.
-	*
-	* Revision 1.9  2005/10/06 14:21:28  schmidseder
-	* Bruttoabschluss
-	*
-	* Revision 1.8  2005/08/17 14:35:04  manhart
-	* Sch�ne Fehlermeldung wenn kein PK gefunden wurde
-	*
-	* Revision 1.7  2005/07/20 14:56:29  manhart
-	* Verlags-Mediensuche in Partner/Verlage
-	*
-	* Revision 1.6  2005/03/17 14:29:32  manhart
-	* Fix: MySQL 4.1 nimmt es etwas genauer mit Limit
-	*
-	* Revision 1.5  2004/12/07 12:18:39  manhart
-	* new: getFieldlist
-	*
-	* Revision 1.4  2004/11/26 07:37:13  manhart
-	* Kommentiert
-	*
-	* Revision 1.3  2004/11/09 09:21:59  manhart
-	* Fix Fehlermeldung
-	*
-	* Revision 1.2  2004/09/27 16:13:18  manhart
-	* new function getSpecialCase
-	*
-	* Revision 1.1.1.1  2004/09/21 07:49:25  manhart
-	* initial import
-	*
-	* Revision 1.40  2004/09/07 14:13:59  manhart
-	* Fix: record for session fetched before after_update, now it's correct
-	*
-	* Revision 1.38  2004/09/06 14:56:35  manhart
-	* Fix: after_search executes after_select with same Resultset (it's wrong, now a copy will be hand off)
-	*
-	* Revision 1.35  2004/09/01 14:22:36  manhart
-	* data flow corrected
-	*
-	* Revision 1.34  2004/08/24 15:37:49  manhart
-	* new: getFilterOnQuery and isQuery!
-	*
-	* Revision 1.33  2004/08/23 08:34:42  manhart
-	* -
-	*
-	* Revision 1.27  2004/08/12 14:59:40  manhart
-	* echo ausgabe removed!
-	*
-	* Revision 1.24  2004/08/04 10:13:27  manhart
-	* new: buffer options!
-	*
-	* Revision 1.23  2004/07/15 11:49:50  manhart
-	* Fixes
-	*
-	* Revision 1.22  2004/07/13 12:41:19  manhart
-	* Fix: record
-	* after_save 4. neuer Parameter
-	*
-	* Revision 1.21  2004/07/01 13:20:22  manhart
-	* Fix in action_delete, wenn nur noch ein Datensatz in der Liste uebrig (autoselect)
-	*
-	* Revision 1.20  2004/06/29 14:08:55  manhart
-	* Update: Fixes, Resultsets, ...
-	*
-	* Revision 1.19  2004/06/17 10:29:32  manhart
-	* Ueberarbeitung des Objekts
-	*
-	* Revision 1.18  2004/06/14 14:11:35  manhart
-	* enableDBSession!
-	* ACTION_CLEAR fix: list must be empty
-	*
-	* Revision 1.17  2004/06/09 08:22:55  schulung
-	* Kommentar
-	*
-	* Revision 1.9  2004/06/07 07:50:58  manhart
-	* Kommentare gesetzt
-	*
-	*
-	* @version $Id: ActionHandler.class.php,v 1.16 2006/09/18 10:21:41 manhart Exp $
-	* @version $Revision: 1.16 $
-	*
-	* @see ActionHandler.class.php
-	*
-	* @since 2004-06-07
-	* @author Alexander Manhart <alexander.manhart@freenet.de>
-	* @link http://www.misterelsa.de
-	*/
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 	#### Konstanten fuer alle Aktionen
-	define('ACTION_SELECT', 	'selektieren');
+use pool\classes\Core\Component;
+use pool\classes\Database\DAO;
+
+define('ACTION_SELECT', 	'selektieren');
 	define('ACTION_SEARCH', 	'suchen');
 	define('ACTION_DELETE', 	'entfernen');
 	define('ACTION_SAVE',   	'speichern');
@@ -170,17 +58,6 @@
 		//@var array temporaerer Datencontainer
 		//@access private
 		var $buffer = array('id' => null, 'record' => null, 'list' => array(), 'restartpage' => 0, 'options' => array());
-
-		/**
-		 * Konstruktor
-		 *
-		 * @access public
-		 * @param Component $Owner Besitzer
-		 **/
-		function __construct(& $Owner)
-		{
-			parent::__construct($Owner);
-		}
 
 		/**
 		 * Gibt den Typ aus.
@@ -379,7 +256,7 @@
 				$this->buffer['record'] = null;
 				$this->addError('Keinen Datensatz mit Prim�rschl�ssel ('.
 					implode(',', $pk) . ') ' . implode(',', $id) . ' gefunden! ' .
-					'Generiertes SQL: ' . $this -> DAO -> db -> sql);
+					'Generiertes SQL: ' . $this -> DAO -> getDataInterface() -> sql);
 				return false;
 			}
 			return true;
@@ -478,7 +355,7 @@
 			#### Trenne Daten (Datenfelder <-> Muell)
 			$Input_filtered = $Input->filter($this->DAO->getFieldList());
 
-			$bool = $this->pk_exists($pk, new Input(I_POST));
+			$bool = $this->pk_exists($pk, new Input(Input::INPUT_POST));
 
 			#### Plausibilitaetscheck
 			if ($this->validate($Input_filtered)) {
@@ -530,7 +407,7 @@
 				}
 
 //				if($this -> optimized) {
-				$MyResultset = new Resultset();
+				$MyResultset = new ResultSet();
 			    $MyResultset->addValue($record);
 				$this->after_select($MyResultset);
 				$record = $MyResultset->getRow();
@@ -604,7 +481,7 @@
 		 * @param object $Input Input
 		 * @return boolean Ergebnis der Ueberpruefung (true=existiert, false=existiert nicht)
 		 **/
-		function pk_exists($pk, & $Input)
+		function pk_exists($pk,  $Input)
 		{
 			$bool=false;
 			foreach($pk as $pkfieldname) {
@@ -651,7 +528,7 @@
 				$continue = $this->before_delete($id, $Input); // $Input_filtered
 
 				if($continue) {
-					$Resultset = &$this->DAO->delete($id);
+					$Resultset = $this->DAO->delete($id);
 					if(!$Resultset) {
 						$this->addError('Loeschvorgang abgebrochen! Unbekannter Fehler.', 0);
 						return 0;
@@ -684,7 +561,7 @@
 
                     if ($numRecords == 1) {
                         $select_nr = 0;
-						$Resultset = new Resultset();
+						$Resultset = new ResultSet();
 						$Resultset->addValue($list[$select_nr]);
 						$this->after_select($Resultset);
 						$record = $list[$select_nr];
@@ -871,7 +748,7 @@
 		 * @param string $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
 		 * @return object MySQL_Resultset
 		 * @see MySQL_DAO::get
-		 * @see MySQL_Resultset
+		 * @see MySQL_ResultSet
 		 **/
 		function &get($id, $key=NULL)
 		{
@@ -890,7 +767,7 @@
 		 * @param array $limit Limit -> array(Position, Anzahl Datensaetze)
 		 * @return object MySQL_Resultset
 		 * @see MySQL_DAO::getMultiple
-		 * @see MySQL_Resultset
+		 * @see MySQL_ResultSet
 		 * @see MySQL_DAO::__buildFilter
 		 * @see MySQL_DAO::__buildSorting
 		 * @see MySQL_DAO::__buildLimit

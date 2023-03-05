@@ -62,7 +62,7 @@ class GUI_Edit extends GUI_InputElement
      *
      * @access public
      **/
-    function init(?int $superglobals=I_GET|I_POST)
+    function init(?int $superglobals= Input::INPUT_GET | Input::INPUT_POST)
     {
         // $this->Defaults->addVar('placeholder', 'hirsch');
         $this->Defaults->addVar(

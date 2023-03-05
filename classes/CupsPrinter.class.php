@@ -1,18 +1,14 @@
 <?php
-/**
- * POOL (PHP Object Oriented Library): die Datei ExecFOP.class.php ist eine Wrapper Klasse f�r das Java Programm FOP (Formatting Objects Processor).
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Letzte �nderung am: $Date: 2006/08/07 11:38:03 $
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @version $Id: CupsPrinter.class.php,v 1.2 2006/08/07 11:38:03 manhart Exp $
- * @version $Revision: 1.2 $
- * @version
- *
- * @since 2005-07-29
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
- * @package pool
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+use pool\classes\Core\PoolObject;
 
 if(!defined('CLASS_CUPSPRINTER')) {
     /**
@@ -122,9 +118,7 @@ if(!defined('CLASS_CUPSPRINTER')) {
                     break;
 
                 default:
-                    $Xception = new Xception('Action: "' . $action . '" not known!');
-                    PoolObject::throwException($Xception);
-                    break;
+                    throw new Exception('Action: "' . $action . '" not known!');
              }
         }
 

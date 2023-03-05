@@ -1,10 +1,11 @@
 <?php declare(strict_types=1);
 /*
- * pool
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * ConfigurationLoader.class.php created at 22.06.21, 09:32
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author A.Manhart <A.Manhart@manhart-it.de>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 abstract class ConfigurationLoader

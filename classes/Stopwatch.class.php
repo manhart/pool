@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_STOPWATCH')) {
 
     define('CLASS_STOPWATCH', 1); 	// Prevent multiple loading
@@ -42,16 +44,6 @@ if(!defined('CLASS_STOPWATCH')) {
         //@var int For PHP4 function round
         //@access private
         var $precision = 5;
-
-        /**
-         * Konstruktor
-         *
-         * @access public
-         **/
-        function __construct()
-        {
-            parent::__construct();
-        }
 
         /**
          * StopWatch::setPrecision()

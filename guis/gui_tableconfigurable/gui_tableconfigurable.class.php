@@ -954,7 +954,7 @@ class GUI_TableConfigurable extends GUI_Table
     /**
      * Creates data format for the bootstrap table
      */
-    static function getRowSetAsArray(Resultset $ResultSet, int $total): array
+    static function getRowSetAsArray(ResultSet $ResultSet, int $total): array
     {
         $return = [];
         $return['total'] = $total;

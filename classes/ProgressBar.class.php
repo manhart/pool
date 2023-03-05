@@ -17,6 +17,8 @@
 * @package pool
 */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_PROGRESSBAR')) {
     /**
      * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)
@@ -128,11 +130,8 @@ if(!defined('CLASS_PROGRESSBAR')) {
 
         function __construct($imageBar, $flush=true)
         {
-            $result = $this -> setImage($imageBar);
-            if($this -> isError($result)) {
-                $this -> throwException($result);
-            }
-            $this -> flush = $flush;
+            $this->setImage($imageBar);
+            $this->flush = $flush;
         }
 
         function _initialize()
@@ -259,9 +258,7 @@ if(!defined('CLASS_PROGRESSBAR')) {
         {
             $bExists = file_exists($image);
             if(!$bExists) {
-                $Xception = new Xception('Bild-Datei: ' . $image . ' wurde nicht gefunden!', 0,
-                  array('file' => __FILE__, 'line' => __LINE__, 'function' => __FUNCTION__, 'class' => __CLASS__));
-                return $Xception;
+                throw new Exception('Bild-Datei: ' . $image . ' wurde nicht gefunden!', 0);
             }
             $this->image = $image;
             return true;
@@ -314,9 +311,7 @@ if(!defined('CLASS_PROGRESSBAR')) {
         {
             $bExists = file_exists($blindGif);
             if(!$bExists) {
-                $Xception = new Xception('BlindGif-Datei: ' . $blindGif . ' wurde nicht gefunden!', 0,
-                  array('file' => __FILE__, 'line' => __LINE__, 'function' => __FUNCTION__, 'class' => __CLASS__));
-                $this->throwException($Xception);
+                throw new Exception('BlindGif-Datei: ' . $blindGif . ' wurde nicht gefunden!', 0);
             }
             $this->blindGapGif = $blindGif;
             $this->gap = $gap;

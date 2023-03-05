@@ -19,7 +19,10 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\ModulNotFoundException;
+use pool\classes\Core\PoolObject;
+use pool\classes\Core\Component;
+use pool\classes\Core\Module;
+use pool\classes\Exception\ModulNotFoundException;
 
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
@@ -216,6 +219,13 @@ class GUI_Module extends Module
                 return true;
             }
 
+            // PSR-4 style
+            $filename = $GUIRootDir . $GUIClassName . '/' . $GUIClassName . '.php';
+            if(file_exists($filename)) {
+                require_once $filename;
+                return true;
+            }
+
             if($ParentGUI instanceof Module) {
                 // verschachtelte GUI's
                 $parent_directory = '';
@@ -276,7 +286,7 @@ class GUI_Module extends Module
         }
 
         if($class_exists) {
-            $Params = new Input(I_EMPTY);
+            $Params = new Input(Input::INPUT_EMPTY);
             $Params->setParams($params);
             //TODO check authorisation
             $GUI = new $GUIClassName($Owner, $Params->getData());
@@ -310,9 +320,7 @@ class GUI_Module extends Module
     {
         $TemplateFiles = $this->Template->getFiles();
         foreach($TemplateFiles as $TemplateFile) {
-            /**@var TempCoreHandle $TemplateFile */
             //pump content through searchGUIs
-
             $content = $TemplateFile->getContent();
             $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
             $TemplateFile->setContent($newContent, false);
@@ -485,7 +493,7 @@ class GUI_Module extends Module
      *
      * @return bool
      */
-    protected function js_createGUIModule(string $className = '', bool $includeJS = true/*, bool $global = true*/): bool
+    protected function js_createGUIModule(string $className = '', bool $includeJS = true): bool
     {
         if(!$this->js_createGUIModule) {
             return false;
@@ -497,20 +505,13 @@ class GUI_Module extends Module
         $className = $className ?: $this->getClassName();
 
         if($includeJS) {
-            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isBasicLibrary(), false);
+            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isPOOL(), false);
             if(!$js) {
                 return false;
             }
 
             $this->Weblication->getFrame()->getHeadData()->addJavaScript($js);
         }
-
-//        $windowCode = '';
-//        if($global) {
-//            $windowCode = 'window[\'$' . $this->getName() . '\'] = ';
-//        }
-//        $this->Weblication->getFrame()->getHeadData()->addScriptCode($this->getName(),
-//            $windowCode . 'GUI_Module.createGUIModule(' . $className . ', \'' . $this->getName() . '\');');
         return true;
     }
 
@@ -547,7 +548,8 @@ class GUI_Module extends Module
     {
         $this->provision();
         foreach($this->childModules as $modul) {
-            $modul->provisionContent();
+            if ($modul instanceof GUI_Module)
+                $modul->provisionContent();
         }
     }
 
@@ -577,7 +579,6 @@ class GUI_Module extends Module
      **/
     private function prepareChildren()
     {
-        /** @var GUI_Module $Module */
         foreach($this->childModules as $Module) {
             $Module->importHandoff($this->handoff);
             $Module->prepareContent();
@@ -586,8 +587,8 @@ class GUI_Module extends Module
 
     /**
      * Please override this method to register ajax calls
-     *
      * @return void
+     * @see GUI_Module::registerAjaxMethod()
      */
     protected function registerAjaxCalls(): void
     {
@@ -675,6 +676,7 @@ class GUI_Module extends Module
 
         if($Closure) {
             //TODO check Authorisation
+            //TODO check arg types -> code 400
 
             // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
             /** @var mixed $result */
@@ -824,7 +826,7 @@ class GUI_Module extends Module
      *
      * @param string $content Eigener Content
      * @return string Eigener Content samt dem Content der Child GUIs
-     **/
+     */
     private function pasteChildren(string $content): string
     {
         $replace_pairs = [];
@@ -837,7 +839,7 @@ class GUI_Module extends Module
 
     /**
      * returns the contents of the module
-     **/
+     */
     protected function finalize(): string
     {
         $content = '';

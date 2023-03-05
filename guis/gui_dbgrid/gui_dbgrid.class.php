@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Database\DAO;
+
 /**
  * GUI_DBGrid
  *
@@ -72,7 +74,7 @@ class GUI_DBGrid extends GUI_Module
     /**
      * Resultset
      *
-     * @var Resultset
+     * @var ResultSet
      */
     var $Resultset = null;
 
@@ -88,7 +90,7 @@ class GUI_DBGrid extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('DynToolTipFiltersEnabled', 1);
         $this->Defaults->addVar('submittedVerteiltermin', 0); # abgesendete Suche
@@ -127,7 +129,7 @@ class GUI_DBGrid extends GUI_Module
         $this -> Defaults -> addVar('primaryKey', array());
         $this -> Defaults -> addVar('resultset', null);
 
-        parent :: init(I_GET|I_POST);
+        parent :: init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     /**
@@ -288,14 +290,14 @@ class GUI_DBGrid extends GUI_Module
                 // Callback Funktion
             }
 
-            /* @var $Set Resultset */
+            /* @var $Set ResultSet */
             $CountSet = $Dao->$countFunction(null, null, $filter_rules);
             $this->numRecords = (int)$CountSet->getValue('count');
 
             $numVisibleRecords = $Set->count();
         }
         else {
-            $Set=$Resultset; /* @var $Set Resultset */
+            $Set=$Resultset; /* @var $Set ResultSet */
             $this->numRecords=$Resultset->count();
             $Set->seek($splitterPos);
             //$numVisibleRecords = $Set->count()-$splitterPos;
@@ -545,7 +547,7 @@ class GUI_DBGrid extends GUI_Module
     /**
      * Liefert das erstellte Resultset
      *
-     * @return Resultset
+     * @return ResultSet
      */
     function &getResultset()
     {

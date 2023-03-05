@@ -16,6 +16,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
+
 const URL_TARGET_BLANK = '_blank';    # um den Verweis in einem neuen Fenster zu öffnen
 const URL_TARGET_SELF = '_self';        # um den Verweis im aktuellen Fenster zu öffnen
 const URL_TARGET_PARENT = '_parent';    # um bei verschachtelten Framesets das aktuelle Frameset zu sprengen
@@ -36,12 +38,9 @@ const URL_DEFAULT_PORT = 80;
 class Url extends PoolObject
 {
     /**
-     * Objekt IGet
-     *
-     * @access private
-     * @var IGet
+     * @var InputGet
      */
-    var $InpGet = null;
+    private InputGet $InputGet;
 
     //@var string Scriptname
     private string $ScriptName = '';
@@ -118,9 +117,9 @@ class Url extends PoolObject
      * @param int $superglobal Superglobals (siehe Input.class.php)
      * @see Input::__construct
      **/
-    function __construct(int $superglobal=I_GET)
+    function __construct(int $superglobal= Input::INPUT_GET)
     {
-        $this->InpGet = new IGet($superglobal);
+        $this->InputGet = new InputGet($superglobal);
         $this->Host = $_SERVER['SERVER_NAME'];
         $this->ScriptPath = dirname($_SERVER['SCRIPT_NAME']);
         $this->ScriptName = basename($_SERVER['SCRIPT_NAME']);
@@ -137,8 +136,6 @@ class Url extends PoolObject
         if(isset($_SERVER['SERVER_PORT'])) {
             $this->port = intval($_SERVER['SERVER_PORT']);
         }
-
-        parent::__construct();
     }
 
     /**
@@ -216,7 +213,7 @@ class Url extends PoolObject
         $this->mieserWorkaround = false;
 
         $query = $parsed_url['query'] ?? '';
-        $this->InpGet->setParams($query);
+        $this->InputGet->setParams($query);
     }
 
     /**
@@ -231,7 +228,7 @@ class Url extends PoolObject
         if ($scriptName == '') {
             $scriptName = ($this->ScriptName != '') ? (addEndingSlash($this->ScriptPath).$this->ScriptName) : $this->ScriptPath;
         }
-        $q = $this->InpGet->getQuery('', $this->entityAmpersand);
+        $q = $this->InputGet->getQuery('', $this->entityAmpersand);
 
         // todo pruefen ob es reicht auf $_GET[session_id] zu pruefen. Und nur wenn gesetzt, fuehren wir die ID in der URL weiter
         $use_only_cookies = ini_get('session.use_only_cookies');
@@ -291,7 +288,7 @@ class Url extends PoolObject
         if(strlen($path) > 0 and $path[0] != '/') {
             $path = '/'.$path;
         }
-        $query = $this->InpGet->getQuery('', $this->entityAmpersand);
+        $query = $this->InputGet->getQuery('', $this->entityAmpersand);
 
         if($isSID and $withSid) {
             if($query != '') $query .= $this->entityAmpersand;
@@ -518,7 +515,7 @@ class Url extends PoolObject
      **/
     public function clear()
     {
-        $this->InpGet->clear();
+        $this->InputGet->clear();
     }
 
     /**
@@ -530,7 +527,7 @@ class Url extends PoolObject
      */
     public function setParam(string $key, ?string $value=''): Url
     {
-        $this->InpGet->setVar($key, $value);
+        $this->InputGet->setVar($key, $value);
         return $this;
     }
 

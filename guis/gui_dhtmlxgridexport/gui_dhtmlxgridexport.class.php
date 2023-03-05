@@ -34,7 +34,7 @@ class GUI_DHtmlXGridExport extends GUI_Module
      * @access public
      * @param integer|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    function init(?int $superglobals = I_REQUEST)
+    function init(?int $superglobals = Input::INPUT_REQUEST)
     {
         $this->Defaults->addVar('type', 'pdf');
 
