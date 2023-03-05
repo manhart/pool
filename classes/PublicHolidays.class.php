@@ -302,6 +302,12 @@ final class PublicHolidays extends PoolObject
     ];
 
     /**
+     * holds the public holidays
+     * @var array
+     */
+    private array $publicHolidays = [];
+
+    /**
      * checks date for a holiday
      *
      * @param DateTimeInterface $Date
