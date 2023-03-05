@@ -18,7 +18,6 @@ final class PublicHolidays extends PoolObject
      * @see https://www.welt-der-zahlen.info/berechnung.html
      */
 
-
     const NEUJAHRSTAG = 0;
     const HEILIGEDREIKOENIGE = 1;
     const ROSENMONTAG = 2;
@@ -311,7 +310,7 @@ final class PublicHolidays extends PoolObject
      * @return bool
      * @throws Exception
      */
-    static function check(\DateTimeInterface $Date, string $state = '', bool $legal = true): bool
+    static function check(DateTimeInterface $Date, string $state = '', bool $legal = true): bool
     {
         $year = (int)$Date->format('Y');
 
@@ -334,7 +333,7 @@ final class PublicHolidays extends PoolObject
      * @return PublicHoliday|null
      * @throws Exception
      */
-    static function which(\DateTime $Date, string $state = ''): ?PublicHoliday
+    static function which(DateTime $Date, string $state = ''): ?PublicHoliday
     {
         $year = (int)$Date->format('Y');
 
@@ -421,7 +420,7 @@ final class PublicHolidays extends PoolObject
      * @param DateTimeInterface $ToDate
      * @return array
      */
-    public function getLegalHolidaysByRange(\DateTimeInterface $FromDate, \DateTimeInterface $ToDate): array
+    public function getLegalHolidaysByRange(DateTimeInterface $FromDate, DateTimeInterface $ToDate): array
     {
         $holidaysByRange = array();
         $fromYear = (int)$FromDate->format('Y');
@@ -431,7 +430,7 @@ final class PublicHolidays extends PoolObject
             try {
                 $this->factory($i);
             }
-            catch(Exception $Exception) {}
+            catch(Exception) {}
 
             foreach($this->publicHolidays as $key => $Holiday) {
                 if($FromDate <= $Holiday and $Holiday <= $ToDate) {
@@ -455,7 +454,7 @@ final class PublicHolidays extends PoolObject
         try {
             $this->factory($year);
         }
-        catch(Exception $Exception) {}
+        catch(Exception) {}
 
         if($state == '') {
             return $this->publicHolidays[$year]['legal'];
@@ -629,6 +628,6 @@ final class PublicHolidays extends PoolObject
             $monat = 4;
         }
 
-        return new DateTimeImmutable("{$year}-{$monat}-{$os}");
+        return new DateTimeImmutable("$year-$monat-$os");
     }
 }
