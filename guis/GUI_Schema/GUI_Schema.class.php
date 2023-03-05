@@ -1,7 +1,5 @@
 <?php
 
-use pool\classes\ModulNotFoundException;
-
 /**
  * -= Rapid Module Library (RML) =-
  *
@@ -36,7 +34,7 @@ class GUI_Schema extends GUI_Module
     /**
      * @param int|null $superglobals takes parameter schema from request
      */
-    public function init(?int $superglobals = I_REQUEST)
+    public function init(?int $superglobals = Input::INPUT_REQUEST)
     {
         $this->Defaults->addVar('schema');
         parent::init($superglobals);
@@ -156,7 +154,7 @@ class GUI_Schema extends GUI_Module
      * Der gesamte Inhalt wird zurueck gegeben.
      *
      * @return string Content
-     **/
+     */
     public function finalize(): string
     {
         $content = '';

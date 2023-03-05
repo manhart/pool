@@ -45,7 +45,7 @@ class GUI_DBTextarea extends GUI_Textarea
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('tabledefine', '');
         $this -> Defaults -> addVar('id', 0); 	// separated by ;

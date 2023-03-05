@@ -29,6 +29,8 @@ class PoolError extends Error {
 }
 
 class PoolAjaxResponseError extends PoolError {
+    serverSideType = '';
+    responseText = '';
     /**
      * Any Ajax response can contain custom errors in the JSON. An error type can be specified in the JSON Error.
      *
@@ -36,10 +38,11 @@ class PoolAjaxResponseError extends PoolError {
      * @param cause origin Error or null
      * @param serverSideType custom serverside error type
      */
-    constructor(message, cause, serverSideType = '')
+    constructor(message, cause, serverSideType = '', responseText = '')
     {
         super(message, cause);
         this.serverSideType = serverSideType;
+        this.responseText = responseText;
     }
 
     /**
@@ -49,5 +52,10 @@ class PoolAjaxResponseError extends PoolError {
     getServerSideType()
     {
         return this.serverSideType;
+    }
+
+    getResponseText()
+    {
+        return this.responseText;
     }
 }

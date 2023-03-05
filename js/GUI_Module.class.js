@@ -71,14 +71,14 @@ class GUI_Module
             json = JSON.parse(text);
         }
         catch(e) {
-            throw new PoolAjaxResponseError('Syntax Error', e);
+            throw new PoolAjaxResponseError('Syntax Error', e, '', text);
         }
         const { data, error, success } = response.status !== 204 ? json : { success: true };
 
         // trigger a new exception to capture later on request call site
         if (!success) {
             // notice: the pool responses with an error.type and error.message
-            throw new PoolAjaxResponseError(error.message, null, error.type);
+            throw new PoolAjaxResponseError(error.message, null, error.type, text);
         }
         // Otherwise, simply resolve the received data
         return data;
@@ -149,9 +149,10 @@ class GUI_Module
                 if(Array.isArray(value)) {
                     value.forEach(innerValue => QueryURL.append(key, innerValue));
                 }
+                    //doesn't work with empty Objects
                 else if(typeof value === 'object') {
                     for(const [innerKey, innerValue] of Object.entries(value)) {
-                        QueryURL.append(key + '[' + innerKey + ']', innerValue.toString());
+                        QueryURL.append(key + '[' + innerKey + ']',String(innerValue));
                     }
                 }
                 else {
@@ -201,7 +202,7 @@ class GUI_Module
         }
         else {
             if(!Weblication.classMapping[GUIClassName]) {
-                throw new Error('Class ' + GUIClassName + ' is not registered.');
+                throw new Error('Class ' + GUIClassName + ' is not registered. Please make sure to register your Module.');
             }
             myClass = Weblication.classMapping[GUIClassName];
         }

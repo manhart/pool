@@ -13,6 +13,8 @@
 
 use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
+use pool\classes\Database\DAO;
+use pool\classes\Database\DataInterface;
 
 class Log
 {
@@ -405,7 +407,7 @@ class Log
         }
     }
 
-    public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): self
+    public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON)
     {
         $message = $text;
         self::$facilities[$configurationName][self::OUTPUT_FILE]['LogFile']->addLine($message);

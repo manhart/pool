@@ -1,44 +1,32 @@
 <?php
-/**
- * POOL
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Includes all necessary base files for the use of POOL
- *
- * @version $Id: pool.lib.php,v 1.2 2005/06/03 08:32:08 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
- * @since 2003-09-30
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 const POOL = 'POOL';
+const pool = 'pool';
 
-// subdirectories
+if(!defined('DIR_POOL_ROOT')) {
+    define('DIR_POOL_ROOT', __DIR__);
+}
+
 const PWD_TILL_INCLUDES = 'includes';
 const PWD_TILL_CLASSES = 'classes';
 const PWD_TILL_GUIS = 'guis';
 const PWD_TILL_SCHEMES = 'schemes';
 const PWD_TILL_SKINS = 'skins';
 const PWD_TILL_JAVASCRIPTS = 'js';
-// const PWD_TILL_3RDPARTY = '3rdparty';
 const PWD_TILL_SUBCODES = 'subcodes';
 
-if(!defined('DIR_POOL_ROOT')) {
-    define('DIR_POOL_ROOT', __DIR__);
-}
+require_once(__DIR__ . '/' . PWD_TILL_CLASSES . '/Autoloader.php');
+\pool\classes\Autoloader::getLoader()->register();
 
-# Bindet die jeweiligen Includes (.lib.php) der Unterverzeichnisse mit ein.
-require __DIR__.'/'.PWD_TILL_INCLUDES.'/includes.lib.php';
-require __DIR__.'/'.PWD_TILL_CLASSES.'/classes.lib.php';
-//require (PWD_TILL_3RDPARTY.'/3rdparty.lib.php');
-
-//if (defined('DIR_SUBCODES_ROOT') and is_dir(DIR_SUBCODES_ROOT)) {
-//    include_once __DIR__.'/'.DIR_SUBCODES_ROOT.'/subcodes.lib.php';
-//}
-
-require_once('autoload.inc.php');
-PoolAutoloader::getLoader()->register();
+// @todo replace against Utils classes
+require __DIR__ . '/' . PWD_TILL_INCLUDES . '/includes.lib.php';
+// @todo load from autoloader
+require __DIR__ . '/' . PWD_TILL_CLASSES . '/classes.lib.php';

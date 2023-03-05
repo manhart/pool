@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Database\DAO;
+
 /**
  * DBSelect steuert eine Dropdown- und Multiselect Box.
  *
@@ -37,7 +39,7 @@ class GUI_DBLookupSelect extends GUI_Select
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('tabledefine', '');
         $this->Defaults->addVar('keyValue', false); 	// separated by ;
@@ -63,12 +65,11 @@ class GUI_DBLookupSelect extends GUI_Select
      **/
     function prepare ()
     {
-        $interfaces = $this->Weblication->getInterfaces();
         $Input = & $this -> Input;
 
         $utf8 = $Input->getVar('utf8');
 
-        $DAO = DAO::createDAO($Input->getVar('tabledefine'), $interfaces);
+        $DAO = DAO::createDAO($Input->getVar('tabledefine'));
 
         # filter
         $filter = $Input->getVar('filter');

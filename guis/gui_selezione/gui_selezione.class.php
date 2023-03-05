@@ -39,7 +39,7 @@ class GUI_Selezione extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('id', $this->getName());
         $this->Defaults->addVar('name', $this->getName());
@@ -54,7 +54,7 @@ class GUI_Selezione extends GUI_Module
         // todo's:
         $this->Defaults->addVar('list_and_selection_unique', false);
 
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET | Input::INPUT_POST);
     }
 
     function loadFiles()

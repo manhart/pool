@@ -14,6 +14,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_SUBCODERESULT'))
 {
     define('CLASS_SUBCODERESULT', '1');

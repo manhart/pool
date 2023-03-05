@@ -61,7 +61,7 @@ class GUI_Box extends GUI_Module
      *
      * @param int|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    public function init(?int $superglobals = I_EMPTY)
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         parent::init($superglobals);
     }

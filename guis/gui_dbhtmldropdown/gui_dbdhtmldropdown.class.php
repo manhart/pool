@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Database\DAO;
+
 /**
  * GUI_DBDHTMLDropdown
  *
@@ -32,7 +34,7 @@ class GUI_DBDHTMLDropdown extends GUI_DHTMLDropdown
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar(
             array(

@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\Core\PoolObject;
+
 /**
  *IniFile
  * @author Alexander Manhart <alexander@manhart-it.de>

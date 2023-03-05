@@ -1,16 +1,14 @@
 <?php declare(strict_types=1);
-/**
- * POOL
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Computes all 20 legal holidays in Germany for a given year or period
- *
- * @see https://www.welt-der-zahlen.info/berechnung.html
- * @since 2022-03-25
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+use pool\classes\Core\PoolObject;
 
 final class PublicHolidays extends PoolObject
 {
@@ -19,7 +17,6 @@ final class PublicHolidays extends PoolObject
      *
      * @see https://www.welt-der-zahlen.info/berechnung.html
      */
-
 
     const NEUJAHRSTAG = 0;
     const HEILIGEDREIKOENIGE = 1;
@@ -299,6 +296,12 @@ final class PublicHolidays extends PoolObject
     ];
 
     /**
+     * holds the public holidays
+     * @var array
+     */
+    private array $publicHolidays = [];
+
+    /**
      * checks date for a holiday
      *
      * @param DateTimeInterface $Date
@@ -307,7 +310,7 @@ final class PublicHolidays extends PoolObject
      * @return bool
      * @throws Exception
      */
-    static function check(\DateTimeInterface $Date, string $state = '', bool $legal = true): bool
+    static function check(DateTimeInterface $Date, string $state = '', bool $legal = true): bool
     {
         $year = (int)$Date->format('Y');
 
@@ -328,8 +331,9 @@ final class PublicHolidays extends PoolObject
      * @param DateTime $Date
      * @param string $state
      * @return PublicHoliday|null
+     * @throws Exception
      */
-    static function which(\DateTime $Date, string $state = ''): ?\PublicHoliday
+    static function which(DateTime $Date, string $state = ''): ?PublicHoliday
     {
         $year = (int)$Date->format('Y');
 
@@ -416,7 +420,7 @@ final class PublicHolidays extends PoolObject
      * @param DateTimeInterface $ToDate
      * @return array
      */
-    public function getLegalHolidaysByRange(\DateTimeInterface $FromDate, \DateTimeInterface $ToDate): array
+    public function getLegalHolidaysByRange(DateTimeInterface $FromDate, DateTimeInterface $ToDate): array
     {
         $holidaysByRange = array();
         $fromYear = (int)$FromDate->format('Y');
@@ -426,7 +430,7 @@ final class PublicHolidays extends PoolObject
             try {
                 $this->factory($i);
             }
-            catch(Exception $Exception) {}
+            catch(Exception) {}
 
             foreach($this->publicHolidays as $key => $Holiday) {
                 if($FromDate <= $Holiday and $Holiday <= $ToDate) {
@@ -450,7 +454,7 @@ final class PublicHolidays extends PoolObject
         try {
             $this->factory($year);
         }
-        catch(Exception $Exception) {}
+        catch(Exception) {}
 
         if($state == '') {
             return $this->publicHolidays[$year]['legal'];
@@ -480,10 +484,10 @@ final class PublicHolidays extends PoolObject
             // already created
             return;
         }
-        $Date = new \DateTimeImmutable($year.'-01-01');
+        $Date = new DateTimeImmutable($year.'-01-01');
         $this->publicHolidays[$year]['legal'][self::NEUJAHRSTAG] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-01-06');
+        $Date = new DateTimeImmutable($year.'-01-06');
         $this->publicHolidays[$year]['legal'][self::HEILIGEDREIKOENIGE] = $Date;
 
         $EasterSunday = $this->calculateEasterSunday($year);
@@ -494,7 +498,7 @@ final class PublicHolidays extends PoolObject
         $Date = $EasterSunday->modify('-48 days');
         $this->publicHolidays[$year]['other'][self::ROSENMONTAG] = $Date;
 
-        $Date = new \DateTimeImmutable($year . '-03-08');
+        $Date = new DateTimeImmutable($year . '-03-08');
         $this->publicHolidays[$year]['legal'][self::FRAUENTAG] = $Date;
 
 
@@ -510,7 +514,7 @@ final class PublicHolidays extends PoolObject
         $Date = $EasterSunday->modify('+1 days');
         $this->publicHolidays[$year]['legal'][self::OSTERMONTAG] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-05-01');
+        $Date = new DateTimeImmutable($year.'-05-01');
         $this->publicHolidays[$year]['legal'][self::TAGDERARBEIT] = $Date;
 
         $Date = $EasterSunday->modify('+39 days');
@@ -525,31 +529,31 @@ final class PublicHolidays extends PoolObject
         $Date = $EasterSunday->modify('+60 days');
         $this->publicHolidays[$year]['legal'][self::FRONLEICHNAM] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-08-08');
+        $Date = new DateTimeImmutable($year.'-08-08');
         $this->publicHolidays[$year]['legal'][self::AUGSBURGERFRIEDENSFEST] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-08-15');
+        $Date = new DateTimeImmutable($year.'-08-15');
         $this->publicHolidays[$year]['legal'][self::MARIAEHIMMELFAHRT] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-10-03');
+        $Date = new DateTimeImmutable($year.'-10-03');
         $this->publicHolidays[$year]['legal'][self::TAGDERDEUTSCHENEINHEIT] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-10-31');
+        $Date = new DateTimeImmutable($year.'-10-31');
         $this->publicHolidays[$year]['legal'][self::REFORMATIONSTAG] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-11-01');
+        $Date = new DateTimeImmutable($year.'-11-01');
         $this->publicHolidays[$year]['legal'][self::ALLERHEILIGEN] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-11-22');
+        $Date = new DateTimeImmutable($year.'-11-22');
         while ($Date->format('N') != 3) {
             $Date = $Date->modify('-1 days');
         }
         $this->publicHolidays[$year]['legal'][self::BUSSUNDBETTAG] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-12-25');
+        $Date = new DateTimeImmutable($year.'-12-25');
         $this->publicHolidays[$year]['legal'][self::ERSTERWEIHNACHTSTAG] = $Date;
 
-        $Date = new \DateTimeImmutable($year.'-12-26');
+        $Date = new DateTimeImmutable($year.'-12-26');
         $this->publicHolidays[$year]['legal'][self::ZWEITERWEIHNACHTSTAG] = $Date;
     }
 
@@ -607,7 +611,12 @@ final class PublicHolidays extends PoolObject
         return $o;
     }
 
-    public function calculateEasterSunday(int $year): \DateTimeImmutable
+    /**
+     * calculate easter sunday
+     * @param int $year
+     * @return DateTimeImmutable
+     */
+    public function calculateEasterSunday(int $year): DateTimeImmutable
     {
         $os = self::gauss($year);
 
@@ -619,6 +628,6 @@ final class PublicHolidays extends PoolObject
             $monat = 4;
         }
 
-        return new \DateTimeImmutable("{$year}-{$monat}-{$os}");
+        return new DateTimeImmutable("$year-$monat-$os");
     }
 }

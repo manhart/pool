@@ -8,6 +8,9 @@
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
+use pool\classes\Core\Component;
+use pool\classes\Core\Module;
+
 /**
  * -= Rapid Module Library (RML) =-
  *
@@ -124,6 +127,7 @@ class GUI_HeadData extends GUI_Module
      */
     private array $clientData = [];
 
+
     /**
      * Konstruktor
      *
@@ -236,16 +240,6 @@ class GUI_HeadData extends GUI_Module
     function setRobots(string $sRobots)
     {
         $this->robots = $sRobots;
-    }
-
-    /**
-     * Setzt die Sprache fuer die Seite
-     *
-     * @param string $lang
-     **/
-    function setLanguage(string $lang)
-    {
-        $this->ContentLanguage = $lang;
     }
 
     /**
@@ -366,7 +360,7 @@ class GUI_HeadData extends GUI_Module
      */
     public function finalize(): string
     {
-        $Url = new Url(I_EMPTY);
+        $Url = new Url(Input::INPUT_EMPTY);
 
         $this->Template->setVars(
             array(

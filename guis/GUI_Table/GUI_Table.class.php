@@ -7,8 +7,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
-//use pool\classes\Configurable;
-
 class GUI_Table extends GUI_Module
 {
     use Configurable;
@@ -1040,7 +1038,7 @@ class GUI_Table extends GUI_Module
     /**
      * @param int|null $superglobals
      */
-    public function init(?int $superglobals = I_EMPTY)
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
         $this->Defaults->addVar('render', self::RENDER_ONDOMLOADED);
@@ -1364,7 +1362,7 @@ class GUI_Table extends GUI_Module
                     // translate title
                     if($optName == 'title') {
                         if(str_contains($attrValue, '.')) {
-                            $attrValue = $this->Weblication->getTranslator()->get($attrValue) ?: $attrValue;
+                            $attrValue = $this->Weblication->getTranslator()->getTranslation($attrValue, $attrValue) ?: $attrValue;
                         }
                     }
 
@@ -1515,7 +1513,7 @@ class GUI_Table extends GUI_Module
     /**
      * Creates data format for the bootstrap table (clientside transfer format)
      */
-    static function getRowSetAsArray(Resultset $ResultSet, int $total): array
+    static function getRowSetAsArray(ResultSet $ResultSet, int $total): array
     {
         $return = [];
         $return['total'] = $total;

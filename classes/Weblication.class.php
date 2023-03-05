@@ -1,28 +1,29 @@
 <?php declare(strict_types=1);
-/**
- * POOL
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Weblication.class.php
- *
- * The main class of all web applications. Every new project starts with Weblication and is instantiated from it.
- *
- * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
+use pool\classes\Core\Component;
+use pool\classes\Database\DAO;
+use pool\classes\Database\DataInterface;
+use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\Language;
-use pool\classes\ModulNotFoundException;
-use pool\classes\Translator;
+use pool\classes\translator\TranslationProviderFactory;
+use pool\classes\translator\TranslationProviderFactory_nop;
+use pool\classes\translator\TranslationProviderFactory_ResourceFile;
+use pool\classes\translator\Translator;
 
 class Weblication extends Component
 {
     /**
      * Is this request an ajax call
      */
-    static public $isAjax = false;
+    static public bool $isAjax = false;
 
     /**
      * Titel der Weblication
@@ -51,9 +52,9 @@ class Weblication extends Component
     /**
      * PHP Session gekapselt in ISession
      *
-     * @var ISession|null $Session
+     * @var InputSession|null $Session
      */
-    public ?ISession $Session = null;
+    public ?InputSession $Session = null;
 
     /**
      * @var Weblication|null
@@ -63,7 +64,7 @@ class Weblication extends Component
     /**
      * @var int filter that defines which superglobals are passed to input->vars
      */
-    private int $superglobals = I_EMPTY;
+    private int $superglobals = Input::INPUT_EMPTY;
 
     /**
      * @var Input
@@ -174,11 +175,6 @@ class Weblication extends Component
     private string $defaultLocale = 'en_US';
 
     /**
-     * @var string
-     */
-    protected string $subDirTranslated = '';
-
-    /**
      * @var string version of the application
      */
     private string $version = '';
@@ -186,9 +182,9 @@ class Weblication extends Component
     /**
      * Cookie for the application
      *
-     * @var ICookie|null
+     * @var InputCookie|null
      */
-    private ?ICookie $Cookie = null;
+    private ?InputCookie $Cookie = null;
 
     /**
      * locale unchanged / as is.
@@ -207,7 +203,6 @@ class Weblication extends Component
      */
     const LOCALE_WITHOUT_CHARSET = 4;
 
-
     /**
      * @var array all possible default formats
      */
@@ -220,6 +215,7 @@ class Weblication extends Component
         'strftime.time' => '%H:%M', // needed in js
         'strftime.date' => '%d.%m.%Y', // needed in js
         'strftime.date.time' => '%d.%m.%Y %H:%M', // needed in js
+        'strftime.date.time.short' => '%d.%m.%y %H:%M', // needed in js
         'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S', // needed in js
         'moment.date' => 'DD.MM.YYYY', // needed for moment js
         'moment.date.time' => 'DD.MM.YYYY HH:mm', // needed for moment js
@@ -235,6 +231,16 @@ class Weblication extends Component
     ];
 
     /**
+     * @var Translator
+     */
+    protected Translator $translator;
+
+    /**
+     * @var SessionHandler
+     */
+    private SessionHandler $SessionHandler;
+
+    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -242,7 +248,7 @@ class Weblication extends Component
     {
         parent::__construct(null);
         self::$isAjax = isAjax();
-        $this->Settings = new Input(I_EMPTY);
+        $this->Settings = new Input(Input::INPUT_EMPTY);
         $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         return $this;
@@ -251,13 +257,9 @@ class Weblication extends Component
     /**
      * gets the instance via lazy initialization (created on first usage)
      */
-    public static function getInstance(): Weblication
+    public static function getInstance(): static
     {
-        if(static::$Instance === null) {
-            static::$Instance = new static();
-        }
-
-        return static::$Instance;
+        return static::$Instance ??= new static;
     }
 
     /**
@@ -265,7 +267,7 @@ class Weblication extends Component
      */
     public static function hasInstance(): bool
     {
-        return (static::$Instance !== null);
+        return static::$Instance !== null;
     }
 
     /**
@@ -299,7 +301,7 @@ class Weblication extends Component
      * (wird derzeit fuer die Bilder und Html Templates missbraucht)
      *
      * @return string Name des Designs (Skin)
-     **/
+     */
     public function getSkin(): string
     {
         return $this->skin;
@@ -308,16 +310,29 @@ class Weblication extends Component
     /**
      * Get translator
      *
-     * @param string|null $language overrides default language
      * @return Translator
      */
-    public function getTranslator(?string $language = null): Translator
+    public function getTranslator(): Translator
     {
-        $Translator = Translator::getInstance();
-        if($language) {
-            $Translator->changeLanguage($language);
-        }
-        return $Translator;
+        return $this->translator;
+    }
+
+    /**
+     * @param Translator $translator
+     * @return $this
+     */
+    public function setTranslator(Translator $translator): static
+    {
+        $this->translator = $translator;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasTranslator(): bool
+    {
+        return isset($this->translator);
     }
 
     /**
@@ -421,16 +436,6 @@ class Weblication extends Component
     }
 
     /**
-     * determines current schema/layout
-     *
-     * @return string
-     */
-    public function getSchema(): string
-    {
-        return (isset($_REQUEST['schema']) and $_REQUEST['schema'] != '') ? $_REQUEST['schema'] : $this->getDefaultSchema();
-    }
-
-    /**
      * @param string $version application version
      * @return Weblication
      */
@@ -459,7 +464,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert das Haupt-GUI (meistens erstes GUI, das im Startscript �bergeben wurde).
+     * Liefert das Haupt-GUI (meistens erstes GUI, das im Startscript uebergeben wurde).
      *
      * @return GUI_Module
      */
@@ -485,6 +490,7 @@ class Weblication extends Component
     {
         if(!$this->Frame) {
             if($this->hasFrame()) {
+                assert($this->Main instanceof GUI_CustomFrame);
                 $this->Frame = $this->Main;
             }
         }
@@ -642,7 +648,7 @@ class Weblication extends Component
      * Searches the given image in a fixed directory skins folder structure.
      *
      * @param string $filename wanted image
-     * @return string File or empty string
+     * @return string Filename or empty string in case of failure
      */
     function findImage(string $filename): string
     {
@@ -742,35 +748,22 @@ class Weblication extends Component
 
     /**
      * Sucht das uebergebene Template in einer fest vorgegebenen Verzeichnisstruktur.
-     * Zuerst im Ordner skins, als naechstes im guis Ordner. Wird der Parameter baslib auf true gesetzt,
-     * wird abschliessend noch in der baselib gesucht.<br>
-     * Reihenfolge: skin-translated+subdirTranslated common-skin skin-translated skin GUIs-Projekt+ GUIs-Common+ (GUIs-Baselib)
+     * Zuerst im Ordner skins, als naechstes im guis Ordner. Wird der Parameter baseLib auf true gesetzt,
+     * wird abschliessend noch in der baseLib gesucht.<br>
+     * Reihenfolge: <s>skin-translated+subdirTranslated</s> (<b>common-skin-translated</b> common-skin skin-translated skin) GUIs-Projekt+ <i>(..?skins of Projekt Common?..)</i> GUIs-Common+ ((..???..) GUIs-Baselib)
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param boolean $baseLib Schau auch in die baselib
+     * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefundenen Templates. Im Fehlerfall ''.
-     **/
+     */
     public function findTemplate(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $language = $this->language;
-        $templates_subFolder = 'templates';
-        $skinTemplateFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $templates_subFolder);
-        //skin-translated+subdirTranslated
-        //static translation templates have priority
-        if($this->subDirTranslated) {
-            if($this->hasSkinFolder($templates_subFolder, $language, $this->subDirTranslated)) {
-                $translatedTemplate = buildFilePath($skinTemplateFolder, $language, $this->subDirTranslated, $filename);
-                if(file_exists($translatedTemplate)) {
-                    return $translatedTemplate;
-                }
-            }
-        }
-
-        $template = $this->findBestElement($templates_subFolder, $filename, $language, $classFolder, $baseLib);
-        if($template) {
-            return $template;
-        }
+        $elementSubFolder = 'templates';
+        $translate = (bool)Template::getTranslator();
+        $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
+        if($template) return $template;
 
         $msg = "Template $filename in ".__METHOD__." not found!";
         if(!$this->getPoolClientSideRelativePath() and $baseLib) {
@@ -784,8 +777,8 @@ class Weblication extends Component
     /**
      * Sucht das uebergebene StyleSheet in einer fest vorgegebenen Verzeichnisstruktur.
      * Zuerst im Ordner skins, als naechstes im guis Ordner.<br>
-     * Reihenfolge: common-skin skin-translated skin GUIs-Projekt+ GUIs-Common+ (Baselib xor Common-common-skin)
-     *
+     * Reihenfolge: common-skin+ skin+ GUIs-Projekt+ (..? skins ?..) GUIs-Common+ (BaseLib xor Common-common-skin)
+     * @see Weblication::findTemplate()
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param boolean $baseLib Schau auch in die baseLib
@@ -794,17 +787,16 @@ class Weblication extends Component
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $elementSubFolder = $this->cssFolder;
+        $language = $this->language;
+        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
+        if($stylesheet) return $stylesheet;
 
-        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $this->language, $classFolder, $baseLib);
-        if($stylesheet)
-            return $stylesheet;
-
+        //TODO Remove or define use of skins for included Projekts and merge with findBestElement
         if(!$baseLib) {//Common-common-skin
             if(defined('DIR_COMMON_ROOT_REL')) {
                 $stylesheet = buildFilePath(
                     DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-                if(file_exists($stylesheet))
-                    return $stylesheet;
+                if(file_exists($stylesheet)) return $stylesheet;
             }
         }
 
@@ -818,60 +810,51 @@ class Weblication extends Component
      * @param string $language
      * @param string $classFolder
      * @param bool $baseLib
+     * @param bool $all
+     * @param bool $translate
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib, bool $all, bool $translate = false): string
     {
-        $skinElementFolder = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
-
-
-        //common-skin
-        if($this->hasCommonSkinFolder($elementSubFolder)) {
-            $file = buildFilePath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-            if(file_exists($file))
-                return $file;
-        }
-
-        if($this->hasSkinFolder($elementSubFolder)) {
-            //skin-translated
-            if($this->hasSkinFolder($elementSubFolder, $language)) { // with language, more specific
-                $file = buildFilePath($skinElementFolder, $language, $filename);
-                if(file_exists($file))
-                    return $file;
-            }
-            //skin without language
-            $file = buildFilePath($skinElementFolder, $filename);
-            if(file_exists($file))
-                return $file;
-        }
-
-        $gui_directories = [];
-        if($classFolder) {
+        $places = [];
+        //Getting list of Places to search
+        if($this->hasCommonSkinFolder($elementSubFolder)) //Project? -> Special common-skin
+            $places[] = buildDirPath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
+        if($this->hasSkinFolder($elementSubFolder)) //Project? -> Skin
+            $places[] = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
+        $places[] = buildDirPath($elementSubFolder);
+        if($classFolder) {//Projects -> GUI
+            //Path from Project root to the specific GUI folder
             $folder_guis = buildDirPath(PWD_TILL_GUIS, $classFolder);
-            //Project-GUIs
-            $gui_directories[] = $folder_guis;
-            if(defined('DIR_COMMON_ROOT_REL')) {
-                //Common-GUIs
-                $gui_directories[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
-            }
-            if($baseLib) {
-                //BaseLib-GUIs
-                $gui_directories[] = buildDirPath($this->getPoolServerSideRelativePath(PWD_TILL_GUIS), $classFolder);
-            }
+            //current Project
+            $places[] = $folder_guis;
+            //common Project
+            if(defined('DIR_COMMON_ROOT_REL'))
+                $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
+            //POOL Library Project
+            if($baseLib)
+                $places[] = buildDirPath($this->getPoolServerSideRelativePath(), $folder_guis);
         }
-
-        foreach($gui_directories as $folder_guis) {
-            $file = $folder_guis . $filename;
+        $finds = [];
+        //Searching
+        foreach($places as $folder_guis) {
+            $file = buildFilePath($folder_guis, $filename);
             if(file_exists($file)) {
-                $translatedStylesheet = buildFilePath($folder_guis, $language, $filename);
-                if(file_exists($translatedStylesheet))
-                    // Language Ordner
-                    return $translatedStylesheet;
-                // GUI Ordner
-                return $file;
+                $translatedFile = buildFilePath($folder_guis, $language, $filename);
+                if(Template::isCacheTranslations() && file_exists($translatedFile)) {
+                    // Language specific Ordner
+                    $finds[] = $translatedFile;
+                } elseif ($translate && Template::isCacheTranslations()) {
+                    //Create Translated file and put it in the language folder
+                    $finds[] = Template::attemptFileTranslation($file, $language);
+                } else {// generic Ordner
+                    $finds[] = $file;
+                }//end decision which file to pick
+                if (!$all) break;//stop searching after first match
             }
         }
-        return "";
+        //grab first element for now
+        return reset($finds)?:"";
     }
 
     /**
@@ -953,7 +936,7 @@ class Weblication extends Component
      */
     public function addDataInterface(DataInterface $DataInterface): DataInterface
     {
-        $this->interfaces[$DataInterface->getInterfaceType()] = $DataInterface;
+        $this->interfaces[$DataInterface::class] = $DataInterface;
         return $DataInterface;
     }
 
@@ -988,20 +971,57 @@ class Weblication extends Component
      *   application.locale
      *   application.launchModule - sets the main module that is launched
      *   application.session.className - overrides default session class
-     *   application.translator
-     *   application.translator.resourceDir
-     *   application.translator.resource
+     *   application.translator Instance of Translator
+     *   application.translatorResource Instance of TranslationProviderFactory
+     *   application.translatorResourceDir Directory where translation files are stored
+     *
      * @return Weblication
      * @throws Exception
      */
-    public function setup(array $settings = []): self
+    public function setup(array $settings = []): static
     {
         $this->Settings->setVars($settings);
 
+        //set well known setting
         $this->setName($this->Settings->getVar('application.name', $this->getName()));
         $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
         $this->setCharset($this->Settings->getVar('application.charset', $this->getCharset()));
         $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
+
+        // setup AppTranslator
+        $defaultLocale = $this->Settings->getVar('application.locale', 'en_US');
+        $AppTranslator = $this->Settings->getVar('application.translator');
+        $TranslatorResource = $this->Settings->getVar('application.translatorResource');
+        $translatorResourceDir = $this->Settings->getVar('application.translatorResourceDir');
+        if(!$AppTranslator instanceof Translator)
+            $AppTranslator = new Translator();
+        if(!$TranslatorResource instanceof TranslationProviderFactory) {
+            if ($translatorResourceDir)//make a ressource from a given file
+                $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
+        elseif (sizeof($AppTranslator->getTranslationResources()) > 0)//Translator is already loaded
+            $TranslatorResource = null;
+        else//add Fallback or throw
+            $TranslatorResource = TranslationProviderFactory_nop::create();
+        }
+        if ($TranslatorResource != null)
+            $AppTranslator->addTranslationResource($TranslatorResource);
+        //Setup Languages (for Application)
+        $AppLanguages = $this->Settings->getVar('application.languages');
+        //Get defaults from browser
+        $AppLanguages ??= $AppTranslator->parseLangHeader(false, $defaultLocale);
+        //Try to load the required languages
+        $AppTranslator->swapLangList($AppLanguages, true);
+        $this->setTranslator($AppTranslator);
+
+        //setup TemplateTranslator
+        $translatorStaticResourceDir = $this->Settings->getVar('application.translatorStaticResourceDir');
+        if ($translatorStaticResourceDir) {
+            $staticResource = TranslationProviderFactory_ResourceFile::create($translatorStaticResourceDir);
+            $TemplateTranslator = new Translator($staticResource);
+            //Try to load the required languages
+            $TemplateTranslator->swapLangList($AppLanguages, true);
+            Template::setTranslator($TemplateTranslator);
+        }
 
         // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
         return $this;
@@ -1016,11 +1036,11 @@ class Weblication extends Component
      * @param integer $use_cookies Verwende Cookies (Default: 1)
      * @param integer $use_only_cookies Verwende nur Cookies (Default: 0)
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
-     * @return ISession|null
+     * @return InputSession|null
      * @throws Exception
      */
     public function startPHPSession(string $session_name = 'PHPSESSID', int $use_trans_sid = 0, int $use_cookies = 1,
-        int $use_only_cookies = 0, bool $autoClose = true): ?ISession
+        int $use_only_cookies = 0, bool $autoClose = true): ?InputSession
     {
         switch(session_status()) {
             case PHP_SESSION_DISABLED:
@@ -1047,12 +1067,21 @@ class Weblication extends Component
 
         $isStatic = !(isset($this)); // TODO static calls or static AppSettings
         if($isStatic) {
-            return new ISession($autoClose);
+            return new InputSession($autoClose);
         }
-        $className = $this->Settings->getVar('application.session.className', 'ISession');
+        $className = $this->Settings->getVar('application.session.className', InputSession::class);
         $this->Session = new $className($autoClose);
 
         return $this->Session;
+    }
+
+    /**
+     * @param string $key
+     * @return mixed
+     */
+    public function getSetting(string $key): mixed
+    {
+        return $this->Session->getVar($key);
     }
 
     /**
@@ -1063,7 +1092,7 @@ class Weblication extends Component
     public function createSessionHandler(string $tabledefine)
     {
         $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
-        $this->Session = new ISession();
+        $this->Session = new InputSession();
     }
 
     /**
@@ -1114,7 +1143,7 @@ class Weblication extends Component
      * @param string $locale
      * @return Weblication
      */
-    public function setLocale(string $locale): self
+    public function setLocale(string $locale): static
     {
         $this->locale = $locale;
         return $this;
@@ -1134,14 +1163,12 @@ class Weblication extends Component
      * @param int $type
      * @return string
      * @see Weblication::setLocale()
-     * @see Translator::detectLocale()
+     * @see Translator::getPrimaryLocale()
      */
     public function getLocale(int $type = self::LOCALE_UNCHANGED): string
     {
         if(!$this->locale) {
-            // @todo replace with Translator::getInstance()->parseLangHeader() after merge with feature-translator
-            // @todo maybe move it into constructor or setup (but setup does not necessarily have to be called)
-            $this->setLocale(Translator::detectLocale($this->defaultLocale));
+            $this->setLocale($this->getTranslator()->getPrimaryLocale());
         }
 
         if($type == self::LOCALE_UNCHANGED) {
@@ -1152,11 +1179,11 @@ class Weblication extends Component
 
         // with region
         if($type & self::LOCALE_FORCE_REGION && !(str_contains($locale, '_') || str_contains($locale, '-'))) {
-            $locale = Language::getBestLocale($this->locale, $this->defaultLocale);
+            $locale = Language::getBestLocale($locale, $this->getDefaultLocale());
         }
         // with charset
         if($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {
-            $locale = "$locale.{$this->charset}";
+            $locale = "$locale.$this->charset";
         }
         // without charset
         if($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {
@@ -1171,7 +1198,7 @@ class Weblication extends Component
      * @param string $lang Country Code
      * @return Weblication
      */
-    public function setLanguage(string $lang): self
+    public function setLanguage(string $lang): static
     {
         $this->language = $lang;
         return $this;
@@ -1194,12 +1221,12 @@ class Weblication extends Component
     /**
      * returns cookie for this application
      *
-     * @return ICookie
+     * @return InputCookie
      */
-    public function getCookie(): ICookie
+    public function getCookie(): InputCookie
     {
         if(!$this->Cookie) {
-            $this->Cookie = new ICookie();
+            $this->Cookie = new InputCookie();
         }
         return $this->Cookie;
     }
@@ -1208,7 +1235,7 @@ class Weblication extends Component
      * @param string $launchModule
      * @return $this
      */
-    public function setLaunchModule(string $launchModule): self
+    public function setLaunchModule(string $launchModule): static
     {
         $this->launchModule = $launchModule;
         return $this;
@@ -1247,22 +1274,15 @@ class Weblication extends Component
      *
      * @throws ModulNotFoundException|Exception
      */
-    public function run(string $className = GUI_CustomFrame::class): self
+    public function run(string $className = GUI_CustomFrame::class): static
     {
         // An application name is required. For example, the application name is used for creating directories in the data folder.
         if($this->getName() == '') {
             throw new Exception('The application name must be defined.');
         }
 
-        // TODO Get Parameter frame
-        // TODO Subcode::createSubCode()?
-        // TODO Security hole params
-        $params = $_REQUEST['params'] ?? '';
-        if(isNotEmpty($params) and $this->isAjax()) {
-            $params = base64url_decode($params) ?: "";
-        }
-
-        $mainGUI = GUI_Module::createGUIModule($className, $this, null, $params, true, false);
+        $mainGUI = GUI_Module::createGUIModule($className, $this, null, '', true, false);
+        //maybe an Ajax Call could run here and return its result
         $this->setMain($mainGUI);
 
         $mainGUI->searchGUIsInPreloadedContent();
@@ -1272,8 +1292,6 @@ class Weblication extends Component
             $Header = $this->getFrame()->getHeadData();
 
             $Header->setTitle($this->title);
-            //TODO Translator?
-            $Header->setLanguage($this->language);
             if($this->charset) $Header->setCharset($this->charset);
         }
         return $this;
@@ -1285,7 +1303,7 @@ class Weblication extends Component
     protected function prepareContent(): void
     {
         $this->Main->provisionContent();
-        if (!$this->Main->isAjax()) {
+        if(!$this->Main->isAjax()) {
             $this->Main->prepareContent();
         }
     }
@@ -1293,6 +1311,7 @@ class Weblication extends Component
     /**
      * return finished HTML content
      * Error handling wrapper around finalizeContent of the Main-GUI
+     *
      * @return string website content
      *
      * @throws Exception

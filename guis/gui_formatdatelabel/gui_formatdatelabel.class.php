@@ -41,7 +41,7 @@ class GUI_FormatDateLabel extends GUI_Label
      *
      * @access public
      **/
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar('format', 'd.m.Y H:i:s');
         $this -> Defaults -> addVar('timestamp', time());

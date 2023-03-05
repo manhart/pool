@@ -1,36 +1,19 @@
 <?php
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Xception.class.php created at 26.01.22, 09:24
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author A.Manhart <A.Manhart@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
- */
-
-/**
- * POOL (PHP Object Oriented Library): die Datei Object.class.php enthaelt die Grundklasse, der Uhrahn aller Objekte.
- *
- * Die Klasse Xception integriert eine Fehlerbehandlung.
- *
- * Vermerk Author:<br>
- * Ich will an diesem System nichts verkomplizieren, keep it simple stupid.
- *
- * Letzte Änderung am: $Date: 2007/02/16 07:46:28 $
- *
- * @version $Id: Exception.class.php,v 1.18 2007/02/16 07:46:28 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
- * @since 2003-07-10
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @link http://www.misterelsa.de
- * @package pool
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 /**
  * Erzwingt Fehler mittels PHP trigger_error.
  */
+
+use pool\classes\Database\DAO;
+
 const POOL_ERROR_LOGFILE = 2;
 /**
  * Erzwingt Fehlerausgabe am Bildschirm.
@@ -62,6 +45,7 @@ ini_set('track_errors', true);
 /**
  * Klasse Xception dient zur Fehlerbehandlung.
  *
+ * @deprecated
  * @package pool
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @access public
@@ -1065,7 +1049,3 @@ function pool_error_handler($errno, $errstr, $errfile, $errline, $vars)
     //
     //return true;
 }
-/*
-$Xception = new Xception();
-$Xception -> raiseError();
-*/

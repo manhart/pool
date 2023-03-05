@@ -1,0 +1,35 @@
+{
+  "name": "manhart/pool",
+  "description": "PHP Object-Oriented Library",
+  "keywords": ["framework", "library", "pool"],
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "type": "project",
+  "require": {
+    "php": ">=8.2.0",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-intl": "*",
+    "ext-gd": "*"
+  },
+  "suggest": {
+    "ext-mysqli": "*"
+  },
+  "autoload": {
+    "psr-4": {
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "optimize-autoloader": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

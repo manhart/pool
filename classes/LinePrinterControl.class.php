@@ -14,6 +14,8 @@
 * @package pool
 */
 
+use pool\classes\Core\PoolObject;
+
 if(!defined('CLASS_LPC')) {
     /**
      * Verhindert mehrfach Einbindung der Klassen (prevent multiple loading)
@@ -175,9 +177,7 @@ if(!defined('CLASS_LPC')) {
                     break;
 
                 default:
-                    $Xception = new Xception('Action: "' . $action . '" not known!');
-                    PoolObject::throwException($Xception);
-                    break;
+                    throw new Exception('Action: "' . $action . '" not known!');
              }
         }
 

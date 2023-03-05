@@ -18,7 +18,7 @@ class GUI_PageControl extends GUI_Module
         $this->Url = new Url();
     }
 
-    function init(?int $superglobals=I_EMPTY)
+    function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar('id', $this -> getName());
         $this->Defaults->addVar('name', $this -> getName());
@@ -31,7 +31,7 @@ class GUI_PageControl extends GUI_Module
         $this->Defaults->addVar('startPage', '');
         $this->Defaults->addVar('template', 'tpl_pagecontrol.html');
 
-        parent::init(I_REQUEST);
+        parent::init(Input::INPUT_REQUEST);
     }
 
     function loadFiles()

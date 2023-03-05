@@ -69,6 +69,8 @@
  * @see GUI_Choosy::init()
  */
 
+use pool\classes\Database\DAO;
+
 define('CHOOSY_TRANSFER_FILE', 'transfer_by_file');
 define('CHOOSY_TRANSFER_DBCHOOSY', 'transfer_by_db_choosy');
 define('CHOOSY_TRANSFER_DB', 'transfer_by_db');
@@ -172,7 +174,7 @@ class GUI_Choosy extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals = I_EMPTY)
+    function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(
@@ -227,7 +229,7 @@ class GUI_Choosy extends GUI_Module
                 'submitFChoosy' => 0
             )
         );
-        parent:: init(I_REQUEST);
+        parent:: init(Input::INPUT_REQUEST);
     }
 
     function loadFiles()
@@ -413,7 +415,7 @@ class GUI_Choosy extends GUI_Module
                     $limit = array($splitterPos, $maxRecordsPerPage);
                     $sql = $Resultset_Choosy->getValue('input');
 
-                    $MySQL_Resultset = new MySQL_Resultset($interfaces[constant('DATAINTERFACE_MYSQL')]);
+                    $MySQL_Resultset = new MySQL_ResultSet($interfaces[constant('DATAINTERFACE_MYSQL')]);
 
                     $this->getSQLSearchstring($sql, $searchfields);
                     $MySQL_Resultset->execute($sql, $database);
