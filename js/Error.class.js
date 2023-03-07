@@ -37,6 +37,7 @@ class PoolAjaxResponseError extends PoolError {
      * @param message
      * @param cause origin Error or null
      * @param serverSideType custom serverside error type
+     * @param responseText
      */
     constructor(message, cause, serverSideType = '', responseText = '')
     {
