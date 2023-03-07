@@ -634,7 +634,21 @@ class GUI_Table extends GUI_Module
      */
     checkBy(field, values, onlyCurrentPage = false)
     {
-        this.getTable().bootstrapTable('checkBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
+        let alreadyChecked = false;
+        if(this.getOption('singleSelect')) {
+            // avoid multiple selection in singleSelect mode
+            this.getSelections().forEach((row) => {
+                if(values.indexOf(row[field]) === -1) {
+                    this.uncheckBy(field, [row[field]])
+                }
+                else {
+                    // prevent checkBy event to be triggered again
+                    alreadyChecked = true;
+                }
+            });
+        }
+
+        if(!alreadyChecked) this.getTable().bootstrapTable('checkBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
     }
 
     /**
