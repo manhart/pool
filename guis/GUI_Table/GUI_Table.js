@@ -237,27 +237,12 @@ class GUI_Table extends GUI_Module
         columns.forEach((column, z) => {
             let field = ('field' in column) ? column['field'] : z;
             this.columnNames[field] = z;
-            // if(!(field in this.poolColumnOptions)) {
-            //     return;
-            // }
 
             if(!('poolType' in column)) {
                 return;
             }
 
-            // automation for special poolType's
-            // let poolType = '';
-            // if('poolType' in this.poolColumnOptions[field]) {
-            //     poolType = this.poolColumnOptions[field]['poolType'];
-            // }
-            // let poolFormat = '';
-            // if('poolFormat' in this.poolColumnOptions[field]) {
-            //     poolFormat = this.poolColumnOptions[field]['poolFormat']
-            // }
             let poolType = column['poolType'];
-            // if('poolType' in column) {
-            //     poolType = column['poolType'];
-            // }
 
             let poolFormat = '';
             if('poolFormat' in column) {
@@ -432,6 +417,13 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
+    /**
+     * refreshes the table
+     * @param options
+     * @param silent
+     * @param onLoadSuccess
+     * @return {GUI_Table}
+     */
     refresh(options = {}, silent = false, onLoadSuccess = null)
     {
         if(onLoadSuccess !== null) {
@@ -960,29 +952,6 @@ class GUI_Table extends GUI_Module
             this.selections = array_difference(this.selections, this.pageIds);
             this.selections = array_union(this.selections, ids);
         }
-
-        // console.debug(this.getName()+'.onCheckUncheckRows', this.pageIds, ids, this.selections);
-
-        // let rows = rowsAfter;
-
-        // if(evt.type === 'uncheck-all') {
-        //     rows = rowsBefore;
-        // }
-
-        // let ids = $.map(!$.isArray(rows) ? [rows] : rows, function(row) {
-        //     return row.idUser;
-        // })
-
-        // console.debug(evt.type, rows, ids);
-
-        // if(this.getTable().bootstrapTable('getOptions').singleSelect) {
-        //     this.selections = [];
-        // }
-
-        // let fnString = ['check', 'check-all'].indexOf(evt.type) > -1 ? 'array_union' : 'array_difference'
-        // let fn = window[fnString];
-        // this.selections = fn(this.selections, ids);
-        // this.selections = ids;
     }
 
     /**
