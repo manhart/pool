@@ -634,7 +634,21 @@ class GUI_Table extends GUI_Module
      */
     checkBy(field, values, onlyCurrentPage = false)
     {
-        this.getTable().bootstrapTable('checkBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
+        let alreadyChecked = false;
+        if(this.getOption('singleSelect')) {
+            // avoid multiple selection in singleSelect mode
+            this.getSelections().forEach((row) => {
+                if(values.indexOf(row[field]) === -1) {
+                    this.uncheckBy(field, [row[field]])
+                }
+                else {
+                    // prevent checkBy event to be triggered again
+                    alreadyChecked = true;
+                }
+            });
+        }
+
+        if(!alreadyChecked) this.getTable().bootstrapTable('checkBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
     }
 
     /**
@@ -1097,6 +1111,24 @@ class GUI_Table extends GUI_Module
     firstPage()
     {
         this.getTable().bootstrapTable('selectPage', 1);
+    }
+
+    /**
+     * Collapse the row with the uniqueId passed by parameter if the detail view option is set to true.
+     * @param uniqueId
+     */
+    collapseRowByUniqueId(uniqueId)
+    {
+        this.getTable().bootstrapTable('collapseRowByUniqueId', uniqueId);
+    }
+
+    /**
+     * Expand the row with the uniqueId passed by parameter if the detail view option is set to true.
+     * @param uniqueId
+     */
+    expandRowByUniqueId(uniqueId)
+    {
+        this.getTable().bootstrapTable('expandRowByUniqueId', uniqueId);
     }
 
     /**
