@@ -1114,6 +1114,24 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * Collapse the row with the uniqueId passed by parameter if the detail view option is set to true.
+     * @param uniqueId
+     */
+    collapseRowByUniqueId(uniqueId)
+    {
+        this.getTable().bootstrapTable('collapseRowByUniqueId', uniqueId);
+    }
+
+    /**
+     * Expand the row with the uniqueId passed by parameter if the detail view option is set to true.
+     * @param uniqueId
+     */
+    expandRowByUniqueId(uniqueId)
+    {
+        this.getTable().bootstrapTable('expandRowByUniqueId', uniqueId);
+    }
+
+    /**
      * collapse all rows
      */
     collapseAllRows()
