@@ -85,7 +85,7 @@ class GUI_Table extends GUI_Module
     {
         super(name);
 
-        this.options.responseHandler = this.responseHandler
+        this.options.responseHandler = this.responseHandler.bind(this);
 
 
         // let columns = {
@@ -232,6 +232,12 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
+    /**
+     * set columns (with the property poolType you can define special column types: date.time, date, time, number. poolFormat is optional)
+     *
+     * @param columns
+     * @return {GUI_Table}
+     */
     setColumns(columns = [])
     {
         columns.forEach((column, z) => {
@@ -358,6 +364,10 @@ class GUI_Table extends GUI_Module
         }
     }
 
+    /**
+     * Initialize the table with jQuery
+     * @return {jQuery}
+     */
     getTable()
     {
         if(!this.$table) {
@@ -960,7 +970,7 @@ class GUI_Table extends GUI_Module
      * @param res
      * @returns {*}
      */
-    responseHandler = (res) =>
+    responseHandler(res)
     {
         let uniqueId = this.getUniqueId();
         if(!uniqueId) {
