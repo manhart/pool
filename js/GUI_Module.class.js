@@ -7,15 +7,8 @@
  * file that was distributed with this source code.
  */
 
-/*
- * POOL
- *
- * Module.class.js created at 10.12.21, 12:29
- *
- * @author Alexander Manhart <alexander@manhart-it.de>
- */
-
-class GUI_Module {
+class GUI_Module
+{
     name = '';
     className = this.constructor.name;
 
