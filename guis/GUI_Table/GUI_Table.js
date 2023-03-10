@@ -227,7 +227,7 @@ class GUI_Table extends GUI_Module
         if(options.responseHandler) {
             // todo save responseHandler
         }
-        this.options.responseHandler = this.responseHandler
+        this.options.responseHandler = this.responseHandler.bind(this)
 
         return this;
     }
