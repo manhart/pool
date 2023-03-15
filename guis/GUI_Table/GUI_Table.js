@@ -398,7 +398,7 @@ class GUI_Table extends GUI_Module
 
     /**
      * renders bootstrap-table. should only be called once! use method refresh instead
-     *
+     * @see refresh
      * @param options
      * @returns {GUI_Table}
      */
@@ -436,10 +436,10 @@ class GUI_Table extends GUI_Module
      */
     refresh(options = {}, silent = false, onLoadSuccess = null)
     {
-        if(onLoadSuccess !== null) {
-            const eventLoadSuccess = function() {
-                $(this).off('load-success.bs.table', eventLoadSuccess)
-                onLoadSuccess();
+        if(typeof onLoadSuccess === 'function') {
+            const eventLoadSuccess = () => {
+                $(this).off('load-success.bs.table', eventLoadSuccess);
+                onLoadSuccess(this);
             }
             $(this.getTable()).on('load-success.bs.table', eventLoadSuccess);
         }
