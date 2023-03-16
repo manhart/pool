@@ -1357,6 +1357,15 @@ class Weblication extends Component
     }
 
     /**
+     * returns the current timezone
+     * @return string
+     */
+    public function getTimezone(): string
+    {
+        return date_default_timezone_get();
+    }
+
+    /**
      * @return bool
      */
     public function isXdebugEnabled(): bool
