@@ -1150,6 +1150,19 @@ SQL;
                 elseif(is_bool($record[2])) {
                     $query .= ' ' . bool2string($record[2]);
                 }
+                elseif($record[2] instanceof Commands) {
+                    // reserved keywords don't need to be masked
+                    $expression = $this->commands[$record[2]->name];
+                    if($expression instanceof Closure) {
+                        $query .= " $expression($record[0])";
+                    }
+                    else {
+                        $query .= " $expression";
+                    }
+                }
+                elseif($record[2] instanceof DateTimeInterface) {
+                    $query .= " '{$record[2]->format('Y-m-d H:i:s')}'";
+                }
                 elseif(is_int($record[2]) or is_float($record[2]) or
                         $this->__isSubQuery($record[1], $record[2])) {
                     $query .= ' ' . $record[2];
