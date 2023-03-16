@@ -946,8 +946,6 @@ SQL;
      * @return ResultSet Ergebnismenge
      * @see MySQL_ResultSet
      * @see MySQL_DAO::__buildFilter
-     *
-     * @throws Exception
      */
     public function getCount(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[]): ResultSet
     {
@@ -1029,7 +1027,6 @@ SQL;
     /**
      * @param string $field
      * @return string
-     * @throws Exception
      */
     protected function translateValues(string $field): string
     {
@@ -1080,7 +1077,6 @@ SQL;
      * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
      * @return string Teil eines SQL Queries
      *
-     * @throws Exception
      */
     protected function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false): string
     {
