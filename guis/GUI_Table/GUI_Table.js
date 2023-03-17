@@ -705,7 +705,6 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('uncheckAll');
         // }
     }
-
     /**
      * insert row and check row
      *
@@ -929,6 +928,22 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('removeAll');
     }
 
+    /**
+     * @param name Column data-field to hide
+     * @returns {GUI_Table}
+     */
+    hideColumn(name){
+        this.getTable().bootstrapTable('hideColumn', name);
+        return this;
+    }
+    /**
+     * @param name Column data-field to show
+     * @returns {GUI_Table}
+     */
+    showColumn(name) {
+    this.getTable().bootstrapTable('showColumn', name);
+    return this;
+    }
     /**
      * remove selected rows
      *
