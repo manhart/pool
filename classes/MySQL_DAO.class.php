@@ -1109,7 +1109,7 @@ SQL;
             // 24.07.2012, Anfuehrungszeichen steuerbar
             $noQuotes = false;
             $noEscape = false;
-            if(isset($record[3])) { // Optionen
+            if(isset($record[3]) && is_int($record[3])) { // Optionen
                 $noQuotes = ($record[3] & DAO::DAO_NO_QUOTES);
                 $noEscape = ($record[3] & DAO::DAO_NO_ESCAPE);
             }
@@ -1161,7 +1161,8 @@ SQL;
                     }
                 }
                 elseif($record[2] instanceof DateTimeInterface) {
-                    $query .= " '{$record[2]->format('Y-m-d H:i:s')}'";
+                    $dateTime = $record[2]->format($record[3] ?? 'Y-m-d H:i:s');
+                    $query .= " '$dateTime'";
                 }
                 elseif(is_int($record[2]) or is_float($record[2]) or
                         $this->__isSubQuery($record[1], $record[2])) {
