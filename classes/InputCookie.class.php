@@ -22,18 +22,17 @@ class InputCookie extends Input
      * Setzt ein fluechtiges Cookie, dass nur solange wie die Session existiert (d.h. verfaellt nach Schliessen des Browsers).
      * Hinweis: der Wertebereich des Cookies wird automatisch URL-konform codiert (urlencoded) und beim Lesen automatisch URL-konform decodiert.
      *
-     * @param string $cookiename Name des Cookies
+     * @param string $cookieName Name des Cookies
      * @param string $value Wert des Cookies
      * @param string $path Der Pfad zu dem Server, auf welchem das Cookie verfuegbar sein wird
      * @param string $domain Die Domain, der das Cookie zur Verf�gung steht
-     * @param integer $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
+     * @param bool $secure Gibt an, dass das Cookie nur ueber eine sichere HTTPS - Verbindung uebertragen werden soll. Ist es auf 1 gesetzt, wird das Cookie nur gesendet, wenn eine sichere Verbindung besteht. Der Standardwert ist 0.
      * @return boolean Erfolgsstatus
      */
-    public function setTransientCookie($cookiename, $value = '', $path = '/', $domain = '', $secure = 0): bool
+    public function setTransientCookie(string $cookieName, string $value = '', string $path = '/', string $domain = '', bool $secure = false): bool
     {
-        // verf�llt nach Schlie�en des Browsers
-        $this->setVar($cookiename, $value);
-        return setcookie($cookiename, $value, null, $path, $domain, $secure);
+        $this->setVar($cookieName, $value);
+        return setcookie($cookieName, $value, null, $path, $domain, $secure);
     }
 
     /**
