@@ -446,7 +446,7 @@ function file_extension(string $file = ""): string
  *
  * @param string $file filename
  * @return string filename without extension
- **/
+ */
 function remove_extension(string $file = ''): string
 {
     return substr($file, 0, (strrpos($file, '.') ?: strlen($file)));
