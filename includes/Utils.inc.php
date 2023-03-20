@@ -2356,3 +2356,36 @@ function umlauts(string $string, bool $reverse = false): string
     }
     return strtr($string, $umlauts);
 }
+
+/**
+ * Check if a process is already running and abort if so.
+ * @param string $pidDir
+ * @param string $jobName
+ * @return void
+ */
+function checkRunningProcess(string $pidDir, string $jobName): void
+{
+    // get my process id
+    $pid = getmypid();
+
+    if(!$pid) {
+        echo 'Process ID could not be detected.';
+        exit(1);
+    }
+
+    if(!mkdirs($pidDir)) {
+        echo "Could not create PID directory $pidDir. Please check permissions.";
+        exit(1);
+    }
+    $pidFile = $pidDir . $jobName . '.pid';
+    if(file_exists($pidFile)) {
+        $pid = file_get_contents($pidFile);
+
+        // check if process is still running
+        if(posix_kill($pid, 0)) {
+            echo "Job $jobName is already running with PID $pid. Aborting.";
+            exit(1);
+        }
+    }
+    file_put_contents($pidFile, $pid);
+}
