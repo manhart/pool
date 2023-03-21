@@ -1071,7 +1071,6 @@ SQL;
      * in : 'in' erwartet ein Array aus Werten (Sonderbehandlung)
      * not in : 'not in' erwartet ein Array aus Werten (Sonderbehandlung)
      *
-     * @access private
      * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
      * @param string $operator MySQL Operator AND/OR
      * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
