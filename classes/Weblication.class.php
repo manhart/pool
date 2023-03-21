@@ -784,7 +784,7 @@ class Weblication extends Component
      * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **/
-    public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false): string
+    public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
     {
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
@@ -800,7 +800,7 @@ class Weblication extends Component
             }
         }
 
-        $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
+        if($raiseError) $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
         return '';
     }
 
