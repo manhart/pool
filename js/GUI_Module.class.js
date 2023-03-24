@@ -138,12 +138,16 @@ class GUI_Module
                 if (Array.isArray(value)) {
                     value.forEach(innerValue => QueryURL.append(key, innerValue));
                 }
+                else if(value === null) {
+                    QueryURL.append(key, '');
+                }
                 //doesn't work with empty Objects
                 else if (typeof value === 'object') {
                     for (const [innerKey, innerValue] of Object.entries(value)) {
                         QueryURL.append(key + '[' + innerKey + ']', String(innerValue));
                     }
-                } else {
+                }
+                else {
                     QueryURL.append(key, value.toString());
                 }
             }
