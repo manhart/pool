@@ -895,7 +895,7 @@ function explode(separators, inputstring, includeEmpties) {
  * @returns {array}
  */
 function fillControls(containerSelector, rowSet, autoSearchControlsWithinContainer = true) {
-    // console.debug('fillControls');
+    // console.debug('fillControls', rowSet);
     if (!Array.isArray(rowSet) && !isObject(rowSet)) {
         return [];
     }
