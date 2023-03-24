@@ -25,7 +25,6 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
-
 class GUI_Schema extends GUI_Module
 {
     /**
@@ -53,25 +52,35 @@ class GUI_Schema extends GUI_Module
         if (is_string($directory)) {
             if (defined($directory))//test string for a constant
                 $directory = constant($directory);
-        }else
-                $directory = '.';
+        } else
+            $directory = '.';
         $directory = buildDirPath($directory, PWD_TILL_SCHEMES);
         /** @var string $category Divides schemas into subdirectories */
         $category = $this->getInternalParam('category');
-        if ($category) $directory .= addEndingSlash($category);
+        /** @var $vhostMode 0-> category only, 1-> vhost/category/, 2-> category/vhost/, other-> vhost as alternative for category */
+        $vhostMode = (int)$this->getInternalParam('vhost_mode', -1);
+        if ($category) {
+            if ($vhostMode == 1) //preceding vHost
+                $this->appendVHost($directory);
+            //category given and to be included
+            $directory .= addEndingSlash($category);
+            if ($vhostMode == 2)//trailing vHost
+                $this->appendVHost($directory);
+        } elseif ($vhostMode)//no category and vHost to be included
+            $this->appendVHost($directory);
         /** @var string $alternate Alternative schema if the target-schema was not found */
         $alternate = $this->getInternalParam('alternate');
         //Prep template-engine
         $this->templates = [];
         $this->Template->setDirectory($directory);
-        //load...
+        //try to load according schema files into template-engine...
         for ($i = 0; $i < $numSchemes; $i++) {
-            $bExists = file_exists($directory . $schemes[$i] . '.html');
-            if (!$bExists && $alternate) {//test alternative
+            $schemaExists = file_exists($directory . $schemes[$i] . '.html');
+            if (!$schemaExists && $alternate) {//schema missing
                 $schemes[$i] = $alternate;
-                $bExists = file_exists($directory . $alternate . '.html');
+                $schemaExists = file_exists($directory . $alternate . '.html');//test alternative
             }
-            if ($bExists) {//add schema to our templates
+            if ($schemaExists) {//add schema to our templates
                 $uniqId = 'file_' . $i;
                 $this->Template->setFile($uniqId, $schemes[$i] . '.html');
                 $this->templates[$uniqId] = null;//manually set the template
@@ -92,7 +101,7 @@ class GUI_Schema extends GUI_Module
     private function schema404(?string $schema = null): void
     {
         //report problem
-        $errMessage = $schema == null ? "No schema specified" : "Schema '{$schema}.html' doesn't exist";
+        $errMessage = $schema ? "Schema '$schema.html' doesn't exist" : "No schema specified";
         $this->raiseError(__FILE__, __LINE__, $errMessage);
         //clear
         $this->templates = [];
@@ -115,5 +124,17 @@ class GUI_Schema extends GUI_Module
             $schema = $this->Weblication->getDefaultSchema();
         $schemes = explode(',', $schema);
         $this->loadSchemes($schemes);
+    }
+
+    /**
+     * Checks whether the given directory includes a subdirectory which name matches the current vHost and appends it
+     * @param string $directory the directory to be appended
+     * @return void
+     */
+    private function appendVHost(string &$directory): void
+    {
+        $vhost =  $_SERVER['SERVER_NAME'];
+        if (is_dir($proposed = buildDirPath($directory, $vhost)))
+            $directory = $proposed;
     }
 }
