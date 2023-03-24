@@ -119,7 +119,7 @@ abstract class DAO extends PoolObject
      * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
      * sondern nur die Anzahl.
      */
-    abstract public function getCount(): ResultSet;
+    abstract public function getCount(mixed $id = null, mixed $key = null, array $filter_rules=[]): ResultSet;
 
     /**
      * set primary key

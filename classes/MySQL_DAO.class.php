@@ -946,8 +946,6 @@ SQL;
      * @return ResultSet Ergebnismenge
      * @see MySQL_ResultSet
      * @see MySQL_DAO::__buildFilter
-     *
-     * @throws Exception
      */
     public function getCount(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[]): ResultSet
     {
@@ -1029,7 +1027,6 @@ SQL;
     /**
      * @param string $field
      * @return string
-     * @throws Exception
      */
     protected function translateValues(string $field): string
     {
@@ -1074,13 +1071,11 @@ SQL;
      * in : 'in' erwartet ein Array aus Werten (Sonderbehandlung)
      * not in : 'not in' erwartet ein Array aus Werten (Sonderbehandlung)
      *
-     * @access private
      * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
      * @param string $operator MySQL Operator AND/OR
      * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
      * @return string Teil eines SQL Queries
      *
-     * @throws Exception
      */
     protected function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false): string
     {
@@ -1113,7 +1108,7 @@ SQL;
             // 24.07.2012, Anfuehrungszeichen steuerbar
             $noQuotes = false;
             $noEscape = false;
-            if(isset($record[3])) { // Optionen
+            if(isset($record[3]) && is_int($record[3])) { // Optionen
                 $noQuotes = ($record[3] & DAO::DAO_NO_QUOTES);
                 $noEscape = ($record[3] & DAO::DAO_NO_ESCAPE);
             }
@@ -1153,6 +1148,20 @@ SQL;
                 }
                 elseif(is_bool($record[2])) {
                     $query .= ' ' . bool2string($record[2]);
+                }
+                elseif($record[2] instanceof Commands) {
+                    // reserved keywords don't need to be masked
+                    $expression = $this->commands[$record[2]->name];
+                    if($expression instanceof Closure) {
+                        $query .= " $expression($record[0])";
+                    }
+                    else {
+                        $query .= " $expression";
+                    }
+                }
+                elseif($record[2] instanceof DateTimeInterface) {
+                    $dateTime = $record[2]->format($record[3] ?? 'Y-m-d H:i:s');
+                    $query .= " '$dateTime'";
                 }
                 elseif(is_int($record[2]) or is_float($record[2]) or
                         $this->__isSubQuery($record[1], $record[2])) {

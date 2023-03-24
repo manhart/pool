@@ -498,10 +498,10 @@ class GUI_Module extends Module
      *
      * @param string $className
      * @param bool $includeJS
-     *
+     * @param bool $includeCSS
      * @return bool
      */
-    protected function js_createGUIModule(string $className = '', bool $includeJS = true): bool
+    protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $includeCSS = true): bool
     {
         if (!$this->js_createGUIModule) {
             return false;
@@ -512,7 +512,14 @@ class GUI_Module extends Module
 
         $className = $className ?: $this->getClassName();
 
-        if ($includeJS) {
+        if($includeCSS) {
+            $css = $this->Weblication->findStyleSheet($className . '.css', $className, $this->isPOOL(), false);
+            if ($css) {
+                $this->Weblication->getFrame()->getHeadData()->addStyleSheet($css);
+            }
+        }
+
+        if($includeJS) {
             $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isPOOL(), false);
             if (!$js) {
                 return false;
@@ -520,6 +527,7 @@ class GUI_Module extends Module
 
             $this->Weblication->getFrame()->getHeadData()->addJavaScript($js);
         }
+
         return true;
     }
 

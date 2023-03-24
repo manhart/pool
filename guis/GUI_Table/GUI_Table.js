@@ -376,6 +376,7 @@ class GUI_Table extends GUI_Module
                 console.warn(this.getName() + '.getTable() is called before ' + this.getName() + '.render()! Not all table options ' +
                     'were passed. Please check the order of the method calls.');
             }
+            // @todo change event listener!!! Don't use on()!
             this.$table = $('#' + this.getName())
                 .on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows)
                 // .on('refresh-options.bs.table', this.onRefreshOptions)
@@ -398,7 +399,7 @@ class GUI_Table extends GUI_Module
 
     /**
      * renders bootstrap-table. should only be called once! use method refresh instead
-     *
+     * @see refresh
      * @param options
      * @returns {GUI_Table}
      */
@@ -436,10 +437,10 @@ class GUI_Table extends GUI_Module
      */
     refresh(options = {}, silent = false, onLoadSuccess = null)
     {
-        if(onLoadSuccess !== null) {
-            const eventLoadSuccess = function() {
-                $(this).off('load-success.bs.table', eventLoadSuccess)
-                onLoadSuccess();
+        if(typeof onLoadSuccess === 'function') {
+            const eventLoadSuccess = () => {
+                $(this).off('load-success.bs.table', eventLoadSuccess);
+                onLoadSuccess(this);
             }
             $(this.getTable()).on('load-success.bs.table', eventLoadSuccess);
         }
@@ -705,7 +706,6 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('uncheckAll');
         // }
     }
-
     /**
      * insert row and check row
      *
@@ -929,6 +929,22 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('removeAll');
     }
 
+    /**
+     * @param name Column data-field to hide
+     * @returns {GUI_Table}
+     */
+    hideColumn(name){
+        this.getTable().bootstrapTable('hideColumn', name);
+        return this;
+    }
+    /**
+     * @param name Column data-field to show
+     * @returns {GUI_Table}
+     */
+    showColumn(name) {
+    this.getTable().bootstrapTable('showColumn', name);
+    return this;
+    }
     /**
      * remove selected rows
      *

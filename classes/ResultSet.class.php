@@ -300,9 +300,9 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Anzahl Datensaetze in der Ergebnismenge (Iterator)
+     * returns the number of records in the ResultSet
      *
-     * @return int Anzahl
+     * @return int record count
      */
     public function count(): int
     {
