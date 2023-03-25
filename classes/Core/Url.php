@@ -100,6 +100,11 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     protected bool $absolute = false;
 
     /**
+     * @var bool is set to true if the scheme is "mailto" or "tel"
+     */
+    private bool $withoutHost = false;
+
+    /**
      * @param bool|int $withQuery if true, the query params will be initialized with the current query params
      */
     public function __construct(bool | int $withQuery = true)
@@ -174,6 +179,8 @@ class Url extends PoolObject implements Stringable, JsonSerializable
         }
         if($this->scheme != $scheme && $scheme) {
             $this->absolute = true;
+            // set withoutHost to true if scheme is "mailto" or "tel". This is needed for the getUrl() or __toString() method.
+            $this->withoutHost = in_array($scheme, ['mailto', 'tel']);
         }
         $this->scheme = $scheme;
         return $this;
@@ -297,7 +304,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
      */
     public function withPath(string $path): static
     {
-        if(!str_starts_with($path, '/')) {
+        if($this->host && !str_starts_with($path, '/')) {
             $path = '/' . $path;
         }
         $this->path = $path;
@@ -309,7 +316,12 @@ class Url extends PoolObject implements Stringable, JsonSerializable
         return $this->path;
     }
 
-    public function getPathSegments(): array
+    /**
+     * return segments of path as array separated by /
+     *
+     * @return array
+     */
+    public function getSegments(): array
     {
         return explode('/', trim($this->path, '/'));
     }
@@ -520,7 +532,13 @@ class Url extends PoolObject implements Stringable, JsonSerializable
         $url = '';
         $absolute ??= $this->absolute;
         if($absolute) {
-            $url = $this->scheme . '://' . $this->getAuthority();
+            // "mailto" and "tel" have no authority. For an absolute URL, the scheme and host must be set.
+            if($this->withoutHost || ($this->scheme && $this->host)) {
+                $url = $this->scheme ? $this->scheme . ':' : '';
+                if(!$this->withoutHost && $authority = $this->getAuthority()) {
+                    $url .= "//$authority";
+                }
+            }
         }
 
         $url .= $this->path;
@@ -672,4 +690,17 @@ $Url = new Url();
 $Url->setParams($Input->getData());
 //$Url->delParam('arr');
 echo $Url->getUrl();
+echo '<br>';
+
+$Url = Url::fromString('/images/logos/logo.png');
+echo $Url->getUrl();
+echo '<br>';
+$Url->setScriptName('baby.png');
+echo $Url->getUrl();
+echo '<br>';
+$Url->setScriptPath('/images/icons');
+echo $Url->getUrl();
+echo '<br>';
+//$Url->withScheme('https')->withHost('www.example.com');
+echo $Url->getUrl(true);
 echo '<br>';
