@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -8,7 +8,17 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Component;
+declare(strict_types=1);
+
+namespace pool\classes\Core;
+
+use GUI_CustomFrame;
+use GUI_HeadData;
+use GUI_Module;
+use Input;
+use InputCookie;
+use InputSession;
+use Locale;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\ModulNotFoundException;
@@ -17,7 +27,15 @@ use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
+use SessionHandler;
+use Template;
 
+/**
+ * Class Weblication
+ *
+ * @package pool\classes\Core
+ * @since 2003-07-10
+ */
 class Weblication extends Component
 {
     /**
@@ -765,7 +783,7 @@ class Weblication extends Component
         $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
         if($template) return $template;
 
-        $msg = "Template $filename in ".__METHOD__." not found!";
+        $msg = "Template $filename in " . __METHOD__ . " not found!";
         if(!$this->getPoolClientSideRelativePath() and $baseLib) {
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
@@ -778,12 +796,13 @@ class Weblication extends Component
      * Sucht das uebergebene StyleSheet in einer fest vorgegebenen Verzeichnisstruktur.
      * Zuerst im Ordner skins, als naechstes im guis Ordner.<br>
      * Reihenfolge: common-skin+ skin+ GUIs-Projekt+ (..? skins ?..) GUIs-Common+ (BaseLib xor Common-common-skin)
-     * @see Weblication::findTemplate()
+     *
      * @param string $filename StyleSheet Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
-     **/
+     **@see Weblication::findTemplate()
+     */
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
     {
         $elementSubFolder = $this->cssFolder;
@@ -844,17 +863,19 @@ class Weblication extends Component
                 if(Template::isCacheTranslations() && file_exists($translatedFile)) {
                     // Language specific Ordner
                     $finds[] = $translatedFile;
-                } elseif ($translate && Template::isCacheTranslations()) {
+                }
+                elseif($translate && Template::isCacheTranslations()) {
                     //Create Translated file and put it in the language folder
                     $finds[] = Template::attemptFileTranslation($file, $language);
-                } else {// generic Ordner
+                }
+                else {// generic Ordner
                     $finds[] = $file;
                 }//end decision which file to pick
-                if (!$all) break;//stop searching after first match
+                if(!$all) break;//stop searching after first match
             }
         }
         //grab first element for now
-        return reset($finds)?:"";
+        return reset($finds) ?: "";
     }
 
     /**
@@ -914,17 +935,18 @@ class Weblication extends Component
      */
     public function getPoolClientSideRelativePath(string $subDir = ''): string
     {
-        return $this->poolClientSideRelativePath . ($subDir ? '/' : '') .  $subDir;
+        return $this->poolClientSideRelativePath . ($subDir ? '/' : '') . $subDir;
     }
 
     /**
      * server-side relative path to the pool root directory
+     *
      * @param string $subDir
      * @return string path from the application to the pool
      */
     public function getPoolServerSideRelativePath(string $subDir = ''): string
     {
-        return $this->poolServerSideRelativePath . ($subDir ? '/' : '') .  $subDir;
+        return $this->poolServerSideRelativePath . ($subDir ? '/' : '') . $subDir;
     }
 
     /**
@@ -996,14 +1018,14 @@ class Weblication extends Component
         if(!$AppTranslator instanceof Translator)
             $AppTranslator = new Translator();
         if(!$TranslatorResource instanceof TranslationProviderFactory) {
-            if ($translatorResourceDir)//make a ressource from a given file
+            if($translatorResourceDir)//make a ressource from a given file
                 $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
-        elseif (sizeof($AppTranslator->getTranslationResources()) > 0)//Translator is already loaded
-            $TranslatorResource = null;
-        else//add Fallback or throw
-            $TranslatorResource = TranslationProviderFactory_nop::create();
+            elseif(sizeof($AppTranslator->getTranslationResources()) > 0)//Translator is already loaded
+                $TranslatorResource = null;
+            else//add Fallback or throw
+                $TranslatorResource = TranslationProviderFactory_nop::create();
         }
-        if ($TranslatorResource != null)
+        if($TranslatorResource != null)
             $AppTranslator->addTranslationResource($TranslatorResource);
         //Setup Languages (for Application)
         $AppLanguages = $this->Settings->getVar('application.languages');
@@ -1015,7 +1037,7 @@ class Weblication extends Component
 
         //setup TemplateTranslator
         $translatorStaticResourceDir = $this->Settings->getVar('application.translatorStaticResourceDir');
-        if ($translatorStaticResourceDir) {
+        if($translatorStaticResourceDir) {
             $staticResource = TranslationProviderFactory_ResourceFile::create($translatorStaticResourceDir);
             $TemplateTranslator = new Translator($staticResource);
             //Try to load the required languages
@@ -1212,7 +1234,6 @@ class Weblication extends Component
     public function getLanguage(): string
     {
         if(!$this->language) {
-            // @todo replace with Translator::getPrimaryLanguage() after merge with feature-translator
             $this->setLanguage(Locale::getPrimaryLanguage($this->getLocale(self::LOCALE_FORCE_REGION)));
         }
         return $this->language;
@@ -1323,6 +1344,7 @@ class Weblication extends Component
 
     /**
      * Creates an array with given default values / structure for ajax results
+     *
      * @param ...$result
      * @return mixed
      */
@@ -1342,6 +1364,7 @@ class Weblication extends Component
 
     /**
      * Creates an array with references to the variadic default values for ajax results
+     *
      * @param array $result
      * @param mixed ...$defaults
      * @return mixed
@@ -1358,6 +1381,7 @@ class Weblication extends Component
 
     /**
      * returns the current timezone
+     *
      * @return string
      */
     public function getTimezone(): string

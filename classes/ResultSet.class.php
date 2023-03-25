@@ -22,6 +22,7 @@
  */
 
 use pool\classes\Core\PoolObject;
+use pool\classes\Core\Weblication;
 use pool\classes\Exception\InvalidJsonException;
 
 /**

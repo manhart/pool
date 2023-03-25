@@ -13,7 +13,7 @@ namespace pool\classes\translator;
 use Exception;
 use Input;
 use MessageFormatter;
-use Weblication;
+use pool\classes\Core\Weblication;
 use function checkRegExOutcome;
 use function explode;
 

@@ -14,7 +14,6 @@ use Input;
 use InputSession;
 use ReflectionClass;
 use ReflectionException;
-use Weblication;
 
 class Component extends PoolObject
 {

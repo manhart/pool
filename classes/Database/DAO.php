@@ -16,7 +16,7 @@ use MySQLi_Interface;
 use pool\classes\Core\PoolObject;
 use pool\classes\Exception\DAOException;
 
-use Weblication;
+use pool\classes\Core\Weblication;
 use ResultSet;
 use MySQL_DAO;
 
