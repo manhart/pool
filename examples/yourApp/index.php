@@ -1,5 +1,7 @@
 <?php
 // configs.inc.php: kann irgendwo liegen / can be placed anywhere!
+use pool\classes\Core\Weblication;
+
 require_once '../../src/configs/config.inc.php'; // <-- innerhalb config.inc.php die Pfade anpassen!
 require_once DIR_DAOS_ROOT.'/database.inc.php';
 
