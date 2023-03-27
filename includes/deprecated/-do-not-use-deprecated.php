@@ -1812,27 +1812,6 @@ function stripSvnDate($date, $format = 'd.m.Y H:i')
     return date($format, @strtotime(substr($date, 7, 19)));
 }
 
-/**
- * Wandelt einen QueryString in ein Array um.
- *
- * @param string $string
- * @param string $separator
- * @return array
- */
-function parseQueryString($string, $separator = '&')
-{
-    $array = array();
-    if ($string) {
-        $blub = explode($separator, $string);
-        foreach ($blub as $val) {
-            list($key, $val) = explode('=', $val);
-            $array[$key] = $val;
-        }
-    }
-
-    return $array;
-}
-
 function Sec2Time($time)
 {
     if (is_numeric($time)) {
