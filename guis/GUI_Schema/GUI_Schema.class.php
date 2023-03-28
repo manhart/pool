@@ -58,7 +58,7 @@ class GUI_Schema extends GUI_Module
         /** @var string $category Divides schemas into subdirectories */
         $category = $this->getInternalParam('category');
         /** @var $vhostMode 0-> category only, 1-> vhost/category/, 2-> category/vhost/, other-> vhost as alternative for category */
-        $vhostMode = (int)$this->getInternalParam('vhost_mode', -1);
+        $vhostMode = (int)$this->getInternalParam('vhostMode', -1);
         if ($category) {
             if ($vhostMode == 1) //preceding vHost
                 $this->appendVHost($directory);

@@ -150,6 +150,7 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Core\Weblication;
 use pool\classes\Database\Commands;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;

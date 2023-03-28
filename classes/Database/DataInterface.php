@@ -35,14 +35,14 @@ abstract class DataInterface extends PoolObject
     /**
      * factory method to create a data interface
      *
-     * @param string $interfaceType
      * @param array $connectionOptions
+     * @param string|null $interfaceType
      * @return DataInterface
      */
-    public static function createDataInterface(string $interfaceType, array $connectionOptions): DataInterface
+    public static function createDataInterface(array $connectionOptions, ?string $interfaceType = null): DataInterface
     {
-        /** @var DataInterface $DataInterface */
-        $DataInterface = new $interfaceType();
+        $DataInterface = $interfaceType? new $interfaceType() : new static();
+        assert($DataInterface instanceof DataInterface);
         $DataInterface->setOptions($connectionOptions);
         return $DataInterface;
     }
