@@ -169,7 +169,7 @@ class MySQLi_Interface extends DataInterface
     public function setOptions(array $connectionOptions): bool
     {
         // $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
-        $this->force_backend_read = array_key_exists('force_backend_read', $connectionOptions) ? $connectionOptions['force_backend_read'] : false;
+        $this->force_backend_read =  $connectionOptions['force_backend_read'] ?? false;
 
         if (!array_key_exists('host', $connectionOptions)) {
             $this->raiseError(__FILE__, __LINE__, 'MySQL_Interface::setOptions Bad Packet: no key "host"');
@@ -187,12 +187,7 @@ class MySQLi_Interface extends DataInterface
             $this->port = $connectionOptions['port'];
         }
 
-        if (array_key_exists('auth', $connectionOptions)) {
-            $this->auth = $connectionOptions['auth'];
-        }
-        else {
-            $this->auth = 'mysql_auth'; // verwendet zentrale, globale Authentifizierung
-        }
+        $this->auth = $connectionOptions['auth'] ?? 'mysql_auth';// fallback verwendet zentrale, globale Authentifizierung
 
         if (array_key_exists('charset', $connectionOptions)) {
             $this->default_charset = $connectionOptions['charset'];

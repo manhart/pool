@@ -154,7 +154,7 @@ class Log
                         'database' => $dbname,
                         'charset' => $charset
                     );
-                    $Db = DataInterface::createDataInterface($interfaceType, $Packet);
+                    $Db = DataInterface::createDataInterface($Packet, $interfaceType);
                     $DAO = DAO::createDAO($tableDefine, $Db);
                     $DAO->fetchColumns();
                 }
