@@ -999,6 +999,7 @@ class Weblication extends Component
      *
      * @return Weblication
      * @throws Exception
+     * @throws \Exception
      */
     public function setup(array $settings = []): static
     {
