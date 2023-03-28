@@ -25,7 +25,7 @@ if($Weblication instanceof Weblication) {
         'database' => constant('DB_TESTING')
         /* 'charset' => MYSQL_CHARSET */
     );
-    $MySQLi_db = DataInterface::createDataInterface(DATAINTERFACE_MYSQLI, $MySQL_Packet);
+    $MySQLi_db = DataInterface::createDataInterface($MySQL_Packet, MySQLi_Interface::class);
     $Weblication->addDataInterface($MySQLi_db);
 
     $Session = $Weblication->startPHPSession();
@@ -39,10 +39,8 @@ if($Weblication instanceof Weblication) {
     $Weblication->setSkin('default');
     $Weblication->setLanguage($lang);
 
-    $Input = new Input(I_GET);
-    $module = $Input->getVar('module');
-    if($Weblication->run(empty($module) ? 'GUI_Frame' : $module)) {
-        $Weblication->prepareContent();
-        $Weblication->finalizeContent(true, false);
-    }
+    $Weblication->setup([
+        'application.launchModule' => 'GUI_Frame'
+    ]);
+    $Weblication->render();
 }
