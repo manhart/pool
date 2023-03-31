@@ -122,7 +122,7 @@ class PoolObject
         }
         else {
             $classRootDirs = [
-                DIR_POOL_ROOT . '/' . PWD_TILL_CLASSES
+                getcwd() . '/' . PWD_TILL_CLASSES
             ];
             if(defined('DIR_POOL_ROOT')) {
                 $classRootDirs[] = DIR_POOL_ROOT . '/' . PWD_TILL_CLASSES;
