@@ -239,9 +239,9 @@ abstract class DAO extends PoolObject
     {
         global $$tableDefine;
         $tableDefine = $$tableDefine;
-        $interfaceType = $tableDefine[0];
-        $dbname = $tableDefine[1];
-        $table = $tableDefine[2];
+        $interfaceType = $tableDefine[0] ?? '';
+        $dbname = $tableDefine[1] ?? '';
+        $table = $tableDefine[2] ?? '';
     }
 
     /**
@@ -268,7 +268,7 @@ abstract class DAO extends PoolObject
         $interface = $interface ?? Weblication::getInstance()->getInterfaces();
 
         if(is_array($interface)) {
-            $interface = $interface[$type];
+            $interface = $interface[$type] ?? null;
         }
 
         // @todo remove switch
