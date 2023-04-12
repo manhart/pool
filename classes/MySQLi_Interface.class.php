@@ -491,9 +491,9 @@ class MySQLi_Interface extends DataInterface
         if (!$this->sql)//nothing to do
             return false;
         //identify command
-        $offset = strspn($this->sql, '( \n\t\r');//skip to the meat
+        $offset = strspn($this->sql, "( \n\t\r");//skip to the meat
         //find position of first ?whitespace?, starting from magic value 2 from old code
-        $pos = strcspn($this->sql, ' \n\r\t', $offset + 2);
+        $pos = strcspn($this->sql, " \n\r\t", $offset + 2) + 2;// TODO MySQL Syntax DO, USE?
         $command = strtoupper(substr($this->sql, $offset, $pos));//cut command from Query
         if (IS_TESTSERVER && !in_array($command, $this->commands))
             echo "Unknown command: '$command'<br>" .
