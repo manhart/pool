@@ -457,7 +457,8 @@ class GUI_Module extends Module
      */
     public function loadFiles()
     {
-        if (!$this->getWeblication()) return $this;
+        if (!$this->getWeblication())
+            return $this;
 
         $className = $this->getClassName();
 
@@ -466,16 +467,12 @@ class GUI_Module extends Module
             $this->Template->setFilePath($handle, $template);
         }
 
-        $hasFrame = $this->getWeblication()->hasFrame();
-        if ($hasFrame) {
+        if ($this->getWeblication()->hasFrame())
             $Frame = $this->getWeblication()->getFrame();
-        } else {
-            $hasFrame = $this instanceof GUI_CustomFrame;
-            if (!$hasFrame) {
-                return $this;
-            }
+        elseif ($this instanceof GUI_CustomFrame)
             $Frame = $this;
-        }
+        else
+            return $this;
 
         foreach ($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
@@ -488,7 +485,7 @@ class GUI_Module extends Module
         }
 
         // automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication (if enabled).
-        $this->js_createGUIModule($this->getClassName());
+        $this->js_createGUIModule($className);
 
         return $this;
     }
@@ -503,32 +500,16 @@ class GUI_Module extends Module
      */
     protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $includeCSS = true): bool
     {
-        if (!$this->js_createGUIModule) {
-            return false;
-        }
-        if (!$this->Weblication->hasFrame()) {
-            return false;
-        }
-
+        if (!$this->Weblication->hasFrame() || !$this->js_createGUIModule)
+            return false;//abort
         $className = $className ?: $this->getClassName();
-
-        if($includeCSS) {
-            $css = $this->Weblication->findStyleSheet($className . '.css', $className, $this->isPOOL(), false);
-            if ($css) {
-                $this->Weblication->getFrame()->getHeadData()->addStyleSheet($css);
-            }
-        }
-
-        if($includeJS) {
-            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isPOOL(), false);
-            if (!$js) {
-                return false;
-            }
-
-            $this->Weblication->getFrame()->getHeadData()->addJavaScript($js);
-        }
-
-        return true;
+        //associated Stylesheet
+        if($includeCSS && ($css = $this->Weblication->findStyleSheet("$className.css", $className, $this->isPOOL(), false)))
+            $this->Weblication->getFrame()->getHeadData()->addStyleSheet($css);
+        //associated Script
+        if($includeJS && ($jsFile = $this->Weblication->findJavaScript("$className.js", $className, $this->isPOOL(), false)))
+            $this->Weblication->getFrame()->getHeadData()->addJavaScript($jsFile);
+        return (bool)($jsFile??true);//result of JS-lookup or true
     }
 
     /**
