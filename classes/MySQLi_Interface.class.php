@@ -51,6 +51,9 @@ class MySQLi_Interface extends DataInterface
      */
     private $db_connect_id = array(SQL_READ => array(), SQL_WRITE => array());
 
+    /** @var array<string, int> available cluster modes */
+    private array $modes = [SQL_READ => 0, SQL_WRITE => 1];
+
     private array $commands = ['SELECT', 'SHOW', 'INSERT', 'UPDATE', 'DELETE', 'EXPLAIN', 'ALTER', 'CREATE', 'DROP', 'RENAME',
             'CALL', 'REPLACE', 'TRUNCATE', 'LOAD', 'HANDLER', 'DESCRIBE', 'START', 'COMMIT', 'ROLLBACK',
             'LOCK', 'SET', 'STOP', 'RESET', 'CHANGE', 'PREPARE', 'EXECUTE', 'DEALLOCATE', 'DECLARE', 'OPTIMIZE'];
@@ -216,32 +219,20 @@ class MySQLi_Interface extends DataInterface
         if (is_array($available_hosts)) {
             /**MySQL Server aufgeteilt in Lesecluster und Schreibcluster */
             mt_srand(getMicrotime(10000));
-            $targetMode = SQL_READ;
-            $modeKey = 0;
-            /** @var array|null $hostList reference to hosts available in this mode */
-            $hostList =& $available_hosts[$targetMode];
-            if ($mode == $targetMode || (!$mode && $hostList)) {
-                $key = mt_rand(1, sizeof($hostList)) - 1;
-                //$key = array_rand($this->available_hosts[SQL_READ]);
-                $host = $hostList[$key];
-                unset($hostList[$key]);//remove option
-                $hostList = array_values($hostList);//reindex
-            } else
-                $host = $available_hosts[$modeKey] ?? false;
-            if ($host) $this->host[$targetMode] = $host;
-
-            $targetMode = SQL_WRITE;
-            $modeKey = 1;
-            /** @var array|null $hostList reference to hosts available in this mode */
-            $hostList =& $available_hosts[$targetMode];
-            if ($mode == $targetMode || (!$mode && $hostList)) {
-                $key = mt_rand(1, sizeof($hostList)) - 1;
-                //$key = array_rand($this->available_hosts[SQL_WRITE]);
-                $host = $hostList[$key];
-                unset($hostList[$key]);
-            } else
-                $host = $available_hosts[$modeKey] ?? false;
-            if ($host) $this->host[$targetMode] = $host;
+            foreach ($this->modes as $targetMode => $modeKey) {
+                /** @var array|null $hostList reference to hosts available in this mode */
+                $hostList =& $available_hosts[$targetMode];
+                if ((!$mode || $mode == $targetMode) && $hostList) {//targeting that specific mode or no specific one
+                    $key = mt_rand(1, sizeof($hostList)) - 1;
+                    //$key = array_rand($this->available_hosts[SQL_READ]);//sounds good why not?
+                    $host = $hostList[$key];
+                    unset($hostList[$key]);//remove option
+                    if ($targetMode == SQL_READ)//is this just an error in the original code?
+                        $hostList = array_values($hostList);//reindex
+                } else//not requested or a fallback
+                    $host = $available_hosts[$modeKey] ?? false;
+                if ($host) $this->host[$targetMode] = $host;
+            }
         } elseif (is_string($available_hosts)) {
             /**Ein MySQL Server fuer Lesen und Schreiben*/
             $this->host = array(
