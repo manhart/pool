@@ -368,7 +368,9 @@ class MySQLi_Interface extends DataInterface
         //open new DB connection
         $host = $this->host[$mode] . ':' . $this->port;
         $conid = mysqli_connect($host, $this->__get_db_user($database, $mode), $this->__get_db_pass($database, $mode), '', $this->port);
-        if (constant('LOG_ENABLED') && constant('ACTIVATE_INTERFACE_SQL_LOG') >= 1 && ($Log = Singleton('Log'))->isLogging()) {
+        if (defined($x='LOG_ENABLED') && constant($x) &&
+            defined($x='ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
+            ($Log = Singleton('Log'))->isLogging()){
             //Logging enabled
             $sqlTarget = "TO $host MODE: $mode DB: $database";
             $Log->addLine(($conid) ? "CONNECTED " . $sqlTarget :
@@ -511,7 +513,9 @@ class MySQLi_Interface extends DataInterface
         $this->last_connect_id = $conid;
         if ($this->query_result)//Query successful
             $this->last_command = $command;
-        if (constant('LOG_ENABLED') && constant('ACTIVATE_INTERFACE_SQL_LOG') == 2 && ($Log = Singleton('Log'))->isLogging())
+        if (defined($x='LOG_ENABLED') && constant($x) &&
+            defined($x='ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
+            ($Log = Singleton('Log'))->isLogging())
             //Logging enabled
             $Log->addLine('SQL MODE: ' . $mode);
         return $this->query_result;
