@@ -1070,19 +1070,15 @@ SQL;
             return $skip_next_operator ? '1' : '';
         $firstRule = $filter_rules[0];
         $query = is_array($firstRule) || strtolower($firstRule) == 'or' ?//unless the first rule is an "operator" other than 'or'
-            '' : ' and';//we don't add an initial 'and' operator. Bug? [['and'],...] -> ' and and ....'
+            '' : ' and';/** we don't add an initial 'and' operator. Bug? [['and'],...] -> ' and and ....' */
         foreach($filter_rules as $record) {
-            if(!is_array($record)) {//record is a manual operator (or something?)
-                $query .= " $record "; //operator e.g. or, and
-                $skip_next_operator = true;
-                continue;//next record
-            }//else...
-            if (!$skip_next_operator || $skip_next_operator = false)//automatic operator or skip and reset the option
-                $query .= " $operator ";//put operator between the last record and this one
-            if(is_array($record[0])) { // nesting
-                $subFilter = $this->__buildFilter($record[0], $record[1], true);
-                $query .= " ($subFilter) ";
-            }
+            $skipAutomaticOperator = $skip_next_operator;
+            if($skip_next_operator = !is_array($record)) {//record is a manual operator (or something?)
+                $record = " $record "; //operator e.g. or, and
+                if ($skipAutomaticOperator)/** caller error? e.g. [...,['and'],['or'],...] */;
+                $skipAutomaticOperator = true;
+            } elseif (is_array($record[0]))// nesting detected
+                $record = "({$this->__buildFilter($record[0], $record[1], true)})";//"($subFilter)"
             else {//normal record
                 $field = $this->translateValues ? //get field 'name'
                     $this->translateValues($record[0]) : $record[0];//inject replace command?
@@ -1110,7 +1106,7 @@ SQL;
                 } elseif ($values instanceof Commands) {//resolve reserved keywords
                     $expression = $this->commands[$values->name];
                     $value = $expression instanceof Closure ?
-                        $expression($field) : " $expression";//!assuming closure was meant to be evaluated at this point
+                        $expression($field) : $expression;//!assuming closure was meant to be evaluated at this point
                 } elseif ($values instanceof DateTimeInterface) {//format date-objects
                     $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
                     $value = "'$dateTime'";
@@ -1122,8 +1118,10 @@ SQL;
                         default => $this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
                     };
                 //assemble record
-                $query .= "$field $innerOperator $value";
+                $record = "$field $innerOperator $value";
             }
+            $query .= !$skipAutomaticOperator ? //automatic operator?
+                    " $operator $record" : $record;//automation puts operator between the last record and this one
         }
         return $query;
     }

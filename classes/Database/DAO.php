@@ -11,14 +11,14 @@ declare (strict_types=1);
 
 namespace pool\classes\Database;
 
+use Closure;
 use CustomMySQL_DAO;
+use MySQL_DAO;
 use MySQLi_Interface;
 use pool\classes\Core\PoolObject;
-use pool\classes\Exception\DAOException;
-
 use pool\classes\Core\Weblication;
+use pool\classes\Exception\DAOException;
 use ResultSet;
-use MySQL_DAO;
 
 abstract class DAO extends PoolObject
 {
@@ -53,7 +53,7 @@ abstract class DAO extends PoolObject
     protected array $pk = [];
 
     /**
-     * @var array overwrite this array in the constructor to create the commands needed for the database.
+     * @var array<string, string|Closure> overwrite this array in the constructor to create the commands needed for the database.
      * @see Commands
      */
     protected array $commands;
