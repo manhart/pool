@@ -983,7 +983,7 @@ SQL;
     protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_ResultSet
     {
         $MySQL_ResultSet = new MySQL_ResultSet($this->db);
-        $MySQL_ResultSet->execute($sql, $this->dbname, !is_null($customCallback) ? $customCallback : [$this, 'fetchingRow'], $this->metaData);
+        $MySQL_ResultSet->execute($sql, $this->dbname, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
         return $MySQL_ResultSet;
     }
 
@@ -996,10 +996,7 @@ SQL;
      */
     public function fetchingRow(array $row): array
     {
-        if($this->translate) {
-            return $this->translate($row);
-        }
-        return $row;
+        return $this->translate ? $this->translate($row) : $row;
     }
 
     /**
@@ -1011,17 +1008,14 @@ SQL;
      */
     protected function translate(array $row): array
     {
-        if(!Weblication::getInstance()->hasTranslator()) {
-            return $row;
-        }
-
+        if(!Weblication::getInstance()->hasTranslator())//no translator
+            return $row;//unchanged
         $Translator = Weblication::getInstance()->getTranslator();
-        foreach($this->translate as $key) {
-            if(!isset($row[$key])) continue;
-            // another idea to handle columns which should be translated
-            // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
-            $row[$key] = $Translator->getTranslation($row[$key], $row[$key], noAlter: true);
-        }
+        // another idea to handle columns which should be translated
+        // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
+        foreach($this->translate as $key)
+            if(isset($row[$key]))
+                $row[$key] = $Translator->getTranslation($row[$key], $row[$key], noAlter: true);
         return $row;
     }
 
@@ -1031,29 +1025,21 @@ SQL;
      */
     protected function translateValues(string $field): string
     {
-        if(!Weblication::getInstance()->hasTranslator()) {
+        $tokens =& $this->translateValues[$field];
+        if(!Weblication::getInstance()->hasTranslator() || !$tokens)
             return $field;
-        }
-
-        if(!isset($this->translateValues[$field])) {
-            return $field;
-        }
-
         $Translator = Weblication::getInstance()->getTranslator();
-
         $tmp = 'case '.$field;
-        foreach($this->translateValues[$field] as $transl) {
-            $tmp .= ' when \''.$transl.'\' then \''.$Translator->getTranslation($transl, $transl).'\'';
-        }
-        $tmp .= ' else '.$field.' end';
-        return $tmp;
+        foreach($tokens as $token)
+            $tmp .= " when '$token' then '{$Translator->getTranslation($token, $token)}'";
+        return "$tmp else $field end";
     }
 
     /**
      * checks value for subquery
      *
-     * @param $op
-     * @param $value
+     * @param mixed $op string? unused
+     * @param mixed $value string?
      * @return bool
      */
     private function __isSubQuery($op, $value): bool
@@ -1074,111 +1060,70 @@ SQL;
      *
      * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
      * @param string $operator MySQL Operator AND/OR
-     * @param boolean $skip_first_operator False setzt zu Beginn keinen Operator
+     * @param boolean $skip_next_operator False setzt zu Beginn keinen Operator
      * @return string Teil eines SQL Queries
      *
      */
-    protected function __buildFilter(array $filter_rules, string $operator='and', bool $skip_first_operator=false): string
+    protected function __buildFilter(array $filter_rules, string $operator='and', bool $skip_next_operator=false): string
     {
-        $query = '';
-        $z = -1;
+        if(!$filter_rules )//not filter anything (terminate floating operators)
+            return $skip_next_operator ? '1' : '';
+        $firstRule = $filter_rules[0];
+        $query = is_array($firstRule) || strtolower($firstRule) == 'or' ?//unless the first rule is an "operator" other than 'or'
+            '' : ' and';//we don't add an initial 'and' operator. Bug? [['and'],...] -> ' and and ....'
         foreach($filter_rules as $record) {
-            $z++;
-            if(!is_array($record)) { // operator or something manual
-                // where 1 xxx fehlendes and
-                if($z==0 and strtolower($record) != 'or') {
-                    $query .= ' and';
-                }
-                // Verknuepfungen or, and
-                $query .= ' ' . $record . ' ';
-                $skip_first_operator = true;
-                continue;
-            }
-            if($skip_first_operator) {
-                $skip_first_operator = false;
-            }
-            else {
-                $query .= ' ' . $operator . ' ';
-            }
-
+            if(!is_array($record)) {//record is a manual operator (or something?)
+                $query .= " $record "; //operator e.g. or, and
+                $skip_next_operator = true;
+                continue;//next record
+            }//else...
+            if (!$skip_next_operator || $skip_next_operator = false)//automatic operator or skip and reset the option
+                $query .= " $operator ";//put operator between the last record and this one
             if(is_array($record[0])) { // nesting
-                $query .= ' (' . $this -> __buildFilter($record[0], $record[1], true) . ') ';
-                continue;
+                $subFilter = $this->__buildFilter($record[0], $record[1], true);
+                $query .= " ($subFilter) ";
             }
-
-            // 24.07.2012, Anfuehrungszeichen steuerbar
-            $noQuotes = false;
-            $noEscape = false;
-            if(isset($record[3]) && is_int($record[3])) { // Optionen
-                $noQuotes = ($record[3] & DAO::DAO_NO_QUOTES);
-                $noEscape = ($record[3] & DAO::DAO_NO_ESCAPE);
+            else {//normal record
+                $field = $this->translateValues ? //get field 'name'
+                    $this->translateValues($record[0]) : $record[0];//inject replace command?
+                $rawInnerOperator = $record[1];
+                $innerOperator = strtr($rawInnerOperator, $this->MySQL_trans);//map operators for DBMS
+                $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
+                //parse quotation options (defaults to false)
+                $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
+                $noQuotes = $quoteSettings & DAO::DAO_NO_QUOTES;
+                $noEscape = $quoteSettings & DAO::DAO_NO_ESCAPE;
+                if (is_array($values)) switch ($rawInnerOperator) {//multi value operation
+                    case 'between':
+                        $value = /* min */
+                            $this->escapeWhereConditionValue($values[0], $noEscape, $noQuotes);
+                        $value .= ' and ';
+                        $value .= /* max */
+                            $this->escapeWhereConditionValue($values[1], $noEscape, $noQuotes);
+                        break;
+                    default://enlist all values e.g. in, not in
+                        //apply quotation rules
+                        $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
+                        $values = implode(', ', $values);
+                        $value = "($values)";
+                        break;
+                } elseif ($values instanceof Commands) {//resolve reserved keywords
+                    $expression = $this->commands[$values->name];
+                    $value = $expression instanceof Closure ?
+                        $expression($field) : " $expression";//!assuming closure was meant to be evaluated at this point
+                } elseif ($values instanceof DateTimeInterface) {//format date-objects
+                    $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
+                    $value = "'$dateTime'";
+                } else//sub query moved to escapeWhereConditionValue
+                    $value = match (gettype($values)) {//handle by type
+                        'NULL' => 'NULL',
+                        'boolean' => bool2string($values),
+                        'double', 'integer' => $values,//float and int
+                        default => $this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
+                    };
+                //assemble record
+                $query .= "$field $innerOperator $value";
             }
-
-            if($this->translateValues) {
-                $record[0] = $this->translateValues($record[0]);
-            }
-
-            // Sonderregel "in", "not in", "between"
-            if(isset($record[2]) and is_array($record[2])) {
-                if($record[1] == 'between') {
-                    $query .= $record[0].' between ';
-                    $min = $record[2][0];
-                    $max = $record[2][1];
-
-                    $query = $this->addWhereConditionValue($min, $query, $noEscape, $noQuotes);
-                    $query .= ' and ';
-                    $query = $this->addWhereConditionValue($max, $query, $noEscape, $noQuotes);
-                }
-                else { // in, not in or equal with one value
-                    $first = true;
-                    $query .= $record[0] . ' ' . strtr($record[1], $this->MySQL_trans) . ' (';
-                    foreach($record[2] as $value) {
-                        if(!$first) {
-                            $query .= ', ';
-                        }
-                        $query = $this->addWhereConditionValue($value, $query, $noEscape, $noQuotes);
-                        $first = false;
-                    }
-                    $query .= ')';
-                }
-            }
-            else {
-                $query .= $record[0].' '.strtr($record[1], $this->MySQL_trans);
-                if (is_null($record[2])) {
-                    $query .= ' NULL';
-                }
-                elseif(is_bool($record[2])) {
-                    $query .= ' ' . bool2string($record[2]);
-                }
-                elseif($record[2] instanceof Commands) {
-                    // reserved keywords don't need to be masked
-                    $expression = $this->commands[$record[2]->name];
-                    if($expression instanceof Closure) {
-                        $query .= " $expression($record[0])";
-                    }
-                    else {
-                        $query .= " $expression";
-                    }
-                }
-                elseif($record[2] instanceof DateTimeInterface) {
-                    $dateTime = $record[2]->format($record[3] ?? 'Y-m-d H:i:s');
-                    $query .= " '$dateTime'";
-                }
-                elseif(is_int($record[2]) or is_float($record[2]) or
-                        $this->__isSubQuery($record[1], $record[2])) {
-                    $query .= ' ' . $record[2];
-                }
-                else {
-                    $value = $record[2];
-                    if(!$noEscape) $value = $this->db->escapeString($value, $this->dbname);
-                    if(!$noQuotes) $value = '\''.$value.'\'';
-
-                    $query .= ' '.$value;
-                }
-            }
-        }
-        if($z == -1 and $skip_first_operator) { // kein Durchlauf stattgefunden
-            return '1';
         }
         return $query;
     }
@@ -1186,19 +1131,16 @@ SQL;
     /**
      * add value to where condition
      * @param mixed $value
-     * @param string $query
      * @param false|int $noEscape
      * @param false|int $noQuotes
      * @return string
      */
-    private function addWhereConditionValue(mixed $value, string $query, false|int $noEscape, false|int $noQuotes): string
+    private function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): string
     {
-        if(!is_int($value) and !is_float($value)) {
-            if(!$noEscape) $value = $this->db->escapeString($value, $this->dbname);
-            if(!$noQuotes) $value = '\'' . $value . '\'';
-        }
-        $query .= $value;
-        return $query;
+        if(is_int($value) || is_float($value) || $this->__isSubQuery(null, $value))
+            return $value;//not a stringable or a 'subQuery'
+        $value = $noEscape ? $value : $this->db->escapeString($value, $this->dbname);
+        return $noQuotes ? $value : "'$value'"; //quote
     }
 
     /**
