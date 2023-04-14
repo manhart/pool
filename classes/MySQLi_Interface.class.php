@@ -120,9 +120,9 @@ class MySQLi_Interface extends DataInterface
     /**
      * Speichert das Query Result zwischen
      *
-     * @var mysqli_result|true|false
+     * @var mysqli_result|bool
      */
-    var $query_result = false;
+    var bool|mysqli_result $query_result = false;
 
     /**
      * Zuletzt ausgefuehrtes SQL Kommando
@@ -539,17 +539,10 @@ class MySQLi_Interface extends DataInterface
      **/
     public function numrows($query_result = false)
     {
-        if (!$query_result) {
-            if (isset($this->query_result)) {
-                $query_result = $this->query_result;
-            }
-        }
-
-        $numrows = 0;
-        if ($query_result instanceof mysqli_result) {
-            $numrows = mysqli_num_rows($query_result);
-        }
-        return $numrows;
+        if (!$query_result)//try object property
+            $query_result = $this->query_result ?? false;
+        return $query_result instanceof mysqli_result ?
+            mysqli_num_rows($query_result) : 0;
     }
 
     /**
@@ -630,21 +623,11 @@ class MySQLi_Interface extends DataInterface
      * @param integer $query_id Query Ergebnis-Kennung
      * @return array Datensatz in einem assoziativen Array
      **/
-    function fetchrow($query_resource = null)
+    function fetchrow($query_resource = false)
     {
-        if (!$query_resource) {
-            if (isset($this->query_result)) {
-                $query_resource = $this->query_result;
-            }
-        }
-
-
-        if ($query_resource) {
-            return mysqli_fetch_assoc($query_resource);
-        }
-        else {
-            return false;
-        }
+        $query_resource = $query_resource ?: $this->query_result;
+        return $query_resource ?
+            mysqli_fetch_assoc($query_resource) : false;
     }
 
     /**
@@ -657,9 +640,7 @@ class MySQLi_Interface extends DataInterface
      */
     public function fetchrowset(false|mysqli_result $query_result = false, ?callable $callbackOnFetchRow = null, array $metaData = []): array
     {
-        if (!$query_result && isset($this->query_result)) {
-            $query_result = $this->query_result;
-        }
+        $query_result = $query_result ?: $this->query_result;
 
         $rowSet = [];
         // todo faster way?
@@ -685,44 +666,15 @@ class MySQLi_Interface extends DataInterface
      *
      * @param string $field Feldname
      * @param integer $rownum Feld-Offset
-     * @param null $query_resource
+     * @param false|mysqli_result|null $query_resource
      * @return string Wert eines Feldes
      */
-    function fetchfield($field, $rownum = -1, $query_resource = null)
+    function fetchfield($field, int $rownum = -1, false|mysqli_result|null $query_resource = false)
     {
-        $result = false;
-        if (!$query_resource) {
-            if (isset($this->query_result)) {
-                $query_resource = $this->query_result;
-            }
-        }
-
-        if ($query_resource) {
-            if ($rownum > -1) {
-                $result = $this->mysqli_result($query_resource, $rownum, $field);
-            }
-            //					else {
-            //						$query_id = intval($query_resource);
-            //						if(empty($this->row[$query_id]) && empty($this->rowset[$query_id])) {
-            //							if( $this->fetchrow() ) {
-            //								$result = $this->row[$query_id][$field];
-            //							}
-            //						}
-            //			  			else {
-            //							if($this->rowset[$query_id]) {
-            //								$result = $this->rowset[$query_id][$field];
-            //							}
-            //							else if($this->row[$query_id]) {
-            //								$result = $this->row[$query_id][$field];
-            //							}
-            //						}
-            //					}
-
-            return $result;
-        }
-        else {
-            return false;
-        }
+        $query_resource = $query_resource ?: $this->query_result;
+        if ($rownum <= -1 || !$query_resource)
+            return false;//abort
+        return $this->mysqli_result($query_resource, $rownum, $field);
     }
 
     /**
@@ -730,34 +682,29 @@ class MySQLi_Interface extends DataInterface
      *
      * @param mysqli_result $query_result
      * @param int $rownum
-     * @param int $field
+     * @param int|string $field
      * @return mixed
      */
-    private function mysqli_result($query_result, $rownum, $field = 0)
+    private function mysqli_result(mysqli_result $query_result, int $rownum, int|string $field = 0)
     {
-        if (!mysqli_data_seek($query_result, $rownum)) return false;
-        if (!($row = mysqli_fetch_array($query_result))) return false;
-        if (!array_key_exists($field, $row)) return false;
-        return $row[$field];
+        return mysqli_data_seek($query_result, $rownum)//nice staged execution
+        && ($row = mysqli_fetch_array($query_result))
+        && array_key_exists($field, $row) ?
+            $row[$field] : false;
     }
 
     /**
      * Bewegt den internen Ergebnis-Zeiger
      *
      * @public
-     * @param integer $rownum Datensatznummer
-     * @param integer $query_id Query Ergebnis-Kennung
+     * @param integer $rowNum Datensatznummer
+     * @param mysqli_result|null $query_id Query Ergebnis-Kennung
      * @return boolean Bei Erfolg true, bei Misserfolg false
-     **/
-    function rowseek($rownum, $query_id = 0)
+     */
+    function rowseek(int $rowNum, mysqli_result $query_id = null): bool
     {
-        if (!$query_id) {
-            if (isset($this->query_result)) {
-                $query_id = $this->query_result;
-            }
-        }
-
-        return ($query_id) ? mysqli_data_seek($query_id, $rownum) : false;
+        $query_id = $query_id ?: $this->query_result;
+        return $query_id && mysqli_data_seek($query_id, $rowNum);
     }
 
     /**
@@ -781,15 +728,12 @@ class MySQLi_Interface extends DataInterface
      */
     function foundRows()
     {
-        $foundRows = 0;
-
         $sql = 'SELECT FOUND_ROWS() as foundRows';
         $query_id = $this->query($sql);
-        if ($query_id) {
-            $foundRows = $this->fetchfield('foundRows', 0, $query_id);
-            $this->freeresult($query_id);
-        }
-
+        if (!$query_id)
+            return 0;
+        $foundRows = $this->fetchfield('foundRows', 0, $query_id);
+        $this->freeresult($query_id);
         return $foundRows;
     }
 
@@ -883,26 +827,15 @@ SQL;
      * @param mysqli_result|false $query_result Query Ergebnis-Kennung
      * @return boolean Bei Erfolg true, bei Misserfolg false
      **/
-    public function freeresult($query_result = false)
+    public function freeresult($query_result = false):bool
     {
-        if (!$query_result) {
-            if (isset($this->query_result)) {
-                $query_result = $this->query_result;
-            }
-        }
-
-        if ($query_result instanceof mysqli_result) {
-            $xdebug_is_debugger_active = false;
-            if (function_exists('xdebug_is_debugger_active')) {
-                $xdebug_is_debugger_active = xdebug_is_debugger_active();
-            }
+        $result = $query_result ?: $this->query_result;
+        $hasResult = $result instanceof mysqli_result;
+        if ($hasResult
             // attention: xdebug shows strange error messages: Can't fetch mysqli_result
-            if (!$xdebug_is_debugger_active) {
-                mysqli_free_result($query_result);
-            }
-            return true;
-        }
-        return false;
+            && (!function_exists('xdebug_is_debugger_active') || !xdebug_is_debugger_active()))
+            mysqli_free_result($result);
+        return $hasResult;
     }
 
     /**
