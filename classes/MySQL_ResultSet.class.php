@@ -74,84 +74,71 @@ class MySQL_ResultSet extends ResultSet
      * @param string $sql SQL Statement
      * @param string $dbname database name
      * @param callable|null $callbackOnFetchRow
+     * @param array $metaData
      * @return boolean Erfolgsstatus (SQL Fehlermeldungen koennen ueber $this -> getLastError() abgefragt werden)
      * @see ResultSet::getLastError()
      */
     public function execute(string $sql, string $dbname='', ?callable $callbackOnFetchRow = null, array $metaData = []): bool
     {
-        $bResult = false;
+        //clear stored rows
         $this->rowset = [];
 
-        $result = false;
-        if (!$this->db instanceof DataInterface) {
+        if (!$this->db) {//missing interface
             $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
+            return false;//Alternative is a TypeError
         }
-        else {
-            if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
-                ACTIVATE_RESULTSET_SQL_LOG == 1) {
-                // Zeitmessung starten
-                $Stopwatch = Singleton('Stopwatch');
-                $Stopwatch->start('SQLQUERY');
+        /** @var ?Log $Log */
+        $Log = defined($x = 'LOG_ENABLED') && constant($x) && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
+            Singleton('Log') : null;
+        /** @var ?Stopwatch $Stopwatch Logging Stopwatch*/
+        $Stopwatch = $Log && $Log->isLogging() ? Singleton('Stopwatch')->start('SQLQUERY') : null;// zeitmessung starten
+        $result = $this->db->query($sql, $dbname);//run
+        if ($result) {//success
+            switch ($this->db->getLastSQLCommand()) {
+                case 'SELECT':
+                case 'SHOW':
+                case 'DESCRIBE':
+                case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
+                    //? ( z.B. UNION
+                    if ($this->db->numrows($result) > 0) {
+                        $this->rowset = $this->db->fetchrowset($result, $callbackOnFetchRow, $metaData);
+                        $this->reset();
+                    }
+                    $this->db->freeresult($result);
+                    break;
+                /** @noinspection PhpMissingBreakStatementInspection */
+                case 'INSERT'://DML commands
+                    $last_insert_id = $this->db->nextid();
+                    $idColumns = [
+                        'last_insert_id' => $last_insert_id,
+                        'id' => $last_insert_id,
+                    ];
+                case 'UPDATE':
+                case 'DELETE':
+                    $affected_rows = $this->db->affectedrows();
+                    $row = [//id of inserted record or number of rows
+                        0 => $last_insert_id ?? $affected_rows,
+                        'affected_rows' => $affected_rows
+                    ] + ($idColumns??[]);//for insert save value db->nextid()
+                    $this->rowset = [0 => $row];
+                    $this->reset();
+                    break;
             }
-            $result = $this->db->query($sql, $dbname);
-        }
-
-        if (!$result) {
-            $error_msg = $this->db->getErrormsg().' SQL Statement failed: '.$sql;
+        } else {//statement failed
+            $error_msg = $this->db->getErrormsg() . ' SQL Statement failed: ' . $sql;
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             $error = $this->db->getError();
             $error['sql'] = $sql;
-            $this -> errorStack[] = $error;
-        }
-        else {
-            $cmd = $this->db->getLastSQLCommand();
-            #echo $cmd.'<br>';
-            if ($cmd == 'SELECT' or $cmd == 'SHOW' or $cmd == 'DESCRIBE' or $cmd == 'EXPLAIN' /* or substr($cmd, 0, 1) == '('*/) { // ( z.B. UNION
-                if ($this->db->numrows($result) > 0) {
-                    $this->rowset = $this->db->fetchrowset($result, $callbackOnFetchRow, $metaData);
-                    $this->reset();
-                }
-                $this->db->freeresult($result);
-            }
-            elseif ($cmd == 'INSERT') {
-                $last_insert_id = $this->db->nextid();
-                $affected_rows = $this->db->affectedrows();
-                $this->rowset = array(
-                    0 => array(
-                        0 => $last_insert_id,
-                        'last_insert_id' => $last_insert_id,
-                        'id' => $last_insert_id,
-                        'affected_rows' => $affected_rows
-                    )
-                );
-                $this->reset();
-            }
-            elseif ($cmd == 'UPDATE' or $cmd == 'DELETE') {
-                $affected_rows = $this->db->affectedrows();
-                $this->rowset = array(
-                    0 => array(
-                        0 => $affected_rows,
-                        'affected_rows' => $affected_rows
-                    )
-                );
-                $this->reset();
-            }
-            $bResult = true;
+            $this->errorStack[] = $error;
         }
 
         // SQL Statement Logging:
-        if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_RESULTSET_SQL_LOG') and
-            ACTIVATE_RESULTSET_SQL_LOG == 1) {
-            $Stopwatch->stop('SQLQUERY');
-            $timespent = $Stopwatch->getDiff('SQLQUERY');
-
-            $Log = Singleton('Log');
-            if($Log->isLogging()) {
-                $Log->addLine('SQL ON DB '.$dbname.': "'.$sql.'" in '.$timespent.' sec.');
-                if(!$bResult) $Log->addlIne('SQL-ERROR ON DB '.$dbname.': '.$this->db->getErrormsg());
-            }
+        if ($Stopwatch) {
+            $timeSpent = $Stopwatch->stop('SQLQUERY')->getDiff('SQLQUERY');
+            $Log->addLine("SQL ON DB $dbname: '$sql' in $timeSpent sec.");
+            if (!$result) $Log->addlIne('SQL-ERROR ON DB ' . $dbname . ': ' . $this->db->getErrormsg());
         }
-        return $bResult;
+        return $result;
     }
 
     /**
