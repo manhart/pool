@@ -1067,7 +1067,7 @@ class Weblication extends Component
     {
         switch(session_status()) {
             case PHP_SESSION_DISABLED:
-                throw new Exception('PHP Session is  disabled.');
+                throw new Exception('PHP Session is disabled.');
 
             case PHP_SESSION_NONE:
                 // setting ini is only possible, if the session is not started yet
