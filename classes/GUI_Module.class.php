@@ -418,7 +418,7 @@ class GUI_Module extends Module
      *
      * @param string $marker Identifikation innerhalb des Templates
      */
-    protected function setMarker(string $marker)
+    protected function setMarker(string $marker): void
     {
         $this->marker = $marker;
     }
@@ -440,7 +440,7 @@ class GUI_Module extends Module
      * @param string $title Titel
      * @param string $template HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html"); sucht immer im Projektverzeichnis nach der Vorlage.
      **/
-    public function enableBox(string $title = '', string $template = 'tpl_box.html')
+    public function enableBox(string $title = '', string $template = 'tpl_box.html'): static
     {
         $file = $this->Weblication->findTemplate($template, $this->getClassName());
         if ($file) {
@@ -448,17 +448,20 @@ class GUI_Module extends Module
             $this->TemplateBox->setFilePath('stdout', $file);
             $this->TemplateBox->setVar('TITLE', $title);
             $this->enabledBox = true;
-        } else {
+        }
+        else {
             $this->enabledBox = false;
         }
+        return $this;
     }
 
     /**
      * Deaktiviert die Box.
      */
-    public function disableBox()
+    public function disableBox(): static
     {
         $this->enabledBox = false;
+        return $this;
     }
 
     /**
@@ -597,8 +600,8 @@ class GUI_Module extends Module
     /**
      * Runs prepare on all modules
      * Preparing modules and their children.
-     **/
-    public function prepareContent()
+     */
+    public function prepareContent(): void
     {
         $this->prepare();
         $this->prepareChildren();
@@ -610,12 +613,13 @@ class GUI_Module extends Module
 
     /**
      * Bereitet alle Html Templates aller Children auf.
-     **/
-    private function prepareChildren()
+     */
+    private function prepareChildren(): void
     {
         foreach ($this->childModules as $Module) {
             $Module->importHandoff($this->handoff);
-            $Module->prepareContent();
+            if($Module instanceof GUI_Module)
+                $Module->prepareContent();
         }
     }
 
@@ -664,13 +668,13 @@ class GUI_Module extends Module
             $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $requestedMethod);
             $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
         } catch (ReflectionException) {
-            return $this->respondToAjaxCall(null, "Error calling method {$requestedMethod} on {$this->getClassName()}",
+            return $this->respondToAjaxCall(null, "Error calling method $requestedMethod on {$this->getClassName()}",
                 __METHOD__, 'reflection');
         }
 
         // collect succeeding ajax calls that are not closures
         if (!$Closure) {
-            Log::info("The method {$this->getClassName()}:{$requestedMethod} is not used as Closure ", ['className' => $this->getClassName(),
+            Log::info("The method {$this->getClassName()}:$requestedMethod is not used as Closure ", ['className' => $this->getClassName(),
                 'method' => $requestedMethod], 'ajaxCallLog');
         }
 
@@ -736,7 +740,7 @@ class GUI_Module extends Module
         } else
             $errorType = 'undefined';
         return $this->respondToAjaxCall($result, $errorText,
-            "{$callingClassName}:{$requestedMethod}", $errorType);
+            "$callingClassName:$requestedMethod", $errorType);
     }
 
     /**
@@ -815,7 +819,8 @@ class GUI_Module extends Module
                 }
             }
             return $this->pasteChildren($content);
-        } else {
+        }
+        else {
             return "";
         }
     }
@@ -825,12 +830,12 @@ class GUI_Module extends Module
      *
      * @throws Exception
      */
-    private function finalizeChildren()
+    private function finalizeChildren(): void
     {
-        /** @var GUI_Module $GUI */
         foreach ($this->childModules as $GUI) {
             if (!$GUI->enabled()) continue;
-            $GUI->finalContent = $GUI->finalizeContent();
+            if($GUI instanceof GUI_Module)
+                $GUI->finalContent = $GUI->finalizeContent();
         }
     }
 
