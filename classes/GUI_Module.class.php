@@ -355,7 +355,7 @@ class GUI_Module extends Module
      */
     protected function searchGUIs(string $content, bool $recurse = true, bool $autoLoadFiles = true): string
     {
-        $reg = '/\[(GUI_.*)(\((.*)\)|)]/mU';
+        $reg = '/\[([\w\x5c]*GUI_\w+)(\([^\(\)]*\))?\]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 
         if (!$bResult)//no GUIs
@@ -366,7 +366,7 @@ class GUI_Module extends Module
             foreach ($matches as $match) {
                 $pattern = $match[0];
                 $guiName = $match[1];
-                $params = $match[3] ?? '';
+                $params = trim($match[2] ?? '', '()');
                 //try building the GUI found
                 $new_GUI = $this->createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
                 //get unique identifier
