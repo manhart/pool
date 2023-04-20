@@ -222,7 +222,7 @@ class Input extends PoolObject
      */
     function isEmpty(): bool
     {
-        return $this->emptyVar(array_keys($this->vars));
+        return $this->emptyVar($this->vars);
     }
 
     /**
