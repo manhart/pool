@@ -469,7 +469,8 @@ class GUI_Module extends Module
         $hasFrame = $this->getWeblication()->hasFrame();
         if ($hasFrame) {
             $Frame = $this->getWeblication()->getFrame();
-        } else {
+        }
+        else {
             $hasFrame = $this instanceof GUI_CustomFrame;
             if (!$hasFrame) {
                 return $this;
@@ -487,14 +488,15 @@ class GUI_Module extends Module
             $Frame->getHeadData()->addJavaScript($jsFile);
         }
 
-        // automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication (if enabled).
-        $this->js_createGUIModule($this->getClassName());
-
+        /**
+         * Including of the JavaScript class and Stylesheet with the same class/file name is done in the prepareContent() method.
+         * @see GUI_Module::prepareContent()
+         */
         return $this;
     }
 
     /**
-     * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication.
+     * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication. It also includes the CSS file.
      *
      * @param string $className
      * @param bool $includeJS
@@ -506,16 +508,20 @@ class GUI_Module extends Module
         if (!$this->js_createGUIModule) {
             return false;
         }
-        if (!$this->Weblication->hasFrame()) {
+
+        if ($this->getWeblication()->hasFrame())
+            $Frame = $this->getWeblication()->getFrame();
+        elseif ($this instanceof GUI_CustomFrame)
+            $Frame = $this;
+        else
             return false;
-        }
 
         $className = $className ?: $this->getClassName();
 
         if($includeCSS) {
             $css = $this->Weblication->findStyleSheet($className . '.css', $className, $this->isPOOL(), false);
             if ($css) {
-                $this->Weblication->getFrame()->getHeadData()->addStyleSheet($css);
+                $Frame->getHeadData()->addStyleSheet($css);
             }
         }
 
@@ -525,7 +531,7 @@ class GUI_Module extends Module
                 return false;
             }
 
-            $this->Weblication->getFrame()->getHeadData()->addJavaScript($js);
+            $Frame->getHeadData()->addJavaScript($js);
         }
 
         return true;
