@@ -1069,11 +1069,11 @@ SQL;
         if(!$filter_rules )//not filter anything (terminate floating operators)
             return $skip_next_operator ? '1' : '';
         $firstRule = $filter_rules[0];
-        $query = is_array($firstRule) || strtolower($firstRule) == 'or' ?//unless the first rule is an "operator" other than 'or'
-            '' : ' and';/** we don't add an initial 'and' operator. Bug? [['and'],...] -> ' and and ....' */
+        $query = !is_array($firstRule) && !in_array(strtolower($firstRule), ['or', 'and']) ?//1. rule is a non joining operator
+            ' and' : '';//* we add an initial 'and' operator.
         foreach($filter_rules as $record) {
             $skipAutomaticOperator = $skip_next_operator;
-            if($skip_next_operator = !is_array($record)) {//record is a manual operator (or something?)
+            if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
                 $record = " $record "; //operator e.g. or, and
                 if ($skipAutomaticOperator)/** caller error? e.g. [...,['and'],['or'],...] */;
                 $skipAutomaticOperator = true;
@@ -1151,85 +1151,66 @@ SQL;
      */
     public function makeFilter(array $columns = [], string $searchString = '', array $definedSearchKeywords = []): array
     {
+        if(!$searchString && !$definedSearchKeywords)
+            return [];
         $filter = [];
-        $hasSearchString = ($searchString != '');
-        if(!$hasSearchString and !count($definedSearchKeywords)) {
-            return $filter;
-        }
-
-        $searchString = '%'.$searchString.'%';
-
         $defined_filter = [];
-        $isAssoc = null;
-        $i = 0;
         foreach($columns as $column) {
-            if(is_null($isAssoc)) $isAssoc = is_array($column);
-
-            $alias = $isAssoc ? $column['alias'] : $column;
-            $expr = $orig_expr = $isAssoc ? $column['expr'] : $column; // column or expression
-            $type = $isAssoc ? $column['type'] : '';
-            $operator = 'like';
-
-            // $format = $isAssoc ? $column['format'] : '';
-
-            $hasDefinedFilter = isset($definedSearchKeywords[$alias]);
-
-            $isDateTime = $type == 'date.time';
-            $isDate = $type == 'date';
-            if($isDate or $isDateTime) {
-                $expr = 'DATE_FORMAT('.$expr.', "'.Weblication::getInstance()->getDefaultFormat('mysql.date_format.' . $type).'")';
-            }
-
-            if($hasDefinedFilter) {
-                $filterByValue = $definedSearchKeywords[$alias];
-                $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $expr) : $expr;
-                $filterControl = $isAssoc ? ($column['filterControl'] ?: 'input') : 'input';
-                if($filterControl == 'select') {
-                    $operator = 'equal';
+            $originalExpr = $column['expr'] ?? $column; // column or expression
+            $filterExpr = match ($column['type'] ?? '') {
+                'date', 'date.time' => //temporal type
+                ($sqlTimeFormat = Weblication::getInstance()->getDefaultFormat("mysql.date_format.{$column['type']}")) ?//try fetch format-string
+                 "DATE_FORMAT($originalExpr, '$sqlTimeFormat')":$originalExpr,//set SQL to format temporal value
+                default => $originalExpr//unchanged
+            };
+            $columnName = $column['alias'] ?? $column;
+            if(isset($definedSearchKeywords[$columnName])) {//found additional metadata
+                $operator = 'like';
+                /** @var string $filterByValue */
+                $filterByValue = $definedSearchKeywords[$columnName];//get keyword for column name?
+                switch (($column['filterControl']??false ?: 'input')) {//type of input?
+                    case 'select':
+                        $operator = 'equal';
+                        break;
+                    case 'datepicker':
+                        if ($filterByValue)//non-empty
+                            $filterByValue = $this->reformatFilterDate($filterByValue);
+                        $filterByValue .= '%';//empty -> '%'
+                        // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
+                        $filterExpr = $originalExpr;
+                        break;
+                    default:
+                        $filterByValue = "%$filterByValue%";
                 }
-                elseif($filterControl == 'datepicker') {
-                    if($filterByValue) {
-                        $date = date_parse($filterByValue); // is date?
-                        if($date['error_count'] == 0 and $date['warning_count'] == 0 and
-                            $date['year'] and $date['month'] and $date['day']) {
-                            // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
-                            $filterByColumn = $isAssoc ? ($column['filterByDbColumn'] ?: $orig_expr) : $orig_expr;
-                            $filterByValue = $date['year'];
-                            $filterByValue .= '-'.str_pad($date['month'], 2, '0', STR_PAD_LEFT);
-                            $filterByValue .= '-'.str_pad($date['day'], 2, '0', STR_PAD_LEFT);
-
-                            if($date['hour'] and $date['minute']) {
-                                $filterByValue .= ' '.str_pad($date['hour'], 2, '0', STR_PAD_LEFT).
-                                    ':'.str_pad($date['minute'], 2, '0', STR_PAD_LEFT);
-                                if($date['second']) {
-                                    $filterByValue .= ':'.str_pad($date['second'], 2, '0', STR_PAD_LEFT);
-                                }
-                            }
-                        }
-                    }
-                    $filterByValue = $filterByValue.'%';
-                }
-                else {
-                    $filterByValue = '%'.$filterByValue.'%';
-                }
-                $condition = [$filterByColumn, $operator, $filterByValue];
-                $defined_filter[] = $condition;
-            }
-
-            if(!$hasSearchString) continue;
-
-            if($i > 0) $filter[] = 'or';
-            $i++;
-            $condition = [$expr, $operator, $searchString];
-            $filter[] = $condition;
+                $filterByColumn = $column['filterByDbColumn']??false ?:$filterExpr;
+                $defined_filter[] = [$filterByColumn, $operator, $filterByValue];
+            } elseif ($searchString)//column not filtered -> look for searchString
+                array_push($filter, [$filterExpr, 'like', "%$searchString%"], 'or');//add condition, one column must match the searchString
         }
+        array_pop($filter);//remove trailing or
+        return ($defined_filter && $filter) ?
+            array_merge(['('], $filter, [')'], ['and'], $defined_filter) ://both combined
+            ($defined_filter ?: $filter);//the only filled one
+    }
 
-        if($defined_filter) {
-            if($hasSearchString) $filter = array_merge(['('], $filter, [')'], ['and'], $defined_filter);
-            else $filter = $defined_filter;
-        }
-
-        return $filter;
+    /**
+     * @param string $filterByValue
+     * @return string
+     */
+    private function reformatFilterDate(string $filterByValue): string
+    {
+        if (($date = date_parse($filterByValue)) &&
+            $date['error_count'] == 0 && $date['warning_count'] == 0 &&
+            $date['year'] && $date['month'] && $date['day']) {// is date?
+            $format = "%d-%02d-%02d";//y-MM-DD
+            if ($date['hour'] || $date['minute']) {
+                $format .= " %02d:%02d";// hh:mm
+                $format .= $date['second'] ? ":%02d" : '';//:ss
+            }
+            $filterByValue = sprintf($format, $date['year'], $date['month'],
+                $date['day'], $date['hour'], $date['minute'], $date['second']);
+        } else /** Malformed date TODO */ ;
+        return $filterByValue;
     }
 
     /**
