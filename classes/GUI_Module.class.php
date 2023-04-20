@@ -138,7 +138,7 @@ class GUI_Module extends Module
     protected array $ajaxMethods = [];
 
     /**
-     * Konstruktor
+     * Checks if we are in an ajax call and creates a template object
      *
      * @param Component|null $Owner Besitzer vom Typ Component
      * @param array $params additional parameters
@@ -150,7 +150,8 @@ class GUI_Module extends Module
         parent::__construct($Owner, $params);
 
         $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
-        $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->getClassName() == $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod;
+        $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
+            ($_REQUEST[REQUEST_PARAM_MODULE] == static::class || $_REQUEST[REQUEST_PARAM_MODULE] == $this->getClassName());
 
         $this->Template = new Template();
     }
