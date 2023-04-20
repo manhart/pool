@@ -202,34 +202,42 @@ class GUI_Module extends Module
      */
     public static function autoloadGUIModule(string $GUIClassName, ?Module $ParentGUI = null): bool
     {
-        $GUIRootDirs = array(
-            getcwd()
-        );
-        if (defined('DIR_POOL_ROOT')) {
-            $GUIRootDirs[] = DIR_POOL_ROOT;
+        $hasNamespace = str_contains($GUIClassName, '\\');
+
+        if($hasNamespace) {
+            $GUIRootDirs = [
+                DIR_DOCUMENT_ROOT
+            ];
+
+            $GUIClassName = str_replace('\\', '/', $GUIClassName);
         }
-        if (defined('DIR_COMMON_ROOT')) {
-            $GUIRootDirs[] = DIR_COMMON_ROOT;
+        else {
+            $GUIRootDirs = [
+                getcwd() . '/' . PWD_TILL_GUIS
+            ];
+            if(defined('DIR_POOL_ROOT')) {
+                $GUIRootDirs[] = DIR_POOL_ROOT . '/' . PWD_TILL_GUIS;
+            }
+            if(defined('DIR_COMMON_ROOT')) {
+                $GUIRootDirs[] = DIR_COMMON_ROOT . '/'. PWD_TILL_GUIS;
+            }
+
+            // directory + classname
+            $GUIClassName = $GUIClassName . '/' . $GUIClassName;
         }
 
         // try to load class
         foreach ($GUIRootDirs as $GUIRootDir) {
-            $GUIRootDir = addEndingSlash($GUIRootDir) . addEndingSlash(PWD_TILL_GUIS);
+            $GUIRootDir = addEndingSlash($GUIRootDir);
 
-            $filename = $GUIRootDir . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
-            if (file_exists($filename)) {
-                require_once $filename;
-                return true;
-            }
-
-            $filename = $GUIRootDir . $GUIClassName . '/' . $GUIClassName . PoolObject::CLASS_EXTENSION;
+            $filename = $GUIRootDir . $GUIClassName . PoolObject::CLASS_EXTENSION;
             if (file_exists($filename)) {
                 require_once $filename;
                 return true;
             }
 
             // PSR-4 style
-            $filename = $GUIRootDir . $GUIClassName . '/' . $GUIClassName . '.php';
+            $filename = $GUIRootDir . $GUIClassName . '.php';
             if(file_exists($filename)) {
                 require_once $filename;
                 return true;
@@ -311,8 +319,9 @@ class GUI_Module extends Module
                     $GUI->searchGUIsInPreloadedContent();
             }
             return $GUI;
-        } else {//Class not found
-            throw new ModulNotFoundException("Fehler beim Erzeugen der Klasse '$GUIClassName'");
+        }
+        else {//Class not found
+            throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
         }
     }
 
