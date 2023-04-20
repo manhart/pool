@@ -53,7 +53,7 @@ class Weblication extends Component
     /**
      * @var string class name of the module that is started as main module
      */
-    protected string $launchModule = 'GUI_CustomFrame';
+    protected string $launchModule = GUI_CustomFrame::class;
 
     /**
      * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
