@@ -347,7 +347,7 @@ class GUI_HeadData extends GUI_Module
      */
     public function setClientData(Module $Module, ?array $initOptions = null): self
     {
-        $clientData = $this->clientData[$Module->getName()] ?? ['className' => $Module->getClassName()];
+        $clientData = $this->clientData[$Module->getName()] ?? ['className' => $Module->getClassName(), 'fullyQualifiedClassName' => $Module::class];
         if($initOptions) $clientData['initOptions'] = array_merge($clientData['initOptions'] ?? [], $initOptions);
         $this->clientData[$Module->getName()] = $clientData;
         return $this;

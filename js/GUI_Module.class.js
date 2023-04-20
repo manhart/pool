@@ -11,6 +11,8 @@ class GUI_Module
 {
     name = '';
     className = this.constructor.name;
+    /** @var {string} fullyQualifiedClassName of the php module - is required by Ajax Calls */
+    fullyQualifiedClassName = this.constructor.name;
 
     /**
      * @param {string} name of module
@@ -54,6 +56,28 @@ class GUI_Module
         return this.className;
     }
 
+    /**
+     * sets the fully qualified className of the php module
+     * @param fullyQualifiedClassName
+     */
+    setFullyQualifiedClassName(fullyQualifiedClassName) {
+        this.fullyQualifiedClassName = fullyQualifiedClassName;
+        return this;
+    }
+
+    /**
+     * returns the fully qualified className of the php module
+     * @return {string}
+     */
+    getFullyQualifiedClassName() {
+        return this.fullyQualifiedClassName;
+    }
+
+    /**
+     * parses the response as JSON
+     * @param response
+     * @return {Promise<*>}
+     */
     async parseJSON(response) {
         let json;
         let text = await response.text();
@@ -96,7 +120,7 @@ class GUI_Module
             headers,
             query = null,
             method = 'GET',
-            module = this.getClassName(),
+            module = this.getFullyQualifiedClassName(),
             body,
             ...extraOpts
         } = options;
@@ -252,9 +276,10 @@ class GUI_Module
      *
      * @param {string} GUIClassName
      * @param {string} name
+     * @param {string} fullyQualifiedClassName - currently only used for Ajax calls
      * @returns {GUI_Module}
      */
-    static createGUIModule(GUIClassName, name) {
+    static createGUIModule(GUIClassName, name, fullyQualifiedClassName = '') {
         if (Weblication.getInstance().module_exists(name)) {
             return Weblication.getInstance().getModule(name);
         }
@@ -269,7 +294,7 @@ class GUI_Module
             myClass = Weblication.classMapping[GUIClassName];
         }
 
-        return new myClass(name);
+        return (new myClass(name)).setFullyQualifiedClassName(fullyQualifiedClassName);
     }
 }
 
