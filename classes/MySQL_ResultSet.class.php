@@ -138,7 +138,7 @@ class MySQL_ResultSet extends ResultSet
             $Log->addLine("SQL ON DB $dbname: '$sql' in $timeSpent sec.");
             if (!$result) $Log->addlIne('SQL-ERROR ON DB ' . $dbname . ': ' . $this->db->getErrormsg());
         }
-        return $result;
+        return (bool)$result;
     }
 
     /**

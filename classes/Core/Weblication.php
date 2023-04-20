@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace pool\classes\Core;
 
+use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
