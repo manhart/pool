@@ -355,7 +355,8 @@ class GUI_Module extends Module
      */
     protected function searchGUIs(string $content, bool $recurse = true, bool $autoLoadFiles = true): string
     {
-        $reg = '/\[([\w\x5c]*GUI_\w+)(\([^\(\)]*\))?\]/mU';
+        // search for GUIs like [\namespace\GUI_ClassName(key=val)] or [GUI_ClassName] in the content of the template
+        $reg = '/\[([\w\x5c]*GUI_\w+)(\([^()]*\))?]/mU';
         $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
 
         if (!$bResult)//no GUIs
