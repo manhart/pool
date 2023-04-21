@@ -182,7 +182,7 @@ class Input extends PoolObject
     }
 
     /**
-     * Prueft, ob eine Variable ueberhaupt gesetzt wurde.
+     * Check if a variable exists
      *
      * @param string $key Name der Variable
      * @return boolean True=ja; False=nein
@@ -190,6 +190,14 @@ class Input extends PoolObject
     public function exists(string $key): bool
     {
         return array_key_exists($key, $this->vars);
+    }
+
+    /**
+     * Check if a variable exists and is not an empty string and not null
+     */
+    public function has(string $key): bool
+    {
+        return $this->exists($key) && $this->vars[$key] !== '' && $this->vars[$key] !== null;
     }
 
     /**
@@ -202,11 +210,9 @@ class Input extends PoolObject
     public function emptyVar(string|array $key): bool
     {
         if(is_array($key)) {
-            if(sizeof($key) == 0) return true;
-            foreach($key as $k => $v) {
-                if(empty($v)) {
-                    return true;
-                }
+            if(count($key) == 0) return true;
+            foreach($key as $v) {
+                if(empty($v)) return true;
             }
             return false;
         }
@@ -541,29 +547,32 @@ class Input extends PoolObject
     }
 
     /**
-     * Benennt eine Variable um
+     * Renames a variable
      *
-     * @param string $keyname Schluesselname
-     * @param string $new_keyname Neuer Schluesselname
+     * @param string $oldKeyName Old key name
+     * @param string $newKeyName New key name
      */
-    function rename($keyname, $new_keyname)
+    public function rename(string $oldKeyName, string $newKeyName): Input
     {
-        if($this->exists($keyname)) {
-            $this->setVar($new_keyname, $this->vars[$keyname]);
-            $this->delVar($keyname);
+        if($this->exists($oldKeyName)) {
+            $this->setVar($newKeyName, $this->vars[$oldKeyName]);
+            $this->delVar($oldKeyName);
         }
+        return $this;
     }
 
     /**
-     * Bennent mehrere Variablen um
+     * Renames multiple variables
      *
-     * @param array $keynames
+     * @param array $keyNames
+     * @return Input
      */
-    function renameKeys($keynames)
+    function renameKeys(array $keyNames): Input
     {
-        foreach($keynames as $key => $value) {
-            $this->rename($key, $value);
+        foreach($keyNames as $oldKeyName => $newKeyName) {
+            $this->rename($oldKeyName, $newKeyName);
         }
+        return $this;
     }
 
     /**
