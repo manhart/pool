@@ -17,6 +17,7 @@ use GUI_HeadData;
 use GUI_Module;
 use Input;
 use InputCookie;
+use Url;
 use InputSession;
 use Locale;
 use pool\classes\Database\DAO;
@@ -970,6 +971,20 @@ class Weblication extends Component
             }
         }
         return $Input;
+    }
+
+    /**
+     * Redirect to schema
+     *
+     * @param string $schema
+     * @param bool $withQuery
+     * @return never
+     */
+    public function redirect(string $schema, bool $withQuery = false): never
+    {
+        $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
+        $Url->setParam('schema', $schema);
+        $Url->restartUrl();
     }
 
     /**
