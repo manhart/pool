@@ -305,10 +305,10 @@ class Weblication extends Component
     /**
      * Changes the folder for the design templates (Html templates) and images.
      *
-     * @param string $skin Folder for design templates (html templates) and images. (Default value: default)
+     * @param string $skin folder for frontend design (css, templates and images).
      * @return Weblication
      */
-    public function setSkin(string $skin = 'default'): Weblication
+    public function setSkin(string $skin): Weblication
     {
         $this->skin = $skin;
         return $this;
@@ -920,11 +920,13 @@ class Weblication extends Component
     /**
      * @param string $clientSidePath
      * @param string $serverSidePath
+     * @return Weblication
      */
-    public function setPoolRelativePath(string $clientSidePath, string $serverSidePath)
+    public function setPoolRelativePath(string $clientSidePath, string $serverSidePath): Weblication
     {
         $this->poolClientSideRelativePath = $clientSidePath;
         $this->poolServerSideRelativePath = $serverSidePath;
+        return $this;
     }
 
     /**
@@ -947,6 +949,27 @@ class Weblication extends Component
     public function getPoolServerSideRelativePath(string $subDir = ''): string
     {
         return $this->poolServerSideRelativePath . ($subDir ? '/' : '') . $subDir;
+    }
+
+    /**
+     * Transforms the PATH_INFO into an Input object.
+     * @return Input
+     */
+    protected function transformPathInfo(): Input
+    {
+        $Input = new Input();
+        if(isset($_SERVER['PATH_INFO'])) {
+            $pathInfo = trim($_SERVER['PATH_INFO'], '/');
+            $segments = explode('/', $pathInfo);
+            $count = count($segments);
+
+            for($i = 0; $i < $count; $i += 2) {
+                $name = $segments[$i];
+                $value = $segments[$i + 1] ?? null;
+                $Input->setVar($name, $value);
+            }
+        }
+        return $Input;
     }
 
     /**
