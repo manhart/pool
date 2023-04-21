@@ -284,6 +284,17 @@ class Input extends PoolObject
     }
 
     /**
+     * Returns the value of the given key as integer.
+     * @param string $key
+     * @param int $default
+     * @return int
+     */
+    public function getAsInt(string $key, int $default = 0): int
+    {
+        return (int)$this->getVar($key, $default);
+    }
+
+    /**
      * Liefert die Referenz fuer den uebergebenen Schluessel.
      *
      * @access public
