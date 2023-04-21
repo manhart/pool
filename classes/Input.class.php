@@ -306,6 +306,18 @@ class Input extends PoolObject
     }
 
     /**
+     * Returns the value of the given key as boolean.
+     *
+     * @param string $key
+     * @param bool $default
+     * @return bool
+     */
+    public function getAsBool(string $key, bool $default = false): bool
+    {
+        return boolval($this->getVar($key, $default));
+    }
+
+    /**
      * Liefert die Referenz fuer den uebergebenen Schluessel.
      *
      * @access public
