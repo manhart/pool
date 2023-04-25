@@ -622,6 +622,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     }
 }
 
+/*
 $Url = new Url(false);
 echo $Url->getUrl();
 echo '<br>';
@@ -704,3 +705,5 @@ echo '<br>';
 //$Url->withScheme('https')->withHost('www.example.com');
 echo $Url->getUrl(true);
 echo '<br>';
+
+*/
