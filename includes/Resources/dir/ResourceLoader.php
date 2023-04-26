@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2022, GROUP7 AG
  */
 
+/** @noinspection PhpMultipleClassesDeclarationsInOneFile */
 namespace pool\includes\Resources\dir{
 
     use GUI_HeadData;
