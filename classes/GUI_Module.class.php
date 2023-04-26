@@ -260,13 +260,13 @@ class GUI_Module extends Module
                     $ParentGUI = $ParentGUI->getParent();
                 } while ($ParentGUI != null);
 
-                $filename = $GUIRootDir . $parent_directory . strtolower($GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
+                $filename = $GUIRootDir . $parent_directory . $GUIClassName . PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
                     return true;
                 }
 
-                $filename = $GUIRootDir . strtolower($parent_directory_without_frame . $GUIClassName . '/' . $GUIClassName) . PoolObject::CLASS_EXTENSION;
+                $filename = $GUIRootDir . $parent_directory_without_frame . $GUIClassName . PoolObject::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
                     return true;
