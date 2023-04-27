@@ -233,7 +233,7 @@ class Translator
         //get variables
         $translatedDir = buildDirPath(dirname($sourceFile), $lang);
         if (!is_dir($translatedDir))
-            mkdir($translatedDir);
+            mkdir($translatedDir) && chmod($translatedDir, 0775);
         $filename = basename($sourceFile);
         $translatedFile = $translatedDir . $filename;
         $manualPreTranslatedFile = buildFilePath($translatedDir, 'man', $filename);
