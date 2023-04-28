@@ -729,6 +729,8 @@ class GUI_Module extends Module
                 $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
             }
         } catch (Throwable $e) {
+            $this->plainJSON = false;
+            $statusCode = 418;
         }
 
         $errorText = ob_get_contents();
@@ -741,7 +743,7 @@ class GUI_Module extends Module
         } else
             $errorType = 'undefined';
         return $this->respondToAjaxCall($result, $errorText,
-            "$callingClassName:$requestedMethod", $errorType);
+            "$callingClassName:$requestedMethod", $errorType, $statusCode??200);
     }
 
     /**
