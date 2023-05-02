@@ -54,13 +54,21 @@ class MySQL_ResultSet extends ResultSet
      * Die MySQL_db Klasse uebt die eigentlichen datenbankspezfischen
      * Operationen (z.B. mysql_connect, mysql_query) aus.
      *
-     * @param DataInterface $db database layer
+     * @param MySQL_Interface|MySQLi_Interface $db database layer
      * @see MySQL_db
-     **/
-    public function __construct(DataInterface $db)
+     */
+    public function __construct(MySQL_Interface|MySQLi_Interface $db)
     {
         $this->db = $db;
         return $this;
+    }
+
+    /**
+     * @return MySQL_Interface|MySQLi_Interface
+     */
+    public function getDataInterface(): MySQL_Interface|MySQLi_Interface
+    {
+        return $this->db;
     }
 
     /**
