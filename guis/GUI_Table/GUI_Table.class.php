@@ -69,6 +69,11 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
+        'checkboxHeader'=>[
+            'attribute' => 'data-checkbox-header',
+            'type' => 'boolean',
+            'value' => true,
+            'clientside' => true,],
         'columns' => [
             'attribute' => '',
             'type' => 'array',

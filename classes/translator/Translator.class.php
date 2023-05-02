@@ -13,7 +13,7 @@ namespace pool\classes\translator;
 use Exception;
 use Input;
 use MessageFormatter;
-use Weblication;
+use pool\classes\Core\Weblication;
 use function checkRegExOutcome;
 use function explode;
 
@@ -233,7 +233,7 @@ class Translator
         //get variables
         $translatedDir = buildDirPath(dirname($sourceFile), $lang);
         if (!is_dir($translatedDir))
-            mkdir($translatedDir);
+            mkdir($translatedDir) && chmod($translatedDir, 0775);
         $filename = basename($sourceFile);
         $translatedFile = $translatedDir . $filename;
         $manualPreTranslatedFile = buildFilePath($translatedDir, 'man', $filename);

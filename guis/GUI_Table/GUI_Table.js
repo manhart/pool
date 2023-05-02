@@ -85,7 +85,7 @@ class GUI_Table extends GUI_Module
     {
         super(name);
 
-        this.options.responseHandler = this.responseHandler
+        this.options.responseHandler = this.responseHandler.bind(this);
 
 
         // let columns = {
@@ -227,37 +227,28 @@ class GUI_Table extends GUI_Module
         if(options.responseHandler) {
             // todo save responseHandler
         }
-        this.options.responseHandler = this.responseHandler
+        this.options.responseHandler = this.responseHandler.bind(this)
 
         return this;
     }
 
+    /**
+     * set columns (with the property poolType you can define special column types: date.time, date, time, number. poolFormat is optional)
+     *
+     * @param columns
+     * @return {GUI_Table}
+     */
     setColumns(columns = [])
     {
         columns.forEach((column, z) => {
             let field = ('field' in column) ? column['field'] : z;
             this.columnNames[field] = z;
-            // if(!(field in this.poolColumnOptions)) {
-            //     return;
-            // }
 
             if(!('poolType' in column)) {
                 return;
             }
 
-            // automation for special poolType's
-            // let poolType = '';
-            // if('poolType' in this.poolColumnOptions[field]) {
-            //     poolType = this.poolColumnOptions[field]['poolType'];
-            // }
-            // let poolFormat = '';
-            // if('poolFormat' in this.poolColumnOptions[field]) {
-            //     poolFormat = this.poolColumnOptions[field]['poolFormat']
-            // }
             let poolType = column['poolType'];
-            // if('poolType' in column) {
-            //     poolType = column['poolType'];
-            // }
 
             let poolFormat = '';
             if('poolFormat' in column) {
@@ -373,6 +364,10 @@ class GUI_Table extends GUI_Module
         }
     }
 
+    /**
+     * Initialize the table with jQuery
+     * @return {jQuery}
+     */
     getTable()
     {
         if(!this.$table) {
@@ -381,7 +376,9 @@ class GUI_Table extends GUI_Module
                 console.warn(this.getName() + '.getTable() is called before ' + this.getName() + '.render()! Not all table options ' +
                     'were passed. Please check the order of the method calls.');
             }
-            this.$table = $('#' + this.getName())
+            this.$table = $('#' + this.getName());
+            // @todo change event listener!!! Don't use on()!
+            this.$table
                 .on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows)
                 // .on('refresh-options.bs.table', this.onRefreshOptions)
                 .on('click-row.bs.table', this.onClickRow)
@@ -403,7 +400,7 @@ class GUI_Table extends GUI_Module
 
     /**
      * renders bootstrap-table. should only be called once! use method refresh instead
-     *
+     * @see refresh
      * @param options
      * @returns {GUI_Table}
      */
@@ -432,12 +429,19 @@ class GUI_Table extends GUI_Module
         return this;
     }
 
+    /**
+     * refreshes the table
+     * @param options
+     * @param silent
+     * @param onLoadSuccess
+     * @return {GUI_Table}
+     */
     refresh(options = {}, silent = false, onLoadSuccess = null)
     {
-        if(onLoadSuccess !== null) {
-            const eventLoadSuccess = function() {
-                $(this).off('load-success.bs.table', eventLoadSuccess)
-                onLoadSuccess();
+        if(typeof onLoadSuccess === 'function') {
+            const eventLoadSuccess = () => {
+                $(this).off('load-success.bs.table', eventLoadSuccess);
+                onLoadSuccess(this);
             }
             $(this.getTable()).on('load-success.bs.table', eventLoadSuccess);
         }
@@ -634,7 +638,21 @@ class GUI_Table extends GUI_Module
      */
     checkBy(field, values, onlyCurrentPage = false)
     {
-        this.getTable().bootstrapTable('checkBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
+        let alreadyChecked = false;
+        if(this.getOption('singleSelect')) {
+            // avoid multiple selection in singleSelect mode
+            this.getSelections().forEach((row) => {
+                if(values.indexOf(row[field]) === -1) {
+                    this.uncheckBy(field, [row[field]])
+                }
+                else {
+                    // prevent checkBy event to be triggered again
+                    alreadyChecked = true;
+                }
+            });
+        }
+
+        if(!alreadyChecked) this.getTable().bootstrapTable('checkBy', {field: field, values: values, onlyCurrentPage: onlyCurrentPage});
     }
 
     /**
@@ -689,7 +707,6 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('uncheckAll');
         // }
     }
-
     /**
      * insert row and check row
      *
@@ -914,6 +931,22 @@ class GUI_Table extends GUI_Module
     }
 
     /**
+     * @param name Column data-field to hide
+     * @returns {GUI_Table}
+     */
+    hideColumn(name){
+        this.getTable().bootstrapTable('hideColumn', name);
+        return this;
+    }
+    /**
+     * @param name Column data-field to show
+     * @returns {GUI_Table}
+     */
+    showColumn(name) {
+    this.getTable().bootstrapTable('showColumn', name);
+    return this;
+    }
+    /**
      * remove selected rows
      *
      * @returns {GUI_Table}
@@ -946,29 +979,6 @@ class GUI_Table extends GUI_Module
             this.selections = array_difference(this.selections, this.pageIds);
             this.selections = array_union(this.selections, ids);
         }
-
-        // console.debug(this.getName()+'.onCheckUncheckRows', this.pageIds, ids, this.selections);
-
-        // let rows = rowsAfter;
-
-        // if(evt.type === 'uncheck-all') {
-        //     rows = rowsBefore;
-        // }
-
-        // let ids = $.map(!$.isArray(rows) ? [rows] : rows, function(row) {
-        //     return row.idUser;
-        // })
-
-        // console.debug(evt.type, rows, ids);
-
-        // if(this.getTable().bootstrapTable('getOptions').singleSelect) {
-        //     this.selections = [];
-        // }
-
-        // let fnString = ['check', 'check-all'].indexOf(evt.type) > -1 ? 'array_union' : 'array_difference'
-        // let fn = window[fnString];
-        // this.selections = fn(this.selections, ids);
-        // this.selections = ids;
     }
 
     /**
@@ -977,7 +987,7 @@ class GUI_Table extends GUI_Module
      * @param res
      * @returns {*}
      */
-    responseHandler = (res) =>
+    responseHandler(res)
     {
         let uniqueId = this.getUniqueId();
         if(!uniqueId) {
@@ -1097,6 +1107,24 @@ class GUI_Table extends GUI_Module
     firstPage()
     {
         this.getTable().bootstrapTable('selectPage', 1);
+    }
+
+    /**
+     * Collapse the row with the uniqueId passed by parameter if the detail view option is set to true.
+     * @param uniqueId
+     */
+    collapseRowByUniqueId(uniqueId)
+    {
+        this.getTable().bootstrapTable('collapseRowByUniqueId', uniqueId);
+    }
+
+    /**
+     * Expand the row with the uniqueId passed by parameter if the detail view option is set to true.
+     * @param uniqueId
+     */
+    expandRowByUniqueId(uniqueId)
+    {
+        this.getTable().bootstrapTable('expandRowByUniqueId', uniqueId);
     }
 
     /**

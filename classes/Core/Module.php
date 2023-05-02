@@ -193,12 +193,13 @@ class Module extends Component
     /**
      * get internal param
      *
-     * @param string $param
+     * @param string $param parameter name
+     * @param mixed|null $default default value null if omitted
      * @return mixed
      */
-    public function getInternalParam(string $param): mixed
+    public function getInternalParam(string $param, mixed $default = null): mixed
     {
-        return $this->internalParams[$param] ?? null;
+        return $this->internalParams[$param] ?? $default;
     }
 
     /**
@@ -220,7 +221,7 @@ class Module extends Component
      * @param mixed $key name of the variable
      * @param mixed $value value of the variable
      */
-    function addHandoffVar(mixed $key, mixed $value = '')
+    public function addHandoffVar(mixed $key, mixed $value = ''): static
     {
         if(!is_array($key)) {
             $this->handoff[$key] = $value;
@@ -228,6 +229,7 @@ class Module extends Component
         else {
             $this->handoff = array_merge($key, $this->handoff);
         }
+        return $this;
     }
 
     /**
@@ -316,9 +318,10 @@ class Module extends Component
      *
      * @param Module $Parent Klasse vom Typ Module
      */
-    public function setParent(Module $Parent)
+    public function setParent(Module $Parent): static
     {
         $this->Parent = $Parent;
+        return $this;
     }
 
     /**
@@ -343,11 +346,13 @@ class Module extends Component
         return $this;
     }
 
-    /** remove module
+    /**
+     * remove module
      *
      * @param Module $Module
+     * @return Module
      */
-    public function removeModule(Module $Module)
+    public function removeModule(Module $Module): static
     {
         $new_Modules = [];
         // rebuild modules
@@ -357,6 +362,7 @@ class Module extends Component
             }
         }
         $this->childModules = $new_Modules;
+        return $this;
     }
 
     /**
@@ -380,17 +386,19 @@ class Module extends Component
     /**
      * disables module
      */
-    public function disable()
+    public function disable(): static
     {
         $this->enabled = false;
+        return $this;
     }
 
     /**
      * enables module
      */
-    public function enable()
+    public function enable(): static
     {
         $this->enabled = true;
+        return $this;
     }
 
     /**

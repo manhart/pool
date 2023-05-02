@@ -122,7 +122,7 @@ class PoolObject
         }
         else {
             $classRootDirs = [
-                DIR_POOL_ROOT . '/' . PWD_TILL_CLASSES
+                getcwd() . '/' . PWD_TILL_CLASSES
             ];
             if(defined('DIR_POOL_ROOT')) {
                 $classRootDirs[] = DIR_POOL_ROOT . '/' . PWD_TILL_CLASSES;
@@ -137,7 +137,6 @@ class PoolObject
 
             // old style
             $filename = $classRootDir . $className . PoolObject::CLASS_EXTENSION;
-
             if(file_exists($filename)) {
                 require_once $filename;
                 return true;

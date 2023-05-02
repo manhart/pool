@@ -299,11 +299,11 @@ class Url extends PoolObject
     }
 
     /**
-     * Get Domain
+     * Get host
      *
      * @return string
      */
-    public function getDomain(): string
+    public function getHost(): string
     {
         return $this->Host;
     }
@@ -512,7 +512,7 @@ class Url extends PoolObject
 
     /**
      * Loescht alle Url Parameter
-     **/
+     */
     public function clear()
     {
         $this->InputGet->clear();

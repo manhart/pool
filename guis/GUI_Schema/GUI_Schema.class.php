@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 /**
  * -= Rapid Module Library (RML) =-
@@ -17,150 +25,116 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
-
 class GUI_Schema extends GUI_Module
 {
     /**
-     * @var array list of schemes
+     * * fixedParams:
+     * directory - a constant or directory
+     * category - a subdirectory
+     * alternate - if schema was not found, redirect to this schema
+     * @var int $superglobals takes parameter schema from request
      */
-    private array $schemes = [];
-
-    /**
-     * @var array list of indexed schemes
-     */
-    private array $handles = [];
-
-
-    /**
-     * @param int|null $superglobals takes parameter schema from request
-     */
-    public function init(?int $superglobals = Input::INPUT_REQUEST)
-    {
-        $this->Defaults->addVar('schema');
-        parent::init($superglobals);
-        /**
-         * fixedParams:
-         *
-         * directory - a constant or directory
-         * category - a subdirectory
-         * alternate - if schema was not found, redirect to this schema
-         */
-    }
+    protected int $superglobals = Input::INPUT_REQUEST;
 
     /**
      * load schemes
-     *
      * @param array $schemes
+     * @return void
      */
     private function loadSchemes(array $schemes = []): void
     {
-        $directory = $this->getInternalParam('directory');
-        if($directory != null) {
-            // test string for a constant
-            if(defined($directory)) {
-                $directory = constant($directory);
-            }
-        }
-        else {
-            $directory = '.';
-        }
-
-        $directory = $directory . '/' . addEndingSlash(PWD_TILL_SCHEMES);
-
-        // fixed param "category": Divides schemas into subdirectories
-        $category = $this->getInternalParam('category');
-        if($category != null) $directory .= addEndingSlash($category);
-
-        // fixed param "alternate": Switch to an alternative if the schema was not found in the folder.
-        $alternate = $this->getInternalParam('alternate');
-
-        $numSchemes = count($schemes);
-
-        if($numSchemes == 0) {
+        if (0 == $numSchemes = count($schemes)) {//no schema -> abort
             $this->schema404();
             return;
         }
-
-        $this->handles = [];
-
+        //get schema directory
+        $directory = $this->getInternalParam('directory');
+        if (is_string($directory)) {
+            if (defined($directory))//test string for a constant
+                $directory = constant($directory);
+        } else
+            $directory = '.';
+        $directory = buildDirPath($directory, PWD_TILL_SCHEMES);
+        /** @var string $category Divides schemas into subdirectories */
+        $category = $this->getInternalParam('category');
+        /** @var $vhostMode 0-> category only, 1-> vhost/category/, 2-> category/vhost/, other-> vhost as alternative for category */
+        $vhostMode = (int)$this->getInternalParam('vhostMode', -1);
+        if ($category) {
+            if ($vhostMode == 1) //preceding vHost
+                $this->appendVHost($directory);
+            //category given and to be included
+            $directory .= addEndingSlash($category);
+            if ($vhostMode == 2)//trailing vHost
+                $this->appendVHost($directory);
+        } elseif ($vhostMode)//no category and vHost to be included
+            $this->appendVHost($directory);
+        /** @var string $alternate Alternative schema if the target-schema was not found */
+        $alternate = $this->getInternalParam('alternate');
+        //Prep template-engine
+        $this->templates = [];
         $this->Template->setDirectory($directory);
-        for($i = 0; $i < $numSchemes; $i++) {
-            $bExists = file_exists($directory . $schemes[$i] . '.html');
-            if(!$bExists and $alternate != null) {
+        //try to load according schema files into template-engine...
+        for ($i = 0; $i < $numSchemes; $i++) {
+            $schemaExists = file_exists($directory . $schemes[$i] . '.html');
+            if (!$schemaExists && $alternate) {//schema missing
                 $schemes[$i] = $alternate;
-                $bExists = file_exists($directory . $schemes[$i] . '.html');
+                $schemaExists = file_exists($directory . $alternate . '.html');//test alternative
             }
-            if($bExists) {
+            if ($schemaExists) {//add schema to our templates
                 $uniqId = 'file_' . $i;
                 $this->Template->setFile($uniqId, $schemes[$i] . '.html');
-                $this->handles[] = $uniqId;
-            }
-            else {
+                $this->templates[$uniqId] = null;//manually set the template
+                unset($uniqId);
+            } else {//schema not found -> abort
                 $this->schema404($schemes[$i]);
-                break;
+                return;
             }
-            unset($uniqId);
         }
-        $this->schemes = $schemes;
     }
 
     /**
      * Raise an Error 404: Schema not found.
      * Loads schema404.html from templates!
      *
-     * @param string $schema None existing Schema
+     * @param string|null $schema None existing Schema
      */
-    private function schema404(string $schema = ''): void
+    private function schema404(?string $schema = null): void
     {
-        $schema404 = 'schema404.html';
-        $this->raiseError(__FILE__, __LINE__, sprintf('Schema \'%s\' doesn\'t exist', $schema . '.html'));
-        $this->handles = array();
+        //report problem
+        $errMessage = $schema ? "Schema '$schema.html' doesn't exist" : "No schema specified";
+        $this->raiseError(__FILE__, __LINE__, $errMessage);
+        //clear
+        $this->templates = [];
         $this->Template->clear();
-        $file = $this->Weblication->findTemplate($schema404, $this->getClassName(), true);
+        //become 404 GUI
+        http_response_code(404);
+        $file = $this->Weblication->findTemplate('schema404.html', $this->getClassName(), true);
         $this->Template->setFilePath('error404', $file);
         $this->Template->setVar('SCHEMA', empty($schema) ? '(empty)' : $schema . '.html');
-        $this->handles[] = 'error404';
+        $this->templates['error404'] = null;//manually set the template
     }
 
     /**
-     * Liest die _GET Variable "schema" ein, laedt Schemas und sucht nach den darin befindlichen GUIs.
+     * Liest die _GET Variable "schema" ein und laedt die angegebenen Schemata.
      * Wurde kein Schema angegeben, wird versucht von der Weblication ein Default Schema reinzuladen.
-     **
      */
     public function loadFiles(): void
     {
-        $schemes = [];
-
-        $schema = $this->Input->getVar('schema');
-        if($schema == '') {
+        if (!$schema = $this->Input->getVar('schema'))//'' also gets replaced with the default
             $schema = $this->Weblication->getDefaultSchema();
-        }
-
-        if(str_contains($schema, ',')) {
-            $schemes = explode(',', $schema);
-        }
-        else {
-            $schemes[] = $schema;
-        }
-
+        $schemes = explode(',', $schema);
         $this->loadSchemes($schemes);
-
-        parent::loadFiles();
     }
 
     /**
-     * Analysiert jedes Html Template. Dabei werden Bloecke und Variablen zugewiesen.
-     * Alle fertigen Html Templates werden zu einem Inhalt zusammen gefuehrt.
-     * Der gesamte Inhalt wird zurueck gegeben.
-     *
-     * @return string Content
+     * Checks whether the given directory includes a subdirectory which name matches the current vHost and appends it
+     * @param string $directory the directory to be appended
+     * @return void
      */
-    public function finalize(): string
+    private function appendVHost(string &$directory): void
     {
-        $content = '';
-        foreach($this->handles as $handle) {
-            $content .= $this->Template->parse($handle)->getContent($handle);
-        }
-        return $content;
+        $vhost =  $_SERVER['SERVER_NAME'];
+        if (is_dir($proposed = buildDirPath($directory, $vhost)))
+            $directory = $proposed;
     }
 }

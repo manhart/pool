@@ -79,7 +79,7 @@ Url.prototype.delParam = function(key) {
     delete(this.params[key]);
 }
 Url.prototype.restartUrl = function() {
-	location.href = this.getUrl();
+    location.href = this.getUrl();
 }
 /**
  * SCRIPT_SCHEMA contains the current schema. If the schema parameter is not set, we use no schema.

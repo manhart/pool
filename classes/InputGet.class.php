@@ -24,7 +24,7 @@ class InputGet extends Input
      *
      * @return string Query (Url-konforme Parameter Liste)
      */
-    function getQuery($query = '', $ampersand = '&')
+    public function getQuery(string $query = '', $ampersand = '&'): string
     {
         $session_name = session_name();
         foreach($this->vars as $key => $value) {

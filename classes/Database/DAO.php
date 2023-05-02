@@ -16,7 +16,7 @@ use MySQLi_Interface;
 use pool\classes\Core\PoolObject;
 use pool\classes\Exception\DAOException;
 
-use Weblication;
+use pool\classes\Core\Weblication;
 use ResultSet;
 use MySQL_DAO;
 
@@ -119,7 +119,7 @@ abstract class DAO extends PoolObject
      * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
      * sondern nur die Anzahl.
      */
-    abstract public function getCount(): ResultSet;
+    abstract public function getCount(mixed $id = null, mixed $key = null, array $filter_rules=[]): ResultSet;
 
     /**
      * set primary key
@@ -239,9 +239,9 @@ abstract class DAO extends PoolObject
     {
         global $$tableDefine;
         $tableDefine = $$tableDefine;
-        $interfaceType = $tableDefine[0];
-        $dbname = $tableDefine[1];
-        $table = $tableDefine[2];
+        $interfaceType = $tableDefine[0] ?? '';
+        $dbname = $tableDefine[1] ?? '';
+        $table = $tableDefine[2] ?? '';
     }
 
     /**
@@ -268,7 +268,7 @@ abstract class DAO extends PoolObject
         $interface = $interface ?? Weblication::getInstance()->getInterfaces();
 
         if(is_array($interface)) {
-            $interface = $interface[$type];
+            $interface = $interface[$type] ?? null;
         }
 
         // @todo remove switch

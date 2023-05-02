@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 /**
  * Utils.inc.php
  *
@@ -437,7 +446,7 @@ function file_extension(string $file = ""): string
  *
  * @param string $file filename
  * @return string filename without extension
- **/
+ */
 function remove_extension(string $file = ''): string
 {
     return substr($file, 0, (strrpos($file, '.') ?: strlen($file)));
@@ -1195,7 +1204,7 @@ function &getNestedArrayValueReference(array &$arr, array $keys): mixed
 }
 
 /** Build a path by concatenating parts and adding '/' between them and adding an ending slash
- * @param ...$elements
+ * @param string ...$elements
  * @return string The assembled path with an ending slash
  */
 function buildDirPath(...$elements): string
@@ -2346,4 +2355,37 @@ function umlauts(string $string, bool $reverse = false): string
         $umlauts = array_flip($umlauts);
     }
     return strtr($string, $umlauts);
+}
+
+/**
+ * Check if a process is already running and abort if so.
+ * @param string $pidDir
+ * @param string $jobName
+ * @return void
+ */
+function checkRunningProcess(string $pidDir, string $jobName): void
+{
+    // get my process id
+    $pid = getmypid();
+
+    if(!$pid) {
+        echo 'Process ID could not be detected.';
+        exit(1);
+    }
+
+    if(!mkdirs($pidDir)) {
+        echo "Could not create PID directory $pidDir. Please check permissions.";
+        exit(1);
+    }
+    $pidFile = $pidDir . $jobName . '.pid';
+    if(file_exists($pidFile)) {
+        $pid = file_get_contents($pidFile);
+
+        // check if process is still running
+        if(posix_kill($pid, 0)) {
+            echo "Job $jobName is already running with PID $pid. Aborting.";
+            exit(1);
+        }
+    }
+    file_put_contents($pidFile, $pid);
 }
