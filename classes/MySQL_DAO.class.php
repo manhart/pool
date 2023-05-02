@@ -848,7 +848,6 @@ SQL;
      *
      * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
      * @return ResultSet Ergebnismenge
-     * @throws Exception
      * @see MySQL_DAO::__buildFilter
      * @see MySQL_ResultSet
      */
