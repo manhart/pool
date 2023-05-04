@@ -140,8 +140,10 @@ class Weblication
 
         for(const moduleName in clientData) {
             const className = clientData[moduleName].className;
+            /** fully qualified class name of the php module - is required by Ajax Calls */
+            const fullyQualifiedClassName = clientData[moduleName].fullyQualifiedClassName;
             try {
-                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName);
+                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName);
             }
             catch(e) {
                 console.error(e.toString());

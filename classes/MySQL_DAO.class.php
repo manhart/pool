@@ -848,7 +848,6 @@ SQL;
      *
      * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
      * @return ResultSet Ergebnismenge
-     * @throws Exception
      * @see MySQL_DAO::__buildFilter
      * @see MySQL_ResultSet
      */
@@ -875,7 +874,7 @@ SQL;
      * @param mixed $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
      * @return ResultSet Ergebnismenge
      * @see MySQL_ResultSet
-     **/
+     */
     public function get($id, $key=NULL): ResultSet
     {
         $id = $id ?? 0;
@@ -909,7 +908,6 @@ SQL;
      * @see MySQL_DAO::__buildLimit
      * @see MySQL_DAO::__buildGroupBy
      *
-     * @throws Exception
      */
     public function getMultiple(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
                                 array $groupBy=[], array $having=[], array $options=[]): ResultSet
@@ -1218,7 +1216,6 @@ SQL;
      *
      * @param array $filter_rules Filter Regeln (siehe __buildFilter)
      * @return string SQL-Abfrage
-     * @throws Exception
      */
     protected function __buildHaving(array $filter_rules): string
     {
@@ -1233,7 +1230,6 @@ SQL;
      *
      * @param array|null $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
      * @return string ORDER eines SQL Statements
-     * @throws Exception
      */
     protected function __buildSorting(?array $sorting): string
     {

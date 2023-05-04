@@ -73,7 +73,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param Component|null $Owner
      * @param array $params
      *
-     * @throws ModulNotFoundException
+     * @throws ModulNotFoundException|Exception
      */
     function __construct(?Component $Owner, array $params = [])
     {
@@ -187,7 +187,7 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @return void
      */
-    public function prepareContent()
+    public function prepareContent(): void
     {
         parent::prepareContent();
 

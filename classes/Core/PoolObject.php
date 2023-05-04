@@ -137,7 +137,6 @@ class PoolObject
 
             // old style
             $filename = $classRootDir . $className . PoolObject::CLASS_EXTENSION;
-
             if(file_exists($filename)) {
                 require_once $filename;
                 return true;

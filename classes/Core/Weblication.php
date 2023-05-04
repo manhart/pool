@@ -18,6 +18,7 @@ use GUI_HeadData;
 use GUI_Module;
 use Input;
 use InputCookie;
+use Url;
 use InputSession;
 use Locale;
 use pool\classes\Database\DAO;
@@ -54,7 +55,7 @@ class Weblication extends Component
     /**
      * @var string class name of the module that is started as main module
      */
-    protected string $launchModule = 'GUI_CustomFrame';
+    protected string $launchModule = GUI_CustomFrame::class;
 
     /**
      * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
@@ -306,10 +307,10 @@ class Weblication extends Component
     /**
      * Changes the folder for the design templates (Html templates) and images.
      *
-     * @param string $skin Folder for design templates (html templates) and images. (Default value: default)
+     * @param string $skin folder for frontend design (css, templates and images).
      * @return Weblication
      */
-    public function setSkin(string $skin = 'default'): Weblication
+    public function setSkin(string $skin): Weblication
     {
         $this->skin = $skin;
         return $this;
@@ -921,11 +922,13 @@ class Weblication extends Component
     /**
      * @param string $clientSidePath
      * @param string $serverSidePath
+     * @return Weblication
      */
-    public function setPoolRelativePath(string $clientSidePath, string $serverSidePath)
+    public function setPoolRelativePath(string $clientSidePath, string $serverSidePath): Weblication
     {
         $this->poolClientSideRelativePath = $clientSidePath;
         $this->poolServerSideRelativePath = $serverSidePath;
+        return $this;
     }
 
     /**
@@ -948,6 +951,41 @@ class Weblication extends Component
     public function getPoolServerSideRelativePath(string $subDir = ''): string
     {
         return $this->poolServerSideRelativePath . ($subDir ? '/' : '') . $subDir;
+    }
+
+    /**
+     * Transforms the PATH_INFO into an Input object.
+     * @return Input
+     */
+    protected function transformPathInfo(): Input
+    {
+        $Input = new Input();
+        if(isset($_SERVER['PATH_INFO'])) {
+            $pathInfo = trim($_SERVER['PATH_INFO'], '/');
+            $segments = explode('/', $pathInfo);
+            $count = count($segments);
+
+            for($i = 0; $i < $count; $i += 2) {
+                $name = $segments[$i];
+                $value = $segments[$i + 1] ?? null;
+                $Input->setVar($name, $value);
+            }
+        }
+        return $Input;
+    }
+
+    /**
+     * Redirect to schema
+     *
+     * @param string $schema
+     * @param bool $withQuery
+     * @return never
+     */
+    public function redirect(string $schema, bool $withQuery = false): never
+    {
+        $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
+        $Url->setParam('schema', $schema);
+        $Url->restartUrl();
     }
 
     /**
@@ -1068,7 +1106,7 @@ class Weblication extends Component
     {
         switch(session_status()) {
             case PHP_SESSION_DISABLED:
-                throw new Exception('PHP Session is  disabled.');
+                throw new Exception('PHP Session is disabled.');
 
             case PHP_SESSION_NONE:
                 // setting ini is only possible, if the session is not started yet

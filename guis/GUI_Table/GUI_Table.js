@@ -376,8 +376,9 @@ class GUI_Table extends GUI_Module
                 console.warn(this.getName() + '.getTable() is called before ' + this.getName() + '.render()! Not all table options ' +
                     'were passed. Please check the order of the method calls.');
             }
+            this.$table = $('#' + this.getName());
             // @todo change event listener!!! Don't use on()!
-            this.$table = $('#' + this.getName())
+            this.$table
                 .on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', this.onCheckUncheckRows)
                 // .on('refresh-options.bs.table', this.onRefreshOptions)
                 .on('click-row.bs.table', this.onClickRow)
