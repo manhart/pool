@@ -66,16 +66,17 @@ if(!defined('CLASS_STOPWATCH')) {
          * @access public
          * @param string $name Schluessel
          **/
-        function start($name)
+        function start(string $name):self
         {
             $Diff = 0.0;
             if (isset($this -> times[$name])) {
                 if ($this -> times[$name][2] == STOPWATCH_STARTED) {
-                    return;
+                    return $this;
                 }
                 $Diff = $this -> times[$name][1];
             }
             $this -> times[$name] = array(GetMicrotime(), (float)(0 + $Diff), STOPWATCH_STARTED);
+            return $this;
         }
 
         /**
@@ -88,7 +89,7 @@ if(!defined('CLASS_STOPWATCH')) {
          * @access public
          * @param string $name Schluessel
          **/
-        function stop($name)
+        function stop($name):self
         {
             if($this -> times[$name][2] == STOPWATCH_STARTED) {
 
@@ -98,6 +99,7 @@ if(!defined('CLASS_STOPWATCH')) {
                 $this -> times[$name][1] = $Diff;
                 $this -> times[$name][2] = STOPWATCH_STOPPED;
             }
+            return $this;
         }
 
         /**
@@ -122,10 +124,10 @@ if(!defined('CLASS_STOPWATCH')) {
          *
          * this function only returns the calculated runtime value
          *
-         * @param $name Schluessel
+         * @param string $name Schluessel
          * @return float Differenz
          **/
-        function getDiff($name)
+        function getDiff(string $name)
         {
             if ($this -> times[$name][2] == STOPWATCH_STOPPED) {
                 $Diff = $this -> times[$name][1];

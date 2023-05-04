@@ -471,7 +471,8 @@ class GUI_Module extends Module
      */
     public function loadFiles()
     {
-        if (!$this->getWeblication()) return $this;
+        if (!$this->getWeblication())
+            return $this;
 
         $className = $this->getClassName();
 
@@ -480,17 +481,12 @@ class GUI_Module extends Module
             $this->Template->setFilePath($handle, $template);
         }
 
-        $hasFrame = $this->getWeblication()->hasFrame();
-        if ($hasFrame) {
+        if ($this->getWeblication()->hasFrame())
             $Frame = $this->getWeblication()->getFrame();
-        }
-        else {
-            $hasFrame = $this instanceof GUI_CustomFrame;
-            if (!$hasFrame) {
-                return $this;
-            }
+        elseif ($this instanceof GUI_CustomFrame)
             $Frame = $this;
-        }
+        else
+            return $this;
 
         foreach ($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
@@ -531,24 +527,13 @@ class GUI_Module extends Module
             return false;
 
         $className = $className ?: $this->getClassName();
-
-        if($includeCSS) {
-            $css = $this->Weblication->findStyleSheet($className . '.css', $className, $this->isPOOL(), false);
-            if ($css) {
-                $Frame->getHeadData()->addStyleSheet($css);
-            }
-        }
-
-        if($includeJS) {
-            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isPOOL(), false);
-            if (!$js) {
-                return false;
-            }
-
-            $Frame->getHeadData()->addJavaScript($js);
-        }
-
-        return true;
+        //associated Stylesheet
+        if($includeCSS && ($css = $this->Weblication->findStyleSheet("$className.css", $className, $this->isPOOL(), false)))
+            $Frame->getHeadData()->addStyleSheet($css);
+        //associated Script
+        if($includeJS && ($jsFile = $this->Weblication->findJavaScript("$className.js", $className, $this->isPOOL(), false)))
+            $Frame->getHeadData()->addJavaScript($jsFile);
+        return (bool)($jsFile??true);//result of JS-lookup or true
     }
 
     /**
