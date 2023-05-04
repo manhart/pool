@@ -18,7 +18,6 @@ use GUI_HeadData;
 use GUI_Module;
 use Input;
 use InputCookie;
-use Url;
 use InputSession;
 use Locale;
 use pool\classes\Database\DAO;
@@ -29,8 +28,10 @@ use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
+use ReflectionException;
 use SessionHandler;
 use Template;
+use Url;
 
 /**
  * Class Weblication
@@ -1317,6 +1318,7 @@ class Weblication extends Component
      *
      * @return void
      * @throws ModulNotFoundException
+     * @throws ReflectionException
      * @throws Exception
      */
     public function render(): void
@@ -1374,8 +1376,7 @@ class Weblication extends Component
      * Error handling wrapper around finalizeContent of the Main-GUI
      *
      * @return string website content
-     *
-     * @throws Exception
+     * @throws ReflectionException
      */
     protected function finalizeContent(): string
     {

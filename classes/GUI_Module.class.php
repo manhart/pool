@@ -624,7 +624,6 @@ class GUI_Module extends Module
      * @param string $requestedMethod
      * @return string
      * @throws ReflectionException
-     * @throws Exception
      */
     private function invokeAjaxMethod(string $requestedMethod): string
     {
@@ -786,7 +785,7 @@ class GUI_Module extends Module
      * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
      *
      * @return string Content / Inhalt
-     * @throws Exception
+     * @throws ReflectionException
      */
     public function finalizeContent(): string
     {
@@ -816,7 +815,6 @@ class GUI_Module extends Module
     /**
      * Fertigt alle Html Templates der Childs an.
      *
-     * @throws Exception
      */
     private function finalizeChildren(): void
     {
