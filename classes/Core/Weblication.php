@@ -1325,6 +1325,11 @@ class Weblication extends Component
             $this->prepareContent();
             echo $this->finalizeContent();
         }
+
+        $measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
+        if($measurePageSpeed) {
+            $this->measurePageSpeed();
+        }
     }
 
     /**
@@ -1438,6 +1443,34 @@ class Weblication extends Component
             $this->xdebug = extension_loaded('xdebug');
         }
         return $this->xdebug;
+    }
+
+    /**
+     * measure page speed and print it in the footer
+     * @todo ajax requests?
+     * @return void
+     */
+    public function measurePageSpeed(): void
+    {
+        register_shutdown_function(function() {
+            // print only when html content type is set
+            if(!isHtmlContentTypeHeaderSet()) {
+                return;
+            }
+
+            $timeSpent = microtime(true) - POOL_START;
+            $htmlStartTags = $htmlCloseTags = '';
+            if(IS_CONSOLE) {
+                $what = 'Script';
+            }
+            else {
+                $what = 'Page';
+                $color = $timeSpent > 0.2 ? 'red' : 'green';
+                $htmlStartTags = "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">";
+                $htmlCloseTags = '</p></footer>';
+            }
+            echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
+        });
     }
 
     /**
