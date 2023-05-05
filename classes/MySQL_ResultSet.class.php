@@ -31,7 +31,7 @@
 use pool\classes\Database\DataInterface;
 
 /**
- * MySQL_Resultset
+ * MySQL_ResultSet
  *
  * Siehe Datei fuer ausfuehrliche Beschreibung!
  *
