@@ -115,7 +115,7 @@ class PoolObject
 
         if($hasNamespace) {
             $classRootDirs = [
-                DIR_DOCUMENT_ROOT
+                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];
 
             $className = str_replace('\\', '/', $className);

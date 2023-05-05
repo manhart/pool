@@ -207,7 +207,7 @@ class GUI_Module extends Module
 
         if($hasNamespace) {
             $GUIRootDirs = [
-                DIR_DOCUMENT_ROOT
+                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];
 
             $GUIClassName = str_replace('\\', '/', $GUIClassName);
