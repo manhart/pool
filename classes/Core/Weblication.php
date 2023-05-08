@@ -1327,7 +1327,7 @@ class Weblication extends Component
         }
 
         $measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
-        if($measurePageSpeed) {
+        if($measurePageSpeed && defined('POOL_START')) {
             $this->measurePageSpeed();
         }
     }
