@@ -143,7 +143,7 @@ class Log
                 $DAO = $facility['DAO'] ?? null;
                 $tableDefine = $facility['tableDefine'] ?? '';
                 $host = $facility['host'] ?? MYSQL_HOST;
-                $charset = $facility['charset'] ?? MYSQL_CHARSET;
+                $charset = $facility['charset'] ?? 'utf8';
 
                 if($tableDefine) {
                     $interfaceType = $dbname = $table = '';
