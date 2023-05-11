@@ -270,7 +270,7 @@ class Weblication extends Component
         parent::__construct(null);
         self::$isAjax = isAjax();
         $this->Settings = new Input(Input::INPUT_EMPTY);
-        $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
+        $poolRelativePath = makeRelativePathsFrom(getcwd(), realpath(DIR_POOL_ROOT));
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         return $this;
     }
