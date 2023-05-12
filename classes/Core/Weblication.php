@@ -788,7 +788,7 @@ class Weblication extends Component
         if($template) return $template;
 
         $msg = "Template $filename in " . __METHOD__ . " not found!";
-        if(!$this->getPoolClientSideRelativePath() and $baseLib) {
+        if(!$this->getPoolServerSideRelativePath() and $baseLib) {
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
         }
@@ -812,7 +812,12 @@ class Weblication extends Component
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
         $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
-        if($stylesheet) return $stylesheet;
+        if($stylesheet) {
+            if($baseLib) {
+                $stylesheet = strtr($stylesheet, [$this->getPoolServerSideRelativePath() => $this->getPoolClientSideRelativePath()]);
+            }
+            return $stylesheet;
+        }
 
         //TODO Remove or define use of skins for included Projekts and merge with findBestElement
         if(!$baseLib) {//Common-common-skin
@@ -837,7 +842,8 @@ class Weblication extends Component
      * @param bool $translate
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib, bool $all, bool $translate = false): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib, bool $all,
+        bool $translate = false): string
     {
         $places = [];
         //Getting list of Places to search
@@ -893,23 +899,26 @@ class Weblication extends Component
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param bool $baseLib
      * @param bool $raiseError
+     * @param bool $clientSideRelativePath If true, the path to the JavaScript is relative to the client side. If false, the path is relative to the server side.
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
+    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true, bool $clientSideRelativePath = true): string
     {
-        $folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
-        $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
+        $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
+        $serverSide_folder_guis = $clientSide_folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
         //Ordner BaseLib -> look in POOL instead
         if($baseLib) {
-            $folder_javaScripts = addEndingSlash($this->getPoolServerSideRelativePath($folder_javaScripts));
-            $folder_guis = addEndingSlash($this->getPoolServerSideRelativePath($folder_guis));
+            $serverSide_folder_javaScripts = addEndingSlash($this->getPoolServerSideRelativePath($serverSide_folder_javaScripts));
+            $serverSide_folder_guis = addEndingSlash($this->getPoolServerSideRelativePath($serverSide_folder_guis));
+            $clientSide_folder_javaScripts = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_javaScripts));
+            $clientSide_folder_guis = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_guis));
         }
-        $javaScriptFile = $folder_javaScripts . $filename;
+        $javaScriptFile = $serverSide_folder_javaScripts . $filename;
         if(file_exists($javaScriptFile))
-            return $javaScriptFile;//found
-        $javaScriptFile = $folder_guis . $filename;
+            return $clientSideRelativePath ? "$clientSide_folder_javaScripts$filename" : $javaScriptFile;//found
+        $javaScriptFile = $serverSide_folder_guis . $filename;
         if(file_exists($javaScriptFile))
-            return $javaScriptFile;//found
+            return $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;//found
         if(defined('DIR_COMMON_ROOT_REL')) {
             $folder_common = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
             $javaScriptFile = $folder_common . $filename;
