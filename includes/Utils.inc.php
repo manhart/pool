@@ -1358,25 +1358,53 @@ function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = 
     if(!($here && $toThis))//normalization returned an invalid result
         return false;//fail
 
-    // Split the paths into arrays of their individual components.
-    $sourcePathParts = explode($separator, $here);
-    $targetPathParts = explode($separator, $toThis);
 
-    // Find the number of common path components.
-    $commonPathComponents = 0;
-    while (isset($sourcePathParts[$commonPathComponents]) && isset($targetPathParts[$commonPathComponents]) &&
-            $sourcePathParts[$commonPathComponents] === $targetPathParts[$commonPathComponents]) {
-        $commonPathComponents++;
+    $paths = [];
+    $paths['clientside'] = [
+        'here' => $here,
+        'toThis' => $toThis,
+    ];
+
+    // resolve symbolic links only for serverside path
+    $ssHere = realpath($here);
+    $ssToThis = realpath($toThis);
+
+    // if serverside resolved paths are not equal, then stack the paths, because they are different
+    if($ssHere != $here && $ssToThis != $toThis) {
+        $paths['serverside'] = [
+            'here' => $ssHere,
+            'toThis' => $ssToThis,
+        ];
     }
 
-    // Calculate the serverside relative path.
-    $serversideRelativePath = str_repeat('..' . $separator, count($sourcePathParts) - $commonPathComponents) . implode($separator, array_slice($targetPathParts, $commonPathComponents));
+    // loop through the stacked paths and calculate the common path components
+    foreach($paths as $side => $from_to) {
+        // Split the paths into arrays of their individual components.
+        $paths[$side]['hereParts'] = explode($separator, $from_to['here']);
+        $paths[$side]['toThisParts'] = explode($separator, $from_to['toThis']);
+
+        // Find the number of common path components.
+        $commonPathComponents = 0;
+        while (isset($paths[$side]['hereParts'][$commonPathComponents]) && isset($paths[$side]['toThisParts'][$commonPathComponents]) &&
+            $paths[$side]['hereParts'][$commonPathComponents] === $paths[$side]['toThisParts'][$commonPathComponents]) {
+            $commonPathComponents++;
+        }
+        $paths[$side]['commonPathComponents'] = $commonPathComponents;
+    }
 
     // Calculate the clientside relative path.
     $clientsideRelativePathComponents = count(explode($separator, $_SERVER['DOCUMENT_ROOT']));
     $commonPathComponents = min($clientsideRelativePathComponents, $commonPathComponents);
-    $clientsideRelativePath = str_repeat('..' . $separator, $clientsideRelativePathComponents - $commonPathComponents) .
-        implode($separator, array_slice($targetPathParts, $commonPathComponents));
+    $clientsideRelativePath = str_repeat('..' . $separator, $clientsideRelativePathComponents - $paths['clientside']['commonPathComponents']) .
+        implode($separator, array_slice($paths['clientside']['toThisParts'], $commonPathComponents));
+
+    // Calculate the serverside relative path.
+    if(!array_key_exists('serverside', $paths)) {
+        $paths['serverside'] = $paths['clientside'];
+    }
+    $serversideRelativePath = str_repeat("..$separator", count($paths['serverside']['hereParts']) - $paths['serverside']['commonPathComponents']) .
+        implode($separator, array_slice($paths['serverside']['toThisParts'], $paths['serverside']['commonPathComponents']));
+
 
     // Return the relative paths.
     return [
