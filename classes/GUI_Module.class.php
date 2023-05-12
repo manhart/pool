@@ -207,7 +207,7 @@ class GUI_Module extends Module
 
         if($hasNamespace) {
             $GUIRootDirs = [
-                DIR_DOCUMENT_ROOT
+                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];
 
             $GUIClassName = str_replace('\\', '/', $GUIClassName);
@@ -471,7 +471,8 @@ class GUI_Module extends Module
      */
     public function loadFiles()
     {
-        if (!$this->getWeblication()) return $this;
+        if (!$this->getWeblication())
+            return $this;
 
         $className = $this->getClassName();
 
@@ -480,17 +481,12 @@ class GUI_Module extends Module
             $this->Template->setFilePath($handle, $template);
         }
 
-        $hasFrame = $this->getWeblication()->hasFrame();
-        if ($hasFrame) {
+        if ($this->getWeblication()->hasFrame())
             $Frame = $this->getWeblication()->getFrame();
-        }
-        else {
-            $hasFrame = $this instanceof GUI_CustomFrame;
-            if (!$hasFrame) {
-                return $this;
-            }
+        elseif ($this instanceof GUI_CustomFrame)
             $Frame = $this;
-        }
+        else
+            return $this;
 
         foreach ($this->cssFiles as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
@@ -531,24 +527,13 @@ class GUI_Module extends Module
             return false;
 
         $className = $className ?: $this->getClassName();
-
-        if($includeCSS) {
-            $css = $this->Weblication->findStyleSheet($className . '.css', $className, $this->isPOOL(), false);
-            if ($css) {
-                $Frame->getHeadData()->addStyleSheet($css);
-            }
-        }
-
-        if($includeJS) {
-            $js = $this->Weblication->findJavaScript($className . '.js', $className, $this->isPOOL(), false);
-            if (!$js) {
-                return false;
-            }
-
-            $Frame->getHeadData()->addJavaScript($js);
-        }
-
-        return true;
+        //associated Stylesheet
+        if($includeCSS && ($css = $this->Weblication->findStyleSheet("$className.css", $className, $this->isPOOL(), false)))
+            $Frame->getHeadData()->addStyleSheet($css);
+        //associated Script
+        if($includeJS && ($jsFile = $this->Weblication->findJavaScript("$className.js", $className, $this->isPOOL(), false)))
+            $Frame->getHeadData()->addJavaScript($jsFile);
+        return (bool)($jsFile??true);//result of JS-lookup or true
     }
 
     /**
@@ -639,7 +624,6 @@ class GUI_Module extends Module
      * @param string $requestedMethod
      * @return string
      * @throws ReflectionException
-     * @throws Exception
      */
     private function invokeAjaxMethod(string $requestedMethod): string
     {
@@ -801,7 +785,7 @@ class GUI_Module extends Module
      * Das ganze geht von Innen nach Aussen!!! (umgekehrt zu CreateGUI, Init, PrepareContent)
      *
      * @return string Content / Inhalt
-     * @throws Exception
+     * @throws ReflectionException
      */
     public function finalizeContent(): string
     {
@@ -831,7 +815,6 @@ class GUI_Module extends Module
     /**
      * Fertigt alle Html Templates der Childs an.
      *
-     * @throws Exception
      */
     private function finalizeChildren(): void
     {

@@ -12,12 +12,12 @@ declare(strict_types=1);
 
 namespace pool\classes\Core;
 
+use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
 use Input;
 use InputCookie;
-use Url;
 use InputSession;
 use Locale;
 use pool\classes\Database\DAO;
@@ -28,8 +28,10 @@ use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
+use ReflectionException;
 use SessionHandler;
 use Template;
+use Url;
 
 /**
  * Class Weblication
@@ -268,7 +270,8 @@ class Weblication extends Component
         parent::__construct(null);
         self::$isAjax = isAjax();
         $this->Settings = new Input(Input::INPUT_EMPTY);
-        $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
+        // determine the relative client und server path from the application to the pool
+        $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         return $this;
     }
@@ -1316,6 +1319,7 @@ class Weblication extends Component
      *
      * @return void
      * @throws ModulNotFoundException
+     * @throws ReflectionException
      * @throws Exception
      */
     public function render(): void
@@ -1323,6 +1327,11 @@ class Weblication extends Component
         if($this->run($this->getLaunchModule())) {
             $this->prepareContent();
             echo $this->finalizeContent();
+        }
+
+        $measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
+        if($measurePageSpeed && defined('POOL_START')) {
+            $this->measurePageSpeed();
         }
     }
 
@@ -1373,8 +1382,7 @@ class Weblication extends Component
      * Error handling wrapper around finalizeContent of the Main-GUI
      *
      * @return string website content
-     *
-     * @throws Exception
+     * @throws ReflectionException
      */
     protected function finalizeContent(): string
     {
@@ -1437,6 +1445,34 @@ class Weblication extends Component
             $this->xdebug = extension_loaded('xdebug');
         }
         return $this->xdebug;
+    }
+
+    /**
+     * measure page speed and print it in the footer
+     * @todo ajax requests?
+     * @return void
+     */
+    public function measurePageSpeed(): void
+    {
+        register_shutdown_function(function() {
+            // print only when html content type is set
+            if(!isHtmlContentTypeHeaderSet()) {
+                return;
+            }
+
+            $timeSpent = microtime(true) - POOL_START;
+            $htmlStartTags = $htmlCloseTags = '';
+            if(IS_CONSOLE) {
+                $what = 'Script';
+            }
+            else {
+                $what = 'Page';
+                $color = $timeSpent > 0.2 ? 'red' : 'green';
+                $htmlStartTags = "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">";
+                $htmlCloseTags = '</p></footer>';
+            }
+            echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
+        });
     }
 
     /**
