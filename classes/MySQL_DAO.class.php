@@ -156,33 +156,6 @@ use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\translator\Translator;
 
-// Reservierte Wörter kompatibel mit MySQL 5.1 (und abwärts)
-$GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(['ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'ASENSITIVE',
-    'BEFORE', 'BETWEEN', 'BIGINT', 'BINARY', 'BLOB', 'BOTH', 'BY', 'CALL', 'CASCADE', 'CASE', 'CHANGE', 'CHAR',
-    'CHARACTER', 'CHECK', 'COLLATE', 'COLUMN', 'CONDITION', 'CONNECTION', 'CONSTRAINT', 'CONTINUE', 'CONVERT',
-    'CREATE', 'CROSS', 'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP', 'CURRENT_USER', 'CURSOR', 'DATABASE',
-    'DATABASES', 'DAY_HOUR', 'DAY_MICROSECOND', 'DAY_MINUTE', 'DAY_SECOND', 'DEC', 'DECIMAL', 'DECLARE', 'DEFAULT',
-    'DELAYED', 'DELETE', 'DESC', 'DESCRIBE', 'DETERMINISTIC', 'DISTINCT', 'DISTINCTROW', 'DIV', 'DOUBLE', 'DROP',
-    'DUAL', 'EACH', 'ELSE', 'ELSEIF', 'ENCLOSED', 'ESCAPED', 'EXISTS', 'EXIT', 'EXPLAIN', 'FALSE', 'FETCH',
-    'FLOAT', 'FLOAT4', 'FLOAT8', 'FOR', 'FORCE', 'FOREIGN', 'FROM', 'FULLTEXT', 'GRANT', 'GROUP', 'HAVING',
-    'HIGH_PRIORITY', 'HOUR_MICROSECOND', 'HOUR_MINUTE', 'HOUR_SECOND', 'IF', 'IGNORE', 'IN', 'INDEX', 'INFILE',
-    'INNER', 'INOUT', 'INSENSITIVE', 'INSERT', 'INT', 'INT1', 'INT2', 'INT3', 'INT4', 'INT8', 'INTEGER',
-    'INTERVAL', 'INTO', 'IS', 'ITERATE', 'JOIN', 'KEY', 'KEYS', 'KILL', 'LEADING', 'LEAVE', 'LEFT', 'LIKE',
-    'LIMIT', 'LINEAR', 'LINES', 'LOAD', 'LOCALTIME', 'LOCALTIMESTAMP', 'LOCK', 'LONG', 'LONGBLOB', 'LONGTEXT',
-    'LOOP', 'LOW_PRIORITY', 'MATCH', 'MEDIUMBLOB', 'MEDIUMINT', 'MEDIUMTEXT', 'MIDDLEINT', 'MINUTE_MICROSECOND',
-    'MINUTE_SECOND', 'MOD', 'MODIFIES', 'NATURAL', 'NOT', 'NO_WRITE_TO_BINLOG', 'NULL', 'NUMERIC', 'ON',
-    'OPTIMIZE', 'OPTION', 'OPTIONALLY', 'OR', 'ORDER', 'OUT', 'OUTER', 'OUTFILE', 'PRECISION', 'PRIMARY',
-    'PROCEDURE', 'PURGE', 'RANGE', 'READ', 'READS', 'READ_ONLY', 'READ_WRITE', 'REAL', 'REFERENCES', 'REGEXP',
-    'RELEASE', 'RENAME', 'REPEAT', 'REPLACE', 'REQUIRE', 'RESTRICT', 'RETURN', 'REVOKE', 'RIGHT', 'RLIKE',
-    'SCHEMA', 'SCHEMAS', 'SECOND_MICROSECOND', 'SELECT', 'SENSITIVE', 'SEPARATOR', 'SET', 'SHOW', 'SMALLINT',
-    'SPATIAL', 'SPECIFIC', 'SQL', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING', 'SQL_BIG_RESULT',
-    'SQL_CALC_FOUND_ROWS', 'SQL_SMALL_RESULT', 'SSL', 'STARTING', 'STRAIGHT_JOIN', 'TABLE', 'TERMINATED', 'THEN',
-    'TINYBLOB', 'TINYINT', 'TINYTEXT', 'TO', 'TRAILING', 'TRIGGER', 'TRUE', 'UNDO', 'UNION', 'UNIQUE', 'UNLOCK',
-    'UNSIGNED', 'UPDATE', 'USAGE', 'USE', 'USING', 'UTC_DATE', 'UTC_TIME', 'UTC_TIMESTAMP', 'VALUES', 'VARBINARY',
-    'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHEN', 'WHERE', 'WHILE', 'WITH', 'WRITE', 'X509', 'XOR', 'YEAR_MONTH',
-    'ZEROFILL', 'DATE_FORMAT', 'LAST_DAY', 'POINT', 'POINTFROMTEXT', 'ST_POINTFROMTEXT']);
-
-
 /**
  * MySQL_DAO
  *
@@ -212,8 +185,6 @@ class MySQL_DAO extends DAO
     var $table;
 
     var $tableAlias = '';
-
-    var $reserved_words = array();
 
     private array $MySQL_trans = array(
         'equal'	=> '=',
@@ -264,8 +235,6 @@ class MySQL_DAO extends DAO
         $this->db = $DataInterface;
         $this->dbname = $dbname;
         $this->table = $table;
-
-        $this->reserved_words = &$GLOBALS['MySQL_RESERVED_WORDS'];
 
         // Maybe there are columns in the "columns" property
         // todo rework this shit
@@ -329,36 +298,43 @@ class MySQL_DAO extends DAO
      */
     protected function onSetColumns(array $columns)
     {
-//        $columns = $this->getColumns();
         $column_list = '';
         $count = count($columns);
-        $alias = '';
+//        $alias = '';
 //        if($withAlias and $this->tableAlias) {
 //            $alias = $this->tableAlias.'.';
 //        }
 
-        // AM, 16.05.2023, todo always escape columns with backticks
+
+        // todo add table alias
+        // todo introduce expression columns
+        // todo consider column properties (e.g. type, length, ...)
+
         for($i=0; $i < $count; $i++) {
-            $column = trim($columns[$i]);
+            $column = $columns[$i];
 
-            $custom_column = $alias.$column;
+            // don't escape column if it has already backticks, is an expression or contains a dot
+            if(!str_contains_any($column, ['`', '*', '.', '(', 'as'])) {
+                $column = "`$column`";
 
-            if(str_contains($column, ' ') || str_contains($column, '&')) { // column contains space
-                // complex column construct should not be masked
-                if(!str_contains($column, '(') and
-                   !str_contains($column, '\'') and
-                   !str_contains($column, '"') and
-                   stripos($column, 'as ') === false) {
-                    $custom_column = '`'.$column.'`'; // should be a column with space
-                }
+//                if(str_contains($column, ' ') || str_contains($column, '&')) { // column contains space
+//                    // complex column construct should not be masked
+//                    if(!str_contains($column, '(') and
+//                        !str_contains($column, '\'') and
+//                        !str_contains($column, '"') and
+//                        !str_contains($column, '.') and
+//                        stripos($column, 'as ') === false) {
+//                        $column = "`$column`"; // should be a column with space
+//                    }
+//                }
+//                elseif(array_key_exists(strtoupper($column), $this->reserved_words)) { // column name is reserved word
+//                    $column = "`$column`";
+//                }
             }
-            elseif(array_key_exists(strtoupper($column), $this->reserved_words)) { // column name is reserved word
-                $custom_column = '`'.$column.'`';
-            }
-            //$column_list .=  /*(($this -> table) ? $this -> table . '.' : '') . */$column;
-            $column_list .= $custom_column;
 
-            if ($i < ($count - 1)) {
+            $column_list .= $column;
+
+            if ($i < $count - 1) {
                 $column_list .= ', ';
             }
         }
