@@ -308,7 +308,7 @@ class MySQL_DAO extends DAO
         for($i=0; $i < $count; $i++) {
             $column = $columns[$i];
             // don't escape column if it has already backticks, is an expression or contains a dot
-            if(!str_contains_any($column, ['`', '*', '.', '(', 'as'])) {
+            if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
                 $column = "`$column`";
             }
             // add column separator
