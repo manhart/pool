@@ -244,17 +244,16 @@ class MySQL_DAO extends DAO
     /**
      * rebuild column list
      */
-    private function rebuildColumnList()
+    private function rebuildColumnList(): void
     {
         // Columns are predefined as property "columns".
         if(!$this->columns) return;
 
         $columns = $this->getColumns();
 
-        $table = '`'.$this->table.'`';
-        $glue = '`, '.$table.'.`';
-        $column_list = $table.'.`' . implode($glue, $columns).'`';
-        $this->column_list = $column_list;
+        $table = "`$this->table`";
+        $glue = "`, $table.`";
+        $this->column_list = $table.'.`' . implode($glue, $columns).'`';
     }
 
     /**
@@ -300,11 +299,7 @@ class MySQL_DAO extends DAO
     {
         $column_list = '';
         $count = count($columns);
-//        $alias = '';
-//        if($withAlias and $this->tableAlias) {
-//            $alias = $this->tableAlias.'.';
-//        }
-
+        $last = $count - 1;
 
         // todo add table alias
         // todo introduce expression columns
@@ -312,31 +307,12 @@ class MySQL_DAO extends DAO
 
         for($i=0; $i < $count; $i++) {
             $column = $columns[$i];
-
             // don't escape column if it has already backticks, is an expression or contains a dot
             if(!str_contains_any($column, ['`', '*', '.', '(', 'as'])) {
                 $column = "`$column`";
-
-//                if(str_contains($column, ' ') || str_contains($column, '&')) { // column contains space
-//                    // complex column construct should not be masked
-//                    if(!str_contains($column, '(') and
-//                        !str_contains($column, '\'') and
-//                        !str_contains($column, '"') and
-//                        !str_contains($column, '.') and
-//                        stripos($column, 'as ') === false) {
-//                        $column = "`$column`"; // should be a column with space
-//                    }
-//                }
-//                elseif(array_key_exists(strtoupper($column), $this->reserved_words)) { // column name is reserved word
-//                    $column = "`$column`";
-//                }
             }
-
-            $column_list .= $column;
-
-            if ($i < $count - 1) {
-                $column_list .= ', ';
-            }
+            // add column separator
+            $column_list .= $i < $last ? "$column, " : $column;
         }
 
         $this->column_list = $column_list;
