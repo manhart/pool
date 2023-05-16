@@ -157,7 +157,7 @@ use pool\classes\Database\DataInterface;
 use pool\classes\translator\Translator;
 
 // Reservierte Wörter kompatibel mit MySQL 5.1 (und abwärts)
-$GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'ASENSITIVE',
+$GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(['ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC', 'ASENSITIVE',
     'BEFORE', 'BETWEEN', 'BIGINT', 'BINARY', 'BLOB', 'BOTH', 'BY', 'CALL', 'CASCADE', 'CASE', 'CHANGE', 'CHAR',
     'CHARACTER', 'CHECK', 'COLLATE', 'COLUMN', 'CONDITION', 'CONNECTION', 'CONSTRAINT', 'CONTINUE', 'CONVERT',
     'CREATE', 'CROSS', 'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP', 'CURRENT_USER', 'CURSOR', 'DATABASE',
@@ -180,7 +180,7 @@ $GLOBALS['MySQL_RESERVED_WORDS'] = array_flip(array('ACCESSIBLE', 'ADD', 'ALL', 
     'TINYBLOB', 'TINYINT', 'TINYTEXT', 'TO', 'TRAILING', 'TRIGGER', 'TRUE', 'UNDO', 'UNION', 'UNIQUE', 'UNLOCK',
     'UNSIGNED', 'UPDATE', 'USAGE', 'USE', 'USING', 'UTC_DATE', 'UTC_TIME', 'UTC_TIMESTAMP', 'VALUES', 'VARBINARY',
     'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHEN', 'WHERE', 'WHILE', 'WITH', 'WRITE', 'X509', 'XOR', 'YEAR_MONTH',
-    'ZEROFILL', 'DATE_FORMAT', 'LAST_DAY', 'POINT', 'POINTFROMTEXT', 'ST_POINTFROMTEXT'));
+    'ZEROFILL', 'DATE_FORMAT', 'LAST_DAY', 'POINT', 'POINTFROMTEXT', 'ST_POINTFROMTEXT']);
 
 
 /**
@@ -336,17 +336,19 @@ class MySQL_DAO extends DAO
 //        if($withAlias and $this->tableAlias) {
 //            $alias = $this->tableAlias.'.';
 //        }
+
+        // AM, 16.05.2023, todo always escape columns with backticks
         for($i=0; $i < $count; $i++) {
             $column = trim($columns[$i]);
 
             $custom_column = $alias.$column;
 
-            if(str_contains($column, ' ')) { // column contains space
+            if(str_contains($column, ' ') || str_contains($column, '&')) { // column contains space
                 // complex column construct should not be masked
                 if(!str_contains($column, '(') and
                    !str_contains($column, '\'') and
                    !str_contains($column, '"') and
-                   stripos($column, 'as ', 0) === false) {
+                   stripos($column, 'as ') === false) {
                     $custom_column = '`'.$column.'`'; // should be a column with space
                 }
             }
