@@ -2417,3 +2417,21 @@ function checkRunningProcess(string $pidDir, string $jobName): void
     }
     file_put_contents($pidFile, $pid);
 }
+
+/**
+ * Determine whether a string contains substrings from an array
+ *
+ * @param string $haystack
+ * @param array $needles
+ * @param bool $case_sensitive
+ * @return bool
+ */
+function str_contains_any(string $haystack, array $needles, bool $case_sensitive = true): bool
+{
+    foreach ($needles as $needle) {
+        if (str_contains($haystack, $needle) || (($case_sensitive === false) && str_contains(strtolower($haystack), strtolower($needle)))) {
+            return true;
+        }
+    }
+    return false;
+}
