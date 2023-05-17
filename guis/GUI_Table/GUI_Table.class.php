@@ -7,6 +7,8 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+use pool\classes\Database\DAO;
+
 class GUI_Table extends GUI_Module
 {
     use Configurable;
@@ -1189,9 +1191,10 @@ class GUI_Table extends GUI_Module
 
     /**
      * @param string $which possible keys: all, aliasNames, columnNames (assoc array), searchable (assoc array), (@todo filterable/filterSelect)
+     * @param DAO|null $DAO if given, escape column names
      * @return array only columns for database and sql statement passing
      */
-    public function getDBColumns(string $which= 'all'): array
+    public function getDBColumns(string $which= 'all', ?DAO $DAO = null): array
     {
         // todo if columns change / new configuration, reread with loop
         if($this->dbColumns[$which]) {
@@ -1204,7 +1207,6 @@ class GUI_Table extends GUI_Module
             'columnNames' => [], // could also be an expression
             'searchable' => [],
             'sortable' => [],
-//            'searchableWithDataType' => [],
         ];
         $columns = $this->Input->getVar('columns');
         foreach($columns as $column) {
@@ -1213,11 +1215,12 @@ class GUI_Table extends GUI_Module
             $dbColumn = $column['dbColumn'];
             if($dbColumn == '') continue;
 
+            $dbColumn = $DAO ? $DAO->escapeColumn($dbColumn): $dbColumn;
             $this->dbColumns['all'][] = '('.$dbColumn.')`'.$column['field'].'`';
             $this->dbColumns['aliasNames'][] = $column['field'];
 
             $expr = $dbColumn;
-            $isSubQuery = stripos($expr, 'select', 0) === 0;
+            $isSubQuery = stripos($expr, 'select') === 0;
             if($isSubQuery) {
                 $expr = '('.$expr.')';
             }
@@ -1243,14 +1246,8 @@ class GUI_Table extends GUI_Module
                 'filterByDbColumn' => $filterByDbColumn // column
             ];
 
-//            $sortable = $column['searchable'] ?? $this->getColumnProperty('sortable')['value'];
-//            if($sortable) {
-//                $this->dbColumns['sortable'][] = $assoc;
-//            }
-
             $searchable = $column['searchable'] ?? $this->getColumnProperty('searchable')['value'];
             if($searchable) {
-//                $this->dbColumns['searchable'][] = $dbColumn;
                 $this->dbColumns['searchable'][] = $assoc;
             }
         }
