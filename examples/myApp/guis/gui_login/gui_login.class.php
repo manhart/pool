@@ -61,10 +61,6 @@ class GUI_Login extends GUI_Module
     function __construct(& $Owner)
     {
         parent::__construct($Owner);
-        $Frame = $this->Weblication->getMain(); /* @var $Frame GUI_Frame */
-        if($Frame  instanceof GUI_CustomFrame) {
-            $Frame->readoutErrorList($this->getClassName());
-        }
     }
 
     /**

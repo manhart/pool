@@ -63,10 +63,6 @@ class GUI_Article extends GUI_Module
     function __construct(& $Owner)
     {
         parent::__construct($Owner);
-        $Frame = $this->Weblication->getMain(); /* @var $Frame GUI_Frame */
-        if($Frame  instanceof GUI_CustomFrame) {
-            $Frame->readoutErrorList($this->getClassName());
-        }
     }
 
     /**
@@ -74,12 +70,14 @@ class GUI_Article extends GUI_Module
      *
      * @access public
      * @param int $superglobals
-     **/
+     *
+     * @throws Exception
+     */
     function init($superglobals=0)
     {
         $this->Defaults->addVar('count', 1);
         $this->Defaults->addVar('useLipsum', 1); // very slow
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET|Input::INPUT_POST);
 
         // Programmdaten aus der Session laden
         $this->restoreSession();

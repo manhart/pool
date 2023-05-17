@@ -11,12 +11,8 @@ class GUI_AlertBox extends GUI_Module
     function __construct(& $Owner)
     {
         parent::__construct($Owner);
-        $Frame = $this->Weblication->getMain(); /* @var $Frame GUI_Frame */
-        if($Frame  instanceof GUI_CustomFrame) {
-            $Frame->readoutErrorList($this->getClassName());
-        }
     }
-  
+
     /**
      * Default Werte setzen. Input initialisieren.
      *
@@ -26,7 +22,7 @@ class GUI_AlertBox extends GUI_Module
     function init($superglobals=0)
     {
         $this->Defaults->addVar('buttonLabel', 'OK');
-        parent::init(I_GET|I_POST);
+        parent::init(Input::INPUT_GET|Input::INPUT_POST);
     }
 
     /**
@@ -41,41 +37,41 @@ class GUI_AlertBox extends GUI_Module
 
         if(is_a($this->Weblication->getMain(), 'GUI_CustomFrame')) {
             $Frame = &$this->Weblication->getMain();
-            
+
             $className=$this->getClassName();
-            
+
             $js = $this->Weblication->findJavaScript('alertbox.js', strtolower($className), false);
             $Frame->Headerdata->addJavaScript($js);
-            
+
             $jqueryVersion = '3.3.1';
             //             $jqueryUIVersion = '1.12.1';
-            
+
             $jqueryPath = addEndingSlash(DIR_RELATIVE_3RDPARTY_ROOT).'js/jquery/'.$jqueryVersion;
             // $jqueryUIPath = addEndingSlash(DIR_RELATIVE_3RDPARTY_ROOT).'js/jquery-ui/'.$jqueryUIVersion;
             $jsfile = addEndingSlash($jqueryPath).'jquery-'.$jqueryVersion.'.min.js';
             $Frame->Headerdata->addJavaScript($jsfile);
-            
+
             // jQuery-UI
             // $jsfile = addEndingSlash($jqueryUIPath).'jquery-ui-'.$jqueryUIVersion.'.custom.min.js';
             // $this->Headerdata->addJavaScript($jsfile);
-            
+
             // Popper -------------------------------------------------------------------------------
             $jsfile = addEndingSlash(DIR_RELATIVE_3RDPARTY_ROOT) . 'js/popper/popper.min.js';
             $Frame->Headerdata->addJavaScript($jsfile);
-            
-            
+
+
             // Bootstrap ----------------------------------------------------------------------------
             $bootstrapVersion = '4.3.1';
             $bootstrapPath = addEndingSlash(DIR_RELATIVE_3RDPARTY_ROOT) . 'js/bootstrap/' . $bootstrapVersion;
-            
+
             $jsfile = addEndingSlash($bootstrapPath) . 'js/bootstrap.js';
             $Frame->Headerdata->addJavaScript($jsfile);
-            
+
             // Bootstrap CSS
             $cssfile = addEndingSlash($bootstrapPath) . 'css/bootstrap.css';
             $Frame->Headerdata->addStyleSheet($cssfile);
         }
-             
+
     }
 
     /**
@@ -101,7 +97,7 @@ class GUI_AlertBox extends GUI_Module
         $this->Template->setVar('name', $this->getName());
         $this->Template->setVar('buttonLabel', $this->Input->getVar('buttonLabel'));
     }
-    
+
 
     /**
      * Inhalt parsen und zurueck geben.
