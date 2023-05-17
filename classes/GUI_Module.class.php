@@ -674,7 +674,7 @@ class GUI_Module extends Module
             foreach ($parameters as $Parameter) {
                 $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
                 if (is_string($value)) {
-                    if ($Parameter->getType()) {
+                    if ($Parameter->hasType() && !$Parameter->getType()->getName() == 'mixed') {
                         switch ($Parameter->getType()->getName()) {
                             case 'float':
                                 $value = (float)$value;
@@ -685,12 +685,12 @@ class GUI_Module extends Module
                                 break;
 
                             case 'bool':
-                                $value = string2bool($value);
+                                $value = filter_var($value, FILTER_VALIDATE_BOOL);
                                 break;
                         }
                     } else {
                         if ($value === 'true' or $value === 'false') {
-                            $value = (bool)$value;
+                            $value = $value === 'true';
                         }
                     }
                 }
