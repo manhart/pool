@@ -306,16 +306,24 @@ class MySQL_DAO extends DAO
         // todo consider column properties (e.g. type, length, ...)
 
         for($i=0; $i < $count; $i++) {
-            $column = $columns[$i];
             // don't escape column if it has already backticks, is an expression or contains a dot
-            if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
-                $column = "`$column`";
-            }
+            $column = static::escapeColumn($columns[$i]);
             // add column separator
             $column_list .= $i < $last ? "$column, " : $column;
         }
 
         $this->column_list = $column_list;
+    }
+
+    /**
+     * escape column name
+     */
+    static function escapeColumn(string $column): string
+    {
+        if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
+            $column = "`$column`";
+        }
+        return $column;
     }
 
     /**

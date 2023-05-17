@@ -163,6 +163,13 @@ abstract class DAO extends PoolObject
     }
 
     /**
+     * escape a column name
+     * @param string $column
+     * @return string
+     */
+    abstract static function escapeColumn(string $column): string;
+
+    /**
      * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
      *
      * @param string $columns columns as string with separator
