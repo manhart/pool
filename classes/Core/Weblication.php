@@ -989,7 +989,7 @@ class Weblication extends Component
     {
         $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
         $Url->setParam('schema', $schema);
-        $Url->restartUrl();
+        $Url->redirect();
     }
 
     /**

@@ -361,7 +361,7 @@ class GUI_HeadData extends GUI_Module
      */
     public function finalize(): string
     {
-        $Url = new Url(Input::INPUT_EMPTY);
+        $Url = new Url(false);
 
         $this->Template->setVars(
             array(

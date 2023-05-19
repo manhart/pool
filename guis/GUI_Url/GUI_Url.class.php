@@ -37,10 +37,10 @@ class GUI_Url extends GUI_Module
      */
     public function init(?int $superglobals= Input::INPUT_EMPTY)
     {
-        $this->Defaults->addVar('script', '');
-        $this->Defaults->addVar('params', '');
-        $this->Defaults->addVar('passthrough', '');
-        $this->Defaults->addVar('eliminate', '');
+        $this->Defaults->addVar('script');
+        $this->Defaults->addVar('params');
+        $this->Defaults->addVar('passthrough');
+        $this->Defaults->addVar('eliminate');
         $this->Defaults->addVar('empty', 0);
         parent::init($superglobals);
     }
