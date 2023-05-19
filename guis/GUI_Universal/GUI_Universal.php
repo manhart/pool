@@ -20,9 +20,9 @@ class GUI_Universal extends GUI_Module
      */
     protected string $id = '';
 
-    var $attributes = '';
+    protected string $attributes = '';
 
-    var $events = '';
+    protected string $events = '';
 
     /**
      * Initialisiert Standardwerte:
@@ -30,10 +30,8 @@ class GUI_Universal extends GUI_Module
      * TODO Parameter
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
-     *
-     * @access public
-     **/
-    function init(?int $superglobals = Input::INPUT_EMPTY)
+     */
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(

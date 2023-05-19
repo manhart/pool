@@ -21,7 +21,6 @@
  * @package pool
  * @author manhart
  * @version $Id: GUI_InputElement.class.php,v 1.8 2007/07/12 12:55:51 aziz Exp $
- * @access public
  **/
 class GUI_InputElement extends GUI_Universal
 {
@@ -76,7 +75,7 @@ class GUI_InputElement extends GUI_Universal
 
     }
 
-    function prepareName()
+    public function prepareName(): void
     {
         $id = $this -> id;
         $name = $this -> Input -> getVar('name');
@@ -96,10 +95,10 @@ class GUI_InputElement extends GUI_Universal
 
     /**
      * @return
-     **/
+     */
     function prepare ()
     {
-        parent :: prepare();
+        parent::prepare();
 
         $Template = & $this -> Template;
         $Session = & $this -> Session;
@@ -112,11 +111,6 @@ class GUI_InputElement extends GUI_Universal
 
         $name = $Input -> getVar('name');
         $id = $Input -> getVar('id');
-
-        // abgleich session variable
-//			if ($session_variable == $this -> getName() and $name != $this -> getName()) {
-//				$session_variable = $name;
-//			}
 
         #### Events
         $events = $this->events;
