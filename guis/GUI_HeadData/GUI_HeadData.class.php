@@ -10,6 +10,7 @@
 
 use pool\classes\Core\Component;
 use pool\classes\Core\Module;
+use pool\classes\Core\Url;
 
 /**
  * -= Rapid Module Library (RML) =-

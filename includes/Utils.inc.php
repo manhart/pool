@@ -21,6 +21,8 @@
  *
  */
 
+use pool\classes\Core\Url;
+
 
 /**
  * Gibt den aktuellen UNIX-Timestamp/Zeitstempel in Mikrosekunden zurueck
@@ -1110,30 +1112,6 @@ function HTTPStatus(int $num)
     );
 
     header($http[$num]);
-}
-
-/**
- * Laedt das Dokument neu.
- *
- * @param $params array
- */
-function reloadUrl(array $params = array())
-{
-    if (class_exists('Url')) {
-        $Url = new Url();
-        foreach ($params as $key => $val) {
-            $Url->setParam($key, $val);
-        }
-        $Url->reloadUrl();
-    }
-    else {
-        $http = 'http'.(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 's' : '').'://';
-        $host = $_SERVER['HTTP_HOST'];
-        $uri = $_SERVER['REQUEST_URI'];
-        $url = $http.$host.$uri;
-        header('Location: '.$url);
-        exit;
-    }
 }
 
 /**
