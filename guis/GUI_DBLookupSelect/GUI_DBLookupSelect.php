@@ -23,7 +23,6 @@ use pool\classes\Database\DAO;
  * @package pool
  * @author manhart
  * @version $Id: gui_dblookupselect.class.php 38772 2019-09-30 09:31:12Z manhart $
- * @access public
  **/
 class GUI_DBLookupSelect extends GUI_Select
 {
@@ -60,10 +59,9 @@ class GUI_DBLookupSelect extends GUI_Select
     }
 
     /**
-     *
-     * @access public
-     **/
-    function prepare ()
+     * @return void
+     */
+    public function prepare ()
     {
         $Input = & $this -> Input;
 
@@ -81,19 +79,19 @@ class GUI_DBLookupSelect extends GUI_Select
         $shorten = $Input -> getVar('shorten');
 
         if($keyField and $keyValue !== false) {
-            if(strpos($keyField, ';') !== false or is_array($keyField)) {
+            if(str_contains($keyField, ';') or is_array($keyField)) {
                 if(is_string($keyField)) $keyFields = explode(';', $keyField);
                 if(is_string($keyValue)) $keyValues = explode(';', $keyValue);
                 if(is_string($keyOperator)) $keyOperators = explode(';', $keyOperator);
                 for($i=0; $i<sizeof($keyFields); $i++) {
                     $keyField = $keyFields[$i];
                     $keyValue = $keyValues[$i];
-                    $keyOperator = isset($keyOperators[$i]) ? $keyOperators[$i] : 'equal';
-                    array_push($filter, array($keyField, $keyOperator, $keyValue));
+                    $keyOperator = $keyOperators[$i] ?? 'equal';
+                    $filter[] = array($keyField, $keyOperator, $keyValue);
                 }
             }
             else {
-                array_push($filter, array($keyField, $keyOperator, $keyValue));
+                $filter[] = array($keyField, $keyOperator, $keyValue);
             }
         }
         #echo pray($filter);
@@ -129,7 +127,7 @@ class GUI_DBLookupSelect extends GUI_Select
                     if($option != '') $option .= $listfieldSeparator;
                     $option .= $record[$field];
                 }
-//					$option = $record[$listfield];
+
                 if($shorten > 0) {
                     $option = shorten($option, $shorten, 1, false);
                 }

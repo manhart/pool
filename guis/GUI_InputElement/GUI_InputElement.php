@@ -21,7 +21,7 @@
  * @package pool
  * @author manhart
  * @version $Id: GUI_InputElement.class.php,v 1.8 2007/07/12 12:55:51 aziz Exp $
- **/
+ */
 class GUI_InputElement extends GUI_Universal
 {
     /**
@@ -30,237 +30,230 @@ class GUI_InputElement extends GUI_Universal
      * TODO Parameter
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
-     *
-     * @access public
-     **/
-    function init(?int $superglobals= Input::INPUT_EMPTY)
+     */
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
         $this->Defaults->addVar(
             array(
-                'name'			=> $this->getName(),
+                'name' => $this->getName(),
 
-                'type'			=> '',
-                'value'			=> '',
-                'defaultvalue'	=> '',
-                'save'			=> '',
-                'use_session'	=> 0,
-                'session_var' 	=> $this->getName(),
+                'type' => '',
+                'value' => '',
+                'defaultvalue' => '',
+                'save' => '',
+                'use_session' => 0,
+                'session_var' => $this->getName(),
 
-                'accept'		=> null,
-                'accesskey'		=> null,
-                'align'			=> null,
-                'alt'			=> null,
-                'checked'		=> null,
-                'datafld'		=> null,
-                'datasrc'		=> null,
-                'dataformatas'	=> null,
-                'disabled'		=> null,
-                'ismap'			=> null,
-                'maxlength'		=> null,
-                'readonly'		=> null,
-                'size'			=> null,
-                'src'			=> null,
-                'tabindex'		=> null,
-                'usemap'		=> null,
-                'placeholder'   => null,
+                'accept' => null,
+                'accesskey' => null,
+                'align' => null,
+                'alt' => null,
+                'checked' => null,
+                'datafld' => null,
+                'datasrc' => null,
+                'dataformatas' => null,
+                'disabled' => null,
+                'ismap' => null,
+                'maxlength' => null,
+                'readonly' => null,
+                'size' => null,
+                'src' => null,
+                'tabindex' => null,
+                'usemap' => null,
+                'placeholder' => null,
 
-                'onfocus' 		=> '',
-                'onchange'		=> '',
-                'onblur'		=> '',
-                'onselect'		=> ''
+                'onfocus' => '',
+                'onchange' => '',
+                'onblur' => '',
+                'onselect' => ''
             )
         );
 
         parent::init($superglobals);
-
     }
 
     public function prepareName(): void
     {
-        $id = $this -> id;
-        $name = $this -> Input -> getVar('name');
+        $id = $this->id;
+        $name = $this->Input->getVar('name');
 
         // id mit name (sowie umgekehrt) abgleichen
-        if ($name != $this -> Defaults -> getVar('name') and $id == $this -> getName()) {
+        if($name != $this->Defaults->getVar('name') and $id == $this->getName()) {
             $id = $name;
         }
-        if ($id != $this -> Defaults -> getVar('name') and $name == $this -> getName()) {
+        if($id != $this->Defaults->getVar('name') and $name == $this->getName()) {
             $name = $id;
         }
         $this->Input->setVars(array(
-            'name' => $name,
-            'id' => $id)
+                'name' => $name,
+                'id' => $id)
         );
     }
 
     /**
      * @return
      */
-    function prepare ()
+    function prepare()
     {
         parent::prepare();
-
-        $Template = & $this -> Template;
-        $Session = & $this -> Session;
-        $Input = & $this -> Input;
 
         $session_variable = $this->Input->getVar('session_var');
 
         // Namensabgleich
-        $this -> prepareName();
+        $this->prepareName();
 
-        $name = $Input -> getVar('name');
-        $id = $Input -> getVar('id');
+        $name = $this->Input->getVar('name');
+        $id = $this->Input->getVar('id');
 
         #### Events
         $events = $this->events;
-        $onfocus = $Input->getVar('onfocus');
-        if ($onfocus) {
+        $onfocus = $this->Input->getVar('onfocus');
+        if($onfocus) {
             $events .= ' ';
             $events .= 'onfocus="' . $onfocus . '"';
         }
-        $onchange = $Input->getVar('onchange');
-        if ($onchange) {
+        $onchange = $this->Input->getVar('onchange');
+        if($onchange) {
             $events .= ' ';
             $events .= 'onchange="' . $onchange . '"';
         }
-        $onblur = $Input->getVar('onblur');
-        if ($onblur) {
+        $onblur = $this->Input->getVar('onblur');
+        if($onblur) {
             $events .= ' ';
             $events .= 'onblur="' . $onblur . '"';
         }
-        $onselect = $Input->getVar('onselect');
-        if ($onselect) {
+        $onselect = $this->Input->getVar('onselect');
+        if($onselect) {
             $events .= ' ';
             $events .= 'onselect="' . $onselect . '"';
         }
 
         #### leere Attribute
         $emptyattributes = '';
-        $checked = $Input->getVar('checked');
-        if ($checked) {
+        $checked = $this->Input->getVar('checked');
+        if($checked) {
             $emptyattributes .= 'checked';
         }
-        $disabled = $Input->getVar('disabled');
-        if ($disabled) {
+        $disabled = $this->Input->getVar('disabled');
+        if($disabled) {
             $emptyattributes .= ' ';
             $emptyattributes .= 'disabled';
         }
-        $ismap = $Input->getVar('ismap');
-        if ($ismap) {
+        $ismap = $this->Input->getVar('ismap');
+        if($ismap) {
             $emptyattributes .= ' ';
             $emptyattributes .= 'ismap';
         }
-        $readonly = $Input->getVar('readonly');
-        if ($readonly) {
+        $readonly = $this->Input->getVar('readonly');
+        if($readonly) {
             $emptyattributes .= ' ';
             $emptyattributes .= 'readonly';
         }
 
         #### Attribute
-        $attributes = $this -> attributes;
-        $accept = $Input->getVar('accept');
-        if ($accept) {
+        $attributes = $this->attributes;
+        $accept = $this->Input->getVar('accept');
+        if($accept) {
             $attributes .= ' ';
             $attributes .= 'accept="' . $accept . '"';
         }
-        $accesskey = $Input->getVar('accesskey');
-        if ($accesskey) {
+        $accesskey = $this->Input->getVar('accesskey');
+        if($accesskey) {
             $attributes .= ' ';
             $attributes .= 'accesskey="' . $accesskey . '"';
         }
-        $align = $Input->getVar('align');
-        if ($align) {
+        $align = $this->Input->getVar('align');
+        if($align) {
             $attributes .= ' ';
             $attributes .= 'align="' . $align . '"';
         }
-        $alt = $Input->getVar('alt');
-        if ($alt) {
+        $alt = $this->Input->getVar('alt');
+        if($alt) {
             $attributes .= ' ';
             $attributes .= 'alt="' . $alt . '"';
         }
-        $datafld = $Input->getVar('datafld');
-        if ($datafld) {
+        $datafld = $this->Input->getVar('datafld');
+        if($datafld) {
             $attributes .= ' ';
             $attributes .= 'datafld="' . $datafld . '"';
         }
-        $datasrc = $Input->getVar('datasrc');
-        if ($datasrc) {
+        $datasrc = $this->Input->getVar('datasrc');
+        if($datasrc) {
             $attributes .= ' ';
             $attributes .= 'datasrc="' . $datasrc . '"';
         }
-        $dataformatas = $Input->getVar('dataformatas');
-        if ($dataformatas) {
+        $dataformatas = $this->Input->getVar('dataformatas');
+        if($dataformatas) {
             $attributes .= ' ';
             $attributes .= 'dataformatas="' . $dataformatas . '"';
         }
-        $maxlength = $Input->getVar('maxlength');
-        if ($maxlength) {
+        $maxlength = $this->Input->getVar('maxlength');
+        if($maxlength) {
             $attributes .= ' ';
             $attributes .= 'maxlength="' . $maxlength . '"';
         }
-        $size = $Input->getVar('size');
-        if ($size) {
+        $size = $this->Input->getVar('size');
+        if($size) {
             $attributes .= ' ';
             $attributes .= 'size="' . $size . '"';
         }
-        $tabindex = $Input->getVar('tabindex');
-        if ($tabindex) {
+        $tabindex = $this->Input->getVar('tabindex');
+        if($tabindex) {
             $attributes .= ' ';
             $attributes .= 'tabindex="' . $tabindex . '"';
         }
-        $type = $Input->getVar('type');
-        if ($type) {
+        $type = $this->Input->getVar('type');
+        if($type) {
             $attributes .= ' ';
             $attributes .= 'type="' . $type . '"';
         }
-        $defaultvalue = $Input->getVar('defaultvalue');
-        if ($defaultvalue) {
+        $defaultValue = $this->Input->getVar('defaultvalue');
+        if($defaultValue) {
             $attributes .= ' ';
-            $attributes .= 'defaultvalue="' . $defaultvalue . '"';
+            $attributes .= 'defaultvalue="' . $defaultValue . '"';
         }
 
-        $placeholder = $Input->getVar('placeholder');
-        if ($placeholder) {
+        $placeholder = $this->Input->getVar('placeholder');
+        if($placeholder) {
             $attributes .= ' ';
             $attributes .= 'placeholder="' . $placeholder . '"';
         }
 
         #### Set Template wildcards
-        $Template -> setVar(
+        $this->Template->setVar(
             array(
-                'ID' 				=> $id,
-                'NAME' 				=> $name,
-                'ATTRIBUTES'		=> ltrim($attributes),
-                'EVENTS' 			=> ltrim($events),
-                'EMPTYATTRIBUTES' 	=> ltrim($emptyattributes)
+                'ID' => $id,
+                'NAME' => $name,
+                'ATTRIBUTES' => ltrim($attributes),
+                'EVENTS' => ltrim($events),
+                'EMPTYATTRIBUTES' => ltrim($emptyattributes)
             )
         );
 
-        $valueByName = ($Input -> getVar($name) != $name) ? $Input -> getVar($name) : '';
+        $valueByName = ($this->Input->getVar($name) != $name) ? $this->Input->getVar($name) : '';
 
         // save value into session
         $value = '';
 
-        $buf_save = $Input -> getVar('save');
-        if (is_a($Session, 'InputSession') and $Input->getVar('use_session') == 1) {
-            if (empty($buf_save) == false and $Input -> getVar($buf_save) == 1) {
-                $Session -> setVar($session_variable, $Input -> getVar('value') == ''  ? $valueByName : $Input -> getVar('value'));
+        $buf_save = $this->Input->getVar('save');
+        if(is_a($this->Session, 'InputSession') and $this->Input->getVar('use_session') == 1) {
+            if(!empty($buf_save) and $this->Input->getVar($buf_save) == 1) {
+                $this->Session->setVar($session_variable, $this->Input->getVar('value') == '' ? $valueByName : $this->Input->getVar('value'));
             }
 
             // Wert (value) ermitteln (session, object name, value, defaultvalue)
-            $value = $Session->getVar($session_variable);
+            $value = $this->Session->getVar($session_variable);
         }
         else {
-            $value = $Input->getVar('value') != ''  ? $Input -> getVar('value') : $valueByName;
-            if ($value == '{' . $name . '}') {
+            $value = $this->Input->getVar('value') != '' ? $this->Input->getVar('value') : $valueByName;
+            if($value == '{' . $name . '}') {
                 $value = '';
             }
         }
-        if ($value=='' or is_null($value)) {//  or (($Input -> getVar('value') == '') and $name == $Input -> getVar($name)) // fix
-            $value = $Input -> getVar('defaultvalue');
+        if($value == '' or is_null($value)) {//  or (($Input -> getVar('value') == '') and $name == $Input -> getVar($name)) // fix
+            $value = $this->Input->getVar('defaultvalue');
         }
 
-        $Template->setVar('VALUE', $value, Template::CONVERT_HTMLSPECIALCHARS);
+        $this->Template->setVar('VALUE', $value, Template::CONVERT_HTMLSPECIALCHARS);
     }
 }
