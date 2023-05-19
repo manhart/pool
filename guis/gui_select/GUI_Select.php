@@ -26,16 +26,12 @@
 class GUI_Select extends GUI_Universal
 {
     /**
-     * GUI_Select::init()
-     *
      * Initialisiert Standardwerte:
      *
      * TODO Parameter
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
-     *
-     * @access public
-     **/
+     */
     function init(?int $superglobals= Input::INPUT_EMPTY)
     {
         $this -> Defaults -> addVar(
