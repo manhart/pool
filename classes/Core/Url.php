@@ -599,16 +599,6 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     }
 
     /**
-     * @param string $script
-     * @return never
-     * @deprecated use Url::fromString() instead
-     */
-    #[NoReturn] public function setScript(string $script): never
-    {
-        die('deprecated');
-    }
-
-    /**
      * Specify data which should be serialized to JSON
      *
      * @link https://php.net/manual/en/jsonserializable.jsonserialize.php
