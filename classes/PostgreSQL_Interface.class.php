@@ -444,7 +444,7 @@ if(!defined('POSTGRESQL_LAYER'))
 						// SQL Statement Logging:
 						if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
 							if(ACTIVATE_INTERFACE_SQL_LOG >= 1) {
-								$Log = Singleton::get('Log');
+								$Log = Singleton::get('LogFile');
 								$mode_txt = $mode;
 								if($Log->isLogging()) {
 									$Log->addLine('CONNECTED TO '.$this->host[$mode].' MODE: '.$mode_txt.' DB: '.$database.' (conid: '.$conid.')');
@@ -661,7 +661,7 @@ if(!defined('POSTGRESQL_LAYER'))
 
 					if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
 						if(ACTIVATE_INTERFACE_SQL_LOG == 2) {
-							$Log = Singleton::get('Log');
+							$Log = Singleton::get('LogFile');
 							$mode_txt = $mode;
 							if($Log->isLogging()) {
 								$Log->addLine('SQL MODE: '.$mode_txt);

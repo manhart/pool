@@ -53,6 +53,14 @@ class Log
     private static array $facilities = [];
 
     /**
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        throw new Exception('Log is a static class. You cannot instantiate it.');
+    }
+
+    /**
      * Facility entities/properties for OUTPUT_SCREEN:
      * -level - defines the level (LEVEL_DEBUG, LEVEL_INFO, LEVEL_WARN, LEVEL_ERROR, LEVEL_FATAL) at which the message should be displayed
      * -withDate - shows the date with every line
@@ -61,14 +69,13 @@ class Log
      *
      * @param string $configurationName name of the configuration. Default is "common". You can have more configurations for different purposes.
      * @param array $facilities
-     * @return Log
      */
-    public static function setup(array $facilities, string $configurationName = Log::COMMON): self
+    public static function setup(array $facilities, string $configurationName = Log::COMMON): void
     {
         if(!defined('IS_CONSOLE')) define('IS_CONSOLE', php_sapi_name() == 'cli');
         if(!defined('LINE_BREAK')) define('LINE_BREAK', (IS_CONSOLE) ? chr(10) : '<br>');
 
-        $level = 0;
+        $level = self::$facilities[$configurationName][self::OUTPUT_SCREEN]['level'] ?? 0;
         if(isset($facilities[self::OUTPUT_SCREEN])) {
             $facility = $facilities[self::OUTPUT_SCREEN];
             if(is_array($facility)) {
@@ -93,7 +100,7 @@ class Log
         }
         $facilities[self::OUTPUT_SYSTEM]['level'] = (int)$level;
 
-        $level = 0;
+        $level = self::$facilities[$configurationName][self::OUTPUT_FILE]['level'] ?? 0;
         if(isset($facilities[self::OUTPUT_FILE])) {
             $facility = $facilities[self::OUTPUT_FILE];
             if(is_array($facility)) {
@@ -113,7 +120,7 @@ class Log
         $facilities[self::OUTPUT_FILE]['level'] = (int)$level;
 
 
-        $level = 0;
+        $level = self::$facilities[$configurationName][self::OUTPUT_MAIL]['level'] ?? 0;
         if(isset($facilities[self::OUTPUT_MAIL])) {
             $facility = $facilities[self::OUTPUT_MAIL];
             if(is_array($facility)) {
@@ -135,7 +142,7 @@ class Log
         }
         $facilities[self::OUTPUT_MAIL]['level'] = (int)$level;
 
-        $level = 0;
+        $level = self::$facilities[$configurationName][self::OUTPUT_DAO]['level'] ?? 0;
         if(isset($facilities[self::OUTPUT_DAO])) {
             $facility = $facilities[self::OUTPUT_DAO];
             if(is_array($facility)) {
@@ -168,32 +175,10 @@ class Log
         $facilities[self::OUTPUT_DAO]['level'] = (int)$level;
 
         if(!isset($facilities[self::EXIT_LEVEL])) {
-            $facilities[self::EXIT_LEVEL] = 0;
+            $facilities[self::EXIT_LEVEL] = self::$facilities[$configurationName][self::EXIT_LEVEL] ?? 0;
         }
 
-        self::$facilities = [
-            $configurationName => $facilities
-        ];
-
-        //        foreach($facilities as $output => $level) {
-        //
-        //        }
-
-        //        $facility = [
-        //            self::LOG_OUTPUT_SCREEN => self::LOG_LEVEL_ERROR,
-        //            self::LOG_OUTPUT_FILE => [
-        //                'level' => self::LOG_LEVEL_INFO,
-        //                'file' => 'info.log'
-        //            ],
-        //            self::LOG_OUTPUT_DAO => [
-        //                'level' => self::LOG_LEVEL_WARN,
-        //                'dao' => 'g7portal_WarehouseImportQueueLogging', // todo methods, fields
-        //            ],
-        //            self::LOG_OUTPUT_SYSTEM => [
-        //                'level' => self::LOG_LEVEL_ERROR
-        //            ]
-        //        ];
-        return new self();
+        self::$facilities[$configurationName] = $facilities;
     }
 
     /**
@@ -261,7 +246,7 @@ class Log
      * @param string $configurationName
      * @return void
      */
-    public static function debug(string $text, array $extra = [], string $configurationName = Log::COMMON)
+    public static function debug(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_DEBUG, $extra, $configurationName);
     }
@@ -274,7 +259,7 @@ class Log
      * @param string $configurationName
      * @return void
      */
-    public static function info(string $text, array $extra = [], string $configurationName = Log::COMMON)
+    public static function info(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_INFO, $extra, $configurationName);
     }
@@ -287,7 +272,7 @@ class Log
      * @param string $configurationName
      * @return void
      */
-    public static function warn(string $text, array $extra = [], string $configurationName = Log::COMMON)
+    public static function warn(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_WARN, $extra, $configurationName);
     }
@@ -300,7 +285,7 @@ class Log
      * @param string $configurationName
      * @return void
      */
-    public static function error(string $text, array $extra = [], string $configurationName = Log::COMMON)
+    public static function error(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_ERROR, $extra, $configurationName);
     }
@@ -313,7 +298,7 @@ class Log
      * @param string $configurationName
      * @return void
      */
-    public static function fatal(string $text, array $extra = [], string $configurationName = Log::COMMON)
+    public static function fatal(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_FATAL, $extra, $configurationName);
     }
@@ -325,9 +310,8 @@ class Log
      * @param int $level
      * @param array $extra
      * @param string $configurationName
-     * @return Log
      */
-    public static function message(string $text, int $level = self::LEVEL_INFO, array $extra = [], string $configurationName = Log::COMMON): self
+    public static function message(string $text, int $level = self::LEVEL_INFO, array $extra = [], string $configurationName = Log::COMMON): void
     {
         if(self::getLevel($configurationName, self::OUTPUT_SCREEN) & $level) {
             self::writeScreen($text, $level, $extra, $configurationName);
@@ -348,10 +332,9 @@ class Log
         if($level == self::getExitLevel($configurationName)) {
             exit(1);
         }
-        return new self();
     }
 
-    public static function writeScreen(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON)
+    public static function writeScreen(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         // todo format
         $isHTML = isHTML($text);
@@ -408,13 +391,13 @@ class Log
         }
     }
 
-    public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON)
+    public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = $text;
         self::$facilities[$configurationName][self::OUTPUT_FILE]['LogFile']->addLine($message);
     }
 
-    public static function writeMail(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON)
+    public static function writeMail(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = $text;
         $MailMsg = self::$facilities[$configurationName][self::OUTPUT_MAIL]['MailMsg'];
@@ -422,7 +405,7 @@ class Log
         self::$facilities[$configurationName][self::OUTPUT_MAIL]['Mailer']->send($MailMsg);
     }
 
-    public static function writeDAO(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON)
+    public static function writeDAO(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = $text;
         $DAO = self::$facilities[$configurationName][self::OUTPUT_DAO]['DAO'];

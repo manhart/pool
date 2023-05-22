@@ -96,11 +96,10 @@ class MySQL_ResultSet extends ResultSet
             $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
             return false;//Alternative is a TypeError
         }
-        /** @var ?LogFile $Log */
-        $Log = defined($x = 'LOG_ENABLED') && constant($x) && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
-            Singleton::get('Log') : null;
+
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch*/
-        $Stopwatch = $Log && $Log->isLogging() ? Singleton::get('Stopwatch')->start('SQLQUERY') : null;// zeitmessung starten
+        $Stopwatch = defined($x = 'LOG_ENABLED') && constant($x) && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
+            Singleton::get('Stopwatch')->start('SQLQUERY') : null;// start time measurement
         $result = $this->db->query($sql, $dbname);//run
         if ($result) {//success
             switch ($this->db->getLastSQLCommand()) {
@@ -144,8 +143,8 @@ class MySQL_ResultSet extends ResultSet
         // SQL Statement Logging:
         if ($Stopwatch) {
             $timeSpent = $Stopwatch->stop('SQLQUERY')->getDiff('SQLQUERY');
-            $Log->addLine("SQL ON DB $dbname: '$sql' in $timeSpent sec.");
-            if (!$result) $Log->addlIne('SQL-ERROR ON DB ' . $dbname . ': ' . $this->db->getErrormsg());
+            Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > 0.1 ? Log::LEVEL_WARN : Log::LEVEL_INFO);
+            if (!$result) Log::error('SQL-ERROR ON DB ' . $dbname . ': ' . $this->db->getErrormsg());
         }
         return (bool)$result;
     }
