@@ -17,7 +17,7 @@ namespace pool\classes\Utils;
  * Helper function that can simulate an object as a singleton.
  *
  * @since 2004/03/30
- * @package pool\classes
+ * @package pool\classes\Utils
  */
 final class Singleton
 {
