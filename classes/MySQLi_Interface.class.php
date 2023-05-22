@@ -31,6 +31,7 @@
  */
 
 use pool\classes\Database\DataInterface;
+use pool\classes\Utils\Singleton;
 
 if (!defined('SQL_READ')) define('SQL_READ', 'READ');
 if (!defined('SQL_WRITE')) define('SQL_WRITE', 'WRITE');
@@ -370,7 +371,7 @@ class MySQLi_Interface extends DataInterface
         $conid = mysqli_connect($host, $this->__get_db_user($database, $mode), $this->__get_db_pass($database, $mode), '', $this->port);
         if (defined($x='LOG_ENABLED') && constant($x) &&
             defined($x='ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
-            ($Log = Singleton('Log'))->isLogging()){
+            ($Log = Singleton::get('Log'))->isLogging()){
             //Logging enabled
             $sqlTarget = "TO $host MODE: $mode DB: $database";
             $Log->addLine(($conid) ? "CONNECTED " . $sqlTarget :
@@ -515,7 +516,7 @@ class MySQLi_Interface extends DataInterface
             $this->last_command = $command;
         if (defined($x='LOG_ENABLED') && constant($x) &&
             defined($x='ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
-            ($Log = Singleton('Log'))->isLogging())
+            ($Log = Singleton::get('Log'))->isLogging())
             //Logging enabled
             $Log->addLine('SQL MODE: ' . $mode);
         return $this->query_result;

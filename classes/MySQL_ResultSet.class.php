@@ -29,6 +29,7 @@
  */
 
 use pool\classes\Database\DataInterface;
+use pool\classes\Utils\Singleton;
 
 /**
  * MySQL_ResultSet
@@ -95,11 +96,11 @@ class MySQL_ResultSet extends ResultSet
             $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
             return false;//Alternative is a TypeError
         }
-        /** @var ?Log $Log */
+        /** @var ?LogFile $Log */
         $Log = defined($x = 'LOG_ENABLED') && constant($x) && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
-            Singleton('Log') : null;
+            Singleton::get('Log') : null;
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch*/
-        $Stopwatch = $Log && $Log->isLogging() ? Singleton('Stopwatch')->start('SQLQUERY') : null;// zeitmessung starten
+        $Stopwatch = $Log && $Log->isLogging() ? Singleton::get('Stopwatch')->start('SQLQUERY') : null;// zeitmessung starten
         $result = $this->db->query($sql, $dbname);//run
         if ($result) {//success
             switch ($this->db->getLastSQLCommand()) {
