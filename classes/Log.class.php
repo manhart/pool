@@ -1,14 +1,11 @@
 <?php
-/**
- * POOL
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Log.class.php
- *
- * @since 2022-01-18
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 use Nette\Mail\Message;
@@ -17,6 +14,11 @@ use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 
+/**
+ * Class Log
+ * @package pool\classes\Utils
+ * @since 2022-01-18
+ */
 class Log
 {
     const OUTPUT_SCREEN = 'screen';
@@ -46,6 +48,7 @@ class Log
 
     const EXIT_LEVEL = 'exit';
     const COMMON = 'common';
+    const SQL_LOG_NAME = 'ResultSetSql';
 
     /**
      * @var array facilities

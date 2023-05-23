@@ -141,9 +141,13 @@ class MySQL_ResultSet extends ResultSet
         }
 
         // SQL Statement Logging:
-        if ($Stopwatch) {
+        if ($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
             $timeSpent = $Stopwatch->stop('SQLQUERY')->getDiff('SQLQUERY');
-            Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > 0.1 ? Log::LEVEL_WARN : Log::LEVEL_INFO);
+            $onlySlowQueries = defined($x = 'ACTIVATE_RESULTSET_SQL_ONLY_SLOW_QUERIES') && constant($x);
+            $slowQueriesThreshold = defined($x = 'ACTIVATE_RESULTSET_SQL_SLOW_QUERIES_THRESHOLD') && constant($x) ?: 0.01;
+            if (!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
+                Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
+                    configurationName: Log::SQL_LOG_NAME);
             if (!$result) Log::error('SQL-ERROR ON DB ' . $dbname . ': ' . $this->db->getErrormsg());
         }
         return (bool)$result;
