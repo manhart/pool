@@ -674,7 +674,7 @@ class GUI_Module extends Module
             foreach ($parameters as $Parameter) {
                 $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
                 if (is_string($value)) {
-                    if ($Parameter->hasType() && !$Parameter->getType()->getName() == 'mixed') {
+                    if ($Parameter->hasType() && $Parameter->getType()->getName() != 'mixed') {
                         switch ($Parameter->getType()->getName()) {
                             case 'float':
                                 $value = (float)$value;
