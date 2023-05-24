@@ -1448,8 +1448,8 @@ class Weblication extends Component
     {
         // reset the session
         $this->Session->destroy();
-        header('Location: /logout', true, 302);
-        exit;
+        //header('Location: /logout', true, 302);
+        //exit;
     }
 
     /**
