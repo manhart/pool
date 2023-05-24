@@ -144,7 +144,7 @@ class MySQL_ResultSet extends ResultSet
         if ($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
             $timeSpent = $Stopwatch->stop('SQLQUERY')->getDiff('SQLQUERY');
             $onlySlowQueries = defined($x = 'ACTIVATE_RESULTSET_SQL_ONLY_SLOW_QUERIES') && constant($x);
-            $slowQueriesThreshold = defined($x = 'ACTIVATE_RESULTSET_SQL_SLOW_QUERIES_THRESHOLD') && constant($x) ?: 0.01;
+            $slowQueriesThreshold = defined($x = 'ACTIVATE_RESULTSET_SQL_SLOW_QUERIES_THRESHOLD') ? constant($x) : 0.01;
             if (!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
                 Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
                     configurationName: Log::SQL_LOG_NAME);
