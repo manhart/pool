@@ -29,9 +29,7 @@ use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
 use ReflectionException;
-use SessionHandler;
 use Template;
-use Url;
 
 /**
  * Class Weblication
@@ -255,11 +253,6 @@ class Weblication extends Component
      * @var Translator
      */
     protected Translator $translator;
-
-    /**
-     * @var SessionHandler
-     */
-    private SessionHandler $SessionHandler;
 
     /**
      * is not allowed to call from outside to prevent from creating multiple instances,
@@ -996,7 +989,7 @@ class Weblication extends Component
     {
         $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
         $Url->setParam('schema', $schema);
-        $Url->restartUrl();
+        $Url->redirect();
     }
 
     /**
@@ -1155,17 +1148,6 @@ class Weblication extends Component
     public function getSetting(string $key): mixed
     {
         return $this->Session->getVar($key);
-    }
-
-    /**
-     * Erzeugt eine Instanz vom eigenen Session Handler. Ansprechbar ueber Weblication::Session.
-     *
-     * @param string $tabledefine DAO Tabellendefinition.
-     */
-    public function createSessionHandler(string $tabledefine)
-    {
-        $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
-        $this->Session = new InputSession();
     }
 
     /**

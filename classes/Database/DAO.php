@@ -163,6 +163,13 @@ abstract class DAO extends PoolObject
     }
 
     /**
+     * escape a column name
+     * @param string $column
+     * @return string
+     */
+    abstract static function escapeColumn(string $column): string;
+
+    /**
      * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
      *
      * @param string $columns columns as string with separator
@@ -170,11 +177,8 @@ abstract class DAO extends PoolObject
      **/
     public function setColumnsAsString(string $columns, string $separator = ';'): DAO
     {
-        $columns = explode($separator, $columns);
-        $this->columns = array_map('trim', $columns);
-//        $columns = explode($separator, $columns);
-//        $columns = array_map('trim', $columns);
-        $this->onSetColumns($columns);
+        $this->columns = explode($separator, $columns);
+        $this->onSetColumns($this->columns);
         return $this;
     }
 
@@ -276,6 +280,7 @@ abstract class DAO extends PoolObject
             case MySQLi_Interface::class:
                 $class_exists = class_exists($table, false);
 
+                /** @var $type DataInterface */
                 $driver = $type::getDriverName();
                 $include = addEndingSlash(DIR_DAOS_ROOT) . "$driver/$dbname/$table.class.php";
                 $file_exists = file_exists($include);

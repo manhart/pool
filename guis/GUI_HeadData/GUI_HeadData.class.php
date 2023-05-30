@@ -10,6 +10,7 @@
 
 use pool\classes\Core\Component;
 use pool\classes\Core\Module;
+use pool\classes\Core\Url;
 
 /**
  * -= Rapid Module Library (RML) =-
@@ -360,7 +361,7 @@ class GUI_HeadData extends GUI_Module
      */
     public function finalize(): string
     {
-        $Url = new Url(Input::INPUT_EMPTY);
+        $Url = new Url(false);
 
         $this->Template->setVars(
             array(

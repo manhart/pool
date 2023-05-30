@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\Core\Url;
+
 /**
  * -= Rapid Module Library (RML) =-
  *
@@ -34,10 +37,10 @@ class GUI_Url extends GUI_Module
      */
     public function init(?int $superglobals= Input::INPUT_EMPTY)
     {
-        $this->Defaults->addVar('script', '');
-        $this->Defaults->addVar('params', '');
-        $this->Defaults->addVar('passthrough', '');
-        $this->Defaults->addVar('eliminate', '');
+        $this->Defaults->addVar('script');
+        $this->Defaults->addVar('params');
+        $this->Defaults->addVar('passthrough');
+        $this->Defaults->addVar('eliminate');
         $this->Defaults->addVar('empty', 0);
         parent::init($superglobals);
     }
@@ -48,11 +51,13 @@ class GUI_Url extends GUI_Module
     public function prepare()
     {
         $empty = (int)$this->Input->getVar('empty');
-        $Url = new Url($empty ? Input::INPUT_EMPTY : Input::INPUT_GET);
 
-        $script = trim($this->Input->getVar('script'));
+        $script = $this->Input->getVar('script');
         if ($script != '') {
-            $Url->setScript($script);
+            $Url = Url::fromString($script);
+        }
+        else {
+            $Url = new Url(!$empty);
         }
 
         $params = trim($this->Input->getVar('params'));
