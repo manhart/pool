@@ -122,37 +122,37 @@ class Input extends PoolObject
 
         // @see https://www.php.net/manual/en/reserved.variables.environment.php
         if($superglobals & self::INPUT_ENV) { // I_ENV
-            $this->addVar($_ENV);
+            $this->addVars($_ENV);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.server.php
         if($superglobals & self::INPUT_SERVER) { // I_SERVER
-            $this->addVar($_SERVER);
+            $this->addVars($_SERVER);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.files.php
         if($superglobals & self::INPUT_FILES) {
-            $this->addVar($_FILES);
+            $this->addVars($_FILES);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.request.php
         if($superglobals & self::INPUT_REQUEST) {
-            $this->addVar($_REQUEST);
+            $this->addVars($_REQUEST);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.post.php
         if($superglobals & self::INPUT_POST) {
-            $this->addVar($_POST);
+            $this->addVars($_POST);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.get.php
         if($superglobals & self::INPUT_GET) {
-            $this->addVar($_GET);
+            $this->addVars($_GET);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.cookies.php
         if($superglobals & self::INPUT_COOKIE) {
-            $this->addVar($_COOKIE);
+            $this->addVars($_COOKIE);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.session.php
@@ -240,25 +240,14 @@ class Input extends PoolObject
      */
     private function filterVar(string $key): void
     {
-        if(isset($this->filterRules[$key])) {
-            //            $filter = $this->filterRules[$key][0];
-
-            //            switch($filter) {
-            //                case Input::FILTER_SANITIZE_STRIP_TAGS:
-            //                    $val = strip_tags($this->Vars[$key], ($this->filterRules[$key][1] ?: null));
-            //                    break;
-            //
-            //                default:
-            //                    $val = filter_var($this->Vars[$key], $filter, $this->filterRules[$key][1]);
-            //            }
-
-            // todo filter_var returns also false, if there is an error
-            $filteredVar = filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
-            if($filteredVar === false) {
-                throw new Exception('Incoming data with the key ' . $key . ' did not pass the filter.');
-            }
-            $this->vars[$key] = $filteredVar;
+        if(!isset($this->filterRules[$key])) {
+            return;
         }
+        $filteredVar = filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+        if($filteredVar === false) {
+            throw new Exception("Incoming data with the key $key did not pass the filter.");
+        }
+        $this->vars[$key] = $filteredVar;
     }
 
     /**
@@ -365,9 +354,10 @@ class Input extends PoolObject
      * @param string $key Schluessel (bzw. Name der Variable)
      * @param mixed $value Referenz auf die Variable (oder Objekt)
      */
-    function setRef(string $key, &$value)
+    public function setRef(string $key, &$value): static
     {
         $this->vars[$key] = &$value;
+        return $this;
     }
 
     /**
@@ -380,7 +370,7 @@ class Input extends PoolObject
      * @param mixed $filterOptions
      * @return Input
      */
-    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
+    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): Input
     {
         if(!is_array($key)) {
             if(!isset($this->vars[$key])) {
@@ -467,7 +457,7 @@ class Input extends PoolObject
      */
     public function getType(string $key): string
     {
-        return isset($this->vars[$key]) ? gettype($this->vars[$key]) : '';
+        return $this->exists($key) ? gettype($this->vars[$key]) : '';
     }
 
     /**
@@ -477,13 +467,12 @@ class Input extends PoolObject
      * @param string $type data type
      * @see Input::getType()
      */
-    public function setType(string $key, string $type): bool
+    public function setType(string $key, string $type): static
     {
-        $result = false;
-        if(isset($this->vars[$key])) {
-            $result = settype($this->vars[$key], $type);
+        if($this->exists($key)) {
+            settype($this->vars[$key], $type);
         }
-        return $result;
+        return $this;
     }
 
     /**
@@ -653,7 +642,6 @@ class Input extends PoolObject
         $value_len = strlen($value);
 
         $v = 0;
-        $k = 0;
         while($v < $value_len) {
             $k = $v % $skey_len;
             $new_value .= chr(ord($value[$v]) ^ ord($securekey[$k]));
@@ -667,10 +655,9 @@ class Input extends PoolObject
      * Hinweis: serialize() kann mit den Typen integer, double, string, array (mehrdimensional) und object umgehen.
      * Beim Objekt werden die Eigenschaften serialisiert, die Methoden gehen aber verloren.
      *
-     * @access public
      * @return string Byte-Stream
      */
-    function getByteStream()
+    public function getByteStream(): string
     {
         return serialize($this->vars);
     }
@@ -681,10 +668,9 @@ class Input extends PoolObject
      * @param string $data
      * @return Input
      */
-    function setByteStream(string $data): Input
+    public function setByteStream(string $data): Input
     {
-        $buf = unserialize($data);
-        return $this->addVar($buf);
+        return $this->addVars(unserialize($data));
     }
 
     /**
@@ -714,11 +700,10 @@ class Input extends PoolObject
     /**
      * Fuegt Parameter (z.B. von einer Url) in den internen Container ein. Uebergabeformat: key=value&key=value (dabei k�nnen = und & auch durch \ maskiert werden)
      *
-     * @access public
      * @param string $params Siehe oben Beschreibung
      * @param boolean $translate_specialchars Konvertiert HTML-Code (besondere Zeichen) in standardmaessigen Zeichensatz.
      */
-    function setParams(string $params, bool $translate_specialchars = true)
+    public function setParams(string $params, bool $translate_specialchars = true)
     {
         $params = ltrim($params);
         if(strlen($params) > 0) {
@@ -772,14 +757,10 @@ class Input extends PoolObject
         }
         $this->filterRules = $Input->getFilterRules();
 
-        $keys = array_keys($Input->vars);
-        $c = count($keys);
-        for($i = 0; $i < $c; $i++) {
-            $key = $keys[$i];
+        foreach($Input->vars as $key => $value) {
             if(!isset($this->vars[$key])) {
-                $this->setVar($key, $Input->vars[$key]);
+                $this->setVar($key, $value);
             }
-
             $this->filterVar($key);
         }
     }
@@ -787,21 +768,20 @@ class Input extends PoolObject
     /**
      * resets the variable container
      */
-    public function clear()
+    public function clear(): static
     {
         $this->vars = [];
+        return $this;
     }
 
     /**
      * Destruktor
      *
      * Speicherfreigabe des Containers (wir ueberschreiben die Methode Object::destroy()).
-     *
-     * @access public
-     * @see PoolObject::destroy()
      */
-    function destroy()
+    public function destroy(): static
     {
         $this->clear();
+        return $this;
     }
 }
