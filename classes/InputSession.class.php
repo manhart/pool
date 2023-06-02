@@ -89,7 +89,7 @@ class InputSession extends Input
      * @param mixed $filterOptions
      * @return Input Erfolgsstatus
      */
-    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, $filterOptions = 0): Input
+    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): Input
     {
         $this->start();
         parent::addVar($key, $value, $filter, $filterOptions);
@@ -143,14 +143,12 @@ class InputSession extends Input
      * @param string $type data type
      * @see Input::getType()
      */
-    public function setType(string $key, string $type): bool
+    public function setType(string $key, string $type): static
     {
         $this->start();
-        $result = parent::setType($key, $type);
-        if($result) {
-            $this->write_close();
-        }
-        return $result;
+        parent::setType($key, $type);
+        $this->write_close();
+        return $this;
     }
 
     /**
@@ -158,7 +156,7 @@ class InputSession extends Input
      *
      * @return int Maximale Lebenszeit in Sekunden
      */
-    function getMaxLifetime(): int
+    public function getMaxLifetime(): int
     {
         return (int)get_cfg_var('session.gc_maxlifetime');
     }
@@ -176,33 +174,34 @@ class InputSession extends Input
     /**
      * Update the current session id with a newly generated one
      */
-    public function regenerate_id()
+    public function regenerate_id(): static
     {
         session_regenerate_id();
+        return $this;
     }
 
     /**
      * write session and close it. Zu empfehlen bei lang laufenden Programmen, damit andere Scripte nicht gesperrt werden
      *
      */
-    function write_close(): bool
+    public function write_close(): static
     {
         if($this->autoClose) {
-            return session_write_close();
+            session_write_close();
         }
-        return false;
-        //$this->session_started = 0;
+        return $this;
     }
 
     /**
      * destroy the session
      */
-    function destroy()
+    public function destroy(): static
     {
         parent::destroy();
         $this->start();
         if(session_status() == PHP_SESSION_ACTIVE) {
             session_destroy();
         }
+        return $this;
     }
 }

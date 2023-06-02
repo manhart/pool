@@ -64,7 +64,9 @@
 	* @link http://www.misterelsa.de
 	*/
 
-	if(!defined('POSTGRESQL_LAYER'))
+use pool\classes\Utils\Singleton;
+
+if(!defined('POSTGRESQL_LAYER'))
 	{
 		#### Prevent multiple loading
 		define('POSTGRESQL_LAYER', 'postgresql9');
@@ -442,7 +444,7 @@
 						// SQL Statement Logging:
 						if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
 							if(ACTIVATE_INTERFACE_SQL_LOG >= 1) {
-								$Log = &Singleton('Log');
+								$Log = Singleton::get('LogFile');
 								$mode_txt = $mode;
 								if($Log->isLogging()) {
 									$Log->addLine('CONNECTED TO '.$this->host[$mode].' MODE: '.$mode_txt.' DB: '.$database.' (conid: '.$conid.')');
@@ -659,7 +661,7 @@
 
 					if (defined('LOG_ENABLED') and LOG_ENABLED and defined('ACTIVATE_INTERFACE_SQL_LOG')) {
 						if(ACTIVATE_INTERFACE_SQL_LOG == 2) {
-							$Log = &Singleton('Log');
+							$Log = Singleton::get('LogFile');
 							$mode_txt = $mode;
 							if($Log->isLogging()) {
 								$Log->addLine('SQL MODE: '.$mode_txt);

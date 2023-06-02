@@ -29,9 +29,7 @@ use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
 use ReflectionException;
-use SessionHandler;
 use Template;
-use Url;
 
 /**
  * Class Weblication
@@ -257,11 +255,6 @@ class Weblication extends Component
     protected Translator $translator;
 
     /**
-     * @var SessionHandler
-     */
-    private SessionHandler $SessionHandler;
-
-    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -270,7 +263,8 @@ class Weblication extends Component
         parent::__construct(null);
         self::$isAjax = isAjax();
         $this->Settings = new Input(Input::INPUT_EMPTY);
-        $poolRelativePath = makeRelativePathsFrom(getcwd(), DIR_POOL_ROOT);
+        // determine the relative client und server path from the application to the pool
+        $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         return $this;
     }
@@ -787,7 +781,7 @@ class Weblication extends Component
         if($template) return $template;
 
         $msg = "Template $filename in " . __METHOD__ . " not found!";
-        if(!$this->getPoolClientSideRelativePath() and $baseLib) {
+        if(!$this->getPoolServerSideRelativePath() and $baseLib) {
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
         }
@@ -811,7 +805,12 @@ class Weblication extends Component
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
         $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
-        if($stylesheet) return $stylesheet;
+        if($stylesheet) {
+            if($baseLib) {
+                $stylesheet = strtr($stylesheet, [$this->getPoolServerSideRelativePath() => $this->getPoolClientSideRelativePath()]);
+            }
+            return $stylesheet;
+        }
 
         //TODO Remove or define use of skins for included Projekts and merge with findBestElement
         if(!$baseLib) {//Common-common-skin
@@ -836,7 +835,8 @@ class Weblication extends Component
      * @param bool $translate
      * @return string
      */
-    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib, bool $all, bool $translate = false): string
+    public function findBestElement(string $elementSubFolder, string $filename, string $language, string $classFolder, bool $baseLib, bool $all,
+        bool $translate = false): string
     {
         $places = [];
         //Getting list of Places to search
@@ -892,23 +892,26 @@ class Weblication extends Component
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param bool $baseLib
      * @param bool $raiseError
+     * @param bool $clientSideRelativePath If true, the path to the JavaScript is relative to the client side. If false, the path is relative to the server side.
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
+    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true, bool $clientSideRelativePath = true): string
     {
-        $folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
-        $folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
+        $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
+        $serverSide_folder_guis = $clientSide_folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
         //Ordner BaseLib -> look in POOL instead
         if($baseLib) {
-            $folder_javaScripts = addEndingSlash($this->getPoolServerSideRelativePath($folder_javaScripts));
-            $folder_guis = addEndingSlash($this->getPoolServerSideRelativePath($folder_guis));
+            $serverSide_folder_javaScripts = addEndingSlash($this->getPoolServerSideRelativePath($serverSide_folder_javaScripts));
+            $serverSide_folder_guis = addEndingSlash($this->getPoolServerSideRelativePath($serverSide_folder_guis));
+            $clientSide_folder_javaScripts = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_javaScripts));
+            $clientSide_folder_guis = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_guis));
         }
-        $javaScriptFile = $folder_javaScripts . $filename;
+        $javaScriptFile = $serverSide_folder_javaScripts . $filename;
         if(file_exists($javaScriptFile))
-            return $javaScriptFile;//found
-        $javaScriptFile = $folder_guis . $filename;
+            return $clientSideRelativePath ? "$clientSide_folder_javaScripts$filename" : $javaScriptFile;//found
+        $javaScriptFile = $serverSide_folder_guis . $filename;
         if(file_exists($javaScriptFile))
-            return $javaScriptFile;//found
+            return $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;//found
         if(defined('DIR_COMMON_ROOT_REL')) {
             $folder_common = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
             $javaScriptFile = $folder_common . $filename;
@@ -988,7 +991,7 @@ class Weblication extends Component
         $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
         $Url->setParam('schema', $schema);
         if ($path) $Url->setScriptPath($path);
-        $Url->restartUrl();
+        $Url->redirect();
     }
 
     /**
@@ -1147,17 +1150,6 @@ class Weblication extends Component
     public function getSetting(string $key): mixed
     {
         return $this->Session->getVar($key);
-    }
-
-    /**
-     * Erzeugt eine Instanz vom eigenen Session Handler. Ansprechbar ueber Weblication::Session.
-     *
-     * @param string $tabledefine DAO Tabellendefinition.
-     */
-    public function createSessionHandler(string $tabledefine)
-    {
-        $this->SessionHandler = new SessionHandler($this->interfaces, $tabledefine);
-        $this->Session = new InputSession();
     }
 
     /**
@@ -1329,6 +1321,11 @@ class Weblication extends Component
             $this->prepareContent();
             echo $this->finalizeContent();
         }
+
+        $measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
+        if($measurePageSpeed && defined('POOL_START')) {
+            $this->measurePageSpeed();
+        }
     }
 
     /**
@@ -1441,6 +1438,34 @@ class Weblication extends Component
             $this->xdebug = extension_loaded('xdebug');
         }
         return $this->xdebug;
+    }
+
+    /**
+     * measure page speed and print it in the footer
+     * @todo ajax requests?
+     * @return void
+     */
+    public function measurePageSpeed(): void
+    {
+        register_shutdown_function(function() {
+            // print only when html content type is set
+            if(!isHtmlContentTypeHeaderSet()) {
+                return;
+            }
+
+            $timeSpent = microtime(true) - POOL_START;
+            $htmlStartTags = $htmlCloseTags = '';
+            if(IS_CONSOLE) {
+                $what = 'Script';
+            }
+            else {
+                $what = 'Page';
+                $color = $timeSpent > 0.2 ? 'red' : 'green';
+                $htmlStartTags = "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">";
+                $htmlCloseTags = '</p></footer>';
+            }
+            echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
+        });
     }
 
     /**

@@ -182,10 +182,11 @@ class GUI_Module
         }
 
         const {
-            origin, pathname
+            origin, pathname, search
         } = window.location;
 
         let Endpoint = new URL(pathname + queryString, origin);
+        Endpoint.searchParams.get('schema') || Endpoint.searchParams.set('schema', (new URLSearchParams(search).get('schema') || ''));
         Endpoint.searchParams.set('module', module);
         Endpoint.searchParams.set('method', ajaxMethod);
 

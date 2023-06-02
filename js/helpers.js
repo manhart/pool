@@ -895,7 +895,6 @@ function explode(separators, inputstring, includeEmpties) {
  * @returns {array}
  */
 function fillControls(containerSelector, rowSet, autoSearchControlsWithinContainer = true) {
-    // console.debug('fillControls', rowSet);
     if (!Array.isArray(rowSet) && !isObject(rowSet)) {
         return [];
     }
@@ -1015,9 +1014,10 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                                     break;
 
                                 case 'IMG':
-                                    if (isEmpty(value)) {
+                                    if(isEmpty(value)) {
                                         Ctrl.hide();
-                                    } else {
+                                    }
+                                    else {
                                         Ctrl.attr('src', value);
                                         Ctrl.show();
                                     }
@@ -1025,11 +1025,11 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
 
                                 case 'INPUT':
                                     // Checkbox mit 3 Statis
-                                    if (Ctrl.data('tri-state-checkbox')) {
+                                    if(Ctrl.data('tri-state-checkbox')) {
                                         // TODO implementierung in jquery
                                         var possibleValues = explode(',', Ctrl.data('possible-values'));
                                         var img = jQuery('#tri-state-checkbox-' + Ctrl.attr('id'));
-                                        switch (value) {
+                                        switch(value) {
                                             case null:
                                             case possibleValues[0]:
                                                 img.removeClass().addClass('tri-state-checkbox').addClass('checked-partial');
@@ -1047,7 +1047,7 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                                         break;
                                     }
 
-                                    switch (Ctrl.attr('type')) {
+                                    switch(Ctrl.attr('type')) {
                                         case 'checkbox':
                                         case 'radio':
                                             Ctrl.prop('checked', (value == Ctrl.val()));
@@ -1059,12 +1059,12 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
 
                                 default:
                                     Ctrl.val(value);
-                                    if (Ctrl.data('initialValue') == undefined) {
+                                    if(Ctrl.data('initialValue') == undefined) {
                                         Ctrl.data('initialValue', value);
                                     }
 
                                     // bootstrap-select support
-                                    if (Ctrl.hasClass('selectpicker')) {
+                                    if(Ctrl.hasClass('selectpicker')) {
                                         Ctrl.selectpicker('refresh');
                                     }
 
@@ -1080,7 +1080,7 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
                                     // }
 
                                     break;
-                            }
+                          }
                     }
                 }
                 // else {

@@ -29,6 +29,7 @@
  */
 
 use pool\classes\Database\DataInterface;
+use pool\classes\Utils\Singleton;
 
 /**
  * MySQL_ResultSet
@@ -95,11 +96,11 @@ class MySQL_ResultSet extends ResultSet
             $this->raiseError(__FILE__, __LINE__, 'No DataInterface available (@execute).');
             return false;//Alternative is a TypeError
         }
-        /** @var ?Log $Log */
-        $Log = defined($x = 'LOG_ENABLED') && constant($x) && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
-            Singleton('Log') : null;
+
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch*/
-        $Stopwatch = $Log && $Log->isLogging() ? Singleton('Stopwatch')->start('SQLQUERY') : null;// zeitmessung starten
+        $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
+        $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
+            Singleton::get('Stopwatch')->start('SQL-QUERY') : null;// start time measurement
         $result = $this->db->query($sql, $dbname);//run
         if ($result) {//success
             switch ($this->db->getLastSQLCommand()) {
@@ -132,19 +133,26 @@ class MySQL_ResultSet extends ResultSet
                     $this->reset();
                     break;
             }
-        } else {//statement failed
+        }
+        else {//statement failed
             $error_msg = $this->db->getErrormsg() . ' SQL Statement failed: ' . $sql;
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             $error = $this->db->getError();
             $error['sql'] = $sql;
             $this->errorStack[] = $error;
+            // SQL Statement Error Logging:
+            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) == 1)
+                Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
         }
 
-        // SQL Statement Logging:
-        if ($Stopwatch) {
-            $timeSpent = $Stopwatch->stop('SQLQUERY')->getDiff('SQLQUERY');
-            $Log->addLine("SQL ON DB $dbname: '$sql' in $timeSpent sec.");
-            if (!$result) $Log->addlIne('SQL-ERROR ON DB ' . $dbname . ': ' . $this->db->getErrormsg());
+        // SQL Statement Performance Logging:
+        if ($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
+            $timeSpent = $Stopwatch->stop('SQL-QUERY')->getDiff('SQL-QUERY');
+            $onlySlowQueries = defined($x = 'ACTIVATE_RESULTSET_SQL_ONLY_SLOW_QUERIES') && constant($x);
+            $slowQueriesThreshold = defined($x = 'ACTIVATE_RESULTSET_SQL_SLOW_QUERIES_THRESHOLD') ? constant($x) : 0.01;
+            if (!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
+                Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
+                    configurationName: Log::SQL_LOG_NAME);
         }
         return (bool)$result;
     }

@@ -8,7 +8,18 @@
  */
 function Url()
 {
-	this.params = new Object();
+    /**
+     * parameters for query string
+     * @type {{}}
+     */
+	this.params = {};
+
+    /**
+     * url fragment
+     * @type {string}
+     */
+    this.fragment = '';
+
 	//
 	// Fix POOL clone function (not needed in this context)
 	delete(this.params.clone);
@@ -47,6 +58,10 @@ Url.prototype.getUrl = function() {
         u = prepareUrl(u);
         u += k + '=' + this.params[k];
     }
+    // add fragment
+    if(this.fragment) {
+        u += '#'+this.fragment;
+    }
     return u;
 }
 Url.prototype.getParam = function(key) {
@@ -80,6 +95,9 @@ Url.prototype.delParam = function(key) {
 }
 Url.prototype.restartUrl = function() {
     location.href = this.getUrl();
+}
+Url.prototype.setFragment = function(fragment) {
+    this.fragment = fragment;
 }
 /**
  * SCRIPT_SCHEMA contains the current schema. If the schema parameter is not set, we use no schema.

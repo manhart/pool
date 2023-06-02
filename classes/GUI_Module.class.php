@@ -674,23 +674,16 @@ class GUI_Module extends Module
             foreach ($parameters as $Parameter) {
                 $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
                 if (is_string($value)) {
-                    if ($Parameter->getType()) {
-                        switch ($Parameter->getType()->getName()) {
-                            case 'float':
-                                $value = (float)$value;
-                                break;
-
-                            case 'int':
-                                $value = (int)$value;
-                                break;
-
-                            case 'bool':
-                                $value = string2bool($value);
-                                break;
-                        }
+                    if ($Parameter->hasType() && $Parameter->getType()->getName() != 'mixed') {
+                        $value = match ($Parameter->getType()->getName()) {
+                            'float' => (float)$value,
+                            'int' => (int)$value,
+                            'bool' => filter_var($value, FILTER_VALIDATE_BOOL),
+                            default => $value,
+                        };
                     } else {
                         if ($value === 'true' or $value === 'false') {
-                            $value = (bool)$value;
+                            $value = $value === 'true';
                         }
                     }
                 }
