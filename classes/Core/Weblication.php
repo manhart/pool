@@ -987,7 +987,7 @@ class Weblication extends Component
      */
     public function redirect(string $schema, bool $withQuery = false): never
     {
-        $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
+        $Url = new Url($withQuery);
         $Url->setParam('schema', $schema);
         $Url->redirect();
     }
