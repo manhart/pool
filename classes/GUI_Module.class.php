@@ -558,7 +558,7 @@ class GUI_Module extends Module
      * frontend control: Prepare data for building the content or responding to an ajax-call<br>
      * Called once all modules and files have been loaded
      */
-    public function provision(): void
+    protected function provision(): void
     {
     }
 
