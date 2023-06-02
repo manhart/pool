@@ -100,7 +100,7 @@ class MySQL_ResultSet extends ResultSet
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch*/
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
         $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
-            Singleton::get('Stopwatch')->start('SQLQUERY') : null;// start time measurement
+            Singleton::get('Stopwatch')->start('SQL-QUERY') : null;// start time measurement
         $result = $this->db->query($sql, $dbname);//run
         if ($result) {//success
             switch ($this->db->getLastSQLCommand()) {
@@ -141,13 +141,13 @@ class MySQL_ResultSet extends ResultSet
             $error['sql'] = $sql;
             $this->errorStack[] = $error;
             // SQL Statement Error Logging:
-            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERRORLOG') && constant($x) == 1)
+            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) == 1)
                 Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
         }
 
         // SQL Statement Performance Logging:
         if ($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
-            $timeSpent = $Stopwatch->stop('SQLQUERY')->getDiff('SQLQUERY');
+            $timeSpent = $Stopwatch->stop('SQL-QUERY')->getDiff('SQL-QUERY');
             $onlySlowQueries = defined($x = 'ACTIVATE_RESULTSET_SQL_ONLY_SLOW_QUERIES') && constant($x);
             $slowQueriesThreshold = defined($x = 'ACTIVATE_RESULTSET_SQL_SLOW_QUERIES_THRESHOLD') ? constant($x) : 0.01;
             if (!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
