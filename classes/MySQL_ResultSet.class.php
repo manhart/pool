@@ -158,16 +158,6 @@ class MySQL_ResultSet extends ResultSet
     }
 
     /**
-     * define callback for event onFetchingRow
-     *
-     * @param callable $callback
-     */
-    public function onFetchingRow(callable $callback)
-    {
-        $this->db->onFetchingRow($callback);
-    }
-
-    /**
      * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
      *
      * @param string|null $table
