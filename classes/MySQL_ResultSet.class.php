@@ -98,7 +98,8 @@ class MySQL_ResultSet extends ResultSet
         }
 
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch*/
-        $Stopwatch = defined($x = 'LOG_ENABLED') && constant($x) && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
+        $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
+        $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
             Singleton::get('Stopwatch')->start('SQLQUERY') : null;// start time measurement
         $result = $this->db->query($sql, $dbname);//run
         if ($result) {//success
@@ -132,15 +133,19 @@ class MySQL_ResultSet extends ResultSet
                     $this->reset();
                     break;
             }
-        } else {//statement failed
+        }
+        else {//statement failed
             $error_msg = $this->db->getErrormsg() . ' SQL Statement failed: ' . $sql;
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             $error = $this->db->getError();
             $error['sql'] = $sql;
             $this->errorStack[] = $error;
+            // SQL Statement Error Logging:
+            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERRORLOG') && constant($x) == 1)
+                Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
         }
 
-        // SQL Statement Logging:
+        // SQL Statement Performance Logging:
         if ($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
             $timeSpent = $Stopwatch->stop('SQLQUERY')->getDiff('SQLQUERY');
             $onlySlowQueries = defined($x = 'ACTIVATE_RESULTSET_SQL_ONLY_SLOW_QUERIES') && constant($x);
@@ -148,7 +153,6 @@ class MySQL_ResultSet extends ResultSet
             if (!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
                 Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
                     configurationName: Log::SQL_LOG_NAME);
-            if (!$result) Log::error('SQL-ERROR ON DB ' . $dbname . ': ' . $this->db->getErrormsg());
         }
         return (bool)$result;
     }
