@@ -201,14 +201,9 @@ class Url extends PoolObject
             $path = $parsed_url['scheme'] . '://' . $this->Host . ($this->port ? ':' . $this->port : '') . $path;
         }
 
-        if ($bool) {
-            $this->setScriptPath($path);
-            $this->setScriptName(basename(($parsed_url['path'] ?? '')));
-        }
-        else {
-            $this->setScriptPath($path);
-            $this->setScriptName('');
-        }
+        $this->setScriptPath($path);
+        $scriptName = $bool ? basename(($parsed_url['path'] ?? '')) : '';
+        $this->setScriptName($scriptName);
 
         $this->mieserWorkaround = false;
 
@@ -464,6 +459,7 @@ class Url extends PoolObject
 
             case 'frame':
                 $js = 'top.frames[\''.$name.'\'].location.href=\''.$url.'\';';
+                break;
 
             default:
                 $js = 'void(0);';
