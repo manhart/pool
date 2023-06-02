@@ -980,12 +980,14 @@ class Weblication extends Component
      *
      * @param string $schema
      * @param bool $withQuery
+     * @param string $path
      * @return never
      */
-    public function redirect(string $schema, bool $withQuery = false): never
+    public function redirect(string $schema, bool $withQuery = false, string $path = ''): never
     {
         $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
         $Url->setParam('schema', $schema);
+        if ($path) $Url->setScriptPath($path);
         $Url->restartUrl();
     }
 
