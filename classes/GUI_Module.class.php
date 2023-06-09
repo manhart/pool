@@ -664,9 +664,7 @@ class GUI_Module extends Module
         }
 
         error_clear_last();
-
         ob_start();
-
 
         $args = [];
         if ($numberOfParameters) {
