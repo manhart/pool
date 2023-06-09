@@ -167,7 +167,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     }
 
     /**
-     * Set the scheme
+     * Set the URI-scheme
      *
      * @param string $scheme
      * @return $this
