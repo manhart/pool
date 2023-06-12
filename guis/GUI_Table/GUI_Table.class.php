@@ -1300,7 +1300,7 @@ class GUI_Table extends GUI_Module
     /**
      * prepare content
      */
-    public function prepare()
+    protected function prepare()
     {
         $this->poolOptions['moduleName'] = $this->getName();
 
