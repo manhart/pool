@@ -21,6 +21,9 @@ use Stringable;
 
 /**
  * Class Url
+ * @inheritDoc https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
+ * @link https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
+ * @link http://tools.ietf.org/html/rfc3986 (the URI specification)
  * @package pool\classes\Core
  * @since 2003-08-04
  */
