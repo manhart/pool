@@ -1364,7 +1364,7 @@ class GUI_Table extends GUI_Module
                     // translate title
                     if($optName == 'title') {
                         if(str_contains($attrValue, '.')) {
-                            $attrValue = $this->Weblication->getTranslator()->getTranslation($attrValue, $attrValue) ?: $attrValue;
+                            $attrValue = $this->Weblication->getTranslator()->getTranslation($attrValue, $attrValue);
                         }
                     }
 
