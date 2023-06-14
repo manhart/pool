@@ -668,7 +668,7 @@ class GUI_Module extends Module
 
         ob_start();
 
-
+        $callingClassName = $this->getClassName();
         try {
             $args = [];
             if ($numberOfParameters) {
@@ -693,7 +693,6 @@ class GUI_Module extends Module
                     $args[] = $value;
                 }
             }
-            $callingClassName = $this->getClassName();
             try {
                 if ($Closure) {
                     //TODO check Authorisation
