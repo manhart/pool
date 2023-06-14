@@ -256,6 +256,12 @@ class GUI_Module
                 return await this.onAjax_ModuleAccessDenied(response);
             case 405://Access denied (Method e.g. save)
                 return await this.onAjax_MethodAccessDenied(response);
+            default:
+                let data, error;
+                try {
+                    ({error, data} = await this.parseJSON(response));
+                } catch (e){}
+                throw new PoolAjaxResponseError(error?.message ?? `Status ${status}`, data, error?.type ?? "unknown");
         }
     };
 
