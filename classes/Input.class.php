@@ -236,7 +236,6 @@ class Input extends PoolObject
      *
      * @param string $key
      * @return void
-     * @throws Exception
      */
     private function filterVar(string $key): void
     {
@@ -244,10 +243,8 @@ class Input extends PoolObject
             return;
         }
         $filteredVar = filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
-        if($filteredVar === false) {
-            throw new Exception("Incoming data with the key $key did not pass the filter.");
-        }
-        $this->vars[$key] = $filteredVar;
+        if($filteredVar !== false)
+            $this->vars[$key] = $filteredVar;
     }
 
     /**
@@ -748,7 +745,6 @@ class Input extends PoolObject
      * Merges variables into their own container (Vars). But only if they are not yet set.
      *
      * @param Input $Input
-     * @throws Exception
      */
     public function mergeVarsIfNotSet(Input $Input): void
     {

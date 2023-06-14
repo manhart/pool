@@ -143,7 +143,6 @@ class GUI_Module extends Module
      * @param Component|null $Owner Besitzer vom Typ Component
      * @param array $params additional parameters
      *
-     * @throws Exception
      */
     public function __construct(?Component $Owner, array $params = [])
     {
