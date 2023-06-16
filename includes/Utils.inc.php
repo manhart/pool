@@ -784,6 +784,17 @@ function sanitizeFilename(string $filename, bool $lowerCase = true): string
 }
 
 /**
+ * normalize Database Column ident (remove umlauts, special characters and whitespaces)
+ *
+ * @param string $ident
+ * @return string
+ */
+function sanitizeIdent(string $ident): string
+{
+    return preg_replace('/[^A-Za-z0-9\-_]/', '', umlauts($ident));
+}
+
+/**
  * Convert boolean expression to integer (0, 1)
  *
  * @param bool $bool boolean value

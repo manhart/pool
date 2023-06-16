@@ -472,10 +472,12 @@ class Weblication extends Component
      * Setzt das Haupt-GUI.
      *
      * @param GUI_Module $GUI_Module
+     * @return Weblication
      */
-    public function setMain(GUI_Module $GUI_Module)
+    public function setMain(GUI_Module $GUI_Module): static
     {
         $this->Main = $GUI_Module;
+        return $this;
     }
 
     /**
@@ -1044,7 +1046,6 @@ class Weblication extends Component
      *
      * @return Weblication
      * @throws Exception
-     * @throws \Exception
      */
     public function setup(array $settings = []): static
     {
@@ -1484,7 +1485,7 @@ class Weblication extends Component
      * PHP will check for open connections when the script is finished anyway.
      * From a performance perspective, closing connections is pure overhead.
      */
-    public function close()
+    public function close(): void
     {
         foreach($this->interfaces as $DataInterface) {
             $DataInterface->close();

@@ -68,8 +68,8 @@ class GUI_Universal extends GUI_Module
 
     /**
      * main logic
-     **/
-    public function prepare()
+     */
+    protected function prepare()
     {
         #### Bindet gui_....css ein:
         if($this->Weblication->hasFrame()) {
