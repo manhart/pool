@@ -144,7 +144,6 @@ class GUI_Module extends Module
      * @param Component|null $Owner Besitzer vom Typ Component
      * @param array $params additional parameters
      *
-     * @throws Exception
      */
     public function __construct(?Component $Owner, array $params = [])
     {
@@ -665,7 +664,6 @@ class GUI_Module extends Module
         }
 
         error_clear_last();
-
         ob_start();
 
         $callingClassName = $this->getClassName();

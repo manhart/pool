@@ -10,7 +10,6 @@
 
 namespace pool\classes\Core;
 
-use Exception;
 use Input;
 
 class Module extends Component
@@ -78,7 +77,6 @@ class Module extends Component
      *
      * @param Component|null $Owner Owner
      * @param array $params internal parameters
-     * @throws Exception
      */
     function __construct(?Component $Owner, array $params = [])
     {
@@ -121,8 +119,6 @@ class Module extends Component
 
     /**
      * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
-     *
-     * @throws Exception
      */
     private function mergeDefaults(): void
     {
