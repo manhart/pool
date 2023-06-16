@@ -365,11 +365,12 @@ class Translator
         }
     }
 
-    /**@param string $key
+    /**Compatibility wrapper for getTranslation
+     * @param string $key
      * @param mixed|null ...$args
      * @return string
      * @deprecated update Code to use ::getTranslation
-     * Compatibility wrapper for getTranslation
+     * @see self::getTranslation
      */
     public function get(string $key, ...$args): string
     {
@@ -379,9 +380,9 @@ class Translator
     /**
      * @param string $key
      * @param string|null $defaultMessage
-     * @param array|null $args
-     * @param bool $noAlter
-     * @param bool $success
+     * @param array|null $args arguments for the intl message formatter
+     * @param bool $noAlter do not create a missing translation, just probe for the key
+     * @param bool $success a translation was found
      * @return string
      */
     public function getTranslation(string $key, ?string $defaultMessage = null, ?array $args = null, bool $noAlter = false, bool &$success = false): string
@@ -391,29 +392,25 @@ class Translator
         $this->queryTranslations($keyArray, $noAlter, $language);
         $translation = $keyArray[$key]??null;
         assert($translation == null || $translation instanceof Translation);
-        $message = $translation?->getMessage() ?? $defaultMessage;
         //message processing
         if (@TranslationProvider_ToolDecorator::isActive())
             @TranslationProvider_ToolDecorator::writeQueryToPostbox(self::getTranslationResources(), $key, default:$defaultMessage, args:$args, noAlter:$noAlter);
+        $message = $translation?->getMessage();
+        $success = $message !== null;
+        $message ??= $defaultMessage;
         if ($message === null) {
-            $success = false;
-            $reply = "String $key not found";
-        }elseif (!$args) {
-            $success = true;
-            $reply =  $message;
-        } else {
+            $message = "String $key not found";
+        } elseif ($args) {
             $locale ??= $translation?->getProvider()->getLocale() ?? self::getPrimaryLocale();
             $formatter = MessageFormatter::create($locale, $message);
             $formattedTranslation = $formatter->format($args);
             if ($formattedTranslation === false) {
                 $success = false;
-                $reply =  $formatter->getErrorMessage();
-            }else {
-                $success = true;
-                $reply =  $formattedTranslation;
-            }
+                $message = $formatter->getErrorMessage();
+            } else
+                $message = $formattedTranslation;
         }
-        return $reply;//static::postprocessTranslation($reply, $success, $noAlter, $key, $message, $args, $defaultMessage);
+        return $message;//static::postprocessTranslation($message, $success, $noAlter, $key, $message, $args, $defaultMessage);
     }
 
 
