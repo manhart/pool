@@ -176,9 +176,10 @@ class MySQL_DAO extends DAO
     //@access protected
     var $dbname = '';
 
-    //@var string Spalten einer Tabelle, getrennt mit Komma
-    //@access protected
-    var $column_list;
+    /**
+     * @var string contains the columns to select
+     */
+    protected string $column_list = '*';
 
     //@var string Tabellenname
     //@access protected
