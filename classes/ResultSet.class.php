@@ -422,7 +422,6 @@ class ResultSet extends PoolObject implements Countable
      * @param null $default
      * @param DateTimeZone|null $timezone
      * @return DateTime|null
-     * @throws Exception
      */
     public function getValueAsDateTime(string $key, $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
@@ -434,7 +433,11 @@ class ResultSet extends PoolObject implements Countable
             if(!str_contains($value, '-') and is_numeric($value)) {
                 $value = '@' . $value; // should be an unix timestamp (integer)
             }
-            return new \DateTime($value, $timezone);
+            try {
+                return new \DateTime($value, $timezone);
+            }
+            catch(Exception) {
+            }
         }
         return null;
     }
