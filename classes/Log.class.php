@@ -26,6 +26,7 @@ class Log
     const OUTPUT_FILE = 'file';
     const OUTPUT_DAO = 'dao';
     const OUTPUT_MAIL = 'mail';
+    const LEVEL_NONE = 0;
     const LEVEL_FATAL = 1;
     const LEVEL_ERROR = 2;
     const LEVEL_WARN = 4;
@@ -178,7 +179,7 @@ class Log
         $facilities[self::OUTPUT_DAO]['level'] = (int)$level;
 
         if(!isset($facilities[self::EXIT_LEVEL])) {
-            $facilities[self::EXIT_LEVEL] = self::$facilities[$configurationName][self::EXIT_LEVEL] ?? 0;
+            $facilities[self::EXIT_LEVEL] = self::$facilities[$configurationName][self::EXIT_LEVEL] ?? self::LEVEL_NONE;
         }
 
         self::$facilities[$configurationName] = $facilities;
@@ -204,7 +205,7 @@ class Log
      */
     private static function getExitLevel(string $configurationName): int
     {
-        return self::$facilities[$configurationName][self::EXIT_LEVEL] ?? 0;
+        return self::$facilities[$configurationName][self::EXIT_LEVEL] ?? self::LEVEL_NONE;
     }
 
     /**
