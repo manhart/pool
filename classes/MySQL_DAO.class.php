@@ -162,7 +162,7 @@ use pool\classes\translator\Translator;
  * @package pool
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
- **/
+ */
 class MySQL_DAO extends DAO
 {
     /**
@@ -172,22 +172,24 @@ class MySQL_DAO extends DAO
      */
     protected ?DataInterface $db = null;
 
-    //@var string Datenbankname
-    //@access protected
-    var $dbname = '';
+    /**
+     * @var string contains the database name
+     */
+    private string $dbname;
 
     /**
      * @var string contains the columns to select
      */
     protected string $column_list = '*';
 
-    //@var string Tabellenname
-    //@access protected
-    var $table;
+    /**
+     * @var string contains the table name
+     */
+    protected string $table;
 
-    var $tableAlias = '';
+    protected string $tableAlias = '';
 
-    private array $MySQL_trans = array(
+    private array $MySQL_trans = [
         'equal'	=> '=',
         'unequal' => '!=',
         'greater' => '>',
@@ -197,7 +199,7 @@ class MySQL_DAO extends DAO
         'in' => 'in',
         'not in' => 'not in',
         'is' => 'is'
-    );
+    ];
 
     /**
      * columns to translate
@@ -293,10 +295,10 @@ class MySQL_DAO extends DAO
     /**
      * Das Ereignis "onSetColumns" wird immer nachdem setzen der Columns
      * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
-     * $this -> column_list fuer die Funktionen $this -> get und
-     * $this -> getMultiple zusammen.
+     * $this→column_list fuer die Funktionen $this -> get und
+     * $this→getMultiple zusammen.
      */
-    protected function onSetColumns(array $columns)
+    protected function onSetColumns(array $columns): void
     {
         $column_list = '';
         $count = count($columns);
@@ -332,7 +334,7 @@ class MySQL_DAO extends DAO
      *
      * @param array $columns
      */
-    public function setTranslationColumns(array $columns)
+    public function setTranslationColumns(array $columns): void
     {
         $this->translate = $columns;
     }
@@ -444,104 +446,11 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * Formatiert eingehende Benutzerdaten �ber ein Formular oder sogar MySQL Ergebnisse einheitlich um. Praktisch im Einsatz mit array_diff_assoc
-     *
-     * @param array $data Daten z.B. aus Input, Resultset, etc.
+     * Set the table alias
+     * @param $alias
+     * @return void
      */
-//    function formatData(&$data)
-//    {
-//        foreach ($data as $fieldname => $fieldvalue) {
-//            $colinfo = $this->getFieldInfo($fieldname);
-//
-//            $coltype = array();
-//            $enclosure = '\'';
-//            $delim = ' ';
-//            $fldcount = 0;
-//            $fldval = '';
-//            $enclosed = false;
-//            $coltype_mysql = $colinfo['Type'];
-//            for($i=0, $len=strlen($coltype_mysql); $i<$len; $i++) {
-//                $chr = $coltype_mysql[$i];
-//                switch($chr) {
-//                    case $enclosure:
-//                        if($enclosed && $coltype_mysql[$i+1] == $enclosure) {
-//                            $fldval .= $chr;
-//                            ++$i; //skip next char
-//                        }
-//                        else $enclosed = !$enclosed;
-//                        break;
-//
-//                    case $delim:
-//                        if(!$enclosed) {
-//                            $coltype[$fldcount++] = $fldval;
-//                            $fldval = '';
-//                        }
-//                        else $fldval .= $chr;
-//                        break;
-//
-//                    default:
-//                        $fldval .= $chr;
-//                }
-//            }
-//            if($fldval) $coltype[$fldcount] = $fldval;
-//
-//            $typeinfo = array_shift($coltype);
-//            $len = null;
-//            // $enum_values = array();
-//            if(($pos = strpos($typeinfo, '(')) !== false) {
-//                $type = substr($typeinfo, 0, $pos);
-//                if($type != 'enum') {
-//                    $len = substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2);
-//                }
-//                //else {
-//                //    $enum_values = explode(',', substr($typeinfo, $pos+1, strlen($typeinfo)-$pos-2));
-//                //}
-//            }
-//            else $type = $typeinfo;
-//
-//
-//
-//            //echo $type.' mit len:'.$len.'<br>';
-//            switch ($type) {
-//                case 'int':
-//                    if($fieldvalue == '') $data[$fieldname] = '0';
-//                    if(in_array('zerofill', $coltype)) {
-//                        $data[$fieldname] = sprintf('%0'.$len.'d', $fieldvalue);
-//                    }
-//                    break;
-//
-//                case 'varchar':
-//                case 'enum':
-//                    break;
-//
-//                case 'integer': // tinyint, smallint, mediumint, int, bigint, integer
-//                    break;
-//
-//                case 'boolean': // boolean, bool
-//                    break;
-//
-//                case 'double': // float, double, decimal, real, dec, numeric, fixed
-//                    #$data[$fieldname] = number_format($fieldvalue, $locale[''])
-//                    // floatde_2php hier nicht, wenn dann mit pr�fung auf . als tausender!
-//                    $data[$fieldname] = floatval(str_replace(',', '.', $fieldvalue));
-//                    break;
-//
-//                case 'decimal':
-//                    $len = explode(',', $len);
-//                    $fieldvalue = floatval(str_replace(',', '.', $fieldvalue));
-//                    if(isset($len[1])) {
-//                        $data[$fieldname] = sprintf('%01.'.$len[1].'f', $fieldvalue);
-//                    }
-//                    else $data[$fieldname] = $fieldvalue;
-//                    break;
-//
-//                case 'date':
-//                    break;
-//            }
-//        }
-//    }
-
-    function setTableAlias($alias)
+    function setTableAlias($alias): void
     {
         $this->tableAlias = $alias;
     }
@@ -618,11 +527,10 @@ class MySQL_DAO extends DAO
         }
 
         if ('' == $columns) {
-            $ResultSet = new ResultSet();
-            $ResultSet->addError('MySQL_DAO::insert failed. No fields stated!');
-            return $ResultSet;
+            return (new ResultSet())->addError('MySQL_DAO::insert failed. No fields stated!');
         }
 
+        /** @noinspection SqlResolve */
         $sql = <<<SQL
 INSERT INTO `$this->table`
     ($columns)
@@ -653,9 +561,7 @@ SQL;
         $pk = [];
         for ($i=0; $i<$sizeof; $i++) {
             if(!isset($data[$this->pk[$i]])) {
-                $ResultSet = new ResultSet();
-                $ResultSet->addError('Update is wrong. No primary key found.');
-                return $ResultSet;
+                return (new ResultSet())->addError('Update is wrong. No primary key found.');
             }
             else {
                 $pkValue = $data[$this->pk[$i]];
@@ -670,45 +576,20 @@ SQL;
             }
         }
 
-        $set = '';
-        foreach ($data as $field => $value) {
-            if (is_null($value)) {
-                $value = 'NULL';
-            }
-            elseif(is_bool($value)) {
-                $value = bool2string($value);
-            }
-            elseif($value instanceof Commands) {
-                // reserved keywords don't need to be masked
-                $expression = $this->commands[$value->name];
-                if($expression instanceof Closure) {
-                    $value = $expression($field);
-                }
-                else {
-                    $value = $expression;
-                }
-            }
-            elseif($value instanceof DateTimeInterface) {
-                $value = "'{$value->format('Y-m-d H:i:s')}'";
-            }
-            elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
-            }
-            if($set == '') $set = "`$field`=$value";
-            else $set = "$set,`$field`=$value";
-        }
+        $set = $this->__buildAssignmentList($data);
 
         if (!$set) {
-            return new MySQL_ResultSet($this->db);
+            return new ResultSet();
         }
 
         $where = $this->__buildWhere($pk, $this->pk);
         if ($where == '1') {
-            $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this->table;
+            $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
         }
 
+        /** @noinspection SqlResolve */
         $sql = <<<SQL
 UPDATE `$this->table`
 SET
@@ -729,45 +610,20 @@ SQL;
      */
     public function updateMultiple(array $data, array $filter_rules): ResultSet
     {
-        $set = '';
-        foreach ($data as $field => $value) {
-            if (is_null($value)) {
-                $value = 'NULL';
-            }
-            elseif(is_bool($value)) {
-                $value = bool2string($value);
-            }
-            elseif($value instanceof Commands) {
-                // reserved keywords don't need to be masked
-                $expression = $this->commands[$value->name];
-                if($expression instanceof Closure) {
-                    $value = $expression($field);
-                }
-                else {
-                    $value = $expression;
-                }
-            }
-            elseif($value instanceof DateTimeInterface) {
-                $value = "'{$value->format('Y-m-d H:i:s')}'";
-            }
-            elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
-            }
-            if($set == '') $set = "`$field`=$value";
-            else $set = "$set,`$field`=$value";
-        }
+        $set = $this->__buildAssignmentList($data);
 
         if (!$set) {
-            return new MySQL_ResultSet($this->db);
+            return new ResultSet();
         }
 
         $where = $this->__buildFilter($filter_rules, 'and', true);
         if ($where == '1') {
-            $error_msg = 'Update maybe wrong! Do you really want to update all records in the table: '. $this->table;
+            $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
         }
 
+        /** @noinspection SqlResolve */
         $sql = <<<SQL
 UPDATE `$this->table`
 SET
@@ -796,6 +652,7 @@ SQL;
             die($error_msg);
         }
 
+        /** @noinspection SqlResolve */
         $sql = <<<SQL
 DELETE
 FROM `$this->table`
@@ -817,6 +674,7 @@ SQL;
     public function deleteMultiple(array $filter_rules=[]): ResultSet
     {
         $where = $this->__buildFilter($filter_rules, 'and', true);
+        /** @noinspection SqlResolve */
         $sql = <<<SQL
 DELETE
 FROM `$this->table`
@@ -843,6 +701,7 @@ SQL;
         $id = $id ?? 0;
         $where = $this->__buildWhere($id, $key);
 
+        /** @noinspection SqlResolve */
         $sql = <<<SQL
 SELECT $this->column_list
 FROM `$this->table`
@@ -884,6 +743,7 @@ SQL;
         $sorting = $this->__buildSorting($sorting);
         $limit = $this->__buildLimit($limit);
 
+        /** @noinspection SqlResolve */
         $sql = <<<SQL
 SELECT $options $this->column_list
 FROM `$this->table`
@@ -999,13 +859,12 @@ SQL;
     /**
      * checks value for subquery
      *
-     * @param mixed $op string? unused
      * @param mixed $value string?
      * @return bool
      */
-    private function __isSubQuery($op, $value): bool
+    private function __isSubQuery(mixed $value): bool
     {
-        return (str_contains($value, '(SELECT ')/* and ($op == 'IN' or $op == 'ANY' or $op == 'SOME' or $op == 'ALL')*/);
+        return str_contains($value, '(SELECT ');
     }
 
     /**
@@ -1096,7 +955,7 @@ SQL;
      */
     private function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): string
     {
-        if(is_int($value) || is_float($value) || $this->__isSubQuery(null, $value))
+        if(is_int($value) || is_float($value) || $this->__isSubQuery($value))
             return $value;//not a stringable or a 'subQuery'
         $value = $noEscape ? $value : $this->db->escapeString($value, $this->dbname);
         return $noQuotes ? $value : "'$value'"; //quote
@@ -1198,8 +1057,7 @@ SQL;
     {
         $sql = '';
         if (is_array($sorting) and count($sorting)) {
-            $alias = '';
-            if($this->tableAlias) $alias = $this->tableAlias.'.';
+            $alias = $this->tableAlias ? "$this->tableAlias." : '';
 
             foreach ($sorting as $column => $sort) {
                 if ($sql == '') {
@@ -1213,7 +1071,7 @@ SQL;
                 if($this->translateValues) {
                     $column = $this->translateValues($column);
                 }
-                $sql .= $column.' '.$sort;
+                $sql .= "$column $sort";
             }
         }
         return $sql;
@@ -1253,13 +1111,13 @@ SQL;
                 $sql = ' GROUP BY ';
             }
             elseif($column == 'WITH ROLLUP') {
-                $sql .= ' '.$column;
+                $sql .= " $column";
                 break;
             }
             else {
                 $sql .= ', ';
             }
-            $sql .= $alias.$column.' '.$sort;
+            $sql .= "$alias.$column $sort";
         }
         return $sql;
     }
@@ -1270,15 +1128,14 @@ SQL;
      * @param mixed $id integer oder array (ID's)
      * @param mixed $key integer oder array (Spalten)
      * @return string Teil eines SQL Queries
-     **/
-    protected function __buildWhere($id, $key): string
+     */
+    protected function __buildWhere(mixed $id, mixed $key): string
     {
         $result = '';
         if (is_null($id)) {
             return '1';
         }
-        $alias = '';
-        if($this->tableAlias) $alias = $this->tableAlias.'.'; // besser w�re gleich bei setTableAlias den . (Punkt) dazu; zu viele code stellen
+        $alias = $this->tableAlias ? "$this->tableAlias." : '';
         if (is_null($key)) {
             $key = $this->pk;
         }
@@ -1298,5 +1155,43 @@ SQL;
             $result = "$alias$key=\"{$this->db->escapeString($id, $this->dbname)}\"";
         }
         return $result;
+    }
+
+    /**
+     * Build assignment list for update statements
+     *
+     * @param array $data
+     * @return string
+     */
+    protected function __buildAssignmentList(array $data): string
+    {
+        $set = '';
+        foreach($data as $field => $value) {
+            if(is_null($value)) {
+                $value = 'NULL';
+            }
+            elseif(is_bool($value)) {
+                $value = bool2string($value);
+            }
+            elseif($value instanceof Commands) {
+                // reserved keywords don't need to be masked
+                $expression = $this->commands[$value->name];
+                if($expression instanceof Closure) {
+                    $value = $expression($field);
+                }
+                else {
+                    $value = $expression;
+                }
+            }
+            elseif($value instanceof DateTimeInterface) {
+                $value = "'{$value->format('Y-m-d H:i:s')}'";
+            }
+            elseif(!is_int($value) && !is_float($value)) {
+                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
+            }
+            if($set == '') $set = "`$field`=$value";
+            else $set = "$set,`$field`=$value";
+        }
+        return $set;
     }
 }
