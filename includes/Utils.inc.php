@@ -21,8 +21,6 @@
  *
  */
 
-use pool\classes\Core\Url;
-
 
 /**
  * Gibt den aktuellen UNIX-Timestamp/Zeitstempel in Mikrosekunden zurueck
@@ -2191,8 +2189,7 @@ function isHTML(string $string): bool
  */
 function isValidJSON(string $string): bool
 {
-    $literal = substr($string, 0, 1);
-    if($literal != '{' and $literal != '[') {
+    if($string[0] !== '{' && $string[0] !== '[') {
         return false;
     }
     json_decode($string);
