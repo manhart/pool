@@ -109,7 +109,7 @@ class InputSession extends Input
     public function addVars(array $vars): static
     {
         $this->start();
-        return parent::addVars($vars);
+        parent::addVars($vars);
         $this->write_close();
         return $this;
     }
