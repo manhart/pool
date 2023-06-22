@@ -33,8 +33,7 @@ class GUI_InputElement extends GUI_Universal
      */
     public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
-        $this->Defaults->addVar(
-            array(
+        $this->Defaults->addVars([
                 'name' => $this->getName(),
 
                 'type' => '',
@@ -66,7 +65,7 @@ class GUI_InputElement extends GUI_Universal
                 'onchange' => '',
                 'onblur' => '',
                 'onselect' => ''
-            )
+            ]
         );
 
         parent::init($superglobals);

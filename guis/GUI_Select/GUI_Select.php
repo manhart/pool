@@ -34,13 +34,13 @@ class GUI_Select extends GUI_Universal
      */
     public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
-        $this->Defaults->addVar(
-            array(
+        $this->Defaults->addVars(
+            [
                 'name' => $this->getName(),
 
-                'options' => array(),    // oder String getrennt mit ;
-                'values' => array(),    // oder String getrennt mit ;
-                'styles' => array(), // oder String getrennt mit ;
+                'options' => [],    // oder String getrennt mit ;
+                'values' => [],    // oder String getrennt mit ;
+                'styles' => [], // oder String getrennt mit ;
                 'selected' => '',        // entspricht einem Wert von "values"
                 'defaultselected' => '',
                 'defaultvalue' => '',        // similar to defaultselected
@@ -60,7 +60,7 @@ class GUI_Select extends GUI_Universal
                 'onfocus' => '',
                 'onchange' => '',
                 'onblur' => ''
-            )
+            ]
         );
 
         parent::init(Input::INPUT_GET | Input::INPUT_POST);
@@ -276,20 +276,17 @@ class GUI_Option extends GUI_Universal
      * Initialisiert Standardwerte:
      *
      * TODO Parameter
-     *
-     * @access public
-     **/
-    function init(?int $superglobals = Input::INPUT_EMPTY)
+     */
+    public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
-        $this->Defaults->addVar(
-            array(
+        $this->Defaults->addVars([
                 'value' => '',    // oder String getrennt mit ;
                 'selected' => null,
                 'disabled' => null,
                 'label' => null,
                 'style' => null,
                 'content' => null
-            )
+            ]
         );
 
         parent::init(Input::INPUT_GET | Input::INPUT_POST);

@@ -33,8 +33,7 @@ class GUI_Universal extends GUI_Module
      */
     public function init(?int $superglobals = Input::INPUT_EMPTY)
     {
-        $this->Defaults->addVar(
-            array(
+        $this->Defaults->addVars([
                 /* Allgemeine Universalattribute */
                 'id' => $this->getName(),
                 'title' => '',
@@ -60,7 +59,7 @@ class GUI_Universal extends GUI_Module
                 'onkeyup' => '',
 
                 'guierror' => null
-            )
+            ]
         );
 
         parent::init($superglobals);
