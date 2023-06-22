@@ -8,14 +8,14 @@
  * file that was distributed with this source code.
  */
 
-declare(strict_types=1);
-
 namespace pool\classes\Core;
 
 use Countable;
 
 /**
  * Core class for incoming data on the server
+ * @package pool\classes\Core
+ * @since 2003-07-10
  */
 class Input extends PoolObject implements Countable
 {

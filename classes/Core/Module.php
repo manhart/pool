@@ -10,6 +10,11 @@
 
 namespace pool\classes\Core;
 
+/**
+ * Core class for POOL modules. Provides the basic functionality for modules.
+ * @package pool\classes\Core
+ * @since 2003-07-10
+ */
 class Module extends Component
 {
     /**

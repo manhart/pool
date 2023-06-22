@@ -19,7 +19,7 @@ use SensitiveParameter;
 use Stringable;
 
 /**
- * Class Url
+ * Core class Url
  * @inheritDoc https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
  * @link https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
  * @link http://tools.ietf.org/html/rfc3986 (the URI specification)

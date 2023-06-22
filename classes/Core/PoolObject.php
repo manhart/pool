@@ -12,6 +12,11 @@ namespace pool\classes\Core;
 
 use ReflectionClass;
 
+/**
+ * Core class for all POOL objects. Provides basic functionality for all POOL objects.
+ * @package pool\classes\Core
+ * @since 2003-07-10
+ */
 class PoolObject
 {
     /**

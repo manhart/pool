@@ -31,8 +31,7 @@ use ReflectionException;
 use Template;
 
 /**
- * Class Weblication
- *
+ * Class Weblication represents the main class of a web application
  * @package pool\classes\Core
  * @since 2003-07-10
  */
