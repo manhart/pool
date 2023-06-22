@@ -10,23 +10,12 @@
 
 //namespace pool\classes;
 
-// 05.01.22, AM, POST Requests with JSON-Data
 use pool\classes\Core\PoolObject;
-
-$REQUEST_METHOD = $_SERVER['REQUEST_METHOD'] ?? '';
-$CONTENT_TYPE = $_SERVER['CONTENT_TYPE'] ?? '';
-if($REQUEST_METHOD == 'POST' and $CONTENT_TYPE == 'application/json') {
-    $json = file_get_contents('php://input');
-    if(isValidJSON($json)) {
-        $_POST = json_decode($json, true);
-        $_REQUEST = $_REQUEST + $_POST;
-    }
-}
 
 /**
  * base class for incoming data at the server
  */
-class Input extends PoolObject
+class Input extends PoolObject implements Countable
 {
     /**
      * @constant int INPUT_EMPTY no superglobals
@@ -70,7 +59,7 @@ class Input extends PoolObject
     public const INPUT_ALL = 255;
 
     /**
-     * @var array variables container
+     * @var array variables internal container
      */
     protected array $vars = [];
 
@@ -164,11 +153,24 @@ class Input extends PoolObject
     /**
      * reinitialize superglobals.
      */
-    public function reInit()
+    public function reInit(): void
     {
-        /*$this->clear(); vermeiden, da clear sich auch in ISession beim Leeren der Session auswirkt */
-        $this->vars = [];
-        $this->init($this->superglobals);
+        $this->clear()->init($this->superglobals);
+    }
+
+    /**
+     * @return void
+     */
+    public static function processJsonPostRequest(): void
+    {
+        // decode POST requests with JSON-Data
+        if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' and ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
+            $json = file_get_contents('php://input');
+            if(isValidJSON($json)) {
+                $_POST = json_decode($json, true);
+                $_REQUEST = $_REQUEST + $_POST;
+            }
+        }
     }
 
     /**
@@ -201,34 +203,32 @@ class Input extends PoolObject
     }
 
     /**
-     * Prueft, ob eine Variable einen Wert enthaelt.
-     * Diese Funktion liefert TRUE, wenn eine Variable nicht definiert, leer oder gleich 0 ist, ansonsten FALSE
+     * Checks if a variable exists and is not empty
      *
-     * @param string|array $key Name der Variable
+     * @param string $key name of the variable
      * @return boolean True=ja; False=nein
      */
-    public function emptyVar(string|array $key): bool
+    public function emptyVar(string $key): bool
     {
-        if(is_array($key)) {
-            if(count($key) == 0) return true;
-            foreach($key as $v) {
-                if(empty($v)) return true;
-            }
-            return false;
-        }
-        else {
-            return (!isset($this->vars[$key]) or empty($this->vars[$key]));
-        }
+        return (!isset($this->vars[$key]) or empty($this->vars[$key]));
     }
 
     /**
-     * Liefert einen Boolean zurück, ob alle Daten innerhalb des Inputs leer sind
+     * Returns if all variables are empty
      *
      * @return boolean
      */
-    function isEmpty(): bool
+    public function allEmpty(): bool
     {
-        return $this->emptyVar($this->vars);
+        if($this->count() == 0) {
+            return true;
+        }
+        foreach($this->vars as $value) {
+            if(!empty($value)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -308,10 +308,10 @@ class Input extends PoolObject
      *
      * @access public
      * @param string $key Name der Variable
-     * @param mixed|null $default return default value, if key is not set
+     * @param mixed $default return default value, if key is not set
      * @return mixed Referenz auf das Objekt oder NULL, wenn das Objekt nicht existiert
      */
-    public function &getRef(string $key, $default = null)
+    public function &getRef(string $key, mixed $default = null): mixed
     {
         $ref = $default;
         if(isset($this->vars[$key])) {
@@ -351,7 +351,7 @@ class Input extends PoolObject
      * @param string $key Schluessel (bzw. Name der Variable)
      * @param mixed $value Referenz auf die Variable (oder Objekt)
      */
-    public function setRef(string $key, &$value): static
+    public function setRef(string $key, mixed &$value): static
     {
         $this->vars[$key] = &$value;
         return $this;
@@ -361,25 +361,19 @@ class Input extends PoolObject
      * adds a default value/data to a variable if it does not exist. We can also add a filter on an incoming variable.
      * At the moment filtering does not work with array passes on the key!
      *
-     * @param string|array $key Schluessel (bzw. Name der Variable)
+     * @param string $key Schluessel (bzw. Name der Variable)
      * @param mixed $value Wert der Variable
      * @param int $filter
      * @param mixed $filterOptions
      * @return Input
      */
-    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): Input
+    public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
     {
-        if(!is_array($key)) {
-            if(!isset($this->vars[$key])) {
-                $this->vars[$key] = $value;
-            }
-            if($filter) {
-                $this->filterRules[$key] = [$filter, $filterOptions];
-            }
+        if(!isset($this->vars[$key])) {
+            $this->vars[$key] = $value;
         }
-        else {
-            // @deprecated
-            $this->addVars($key);
+        if($filter) {
+            $this->filterRules[$key] = [$filter, $filterOptions];
         }
         return $this;
     }
@@ -390,37 +384,20 @@ class Input extends PoolObject
      * @param array $vars
      * @return Input
      */
-    public function addVars(array $vars): self
+    public function addVars(array $vars): static
     {
         $this->vars = $this->vars + $vars;
         return $this;
     }
 
     /**
-     * Setzt eine Variable im internen Container. Symlink auf Input::setRef().
+     * Deletes a variable from the internal container.
      *
-     * @param string $key Schluessel (bzw. Name der Variable/Objekt)
-     * @param mixed $value Referenz auf die Variable (oder Objekt)
+     * @param string $key name of the variable
      */
-    function addRef(string $key, &$value)
+    public function delVar(string $key): static
     {
-        $this->setRef($key, $value);
-    }
-
-    /**
-     * Loescht eine Variable aus dem internen Container.
-     *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     */
-    public function delVar($key): self
-    {
-        if(!is_array($key)) {
-            unset($this->vars[$key]);
-        }
-        else {
-            // @deprecated
-            $this->delVars($key);
-        }
+        unset($this->vars[$key]);
         return $this;
     }
 
@@ -434,16 +411,6 @@ class Input extends PoolObject
             unset($this->vars[$key]);
         }
         return $this;
-    }
-
-    /**
-     * Loescht eine Referenz aus dem internen Container. SymLink auf Input::delVar().
-     *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     */
-    function delRef($key)
-    {
-        $this->delVar($key);
     }
 
     /**
@@ -473,34 +440,28 @@ class Input extends PoolObject
     }
 
     /**
-     * Liefert eine verschluesselte Variable entschluesselt zurueck.
-     * Dekodiert vor der Entschluesslung den Wert (MIME base64).
+     * Simple XOR encryption/decryption, based on a given key. Returns the encrypted/decrypted data.
      *
      * @param string $name variable name
-     * @return string $securekey Wert der Variable (entschluesselt)
+     * @return string $secretKey key for encryption
      */
-    function getDecryptedVar($name, $securekey)
+    public function getXOREncrypted(string $name, string $secretKey): string
     {
-        // Call Xor Algo.
-        $decoded_data = base64_decode($this->getVar($name));
-        return $this->xorEnDecryption($decoded_data, $securekey);
+        return $this->xorEnDecryption(base64_decode($this->getVar($name)), $secretKey);
     }
 
     /**
      * Setzt eine Variable und verschluesselt deren Wert anhand eines Schluessels.
      * Abschliessend wird der verschluesselte Wert kodiert (MIME base64).
      *
-     * @access public
-     * @param string $name Name der Variable
-     * @param string $value Wert der Variable
-     * @param string $securekey Schluessel
+     * @param string $name name of the variable
+     * @param string $value value to encrypt
+     * @param string $secretKey key for encryption
      */
-    function setEncryptedVar($name, $value, $securekey)
+    public function setXOREncrypted(string $name, string $value, string $secretKey): static
     {
-        // Call Xor Algo.
-        $encrypted_data = $this->xorEnDecryption($value, $securekey);
-        $encoded_data = base64_encode($encrypted_data);
-        $this->setVar($name, $encoded_data);
+        $this->setVar($name, base64_encode($this->xorEnDecryption($value, $secretKey)));
+        return $this;
     }
 
     /**
@@ -530,40 +491,24 @@ class Input extends PoolObject
     }
 
     /**
-     * Overrides variables
+     * Overrides all variables (internal container) with the given array
      *
-     * @param array $data associative array
-     **/
-    public function setData(array $data)
+     * @param array $data associative array of data
+     */
+    public function setData(array $data): static
     {
         $this->vars = $data;
+        return $this;
     }
 
     /**
-     * Liefert ein assoziatives Array mit allen Daten des Input Objekts zureck
+     * Returns all variables as array
      *
      * @return array Daten
      **/
     public function getData(): array
     {
         return $this->vars;
-    }
-
-    /**
-     * Liefert alle Werte als kompletten String zurück
-     *
-     * @param string $delimiter Trenner
-     * @return string
-     * @deprecated
-     */
-    function getValuesAsString(string $delimiter): string
-    {
-        $result = '';
-        foreach($this->vars as $key => $val) {
-            if($result != '') $result .= $delimiter;
-            $result .= $val;
-        }
-        return $result;
     }
 
     /**
@@ -596,7 +541,7 @@ class Input extends PoolObject
     }
 
     /**
-     * Ermittelt die Unterschiede von Input zu einem Array
+     * Computes the difference between the internal variables and the given array
      *
      * @param array $array
      * @return array
@@ -607,7 +552,7 @@ class Input extends PoolObject
     }
 
     /**
-     * Berechnet den Unterschied zwischen Arrays mit zus�tzlicher Indexpr�fung
+     * Computes the difference between the internal variables and the given array with additional index check
      *
      * @param array $array
      * @return array
@@ -622,27 +567,23 @@ class Input extends PoolObject
      * Die Funktion dient lediglich zum Verschleiern von Variablenwerten.
      * Fuer sicherheitsrelevante Daten nicht geeignet!
      *
-     * @access public
-     * @param string $value Zu verschluesselnder Wert
-     * @param string $securekey Schluessel
-     * @return string Verschluesselter Wert
+     * @param string $value value to encrypt
+     * @param string $secretKey key for encryption
+     * @return string
      */
-    function xorEnDecryption($value, $securekey)
+    public function xorEnDecryption(string $value, string $secretKey): string
     {
-        if($value == '' or $securekey == '') {
+        if(empty($value) || empty($secretKey)) {
             return $value;
         }
 
-        $new_value = '';
-
-        $skey_len = strlen($securekey);
+        $key_len = strlen($secretKey);
         $value_len = strlen($value);
 
-        $v = 0;
-        while($v < $value_len) {
-            $k = $v % $skey_len;
-            $new_value .= chr(ord($value[$v]) ^ ord($securekey[$k]));
-            $v++;
+        $new_value = '';
+        for ($v = 0; $v < $value_len; $v++) {
+            $k = $v % $key_len;
+            $new_value .= chr(ord($value[$v]) ^ ord($secretKey[$k]));
         }
         return $new_value;
     }
@@ -665,28 +606,22 @@ class Input extends PoolObject
      * @param string $data
      * @return Input
      */
-    public function setByteStream(string $data): Input
+    public function setByteStream(string $data): static
     {
         return $this->addVars(unserialize($data));
     }
 
     /**
-     * Die Funktion dumpVars verwendet eine globale Funktion "pray" (Utils.inc.php).
+     * Prints or returns one or all variables in the internal container (for debugging)
      *
-     * @access public
      * @param boolean $print Ausgabe auf dem Schirm (Standard true)
      * @param string $key Schluessel (bzw. Name einer Variable). Wird kein Name angegeben, werden alle Variablen des internen Containers ausgegeben.
      * @return string Dump aller Variablen im internen Container
      * @see pray()
      */
-    function dumpVars($print = true, $key = '')
+    public function dump(bool $print = true, string $key = ''): string
     {
-        if(!empty($key)) {
-            $output = pray($this->getVar($key));
-        }
-        else {
-            $output = pray($this->vars);
-        }
+        $output = pray($key ? $this->getVar($key) : $this->vars);
 
         if($print) {
             print ($output);
@@ -695,33 +630,21 @@ class Input extends PoolObject
     }
 
     /**
-     * Fuegt Parameter (z.B. von einer Url) in den internen Container ein. Uebergabeformat: key=value&key=value (dabei k�nnen = und & auch durch \ maskiert werden)
+     * Adds parameters (e.g. from a URL) to the internal container. Format: key=value&key=value.
      *
      * @param string $params Siehe oben Beschreibung
-     * @param boolean $translate_specialchars Konvertiert HTML-Code (besondere Zeichen) in standardmaessigen Zeichensatz.
+     * @see htmlspecialchars_decode()
      */
-    public function setParams(string $params, bool $translate_specialchars = true)
+    public function setParams(string $params): static
     {
-        $params = ltrim($params);
-        if(strlen($params) > 0) {
-            if($translate_specialchars) {
-                # &amp; => &
-                $trans = get_html_translation_table(HTML_SPECIALCHARS, ENT_QUOTES);
-                $trans = array_flip($trans);
-                $params = strtr($params, $trans);
-            }
-
-            $arrParams = preg_split('/(?<!\\\)&/', $params);
-            $arrParams = str_replace('\&', '&', $arrParams);
-            foreach($arrParams as $paramPair) {
-                $paramPairArray = preg_split('/(?<!\\\)=/', $paramPair); // explode('=', $arrParams[$i]);
-                $paramPairArray = str_replace('\=', '=', $paramPairArray);
-                if(is_array($paramPairArray) && isset($paramPairArray[1])) {
-                    $this->setVar($paramPairArray[0], str_replace('\n', "\n", $paramPairArray[1]));
-                }
-                unset($paramPairArray);
-            }
+        if(strlen($params) == 0) {
+            return $this;
         }
+        parse_str($params, $parsedParams);
+        foreach($parsedParams as $key => $value) {
+            $this->setVar($key, $value);
+        }
+        return $this;
     }
 
     /**
@@ -745,11 +668,12 @@ class Input extends PoolObject
      * Merges variables into their own container (Vars). But only if they are not yet set.
      *
      * @param Input $Input
+     * @return Input
      */
-    public function mergeVarsIfNotSet(Input $Input): void
+    public function mergeVarsIfNotSet(Input $Input): static
     {
         if($Input->count() == 0) {
-            return;
+            return $this;
         }
         $this->filterRules = $Input->getFilterRules();
 
@@ -759,6 +683,7 @@ class Input extends PoolObject
             }
             $this->filterVar($key);
         }
+        return $this;
     }
 
     /**

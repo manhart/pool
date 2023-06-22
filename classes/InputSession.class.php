@@ -19,9 +19,9 @@ class InputSession extends Input
      */
     private bool $autoClose = true;
 
-    function __construct($autoClose = true)
+    function __construct($autoWriteCloseAtEachDataChange = true)
     {
-        $this->setAutoClose($autoClose);
+        $this->setAutoClose($autoWriteCloseAtEachDataChange);
 
         $this->start();
         parent::__construct(Input::INPUT_SESSION);
@@ -31,7 +31,7 @@ class InputSession extends Input
     /**
      * Starts Session
      */
-    function start()
+    public function start()
     {
         if(!$this->session_started) {
             $this->session_started = session_start();
@@ -87,9 +87,9 @@ class InputSession extends Input
      * @param mixed $value Wert der Variable
      * @param int $filter
      * @param mixed $filterOptions
-     * @return Input Erfolgsstatus
+     * @return InputSession Erfolgsstatus
      */
-    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): Input
+    public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
     {
         $this->start();
         parent::addVar($key, $value, $filter, $filterOptions);
@@ -98,11 +98,25 @@ class InputSession extends Input
     }
 
     /**
-     * Loescht eine Variable aus dem internen Container.
+     * merge array with vars but don't override existing vars
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
+     * @param array $vars
+     * @return $this
      */
-    public function delVar($key): self
+    public function addVars(array $vars): static
+    {
+        $this->start();
+        return parent::addVars($vars);
+        $this->write_close();
+        return $this;
+    }
+
+    /**
+     * Delete a variable from the session
+     *
+     * @param string $key name of variable
+     */
+    public function delVar(string $key): static
     {
         $this->start();
         parent::delVar($key);
@@ -115,11 +129,12 @@ class InputSession extends Input
      *
      * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
      */
-    public function setData(array $data)
+    public function setData(array $data): static
     {
         $this->start();
         parent::setData($data);
         $this->write_close();
+        return $this;
     }
 
     /**
