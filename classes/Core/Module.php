@@ -10,8 +10,6 @@
 
 namespace pool\classes\Core;
 
-use Input;
-
 class Module extends Component
 {
     /**

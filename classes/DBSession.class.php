@@ -31,6 +31,7 @@
 * @link http://www.misterelsa.de
 */
 
+use pool\classes\Core\Input;
 use pool\classes\Core\PoolObject;
 use pool\classes\Database\DAO;
 

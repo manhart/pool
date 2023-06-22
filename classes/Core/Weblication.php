@@ -16,7 +16,6 @@ use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
-use Input;
 use InputCookie;
 use InputSession;
 use Locale;

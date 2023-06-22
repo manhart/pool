@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace pool\classes\Core;
 
-use Input;
 use JetBrains\PhpStorm\NoReturn;
 use JsonSerializable;
 use pool\classes\Exception\InvalidArgumentException;

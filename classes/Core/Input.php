@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -8,9 +8,11 @@
  * file that was distributed with this source code.
  */
 
-//namespace pool\classes;
+declare(strict_types=1);
 
-use pool\classes\Core\PoolObject;
+namespace pool\classes\Core;
+
+use Countable;
 
 /**
  * base class for incoming data at the server
@@ -271,6 +273,7 @@ class Input extends PoolObject implements Countable
 
     /**
      * Returns the value of the given key as integer.
+     *
      * @param string $key
      * @param int $default
      * @return int
@@ -282,6 +285,7 @@ class Input extends PoolObject implements Countable
 
     /**
      * Returns the value of the given key as string.
+     *
      * @param string $key
      * @param string $default
      * @return string
@@ -581,7 +585,7 @@ class Input extends PoolObject implements Countable
         $value_len = strlen($value);
 
         $new_value = '';
-        for ($v = 0; $v < $value_len; $v++) {
+        for($v = 0; $v < $value_len; $v++) {
             $k = $v % $key_len;
             $new_value .= chr(ord($value[$v]) ^ ord($secretKey[$k]));
         }

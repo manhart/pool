@@ -18,6 +18,8 @@
  * @see GUI_FormElement
  */
 
+use pool\classes\Core\Input;
+
 /**
  * GUI_Edit
  *

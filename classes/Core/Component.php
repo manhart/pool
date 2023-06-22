@@ -10,7 +10,6 @@
 
 namespace pool\classes\Core;
 
-use Input;
 use InputSession;
 use ReflectionClass;
 use ReflectionException;

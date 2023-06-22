@@ -7,6 +7,8 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+use pool\classes\Core\Input;
+
 class GUI_Toast extends GUI_Module
 {
     /**

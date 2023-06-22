@@ -29,6 +29,7 @@
  */
 
 use pool\classes\Core\Component;
+use pool\classes\Core\Input;
 use pool\classes\Core\Module;
 use pool\classes\Core\PoolObject;
 use pool\classes\Exception\MissingArgumentException;

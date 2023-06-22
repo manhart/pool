@@ -16,6 +16,7 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\Input;
 use pool\classes\Database\DAO;
 
 /**

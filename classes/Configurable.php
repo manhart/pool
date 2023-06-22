@@ -11,6 +11,7 @@
 //namespace pool\classes;
 
 use pool\classes\Core\Component;
+use pool\classes\Core\Input;
 
 trait Configurable
 {

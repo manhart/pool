@@ -13,6 +13,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\Input;
+
 /**
  * GUI_Select
  *

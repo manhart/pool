@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\Core\Input;
+
 /**
  * -= PHP Object Oriented Library (POOL) =-
  *

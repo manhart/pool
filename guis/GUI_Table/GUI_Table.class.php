@@ -7,6 +7,7 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+use pool\classes\Core\Input;
 use pool\classes\Database\DAO;
 
 class GUI_Table extends GUI_Module
