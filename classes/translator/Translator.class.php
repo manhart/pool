@@ -326,7 +326,7 @@ class Translator
         } else {
             $key = substr($handle, 0, $keyLength);
             $args = substr($handle, $keyLength, -1);
-            $Params = new Input(Input::INPUT_EMPTY);
+            $Params = new Input(Input::EMPTY);
             $Params->setParams($args);
             $args = $Params->getData();
         }

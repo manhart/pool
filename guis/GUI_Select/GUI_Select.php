@@ -34,7 +34,7 @@ class GUI_Select extends GUI_Universal
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
      */
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVars(
             [
@@ -65,7 +65,7 @@ class GUI_Select extends GUI_Universal
             ]
         );
 
-        parent::init(Input::INPUT_GET | Input::INPUT_POST);
+        parent::init(Input::GET | Input::POST);
     }
 
     public function loadFiles()
@@ -279,7 +279,7 @@ class GUI_Option extends GUI_Universal
      *
      * TODO Parameter
      */
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVars([
                 'value' => '',    // oder String getrennt mit ;
@@ -291,7 +291,7 @@ class GUI_Option extends GUI_Universal
             ]
         );
 
-        parent::init(Input::INPUT_GET | Input::INPUT_POST);
+        parent::init(Input::GET | Input::POST);
     }
 
     function loadFiles()

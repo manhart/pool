@@ -12,7 +12,7 @@ use pool\classes\Core\Input;
 
 class InputFiles extends Input
 {
-    function __construct(int $superglobals = Input::INPUT_FILES)
+    function __construct(int $superglobals = Input::FILES)
     {
         parent::__construct($superglobals);
     }

@@ -37,7 +37,7 @@ class GUI_Schema extends GUI_Module
      * alternate - if schema was not found, redirect to this schema
      * @var int $superglobals takes parameter schema from request
      */
-    protected int $superglobals = Input::INPUT_REQUEST;
+    protected int $superglobals = Input::REQUEST;
 
     /**
      * load schemes

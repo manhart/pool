@@ -27,14 +27,14 @@ class InputSession extends Input
         $this->setAutoClose($autoWriteCloseAtEachDataChange);
 
         $this->start();
-        parent::__construct(Input::INPUT_SESSION);
+        parent::__construct(Input::SESSION);
         $this->write_close();
     }
 
     /**
      * Starts Session
      */
-    public function start()
+    public function start(): void
     {
         if(!$this->session_started) {
             $this->session_started = session_start();
@@ -47,20 +47,21 @@ class InputSession extends Input
 
     /**
      * @param $autoClose
+     * @return InputSession
      */
-    function setAutoClose($autoClose)
+    function setAutoClose($autoClose): static
     {
         $this->autoClose = $autoClose;
+        return $this;
     }
 
     /**
-     * Setzt eine Variable im internen Container.
-     * Im Unterschied zu Input::addVar ueberschreibt Input::setVar alle Variablen.
+     * assign data to a variable
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     * @param mixed $value Wert der Variable
+     * @param string $key name of variable
+     * @param mixed $value value of variable
      */
-    public function setVar($key, $value = ''): Input
+    public function setVar(string $key, mixed $value = ''): static
     {
         $this->start();
         parent::setVar($key, $value);
@@ -83,11 +84,10 @@ class InputSession extends Input
     }
 
     /**
-     * Setzt eine Variable im internen Container.
-     * Im Unterschied zu Input::setVar ueberschreibt Input::addVar keine bereits vorhanden Variablen.
+     * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming variable.
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     * @param mixed $value Wert der Variable
+     * @param string $key name of variable
+     * @param mixed $value value of variable
      * @param int $filter
      * @param mixed $filterOptions
      * @return InputSession Erfolgsstatus
@@ -215,7 +215,7 @@ class InputSession extends Input
      */
     public function destroy(): static
     {
-        parent::destroy();
+        parent::clear();
         $this->start();
         if(session_status() == PHP_SESSION_ACTIVE) {
             session_destroy();

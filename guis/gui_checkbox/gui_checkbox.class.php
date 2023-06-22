@@ -10,14 +10,14 @@ use pool\classes\Core\Input;
  */
 class GUI_Checkbox extends GUI_InputElement
 {
-    function init(?int $superglobals= Input::INPUT_EMPTY)
+    function init(?int $superglobals= Input::EMPTY)
     {
         $this -> Defaults -> addVar('type', 'checkbox');
 
         $this -> Defaults -> addVar('array', 0);
         $this -> Defaults -> addVar('label', '');
 
-        parent::init(Input::INPUT_GET | Input::INPUT_POST);
+        parent::init(Input::GET | Input::POST);
     }
 
     function loadFiles()

@@ -34,7 +34,7 @@ class GUI_Universal extends GUI_Module
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
      */
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVars([
                 /* Allgemeine Universalattribute */

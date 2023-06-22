@@ -82,7 +82,7 @@ class Weblication extends Component
     /**
      * @var int filter that defines which superglobals are passed to input->vars
      */
-    private int $superglobals = Input::INPUT_EMPTY;
+    private int $superglobals = Input::EMPTY;
 
     /**
      * @var Input
@@ -263,7 +263,7 @@ class Weblication extends Component
         self::$isAjax = isAjax();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
-        $this->Settings = new Input(Input::INPUT_EMPTY);
+        $this->Settings = new Input(Input::EMPTY);
         // determine the relative client und server path from the application to the pool
         $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);

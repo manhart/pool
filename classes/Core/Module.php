@@ -61,7 +61,7 @@ class Module extends Component
     /**
      * @var int defines which superglobals should be used in this module. Superglobal variables are passed to superglobals in the Input class.
      */
-    protected int $superglobals = Input::INPUT_EMPTY;
+    protected int $superglobals = Input::EMPTY;
 
     /**
      * data for the client
@@ -81,7 +81,7 @@ class Module extends Component
         parent::__construct($Owner);
         $this->childModules = [];
         $this->handoff = [];
-        $this->Defaults = new Input(Input::INPUT_EMPTY);
+        $this->Defaults = new Input(Input::EMPTY);
         $this->internalParams = $params;
         $this->init();
     }

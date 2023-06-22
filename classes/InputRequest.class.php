@@ -12,7 +12,7 @@ use pool\classes\Core\Input;
 
 class InputRequest extends Input
 {
-    function __construct(int $superglobals = Input::INPUT_REQUEST)
+    function __construct(int $superglobals = Input::REQUEST)
     {
         parent::__construct($superglobals);
     }

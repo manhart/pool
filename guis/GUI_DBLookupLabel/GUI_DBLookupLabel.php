@@ -44,7 +44,7 @@ class GUI_DBLookupLabel extends GUI_Label
      *
      * @access public
      **/
-    function init(?int $superglobals = Input::INPUT_EMPTY)
+    function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVar('tabledefine', '');
         $this->Defaults->addVar('autoload_fields', 1);

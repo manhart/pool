@@ -305,7 +305,7 @@ class GUI_Module extends Module
         }
 
         if ($class_exists) {
-            $Params = new Input(Input::INPUT_EMPTY);
+            $Params = new Input(Input::EMPTY);
             $Params->setParams($params);
 
             /* @var $GUI GUI_Module */

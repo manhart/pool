@@ -16,7 +16,7 @@ class InputCookie extends Input
      * initialize the InputCookie object with the superglobal $_COOKIE
      * @param int $superglobals
      */
-    public function __construct(int $superglobals = Input::INPUT_COOKIE)
+    public function __construct(int $superglobals = Input::COOKIE)
     {
         parent::__construct($superglobals);
     }

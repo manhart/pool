@@ -17,7 +17,7 @@ class InputGet extends Input
      *
      * @param int $superglobals
      */
-    function __construct(int $superglobals = Input::INPUT_GET)
+    function __construct(int $superglobals = Input::GET)
     {
         parent::__construct($superglobals);
     }

@@ -39,7 +39,7 @@ class GUI_DBLookupSelect extends GUI_Select
      *
      * @access public
      **/
-    function init(?int $superglobals= Input::INPUT_EMPTY)
+    function init(?int $superglobals= Input::EMPTY)
     {
         $this->Defaults->addVar('tabledefine', '');
         $this->Defaults->addVar('keyValue', false); 	// separated by ;

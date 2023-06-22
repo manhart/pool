@@ -12,7 +12,7 @@ use pool\classes\Core\Input;
 
 class InputServer extends Input
 {
-    function __construct(int $superglobals = Input::INPUT_SERVER)
+    function __construct(int $superglobals = Input::SERVER)
     {
         parent::__construct($superglobals);
     }

@@ -10,13 +10,13 @@ use pool\classes\Core\Input;
  */
 class GUI_Radiobutton extends GUI_InputElement
 {
-    function init(?int $superglobals= Input::INPUT_EMPTY)
+    function init(?int $superglobals= Input::EMPTY)
     {
         $this -> Defaults -> addVar('type', 'radio');
 
         $this -> Defaults -> addVar('label', '');
 
-        parent::init(Input::INPUT_GET | Input::INPUT_POST);
+        parent::init(Input::GET | Input::POST);
     }
 
     function loadFiles()

@@ -33,7 +33,7 @@ class GUI_InputElement extends GUI_Universal
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
      */
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVars([
                 'name' => $this->getName(),

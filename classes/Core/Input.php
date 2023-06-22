@@ -15,50 +15,58 @@ namespace pool\classes\Core;
 use Countable;
 
 /**
- * base class for incoming data at the server
+ * Core class for incoming data on the server
  */
 class Input extends PoolObject implements Countable
 {
     /**
-     * @constant int INPUT_EMPTY no superglobals
+     * @constant int EMPTY no superglobals
      */
-    public const INPUT_EMPTY = 0;
+    public const EMPTY = 0;
     /**
-     * @constant int INPUT_COOKIE $_COOKIE (php equivalent INPUT_COOKIE 2)
+     * @constant int COOKIE $_COOKIE (php equivalent INPUT_COOKIE (2))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_COOKIE = 1;
+    public const COOKIE = 1;
     /**
-     * @constant int INPUT_GET $_GET (php equivalent INPUT_GET 1)
+     * @constant int GET $_GET (php equivalent INPUT_GET (1))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_GET = 2;
+    public const GET = 2;
     /**
-     * @constant int INPUT_POST $_POST (php equivalent INPUT_POST 0)
+     * @constant int POST $_POST (php equivalent INPUT_POST (0))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_POST = 4;
+    public const POST = 4;
     /**
-     * @constant int INPUT_FILES $_FILES (php equivalent INPUT_FILES 3)
+     * @constant int FILES $_FILES (php equivalent INPUT_FILES (3))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_FILES = 8;
+    public const FILES = 8;
     /**
-     * @constant int INPUT_ENV $_ENV (php equivalent INPUT_ENV 4)
+     * @constant int ENV $_ENV (php equivalent INPUT_ENV (4))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_ENV = 16;
+    public const ENV = 16;
     /**
-     * @constant int INPUT_SERVER $_SERVER (php equivalent INPUT_SERVER 5)
+     * @constant int SERVER $_SERVER (php equivalent INPUT_SERVER (5))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_SERVER = 32;
+    public const SERVER = 32;
     /**
-     * @constant int INPUT_SESSION $_SESSION (php equivalent INPUT_SESSION 6)
+     * @constant int SESSION $_SESSION (php equivalent INPUT_SESSION (6))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_SESSION = 64;
+    public const SESSION = 64;
     /**
-     * @constant int INPUT_REQUEST $_REQUEST (php equivalent INPUT_REQUEST 99)
+     * @constant int REQUEST $_REQUEST (php equivalent INPUT_REQUEST (99))
+     * @see https://www.php.net/manual/de/filter.constants.php
      */
-    public const INPUT_REQUEST = 128;
+    public const REQUEST = 128;
     /**
      * @constant int I_ALL all superglobals
      */
-    public const INPUT_ALL = 255;
+    public const ALL = 255;
 
     /**
      * @var array variables internal container
@@ -69,7 +77,7 @@ class Input extends PoolObject implements Countable
      * @var int Superglobals
      * @see https://www.php.net/manual/de/language.variables.superglobals.php
      */
-    private int $superglobals = self::INPUT_EMPTY;
+    private int $superglobals = self::EMPTY;
 
     /**
      * @var array
@@ -77,12 +85,12 @@ class Input extends PoolObject implements Countable
     private array $filterRules = [];
 
     /**
-     * Input constructor. Initialization of the superglobals.
+     * Initialization of the superglobals. Attention: SESSION is a reference to the internal container and cannot be combined with other superglobals!
      *
-     * @param int $superglobals Select a predefined constant: INPUT_GET, INPUT_POST, INPUT_REQUEST, INPUT_SERVER, INPUT_FILES, INPUT_COOKIE
+     * @param int $superglobals Select or combine predefined constants: EMPTY, GET, POST, REQUEST, SERVER, FILES, COOKIE, SESSION, ALL
      * @see https://www.php.net/manual/de/language.variables.superglobals.php
      */
-    public function __construct(int $superglobals = self::INPUT_EMPTY)
+    public function __construct(int $superglobals = self::EMPTY)
     {
         $this->init($superglobals);
     }
@@ -98,13 +106,12 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Initialisiert gewaehlte Superglobals und schreibt die Variablen in den internen Variablen Container.
-     * Falls Magic Quotes eingestellt sind, werden bei den $_GET und $_POST Superglobals alle Escape Zeichen entfernt.
-     * Aussnahme: Session! Die Superglobale Variable $_SESSION wird zum internen Container referenziert!
+     * Initializes selected superglobals and writes the variables into the internal variable container.
+     * Except: SESSION: The super global variable $_SESSION is referenced to the internal container!
      *
      * @param int $superglobals Einzulesende Superglobals (siehe Konstanten)
      */
-    protected function init(int $superglobals = self::INPUT_EMPTY): void
+    protected function init(int $superglobals = self::EMPTY): void
     {
         if($superglobals == 0) {
             return;
@@ -112,42 +119,42 @@ class Input extends PoolObject implements Countable
         $this->superglobals = $superglobals;
 
         // @see https://www.php.net/manual/en/reserved.variables.environment.php
-        if($superglobals & self::INPUT_ENV) { // I_ENV
+        if($superglobals & self::ENV) { // I_ENV
             $this->addVars($_ENV);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.server.php
-        if($superglobals & self::INPUT_SERVER) { // I_SERVER
+        if($superglobals & self::SERVER) { // I_SERVER
             $this->addVars($_SERVER);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.files.php
-        if($superglobals & self::INPUT_FILES) {
+        if($superglobals & self::FILES) {
             $this->addVars($_FILES);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.request.php
-        if($superglobals & self::INPUT_REQUEST) {
+        if($superglobals & self::REQUEST) {
             $this->addVars($_REQUEST);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.post.php
-        if($superglobals & self::INPUT_POST) {
+        if($superglobals & self::POST) {
             $this->addVars($_POST);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.get.php
-        if($superglobals & self::INPUT_GET) {
+        if($superglobals & self::GET) {
             $this->addVars($_GET);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.cookies.php
-        if($superglobals & self::INPUT_COOKIE) {
+        if($superglobals & self::COOKIE) {
             $this->addVars($_COOKIE);
         }
 
         // @see https://www.php.net/manual/en/reserved.variables.session.php
-        if($superglobals != self::INPUT_ALL and $superglobals & self::INPUT_SESSION) { // only $_SESSION assigned directly (not combinable)
+        if($superglobals != self::ALL and $superglobals & self::SESSION) { // only $_SESSION assigned directly (not combinable)
             $this->vars = &$_SESSION; // PHP Session Handling (see php manual)
         }
     }
@@ -260,11 +267,11 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Liefert den Wert fuer den uebergebenen Schluessel.
+     * Returns the value for the given key.
      *
-     * @param string $key Name der Variable
-     * @param mixed $default return default value, if key is not set
-     * @return mixed Wert der Variable oder NULL, wenn die Variable nicht existiert
+     * @param string $key Name of the variable
+     * @param mixed $default Returns this value as default, if key is not set
+     * @return mixed Value of the variable or $default/NULL if the variable does not exist
      */
     public function getVar(string $key, mixed $default = null): mixed
     {
@@ -308,12 +315,11 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Liefert die Referenz fuer den uebergebenen Schluessel.
+     * Returns the reference for the given key.
      *
-     * @access public
-     * @param string $key Name der Variable
-     * @param mixed $default return default value, if key is not set
-     * @return mixed Referenz auf das Objekt oder NULL, wenn das Objekt nicht existiert
+     * @param string $key Name of the variable
+     * @param mixed $default Return this value as default, if key is not set
+     * @return mixed Reference to the object, or $default/NULL if the object does not exist
      */
     public function &getRef(string $key, mixed $default = null): mixed
     {
@@ -331,7 +337,7 @@ class Input extends PoolObject implements Countable
      * @param mixed $value value
      * @return Input
      */
-    public function setVar(string $key, mixed $value = ''): Input
+    public function setVar(string $key, mixed $value = ''): static
     {
         $this->vars[$key] = $value;
         return $this;
@@ -350,10 +356,10 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Legt eine Referenz eines Objekts im internen Container ab.
+     * Places a reference of an object in the internal container.
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     * @param mixed $value Referenz auf die Variable (oder Objekt)
+     * @param string $key Name of the variable
+     * @param mixed $value Reference to the object
      */
     public function setRef(string $key, mixed &$value): static
     {
@@ -362,14 +368,14 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * adds a default value/data to a variable if it does not exist. We can also add a filter on an incoming variable.
-     * At the moment filtering does not work with array passes on the key!
+     * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming variable.
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     * @param mixed $value Wert der Variable
-     * @param int $filter
+     * @param string $key name of the variable
+     * @param mixed $value value of the variable
+     * @param int $filter filter type
      * @param mixed $filterOptions
      * @return Input
+     * @see https://www.php.net/manual/de/filter.filters.php
      */
     public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
     {
@@ -418,10 +424,11 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Diese Funktion lieferten den Typ der Variablen mit dem uebergebenen Schluesselnamen $key.
+     * Return the type of the variable with the passed key name $key.
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     * @return string Typen (set of "integer", "double", "string", "array", "object", "unknown type") oder false, wenn die Variable nicht gesetzt ist.
+     * @param string $key variable name
+     * @return string types (set of "integer", "double", "string", "array", "object", "unknown type", "NULL", "resource") or an empty string if the variable is not set.
+     * @see https://www.php.net/manual/de/function.gettype.php
      */
     public function getType(string $key): string
     {
@@ -429,7 +436,7 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * sets the data type of variable
+     * Sets the data type of variable
      *
      * @param string $key variable name
      * @param string $type data type
@@ -455,8 +462,7 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Setzt eine Variable und verschluesselt deren Wert anhand eines Schluessels.
-     * Abschliessend wird der verschluesselte Wert kodiert (MIME base64).
+     * Sets a variable and encrypts its value using a key. The value is encoded using MIME base64 and a simple XOR encryption.
      *
      * @param string $name name of the variable
      * @param string $value value to encrypt
@@ -469,17 +475,17 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Filtert die Daten. Dabei bleiben nur die Felder (Schluessel) uebrig, die uebergeben wurden.
-     * Sehr praktisch beim Einfuegen von Daten in eine Datenbank. Man kann so unnuetze Daten entfernen.
+     * Filters variables based on a callable function.
+     * Very handy when inserting data into a database. You can remove unnecessary data.
      *
-     * @param array $keys_must_exists Felder, die bestehen bleiben muessen
-     * @param string $prefix fieldnames with prefix
-     * @param boolean $removePrefix removes prefix
-     * @return Input Neues Objekt vom Typ Input (enthaelt die gefilterten Daten)
+     * @param array $keys_must_exists Variables that must remain
+     * @param string $prefix use only variable names with this prefix
+     * @param boolean $removePrefix removes the variables with prefix from the returned object
+     * @return Input The result in a new input object
      **/
     public function filter(array $keys_must_exists, ?callable $filter = null, string $prefix = '', bool $removePrefix = false): Input
     {
-        $Input = new Input(self::INPUT_EMPTY);
+        $Input = new Input(self::EMPTY);
         $new_prefix = ($removePrefix) ? '' : $prefix;
         foreach($keys_must_exists as $key) {
             // AM, 22.04.09, modified (isset nimmt kein NULL)
@@ -567,9 +573,8 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Bekannte, einfache, veraltete bitweise XOR Verschluesslung.
-     * Die Funktion dient lediglich zum Verschleiern von Variablenwerten.
-     * Fuer sicherheitsrelevante Daten nicht geeignet!
+     * Well-known, simple, obsolete bitwise XOR encryption. Obfuscates the value of variables.
+     * Not suitable for security-related data!
      *
      * @param string $value value to encrypt
      * @param string $secretKey key for encryption
@@ -593,11 +598,11 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Gibt in einer Zeichenkette (String) einen Byte-Stream aller Variablen zurueck.
-     * Hinweis: serialize() kann mit den Typen integer, double, string, array (mehrdimensional) und object umgehen.
-     * Beim Objekt werden die Eigenschaften serialisiert, die Methoden gehen aber verloren.
+     * Returns a byte stream of all variables in a string.
      *
      * @return string Byte-Stream
+     * @see setByteStream()
+     * @see http://php.net/manual/de/function.serialize.php
      */
     public function getByteStream(): string
     {
@@ -609,6 +614,8 @@ class Input extends PoolObject implements Countable
      *
      * @param string $data
      * @return Input
+     * @see getByteStream()
+     * @see http://php.net/manual/de/function.unserialize.php
      */
     public function setByteStream(string $data): static
     {
@@ -618,9 +625,9 @@ class Input extends PoolObject implements Countable
     /**
      * Prints or returns one or all variables in the internal container (for debugging)
      *
-     * @param boolean $print Ausgabe auf dem Schirm (Standard true)
-     * @param string $key Schluessel (bzw. Name einer Variable). Wird kein Name angegeben, werden alle Variablen des internen Containers ausgegeben.
-     * @return string Dump aller Variablen im internen Container
+     * @param boolean $print optional print the output
+     * @param string $key optional only one variable
+     * @return string output
      * @see pray()
      */
     public function dump(bool $print = true, string $key = ''): string
@@ -652,10 +659,10 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * Vereinigt die Variablen Container von zwei Input Objekten. Vorhandene Keys werden nicht ueberschrieben.
+     * Joins the variable containers of two input objects. Existing keys are not overwritten.
      *
-     * @param Input $Input Objekt vom Typ Input
-     * @param boolean $flip Fuegt die Daten in umgekehrter Reihenfolge zusammen (true), Standard ist false (Parameter nicht erforderlich)
+     * @param Input $Input other input object
+     * @param boolean $flip if true, the variables of the other input object are merged into the internal container (affects the order of merge)
      **/
     public function mergeVars(Input $Input, bool $flip = false): Input
     {
@@ -691,22 +698,11 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * resets the variable container
+     * Resets the variable container
      */
     public function clear(): static
     {
         $this->vars = [];
-        return $this;
-    }
-
-    /**
-     * Destruktor
-     *
-     * Speicherfreigabe des Containers (wir ueberschreiben die Methode Object::destroy()).
-     */
-    public function destroy(): static
-    {
-        $this->clear();
         return $this;
     }
 }

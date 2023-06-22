@@ -12,7 +12,7 @@ use pool\classes\Core\Input;
 
 class InputEnv extends Input
 {
-    function __construct(int $superglobals = Input::INPUT_ENV)
+    function __construct(int $superglobals = Input::ENV)
     {
         parent::__construct($superglobals);
     }
