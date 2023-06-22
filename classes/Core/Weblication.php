@@ -1457,7 +1457,7 @@ class Weblication extends Component
 
             $timeSpent = microtime(true) - POOL_START;
             $htmlStartTags = $htmlCloseTags = '';
-            if(IS_CONSOLE) {
+            if(IS_CLI) {
                 $what = 'Script';
             }
             else {
