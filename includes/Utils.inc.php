@@ -1383,7 +1383,7 @@ function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = 
     $clientsideRelativePathComponents = count(explode($separator, $_SERVER['DOCUMENT_ROOT']));
     $commonPathComponents = min($clientsideRelativePathComponents, $paths['clientside']['commonPathComponents']);
     $amount = $clientsideRelativePathComponents - $paths['clientside']['commonPathComponents'];
-    $levels = $amount > 0 ? str_repeat('..' . $separator, $amount) ?: '/' : 0;
+    $levels = $amount > 0 ? str_repeat('..' . $separator, $amount) : '/';
     $clientsideRelativePath = $levels . implode($separator, array_slice($paths['clientside']['toThisParts'], $commonPathComponents));
 
     // Calculate the serverside relative path.
