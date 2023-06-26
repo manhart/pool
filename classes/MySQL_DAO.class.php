@@ -1053,7 +1053,7 @@ SQL;
     protected function __buildHaving(array $filter_rules): string
     {
         $query = $this->__buildFilter($filter_rules, 'and', false, '');
-        if($query != '') $query = " HAVING $query";
+        if($query) $query = " HAVING $query";
         return $query;
     }
 
