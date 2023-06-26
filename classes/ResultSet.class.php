@@ -589,7 +589,7 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Loescht ein Feld (Key) inkl. Inhalt (Value) aus dem Datensatz
+     * Deletes a field (key) including its content (value) from the data record
      *
      * @param string $key
      * @return ResultSet
@@ -601,13 +601,41 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Aendert den Namen eines Schluessels
+     * Deletes a field (key) including its content (value) from all data records
+     * @param string $key
+     * @return $this
+     */
+    public function delKeyFromAll(string $key): static
+    {
+        foreach ($this->rowset as &$row) {
+            unset($row[$key]);
+        }
+        return $this;
+    }
+
+    /**
+     * Deletes fields (keys) including their content (values) from all data records
+     * @param array $keys
+     * @return $this
+     */
+    public function delKeysFromAll(array $keys): static
+    {
+        foreach ($this->rowset as &$row) {
+            foreach ($keys as $key) {
+                unset($row[$key]);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Changes the name of a key
      *
-     * @param array $old_key alter Schluesselname (oder array fuer mehrere Schluesselaenderungen)
-     * @param array $new_key neuer Schluesselname (oder array fuer mehrere Schluesselaenderungen)
+     * @param array $old_key old key name
+     * @param array $new_key new key name
      * @return ResultSet
      */
-    public function changeKey(array $old_key, array $new_key): self
+    public function changeKeysFromAll(array $old_key, array $new_key): self
     {
         $oldCount = count($old_key);
 
@@ -706,7 +734,7 @@ class ResultSet extends PoolObject implements Countable
      *
      * @return array Recordset
      */
-    public function getRowset(): array
+    public function getRowSet(): array
     {
         return $this->rowset;
     }
@@ -714,11 +742,10 @@ class ResultSet extends PoolObject implements Countable
     /**
      * Füllt das Resultset mit Daten. Als Übergabeparameter erwartet die Funktion ein indiziertes Array (enthaelt je Satz ein assoziatives Array mit Feldnamen). Satzzeiger wird auf ersten Satz gelegt.
      *
-     * @access public
      * @param array $rowSet
      * @return ResultSet
      */
-    public function setRowset(array $rowSet): static
+    public function setRowSet(array $rowSet): static
     {
         $this->rowset = $rowSet;
         $this->reset();
@@ -731,7 +758,7 @@ class ResultSet extends PoolObject implements Countable
      * @param array $rowSet
      * @return ResultSet
      */
-    public function addRowset(array $rowSet): static
+    public function addRowSet(array $rowSet): static
     {
         $this->rowset = array_merge($this->rowset, $rowSet);
         $this->reset();

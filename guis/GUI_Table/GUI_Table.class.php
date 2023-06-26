@@ -1521,7 +1521,7 @@ class GUI_Table extends GUI_Module
         $return = [];
         $return['total'] = $total;
         //            $return['totalNotFiltered'] = $total;
-        $return['rows'] = $ResultSet->getRowset();
+        $return['rows'] = $ResultSet->getRowSet();
         return $return;
     }
 

@@ -114,7 +114,7 @@ class GUI_DBLookupSelect extends GUI_Select
 
         $Resultset = $DAO->getMultiple(null, null, $filter, $sorting);
         #echo pray($Resultset);
-        $rowset = $Resultset -> getRowset();
+        $rowset = $Resultset -> getRowSet();
 
         $listfields = explode(',', $listfield);
         $listfieldSeparator = $this->Input->getVar('listfieldSeparator');
