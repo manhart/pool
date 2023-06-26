@@ -1,154 +1,154 @@
 <?php
 /**
-* # PHP Object Oriented Library (POOL) #
-*
-* Class MySQL_DAO abgeleitet von der abstrakten Basisklasse DAO.
-* Diese Klasse kapselt die MySQL Aktionen "select, select count(), insert, update, delete"!
-* Dabei wurden die Basisfunktionen "get, getMultiple, update, insert, delete" so angepasst, dass
-* die korrekte SQL Syntax fuer die Kommunikation mit dem MySQL Server erstellt wird.
-*
-* $Log: MySQL_DAO.class.php,v $
-* Revision 1.39  2007/05/02 11:35:41  manhart
-* -/-
-*
-* Revision 1.38  2007/04/04 10:43:06  manhart
-* Fix 'leerzeichen' in Spaltennamen
-*
-* Revision 1.37  2007/03/29 09:20:57  manhart
-* n/a
-*
-* Revision 1.36  2007/02/16 07:45:03  manhart
-* no message
-*
-* Revision 1.35  2007/02/12 14:14:36  manhart
-* Fix: primarykey exception
-*
-* Revision 1.34  2007/02/01 13:43:15  manhart
-* Fixed: "mysql_escape_string am falschen Platz"
-*
-* Revision 1.33  2007/01/30 13:04:06  manhart
-* Fixed constructor call in CustomMySQL_DAO
-*
-* Revision 1.32  2007/01/30 12:32:10  manhart
-* Fix reserved words in column_list
-*
-* Revision 1.30  2006/12/28 17:28:43  manhart
-* Fixed "tableAlias in __buildWhere"
-*
-* Revision 1.26  2006/09/27 11:24:59  manhart
-* n/a
-*
-* Revision 1.25  2006/09/22 12:31:40  manhart
-* new function deleteMultiple
-*
-* Revision 1.24  2006/09/07 14:16:58  manhart
-* new setTableAlias
-*
-* Revision 1.23  2006/08/07 11:36:59  manhart
-* Exception -> Xception (PHP5 kompatibel)
-*
-* Revision 1.22  2006/05/03 09:09:27  manhart
-* new feature update mit KEY
-*
-* Revision 1.21  2006/05/02 08:15:37  manhart
-* Fix
-*
-* Revision 1.20  2006/04/11 11:57:53  manhart
-* Aenderung listfields, Fix E_NOTICE
-*
-* Revision 1.19  2006/03/21 09:57:26  manhart
-* new foundRows()
-*
-* Revision 1.18  2006/02/23 08:40:33  manhart
-* na
-*
-* Revision 1.17  2006/02/17 09:41:46  schmidseder
-* no message
-*
-* Revision 1.16  2006/02/15 09:08:43  manhart
-* Bugfix bei Verwendung von get ohne Parameter
-*
-* Revision 1.15  2006/02/02 10:05:53  manhart
-* no message
-*
-* Revision 1.14  2005/12/30 12:45:06  manhart
-* no message
-*
-* Revision 1.12  2005/11/16 16:26:42  manhart
-* Big Improvement: check variable type for sql statement
-*
-* Revision 1.11  2005/10/06 14:21:28  schmidseder
-* Bruttoabschluss
-*
-* Revision 1.10  2005/10/04 11:05:04  manhart
-* no message
-*
-* Revision 1.9  2005/10/04 11:04:06  manhart
-* Fix null in update
-*
-* Revision 1.8  2005/10/04 11:00:12  manhart
-* reserved word list in update
-*
-* Revision 1.7  2005/09/15 14:33:17  manhart
-* Spezielle MySQL Kommandos nicht maskieren!
-*
-* Revision 1.5  2005/06/16 10:31:32  manhart
-* Fix undefined Variable
-*
-* Revision 1.4  2005/06/14 11:47:12  manhart
-* Fix raise Xception
-*
-* Revision 1.3  2005/02/18 10:49:38  manhart
-* k
-*
-* Revision 1.2  2005/01/07 14:01:49  manhart
-* debug!
-*
-* Revision 1.1.1.1  2004/09/21 07:49:25  manhart
-* initial import
-*
-* Revision 1.31  2004/09/02 12:44:09  manhart
-* Fix: fieldnames with space aborted!
-*
-* Revision 1.30  2004/08/19 15:05:58  manhart
-* Fix rueckgabe bei MySQL_DAO::update muss immer ein Objekt sein
-*
-* Revision 1.29  2004/08/19 06:48:50  manhart
-* fix reference at MySQL_DAO::__createMySQLResultset
-*
-* Revision 1.28  2004/08/03 16:14:42  manhart
-* Fix debug
-*
-* Revision 1.27  2004/08/02 11:16:13  manhart
-* New: Debugging Rows
-*
-* Revision 1.26  2004/06/29 14:10:45  manhart
-* Fix in getCount. * instead of primary keys
-*
-* Revision 1.25  2004/04/29 14:42:44  manhart
-* __buildFilter now supports operators like or, and, ( ...
-*
-* Revision 1.24  2004/04/29 10:39:28  manhart
-* New Feature, or Verkn�pfungen
-*
-* Revision 1.23  2004/04/20 16:17:57  manhart
-* update
-*
-* Revision 1.22  2004/04/01 15:11:44  manhart
-* Interface Types implemented, Comments/Description
-*
-*
-* @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
-* @version $Revision: 1.39 $
-*
-* @see DAO.class.php
-* @see MySQL_Interface.class.php
-* @see MySQL_Resultset.class.php
-*
-* @since 2003/07/10
-* @author Alexander Manhart <alexander@manhart-it.de>
-* @link https://alexander-manhart.de
-*/
+ * # PHP Object Oriented Library (POOL) #
+ *
+ * Class MySQL_DAO abgeleitet von der abstrakten Basisklasse DAO.
+ * Diese Klasse kapselt die MySQL Aktionen "select, select count(), insert, update, delete"!
+ * Dabei wurden die Basisfunktionen "get, getMultiple, update, insert, delete" so angepasst, dass
+ * die korrekte SQL Syntax fuer die Kommunikation mit dem MySQL Server erstellt wird.
+ *
+ * $Log: MySQL_DAO.class.php,v $
+ * Revision 1.39  2007/05/02 11:35:41  manhart
+ * -/-
+ *
+ * Revision 1.38  2007/04/04 10:43:06  manhart
+ * Fix 'leerzeichen' in Spaltennamen
+ *
+ * Revision 1.37  2007/03/29 09:20:57  manhart
+ * n/a
+ *
+ * Revision 1.36  2007/02/16 07:45:03  manhart
+ * no message
+ *
+ * Revision 1.35  2007/02/12 14:14:36  manhart
+ * Fix: primarykey exception
+ *
+ * Revision 1.34  2007/02/01 13:43:15  manhart
+ * Fixed: "mysql_escape_string am falschen Platz"
+ *
+ * Revision 1.33  2007/01/30 13:04:06  manhart
+ * Fixed constructor call in CustomMySQL_DAO
+ *
+ * Revision 1.32  2007/01/30 12:32:10  manhart
+ * Fix reserved words in column_list
+ *
+ * Revision 1.30  2006/12/28 17:28:43  manhart
+ * Fixed "tableAlias in __buildWhere"
+ *
+ * Revision 1.26  2006/09/27 11:24:59  manhart
+ * n/a
+ *
+ * Revision 1.25  2006/09/22 12:31:40  manhart
+ * new function deleteMultiple
+ *
+ * Revision 1.24  2006/09/07 14:16:58  manhart
+ * new setTableAlias
+ *
+ * Revision 1.23  2006/08/07 11:36:59  manhart
+ * Exception -> Xception (PHP5 kompatibel)
+ *
+ * Revision 1.22  2006/05/03 09:09:27  manhart
+ * new feature update mit KEY
+ *
+ * Revision 1.21  2006/05/02 08:15:37  manhart
+ * Fix
+ *
+ * Revision 1.20  2006/04/11 11:57:53  manhart
+ * Aenderung listfields, Fix E_NOTICE
+ *
+ * Revision 1.19  2006/03/21 09:57:26  manhart
+ * new foundRows()
+ *
+ * Revision 1.18  2006/02/23 08:40:33  manhart
+ * na
+ *
+ * Revision 1.17  2006/02/17 09:41:46  schmidseder
+ * no message
+ *
+ * Revision 1.16  2006/02/15 09:08:43  manhart
+ * Bugfix bei Verwendung von get ohne Parameter
+ *
+ * Revision 1.15  2006/02/02 10:05:53  manhart
+ * no message
+ *
+ * Revision 1.14  2005/12/30 12:45:06  manhart
+ * no message
+ *
+ * Revision 1.12  2005/11/16 16:26:42  manhart
+ * Big Improvement: check variable type for sql statement
+ *
+ * Revision 1.11  2005/10/06 14:21:28  schmidseder
+ * Bruttoabschluss
+ *
+ * Revision 1.10  2005/10/04 11:05:04  manhart
+ * no message
+ *
+ * Revision 1.9  2005/10/04 11:04:06  manhart
+ * Fix null in update
+ *
+ * Revision 1.8  2005/10/04 11:00:12  manhart
+ * reserved word list in update
+ *
+ * Revision 1.7  2005/09/15 14:33:17  manhart
+ * Spezielle MySQL Kommandos nicht maskieren!
+ *
+ * Revision 1.5  2005/06/16 10:31:32  manhart
+ * Fix undefined Variable
+ *
+ * Revision 1.4  2005/06/14 11:47:12  manhart
+ * Fix raise Xception
+ *
+ * Revision 1.3  2005/02/18 10:49:38  manhart
+ * k
+ *
+ * Revision 1.2  2005/01/07 14:01:49  manhart
+ * debug!
+ *
+ * Revision 1.1.1.1  2004/09/21 07:49:25  manhart
+ * initial import
+ *
+ * Revision 1.31  2004/09/02 12:44:09  manhart
+ * Fix: fieldnames with space aborted!
+ *
+ * Revision 1.30  2004/08/19 15:05:58  manhart
+ * Fix rueckgabe bei MySQL_DAO::update muss immer ein Objekt sein
+ *
+ * Revision 1.29  2004/08/19 06:48:50  manhart
+ * fix reference at MySQL_DAO::__createMySQLResultset
+ *
+ * Revision 1.28  2004/08/03 16:14:42  manhart
+ * Fix debug
+ *
+ * Revision 1.27  2004/08/02 11:16:13  manhart
+ * New: Debugging Rows
+ *
+ * Revision 1.26  2004/06/29 14:10:45  manhart
+ * Fix in getCount. * instead of primary keys
+ *
+ * Revision 1.25  2004/04/29 14:42:44  manhart
+ * __buildFilter now supports operators like or, and, ( ...
+ *
+ * Revision 1.24  2004/04/29 10:39:28  manhart
+ * New Feature, or Verkn�pfungen
+ *
+ * Revision 1.23  2004/04/20 16:17:57  manhart
+ * update
+ *
+ * Revision 1.22  2004/04/01 15:11:44  manhart
+ * Interface Types implemented, Comments/Description
+ *
+ *
+ * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
+ * @version $Revision: 1.39 $
+ *
+ * @see DAO.class.php
+ * @see MySQL_Interface.class.php
+ * @see MySQL_Resultset.class.php
+ *
+ * @since 2003/07/10
+ * @author Alexander Manhart <alexander@manhart-it.de>
+ * @link https://alexander-manhart.de
+ */
 
 use pool\classes\Core\Weblication;
 use pool\classes\Database\Commands;
@@ -190,7 +190,7 @@ class MySQL_DAO extends DAO
     protected string $tableAlias = '';
 
     private array $MySQL_trans = [
-        'equal'	=> '=',
+        'equal' => '=',
         'unequal' => '!=',
         'greater' => '>',
         'greater than' => '>=',
@@ -256,7 +256,7 @@ class MySQL_DAO extends DAO
 
         $table = "`$this->table`";
         $glue = "`, $table.`";
-        $this->column_list = $table.'.`' . implode($glue, $columns).'`';
+        $this->column_list = $table . '.`' . implode($glue, $columns) . '`';
     }
 
     /**
@@ -308,7 +308,7 @@ class MySQL_DAO extends DAO
         // todo introduce expression columns
         // todo consider column properties (e.g. type, length, ...)
 
-        for($i=0; $i < $count; $i++) {
+        for($i = 0; $i < $count; $i++) {
             // don't escape column if it has already backticks, is an expression or contains a dot
             $column = static::escapeColumn($columns[$i]);
             // add column separator
@@ -382,9 +382,9 @@ class MySQL_DAO extends DAO
      * @param boolean $reInit Feldliste erneuern
      * @return array Felder der Tabelle
      */
-    public function getFieldList(bool $reInit=false): array
+    public function getFieldList(bool $reInit = false): array
     {
-        if (count($this->getColumns()) == 0 or $reInit) {
+        if(count($this->getColumns()) == 0 or $reInit) {
             $this->fetchColumns();
         }
         return $this->getColumns();
@@ -399,7 +399,7 @@ class MySQL_DAO extends DAO
     public function getFieldType(string $fieldName): string
     {
         if(!$this->field_list) $this->fetchColumns();
-        foreach ($this->field_list as $field) {
+        foreach($this->field_list as $field) {
             if($field['COLUMN_NAME'] == $fieldName) {
                 $buf = explode(' ', $field['COLUMN_TYPE']);
                 $type = $buf[0];
@@ -421,7 +421,7 @@ class MySQL_DAO extends DAO
     public function getFieldInfo(string $fieldName): array
     {
         if(!$this->field_list) $this->fetchColumns();
-        foreach ($this->field_list as $field) {
+        foreach($this->field_list as $field) {
             if($field['COLUMN_NAME'] == $fieldName) {
                 return $field;
             }
@@ -447,6 +447,7 @@ class MySQL_DAO extends DAO
 
     /**
      * Set the table alias
+     *
      * @param $alias
      * @return void
      */
@@ -462,7 +463,9 @@ class MySQL_DAO extends DAO
      */
     public function getColumnsWithTableAlias(): array
     {
-        return array_map(function($val) { return $this->tableAlias . '.'.$val; }, $this->getColumns());
+        return array_map(function($val) {
+            return $this->tableAlias . '.' . $val;
+        }, $this->getColumns());
     }
 
     /**
@@ -526,7 +529,7 @@ class MySQL_DAO extends DAO
             }
         }
 
-        if ('' == $columns) {
+        if('' == $columns) {
             return (new ResultSet())->addError('MySQL_DAO::insert failed. No fields stated!');
         }
 
@@ -559,7 +562,7 @@ SQL;
     {
         $sizeof = count($this->pk);
         $pk = [];
-        for ($i=0; $i<$sizeof; $i++) {
+        for($i = 0; $i < $sizeof; $i++) {
             if(!isset($data[$this->pk[$i]])) {
                 return (new ResultSet())->addError('Update is wrong. No primary key found.');
             }
@@ -578,12 +581,12 @@ SQL;
 
         $set = $this->__buildAssignmentList($data);
 
-        if (!$set) {
+        if(!$set) {
             return new ResultSet();
         }
 
         $where = $this->__buildWhere($pk, $this->pk);
-        if ($where == '1') {
+        if($where == '1') {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
@@ -603,6 +606,7 @@ SQL;
 
     /**
      * Update multiple records at once
+     *
      * @param array $data
      * @param array $filter_rules
      * @return ResultSet
@@ -612,12 +616,12 @@ SQL;
     {
         $set = $this->__buildAssignmentList($data);
 
-        if (!$set) {
+        if(!$set) {
             return new ResultSet();
         }
 
         $where = $this->__buildFilter($filter_rules, 'and', true);
-        if ($where == '1') {
+        if($where == '1') {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
@@ -646,8 +650,8 @@ SQL;
     public function delete($id): ResultSet
     {
         $where = $this->__buildWhere($id, $this->pk);
-        if ($where == '1') {
-            $error_msg = 'Delete maybe wrong! Do you really want to delete all records in the table: '. $this -> table;
+        if($where == '1') {
+            $error_msg = 'Delete maybe wrong! Do you really want to delete all records in the table: ' . $this->table;
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
         }
@@ -671,7 +675,7 @@ SQL;
      * @see MySQL_DAO::__buildFilter
      * @see MySQL_ResultSet
      */
-    public function deleteMultiple(array $filter_rules=[]): ResultSet
+    public function deleteMultiple(array $filter_rules = []): ResultSet
     {
         $where = $this->__buildFilter($filter_rules, 'and', true);
         /** @noinspection SqlResolve */
@@ -696,7 +700,7 @@ SQL;
      * @return ResultSet Ergebnismenge
      * @see MySQL_ResultSet
      */
-    public function get($id, $key=NULL): ResultSet
+    public function get($id, $key = null): ResultSet
     {
         $id = $id ?? 0;
         $where = $this->__buildWhere($id, $key);
@@ -731,8 +735,8 @@ SQL;
      * @see MySQL_DAO::__buildGroupBy
      *
      */
-    public function getMultiple(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[], array $sorting=[], array $limit=[],
-                                array $groupBy=[], array $having=[], array $options=[]): ResultSet
+    public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
+        array $groupBy = [], array $having = [], array $options = []): ResultSet
     {
         $options = implode(' ', $options);
 
@@ -769,7 +773,7 @@ SQL;
      * @see MySQL_ResultSet
      * @see MySQL_DAO::__buildFilter
      */
-    public function getCount(mixed $id=NULL, mixed $key=NULL, array $filter_rules=[]): ResultSet
+    public function getCount(mixed $id = null, mixed $key = null, array $filter_rules = []): ResultSet
     {
         $where = $this->__buildWhere($id, $key);
         $filter = $this->__buildFilter($filter_rules);
@@ -850,7 +854,7 @@ SQL;
         if(!Weblication::getInstance()->hasTranslator() || !$tokens)
             return $field;
         $Translator = Weblication::getInstance()->getTranslator();
-        $tmp = 'case '.$field;
+        $tmp = 'case ' . $field;
         foreach($tokens as $token)
             $tmp .= " when '$token' then '{$Translator->getTranslation($token, $token)}'";
         return "$tmp else $field end";
@@ -881,23 +885,24 @@ SQL;
      * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
      * @param string $operator MySQL Operator AND/OR
      * @param boolean $skip_next_operator False setzt zu Beginn keinen Operator
-     * @return string Teil eines SQL Queries
-     *
+     * @param string $initialOperator
+     * @return string filter part of sql statement
      */
-    protected function __buildFilter(array $filter_rules, string $operator='and', bool $skip_next_operator=false): string
+    protected function __buildFilter(array $filter_rules, string $operator = 'and', bool $skip_next_operator = false, string $initialOperator = ' and'): string
     {
-        if(!$filter_rules )//not filter anything (terminate floating operators)
+        if(!$filter_rules)//not filter anything (terminate floating operators)
             return $skip_next_operator ? '1' : '';
         $firstRule = $filter_rules[0];
         $query = !is_array($firstRule) && !in_array(strtolower($firstRule), ['or', 'and']) ?//1. rule is a non joining operator
-            ' and' : '';//* we add an initial 'and' operator.
+            $initialOperator : '';//* we add an initial 'and' operator.
         foreach($filter_rules as $record) {
             $skipAutomaticOperator = $skip_next_operator;
             if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
                 $record = " $record "; //operator e.g. or, and
-                if ($skipAutomaticOperator)/** caller error? e.g. [...,['and'],['or'],...] */;
-                $skipAutomaticOperator = true;
-            } elseif (is_array($record[0]))// nesting detected
+                if($skipAutomaticOperator) /** caller error? e.g. [...,['and'],['or'],...] */ ;
+                    $skipAutomaticOperator = true;
+            }
+            elseif(is_array($record[0]))// nesting detected
                 $record = "({$this->__buildFilter($record[0], $record[1], true)})";//"($subFilter)"
             else {//normal record
                 $field = $this->translateValues ? //get field 'name'
@@ -909,28 +914,32 @@ SQL;
                 $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
                 $noQuotes = $quoteSettings & DAO::DAO_NO_QUOTES;
                 $noEscape = $quoteSettings & DAO::DAO_NO_ESCAPE;
-                if (is_array($values)) switch ($rawInnerOperator) {//multi value operation
-                    case 'between':
-                        $value = /* min */
-                            $this->escapeWhereConditionValue($values[0], $noEscape, $noQuotes);
-                        $value .= ' and ';
-                        $value .= /* max */
-                            $this->escapeWhereConditionValue($values[1], $noEscape, $noQuotes);
-                        break;
-                    default://enlist all values e.g. in, not in
-                        //apply quotation rules
-                        $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
-                        $values = implode(', ', $values);
-                        $value = "($values)";
-                        break;
-                } elseif ($values instanceof Commands) {//resolve reserved keywords
+                if(is_array($values))
+                    switch($rawInnerOperator) {//multi value operation
+                        case 'between':
+                            $value = /* min */
+                                $this->escapeWhereConditionValue($values[0], $noEscape, $noQuotes);
+                            $value .= ' and ';
+                            $value .= /* max */
+                                $this->escapeWhereConditionValue($values[1], $noEscape, $noQuotes);
+                            break;
+                        default://enlist all values e.g. in, not in
+                            //apply quotation rules
+                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
+                            $values = implode(', ', $values);
+                            $value = "($values)";
+                            break;
+                    }
+                elseif($values instanceof Commands) {//resolve reserved keywords
                     $expression = $this->commands[$values->name];
                     $value = $expression instanceof Closure ?
                         $expression($field) : $expression;//!assuming closure was meant to be evaluated at this point
-                } elseif ($values instanceof DateTimeInterface) {//format date-objects
+                }
+                elseif($values instanceof DateTimeInterface) {//format date-objects
                     $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
                     $value = "'$dateTime'";
-                } else//sub query moved to escapeWhereConditionValue
+                }
+                else//sub query moved to escapeWhereConditionValue
                     $value = match (gettype($values)) {//handle by type
                         'NULL' => 'NULL',
                         'boolean' => bool2string($values),
@@ -941,13 +950,14 @@ SQL;
                 $record = "$field $innerOperator $value";
             }
             $query .= !$skipAutomaticOperator ? //automatic operator?
-                    " $operator $record" : $record;//automation puts operator between the last record and this one
+                " $operator $record" : $record;//automation puts operator between the last record and this one
         }
         return $query;
     }
 
     /**
      * add value to where condition
+     *
      * @param mixed $value
      * @param false|int $noEscape
      * @param false|int $noQuotes
@@ -980,7 +990,7 @@ SQL;
             $filterExpr = match ($column['type'] ?? '') {
                 'date', 'date.time' => //temporal type
                 ($sqlTimeFormat = Weblication::getInstance()->getDefaultFormat("mysql.date_format.{$column['type']}")) ?//try fetch format-string
-                 "DATE_FORMAT($originalExpr, '$sqlTimeFormat')":$originalExpr,//set SQL to format temporal value
+                    "DATE_FORMAT($originalExpr, '$sqlTimeFormat')" : $originalExpr,//set SQL to format temporal value
                 default => $originalExpr//unchanged
             };
             $columnName = $column['alias'] ?? $column;
@@ -988,12 +998,12 @@ SQL;
                 $operator = 'like';
                 /** @var string $filterByValue */
                 $filterByValue = $definedSearchKeywords[$columnName];//get keyword for column name?
-                switch (($column['filterControl']??false ?: 'input')) {//type of input?
+                switch(($column['filterControl'] ?? false ?: 'input')) {//type of input?
                     case 'select':
                         $operator = 'equal';
                         break;
                     case 'datepicker':
-                        if ($filterByValue)//non-empty
+                        if($filterByValue)//non-empty
                             $filterByValue = $this->reformatFilterDate($filterByValue);
                         $filterByValue .= '%';//empty -> '%'
                         // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
@@ -1002,9 +1012,10 @@ SQL;
                     default:
                         $filterByValue = "%$filterByValue%";
                 }
-                $filterByColumn = $column['filterByDbColumn']??false ?:$filterExpr;
+                $filterByColumn = $column['filterByDbColumn'] ?? false ?: $filterExpr;
                 $defined_filter[] = [$filterByColumn, $operator, $filterByValue];
-            } elseif ($searchString)//column not filtered -> look for searchString
+            }
+            elseif($searchString)//column not filtered -> look for searchString
                 array_push($filter, [$filterExpr, 'like', "%$searchString%"], 'or');//add condition, one column must match the searchString
         }
         array_pop($filter);//remove trailing or
@@ -1019,31 +1030,31 @@ SQL;
      */
     private function reformatFilterDate(string $filterByValue): string
     {
-        if (($date = date_parse($filterByValue)) &&
+        if(($date = date_parse($filterByValue)) &&
             $date['error_count'] == 0 && $date['warning_count'] == 0 &&
             $date['year'] && $date['month'] && $date['day']) {// is date?
             $format = "%d-%02d-%02d";//y-MM-DD
-            if ($date['hour'] || $date['minute']) {
+            if($date['hour'] || $date['minute']) {
                 $format .= " %02d:%02d";// hh:mm
                 $format .= $date['second'] ? ":%02d" : '';//:ss
             }
             $filterByValue = sprintf($format, $date['year'], $date['month'],
                 $date['day'], $date['hour'], $date['minute'], $date['second']);
-        } else /** Malformed date TODO */ ;
+        }
+        else /** Malformed date TODO */ ;
         return $filterByValue;
     }
 
     /**
-     * Filter-Regeln fuer die Gruppierung
+     * Build a having statement for a SQL query
      *
      * @param array $filter_rules Filter Regeln (siehe __buildFilter)
      * @return string SQL-Abfrage
      */
     protected function __buildHaving(array $filter_rules): string
     {
-        $query = ltrim($this->__buildFilter($filter_rules, 'and', true));
-        $beginningAnd = (str_starts_with($query, 'and'));
-        if($query != '') $query = ' HAVING '.($beginningAnd ? '1 ' : '').$query;
+        $query = $this->__buildFilter($filter_rules, 'and', true, '');
+        if($query != '') $query = " HAVING $query";
         return $query;
     }
 
@@ -1056,18 +1067,18 @@ SQL;
     protected function __buildSorting(?array $sorting): string
     {
         $sql = '';
-        if (is_array($sorting) and count($sorting)) {
+        if(is_array($sorting) and count($sorting)) {
             $alias = $this->tableAlias ? "$this->tableAlias." : '';
 
-            foreach ($sorting as $column => $sort) {
-                if ($sql == '') {
+            foreach($sorting as $column => $sort) {
+                if($sql == '') {
                     $sql = ' ORDER BY ';
                 }
                 else {
                     $sql .= ', ';
                 }
 
-                $column = $alias.$column;
+                $column = $alias . $column;
                 if($this->translateValues) {
                     $column = $this->translateValues($column);
                 }
@@ -1084,7 +1095,7 @@ SQL;
     protected function __buildLimit(array $limit): string
     {
         $sql = '';
-        if ($limit) {
+        if($limit) {
             $sql = ' LIMIT ' . implode(', ', $limit);
         }
         return $sql;
@@ -1104,10 +1115,10 @@ SQL;
         // array('test' => 'ASC', 'WITH ROLLUP');
         $sql = '';
         $alias = '';
-        if($this->tableAlias) $alias = $this->tableAlias.'.';
+        if($this->tableAlias) $alias = $this->tableAlias . '.';
 
-        foreach ($groupBy as $column => $sort) {
-            if ($sql == '') {
+        foreach($groupBy as $column => $sort) {
+            if($sql == '') {
                 $sql = ' GROUP BY ';
             }
             elseif($column == 'WITH ROLLUP') {
@@ -1132,22 +1143,22 @@ SQL;
     protected function __buildWhere(mixed $id, mixed $key): string
     {
         $result = '';
-        if (is_null($id)) {
+        if(is_null($id)) {
             return '1';
         }
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
-        if (is_null($key)) {
+        if(is_null($key)) {
             $key = $this->pk;
         }
-        if (is_array($key)) {
-            if (!is_array($id)) {
+        if(is_array($key)) {
+            if(!is_array($id)) {
                 $id = array($id);
             }
             $count = count($key);
-            for ($i=0; $i<$count; $i++) {
+            for($i = 0; $i < $count; $i++) {
                 $keyName = $key[$i];
                 $result = "$result$alias$keyName=\"{$this->db->escapeString($id[$i], $this->dbname)}\"";
-                if(!isset($id[$i+1])) break;
+                if(!isset($id[$i + 1])) break;
                 $result .= ' and ';
             }
         }
