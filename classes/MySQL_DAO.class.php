@@ -899,8 +899,7 @@ SQL;
             $skipAutomaticOperator = $skip_next_operator;
             if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
                 $record = " $record "; //operator e.g. or, and
-                if($skipAutomaticOperator) /** caller error? e.g. [...,['and'],['or'],...] */ ;
-                    $skipAutomaticOperator = true;
+                $skipAutomaticOperator = true;
             }
             elseif(is_array($record[0]))// nesting detected
                 $record = "({$this->__buildFilter($record[0], $record[1], true)})";//"($subFilter)"
@@ -1053,7 +1052,7 @@ SQL;
      */
     protected function __buildHaving(array $filter_rules): string
     {
-        $query = $this->__buildFilter($filter_rules, 'and', true, '');
+        $query = $this->__buildFilter($filter_rules, 'and', false, '');
         if($query != '') $query = " HAVING $query";
         return $query;
     }
