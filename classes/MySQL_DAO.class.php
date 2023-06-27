@@ -1066,7 +1066,7 @@ SQL;
     protected function __buildSorting(?array $sorting): string
     {
         $sql = '';
-        if(is_array($sorting) and count($sorting)) {
+        if(is_array($sorting) && count($sorting)) {
             $alias = $this->tableAlias ? "$this->tableAlias." : '';
 
             foreach($sorting as $column => $sort) {
@@ -1090,14 +1090,10 @@ SQL;
     /**
      * @param array $limit Array im Format $array([offset], max). Beispiel $array(5) oder auch $array(0, 5)
      * @return string LIMIT eines SQL Statements
-     **/
+     */
     protected function __buildLimit(array $limit): string
     {
-        $sql = '';
-        if($limit) {
-            $sql = ' LIMIT ' . implode(', ', $limit);
-        }
-        return $sql;
+        return $limit ? ' LIMIT ' . implode(', ', $limit) : '';
     }
 
     /**
