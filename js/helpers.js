@@ -1477,6 +1477,17 @@ const areArraysEqual = (a, b) =>
 }
 
 /**
+ * compares objects if they are equal
+ * @param obj1
+ * @param obj2
+ * @return {boolean}
+ */
+const areObjectsEqual = (obj1, obj2) =>
+{
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
+}
+
+/**
  * @see https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
  * @param str
  * @return {string}
