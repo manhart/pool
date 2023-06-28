@@ -278,6 +278,26 @@ class MySQL_DAO extends DAO
     }
 
     /**
+     * return columns to translate into another language
+     */
+    public function getTranslatedColumns(): array
+    {
+        return $this->translate;
+    }
+
+    /**
+     * set columns for translation into another language
+     *
+     * @param array $translate
+     * @return $this
+     */
+    public function setTranslatedColumns(array $translate): static
+    {
+        $this->translate = $translate;
+        return $this;
+    }
+
+    /**
      * fetches the columns automatically from the driver / interface
      *
      * Beim Setzen der Spalten/Felder wird das Ereignis
@@ -344,7 +364,7 @@ class MySQL_DAO extends DAO
      *
      * @return $this
      */
-    public function enableTranslation(): MySQL_DAO
+    public function enableTranslation(): static
     {
         $this->translateValues = $this->cache['translatedValues'] ?: $this->translateValues;
         $this->translate = $this->cache['translate'] ?: $this->translate;
@@ -356,7 +376,7 @@ class MySQL_DAO extends DAO
      *
      * @return $this
      */
-    public function disableTranslation(): MySQL_DAO
+    public function disableTranslation(): static
     {
         $this->cache['translate'] = $this->translate;
         $this->cache['translatedValues'] = $this->translateValues;
