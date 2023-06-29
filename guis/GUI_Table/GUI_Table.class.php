@@ -7,6 +7,7 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+use pool\classes\Core\Input;
 use pool\classes\Database\DAO;
 
 class GUI_Table extends GUI_Module
@@ -1045,7 +1046,7 @@ class GUI_Table extends GUI_Module
     /**
      * @param int|null $superglobals
      */
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVar('framework', 'bs4');
         $this->Defaults->addVar('render', self::RENDER_ONDOMLOADED);
@@ -1300,7 +1301,7 @@ class GUI_Table extends GUI_Module
     /**
      * prepare content
      */
-    public function prepare()
+    protected function prepare()
     {
         $this->poolOptions['moduleName'] = $this->getName();
 
@@ -1364,7 +1365,7 @@ class GUI_Table extends GUI_Module
                     // translate title
                     if($optName == 'title') {
                         if(str_contains($attrValue, '.')) {
-                            $attrValue = $this->Weblication->getTranslator()->getTranslation($attrValue, $attrValue) ?: $attrValue;
+                            $attrValue = $this->Weblication->getTranslator()->getTranslation($attrValue, $attrValue);
                         }
                     }
 
@@ -1520,7 +1521,7 @@ class GUI_Table extends GUI_Module
         $return = [];
         $return['total'] = $total;
         //            $return['totalNotFiltered'] = $total;
-        $return['rows'] = $ResultSet->getRowset();
+        $return['rows'] = $ResultSet->getRowSet();
         return $return;
     }
 

@@ -8,12 +8,13 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
+namespace pool\classes\Exception;
 
-class InputEnv extends Input
+use InvalidArgumentException as PhpInvalidArgumentException;
+
+/**
+ * Thrown to indicate that the argument received is not valid.
+ */
+class MissingArgumentException extends PhpInvalidArgumentException implements PoolExceptionInterface
 {
-    function __construct(int $superglobals = Input::ENV)
-    {
-        parent::__construct($superglobals);
-    }
 }

@@ -18,6 +18,8 @@
  * @see GUI_FormElement
  */
 
+use pool\classes\Core\Input;
+
 /**
  * GUI_Edit
  *
@@ -33,10 +35,10 @@ class GUI_Edit extends GUI_InputElement
 {
     use Configurable;
 
-//    protected string $storageType = 'JSON';
-//
-//    use \pool\classes\Configurable;
-//
+    //    protected string $storageType = 'JSON';
+    //
+    //    use \pool\classes\Configurable;
+    //
     private array $inspectorProperties = [
         'placeholder' => [
             'attribute' => 'placeholder',
@@ -48,8 +50,9 @@ class GUI_Edit extends GUI_InputElement
             'configurable' => true,
         ]
     ];
-//
-//    private array $poolOptions = [];
+
+    //
+    //    private array $poolOptions = [];
 
     /**
      * Initialisiert Standardwerte:
@@ -62,33 +65,32 @@ class GUI_Edit extends GUI_InputElement
      *
      * @access public
      **/
-    function init(?int $superglobals= Input::INPUT_GET | Input::INPUT_POST)
+    function init(?int $superglobals = Input::GET | Input::POST)
     {
         // $this->Defaults->addVar('placeholder', 'hirsch');
-        $this->Defaults->addVar(
-            array(
-                'type'			=> 'text',
-                'size'			=> 20,
-            )
+        $this->Defaults->addVars([
+                'type' => 'text',
+                'size' => 20,
+            ]
         );
 
         parent::init($superglobals);
     }
 
-//    public function hasConfiguration()
-//    {
-//        // TODO: Implement hasConfiguration() method.
-//    }
-//
-//    public function saveConfiguration()
-//    {
-//        // TODO: Implement saveConfiguration() method.
-//    }
-//
-//    public function loadConfiguration()
-//    {
-//        // TODO: Implement loadConfiguration() method.
-//    }
+    //    public function hasConfiguration()
+    //    {
+    //        // TODO: Implement hasConfiguration() method.
+    //    }
+    //
+    //    public function saveConfiguration()
+    //    {
+    //        // TODO: Implement saveConfiguration() method.
+    //    }
+    //
+    //    public function loadConfiguration()
+    //    {
+    //        // TODO: Implement loadConfiguration() method.
+    //    }
 
     /**
      * Laedt Template "tpl_edit.html". Ist im projekteigenen Skinordner ueberschreibbar!
@@ -101,43 +103,43 @@ class GUI_Edit extends GUI_InputElement
     /**
      * Provisioning data before preparing module and there children.
      */
-//    public function provision()
-//    {
-//        $data = $this->Input->getData();
-//        unset(
-//            $data['moduleName'],
-//            $data['ModuleName'],
-//            $data['modulename'],
-//            $data['framework'],
-//            $data['render']
-//        );
-//
-//        $this->setConfiguration($data);
+    //    public function provision()
+    //    {
+    //        $data = $this->Input->getData();
+    //        unset(
+    //            $data['moduleName'],
+    //            $data['ModuleName'],
+    //            $data['modulename'],
+    //            $data['framework'],
+    //            $data['render']
+    //        );
+    //
+    //        $this->setConfiguration($data);
 
-//        $config = [];
-//        $fileName = $this->getFixedParam('loadConfigFromJSON');
-//        if($fileName) {
-//            $config = $this->loadConfigFromJSON($fileName);
-//        }
-//        $this->setConfiguration($config);
-//    }
+    //        $config = [];
+    //        $fileName = $this->getFixedParam('loadConfigFromJSON');
+    //        if($fileName) {
+    //            $config = $this->loadConfigFromJSON($fileName);
+    //        }
+    //        $this->setConfiguration($config);
+    //    }
 
-//    public function loadConfigFromJSON($fileName)
-//    {
-//        $file = DIR_DATA_ROOT.'/ModuleConfiguratorTemp/'.$fileName;
-//        $json = file_get_contents($file);
-//
-//        $config = json_decode($json, JSON_OBJECT_AS_ARRAY);
-//        if(json_last_error() != JSON_ERROR_NONE) {
-//            return [];
-//        }
-//        return $config;
-//    }
+    //    public function loadConfigFromJSON($fileName)
+    //    {
+    //        $file = DIR_DATA_ROOT.'/ModuleConfiguratorTemp/'.$fileName;
+    //        $json = file_get_contents($file);
+    //
+    //        $config = json_decode($json, JSON_OBJECT_AS_ARRAY);
+    //        if(json_last_error() != JSON_ERROR_NONE) {
+    //            return [];
+    //        }
+    //        return $config;
+    //    }
 
     public function prepare()
     {
-//        echo 'placeholder: '.$this->getVar('placeholder');
-//        $this->setVar($this->options);
+        //        echo 'placeholder: '.$this->getVar('placeholder');
+        //        $this->setVar($this->options);
         parent::prepare();
     }
 
@@ -147,23 +149,23 @@ class GUI_Edit extends GUI_InputElement
         return $tmp;
     }
 
-//    public function setOptions(array $options)
-//    {
-//        foreach($options as $key => $value) {
-//            if($value === 'true' or $value === 'false') {
-//                $value = string2bool($value);
-//            }
-//            if(isset($this->getInspectorProperties()[$key])) {
-//                if($this->getInspectorProperties()[$key]['value'] != $value) {
-//                    $this->configuration[$key] = $value;
-//                }
-//            }
-//            else {
-//                $this->poolOptions[$key] = $value;
-//            }
-//        }
-//        $this->setVar($this->configuration);
-//    }
+    //    public function setOptions(array $options)
+    //    {
+    //        foreach($options as $key => $value) {
+    //            if($value === 'true' or $value === 'false') {
+    //                $value = string2bool($value);
+    //            }
+    //            if(isset($this->getInspectorProperties()[$key])) {
+    //                if($this->getInspectorProperties()[$key]['value'] != $value) {
+    //                    $this->configuration[$key] = $value;
+    //                }
+    //            }
+    //            else {
+    //                $this->poolOptions[$key] = $value;
+    //            }
+    //        }
+    //        $this->setVar($this->configuration);
+    //    }
 
     /**
      * Verarbeitet Template (Platzhalter, Bloecke, etc.) und generiert HTML Output.
@@ -175,5 +177,4 @@ class GUI_Edit extends GUI_InputElement
         $this->Template->parse('stdout');
         return $this->Template->getContent('stdout');
     }
-
 }

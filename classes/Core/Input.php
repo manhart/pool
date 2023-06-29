@@ -1,0 +1,708 @@
+<?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace pool\classes\Core;
+
+use Countable;
+
+/**
+ * Core class for incoming data on the server
+ * @package pool\classes\Core
+ * @since 2003-07-10
+ */
+class Input extends PoolObject implements Countable
+{
+    /**
+     * @constant int EMPTY no superglobals
+     */
+    public const EMPTY = 0;
+    /**
+     * @constant int COOKIE $_COOKIE (php equivalent INPUT_COOKIE (2))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const COOKIE = 1;
+    /**
+     * @constant int GET $_GET (php equivalent INPUT_GET (1))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const GET = 2;
+    /**
+     * @constant int POST $_POST (php equivalent INPUT_POST (0))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const POST = 4;
+    /**
+     * @constant int FILES $_FILES (php equivalent INPUT_FILES (3))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const FILES = 8;
+    /**
+     * @constant int ENV $_ENV (php equivalent INPUT_ENV (4))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const ENV = 16;
+    /**
+     * @constant int SERVER $_SERVER (php equivalent INPUT_SERVER (5))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const SERVER = 32;
+    /**
+     * @constant int SESSION $_SESSION (php equivalent INPUT_SESSION (6))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const SESSION = 64;
+    /**
+     * @constant int REQUEST $_REQUEST (php equivalent INPUT_REQUEST (99))
+     * @see https://www.php.net/manual/de/filter.constants.php
+     */
+    public const REQUEST = 128;
+    /**
+     * @constant int I_ALL all superglobals
+     */
+    public const ALL = 255;
+
+    /**
+     * @var array variables internal container
+     */
+    protected array $vars = [];
+
+    /**
+     * @var int Superglobals
+     * @see https://www.php.net/manual/de/language.variables.superglobals.php
+     */
+    private int $superglobals = self::EMPTY;
+
+    /**
+     * @var array
+     */
+    private array $filterRules = [];
+
+    /**
+     * Initialization of the superglobals. Attention: SESSION is a reference to the internal container and cannot be combined with other superglobals!
+     *
+     * @param int $superglobals Select or combine predefined constants: EMPTY, GET, POST, REQUEST, SERVER, FILES, COOKIE, SESSION, ALL
+     * @see https://www.php.net/manual/de/language.variables.superglobals.php
+     */
+    public function __construct(int $superglobals = self::EMPTY)
+    {
+        $this->init($superglobals);
+    }
+
+    /**
+     * get superglobals
+     *
+     * @return int
+     */
+    public function getSuperglobals(): int
+    {
+        return $this->superglobals;
+    }
+
+    /**
+     * Initializes selected superglobals and writes the variables into the internal variable container.
+     * Except: SESSION: The super global variable $_SESSION is referenced to the internal container!
+     *
+     * @param int $superglobals Einzulesende Superglobals (siehe Konstanten)
+     */
+    protected function init(int $superglobals = self::EMPTY): void
+    {
+        if($superglobals == 0) {
+            return;
+        }
+        $this->superglobals = $superglobals;
+
+        // @see https://www.php.net/manual/en/reserved.variables.environment.php
+        if($superglobals & self::ENV) { // I_ENV
+            $this->addVars($_ENV);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.server.php
+        if($superglobals & self::SERVER) { // I_SERVER
+            $this->addVars($_SERVER);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.files.php
+        if($superglobals & self::FILES) {
+            $this->addVars($_FILES);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.request.php
+        if($superglobals & self::REQUEST) {
+            $this->addVars($_REQUEST);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.post.php
+        if($superglobals & self::POST) {
+            $this->addVars($_POST);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.get.php
+        if($superglobals & self::GET) {
+            $this->addVars($_GET);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.cookies.php
+        if($superglobals & self::COOKIE) {
+            $this->addVars($_COOKIE);
+        }
+
+        // @see https://www.php.net/manual/en/reserved.variables.session.php
+        if($superglobals != self::ALL and $superglobals & self::SESSION) { // only $_SESSION assigned directly (not combinable)
+            $this->vars = &$_SESSION; // PHP Session Handling (see php manual)
+        }
+    }
+
+    /**
+     * reinitialize superglobals.
+     */
+    public function reInit(): void
+    {
+        $this->clear()->init($this->superglobals);
+    }
+
+    /**
+     * @return void
+     */
+    public static function processJsonPostRequest(): void
+    {
+        // decode POST requests with JSON-Data
+        if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' and ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
+            $json = file_get_contents('php://input');
+            if(isValidJSON($json)) {
+                $_POST = json_decode($json, true);
+                $_REQUEST = $_REQUEST + $_POST;
+            }
+        }
+    }
+
+    /**
+     * returns number of variables
+     *
+     * @return int
+     */
+    public function count(): int
+    {
+        return count($this->vars);
+    }
+
+    /**
+     * Check if a variable exists
+     *
+     * @param string $key Name der Variable
+     * @return boolean True=ja; False=nein
+     **/
+    public function exists(string $key): bool
+    {
+        return array_key_exists($key, $this->vars);
+    }
+
+    /**
+     * Check if a variable exists and is not an empty string and not null
+     */
+    public function has(string $key): bool
+    {
+        return $this->exists($key) && $this->vars[$key] !== '' && $this->vars[$key] !== null;
+    }
+
+    /**
+     * Checks if a variable exists and is not empty
+     *
+     * @param string $key name of the variable
+     * @return boolean True=ja; False=nein
+     */
+    public function emptyVar(string $key): bool
+    {
+        return (!isset($this->vars[$key]) or empty($this->vars[$key]));
+    }
+
+    /**
+     * Returns if all variables are empty
+     *
+     * @return boolean
+     */
+    public function allEmpty(): bool
+    {
+        if($this->count() == 0) {
+            return true;
+        }
+        foreach($this->vars as $value) {
+            if(!empty($value)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * filter a variable
+     *
+     * @param string $key
+     * @return void
+     */
+    private function filterVar(string $key): void
+    {
+        if(!isset($this->filterRules[$key])) {
+            return;
+        }
+        $filteredVar = filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+        if($filteredVar !== false)
+            $this->vars[$key] = $filteredVar;
+    }
+
+    /**
+     * returns filter rules for filtering incoming variables
+     *
+     * @return array
+     */
+    public function getFilterRules(): array
+    {
+        return $this->filterRules;
+    }
+
+    /**
+     * Returns the value for the given key.
+     *
+     * @param string $key Name of the variable
+     * @param mixed $default Returns this value as default, if key is not set
+     * @return mixed Value of the variable or $default/NULL if the variable does not exist
+     */
+    public function getVar(string $key, mixed $default = null): mixed
+    {
+        return $this->vars[$key] ?? $default;
+    }
+
+    /**
+     * Returns the value of the given key as integer.
+     *
+     * @param string $key
+     * @param int $default
+     * @return int
+     */
+    public function getAsInt(string $key, int $default = 0): int
+    {
+        return (int)$this->getVar($key, $default);
+    }
+
+    /**
+     * Returns the value of the given key as string.
+     *
+     * @param string $key
+     * @param string $default
+     * @return string
+     */
+    public function getAsString(string $key, string $default = ''): string
+    {
+        return (string)$this->getVar($key, $default);
+    }
+
+    /**
+     * Returns the value of the given key as boolean.
+     *
+     * @param string $key
+     * @param bool $default
+     * @return bool
+     */
+    public function getAsBool(string $key, bool $default = false): bool
+    {
+        return boolval($this->getVar($key, $default));
+    }
+
+    /**
+     * Returns the reference for the given key.
+     *
+     * @param string $key Name of the variable
+     * @param mixed $default Return this value as default, if key is not set
+     * @return mixed Reference to the object, or $default/NULL if the object does not exist
+     */
+    public function &getRef(string $key, mixed $default = null): mixed
+    {
+        $ref = $default;
+        if(isset($this->vars[$key])) {
+            $ref = &$this->vars[$key];
+        }
+        return $ref;
+    }
+
+    /**
+     * assign data to a variable
+     *
+     * @param string $key variable name
+     * @param mixed $value value
+     * @return Input
+     */
+    public function setVar(string $key, mixed $value = ''): static
+    {
+        $this->vars[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * assign data as array
+     *
+     * @param array $assoc
+     * @return Input
+     */
+    public function setVars(array $assoc): Input
+    {
+        $this->vars = $assoc + $this->vars;
+        return $this;
+    }
+
+    /**
+     * Places a reference of an object in the internal container.
+     *
+     * @param string $key Name of the variable
+     * @param mixed $value Reference to the object
+     */
+    public function setRef(string $key, mixed &$value): static
+    {
+        $this->vars[$key] = &$value;
+        return $this;
+    }
+
+    /**
+     * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming variable.
+     *
+     * @param string $key name of the variable
+     * @param mixed $value value of the variable
+     * @param int $filter filter type
+     * @param mixed $filterOptions
+     * @return Input
+     * @see https://www.php.net/manual/de/filter.filters.php
+     */
+    public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
+    {
+        if(!isset($this->vars[$key])) {
+            $this->vars[$key] = $value;
+        }
+        if($filter) {
+            $this->filterRules[$key] = [$filter, $filterOptions];
+        }
+        return $this;
+    }
+
+    /**
+     * merge array with vars but don't override existing vars
+     *
+     * @param array $vars
+     * @return Input
+     */
+    public function addVars(array $vars): static
+    {
+        $this->vars = $this->vars + $vars;
+        return $this;
+    }
+
+    /**
+     * Deletes a variable from the internal container.
+     *
+     * @param string $key name of the variable
+     */
+    public function delVar(string $key): static
+    {
+        unset($this->vars[$key]);
+        return $this;
+    }
+
+    /**
+     * @param array $assoc
+     * @return $this
+     */
+    public function delVars(array $assoc): Input
+    {
+        foreach($assoc as $key) {
+            unset($this->vars[$key]);
+        }
+        return $this;
+    }
+
+    /**
+     * Return the type of the variable with the passed key name $key.
+     *
+     * @param string $key variable name
+     * @return string types (set of "integer", "double", "string", "array", "object", "unknown type", "NULL", "resource") or an empty string if the variable is not set.
+     * @see https://www.php.net/manual/de/function.gettype.php
+     */
+    public function getType(string $key): string
+    {
+        return $this->exists($key) ? gettype($this->vars[$key]) : '';
+    }
+
+    /**
+     * Sets the data type of variable
+     *
+     * @param string $key variable name
+     * @param string $type data type
+     * @see Input::getType()
+     */
+    public function setType(string $key, string $type): static
+    {
+        if($this->exists($key)) {
+            settype($this->vars[$key], $type);
+        }
+        return $this;
+    }
+
+    /**
+     * Simple XOR encryption/decryption, based on a given key. Returns the encrypted/decrypted data.
+     *
+     * @param string $name variable name
+     * @return string $secretKey key for encryption
+     */
+    public function getXOREncrypted(string $name, string $secretKey): string
+    {
+        return $this->xorEnDecryption(base64_decode($this->getVar($name)), $secretKey);
+    }
+
+    /**
+     * Sets a variable and encrypts its value using a key. The value is encoded using MIME base64 and a simple XOR encryption.
+     *
+     * @param string $name name of the variable
+     * @param string $value value to encrypt
+     * @param string $secretKey key for encryption
+     */
+    public function setXOREncrypted(string $name, string $value, string $secretKey): static
+    {
+        $this->setVar($name, base64_encode($this->xorEnDecryption($value, $secretKey)));
+        return $this;
+    }
+
+    /**
+     * Filters variables based on a callable function.
+     * Very handy when inserting data into a database. You can remove unnecessary data.
+     *
+     * @param array $keys_must_exists Variables that must remain
+     * @param string $prefix use only variable names with this prefix
+     * @param boolean $removePrefix removes the variables with prefix from the returned object
+     * @return Input The result in a new input object
+     **/
+    public function filter(array $keys_must_exists, ?callable $filter = null, string $prefix = '', bool $removePrefix = false): Input
+    {
+        $Input = new Input(self::EMPTY);
+        $new_prefix = ($removePrefix) ? '' : $prefix;
+        foreach($keys_must_exists as $key) {
+            // AM, 22.04.09, modified (isset nimmt kein NULL)
+            if(array_key_exists($prefix . $key, $this->vars)) {
+                if($filter) {
+                    $remove = call_user_func($filter, $this->vars[$prefix . $key], $prefix . $key);
+                    if($remove) continue;
+                }
+                $Input->setVar($new_prefix . $key, $this->vars[$prefix . $key]);
+            }
+        }
+        return $Input;
+    }
+
+    /**
+     * Overrides all variables (internal container) with the given array
+     *
+     * @param array $data associative array of data
+     */
+    public function setData(array $data): static
+    {
+        $this->vars = $data;
+        return $this;
+    }
+
+    /**
+     * Returns all variables as array
+     *
+     * @return array Daten
+     **/
+    public function getData(): array
+    {
+        return $this->vars;
+    }
+
+    /**
+     * Renames a variable
+     *
+     * @param string $oldKeyName Old key name
+     * @param string $newKeyName New key name
+     */
+    public function rename(string $oldKeyName, string $newKeyName): Input
+    {
+        if($this->exists($oldKeyName)) {
+            $this->setVar($newKeyName, $this->vars[$oldKeyName]);
+            $this->delVar($oldKeyName);
+        }
+        return $this;
+    }
+
+    /**
+     * Renames multiple variables
+     *
+     * @param array $keyNames
+     * @return Input
+     */
+    function renameKeys(array $keyNames): Input
+    {
+        foreach($keyNames as $oldKeyName => $newKeyName) {
+            $this->rename($oldKeyName, $newKeyName);
+        }
+        return $this;
+    }
+
+    /**
+     * Computes the difference between the internal variables and the given array
+     *
+     * @param array $array
+     * @return array
+     */
+    public function diff(array $array): array
+    {
+        return array_diff($this->vars, $array);
+    }
+
+    /**
+     * Computes the difference between the internal variables and the given array with additional index check
+     *
+     * @param array $array
+     * @return array
+     */
+    public function diff_assoc(array $array): array
+    {
+        return array_diff_assoc($this->vars, $array);
+    }
+
+    /**
+     * Well-known, simple, obsolete bitwise XOR encryption. Obfuscates the value of variables.
+     * Not suitable for security-related data!
+     *
+     * @param string $value value to encrypt
+     * @param string $secretKey key for encryption
+     * @return string
+     */
+    public function xorEnDecryption(string $value, string $secretKey): string
+    {
+        if(empty($value) || empty($secretKey)) {
+            return $value;
+        }
+
+        $key_len = strlen($secretKey);
+        $value_len = strlen($value);
+
+        $new_value = '';
+        for($v = 0; $v < $value_len; $v++) {
+            $k = $v % $key_len;
+            $new_value .= chr(ord($value[$v]) ^ ord($secretKey[$k]));
+        }
+        return $new_value;
+    }
+
+    /**
+     * Returns a byte stream of all variables in a string.
+     *
+     * @return string Byte-Stream
+     * @see setByteStream()
+     * @see http://php.net/manual/de/function.serialize.php
+     */
+    public function getByteStream(): string
+    {
+        return serialize($this->vars);
+    }
+
+    /**
+     * Importiert einen Byte-Stream im internen Container.
+     *
+     * @param string $data
+     * @return Input
+     * @see getByteStream()
+     * @see http://php.net/manual/de/function.unserialize.php
+     */
+    public function setByteStream(string $data): static
+    {
+        return $this->addVars(unserialize($data));
+    }
+
+    /**
+     * Prints or returns one or all variables in the internal container (for debugging)
+     *
+     * @param boolean $print optional print the output
+     * @param string $key optional only one variable
+     * @return string output
+     * @see pray()
+     */
+    public function dump(bool $print = true, string $key = ''): string
+    {
+        $output = pray($key ? $this->getVar($key) : $this->vars);
+
+        if($print) {
+            print ($output);
+        }
+        return $output;
+    }
+
+    /**
+     * Adds parameters (e.g. from a URL) to the internal container. Format: key=value&key=value.
+     *
+     * @param string $params Siehe oben Beschreibung
+     * @see htmlspecialchars_decode()
+     */
+    public function setParams(string $params): static
+    {
+        if(strlen($params) == 0) {
+            return $this;
+        }
+        parse_str($params, $parsedParams);
+        foreach($parsedParams as $key => $value) {
+            $this->setVar($key, $value);
+        }
+        return $this;
+    }
+
+    /**
+     * Joins the variable containers of two input objects. Existing keys are not overwritten.
+     *
+     * @param Input $Input other input object
+     * @param boolean $flip if true, the variables of the other input object are merged into the internal container (affects the order of merge)
+     **/
+    public function mergeVars(Input $Input, bool $flip = false): Input
+    {
+        if($flip) {
+            $this->vars = array_merge($Input->vars, $this->vars);
+        }
+        else {
+            $this->vars = array_merge($this->vars, $Input->vars);
+        }
+        return $this;
+    }
+
+    /**
+     * Merges variables into their own container (Vars). But only if they are not yet set.
+     *
+     * @param Input $Input
+     * @return Input
+     */
+    public function mergeVarsIfNotSet(Input $Input): static
+    {
+        if($Input->count() == 0) {
+            return $this;
+        }
+        $this->filterRules = $Input->getFilterRules();
+
+        foreach($Input->vars as $key => $value) {
+            if(!isset($this->vars[$key])) {
+                $this->setVar($key, $value);
+            }
+            $this->filterVar($key);
+        }
+        return $this;
+    }
+
+    /**
+     * Resets the variable container
+     */
+    public function clear(): static
+    {
+        $this->vars = [];
+        return $this;
+    }
+}

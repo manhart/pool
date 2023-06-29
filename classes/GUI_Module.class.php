@@ -29,8 +29,10 @@
  */
 
 use pool\classes\Core\Component;
+use pool\classes\Core\Input;
 use pool\classes\Core\Module;
 use pool\classes\Core\PoolObject;
+use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 
 const REQUEST_PARAM_MODULE = 'module';
@@ -143,7 +145,6 @@ class GUI_Module extends Module
      * @param Component|null $Owner Besitzer vom Typ Component
      * @param array $params additional parameters
      *
-     * @throws Exception
      */
     public function __construct(?Component $Owner, array $params = [])
     {
@@ -304,7 +305,7 @@ class GUI_Module extends Module
         }
 
         if ($class_exists) {
-            $Params = new Input(Input::INPUT_EMPTY);
+            $Params = new Input(Input::EMPTY);
             $Params->setParams($params);
 
             /* @var $GUI GUI_Module */
@@ -558,7 +559,7 @@ class GUI_Module extends Module
      * frontend control: Prepare data for building the content or responding to an ajax-call<br>
      * Called once all modules and files have been loaded
      */
-    public function provision(): void
+    protected function provision(): void
     {
     }
 
@@ -664,50 +665,53 @@ class GUI_Module extends Module
         }
 
         error_clear_last();
-
         ob_start();
 
-
-        $args = [];
-        if ($numberOfParameters) {
-            $parameters = $ReflectionMethod->getParameters();
-            foreach ($parameters as $Parameter) {
-                $value = $this->Input->getVar($Parameter->getName(), ($Parameter->isOptional() ? $Parameter->getDefaultValue() : ''));
-                if (is_string($value)) {
-                    if ($Parameter->hasType() && $Parameter->getType()->getName() != 'mixed') {
-                        $value = match ($Parameter->getType()->getName()) {
-                            'float' => (float)$value,
-                            'int' => (int)$value,
-                            'bool' => filter_var($value, FILTER_VALIDATE_BOOL),
-                            default => $value,
-                        };
-                    } else {
-                        if ($value === 'true' or $value === 'false') {
-                            $value = $value === 'true';
-                        }
-                    }
-                }
-
-                $args[] = $value;
-            }
-        }
         $callingClassName = $this->getClassName();
         try {
-            if ($Closure) {
-                //TODO check Authorisation
-                //if (!$accessGranted)
-                //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
+            $args = [];
+            if ($numberOfParameters) {
+                $parameters = $ReflectionMethod->getParameters();
+                foreach ($parameters as $Parameter) {
+                    $value = $this->Input->getVar($Parameter->getName()) ?? ($Parameter->isOptional() ? $Parameter->getDefaultValue() : throw new MissingArgumentException('Missing parameter ' . $Parameter->getName()));
+                    if (is_string($value)) {
+                        if ($Parameter->hasType() && $Parameter->getType()->getName() != 'mixed') {
+                            $value = match ($Parameter->getType()->getName()) {
+                                'float' => (float)$value,
+                                'int' => (int)$value,
+                                'bool' => filter_var($value, FILTER_VALIDATE_BOOL),
+                                default => $value,
+                            };
+                        } else {
+                            if ($value === 'true' or $value === 'false') {
+                                $value = $value === 'true';
+                            }
+                        }
+                    }
 
-                // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
-                /** @var mixed $result */
-                $result = $Closure(...$args);
-            } else {
-                $result = $ReflectionMethod->invokeArgs($this, $args);
-                $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
+                    $args[] = $value;
+                }
+            }
+            try {
+                if ($Closure) {
+                    //TODO check Authorisation
+                    //if (!$accessGranted)
+                    //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
+
+                    // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
+                    /** @var mixed $result */
+                    $result = $Closure(...$args);
+                } else {
+                    $result = $ReflectionMethod->invokeArgs($this, $args);
+                    $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
+                }
+            } catch (Throwable $e) {
+                $this->plainJSON = false;
+                $statusCode = 418;
             }
         } catch (Throwable $e) {
             $this->plainJSON = false;
-            $statusCode = 418;
+            $statusCode = 400;
         }
 
         $errorText = ob_get_contents();

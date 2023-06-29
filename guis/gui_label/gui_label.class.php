@@ -13,6 +13,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\Input;
+
 /**
  * GUI_Label
  *
@@ -32,7 +34,7 @@ class GUI_Label extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals= Input::INPUT_EMPTY)
+    function init(?int $superglobals= Input::EMPTY)
     {
         $this -> Defaults -> addVar('id', $this -> getName());
         $this -> Defaults -> addVar('name', $this -> getName());
@@ -72,7 +74,7 @@ class GUI_Label extends GUI_Module
 
         // $this -> Defaults -> addVar('gap', 0);
 
-        parent::init(Input::INPUT_GET | Input::INPUT_POST);
+        parent::init(Input::GET | Input::POST);
     }
 
     function loadFiles()

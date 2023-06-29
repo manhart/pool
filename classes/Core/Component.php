@@ -10,11 +10,15 @@
 
 namespace pool\classes\Core;
 
-use Input;
 use InputSession;
 use ReflectionClass;
 use ReflectionException;
 
+/**
+ * Core class for POOL components. Provides unique names for all components.
+ * @package pool\classes\Core
+ * @since 2003-07-10
+ */
 class Component extends PoolObject
 {
     /**

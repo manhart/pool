@@ -8,6 +8,9 @@
  * file that was distributed with this source code.
  */
 
+use pool\classes\Core\Input;
+use pool\classes\Core\Weblication;
+
 /**
  * -= Rapid Module Library (RML) =-
  *
@@ -34,7 +37,7 @@ class GUI_Schema extends GUI_Module
      * alternate - if schema was not found, redirect to this schema
      * @var int $superglobals takes parameter schema from request
      */
-    protected int $superglobals = Input::INPUT_REQUEST;
+    protected int $superglobals = Input::REQUEST;
 
     /**
      * load schemes
@@ -69,7 +72,7 @@ class GUI_Schema extends GUI_Module
         } elseif ($vhostMode)//no category and vHost to be included
             $this->appendVHost($directory);
         /** @var string $alternate Alternative schema if the target-schema was not found */
-        $alternate = $this->getInternalParam('alternate');
+        $alternate = $this->getInternalParam('alternate', Weblication::getInstance()->getDefaultSchema());
         //Prep template-engine
         $this->templates = [];
         $this->Template->setDirectory($directory);

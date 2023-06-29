@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\Core\Input;
+
 /**
  * -= PHP Object Oriented Library (POOL) =-
  *
@@ -18,7 +21,7 @@ class GUI_Button extends GUI_Universal
     /**
      * @param int|null $superglobals Superglobals I_GET, I_POST, I_REQUEST....
      */
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVars([
                 'name' => $this->getName(),

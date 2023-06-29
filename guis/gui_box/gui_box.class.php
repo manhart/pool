@@ -15,6 +15,8 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\Input;
+
 /**
  * GUI_Box
  *
@@ -61,7 +63,7 @@ class GUI_Box extends GUI_Module
      *
      * @param int|null $superglobals Superglobals (siehe Klasse Input)
      **/
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         parent::init($superglobals);
     }

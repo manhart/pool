@@ -60,20 +60,16 @@ const TEMP_SESSION_IDENT = '';
 class TempHandle extends PoolObject
 {
     //@var string Typ des Handles
-    //@access public
-    var $Type;
+    protected string $Type;
 
     //@var string Name des Handles (muss unique sein)
-    //@access public
-    var $Handle;
+    protected string $Handle;
 
     //@var string Inhalt des Handles
-    //@access public
     protected string $content = '';
 
     //@var string Geparster, vervollstaendigter Inhalt
-    //@access public
-    var $ParsedContent = '';
+    protected string $ParsedContent = '';
 
     /**
      * Konstruktor der Klasse TempHandle (lang TemplateHandle)

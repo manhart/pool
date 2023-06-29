@@ -7,6 +7,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+use pool\classes\Core\Input;
+
 class InputGet extends Input
 {
     /**
@@ -14,7 +17,7 @@ class InputGet extends Input
      *
      * @param int $superglobals
      */
-    function __construct(int $superglobals = Input::INPUT_GET)
+    function __construct(int $superglobals = Input::GET)
     {
         parent::__construct($superglobals);
     }

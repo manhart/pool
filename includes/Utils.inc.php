@@ -21,8 +21,6 @@
  *
  */
 
-use pool\classes\Core\Url;
-
 
 /**
  * Gibt den aktuellen UNIX-Timestamp/Zeitstempel in Mikrosekunden zurueck
@@ -784,6 +782,17 @@ function sanitizeFilename(string $filename, bool $lowerCase = true): string
 }
 
 /**
+ * normalize Database Column ident (remove umlauts, special characters and whitespaces)
+ *
+ * @param string $ident
+ * @return string
+ */
+function sanitizeIdent(string $ident): string
+{
+    return preg_replace('/[^A-Za-z0-9\-_]/', '', umlauts($ident));
+}
+
+/**
  * Convert boolean expression to integer (0, 1)
  *
  * @param bool $bool boolean value
@@ -1373,7 +1382,8 @@ function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = 
     // Calculate the clientside relative path.
     $clientsideRelativePathComponents = count(explode($separator, $_SERVER['DOCUMENT_ROOT']));
     $commonPathComponents = min($clientsideRelativePathComponents, $paths['clientside']['commonPathComponents']);
-    $levels = str_repeat('..' . $separator, $clientsideRelativePathComponents - $paths['clientside']['commonPathComponents']) ?: '/';
+    $amount = $clientsideRelativePathComponents - $paths['clientside']['commonPathComponents'];
+    $levels = $amount > 0 ? str_repeat('..' . $separator, $amount) : '/';
     $clientsideRelativePath = $levels . implode($separator, array_slice($paths['clientside']['toThisParts'], $commonPathComponents));
 
     // Calculate the serverside relative path.
@@ -2180,8 +2190,7 @@ function isHTML(string $string): bool
  */
 function isValidJSON(string $string): bool
 {
-    $literal = substr($string, 0, 1);
-    if($literal != '{' and $literal != '[') {
+    if($string[0] !== '{' && $string[0] !== '[') {
         return false;
     }
     json_decode($string);
