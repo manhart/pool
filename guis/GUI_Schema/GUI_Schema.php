@@ -103,10 +103,7 @@ class GUI_Schema extends GUI_Module
      */
     private function schema404(?string $schema = null): void
     {
-        //report problem
-        $errMessage = $schema ? "Schema '$schema.html' doesn't exist" : "No schema specified";
-        $this->raiseError(__FILE__, __LINE__, $errMessage);
-        //clear
+        // clear templates
         $this->templates = [];
         $this->Template->clear();
         //become 404 GUI
@@ -114,6 +111,7 @@ class GUI_Schema extends GUI_Module
         $file = $this->Weblication->findTemplate('schema404.html', $this->getClassName(), true);
         $this->Template->setFilePath('error404', $file);
         $this->Template->setVar('SCHEMA', empty($schema) ? '(empty)' : $schema . '.html');
+        $this->Template->setVar('WEBMASTER', $_SERVER['SERVER_ADMIN']);
         $this->templates['error404'] = null;//manually set the template
     }
 
