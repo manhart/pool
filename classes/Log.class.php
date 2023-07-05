@@ -10,6 +10,7 @@
 
 use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
+use pool\classes\Core\Input;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
@@ -26,6 +27,7 @@ class Log
     const OUTPUT_FILE = 'file';
     const OUTPUT_DAO = 'dao';
     const OUTPUT_MAIL = 'mail';
+    const LEVEL_NONE = 0;
     const LEVEL_FATAL = 1;
     const LEVEL_ERROR = 2;
     const LEVEL_WARN = 4;
@@ -75,8 +77,8 @@ class Log
      */
     public static function setup(array $facilities, string $configurationName = Log::COMMON): void
     {
-        if(!defined('IS_CONSOLE')) define('IS_CONSOLE', php_sapi_name() == 'cli');
-        if(!defined('LINE_BREAK')) define('LINE_BREAK', (IS_CONSOLE) ? chr(10) : '<br>');
+        if(!defined('IS_CLI')) define('IS_CLI', php_sapi_name() == 'cli');
+        if(!defined('LINE_BREAK')) define('LINE_BREAK', (IS_CLI) ? chr(10) : '<br>');
 
         $level = self::$facilities[$configurationName][self::OUTPUT_SCREEN]['level'] ?? 0;
         if(isset($facilities[self::OUTPUT_SCREEN])) {
@@ -178,7 +180,7 @@ class Log
         $facilities[self::OUTPUT_DAO]['level'] = (int)$level;
 
         if(!isset($facilities[self::EXIT_LEVEL])) {
-            $facilities[self::EXIT_LEVEL] = self::$facilities[$configurationName][self::EXIT_LEVEL] ?? 0;
+            $facilities[self::EXIT_LEVEL] = self::$facilities[$configurationName][self::EXIT_LEVEL] ?? self::LEVEL_NONE;
         }
 
         self::$facilities[$configurationName] = $facilities;
@@ -204,7 +206,7 @@ class Log
      */
     private static function getExitLevel(string $configurationName): int
     {
-        return self::$facilities[$configurationName][self::EXIT_LEVEL] ?? 0;
+        return self::$facilities[$configurationName][self::EXIT_LEVEL] ?? self::LEVEL_NONE;
     }
 
     /**
@@ -347,7 +349,7 @@ class Log
         $withDate = self::screenWithDate($configurationName);
         $withLineBreak = self::screenWithLineBreak($configurationName);
 
-        if(IS_CONSOLE) {
+        if(IS_CLI) {
 
             if($isHTML) {
                 // no html

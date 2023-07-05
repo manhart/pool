@@ -1,5 +1,6 @@
 <?php
 
+use pool\classes\Core\Input;
 use pool\classes\Core\Url;
 
 /**
@@ -35,7 +36,7 @@ class GUI_Url extends GUI_Module
      *
      * @throws Exception
      */
-    public function init(?int $superglobals= Input::INPUT_EMPTY)
+    public function init(?int $superglobals= Input::EMPTY)
     {
         $this->Defaults->addVar('script');
         $this->Defaults->addVar('params');
@@ -73,7 +74,7 @@ class GUI_Url extends GUI_Module
 
         $passThrough = trim($this->Input->getVar('passthrough'));
         if ($passThrough != '') {
-            $IGet = new Input(Input::INPUT_GET);
+            $IGet = new Input(Input::GET);
             $passThrough = explode(';', $passThrough);
             foreach($passThrough as $param) {
                 $Url->setParam($param, $IGet -> getVar($param));

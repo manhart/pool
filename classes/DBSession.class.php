@@ -31,6 +31,7 @@
 * @link http://www.misterelsa.de
 */
 
+use pool\classes\Core\Input;
 use pool\classes\Core\PoolObject;
 use pool\classes\Database\DAO;
 
@@ -161,7 +162,7 @@ class DBSession extends PoolObject
      **/
     function initialize()
     {
-        $this->Input = new Input(Input::INPUT_EMPTY);
+        $this->Input = new Input(Input::EMPTY);
 
         $data = $this->DAO_Session->getData($this->sid);
         if ($data === false) {

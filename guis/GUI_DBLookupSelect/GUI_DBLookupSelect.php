@@ -15,6 +15,7 @@
  * @link https://alexander-manhart.de
  */
 
+use pool\classes\Core\Input;
 use pool\classes\Database\DAO;
 
 /**
@@ -38,7 +39,7 @@ class GUI_DBLookupSelect extends GUI_Select
      *
      * @access public
      **/
-    function init(?int $superglobals= Input::INPUT_EMPTY)
+    function init(?int $superglobals= Input::EMPTY)
     {
         $this->Defaults->addVar('tabledefine', '');
         $this->Defaults->addVar('keyValue', false); 	// separated by ;
@@ -113,7 +114,7 @@ class GUI_DBLookupSelect extends GUI_Select
 
         $Resultset = $DAO->getMultiple(null, null, $filter, $sorting);
         #echo pray($Resultset);
-        $rowset = $Resultset -> getRowset();
+        $rowset = $Resultset -> getRowSet();
 
         $listfields = explode(',', $listfield);
         $listfieldSeparator = $this->Input->getVar('listfieldSeparator');

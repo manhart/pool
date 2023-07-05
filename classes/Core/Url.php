@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace pool\classes\Core;
 
-use Input;
 use JetBrains\PhpStorm\NoReturn;
 use JsonSerializable;
 use pool\classes\Exception\InvalidArgumentException;
@@ -20,7 +19,10 @@ use SensitiveParameter;
 use Stringable;
 
 /**
- * Class Url
+ * Core class Url
+ * @inheritDoc https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
+ * @link https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
+ * @link http://tools.ietf.org/html/rfc3986 (the URI specification)
  * @package pool\classes\Core
  * @since 2003-08-04
  */
@@ -167,7 +169,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     }
 
     /**
-     * Set the scheme
+     * Set the URI-scheme
      *
      * @param string $scheme
      * @return $this

@@ -10,9 +10,11 @@
 
 namespace pool\classes\Core;
 
-use Exception;
-use Input;
-
+/**
+ * Core class for POOL modules. Provides the basic functionality for modules.
+ * @package pool\classes\Core
+ * @since 2003-07-10
+ */
 class Module extends Component
 {
     /**
@@ -64,7 +66,7 @@ class Module extends Component
     /**
      * @var int defines which superglobals should be used in this module. Superglobal variables are passed to superglobals in the Input class.
      */
-    protected int $superglobals = Input::INPUT_EMPTY;
+    protected int $superglobals = Input::EMPTY;
 
     /**
      * data for the client
@@ -78,14 +80,13 @@ class Module extends Component
      *
      * @param Component|null $Owner Owner
      * @param array $params internal parameters
-     * @throws Exception
      */
     function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner);
         $this->childModules = [];
         $this->handoff = [];
-        $this->Defaults = new Input(Input::INPUT_EMPTY);
+        $this->Defaults = new Input(Input::EMPTY);
         $this->internalParams = $params;
         $this->init();
     }
@@ -94,7 +95,6 @@ class Module extends Component
      * set default values for external inputs
      *
      * @param int|null $superglobals Konstanten aus der Input.class.php
-     * @throws Exception
      * @see Input.class.php
      */
     public function init(?int $superglobals = null)
@@ -122,8 +122,6 @@ class Module extends Component
 
     /**
      * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
-     *
-     * @throws Exception
      */
     private function mergeDefaults(): void
     {

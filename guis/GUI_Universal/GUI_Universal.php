@@ -1,4 +1,7 @@
 <?php
+
+use pool\classes\Core\Input;
+
 /**
  * -= PHP Object Oriented Library (POOL) =-
  *
@@ -31,10 +34,9 @@ class GUI_Universal extends GUI_Module
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
      */
-    public function init(?int $superglobals = Input::INPUT_EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
-        $this->Defaults->addVar(
-            array(
+        $this->Defaults->addVars([
                 /* Allgemeine Universalattribute */
                 'id' => $this->getName(),
                 'title' => '',
@@ -60,7 +62,7 @@ class GUI_Universal extends GUI_Module
                 'onkeyup' => '',
 
                 'guierror' => null
-            )
+            ]
         );
 
         parent::init($superglobals);
@@ -68,8 +70,8 @@ class GUI_Universal extends GUI_Module
 
     /**
      * main logic
-     **/
-    public function prepare()
+     */
+    protected function prepare()
     {
         #### Bindet gui_....css ein:
         if($this->Weblication->hasFrame()) {

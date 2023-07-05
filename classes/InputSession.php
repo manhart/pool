@@ -7,6 +7,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+use pool\classes\Core\Input;
+
 class InputSession extends Input
 {
     /**
@@ -19,19 +22,19 @@ class InputSession extends Input
      */
     private bool $autoClose = true;
 
-    function __construct($autoClose = true)
+    function __construct($autoWriteCloseAtEachDataChange = true)
     {
-        $this->setAutoClose($autoClose);
+        $this->setAutoClose($autoWriteCloseAtEachDataChange);
 
         $this->start();
-        parent::__construct(Input::INPUT_SESSION);
+        parent::__construct(Input::SESSION);
         $this->write_close();
     }
 
     /**
      * Starts Session
      */
-    function start()
+    public function start(): void
     {
         if(!$this->session_started) {
             $this->session_started = session_start();
@@ -44,20 +47,21 @@ class InputSession extends Input
 
     /**
      * @param $autoClose
+     * @return InputSession
      */
-    function setAutoClose($autoClose)
+    function setAutoClose($autoClose): static
     {
         $this->autoClose = $autoClose;
+        return $this;
     }
 
     /**
-     * Setzt eine Variable im internen Container.
-     * Im Unterschied zu Input::addVar ueberschreibt Input::setVar alle Variablen.
+     * assign data to a variable
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     * @param mixed $value Wert der Variable
+     * @param string $key name of variable
+     * @param mixed $value value of variable
      */
-    public function setVar($key, $value = ''): Input
+    public function setVar(string $key, mixed $value = ''): static
     {
         $this->start();
         parent::setVar($key, $value);
@@ -80,16 +84,15 @@ class InputSession extends Input
     }
 
     /**
-     * Setzt eine Variable im internen Container.
-     * Im Unterschied zu Input::setVar ueberschreibt Input::addVar keine bereits vorhanden Variablen.
+     * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming variable.
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
-     * @param mixed $value Wert der Variable
+     * @param string $key name of variable
+     * @param mixed $value value of variable
      * @param int $filter
      * @param mixed $filterOptions
-     * @return Input Erfolgsstatus
+     * @return InputSession Erfolgsstatus
      */
-    public function addVar($key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): Input
+    public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
     {
         $this->start();
         parent::addVar($key, $value, $filter, $filterOptions);
@@ -98,11 +101,25 @@ class InputSession extends Input
     }
 
     /**
-     * Loescht eine Variable aus dem internen Container.
+     * merge array with vars but don't override existing vars
      *
-     * @param string $key Schluessel (bzw. Name der Variable)
+     * @param array $vars
+     * @return $this
      */
-    public function delVar($key): self
+    public function addVars(array $vars): static
+    {
+        $this->start();
+        parent::addVars($vars);
+        $this->write_close();
+        return $this;
+    }
+
+    /**
+     * Delete a variable from the session
+     *
+     * @param string $key name of variable
+     */
+    public function delVar(string $key): static
     {
         $this->start();
         parent::delVar($key);
@@ -115,11 +132,12 @@ class InputSession extends Input
      *
      * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
      */
-    public function setData(array $data)
+    public function setData(array $data): static
     {
         $this->start();
         parent::setData($data);
         $this->write_close();
+        return $this;
     }
 
     /**
@@ -197,7 +215,7 @@ class InputSession extends Input
      */
     public function destroy(): static
     {
-        parent::destroy();
+        parent::clear();
         $this->start();
         if(session_status() == PHP_SESSION_ACTIVE) {
             session_destroy();

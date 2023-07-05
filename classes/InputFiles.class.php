@@ -7,9 +7,12 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+use pool\classes\Core\Input;
+
 class InputFiles extends Input
 {
-    function __construct(int $superglobals = Input::INPUT_FILES)
+    function __construct(int $superglobals = Input::FILES)
     {
         parent::__construct($superglobals);
     }

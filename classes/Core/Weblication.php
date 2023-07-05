@@ -16,7 +16,6 @@ use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
-use Input;
 use InputCookie;
 use InputSession;
 use Locale;
@@ -32,8 +31,7 @@ use ReflectionException;
 use Template;
 
 /**
- * Class Weblication
- *
+ * Class Weblication represents the main class of a web application
  * @package pool\classes\Core
  * @since 2003-07-10
  */
@@ -83,7 +81,7 @@ class Weblication extends Component
     /**
      * @var int filter that defines which superglobals are passed to input->vars
      */
-    private int $superglobals = Input::INPUT_EMPTY;
+    private int $superglobals = Input::EMPTY;
 
     /**
      * @var Input
@@ -262,7 +260,9 @@ class Weblication extends Component
     {
         parent::__construct(null);
         self::$isAjax = isAjax();
-        $this->Settings = new Input(Input::INPUT_EMPTY);
+        //handles POST requests containing JSON data
+        Input::processJsonPostRequest();
+        $this->Settings = new Input(Input::EMPTY);
         // determine the relative client und server path from the application to the pool
         $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
@@ -472,10 +472,12 @@ class Weblication extends Component
      * Setzt das Haupt-GUI.
      *
      * @param GUI_Module $GUI_Module
+     * @return Weblication
      */
-    public function setMain(GUI_Module $GUI_Module)
+    public function setMain(GUI_Module $GUI_Module): static
     {
         $this->Main = $GUI_Module;
+        return $this;
     }
 
     /**
@@ -983,12 +985,14 @@ class Weblication extends Component
      *
      * @param string $schema
      * @param bool $withQuery
+     * @param string $path
      * @return never
      */
-    public function redirect(string $schema, bool $withQuery = false): never
+    public function redirect(string $schema, bool $withQuery = false, string $path = ''): never
     {
-        $Url = new Url($withQuery ? Input::INPUT_GET : Input::INPUT_EMPTY);
+        $Url = new Url($withQuery);
         $Url->setParam('schema', $schema);
+        if ($path) $Url->setScriptPath($path);
         $Url->redirect();
     }
 
@@ -1042,7 +1046,6 @@ class Weblication extends Component
      *
      * @return Weblication
      * @throws Exception
-     * @throws \Exception
      */
     public function setup(array $settings = []): static
     {
@@ -1453,7 +1456,7 @@ class Weblication extends Component
 
             $timeSpent = microtime(true) - POOL_START;
             $htmlStartTags = $htmlCloseTags = '';
-            if(IS_CONSOLE) {
+            if(IS_CLI) {
                 $what = 'Script';
             }
             else {
@@ -1473,6 +1476,8 @@ class Weblication extends Component
     {
         // reset the session
         $this->Session->destroy();
+        //header('Location: /logout', true, 302);
+        //exit;
     }
 
     /**
@@ -1480,7 +1485,7 @@ class Weblication extends Component
      * PHP will check for open connections when the script is finished anyway.
      * From a performance perspective, closing connections is pure overhead.
      */
-    public function close()
+    public function close(): void
     {
         foreach($this->interfaces as $DataInterface) {
             $DataInterface->close();
