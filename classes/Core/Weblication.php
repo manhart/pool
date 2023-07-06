@@ -1491,11 +1491,11 @@ class Weblication extends Component
     /**
      * terminates Ajax requests with a reauthorization/unauthorized error
      */
-    public function reauthorizeAJAX_Request(): void
+    public function reauthorizeRequiredAJAX_Request(): void
     {
         if($this->isAjax()) {
             header('Content-type: application/json', true, 401);
-            $message = $this->getTranslator()->getTranslation('global.applicationReauthorize', 'Reauthorization required.');
+            $message = $this->getTranslator()->getTranslation('global.applicationReauthorizeRequired', 'Reauthorization required.');
             $return = [
                 'success' => false,
                 'error'  => [
