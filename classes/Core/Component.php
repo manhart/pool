@@ -115,10 +115,9 @@ class Component extends PoolObject
     }
 
     /**
-     * Setzt den Namen der Komponente.
-     *
-     * Vor dem Setzen wird der Name noch validiert.
-     * Existiert der Name bereits, wird false zurueck gegeben.
+     * Specifies a unique name for the component. The name can only consist of alphanumeric characters (A-Z, a-z, 0-9), underscores (_), points (.), and hyphens (-).
+     * The name must start with a letter. The name cannot contain spaces. The name is case-sensitive.
+     * The name is validated for uniqueness. If the name is not unique, the component is not renamed.
      *
      * @param string $new_name new name for component
      * @return Component
@@ -206,7 +205,7 @@ class Component extends PoolObject
     }
 
     /**
-     * returns the component with the given name
+     * Returns the component with the given name
      *
      * @param string $name Search for a Component with name
      * @return Component|null Component

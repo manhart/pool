@@ -9,17 +9,21 @@
 
 class GUI_Module
 {
+    /** @var {string} contains the unique name of the module */
     name = '';
+    /** @var {string} contains the ID selector for the HTML Element of the module */
+    moduleSelector = '';
     className = this.constructor.name;
     /** @var {string} fullyQualifiedClassName of the php module - is required by Ajax Calls */
     fullyQualifiedClassName = this.constructor.name;
 
     /**
-     * @param {string} name of module
+     * @param {string} unique name of module (must consist of only alphanumeric characters (A-Z, a-z, 0-9), underscore (_), and hyphen (-).)
      */
     constructor(name)
     {
         this.name = name;
+        this.moduleSelector = `#${name}`;
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
         if (typeof this.className == 'undefined') {
             if (!window['pool_GUI_Module_unknown_className']) {
@@ -33,11 +37,10 @@ class GUI_Module
     }
 
     /**
-     * @abstract
+     * initializes the module with the given options
      */
     init(options = {})
     {
-        // console.debug(this.getName()+'.init called');
     }
 
     /**
@@ -82,7 +85,7 @@ class GUI_Module
     /**
      * parses the response as JSON
      * @param response
-     * @return {Promise<*>}
+     * @returns {Promise<*>}
      */
     async parseJSON(response)
     {
@@ -105,7 +108,7 @@ class GUI_Module
      * @param {string} ajaxMethod Alias name of the method to call
      * @param data Object containing parameters passed to server method
      * @param {object} options Request options e.g. {method:'POST'}
-     * @return {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
+     * @returns {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
      */
     request(ajaxMethod, data, options = {})
     {
@@ -240,7 +243,7 @@ class GUI_Module
 
     /**
      * @param {Response} response
-     * @return {Promise<*>}
+     * @returns {Promise<*>}
      */
     async parseAjaxResponse(response)
     {
@@ -274,7 +277,7 @@ class GUI_Module
                 } catch (e){}
                 throw new PoolAjaxResponseError(error?.message ?? `Status ${status}`, data, error?.type ?? "unknown");
         }
-    };
+    }
 
     onAjax_ReAuthorizationRequired = async response => alert('Session expired');
     onAjax_404 = async response => console.error(`Ajax-Method at ${response.url} not found`);
@@ -288,6 +291,76 @@ class GUI_Module
      */
     redraw(options = {})
     {
+    }
+
+    /**
+     * Returns predefined moduleSelector
+     *
+     * @returns {string}
+     */
+    getModuleSelector()
+    {
+        return this.moduleSelector;
+    }
+
+    /**
+     * Returns selected element within the root / module element. if no selector is given, it should return self (=the top root / module element)
+     *
+     * @param selector
+     * @returns {Element}
+     */
+    element(selector = '')
+    {
+        return document.querySelector(`${this.moduleSelector}${(selector) ? ' ' + selector : ''}`);
+    }
+
+    /**
+     * Search html element by id within the root / module element
+     *
+     * @param id
+     * @returns {HTMLElement}
+     * @see moduleSelector
+     */
+    elementById(id = '')
+    {
+        return document.getElementById(this.name + id);
+    }
+
+    /**
+     * Search a html element by name within the root / module element
+     *
+     * @param name
+     * @returns {HTMLElement}
+     * @see moduleSelector
+     */
+    elementByName(name)
+    {
+        return this.element(`[name='${name}']`);
+    }
+
+    /**
+     * Search html elements by name within the root / module element
+     *
+     * @param name
+     * @returns {NodeListOf<Element>}
+     * @see moduleSelector
+     */
+    elementsByName(name)
+    {
+        return this.elements(`[name='${name}']`);
+    }
+
+    /**
+     * Search html elements by selector within the root / module element
+     *
+     * @param selectors
+     * @returns {NodeListOf<Element>}
+     * @see moduleSelector
+     */
+    elements(...selectors)
+    {
+        const selector = selectors.map(s => this.moduleSelector + ' ' + s).join(', ');
+        return document.querySelectorAll(selector);
     }
 
     /**
