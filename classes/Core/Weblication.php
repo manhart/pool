@@ -1470,6 +1470,44 @@ class Weblication extends Component
     }
 
     /**
+     * terminates Ajax requests with an access-denied error
+     */
+    public function denyAJAX_Request(): void
+    {
+        if($this->isAjax()) {
+            header('Content-type: application/json', true, 403);
+            $message = $this->getTranslator()->getTranslation('global.applicationAccessDenied', 'Access to the application denied.');
+            $return = [
+                'success' => false,
+                'error'  => [
+                    'type' => 'access-denied',
+                    'message' => $message
+                ]
+            ];
+            die(json_encode($return));
+        }
+    }
+
+    /**
+     * terminates Ajax requests with a reauthorization/unauthorized error
+     */
+    public function reauthorizeAJAX_Request(): void
+    {
+        if($this->isAjax()) {
+            header('Content-type: application/json', true, 401);
+            $message = $this->getTranslator()->getTranslation('global.applicationReauthorize', 'Reauthorization required.');
+            $return = [
+                'success' => false,
+                'error'  => [
+                    'type' => 'reauthorize',
+                    'message' => $message
+                ]
+            ];
+            die(json_encode($return));
+        }
+    }
+
+    /**
      * @return void
      */
     public function logout(): void
