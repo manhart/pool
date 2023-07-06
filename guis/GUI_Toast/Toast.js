@@ -26,6 +26,7 @@ class Toast
     */
     autohide = true;
     delay = Toast.DEFAULT_DELAY;
+    onHideCallback = null;
     position = 'bottom-right';
     Toast = null;
     pauseOnHover = true;
@@ -137,6 +138,18 @@ class Toast
     }
 
     /**
+     * Set callback for onHide event
+     *
+     * @param callback
+     * @return {null}
+     */
+    onHide(callback)
+    {
+        this.onHideCallback = callback;
+        return this;
+    }
+
+    /**
      * Set position of the toasts. See style classes.
      *
      * @param position
@@ -219,6 +232,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      * Defaults based on  the type are Provided.
      * @param message  The content of this Toast. Expects a String or an array [translationKey, default]
      * @param subtitle Additional information displayed instead of the Toasts age
+     * @param onHide A function to be called when the Toast is hidden
      * @returns {Promise<Toast>}
      */
     showAsync = async (type, title, message, subtitle) => {
@@ -287,7 +301,13 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             this.Toast.on('hidden.bs.toast', () => clearInterval(dateUpdateIntervall));
         }
         //add a handler that removes the Toast from the DOM when it is hidden
-        this.Toast.on('hidden.bs.toast', () => $('#'+id).remove());
+        this.Toast.on('hidden.bs.toast', () => {
+            $('#'+id).remove();
+            if (typeof this.onHideCallback === 'function') {
+                // execute callback
+                this.onHideCallback();
+            }
+        });
         //start displaying
         this.Toast.toast('show');
         //check whether handlers for auto-hiding are required
@@ -330,10 +350,11 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      * @param message
      * @param delay
      */
-    static show = (type, title, message, delay = Toast.DEFAULT_DELAY) =>
+    static show = (type, title, message, delay = Toast.DEFAULT_DELAY, onHide = null) =>
     {
         let $Toast = new Toast();
         $Toast.setDelay(delay);
+        $Toast.onHide(onHide);
         $Toast.show(type, title, message);
     }
 
