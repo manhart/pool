@@ -771,7 +771,7 @@ class GUI_Module extends Module
      * @param bool $activate
      * @return GUI_Module
      */
-    public function respondAsPlainJSON(bool $activate = true): GUI_Module
+    protected function respondAsPlainJSON(bool $activate = true): GUI_Module
     {
         $this->plainJSON = $activate;
         return $this;

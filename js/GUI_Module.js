@@ -17,7 +17,8 @@ class GUI_Module
     /**
      * @param {string} name of module
      */
-    constructor(name) {
+    constructor(name)
+    {
         this.name = name;
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
         if (typeof this.className == 'undefined') {
@@ -34,7 +35,8 @@ class GUI_Module
     /**
      * @abstract
      */
-    init(options = {}) {
+    init(options = {})
+    {
         // console.debug(this.getName()+'.init called');
     }
 
@@ -43,7 +45,8 @@ class GUI_Module
      *
      * @returns {string}
      */
-    getName() {
+    getName()
+    {
         return this.name;
     }
 
@@ -52,7 +55,8 @@ class GUI_Module
      *
      * @returns {string}
      */
-    getClassName() {
+    getClassName()
+    {
         return this.className;
     }
 
@@ -60,7 +64,8 @@ class GUI_Module
      * sets the fully qualified className of the php module
      * @param fullyQualifiedClassName
      */
-    setFullyQualifiedClassName(fullyQualifiedClassName) {
+    setFullyQualifiedClassName(fullyQualifiedClassName)
+    {
         this.fullyQualifiedClassName = fullyQualifiedClassName;
         return this;
     }
@@ -69,7 +74,8 @@ class GUI_Module
      * returns the fully qualified className of the php module
      * @return {string}
      */
-    getFullyQualifiedClassName() {
+    getFullyQualifiedClassName()
+    {
         return this.fullyQualifiedClassName;
     }
 
@@ -78,7 +84,8 @@ class GUI_Module
      * @param response
      * @return {Promise<*>}
      */
-    async parseJSON(response) {
+    async parseJSON(response)
+    {
         let json;
         let text = await response.text();
         try {
@@ -100,7 +107,8 @@ class GUI_Module
      * @param {object} options Request options e.g. {method:'POST'}
      * @return {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
      */
-    request(ajaxMethod, data, options = {}) {
+    request(ajaxMethod, data, options = {})
+    {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
         let key = 'query';
         if (options.method) {
@@ -198,7 +206,8 @@ class GUI_Module
     }
 
     onFetchNetworkError = () => alert('Netzwerkfehler');
-    onAjax_UnhandledException = e => {
+    onAjax_UnhandledException = e =>
+    {
         if (e instanceof PoolAjaxResponseError) {
             console.warn('Caught unhandled Ajax Error of Server-type: ' + e.serverSideType);
             if (e.cause) console.warn(e.cause)
@@ -207,7 +216,8 @@ class GUI_Module
         console.warn(e);
     }
 
-    getThenMod = (handler) => {
+    getThenMod = (handler) =>
+    {
         const thenMod = function (onFullfilled, onRejected) {
             console.debug('modded')
             onRejected ??= e => {//create delegating handler
@@ -232,7 +242,8 @@ class GUI_Module
      * @param {Response} response
      * @return {Promise<*>}
      */
-    async parseAjaxResponse(response) {
+    async parseAjaxResponse(response)
+    {
         const status = response.status;
         if (500 <= status && status < 600)//Server error
             throw new PoolAjaxResponseError(await response.text(), null, 'internal');
@@ -275,7 +286,8 @@ class GUI_Module
      * should be used (overwritten) to redraw the corresponding html element (necessary for module configurator)
      * @param options
      */
-    redraw(options = {}) {
+    redraw(options = {})
+    {
     }
 
     /**
@@ -304,5 +316,4 @@ class GUI_Module
         return (new myClass(name)).setFullyQualifiedClassName(fullyQualifiedClassName);
     }
 }
-
-console.debug('GUI_Module.class.js loaded');
+console.debug('GUI_Module.js loaded');
