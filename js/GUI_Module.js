@@ -18,7 +18,7 @@ class GUI_Module
     fullyQualifiedClassName = this.constructor.name;
 
     /**
-     * @param {string} unique name of module (must consist of only alphanumeric characters (A-Z, a-z, 0-9), underscore (_), and hyphen (-).)
+     * @param {string} name unique name of the module
      */
     constructor(name)
     {
@@ -37,14 +37,16 @@ class GUI_Module
     }
 
     /**
-     * initializes the module with the given options
+     * Initializes the module
+     *
+     * @param {object} options options for the module
      */
     init(options = {})
     {
     }
 
     /**
-     * returns the name of the module
+     * Returns the name of the module
      *
      * @returns {string}
      */
@@ -54,7 +56,7 @@ class GUI_Module
     }
 
     /**
-     * returns the className of the module
+     * Returns the className of the module
      *
      * @returns {string}
      */
@@ -64,8 +66,9 @@ class GUI_Module
     }
 
     /**
-     * sets the fully qualified className of the php module
-     * @param fullyQualifiedClassName
+     * Sets the fully qualified className of the php module
+     *
+     * @param {string} fullyQualifiedClassName
      */
     setFullyQualifiedClassName(fullyQualifiedClassName)
     {
@@ -74,8 +77,9 @@ class GUI_Module
     }
 
     /**
-     * returns the fully qualified className of the php module
-     * @return {string}
+     * Returns the fully qualified className of the php module
+     * @see https://www.php.net/manual/en/language.namespaces.rules.php
+     * @returns {string}
      */
     getFullyQualifiedClassName()
     {
@@ -84,7 +88,7 @@ class GUI_Module
 
     /**
      * parses the response as JSON
-     * @param response
+     * @param {Response} response
      * @returns {Promise<*>}
      */
     async parseJSON(response)
@@ -106,7 +110,7 @@ class GUI_Module
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
      * @see https://blog.openreplay.com/ajax-battle-xmlhttprequest-vs-the-fetch-api
      * @param {string} ajaxMethod Alias name of the method to call
-     * @param data Object containing parameters passed to server method
+     * @param {object|FormData} data Object containing parameters passed to server method
      * @param {object} options Request options e.g. {method:'POST'}
      * @returns {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
      */
@@ -242,6 +246,8 @@ class GUI_Module
     }
 
     /**
+     * Parses the response and analyzes the status code.
+     *
      * @param {Response} response
      * @returns {Promise<*>}
      */
@@ -306,8 +312,8 @@ class GUI_Module
     /**
      * Returns selected element within the root / module element. if no selector is given, it should return self (=the top root / module element)
      *
-     * @param selector
-     * @returns {Element}
+     * @param {string} selector
+     * @returns {HTMLElement}
      */
     element(selector = '')
     {
@@ -317,7 +323,7 @@ class GUI_Module
     /**
      * Search html element by id within the root / module element
      *
-     * @param id
+     * @param {string} id
      * @returns {HTMLElement}
      * @see moduleSelector
      */
@@ -329,7 +335,7 @@ class GUI_Module
     /**
      * Search a html element by name within the root / module element
      *
-     * @param name
+     * @param {string} name
      * @returns {HTMLElement}
      * @see moduleSelector
      */
@@ -341,7 +347,7 @@ class GUI_Module
     /**
      * Search html elements by name within the root / module element
      *
-     * @param name
+     * @param {string} name
      * @returns {NodeListOf<Element>}
      * @see moduleSelector
      */
