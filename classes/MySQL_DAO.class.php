@@ -1172,13 +1172,13 @@ SQL;
             $count = count($key);
             for($i = 0; $i < $count; $i++) {
                 $keyName = $key[$i];
-                $result = "$result$alias$keyName=\"{$this->db->escapeString($id[$i], $this->dbname)}\"";
+                $result = "$result$alias$keyName={$this->escapeWhereConditionValue($id[$i], false, false)}";
                 if(!isset($id[$i + 1])) break;
                 $result .= ' and ';
             }
         }
         else {
-            $result = "$alias$key=\"{$this->db->escapeString($id, $this->dbname)}\"";
+            $result = "$alias$key={$this->escapeWhereConditionValue($id, false, false)}";
         }
         return $result;
     }
