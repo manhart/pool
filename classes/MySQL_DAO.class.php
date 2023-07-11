@@ -963,7 +963,10 @@ SQL;
                         'NULL' => 'NULL',
                         'boolean' => bool2string($values),
                         'double', 'integer' => $values,//float and int
-                        default => $this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
+                        default => match ($this->__isSubQuery($values)){
+                            true => $values,// TODO? NOT ESCAPED
+                            default =>$this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
+                        }
                     };
                 //assemble record
                 $record = "$field $innerOperator $value";
@@ -984,7 +987,7 @@ SQL;
      */
     private function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): string
     {
-        if(is_int($value) || is_float($value) || $this->__isSubQuery($value))
+        if(is_int($value) || is_float($value))
             return $value;//not a stringable or a 'subQuery'
         $value = $noEscape ? $value : $this->db->escapeString($value, $this->dbname);
         return $noQuotes ? $value : "'$value'"; //quote
