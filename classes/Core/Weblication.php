@@ -256,7 +256,7 @@ class Weblication extends Component
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
-    private function __construct()
+    private final function __construct()
     {
         parent::__construct(null);
         self::$isAjax = isAjax();
