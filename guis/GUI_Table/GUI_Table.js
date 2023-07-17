@@ -440,10 +440,11 @@ class GUI_Table extends GUI_Module
     }
 
     /**
-     * refreshes the table
-     * @param options
-     * @param silent
-     * @param onLoadSuccess
+     * Refreshes the table
+     *
+     * @param {object} options
+     * @param {boolean} silent
+     * @param {null|function} onLoadSuccess
      * @return {GUI_Table}
      */
     refresh(options = {}, silent = false, onLoadSuccess = null)
@@ -456,14 +457,20 @@ class GUI_Table extends GUI_Module
             $(this.getTable()).on('load-success.bs.table', eventLoadSuccess);
         }
 
+        const forceRefreshOptions = this.forceRefreshOptions;
+        this.forceRefreshOptions = false;
+
+        if(!this.rendered) {
+            return this.render(options);
+        }
+
         // console.debug(this.getName() + '.refresh');
         // todo stelle Seite wieder her
-        if(!isEmpty(options) || this.forceRefreshOptions) {
+        if(!isEmpty(options) || forceRefreshOptions) {
             this.options = Object.assign({}, this.options, options);
             // console.debug(this.getName() + '.refreshOptions', this.options);
             this.scrollPosition = this.getScrollPosition();
             this.getTable().bootstrapTable('refreshOptions', this.options);
-            this.forceRefreshOptions = false;
         }
         else {
             let params = {};
