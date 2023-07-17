@@ -2190,7 +2190,7 @@ function isHTML(string $string): bool
  */
 function isValidJSON(string $string): bool
 {
-    if($string[0] !== '{' && $string[0] !== '[') {
+    if($string != '' && $string[0] !== '{' && $string[0] !== '[') {
         return false;
     }
     json_decode($string);
