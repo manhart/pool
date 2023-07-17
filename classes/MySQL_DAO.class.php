@@ -173,11 +173,6 @@ class MySQL_DAO extends DAO
     protected ?DataInterface $db = null;
 
     /**
-     * @var string contains the database name
-     */
-    private string $dbname;
-
-    /**
      * @var string contains the columns to select
      */
     protected string $column_list = '*';
@@ -188,18 +183,6 @@ class MySQL_DAO extends DAO
     protected string $table;
 
     protected string $tableAlias = '';
-
-    private array $MySQL_trans = [
-        'equal' => '=',
-        'unequal' => '!=',
-        'greater' => '>',
-        'greater than' => '>=',
-        'less' => '<',
-        'less than' => '<=',
-        'in' => 'in',
-        'not in' => 'not in',
-        'is' => 'is'
-    ];
 
     /**
      * columns to translate
@@ -216,17 +199,37 @@ class MySQL_DAO extends DAO
     protected array $translateValues = [];
 
     /**
+     * @var Translator
+     */
+    protected Translator $Translator;
+
+    /**
+     * @var string contains the database name
+     */
+    private string $dbname;
+
+    /**
+     * @var array|string[] operators for the filter method
+     */
+    private array $MySQL_trans = [
+        'equal' => '=',
+        'unequal' => '!=',
+        'greater' => '>',
+        'greater than' => '>=',
+        'less' => '<',
+        'less than' => '<=',
+        'in' => 'in',
+        'not in' => 'not in',
+        'is' => 'is'
+    ];
+
+    /**
      * @var array
      */
     private array $cache = [
         'translatedValues' => [],
         'translate' => []
     ];
-
-    /**
-     * @var Translator
-     */
-    protected Translator $Translator;
 
     /**
      * MySQL_DAO constructor.
@@ -298,58 +301,6 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * fetches the columns automatically from the driver / interface
-     *
-     * Beim Setzen der Spalten/Felder wird das Ereignis
-     * $this -> onSetColumns() aufgerufen
-     */
-    public function fetchColumns(): static
-    {
-        $this->pk = [];
-        $this->columns = [];
-        $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
-        $this->onSetColumns($this->columns);
-        return $this;
-    }
-
-    /**
-     * Das Ereignis "onSetColumns" wird immer nachdem setzen der Columns
-     * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
-     * $this→column_list fuer die Funktionen $this -> get und
-     * $this→getMultiple zusammen.
-     */
-    protected function onSetColumns(array $columns): void
-    {
-        $column_list = '';
-        $count = count($columns);
-        $last = $count - 1;
-
-        // todo add table alias
-        // todo introduce expression columns
-        // todo consider column properties (e.g. type, length, ...)
-
-        for($i = 0; $i < $count; $i++) {
-            // don't escape column if it has already backticks, is an expression or contains a dot
-            $column = static::escapeColumn($columns[$i]);
-            // add column separator
-            $column_list .= $i < $last ? "$column, " : $column;
-        }
-
-        $this->column_list = $column_list;
-    }
-
-    /**
-     * escape column name
-     */
-    static function escapeColumn(string $column): string
-    {
-        if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
-            $column = "`$column`";
-        }
-        return $column;
-    }
-
-    /**
      * Sets columns to be translated
      *
      * @param array $columns
@@ -408,6 +359,58 @@ class MySQL_DAO extends DAO
             $this->fetchColumns();
         }
         return $this->getColumns();
+    }
+
+    /**
+     * fetches the columns automatically from the driver / interface
+     *
+     * Beim Setzen der Spalten/Felder wird das Ereignis
+     * $this -> onSetColumns() aufgerufen
+     */
+    public function fetchColumns(): static
+    {
+        $this->pk = [];
+        $this->columns = [];
+        $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
+        $this->onSetColumns($this->columns);
+        return $this;
+    }
+
+    /**
+     * Das Ereignis "onSetColumns" wird immer nachdem setzen der Columns
+     * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
+     * $this→column_list fuer die Funktionen $this -> get und
+     * $this→getMultiple zusammen.
+     */
+    protected function onSetColumns(array $columns): void
+    {
+        $column_list = '';
+        $count = count($columns);
+        $last = $count - 1;
+
+        // todo add table alias
+        // todo introduce expression columns
+        // todo consider column properties (e.g. type, length, ...)
+
+        for($i = 0; $i < $count; $i++) {
+            // don't escape column if it has already backticks, is an expression or contains a dot
+            $column = static::escapeColumn($columns[$i]);
+            // add column separator
+            $column_list .= $i < $last ? "$column, " : $column;
+        }
+
+        $this->column_list = $column_list;
+    }
+
+    /**
+     * escape column name
+     */
+    static function escapeColumn(string $column): string
+    {
+        if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
+            $column = "`$column`";
+        }
+        return $column;
     }
 
     /**
@@ -565,6 +568,20 @@ SQL;
     }
 
     /**
+     * executes sql statement and returns resultset
+     *
+     * @param string $sql sql statement to execute
+     * @param callable|null $customCallback
+     * @return MySQL_ResultSet
+     */
+    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_ResultSet
+    {
+        $MySQL_ResultSet = new MySQL_ResultSet($this->db);
+        $MySQL_ResultSet->execute($sql, $this->dbname, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
+        return $MySQL_ResultSet;
+    }
+
+    /**
      * Die Funktion "update" aendert einen Datensatz. Ein Datensatz kann nur geaendert
      * werden, wenn auch der entsprechende Primaerschluessel mituebergeben wurde!! Der
      * Schluessel wird automatisch erkannt und die Daten landen in den richtigen Datensatz.
@@ -625,6 +642,95 @@ SQL;
     }
 
     /**
+     * Build assignment list for update statements
+     *
+     * @param array $data
+     * @return string
+     */
+    protected function __buildAssignmentList(array $data): string
+    {
+        $set = '';
+        foreach($data as $field => $value) {
+            if(is_null($value)) {
+                $value = 'NULL';
+            }
+            elseif(is_bool($value)) {
+                $value = bool2string($value);
+            }
+            elseif($value instanceof Commands) {
+                // reserved keywords don't need to be masked
+                $expression = $this->commands[$value->name];
+                if($expression instanceof Closure) {
+                    $value = $expression($field);
+                }
+                else {
+                    $value = $expression;
+                }
+            }
+            elseif($value instanceof DateTimeInterface) {
+                $value = "'{$value->format('Y-m-d H:i:s')}'";
+            }
+            elseif(!is_int($value) && !is_float($value)) {
+                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
+            }
+            if($set == '') $set = "`$field`=$value";
+            else $set = "$set,`$field`=$value";
+        }
+        return $set;
+    }
+
+    /**
+     * Erstellt die Abfrage auf Primaer Schluessel (Indexes, Unique Keys etc.).
+     *
+     * @param mixed $id integer oder array (ID's)
+     * @param mixed $key integer oder array (Spalten)
+     * @return string Teil eines SQL Queries
+     */
+    protected function __buildWhere(mixed $id, mixed $key): string
+    {
+        $result = '';
+        if(is_null($id)) {
+            return '1';
+        }
+        $alias = $this->tableAlias ? "$this->tableAlias." : '';
+        if(is_null($key)) {
+            $key = $this->pk;
+        }
+        if(is_array($key)) {
+            if(!is_array($id)) {
+                $id = array($id);
+            }
+            $count = count($key);
+            for($i = 0; $i < $count; $i++) {
+                $keyName = $key[$i];
+                $result = "$result$alias$keyName={$this->escapeWhereConditionValue($id[$i], false, false)}";
+                if(!isset($id[$i + 1])) break;
+                $result .= ' and ';
+            }
+        }
+        else {
+            $result = "$alias$key={$this->escapeWhereConditionValue($id, false, false)}";
+        }
+        return $result;
+    }
+
+    /**
+     * add value to where condition
+     *
+     * @param mixed $value
+     * @param false|int $noEscape
+     * @param false|int $noQuotes
+     * @return string
+     */
+    private function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): string
+    {
+        if(is_int($value) || is_float($value))
+            return $value;//not a stringable or a 'subQuery'
+        $value = $noEscape ? $value : $this->db->escapeString($value, $this->dbname);
+        return $noQuotes ? $value : "'$value'"; //quote
+    }
+
+    /**
      * Update multiple records at once
      *
      * @param array $data
@@ -657,6 +763,119 @@ WHERE
 SQL;
 
         return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
+     *
+     * Verfuegbare Regeln:
+     * equal : '='
+     * unequal : '!='
+     * greater : '>'
+     * less : '<'
+     * in : 'in' erwartet ein Array aus Werten (Sonderbehandlung)
+     * not in : 'not in' erwartet ein Array aus Werten (Sonderbehandlung)
+     *
+     * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
+     * @param string $operator MySQL Operator AND/OR
+     * @param boolean $skip_next_operator False setzt zu Beginn keinen Operator
+     * @param string $initialOperator
+     * @return string filter part of sql statement
+     */
+    protected function __buildFilter(array $filter_rules, string $operator = 'and', bool $skip_next_operator = false, string $initialOperator = ' and'): string
+    {
+        if(!$filter_rules)//not filter anything (terminate floating operators)
+            return $skip_next_operator ? '1' : '';
+        $firstRule = $filter_rules[0];
+        $query = !is_array($firstRule) && !in_array(strtolower($firstRule), ['or', 'and']) ?//1. rule is a non joining operator
+            $initialOperator : '';//* we add an initial 'and' operator.
+        foreach($filter_rules as $record) {
+            $skipAutomaticOperator = $skip_next_operator;
+            if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
+                $record = " $record "; //operator e.g. or, and
+                $skipAutomaticOperator = true;
+            }
+            elseif(is_array($record[0]))// nesting detected
+                $record = "({$this->__buildFilter($record[0], $record[1], true)})";//"($subFilter)"
+            else {//normal record
+                $field = $this->translateValues ? //get field 'name'
+                    $this->translateValues($record[0]) : $record[0];//inject replace command?
+                $rawInnerOperator = $record[1];
+                $innerOperator = strtr($rawInnerOperator, $this->MySQL_trans);//map operators for DBMS
+                $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
+                //parse quotation options (defaults to false)
+                $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
+                $noQuotes = $quoteSettings & DAO::DAO_NO_QUOTES;
+                $noEscape = $quoteSettings & DAO::DAO_NO_ESCAPE;
+                if(is_array($values))
+                    switch($rawInnerOperator) {//multi value operation
+                        case 'between':
+                            $value = /* min */
+                                $this->escapeWhereConditionValue($values[0], $noEscape, $noQuotes);
+                            $value .= ' and ';
+                            $value .= /* max */
+                                $this->escapeWhereConditionValue($values[1], $noEscape, $noQuotes);
+                            break;
+                        default://enlist all values e.g. in, not in
+                            //apply quotation rules
+                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
+                            $values = implode(', ', $values);
+                            $value = "($values)";
+                            break;
+                    }
+                elseif($values instanceof Commands) {//resolve reserved keywords
+                    $expression = $this->commands[$values->name];
+                    $value = $expression instanceof Closure ?
+                        $expression($field) : $expression;//!assuming closure was meant to be evaluated at this point
+                }
+                elseif($values instanceof DateTimeInterface) {//format date-objects
+                    $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
+                    $value = "'$dateTime'";
+                }
+                else//sub query moved to escapeWhereConditionValue
+                    $value = match (gettype($values)) {//handle by type
+                        'NULL' => 'NULL',
+                        'boolean' => bool2string($values),
+                        'double', 'integer' => $values,//float and int
+                        default => match ($this->__isSubQuery($values)) {
+                            true => $values,// TODO? NOT ESCAPED
+                            default => $this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
+                        }
+                    };
+                //assemble record
+                $record = "$field $innerOperator $value";
+            }
+            $query .= !$skipAutomaticOperator ? //automatic operator?
+                " $operator $record" : $record;//automation puts operator between the last record and this one
+        }
+        return $query;
+    }
+
+    /**
+     * @param string $field
+     * @return string
+     */
+    protected function translateValues(string $field): string
+    {
+        $tokens =& $this->translateValues[$field];
+        if(!Weblication::getInstance()->hasTranslator() || !$tokens)
+            return $field;
+        $Translator = Weblication::getInstance()->getTranslator();
+        $tmp = 'case ' . $field;
+        foreach($tokens as $token)
+            $tmp .= " when '$token' then '{$Translator->getTranslation($token, $token)}'";
+        return "$tmp else $field end";
+    }
+
+    /**
+     * checks value for subquery
+     *
+     * @param mixed $value string?
+     * @return bool
+     */
+    private function __isSubQuery(mixed $value): bool
+    {
+        return str_contains($value, '(SELECT ');
     }
 
     /**
@@ -753,7 +972,6 @@ SQL;
      * @see MySQL_DAO::__buildSorting
      * @see MySQL_DAO::__buildLimit
      * @see MySQL_DAO::__buildGroupBy
-     *
      */
     public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
         array $groupBy = [], array $having = [], array $options = []): ResultSet
@@ -781,6 +999,90 @@ WHERE
 SQL;
 
         return $this->__createMySQL_Resultset($sql);
+    }
+
+    /**
+     * Erstelle Gruppierung fuer das SQL-Statement
+     *
+     * @param array $groupBy
+     * @return string SQL-Statement
+     */
+    protected function __buildGroupBy(array $groupBy): string
+    {
+        if(!$groupBy) return '';
+
+        // GROUP BY a.test ASC WITH ROLLUP
+        // array('test' => 'ASC', 'WITH ROLLUP');
+        $sql = '';
+        $alias = '';
+        if($this->tableAlias) $alias = $this->tableAlias . '.';
+
+        foreach($groupBy as $column => $sort) {
+            if($sql == '') {
+                $sql = ' GROUP BY ';
+            }
+            elseif($column == 'WITH ROLLUP') {
+                $sql .= " $column";
+                break;
+            }
+            else {
+                $sql .= ', ';
+            }
+            $sql .= "$alias.$column $sort";
+        }
+        return $sql;
+    }
+
+    /**
+     * Build a having statement for a SQL query
+     *
+     * @param array $filter_rules Filter Regeln (siehe __buildFilter)
+     * @return string SQL-Abfrage
+     */
+    protected function __buildHaving(array $filter_rules): string
+    {
+        $query = $this->__buildFilter($filter_rules, 'and', false, '');
+        if($query) $query = " HAVING $query";
+        return $query;
+    }
+
+    /**
+     * Erstellung einer Sortierung fuer ein SQL Statement
+     *
+     * @param array|null $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
+     * @return string ORDER eines SQL Statements
+     */
+    protected function __buildSorting(?array $sorting): string
+    {
+        $sql = '';
+        if(is_array($sorting) && count($sorting)) {
+            $alias = $this->tableAlias ? "$this->tableAlias." : '';
+
+            foreach($sorting as $column => $sort) {
+                if($sql == '') {
+                    $sql = ' ORDER BY ';
+                }
+                else {
+                    $sql .= ', ';
+                }
+
+                $column = $alias . $column;
+                if($this->translateValues) {
+                    $column = $this->translateValues($column);
+                }
+                $sql .= "$column $sort";
+            }
+        }
+        return $sql;
+    }
+
+    /**
+     * @param array $limit Array im Format $array([offset], max). Beispiel $array(5) oder auch $array(0, 5)
+     * @return string LIMIT eines SQL Statements
+     */
+    protected function __buildLimit(array $limit): string
+    {
+        return $limit ? ' LIMIT ' . implode(', ', $limit) : '';
     }
 
     /**
@@ -819,20 +1121,6 @@ SQL;
     }
 
     /**
-     * executes sql statement and returns resultset
-     *
-     * @param string $sql sql statement to execute
-     * @param callable|null $customCallback
-     * @return MySQL_ResultSet
-     */
-    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_ResultSet
-    {
-        $MySQL_ResultSet = new MySQL_ResultSet($this->db);
-        $MySQL_ResultSet->execute($sql, $this->dbname, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
-        return $MySQL_ResultSet;
-    }
-
-    /**
      * fetching rows
      *
      * @param array $row
@@ -865,136 +1153,7 @@ SQL;
     }
 
     /**
-     * @param string $field
-     * @return string
-     */
-    protected function translateValues(string $field): string
-    {
-        $tokens =& $this->translateValues[$field];
-        if(!Weblication::getInstance()->hasTranslator() || !$tokens)
-            return $field;
-        $Translator = Weblication::getInstance()->getTranslator();
-        $tmp = 'case ' . $field;
-        foreach($tokens as $token)
-            $tmp .= " when '$token' then '{$Translator->getTranslation($token, $token)}'";
-        return "$tmp else $field end";
-    }
-
-    /**
-     * checks value for subquery
-     *
-     * @param mixed $value string?
-     * @return bool
-     */
-    private function __isSubQuery(mixed $value): bool
-    {
-        return str_contains($value, '(SELECT ');
-    }
-
-    /**
-     * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
-     *
-     * Verfuegbare Regeln:
-     * equal : '='
-     * unequal : '!='
-     * greater : '>'
-     * less : '<'
-     * in : 'in' erwartet ein Array aus Werten (Sonderbehandlung)
-     * not in : 'not in' erwartet ein Array aus Werten (Sonderbehandlung)
-     *
-     * @param array $filter_rules Filter Regeln im Format $arr = Array(feldname, regel, wert)
-     * @param string $operator MySQL Operator AND/OR
-     * @param boolean $skip_next_operator False setzt zu Beginn keinen Operator
-     * @param string $initialOperator
-     * @return string filter part of sql statement
-     */
-    protected function __buildFilter(array $filter_rules, string $operator = 'and', bool $skip_next_operator = false, string $initialOperator = ' and'): string
-    {
-        if(!$filter_rules)//not filter anything (terminate floating operators)
-            return $skip_next_operator ? '1' : '';
-        $firstRule = $filter_rules[0];
-        $query = !is_array($firstRule) && !in_array(strtolower($firstRule), ['or', 'and']) ?//1. rule is a non joining operator
-            $initialOperator : '';//* we add an initial 'and' operator.
-        foreach($filter_rules as $record) {
-            $skipAutomaticOperator = $skip_next_operator;
-            if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
-                $record = " $record "; //operator e.g. or, and
-                $skipAutomaticOperator = true;
-            }
-            elseif(is_array($record[0]))// nesting detected
-                $record = "({$this->__buildFilter($record[0], $record[1], true)})";//"($subFilter)"
-            else {//normal record
-                $field = $this->translateValues ? //get field 'name'
-                    $this->translateValues($record[0]) : $record[0];//inject replace command?
-                $rawInnerOperator = $record[1];
-                $innerOperator = strtr($rawInnerOperator, $this->MySQL_trans);//map operators for DBMS
-                $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
-                //parse quotation options (defaults to false)
-                $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
-                $noQuotes = $quoteSettings & DAO::DAO_NO_QUOTES;
-                $noEscape = $quoteSettings & DAO::DAO_NO_ESCAPE;
-                if(is_array($values))
-                    switch($rawInnerOperator) {//multi value operation
-                        case 'between':
-                            $value = /* min */
-                                $this->escapeWhereConditionValue($values[0], $noEscape, $noQuotes);
-                            $value .= ' and ';
-                            $value .= /* max */
-                                $this->escapeWhereConditionValue($values[1], $noEscape, $noQuotes);
-                            break;
-                        default://enlist all values e.g. in, not in
-                            //apply quotation rules
-                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
-                            $values = implode(', ', $values);
-                            $value = "($values)";
-                            break;
-                    }
-                elseif($values instanceof Commands) {//resolve reserved keywords
-                    $expression = $this->commands[$values->name];
-                    $value = $expression instanceof Closure ?
-                        $expression($field) : $expression;//!assuming closure was meant to be evaluated at this point
-                }
-                elseif($values instanceof DateTimeInterface) {//format date-objects
-                    $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
-                    $value = "'$dateTime'";
-                }
-                else//sub query moved to escapeWhereConditionValue
-                    $value = match (gettype($values)) {//handle by type
-                        'NULL' => 'NULL',
-                        'boolean' => bool2string($values),
-                        'double', 'integer' => $values,//float and int
-                        default => match ($this->__isSubQuery($values)){
-                            true => $values,// TODO? NOT ESCAPED
-                            default =>$this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
-                        }
-                    };
-                //assemble record
-                $record = "$field $innerOperator $value";
-            }
-            $query .= !$skipAutomaticOperator ? //automatic operator?
-                " $operator $record" : $record;//automation puts operator between the last record and this one
-        }
-        return $query;
-    }
-
-    /**
-     * add value to where condition
-     *
-     * @param mixed $value
-     * @param false|int $noEscape
-     * @param false|int $noQuotes
-     * @return string
-     */
-    private function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): string
-    {
-        if(is_int($value) || is_float($value))
-            return $value;//not a stringable or a 'subQuery'
-        $value = $noEscape ? $value : $this->db->escapeString($value, $this->dbname);
-        return $noQuotes ? $value : "'$value'"; //quote
-    }
-
-    /**
-     * make filter rules based on search string or defined search keywords
+     * Make filter rules based on search string or defined search keywords
      *
      * @param array $columns
      * @param string $searchString
@@ -1065,162 +1224,5 @@ SQL;
         }
         else /** Malformed date TODO */ ;
         return $filterByValue;
-    }
-
-    /**
-     * Build a having statement for a SQL query
-     *
-     * @param array $filter_rules Filter Regeln (siehe __buildFilter)
-     * @return string SQL-Abfrage
-     */
-    protected function __buildHaving(array $filter_rules): string
-    {
-        $query = $this->__buildFilter($filter_rules, 'and', false, '');
-        if($query) $query = " HAVING $query";
-        return $query;
-    }
-
-    /**
-     * Erstellung einer Sortierung fuer ein SQL Statement
-     *
-     * @param array|null $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
-     * @return string ORDER eines SQL Statements
-     */
-    protected function __buildSorting(?array $sorting): string
-    {
-        $sql = '';
-        if(is_array($sorting) && count($sorting)) {
-            $alias = $this->tableAlias ? "$this->tableAlias." : '';
-
-            foreach($sorting as $column => $sort) {
-                if($sql == '') {
-                    $sql = ' ORDER BY ';
-                }
-                else {
-                    $sql .= ', ';
-                }
-
-                $column = $alias . $column;
-                if($this->translateValues) {
-                    $column = $this->translateValues($column);
-                }
-                $sql .= "$column $sort";
-            }
-        }
-        return $sql;
-    }
-
-    /**
-     * @param array $limit Array im Format $array([offset], max). Beispiel $array(5) oder auch $array(0, 5)
-     * @return string LIMIT eines SQL Statements
-     */
-    protected function __buildLimit(array $limit): string
-    {
-        return $limit ? ' LIMIT ' . implode(', ', $limit) : '';
-    }
-
-    /**
-     * Erstelle Gruppierung fuer das SQL-Statement
-     *
-     * @param array $groupBy
-     * @return string SQL-Statement
-     */
-    protected function __buildGroupBy(array $groupBy): string
-    {
-        if(!$groupBy) return '';
-
-        // GROUP BY a.test ASC WITH ROLLUP
-        // array('test' => 'ASC', 'WITH ROLLUP');
-        $sql = '';
-        $alias = '';
-        if($this->tableAlias) $alias = $this->tableAlias . '.';
-
-        foreach($groupBy as $column => $sort) {
-            if($sql == '') {
-                $sql = ' GROUP BY ';
-            }
-            elseif($column == 'WITH ROLLUP') {
-                $sql .= " $column";
-                break;
-            }
-            else {
-                $sql .= ', ';
-            }
-            $sql .= "$alias.$column $sort";
-        }
-        return $sql;
-    }
-
-    /**
-     * Erstellt die Abfrage auf Primaer Schluessel (Indexes, Unique Keys etc.).
-     *
-     * @param mixed $id integer oder array (ID's)
-     * @param mixed $key integer oder array (Spalten)
-     * @return string Teil eines SQL Queries
-     */
-    protected function __buildWhere(mixed $id, mixed $key): string
-    {
-        $result = '';
-        if(is_null($id)) {
-            return '1';
-        }
-        $alias = $this->tableAlias ? "$this->tableAlias." : '';
-        if(is_null($key)) {
-            $key = $this->pk;
-        }
-        if(is_array($key)) {
-            if(!is_array($id)) {
-                $id = array($id);
-            }
-            $count = count($key);
-            for($i = 0; $i < $count; $i++) {
-                $keyName = $key[$i];
-                $result = "$result$alias$keyName={$this->escapeWhereConditionValue($id[$i], false, false)}";
-                if(!isset($id[$i + 1])) break;
-                $result .= ' and ';
-            }
-        }
-        else {
-            $result = "$alias$key={$this->escapeWhereConditionValue($id, false, false)}";
-        }
-        return $result;
-    }
-
-    /**
-     * Build assignment list for update statements
-     *
-     * @param array $data
-     * @return string
-     */
-    protected function __buildAssignmentList(array $data): string
-    {
-        $set = '';
-        foreach($data as $field => $value) {
-            if(is_null($value)) {
-                $value = 'NULL';
-            }
-            elseif(is_bool($value)) {
-                $value = bool2string($value);
-            }
-            elseif($value instanceof Commands) {
-                // reserved keywords don't need to be masked
-                $expression = $this->commands[$value->name];
-                if($expression instanceof Closure) {
-                    $value = $expression($field);
-                }
-                else {
-                    $value = $expression;
-                }
-            }
-            elseif($value instanceof DateTimeInterface) {
-                $value = "'{$value->format('Y-m-d H:i:s')}'";
-            }
-            elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
-            }
-            if($set == '') $set = "`$field`=$value";
-            else $set = "$set,`$field`=$value";
-        }
-        return $set;
     }
 }
