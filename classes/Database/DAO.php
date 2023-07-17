@@ -39,18 +39,18 @@ abstract class DAO extends PoolObject
     protected array $metaData = [];
 
     /**
-     * columns of table
-     *
-     * @var array|string[]
-     */
-    protected array $columns = [];
-
-    /**
      * primary key of table
      *
      * @var array|string[]
      */
     protected array $pk = [];
+
+    /**
+     * columns of table
+     *
+     * @var array|string[]
+     */
+    protected array $columns = [];
 
     /**
      * @var array<string, string|Closure> overwrite this array in the constructor to create the commands needed for the database.
