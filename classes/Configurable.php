@@ -202,8 +202,9 @@ trait Configurable
      * set configuration for module (it only takes different values)
      *
      * @param array $configuration
+     * @return Configurable
      */
-    public function setConfiguration(array $configuration): void
+    public function setConfiguration(array $configuration): static
     {
         $this->configuration = $this->formatConfigurationValues($configuration, $this->getInspectorProperties());
 
@@ -212,6 +213,7 @@ trait Configurable
         }
 
         $this->Input->setVars($this->configuration);
+        return $this;
     }
 
     /**
