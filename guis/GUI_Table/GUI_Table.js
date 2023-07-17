@@ -426,7 +426,17 @@ class GUI_Table extends GUI_Module
         }
         this.inside_render = false;
         this.rendered = true;
+
+        // @todo check if this is still needed after the update to new bootstrap-table version
+        // this.eliminateFocusBug();
         return this;
+    }
+
+    eliminateFocusBug()
+    {
+        // find search-input class within table
+        // const $SearchInput = document.querySelector(`.${this.getName()}_toolbar + div .fixed-table-toolbar .search .search-input`);
+        // $SearchInput.addEventListener('focusin', () => {});
     }
 
     /**
