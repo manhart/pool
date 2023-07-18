@@ -390,20 +390,19 @@ function getJSEMailLink(string $email, $caption = null): string
 }
 
 /**
- * deleteDir()
- * Loescht kompletten Inhalt inkl. Unterverzeichnisse eines Verzeichnisses
+ * Deletes a directory recursively
  *
- * @access public
- * @param string $dir Verzeichnis
- * @return boolean Erfolgsstatus
+ * @param string $dir directory to delete
+ * @param boolean $rmSelf removes the directory itself if true
+ * @return boolean success
  **/
-function deleteDir(string $dir, $rmSelf = true): bool
+function deleteDir(string $dir, bool $rmSelf = true): bool
 {
-    if (!$opendir = opendir($dir)) {
+    if (!$dir_handle = opendir($dir)) {
         return false;
     }
     $dir = addEndingSlash($dir);
-    while (false !== ($readdir = readdir($opendir))) {
+    while (false !== ($readdir = readdir($dir_handle))) {
         if ($readdir !== '..' && $readdir !== '.') {
             $readdir = trim($readdir);
             if (is_file($dir.$readdir)) {
@@ -419,7 +418,7 @@ function deleteDir(string $dir, $rmSelf = true): bool
             }
         }
     }
-    closedir($opendir);
+    closedir($dir_handle);
     if ($rmSelf) {
         if (!rmdir($dir)) {
             return false;
