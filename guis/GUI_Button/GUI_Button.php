@@ -1,21 +1,20 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 use pool\classes\Core\Input;
 
 /**
- * -= PHP Object Oriented Library (POOL) =-
- *
- * gui_button.class.php
- *
- * @version $Id: gui_button.class.php 37657 2019-03-20 16:46:08Z manhart $
- * @version $revision 1.0$
- * @version
- *
+ * Class GUI_Button
+ * @package pool\guis\GUI_Button
  * @since 2004/07/07
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
  */
-
 class GUI_Button extends GUI_Universal
 {
     /**

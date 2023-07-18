@@ -13,7 +13,7 @@ use pool\classes\Core\Input;
 /**
  * Class GUI_Toast
  * @package pool\guis\GUI_Toast
- * @since 18.11.20, 19:12
+ * @since 2020-11-18, 19:12
  */
 class GUI_Toast extends GUI_Module
 {

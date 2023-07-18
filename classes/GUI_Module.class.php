@@ -556,6 +556,15 @@ class GUI_Module extends Module
     }
 
     /**
+     * Please override this method to register ajax calls
+     * @return void
+     * @see GUI_Module::registerAjaxMethod()
+     */
+    protected function registerAjaxCalls(): void
+    {
+    }
+
+    /**
      * frontend control: Prepare data for building the content or responding to an ajax-call<br>
      * Called once all modules and files have been loaded
      */
@@ -608,15 +617,6 @@ class GUI_Module extends Module
             if($Module instanceof GUI_Module)
                 $Module->prepareContent();
         }
-    }
-
-    /**
-     * Please override this method to register ajax calls
-     * @return void
-     * @see GUI_Module::registerAjaxMethod()
-     */
-    protected function registerAjaxCalls(): void
-    {
     }
 
     /**

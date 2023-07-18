@@ -1,36 +1,20 @@
 <?php
-/**
- * -= PHP Object Oriented Library (POOL) =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * gui_edit.class.php
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Die Klasse GUI_Edit erzeugt ein HTML Eingabefeld (<input type="text">).
- * Siehe fuer Uebergabeparameter auch in die abgeleitete Klasse GUI_FormElement!!
- *
- * @version $Id: gui_edit.class.php,v 1.3 2007/05/16 15:17:34 manhart Exp $
- * @version $revision 1.0$
- * @version
- *
- * @since 2004/07/07
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
- *
- * @see GUI_FormElement
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 use pool\classes\Core\Input;
 
 /**
- * GUI_Edit
- *
- * Siehe Datei fuer ausfuehrliche Beschreibung!
- *
- * @package pool
- * @author manhart
- * @version $Id: gui_edit.class.php,v 1.3 2007/05/16 15:17:34 manhart Exp $
- * @access public
- * @see GUI_FormElement
- **/
+ * Class GUI_Edit
+ * @package pool\guis\GUI_Edit
+ * @since 2004/07/07
+ */
 class GUI_Edit extends GUI_InputElement
 {
     use Configurable;

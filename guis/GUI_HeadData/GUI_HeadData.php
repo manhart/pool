@@ -1,11 +1,11 @@
 <?php
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * GUI_HeaderData.class.php created at 24.11.22, 23:43
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author A.Manhart <A.Manhart@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 use pool\classes\Core\Component;
@@ -13,21 +13,10 @@ use pool\classes\Core\Module;
 use pool\classes\Core\Url;
 
 /**
- * -= Rapid Module Library (RML) =-
- *
- * Header.class.php
- *
- * Kopfdaten fuer ein Html Dokument (<head>kopfdaten</head>)..
- *
- * @version $Id: GUI_HeaderData.class.php,v 1.6 2007/08/09 10:23:06 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
+ * Class GUI_HeaderData
+ * @package pool\guis\GUI_HeaderData
  * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
  */
-
 class GUI_HeadData extends GUI_Module
 {
     const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
@@ -43,9 +32,12 @@ class GUI_HeadData extends GUI_Module
     // @access private
     var $BrowserNoCache = true;
 
-    // @var boolean An Proxy-Agenten: Datei bitte nicht auf Proxy-Server speichern!
-    // @access private
-    var $ProxyNoCache = true;
+    /**
+     * Control the proxy cache
+     *
+     * @var bool
+     */
+    private bool $proxyNoCache = true;
 
     /**
      * meta refresh
@@ -187,9 +179,10 @@ class GUI_HeadData extends GUI_Module
      *
      * @param boolean $bValue Wahr NoCache, Falsch mit Cache
      */
-    function setProxyNoCache($bValue)
+    public function setProxyNoCache(bool $bValue): static
     {
-        $this->ProxyNoCache = $bValue;
+        $this->proxyNoCache = $bValue;
+        return $this;
     }
 
     /**
@@ -197,9 +190,10 @@ class GUI_HeadData extends GUI_Module
      *
      * @param string $title Titel (darf nicht leer sein; Titel muss vorhanden sein)
      */
-    public function setTitle(string $title)
+    public function setTitle(string $title): static
     {
         $this->title = $title;
+        return $this;
     }
 
     /**
@@ -217,9 +211,10 @@ class GUI_HeadData extends GUI_Module
      *
      * @param string $charset Zeichensatz
      */
-    public function setCharset(string $charset)
+    public function setCharset(string $charset): static
     {
         $this->charset = $charset;
+        return $this;
     }
 
     /**
@@ -391,7 +386,7 @@ class GUI_HeadData extends GUI_Module
             $this->Template->newBlock('BROWSERNOCACHE');
         }
 
-        if($this->ProxyNoCache) {
+        if($this->proxyNoCache) {
             $this->Template->newBlock('PROXYNOCACHE');
         }
 

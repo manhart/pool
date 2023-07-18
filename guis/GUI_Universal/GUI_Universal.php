@@ -1,21 +1,20 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 use pool\classes\Core\Input;
 
 /**
- * -= PHP Object Oriented Library (POOL) =-
- *
- * gui_universal.class.php
- *
- * @version $Id: GUI_Universal.class.php,v 1.5 2007/02/27 10:36:31 hoesl Exp $
- * @version $revision 1.0$
- * @version
- *
+ * Class GUI_Universal
+ * @package pool\guis\GUI_Universal
  * @since 2004/07/07
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
  */
-
 class GUI_Universal extends GUI_Module
 {
     /**

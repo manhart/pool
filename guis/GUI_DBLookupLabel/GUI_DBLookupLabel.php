@@ -1,32 +1,20 @@
 <?php
-/**
- * -= PHP Object Oriented Library (POOL) =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * gui_dblookuplabel.class.php
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Benoetigt:
- * DAO (Data Access Objects)
- *
- * @version $Id: gui_dblookuplabel.class.php 38772 2019-09-30 09:31:12Z manhart $
- * @version $revision$
- * @version
- *
- * @since 2004-02-18
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 use pool\classes\Core\Input;
 use pool\classes\Database\DAO;
 
 /**
- * GUI_DBLookupLabel
- *
- * GUI_DBLookupLabel fuellt ein Eingabefeld (<input type=text>) mit einem Datenbankwert.
- *
- * @package pool
- * @author manhart
- * @version $Id: gui_dblookuplabel.class.php 38772 2019-09-30 09:31:12Z manhart $
+ * Class GUI_DBLookupLabel
+ * @package pool\guis\GUI_DBLookupLabel
+ * @since 2004/02/18
  */
 class GUI_DBLookupLabel extends GUI_Label
 {
