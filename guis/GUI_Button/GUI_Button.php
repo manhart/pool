@@ -40,9 +40,9 @@ class GUI_Button extends GUI_Universal
     }
 
     /**
-     * @return
+     * @return void
      */
-    function prepare()
+    function prepare(): void
     {
         parent::prepare();
 

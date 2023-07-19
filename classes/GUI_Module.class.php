@@ -589,7 +589,7 @@ class GUI_Module extends Module
     /**
      * frontend control: run/execute the main logic and fill templates.
      */
-    protected function prepare()
+    protected function prepare(): void
     {
     }
 

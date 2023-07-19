@@ -77,7 +77,7 @@ class GUI_Textarea extends GUI_Universal
     /**
      * GUI_Textarea::prepare()
      */
-    protected function prepare()
+    protected function prepare(): void
     {
         parent:: prepare();
 

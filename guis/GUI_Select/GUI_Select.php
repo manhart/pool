@@ -82,9 +82,9 @@ class GUI_Select extends GUI_Universal
     /**
      * GUI_Select::prepare()
      *
-     * @return
+     * @return void
      **/
-    function prepare()
+    function prepare(): void
     {
         if($this->Input->getVar('defaultvalue')) {
             $this->Input->setVar('defaultselected', $this->Input->getVar('defaultvalue'));
@@ -303,9 +303,9 @@ class GUI_Option extends GUI_Universal
     /**
      * GUI_Option::prepare()
      *
-     * @return
+     * @return void
      **/
-    function prepare()
+    function prepare(): void
     {
         parent:: prepare();
 

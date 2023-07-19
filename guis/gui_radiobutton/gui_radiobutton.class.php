@@ -25,7 +25,7 @@ class GUI_Radiobutton extends GUI_InputElement
         $this -> Template -> setFilePath('stdout', $file);
     }
 
-    function prepare ()
+    function prepare (): void
     {
         $Template = & $this -> Template;
         $Input = & $this -> Input;

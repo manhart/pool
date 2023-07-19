@@ -53,7 +53,7 @@ class GUI_DBLookupSelect extends GUI_Select
     /**
      * @return void
      */
-    public function prepare ()
+    public function prepare (): void
     {
         $Input = & $this -> Input;
 

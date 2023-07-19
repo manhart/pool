@@ -120,7 +120,7 @@ class GUI_Edit extends GUI_InputElement
     //        return $config;
     //    }
 
-    public function prepare()
+    public function prepare(): void
     {
         //        echo 'placeholder: '.$this->getVar('placeholder');
         //        $this->setVar($this->options);

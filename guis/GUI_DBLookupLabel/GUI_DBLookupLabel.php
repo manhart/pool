@@ -47,7 +47,7 @@ class GUI_DBLookupLabel extends GUI_Label
      * Liest Daten aus der Datenbank und legt bei Erfolg den Wert des Feldes im Input ab.
      * Anschliessend wird der Parent GUI_Edit aufgerufen und setzt die Werte fuer das Eingabefeld.
      */
-    public function prepare()
+    public function prepare(): void
     {
         if($this->Input->getVar('keyvalue') != '') {
             if($this->Input->getVar('tabledefine')) {
