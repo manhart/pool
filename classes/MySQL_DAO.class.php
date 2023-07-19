@@ -736,7 +736,6 @@ SQL;
      * @param array $data
      * @param array $filter_rules
      * @return ResultSet
-     * @throws Exception
      */
     public function updateMultiple(array $data, array $filter_rules): ResultSet
     {
