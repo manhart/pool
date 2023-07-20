@@ -822,10 +822,10 @@ SQL;
                             $value = "($values)";
                             break;
                     }
-                elseif($values instanceof Commands) {//resolve reserved keywords
+                elseif($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
                     $expression = $this->commands[$values->name];
                     $value = $expression instanceof Closure ?
-                        $expression($field) : $expression;//!assuming closure was meant to be evaluated at this point
+                        $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
                 }
                 elseif($values instanceof DateTimeInterface) {//format date-objects
                     $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
@@ -836,8 +836,8 @@ SQL;
                         'NULL' => 'NULL',
                         'boolean' => bool2string($values),
                         'double', 'integer' => $values,//float and int
-                        default => match ($this->__isSubQuery($values)) {
-                            true => $values,// TODO? NOT ESCAPED
+                        default => match ($this->__isSubQuery($values)) {// TODO fix insecure sub-query check
+                            true => $values,
                             default => $this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
                         }
                     };
@@ -860,7 +860,7 @@ SQL;
         if(!Weblication::getInstance()->hasTranslator() || !$tokens)
             return $field;
         $Translator = Weblication::getInstance()->getTranslator();
-        $tmp = 'case ' . $field;
+        $tmp = "case $field";
         foreach($tokens as $token)
             $tmp .= " when '$token' then '{$Translator->getTranslation($token, $token)}'";
         return "$tmp else $field end";
