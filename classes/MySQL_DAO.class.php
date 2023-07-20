@@ -1124,7 +1124,6 @@ SQL;
      *
      * @param array $row
      * @return array
-     * @throws Exception
      */
     public function fetchingRow(array $row): array
     {
@@ -1136,7 +1135,6 @@ SQL;
      *
      * @param array $row
      * @return array
-     * @throws Exception
      */
     protected function translate(array $row): array
     {
