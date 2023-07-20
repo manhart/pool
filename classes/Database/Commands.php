@@ -18,6 +18,7 @@ enum Commands
     case Now;
     case CurrentDate;
     case CurrentTimestamp;
+    case CurrentTimestampUs6; // greek µs
     case Increase;
     case Decrease;
     case Reset;

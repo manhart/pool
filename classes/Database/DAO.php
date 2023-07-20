@@ -74,6 +74,7 @@ abstract class DAO extends PoolObject
             Commands::Now->name => 'NOW()',
             Commands::CurrentDate->name => 'CURRENT_DATE()',
             Commands::CurrentTimestamp->name => 'CURRENT_TIMESTAMP()',
+            Commands::CurrentTimestampUs6->name => 'CURRENT_TIMESTAMP(6)',
             Commands::Increase->name => fn($field) => "$field+1",
             Commands::Decrease->name => fn($field) => "$field-1",
             Commands::Reset->name => fn($field) => "DEFAULT($field)",

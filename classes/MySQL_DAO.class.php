@@ -474,7 +474,7 @@ class MySQL_DAO extends DAO
      * @param $alias
      * @return void
      */
-    function setTableAlias($alias): void
+    public function setTableAlias($alias): void
     {
         $this->tableAlias = $alias;
     }
@@ -487,7 +487,7 @@ class MySQL_DAO extends DAO
     public function getColumnsWithTableAlias(): array
     {
         return array_map(function($val) {
-            return $this->tableAlias . '.' . $val;
+            return "$this->tableAlias.$val";
         }, $this->getColumns());
     }
 
