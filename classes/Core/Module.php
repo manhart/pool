@@ -92,10 +92,10 @@ class Module extends Component
     }
 
     /**
-     * set default values for external inputs
+     * Set default values for external inputs
      *
      * @param int|null $superglobals Konstanten aus der Input.class.php
-     * @see Input.class.php
+     * @see Input::init()
      */
     public function init(?int $superglobals = null)
     {

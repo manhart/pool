@@ -1,14 +1,20 @@
 <?php
 /*
- * POOL
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * gui_toast.class.php created at 18.11.20, 19:12
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author Alexander Manhart <alexander@manhart-it.de>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 use pool\classes\Core\Input;
 
+/**
+ * Class GUI_Toast
+ * @package pool\guis\GUI_Toast
+ * @since 2020-11-18, 19:12
+ */
 class GUI_Toast extends GUI_Module
 {
     /**
@@ -32,7 +38,7 @@ class GUI_Toast extends GUI_Module
         $this->Template->setFilePath('stdout', $tpl);
 
         if($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('toast.js', __CLASS__, true));
+            $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('Toast.js', __CLASS__, true));
             $this->Weblication->getFrame()->getHeadData()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', __CLASS__, true));
         }
     }
@@ -40,7 +46,7 @@ class GUI_Toast extends GUI_Module
     /**
      * prepare content
      */
-    public function prepare()
+    protected function prepare(): void
     {
         $this->Template->setVar('moduleName', $this->getName());
     }

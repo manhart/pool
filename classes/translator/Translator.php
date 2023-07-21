@@ -522,5 +522,4 @@ class Translator
         $keyArray = null;
         return false;
     }
-
 }

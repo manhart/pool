@@ -556,6 +556,15 @@ class GUI_Module extends Module
     }
 
     /**
+     * Please override this method to register ajax calls
+     * @return void
+     * @see GUI_Module::registerAjaxMethod()
+     */
+    protected function registerAjaxCalls(): void
+    {
+    }
+
+    /**
      * frontend control: Prepare data for building the content or responding to an ajax-call<br>
      * Called once all modules and files have been loaded
      */
@@ -580,7 +589,7 @@ class GUI_Module extends Module
     /**
      * frontend control: run/execute the main logic and fill templates.
      */
-    protected function prepare()
+    protected function prepare(): void
     {
     }
 
@@ -608,15 +617,6 @@ class GUI_Module extends Module
             if($Module instanceof GUI_Module)
                 $Module->prepareContent();
         }
-    }
-
-    /**
-     * Please override this method to register ajax calls
-     * @return void
-     * @see GUI_Module::registerAjaxMethod()
-     */
-    protected function registerAjaxCalls(): void
-    {
     }
 
     /**
@@ -771,7 +771,7 @@ class GUI_Module extends Module
      * @param bool $activate
      * @return GUI_Module
      */
-    public function respondAsPlainJSON(bool $activate = true): GUI_Module
+    protected function respondAsPlainJSON(bool $activate = true): GUI_Module
     {
         $this->plainJSON = $activate;
         return $this;

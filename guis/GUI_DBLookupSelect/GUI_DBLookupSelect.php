@@ -1,30 +1,21 @@
 <?php
-/**
- * -= PHP Object Oriented Library (POOL) =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * gui_dblookupselect.class.php
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Das GUI_DBLookupSelect ist ein Datenbank Steuerelement. Es steuert ein ComboBox (DropDown) sowie eine Multiselect Box.
- *
- * @version $Id: gui_dblookupselect.class.php 38772 2019-09-30 09:31:12Z manhart $
- * @version $revision 1.0$
- * @version
- *
- * @since 2004-02-12
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 use pool\classes\Core\Input;
 use pool\classes\Database\DAO;
 
 /**
- * DBSelect steuert eine Dropdown- und Multiselect Box.
- *
- * @package pool
- * @author manhart
- * @version $Id: gui_dblookupselect.class.php 38772 2019-09-30 09:31:12Z manhart $
- **/
+ * Class GUI_DBLookupSelect
+ * @package pool\guis\GUI_DBLookupSelect
+ * @since 2004-02-12
+ */
 class GUI_DBLookupSelect extends GUI_Select
 {
     /**
@@ -62,7 +53,7 @@ class GUI_DBLookupSelect extends GUI_Select
     /**
      * @return void
      */
-    public function prepare ()
+    public function prepare (): void
     {
         $Input = & $this -> Input;
 

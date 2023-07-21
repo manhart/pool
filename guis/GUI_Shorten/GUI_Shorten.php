@@ -83,7 +83,7 @@ class GUI_Shorten extends GUI_Module
     /**
      * takes parameter and tries to shorten the text
      */
-    public function prepare()
+    public function prepare(): void
     {
         $text = shorten($this->Input->getVar('text'), $this->Input->getVar('len'), $this->Input->getVar('more'), $this->Input->getVar('backtrack'));
         $this->modified = strcmp($text, $this->Input->getVar('text')) != 0;

@@ -9,16 +9,21 @@
 
 class GUI_Module
 {
+    /** @var {string} contains the unique name of the module */
     name = '';
+    /** @var {string} contains the ID selector for the HTML Element of the module */
+    moduleSelector = '';
     className = this.constructor.name;
     /** @var {string} fullyQualifiedClassName of the php module - is required by Ajax Calls */
     fullyQualifiedClassName = this.constructor.name;
 
     /**
-     * @param {string} name of module
+     * @param {string} name unique name of the module
      */
-    constructor(name) {
+    constructor(name)
+    {
         this.name = name;
+        this.moduleSelector = `#${name}`;
         // 10.02.2022, AM, sometimes the edge has an undefined className (especially when we put new versions live)
         if (typeof this.className == 'undefined') {
             if (!window['pool_GUI_Module_unknown_className']) {
@@ -32,53 +37,62 @@ class GUI_Module
     }
 
     /**
-     * @abstract
+     * Initializes the module
+     *
+     * @param {object} options options for the module
      */
-    init(options = {}) {
-        // console.debug(this.getName()+'.init called');
+    init(options = {})
+    {
     }
 
     /**
-     * returns the name of the module
+     * Returns the name of the module
      *
      * @returns {string}
      */
-    getName() {
+    getName()
+    {
         return this.name;
     }
 
     /**
-     * returns the className of the module
+     * Returns the className of the module
      *
      * @returns {string}
      */
-    getClassName() {
+    getClassName()
+    {
         return this.className;
     }
 
     /**
-     * sets the fully qualified className of the php module
-     * @param fullyQualifiedClassName
+     * Sets the fully qualified className of the php module
+     *
+     * @param {string} fullyQualifiedClassName
      */
-    setFullyQualifiedClassName(fullyQualifiedClassName) {
+    setFullyQualifiedClassName(fullyQualifiedClassName)
+    {
         this.fullyQualifiedClassName = fullyQualifiedClassName;
         return this;
     }
 
     /**
-     * returns the fully qualified className of the php module
-     * @return {string}
+     * Returns the fully qualified className of the php module
+     * @see https://www.php.net/manual/en/language.namespaces.rules.php
+     * @returns {string}
      */
-    getFullyQualifiedClassName() {
+    getFullyQualifiedClassName()
+    {
         return this.fullyQualifiedClassName;
     }
 
     /**
      * parses the response as JSON
-     * @param response
-     * @return {Promise<*>}
+     * @param {Response} response
+     * @returns {Promise<*>}
      */
-    async parseJSON(response) {
+    async parseJSON(response)
+    {
         let json;
         let text = await response.text();
         try {
@@ -96,11 +110,12 @@ class GUI_Module
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
      * @see https://blog.openreplay.com/ajax-battle-xmlhttprequest-vs-the-fetch-api
      * @param {string} ajaxMethod Alias name of the method to call
-     * @param data Object containing parameters passed to server method
+     * @param {object|FormData} data Object containing parameters passed to server method
      * @param {object} options Request options e.g. {method:'POST'}
-     * @return {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
+     * @returns {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
      */
-    request(ajaxMethod, data, options = {}) {
+    request(ajaxMethod, data, options = {})
+    {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
         let key = 'query';
         if (options.method) {
@@ -198,7 +213,8 @@ class GUI_Module
     }
 
     onFetchNetworkError = () => alert('Netzwerkfehler');
-    onAjax_UnhandledException = e => {
+    onAjax_UnhandledException = e =>
+    {
         if (e instanceof PoolAjaxResponseError) {
             console.warn('Caught unhandled Ajax Error of Server-type: ' + e.serverSideType);
             if (e.cause) console.warn(e.cause)
@@ -207,7 +223,8 @@ class GUI_Module
         console.warn(e);
     }
 
-    getThenMod = (handler) => {
+    getThenMod = (handler) =>
+    {
         const thenMod = function (onFullfilled, onRejected) {
             console.debug('modded')
             onRejected ??= e => {//create delegating handler
@@ -229,10 +246,13 @@ class GUI_Module
     }
 
     /**
+     * Parses the response and analyzes the status code.
+     *
      * @param {Response} response
-     * @return {Promise<*>}
+     * @returns {Promise<*>}
      */
-    async parseAjaxResponse(response) {
+    async parseAjaxResponse(response)
+    {
         const status = response.status;
         if (500 <= status && status < 600)//Server error
             throw new PoolAjaxResponseError(await response.text(), null, 'internal');
@@ -263,7 +283,7 @@ class GUI_Module
                 } catch (e){}
                 throw new PoolAjaxResponseError(error?.message ?? `Status ${status}`, data, error?.type ?? "unknown");
         }
-    };
+    }
 
     onAjax_ReAuthorizationRequired = async response => alert('Session expired');
     onAjax_404 = async response => console.error(`Ajax-Method at ${response.url} not found`);
@@ -275,7 +295,78 @@ class GUI_Module
      * should be used (overwritten) to redraw the corresponding html element (necessary for module configurator)
      * @param options
      */
-    redraw(options = {}) {
+    redraw(options = {})
+    {
+    }
+
+    /**
+     * Returns predefined moduleSelector
+     *
+     * @returns {string}
+     */
+    getModuleSelector()
+    {
+        return this.moduleSelector;
+    }
+
+    /**
+     * Returns selected element within the root / module element. if no selector is given, it should return self (=the top root / module element)
+     *
+     * @param {string} selector
+     * @returns {HTMLElement}
+     */
+    element(selector = '')
+    {
+        return document.querySelector(`${this.moduleSelector}${(selector) ? ' ' + selector : ''}`);
+    }
+
+    /**
+     * Search html element by id within the root / module element
+     *
+     * @param {string} id
+     * @returns {HTMLElement}
+     * @see moduleSelector
+     */
+    elementById(id = '')
+    {
+        return document.getElementById(this.name + id);
+    }
+
+    /**
+     * Search a html element by name within the root / module element
+     *
+     * @param {string} name
+     * @returns {HTMLElement}
+     * @see moduleSelector
+     */
+    elementByName(name)
+    {
+        return this.element(`[name='${name}']`);
+    }
+
+    /**
+     * Search html elements by name within the root / module element
+     *
+     * @param {string} name
+     * @returns {NodeListOf<Element>}
+     * @see moduleSelector
+     */
+    elementsByName(name)
+    {
+        return this.elements(`[name='${name}']`);
+    }
+
+    /**
+     * Search html elements by selector within the root / module element
+     *
+     * @param selectors
+     * @returns {NodeListOf<Element>}
+     * @see moduleSelector
+     */
+    elements(...selectors)
+    {
+        const selector = selectors.map(s => this.moduleSelector + ' ' + s).join(', ');
+        return document.querySelectorAll(selector);
     }
 
     /**
@@ -304,5 +395,4 @@ class GUI_Module
         return (new myClass(name)).setFullyQualifiedClassName(fullyQualifiedClassName);
     }
 }
-
-console.debug('GUI_Module.class.js loaded');
+console.debug('GUI_Module.js loaded');

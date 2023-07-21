@@ -1,15 +1,22 @@
 <?php
 /*
- * POOL
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * gui_table.class.php created at 08.04.21, 13:16
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author Alexander Manhart <alexander@manhart-it.de>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 
 use pool\classes\Core\Input;
 use pool\classes\Database\DAO;
 
+/**
+ * Class GUI_Table
+ * @package pool\guis\GUI_Table
+ * @since 2021-04-08
+ */
 class GUI_Table extends GUI_Module
 {
     use Configurable;
@@ -1251,6 +1258,10 @@ class GUI_Table extends GUI_Module
             if($searchable) {
                 $this->dbColumns['searchable'][] = $assoc;
             }
+            $sortable = $column['sortable'] ?? $this->getColumnProperty('sortable')['value'];
+            if($sortable) {
+                $this->dbColumns['sortable'][$column['field']] = $expr;
+            }
         }
 
         return $this->dbColumns[$which];
@@ -1301,7 +1312,7 @@ class GUI_Table extends GUI_Module
     /**
      * prepare content
      */
-    protected function prepare()
+    protected function prepare(): void
     {
         $this->poolOptions['moduleName'] = $this->getName();
 
@@ -1523,6 +1534,86 @@ class GUI_Table extends GUI_Module
         //            $return['totalNotFiltered'] = $total;
         $return['rows'] = $ResultSet->getRowSet();
         return $return;
+    }
+
+    /**
+     * Creates server-side filter rules of a bootstrap table for database queries (DAO's)
+     *
+     * @param MySQL_DAO $DAO DAO to use
+     * @param string $search search terms (e.g. from client side request)
+     * @param string $filter filter (e.g. from client side request)
+     * @param array $mandatoryFilter it involves strict and mandatory constraints.
+     * @param array $searchFilter it involves additional search patterns
+     * @return array
+     * @see MySQL_DAO::__buildFilter()
+     */
+    public function buildFilter(MySQL_DAO $DAO, string $search, string $filter, array $mandatoryFilter = [], array $searchFilter = []): array
+    {
+        if(isValidJSON($filter)) {
+            $filter = json_decode($filter, JSON_OBJECT_AS_ARRAY);
+        }
+        else
+            $filter = [];
+
+        // auto filter
+        $filter = array_merge($DAO->makeFilter($this->getDBColumns('searchable'), $search, $filter), $searchFilter);
+        if($filter && $mandatoryFilter) {
+            array_unshift($filter, '(');
+            $filter[] = ')';
+            $filter[] = 'AND';
+        }
+        return array_merge($filter, $mandatoryFilter);
+    }
+
+    /**
+     * Creates serverside sorting rules for a Bootstrap Table
+     *
+     * @param string $sort sort column (e.g. from client side request)
+     * @param string $order sort order (e.g. from client side request)
+     * @param array|null $multiSort optional: multiple sort columns from client side request
+     * @return array
+     * @see MySQL_DAO::__buildSorting()
+     */
+    public function buildSorting(string $sort, string $order, ?array $multiSort = null): array
+    {
+        $columns = $this->getDBColumns('sortable');
+        // SORTING
+        $sorting = [];
+        if($sort and $order) {
+            $sorting = [$columns[$sort] => $order];
+        }
+        // MULTIPLE SORTING
+        else if($multiSort) {
+            foreach($multiSort as $x => $item) {
+                $sort = $item['sortName'];
+                $order = $item['sortOrder'];
+                $sorting[$columns[$sort]] = $order;
+            }
+        }
+        return $sorting;
+    }
+
+    /**
+     * Creates serverside limit rules for a Bootstrap Table
+     *
+     * @param int $offset offset (e.g. from client side request)
+     * @param int|null $limit limit (e.g. from client side request)
+     * @param int|null $total optional: total number of rows
+     * @return array
+     * @see MySQL_DAO::__buildLimit()
+     */
+    public function buildLimit(int $offset = 0, ?int $limit = null, ?int $total = null): array
+    {
+        if(!is_null($limit)) {
+            if(!is_null($total) && $total <= $limit) {
+                $offset = 0;
+            }
+            $limit = [$offset, $limit];
+        }
+        else {
+            $limit = [];
+        }
+        return $limit;
     }
 
     /**

@@ -1,33 +1,33 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 use pool\classes\Core\Input;
 use pool\classes\Core\Url;
 
 /**
- * -= Rapid Module Library (RML) =-
+ * Class GUI_Url
  *
- * gui_url.class.php - fast way to render an url
- *
- * @version $Id: gui_url.class.php,v 1.4 2007/05/31 14:34:40 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
+ * @package pool\guis\GUI_Url
  * @since 2003-08-19
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
  */
-
 class GUI_Url extends GUI_Module
 {
-    /**
-     * @var string contains the rendered url
-     */
-    private string $content = '';
-
     /**
      * @var bool no files needed
      */
     protected bool $autoLoadFiles = false;
+
+    /**
+     * @var string contains the rendered url
+     */
+    private string $content = '';
 
     /**
      * Default Werte setzen. Input initialisieren.
@@ -36,7 +36,7 @@ class GUI_Url extends GUI_Module
      *
      * @throws Exception
      */
-    public function init(?int $superglobals= Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVar('script');
         $this->Defaults->addVar('params');
@@ -49,22 +49,22 @@ class GUI_Url extends GUI_Module
     /**
      * prepare url
      */
-    public function prepare()
+    protected function prepare(): void
     {
-        $empty = (int)$this->Input->getVar('empty');
+        $withQuery = !$this->Input->getAsBool('empty');
 
         $script = $this->Input->getVar('script');
-        if ($script != '') {
+        if($script != '') {
             $Url = Url::fromString($script);
         }
         else {
-            $Url = new Url(!$empty);
+            $Url = new Url($withQuery);
         }
 
-        $params = trim($this->Input->getVar('params'));
-        if ($params != '') {
+        $params = $this->Input->getVar('params');
+        if($params) {
             $pieces = explode(';', $params);
-            foreach ($pieces as $piece) {
+            foreach($pieces as $piece) {
                 $param = explode(':', $piece);
                 $key = $param[0];
                 $value = $param[1] ?? null;
@@ -72,20 +72,20 @@ class GUI_Url extends GUI_Module
             }
         }
 
-        $passThrough = trim($this->Input->getVar('passthrough'));
-        if ($passThrough != '') {
+        $passThrough = $this->Input->getVar('passthrough');
+        if($passThrough) {
             $IGet = new Input(Input::GET);
             $passThrough = explode(';', $passThrough);
             foreach($passThrough as $param) {
-                $Url->setParam($param, $IGet -> getVar($param));
+                $Url->setParam($param, $IGet->getVar($param));
             }
             unset($IGet);
         }
-        $eliminate = trim($this->Input->getVar('eliminate'));
-        if ($eliminate != '') {
+        $eliminate = $this->Input->getVar('eliminate');
+        if($eliminate) {
             $eliminate = explode(';', $eliminate);
-            foreach ($eliminate as $param) {
-                $Url->setParam($param, NULL);
+            foreach($eliminate as $param) {
+                $Url->setParam($param, null);
             }
         }
 
@@ -95,7 +95,7 @@ class GUI_Url extends GUI_Module
     /**
      * @return string return url
      */
-    public function finalize(): string
+    protected function finalize(): string
     {
         return $this->content;
     }

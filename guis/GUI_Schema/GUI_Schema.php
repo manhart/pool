@@ -12,26 +12,16 @@ use pool\classes\Core\Input;
 use pool\classes\Core\Weblication;
 
 /**
- * -= Rapid Module Library (RML) =-
- *
- * gui_schema.class.php
- *
- * GUI_Scheme laedt verschiedene Html Schemas (Html Schablonen) und sucht darin nach weiteren GUIs.
- * Hinweis: Ein Schema wird ueber die URI als Parameter ?schema=index definiert!
- *
- * @version $Id: gui_schema.class.php,v 1.2 2007/05/31 14:35:10 manhart Exp $
- * @version $Revision 1.0$
- * @version
+ * GUI_Scheme loads various Html schemas (Html templates) and searches for further GUIs in them.
+ * Note: A schema is defined via the URI as a parameter ?schema=index!
  *
  * @package GUI_Schema
  * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
  */
 class GUI_Schema extends GUI_Module
 {
     /**
-     * * fixedParams:
+     * fixedParams:
      * directory - a constant or directory
      * category - a subdirectory
      * alternate - if schema was not found, redirect to this schema
@@ -103,10 +93,7 @@ class GUI_Schema extends GUI_Module
      */
     private function schema404(?string $schema = null): void
     {
-        //report problem
-        $errMessage = $schema ? "Schema '$schema.html' doesn't exist" : "No schema specified";
-        $this->raiseError(__FILE__, __LINE__, $errMessage);
-        //clear
+        // clear templates
         $this->templates = [];
         $this->Template->clear();
         //become 404 GUI
@@ -114,6 +101,7 @@ class GUI_Schema extends GUI_Module
         $file = $this->Weblication->findTemplate('schema404.html', $this->getClassName(), true);
         $this->Template->setFilePath('error404', $file);
         $this->Template->setVar('SCHEMA', empty($schema) ? '(empty)' : $schema . '.html');
+        $this->Template->setVar('WEBMASTER', $_SERVER['SERVER_ADMIN']);
         $this->templates['error404'] = null;//manually set the template
     }
 

@@ -1,24 +1,23 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 use pool\classes\Core\Component;
 use pool\classes\Exception\ModulNotFoundException;
 
 /**
- * -= Rapid Module Library (RML) =-
- *
- * gui_customframe.class.php
- *
  * GUI_CustomFrame ist eine abstrakte Klasse. Der Haupteinsatzzweck dieser Klasse besteht darin,
  * Kopf- Menue- Fuss- und Seitenleiste an zentraler Stelle zu halten.
  * In 85-90% der Faelle ist der Kopf und die Fusszeile auf jeder Seite gleich und nur der Inhalt aendert sich!
  *
- * @version $Id: gui_customframe.class.php,v 1.5 2006/01/19 10:07:05 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
  * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link http://www.misterelsa.de
+ * @link https://github.com/manhart/pool
  */
 class GUI_CustomFrame extends GUI_Module
 {
@@ -99,7 +98,7 @@ class GUI_CustomFrame extends GUI_Module
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('helpers.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Error.class.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
-        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.class.js', '', true));
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.js', '', true));
     }
 
     /**
@@ -122,7 +121,7 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @return GUI_CustomFrame
      */
-    public function addBodyEvent(string $event, string $function): self
+    public function addBodyEvent(string $event, string $function): static
     {
         if(!isset($this->events[$event])) {
             $this->events[$event] = [];
@@ -139,33 +138,39 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @param string $jsFile
      * @param null $position (not yet implemented, should control position)
+     * @return GUI_CustomFrame
      */
-    public function addScriptFileAtTheEnd(string $jsFile, $position = null)
+    public function addScriptFileAtTheEnd(string $jsFile, $position = null): static
     {
         if($this->addFileFct) {
             $jsFile = call_user_func($this->addFileFct, $jsFile);
         }
         array_unshift($this->scriptFilesAtTheEnd, $jsFile);
+        return $this;
     }
 
     /**
      * Add javascript or a javascript function at the end of the body
      *
      * @param string $function
+     * @return GUI_CustomFrame
      */
-    public function addScriptAtTheEnd(string $function)
+    public function addScriptAtTheEnd(string $function): static
     {
         array_unshift($this->scriptAtTheEnd, $function);
+        return $this;
     }
 
     /**
      * Add javascript or a javascript function at the end of the body and call it when DOM is loaded/ready
      *
      * @param string $function
+     * @return GUI_CustomFrame
      */
-    public function addScriptWhenReady(string $function)
+    public function addScriptWhenReady(string $function): static
     {
         array_unshift($this->scriptWhenReady, $function);
+        return $this;
     }
 
     /**

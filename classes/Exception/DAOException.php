@@ -14,4 +14,16 @@ use RuntimeException as PhpRuntimeException;
 
 class DAOException extends PhpRuntimeException implements PoolExceptionInterface
 {
+    /**
+     * You can pass the last error from the ResultSet to this exception.
+     * @param array $lastError
+     * @return $this
+     * @see ResultSet::getLastError()
+     */
+    public function setLastError(array $lastError): static
+    {
+        $this->message = $lastError['message'] ?? $this->message;
+        $this->code = $lastError['code'] ?? $this->code;
+        return $this;
+    }
 }

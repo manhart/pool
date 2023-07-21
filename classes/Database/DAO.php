@@ -39,18 +39,18 @@ abstract class DAO extends PoolObject
     protected array $metaData = [];
 
     /**
-     * columns of table
-     *
-     * @var array|string[]
-     */
-    protected array $columns = [];
-
-    /**
      * primary key of table
      *
      * @var array|string[]
      */
     protected array $pk = [];
+
+    /**
+     * columns of table
+     *
+     * @var array|string[]
+     */
+    protected array $columns = [];
 
     /**
      * @var array<string, string|Closure> overwrite this array in the constructor to create the commands needed for the database.
@@ -74,6 +74,7 @@ abstract class DAO extends PoolObject
             Commands::Now->name => 'NOW()',
             Commands::CurrentDate->name => 'CURRENT_DATE()',
             Commands::CurrentTimestamp->name => 'CURRENT_TIMESTAMP()',
+            Commands::CurrentTimestampUs6->name => 'CURRENT_TIMESTAMP(6)',
             Commands::Increase->name => fn($field) => "$field+1",
             Commands::Decrease->name => fn($field) => "$field-1",
             Commands::Reset->name => fn($field) => "DEFAULT($field)",

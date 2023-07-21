@@ -786,9 +786,10 @@ class ResultSet extends PoolObject implements Countable
      *
      * @param array|string $fieldName Feldname bzw. Spaltenname
      * @param string $fieldNameAsKey dieses Feld als Schlüssel
+     * @param string $type type conversion (int, float, bool, string)
      * @return array Felddaten als Array z.B. array('Alex', 'Florian', 'Andreas')
      */
-    public function getFieldData(array|string $fieldName, string $fieldNameAsKey = ''): array
+    public function getFieldData(array|string $fieldName, string $fieldNameAsKey = '', string $type = ''): array
     {
         $arrResult = [];
         if(is_array($fieldName)) {
@@ -801,6 +802,13 @@ class ResultSet extends PoolObject implements Countable
         else {
             foreach($this->rowset as $row) {
                 if(isset($row[$fieldName])) {
+                    $row[$fieldName] = match($type) {
+                        'int' => (int)$row[$fieldName],
+                        'float' => (float)$row[$fieldName],
+                        'bool' => (bool)$row[$fieldName],
+                        'string' => (string)$row[$fieldName],
+                        default => $row[$fieldName],
+                    };
                     if($fieldNameAsKey) {
                         $arrResult[$row[$fieldNameAsKey]] = $row[$fieldName];
                     }

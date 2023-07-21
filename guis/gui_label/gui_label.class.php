@@ -83,7 +83,7 @@ class GUI_Label extends GUI_Module
         // $this -> Template -> setFilePath('stdout', $file);
     }
 
-    function prepare ()
+    function prepare (): void
     {
         // $Template = & $this -> Template;
         // $Session = & $this -> Session;

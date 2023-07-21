@@ -256,7 +256,7 @@ class Weblication extends Component
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
-    private function __construct()
+    private final function __construct()
     {
         parent::__construct(null);
         self::$isAjax = isAjax();
@@ -1467,6 +1467,44 @@ class Weblication extends Component
             }
             echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
         });
+    }
+
+    /**
+     * terminates Ajax requests with an access-denied error
+     */
+    public function denyAJAX_Request(): void
+    {
+        if($this->isAjax()) {
+            header('Content-type: application/json', true, 403);
+            $message = $this->getTranslator()->getTranslation('global.applicationAccessDenied', 'Access to the application denied.');
+            $return = [
+                'success' => false,
+                'error'  => [
+                    'type' => 'access-denied',
+                    'message' => $message
+                ]
+            ];
+            die(json_encode($return));
+        }
+    }
+
+    /**
+     * terminates Ajax requests with a reauthorization/unauthorized error
+     */
+    public function reauthorizeRequiredAJAX_Request(): void
+    {
+        if($this->isAjax()) {
+            header('Content-type: application/json', true, 401);
+            $message = $this->getTranslator()->getTranslation('global.applicationReauthorizeRequired', 'Reauthorization required.');
+            $return = [
+                'success' => false,
+                'error'  => [
+                    'type' => 'reauthorize',
+                    'message' => $message
+                ]
+            ];
+            die(json_encode($return));
+        }
     }
 
     /**
