@@ -10,6 +10,6 @@
 
 // base classes
 require_once __DIR__ . '/Core/PoolObject.php';
-require_once __DIR__ . '/GUI_Module.class.php';
+require_once __DIR__ . '/GUI_Module.php';
 require_once __DIR__ . '/Configurable.php';
 require_once __DIR__ . '/Net_Ping.class.php';

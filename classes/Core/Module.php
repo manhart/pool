@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -12,30 +12,12 @@ namespace pool\classes\Core;
 
 /**
  * Core class for POOL modules. Provides the basic functionality for modules.
+ *
  * @package pool\classes\Core
  * @since 2003-07-10
  */
 class Module extends Component
 {
-    /**
-     * Parent module
-     *
-     * @var Module $Parent
-     */
-    private Module $Parent;
-
-    /**
-     * @var array<Module> $childModules contains all children modules
-     */
-    protected array $childModules = [];
-
-    /**
-     * Default values should ensure that the module runs even without parameterization. The default values are set in the 'init' function and determine the normal behavior of the module.
-     *
-     * @var Input $Defaults
-     */
-    protected Input $Defaults;
-
     /**
      * Input contains the external input parameters/values. Which parameters are imported is defined by the superglobals.
      *
@@ -44,11 +26,44 @@ class Module extends Component
     public Input $Input;
 
     /**
+     * @var array<Module> $childModules contains all children modules
+     */
+    protected array $childModules = [];
+
+    /**
+     * Default values should ensure that the module runs even without parameterization. The default values are set in the 'init' function and determine
+     * the normal behavior of the module.
+     *
+     * @var Input $Defaults
+     */
+    protected Input $Defaults;
+
+    /**
+     * Default values for external inputs
+     * Format: array('key' => array('value', FILTER_FLAG, FILTER_TYPE))
+     *
+     * @var array<index, array<mixed, int, int>> $defaultInputValues
+     */
+    protected array $defaultInputValues = [];
+
+    /**
      * Variables/parameters to be passed to the child modules.
      *
      * @var array $handoff
      */
     protected array $handoff;
+
+    /**
+     * @var int defines which superglobals should be used in this module. Superglobal variables are passed to superglobals in the Input class.
+     */
+    protected int $superglobals = Input::EMPTY;
+
+    /**
+     * Parent module
+     *
+     * @var Module $Parent
+     */
+    private Module $Parent;
 
     /**
      * states whether the module is enabled or not
@@ -62,11 +77,6 @@ class Module extends Component
      * @see Module::importInternalParams()
      */
     private array $internalParams;
-
-    /**
-     * @var int defines which superglobals should be used in this module. Superglobal variables are passed to superglobals in the Input class.
-     */
-    protected int $superglobals = Input::EMPTY;
 
     /**
      * data for the client
@@ -111,44 +121,7 @@ class Module extends Component
     }
 
     /**
-     * provides the Input Container for the Defaults
-     *
-     * @return Input
-     */
-    public function getDefaults(): Input
-    {
-        return $this->Defaults;
-    }
-
-    /**
-     * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
-     */
-    private function mergeDefaults(): void
-    {
-        $this->Input->mergeVarsIfNotSet($this->getDefaults());
-    }
-
-    /**
-     * Imports variables from the parent module.
-     *
-     * @param array $handoff Liste bestehend aus Variablen
-     *
-     * @return Module Erfolgsstatus
-     */
-    protected function importHandoff(array $handoff): self
-    {
-        if(count($handoff) == 0) {
-            return $this;
-        }
-        $this->addHandoffVar($handoff);
-        $this->Input->setVars($handoff);
-
-        return $this;
-    }
-
-    /**
      * Imports internal parameters into the module
-     *
      * special treated parameters:
      *   moduleName: sets the module name
      *
@@ -170,6 +143,49 @@ class Module extends Component
     }
 
     /**
+     * puts the values of an array into the input container
+     *
+     * @param array $assoc
+     * @return Input
+     */
+    public function setVars(array $assoc): Input
+    {
+        return $this->Input->setVars($assoc);
+    }
+
+    /**
+     * Liest eine Variable aus dem Container Input
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function getVar(string $key): mixed
+    {
+        return $this->Input->getVar($key);
+    }
+
+    /**
+     * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
+     */
+    private function mergeDefaults(): void
+    {
+        $this->Input->mergeVarsIfNotSet($this->getDefaults());
+    }
+
+    /**
+     * provides the Input Container for the Defaults
+     *
+     * @return Input
+     */
+    public function getDefaults(): Input
+    {
+        foreach($this->defaultInputValues as $key => $val) {
+            $this->Defaults->addVar($key, $val[0], $val[1] ?? FILTER_DEFAULT, $val[2] ?? 0);
+        }
+        return $this->Defaults;
+    }
+
+    /**
      * exports internal params as base64
      *
      * @return string params
@@ -181,6 +197,7 @@ class Module extends Component
 
     /**
      * get all internal params
+     *
      * @return array
      */
     public function getInternalParams(): array
@@ -214,23 +231,6 @@ class Module extends Component
     }
 
     /**
-     * Inserting variables that are passed to the child modules.
-     *
-     * @param mixed $key name of the variable
-     * @param mixed $value value of the variable
-     */
-    public function addHandoffVar(mixed $key, mixed $value = ''): static
-    {
-        if(!is_array($key)) {
-            $this->handoff[$key] = $value;
-        }
-        else {
-            $this->handoff = array_merge($key, $this->handoff);
-        }
-        return $this;
-    }
-
-    /**
      * puts variables into the Input container
      *
      * @param string $key
@@ -243,28 +243,26 @@ class Module extends Component
     }
 
     /**
-     * puts the values of an array into the input container
-     *
-     * @param array $assoc
-     * @return Input
-     */
-    public function setVars(array $assoc): Input
-    {
-        return $this->Input->setVars($assoc);
-    }
-
-    /**
      * passes data to the client
      *
      * @param string $key
      * @param mixed $value
-     *
      * @return $this
      */
     public function setClientVar(string $key, mixed $value): self
     {
         $this->clientVars[$key] = $value;
         return $this;
+    }
+
+    /**
+     * returns client data
+     *
+     * @return array
+     */
+    public function getClientVars(): array
+    {
+        return $this->clientVars;
     }
 
     /**
@@ -280,26 +278,6 @@ class Module extends Component
     }
 
     /**
-     * returns client data
-     * @return array
-     */
-    public function getClientVars(): array
-    {
-        return $this->clientVars;
-    }
-
-    /**
-     * Liest eine Variable aus dem Container Input
-     *
-     * @param string $key
-     * @return mixed
-     */
-    public function getVar(string $key): mixed
-    {
-        return $this->Input->getVar($key);
-    }
-
-    /**
      * Wrapper for Input::emptyVar
      *
      * @param string $key
@@ -312,6 +290,16 @@ class Module extends Component
     }
 
     /**
+     * returns the parent module
+     *
+     * @return Module|null Ergebnis vom Typ Module
+     */
+    public function getParent(): ?Module
+    {
+        return $this->Parent ?? null;
+    }
+
+    /**
      * set the parent module
      *
      * @param Module $Parent Klasse vom Typ Module
@@ -320,16 +308,6 @@ class Module extends Component
     {
         $this->Parent = $Parent;
         return $this;
-    }
-
-    /**
-     * returns the parent module
-     *
-     * @return Module|null Ergebnis vom Typ Module
-     */
-    public function getParent(): ?Module
-    {
-        return $this->Parent ?? null;
     }
 
     /**
@@ -345,21 +323,14 @@ class Module extends Component
     }
 
     /**
-     * remove module
+     * Remove module
      *
      * @param Module $Module
      * @return Module
      */
     public function removeModule(Module $Module): static
     {
-        $new_Modules = [];
-        // rebuild modules
-        foreach($this->childModules as $SearchedModule) {
-            if($Module != $SearchedModule) {
-                $new_Modules[] = $SearchedModule;
-            }
-        }
-        $this->childModules = $new_Modules;
+        $this->childModules = array_diff($this->childModules, [$Module]);
         return $this;
     }
 
@@ -371,10 +342,8 @@ class Module extends Component
      */
     public function findChild(string $moduleName): ?Module
     {
-        if($moduleName == '') return null;
-
         foreach($this->childModules as $Module) {
-            if(strcmp($Module->getName(), $moduleName) == 0) {
+            if(strcasecmp($Module->getName(), $moduleName) === 0) {
                 return $Module;
             }
         }
@@ -382,7 +351,7 @@ class Module extends Component
     }
 
     /**
-     * disables module
+     * Disables module
      */
     public function disable(): static
     {
@@ -391,7 +360,7 @@ class Module extends Component
     }
 
     /**
-     * enables module
+     * Enables module
      */
     public function enable(): static
     {
@@ -407,5 +376,36 @@ class Module extends Component
     public function enabled(): bool
     {
         return $this->enabled;
+    }
+
+    /**
+     * Imports variables from the parent module.
+     *
+     * @param array $handoff Liste bestehend aus Variablen
+     * @return Module Erfolgsstatus
+     */
+    protected function importHandoff(array $handoff): self
+    {
+        if(count($handoff)) {
+            $this->addHandoffVar($handoff)->Input->setVars($handoff);
+        }
+        return $this;
+    }
+
+    /**
+     * Inserting variables that are passed to the child modules.
+     *
+     * @param mixed $key name of the variable
+     * @param mixed $value value of the variable
+     */
+    public function addHandoffVar(mixed $key, mixed $value = ''): static
+    {
+        if(!is_array($key)) {
+            $this->handoff[$key] = $value;
+        }
+        else {
+            $this->handoff = array_merge($key, $this->handoff);
+        }
+        return $this;
     }
 }

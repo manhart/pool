@@ -377,7 +377,7 @@ class Input extends PoolObject implements Countable
      * @return Input
      * @see https://www.php.net/manual/de/filter.filters.php
      */
-    public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
+    public function addVar(string $key, mixed $value = '', int $filter = 0, array|int $filterOptions = 0): static
     {
         if(!isset($this->vars[$key])) {
             $this->vars[$key] = $value;
@@ -389,7 +389,7 @@ class Input extends PoolObject implements Countable
     }
 
     /**
-     * merge array with vars but don't override existing vars
+     * Merge array with vars but don't override existing vars
      *
      * @param array $vars
      * @return Input

@@ -8,26 +8,6 @@
  * file that was distributed with this source code.
  */
 
-/**
- * POOL
- *
- * [P]HP [O]bject-[O]riented [L]ibrary
- *
- * Das GUI_Module ist die Basisklasse fuer alle graphischen Steuerelemente.
- * Sie generieren standardmaessig ein Template.
- * Fest definierte GUIs in Html Templates werden automatisch eingelesen, instanziert und mit Parametern gefuellt.
- * Werden GUIs erst zur Laufzeit des Programms beigemischt, schaltet man den Automatismus ab (im Konstruktor) und
- * verwendet am Ende (meist finalize) die Funktion GUI_Module::reviveChildGUIs().
- *
- * @version $Id: GUI_Module.class.php,v 1.7 2006/11/02 12:04:54 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
- * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
- */
-
 use pool\classes\Core\Component;
 use pool\classes\Core\Input;
 use pool\classes\Core\Module;
@@ -39,6 +19,14 @@ const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';
 // const FIXED_PARAM_CONFIG = 'config';
 
+/**
+ * GUI_Module
+ * Base class for all graphical frontend controls.
+ * They have the template engine on board. GUIs defined in HTML templates with the syntax [GUI_xyz(param1=value&param2=value] are read in automatically,
+ * instantiated and filled with parameters.
+ * @package pool
+ * @since 2003-07-10
+ */
 class GUI_Module extends Module
 {
     /**
@@ -399,16 +387,14 @@ class GUI_Module extends Module
      * Wiederbeleben der Child GUIs (meist, falls Autoload auf false gesetzt wurde).
      * Die Funktion muss verwendet werden, wenn zur Laufzeit neue GUI Module gesetzt werden!
      *
-     * @access public
-     * @param string $content Content / Inhalt
-     * @return string Content / Inhalt aller Childs
+     * @param string $content Content
+     * @return string Content from the template with the child GUIs
      *
      * @throws ModulNotFoundException
      * @throws Exception
      */
     public function reviveChildGUIs(string $content): string
     {
-        //$content = $this -> FindGUIsByContent($content);
         $content = $this->searchGUIs($content);
         $this->prepareChildren();
         $this->finalizeChildren();
@@ -436,7 +422,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Aktiviert eine Box. Erwartet als Parameter eine HTML Vorlage mit der Box.
+     * Aktiviert eine Box. Erwartet als Parameter eine HTML-Vorlage mit der Box.
      * In der Vorlage muss der Platzhalter {CONTENT} stehen. Bei Bedarf kann noch {TITLE} gesetzt werden.
      *
      * @param string $title Titel
@@ -810,8 +796,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Fertigt alle Html Templates der Childs an.
-     *
+     * Prepares all html templates of the children.
      */
     private function finalizeChildren(): void
     {
@@ -823,7 +808,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * adopts the content of the children
+     * Adopts the content of the children
      *
      * @param string $content Eigener Content
      * @return string Eigener Content samt dem Content der Child GUIs
@@ -839,7 +824,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * returns the contents of the module
+     * Returns the contents of the module
      */
     protected function finalize(): string
     {
