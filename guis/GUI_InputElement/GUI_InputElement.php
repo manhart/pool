@@ -13,7 +13,8 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
+use pool\classes\Core\Input\Session;
 
 /**
  * GUI_InputElement
@@ -237,8 +238,8 @@ class GUI_InputElement extends GUI_Universal
         $value = '';
 
         $buf_save = $this->Input->getVar('save');
-        if(is_a($this->Session, 'InputSession') and $this->Input->getVar('use_session') == 1) {
-            if(!empty($buf_save) and $this->Input->getVar($buf_save) == 1) {
+        if($this->Session instanceof Session and $this->Input->getAsInt('use_session') == 1) {
+            if(!empty($buf_save) and $this->Input->getAsInt($buf_save) == 1) {
                 $this->Session->setVar($session_variable, $this->Input->getVar('value') == '' ? $valueByName : $this->Input->getVar('value'));
             }
 

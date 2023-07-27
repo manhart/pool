@@ -10,7 +10,8 @@
 
 namespace pool\classes\Core;
 
-use InputSession;
+use pool\classes\Core\Input\Input;
+use pool\classes\Core\Input\Session;
 use ReflectionClass;
 use ReflectionException;
 
@@ -32,9 +33,9 @@ class Component extends PoolObject
     /**
      * Session
      *
-     * @var InputSession|null $Session
+     * @var Session|null $Session
      */
-    public ?InputSession $Session = null;
+    public ?Session $Session = null;
 
     /**
      * Owner of this component

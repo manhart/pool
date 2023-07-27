@@ -10,7 +10,7 @@
 
 //namespace pool\classes;
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 
 trait Configurable
 {

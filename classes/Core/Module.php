@@ -10,6 +10,8 @@
 
 namespace pool\classes\Core;
 
+use pool\classes\Core\Input\Input;
+
 /**
  * Core class for POOL modules. Provides the basic functionality for modules.
  *
@@ -39,12 +41,12 @@ class Module extends Component
     protected Input $Defaults;
 
     /**
-     * Default values for external inputs
-     * Format: array('key' => array('value', FILTER_FLAG, FILTER_TYPE))
+     * Define how external variables are filtered and which default values are used, if no external variables are defined.
+     * Format: ['key' => [DataType, default value]]
      *
-     * @var array<index, array<mixed, int, int>> $defaultInputValues
+     * @var array<string, array> $inputFilter
      */
-    protected array $defaultInputValues = [];
+    protected array $inputFilter = [];
 
     /**
      * Variables/parameters to be passed to the child modules.
@@ -109,37 +111,20 @@ class Module extends Component
      */
     public function init(?int $superglobals = null)
     {
-        if(!isset($superglobals)) {
-            $superglobals = $this->superglobals;
-        }
         // fill variable container input with external variables
-        $this->Input = new Input($superglobals);
-        // assigns also the module name
-        $this->importInternalParams($this->internalParams);
-        // if the external variables are not defined ($this->Input), they are merged with the defaults.
-        $this->mergeDefaults();
-    }
+        $this->Input = new Input($superglobals ?? $this->superglobals, $this->inputFilter);
 
-    /**
-     * Imports internal parameters into the module
-     * special treated parameters:
-     *   moduleName: sets the module name
-     *
-     * @param array $params Im Format: key=value&key2=value2&
-     * @return bool Erfolgsstatus
-     * @see Component::setName()
-     * @see Module::disable()
-     */
-    public function importInternalParams(array $params): bool
-    {
-        $this->setVars($params);
-        // set Component Name, if set by param
-        $moduleName = $this->getVar('moduleName');
-
-        if($moduleName) {
-            $this->setName($moduleName);
+        if($this->inputFilter) {
+            $this->Input->applyDefaults();
         }
-        return true;
+        else {
+            // if the external variables are not defined ($this->Input), they are merged with the defaults.
+            $this->Input->mergeVarsIfNotSet($this->getDefaults());
+        }
+
+        // Assigns also the module name
+        $moduleName = $this->Input->setVars($this->internalParams)->getVar('moduleName');
+        if($moduleName) $this->setName($moduleName);
     }
 
     /**
@@ -165,23 +150,12 @@ class Module extends Component
     }
 
     /**
-     * Gleicht fehlende Parameter/Variablen im Input Objekt anhand der festgelegten Standardwerte ab.
-     */
-    private function mergeDefaults(): void
-    {
-        $this->Input->mergeVarsIfNotSet($this->getDefaults());
-    }
-
-    /**
      * provides the Input Container for the Defaults
      *
      * @return Input
      */
     public function getDefaults(): Input
     {
-        foreach($this->defaultInputValues as $key => $val) {
-            $this->Defaults->addVar($key, $val[0], $val[1] ?? FILTER_DEFAULT, $val[2] ?? 0);
-        }
         return $this->Defaults;
     }
 

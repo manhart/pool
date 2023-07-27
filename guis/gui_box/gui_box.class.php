@@ -15,7 +15,7 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 
 /**
  * GUI_Box

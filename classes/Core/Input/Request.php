@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -8,11 +8,17 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
+namespace pool\classes\Core\Input;
 
-class InputPost extends Input
+/**
+ * Class Request
+ *
+ * @package pool\classes\Core\Input
+ * @since 2003-07-10
+ */
+class Request extends Input
 {
-    function __construct(int $superglobals = Input::POST)
+    public function __construct(int $superglobals = Input::REQUEST)
     {
         parent::__construct($superglobals);
     }

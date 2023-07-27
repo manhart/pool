@@ -1,6 +1,6 @@
 <?php
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 
 /**
  * Class GUI_Radiobutton

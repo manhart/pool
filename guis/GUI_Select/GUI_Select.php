@@ -13,7 +13,8 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
+use pool\classes\Core\Input\Session;
 
 /**
  * GUI_Select
@@ -116,8 +117,8 @@ class GUI_Select extends GUI_Universal
         // save value into session
         $selected = '';
         $buf_save = $this->Input->getVar('save');
-        if(is_a($this->Session, 'InputSession') and $this->Input->getVar('use_session') == 1) {
-            if(empty($buf_save) == false and $this->Input->getVar($buf_save) == 1) {
+        if($this->Session instanceof Session and $this->Input->getAsInt('use_session') == 1) {
+            if(!empty($buf_save) and $this->Input->getVar($buf_save) == 1) {
                 $this->Session->setVar($session_var, $this->Input->getVar('selected') == '' ? $valueByName : $this->Input->getVar('selected'));
             }
             // Wert (value) ermitteln (session, object name, value, defaultvalue)

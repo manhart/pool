@@ -9,7 +9,7 @@
  */
 
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 use pool\classes\Database\DAO;
 
 /**

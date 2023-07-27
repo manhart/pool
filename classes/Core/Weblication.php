@@ -16,9 +16,10 @@ use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
-use InputCookie;
-use InputSession;
 use Locale;
+use pool\classes\Core\Input\Cookie;
+use pool\classes\Core\Input\Input;
+use pool\classes\Core\Input\Session;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\ModulNotFoundException;
@@ -69,9 +70,9 @@ class Weblication extends Component
     /**
      * PHP Session gekapselt in ISession
      *
-     * @var InputSession|null $Session
+     * @var Session|null $Session
      */
-    public ?InputSession $Session = null;
+    public ?Session $Session = null;
 
     /**
      * @var Weblication|null
@@ -199,9 +200,9 @@ class Weblication extends Component
     /**
      * Cookie for the application
      *
-     * @var InputCookie|null
+     * @var Cookie|null
      */
-    private ?InputCookie $Cookie = null;
+    private ?Cookie $Cookie = null;
 
     /**
      * locale unchanged / as is.
@@ -1105,11 +1106,11 @@ class Weblication extends Component
      * @param integer $use_cookies Verwende Cookies (Default: 1)
      * @param integer $use_only_cookies Verwende nur Cookies (Default: 0)
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
-     * @return InputSession|null
+     * @return Session|null
      * @throws Exception
      */
     public function startPHPSession(string $session_name = 'PHPSESSID', int $use_trans_sid = 0, int $use_cookies = 1,
-        int $use_only_cookies = 0, bool $autoClose = true): ?InputSession
+        int $use_only_cookies = 0, bool $autoClose = true): ?Session
     {
         switch(session_status()) {
             case PHP_SESSION_DISABLED:
@@ -1136,9 +1137,9 @@ class Weblication extends Component
 
         $isStatic = !(isset($this)); // TODO static calls or static AppSettings
         if($isStatic) {
-            return new InputSession($autoClose);
+            return new Session($autoClose);
         }
-        $className = $this->Settings->getVar('application.session.className', InputSession::class);
+        $className = $this->Settings->getVar('application.session.className', Session::class);
         $this->Session = new $className($autoClose);
 
         return $this->Session;
@@ -1278,12 +1279,12 @@ class Weblication extends Component
     /**
      * returns cookie for this application
      *
-     * @return InputCookie
+     * @return Cookie
      */
-    public function getCookie(): InputCookie
+    public function getCookie(): Cookie
     {
         if(!$this->Cookie) {
-            $this->Cookie = new InputCookie();
+            $this->Cookie = new Cookie();
         }
         return $this->Cookie;
     }

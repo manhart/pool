@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -8,11 +9,22 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
+namespace pool\classes\Core\Input;
 
-class InputRequest extends Input
+/**
+ * Class GET
+ *
+ * @package pool\classes\Core\Input
+ * @since 2003-07-10
+ */
+class GET extends Input
 {
-    function __construct(int $superglobals = Input::REQUEST)
+    /**
+     * Initialize GET with the superglobal $_GET
+     *
+     * @param int $superglobals
+     */
+    public function __construct(int $superglobals = Input::GET)
     {
         parent::__construct($superglobals);
     }

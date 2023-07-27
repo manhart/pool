@@ -12,7 +12,7 @@ namespace pool\classes\translator;
 
 use Exception;
 use MessageFormatter;
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
 use function checkRegExOutcome;
 use function explode;
@@ -464,7 +464,7 @@ class Translator
         if (function_exists('locale_get_primary_language'))
             $language = locale_get_primary_language($locale);
         else
-            list($language,) = explode('_', $locale);
+            [$language,] = explode('_', $locale);
         return $language;
     }
 
