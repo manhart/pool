@@ -311,7 +311,7 @@ class GUI_Module
 
     /**
      * Returns selected element within the root / module element. if no selector is given, it should return self (=the top root / module element)
-     *
+     * @see document.querySelector
      * @param {string} selector
      * @returns {HTMLElement}
      */
