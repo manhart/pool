@@ -817,8 +817,8 @@ SQL;
                             break;
                         default://enlist all values e.g. in, not in
                             //apply quotation rules
-                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values) ?: ['NULL'];
-                            $values = implode(', ', $values);
+                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
+                            $values = implode(', ', $values) ?: 'NULL';
                             $value = "($values)";
                             break;
                     }

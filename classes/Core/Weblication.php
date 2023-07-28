@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace pool\classes\Core;
 
@@ -33,6 +33,7 @@ use Template;
 
 /**
  * Class Weblication represents the main class of a web application
+ *
  * @package pool\classes\Core
  * @since 2003-07-10
  */
@@ -175,7 +176,7 @@ class Weblication extends Component
      *
      * @var array
      */
-    private array $hasSkinFolder = array();
+    private array $hasSkinFolder = [];
 
     /**
      * @var string language code
@@ -369,7 +370,7 @@ class Weblication extends Component
      */
     public function setCharset(string $charset): Weblication
     {
-        header('content-type: text/html; charset=' . $charset);
+        header('content-type: text/html; charset='.$charset);
         $this->charset = $charset;
         return $this;
     }
@@ -555,14 +556,14 @@ class Weblication extends Component
         $path = '';
 
         # Ordner Skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $this->getCommonSkinFolder();
+        $folder_skins = addEndingSlash(PWD_TILL_SKINS).$this->getCommonSkinFolder();
         if($absolute) {
-            $folder_skins = addEndingSlash(getcwd()) . $folder_skins;
+            $folder_skins = addEndingSlash(getcwd()).$folder_skins;
         }
-        $folder_language = $folder_skins . addEndingSlash($this->language);
+        $folder_language = $folder_skins.addEndingSlash($this->language);
         if($additionalDir != '') {
-            $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
-            $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
+            $folder_skin_dir = addEndingSlash($folder_skins).$additionalDir;
+            $folder_language_dir = addEndingSlash($folder_language).$additionalDir;
         }
         else {
             $folder_skin_dir = $folder_skins;
@@ -592,7 +593,7 @@ class Weblication extends Component
     function skin_exists(string $skin = ''): bool
     {
         $skin = addEndingSlash(($skin ?: $this->skin));
-        $pathSkin = addEndingSlash(getcwd()) . addEndingSlash(PWD_TILL_SKINS) . $skin;
+        $pathSkin = addEndingSlash(getcwd()).addEndingSlash(PWD_TILL_SKINS).$skin;
         return file_exists($pathSkin);
     }
 
@@ -610,14 +611,14 @@ class Weblication extends Component
         $language = addEndingSlash($this->language);
 
         # Ordner Skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
+        $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skin;
         if($absolute) {
-            $folder_skins = addEndingSlash(getcwd()) . $folder_skins;
+            $folder_skins = addEndingSlash(getcwd()).$folder_skins;
         }
-        $folder_language = $folder_skins . $language;
+        $folder_language = $folder_skins.$language;
         if($additionalDir != '') {
-            $folder_skin_dir = addEndingSlash($folder_skins) . $additionalDir;
-            $folder_language_dir = addEndingSlash($folder_language) . $additionalDir;
+            $folder_skin_dir = addEndingSlash($folder_skins).$additionalDir;
+            $folder_language_dir = addEndingSlash($folder_language).$additionalDir;
         }
         else {
             $folder_skin_dir = $folder_skins;
@@ -647,7 +648,7 @@ class Weblication extends Component
     {
         // detect skins
         if(!($this->skins)) {
-            $skinPath = getcwd() . '/' . PWD_TILL_SKINS;
+            $skinPath = getcwd().'/'.PWD_TILL_SKINS;
             $skinDirs = readDirs($skinPath);
             $numDirs = sizeof($skinDirs);
             $skins = [];
@@ -675,22 +676,22 @@ class Weblication extends Component
         $images = 'images/';
 
         # Ordner skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS) . $skin;
-        $folder_images = $folder_skins . $images;
-        $folder_language = $folder_skins . addEndingSlash($language) . $images;
+        $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skin;
+        $folder_images = $folder_skins.$images;
+        $folder_language = $folder_skins.addEndingSlash($language).$images;
 
         if(is_dir($folder_language)) { // Language Ordner
-            if(file_exists($folder_language . $filename)) {
-                return $folder_language . $filename;
+            if(file_exists($folder_language.$filename)) {
+                return $folder_language.$filename;
             }
         }
         if(is_dir($folder_images)) { // Images Ordner
-            if(file_exists($folder_images . $filename)) {
-                return $folder_images . $filename;
+            if(file_exists($folder_images.$filename)) {
+                return $folder_images.$filename;
             }
         }
 
-        $this->raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@Weblication->findImage)!', $folder_images . $filename));
+        $this->raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@Weblication->findImage)!', $folder_images.$filename));
         return '';
     }
 
@@ -704,13 +705,15 @@ class Weblication extends Component
     {
         if(is_null($this->hasCommonSkinFolder)) {
             $this->hasCommonSkinFolder = [];
-            $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder);
+            $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->commonSkinFolder);
         }
         if($subFolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
-            if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = null;
+            if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] =
+                null;
             if(is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) {
                 $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = [];
-                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->commonSkinFolder . '/' . $subFolder);
+                $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] =
+                    is_dir(PWD_TILL_SKINS.'/'.$this->commonSkinFolder.'/'.$subFolder);
             }
             return $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'];
         }
@@ -729,12 +732,12 @@ class Weblication extends Component
     {
         if(!isset($this->hasSkinFolder[$this->skin])) {
             $this->hasSkinFolder[$this->skin] = [];
-            $this->hasSkinFolder[$this->skin]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin);
+            $this->hasSkinFolder[$this->skin]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin);
         }
         if($subfolder != null and $this->hasSkinFolder[$this->skin]['__exists']) {
             if(!isset($this->hasSkinFolder[$this->skin][$subfolder])) {
                 $this->hasSkinFolder[$this->skin][$subfolder] = [];
-                $this->hasSkinFolder[$this->skin][$subfolder]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin . '/' . $subfolder);
+                $this->hasSkinFolder[$this->skin][$subfolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subfolder);
             }
             if(is_null($language) and is_null($translated)) {
                 return $this->hasSkinFolder[$this->skin][$subfolder]['__exists'];
@@ -743,7 +746,8 @@ class Weblication extends Component
                 if($this->hasSkinFolder[$this->skin][$subfolder]['__exists']) {
                     if(!isset($this->hasSkinFolder[$this->skin][$subfolder][$language])) {
                         $this->hasSkinFolder[$this->skin][$subfolder][$language] = [];
-                        $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin . '/' . $subfolder . '/' . $language);
+                        $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'] =
+                            is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subfolder.'/'.$language);
                     }
                     if(is_null($translated)) {
                         return $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'];
@@ -752,7 +756,8 @@ class Weblication extends Component
                         if($this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists']) {
                             if(!isset($this->hasSkinFolder[$this->skin][$subfolder][$language][$translated])) {
                                 $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated] = [];
-                                $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated]['__exists'] = is_dir(PWD_TILL_SKINS . '/' . $this->skin . '/' . $subfolder . '/' . $language . '/' . $translated);
+                                $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated]['__exists'] =
+                                    is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subfolder.'/'.$language.'/'.$translated);
                             }
                             return $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated]['__exists'];
                         }
@@ -768,7 +773,8 @@ class Weblication extends Component
      * Sucht das uebergebene Template in einer fest vorgegebenen Verzeichnisstruktur.
      * Zuerst im Ordner skins, als naechstes im guis Ordner. Wird der Parameter baseLib auf true gesetzt,
      * wird abschliessend noch in der baseLib gesucht.<br>
-     * Reihenfolge: <s>skin-translated+subdirTranslated</s> (<b>common-skin-translated</b> common-skin skin-translated skin) GUIs-Projekt+ <i>(..?skins of Projekt Common?..)</i> GUIs-Common+ ((..???..) GUIs-Baselib)
+     * Reihenfolge: <s>skin-translated+subdirTranslated</s> (<b>common-skin-translated</b> common-skin skin-translated skin) GUIs-Projekt+ <i>(..?skins of
+     * Projekt Common?..)</i> GUIs-Common+ ((..???..) GUIs-Baselib)
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
@@ -783,7 +789,7 @@ class Weblication extends Component
         $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
         if($template) return $template;
 
-        $msg = "Template $filename in " . __METHOD__ . " not found!";
+        $msg = "Template $filename in ".__METHOD__." not found!";
         if(!$this->getPoolServerSideRelativePath() and $baseLib) {
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
@@ -888,20 +894,21 @@ class Weblication extends Component
      * Sucht das uebergebene JavaScript in einer fest vorgegebenen Verzeichnisstruktur.
      * Sucht im Ordner ./javascripts/ anschliessend in ./guis/$classFolder/ und ggf. noch in /poolcommons/guis/$classFolder/.
      * Wird der dritte Parameter benutzt, wird ausgehend von /pool/ anstelle des aktuellen Arbeitsverzeichnisses gesucht.
-     *
      * JavaScripts aus der Hauptbibliothek koennen nicht ueberschrieben werden (macht auch keinen Sinn).
      *
      * @param string $filename JavaScript Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param bool $baseLib
      * @param bool $raiseError
-     * @param bool $clientSideRelativePath If true, the path to the JavaScript is relative to the client side. If false, the path is relative to the server side.
+     * @param bool $clientSideRelativePath If true, the path to the JavaScript is relative to the client side. If false, the path is relative to the
+     *     server side.
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true, bool $clientSideRelativePath = true): string
+    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true,
+        bool $clientSideRelativePath = true): string
     {
         $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
-        $serverSide_folder_guis = $clientSide_folder_guis = addEndingSlash(PWD_TILL_GUIS) . addEndingSlash($classFolder);
+        $serverSide_folder_guis = $clientSide_folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classFolder);
         //Ordner BaseLib -> look in POOL instead
         if($baseLib) {
             $serverSide_folder_javaScripts = addEndingSlash($this->getPoolServerSideRelativePath($serverSide_folder_javaScripts));
@@ -909,15 +916,15 @@ class Weblication extends Component
             $clientSide_folder_javaScripts = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_javaScripts));
             $clientSide_folder_guis = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_guis));
         }
-        $javaScriptFile = $serverSide_folder_javaScripts . $filename;
+        $javaScriptFile = $serverSide_folder_javaScripts.$filename;
         if(file_exists($javaScriptFile))
             return $clientSideRelativePath ? "$clientSide_folder_javaScripts$filename" : $javaScriptFile;//found
-        $javaScriptFile = $serverSide_folder_guis . $filename;
+        $javaScriptFile = $serverSide_folder_guis.$filename;
         if(file_exists($javaScriptFile))
             return $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;//found
         if(defined('DIR_COMMON_ROOT_REL')) {
             $folder_common = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
-            $javaScriptFile = $folder_common . $filename;
+            $javaScriptFile = $folder_common.$filename;
             if(file_exists($javaScriptFile))
                 return $javaScriptFile;//found
         }
@@ -946,7 +953,7 @@ class Weblication extends Component
      */
     public function getPoolClientSideRelativePath(string $subDir = ''): string
     {
-        return $this->poolClientSideRelativePath . ($subDir ? '/' : '') . $subDir;
+        return $this->poolClientSideRelativePath.($subDir ? '/' : '').$subDir;
     }
 
     /**
@@ -957,11 +964,12 @@ class Weblication extends Component
      */
     public function getPoolServerSideRelativePath(string $subDir = ''): string
     {
-        return $this->poolServerSideRelativePath . ($subDir ? '/' : '') . $subDir;
+        return $this->poolServerSideRelativePath.($subDir ? '/' : '').$subDir;
     }
 
     /**
      * Transforms the PATH_INFO into an Input object.
+     *
      * @return Input
      */
     protected function transformPathInfo(): Input
@@ -993,7 +1001,7 @@ class Weblication extends Component
     {
         $Url = new Url($withQuery);
         $Url->setParam('schema', $schema);
-        if ($path) $Url->setScriptPath($path);
+        if($path) $Url->setScriptPath($path);
         $Url->redirect();
     }
 
@@ -1044,7 +1052,6 @@ class Weblication extends Component
      *   application.translator Instance of Translator
      *   application.translatorResource Instance of TranslationProviderFactory
      *   application.translatorResourceDir Directory where translation files are stored
-     *
      * @return Weblication
      * @throws Exception
      */
@@ -1335,7 +1342,6 @@ class Weblication extends Component
      *
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
      * @return Weblication
-     *
      * @throws ModulNotFoundException|Exception
      */
     public function run(string $className = GUI_CustomFrame::class): static
@@ -1444,8 +1450,9 @@ class Weblication extends Component
 
     /**
      * measure page speed and print it in the footer
-     * @todo ajax requests?
+     *
      * @return void
+     * @todo ajax requests?
      */
     public function measurePageSpeed(): void
     {
@@ -1471,36 +1478,22 @@ class Weblication extends Component
     }
 
     /**
-     * terminates Ajax requests with an access-denied error
+     * terminates Ajax requests with a caller-defined error
+     *
+     * @param $messageKey
+     * @param $defaultMessage
+     * @param $response_code
+     * @param $errorType
      */
-    public function denyAJAX_Request(): void
+    public function denyAJAX_Request($messageKey, $defaultMessage, $response_code, $errorType): void
     {
         if($this->isAjax()) {
-            header('Content-type: application/json', true, 403);
-            $message = $this->getTranslator()->getTranslation('global.applicationAccessDenied', 'Access to the application denied.');
+            header('Content-type: application/json', true, $response_code);
+            $message = $this->getTranslator()->getTranslation($messageKey, $defaultMessage);
             $return = [
                 'success' => false,
-                'error'  => [
-                    'type' => 'access-denied',
-                    'message' => $message
-                ]
-            ];
-            die(json_encode($return));
-        }
-    }
-
-    /**
-     * terminates Ajax requests with a reauthorization/unauthorized error
-     */
-    public function reauthorizeRequiredAJAX_Request(): void
-    {
-        if($this->isAjax()) {
-            header('Content-type: application/json', true, 401);
-            $message = $this->getTranslator()->getTranslation('global.applicationReauthorizeRequired', 'Reauthorization required.');
-            $return = [
-                'success' => false,
-                'error'  => [
-                    'type' => 'reauthorize',
+                'error' => [
+                    'type' => $errorType,
                     'message' => $message
                 ]
             ];
