@@ -8,10 +8,10 @@
  * file that was distributed with this source code.
  */
 
+use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
-use pool\classes\Core\PoolObject;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 
@@ -20,7 +20,7 @@ const REQUEST_PARAM_METHOD = 'method';
 // const FIXED_PARAM_CONFIG = 'config';
 
 /**
- * GUI_Module
+ * Class GUI_Module
  * Base class for all graphical frontend controls.
  * They have the template engine on board. GUIs defined in HTML templates with the syntax [GUI_xyz(param1=value&param2=value] are read in automatically,
  * instantiated and filled with parameters.
@@ -213,21 +213,21 @@ class GUI_Module extends Module
             }
 
             // directory + classname
-            $GUIClassName = $GUIClassName . '/' . $GUIClassName;
+            $GUIClassName = "$GUIClassName/$GUIClassName";
         }
 
         // try to load class
         foreach ($GUIRootDirs as $GUIRootDir) {
             $GUIRootDir = addEndingSlash($GUIRootDir);
 
-            $filename = $GUIRootDir . $GUIClassName . PoolObject::CLASS_EXTENSION;
+            $filename = "$GUIRootDir$GUIClassName".Autoloader::CLASS_EXTENSION;
             if (file_exists($filename)) {
                 require_once $filename;
                 return true;
             }
 
             // PSR-4 style
-            $filename = $GUIRootDir . $GUIClassName . '.php';
+            $filename = "$GUIRootDir$GUIClassName.php";
             if(file_exists($filename)) {
                 require_once $filename;
                 return true;
@@ -243,19 +243,19 @@ class GUI_Module extends Module
                         continue;
                     }
                     if (!$ParentGUI instanceof GUI_CustomFrame) {
-                        $parent_directory_without_frame = $ParentGUI->getClassName() . '/' . $parent_directory_without_frame;
+                        $parent_directory_without_frame = "{$ParentGUI->getClassName()}/$parent_directory_without_frame";
                     }
-                    $parent_directory = $ParentGUI->getClassName() . '/' . $parent_directory;
+                    $parent_directory = "{$ParentGUI->getClassName()}/$parent_directory";
                     $ParentGUI = $ParentGUI->getParent();
                 } while ($ParentGUI != null);
 
-                $filename = $GUIRootDir . $parent_directory . $GUIClassName . PoolObject::CLASS_EXTENSION;
+                $filename = "$GUIRootDir$parent_directory$GUIClassName".Autoloader::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
                     return true;
                 }
 
-                $filename = $GUIRootDir . $parent_directory_without_frame . $GUIClassName . PoolObject::CLASS_EXTENSION;
+                $filename = "$GUIRootDir$parent_directory_without_frame$GUIClassName".Autoloader::CLASS_EXTENSION;
                 if (file_exists($filename)) {
                     require_once $filename;
                     return true;

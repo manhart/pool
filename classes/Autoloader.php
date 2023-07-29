@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -11,10 +11,17 @@
 namespace pool\classes;
 
 use GUI_Module;
-use pool\classes\Core\PoolObject;
 
 class Autoloader
 {
+    /**
+     * @constant string the extension of the class files
+     */
+    public const CLASS_EXTENSION = '.class.php';
+
+    /**
+     * @var Autoloader
+     */
     private static Autoloader $PoolLoader;
 
     /**
@@ -50,8 +57,57 @@ class Autoloader
             return GUI_Module::autoloadGUIModule($class);
         }
         else {
-            return PoolObject::autoloadClass($class);
+            return self::autoloadClass($class);
         }
+    }
+
+    /**
+     * Autoloader for POOL Classes
+     *
+     * @param string $className Klasse
+     * @return bool
+     */
+    public static function autoloadClass(string $className): bool
+    {
+        $hasNamespace = str_contains($className, '\\');
+
+        if($hasNamespace) {
+            $classRootDirs = [
+                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
+            ];
+
+            $className = str_replace('\\', '/', $className);
+        }
+        else {
+            $classRootDirs = [
+                getcwd().'/'.PWD_TILL_CLASSES
+            ];
+            if(defined('DIR_POOL_ROOT')) {
+                $classRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_CLASSES;
+            }
+            if(defined('DIR_COMMON_ROOT')) {
+                $classRootDirs[] = DIR_COMMON_ROOT.'/'.PWD_TILL_CLASSES;
+            }
+        }
+
+        foreach($classRootDirs as $classRootDir) {
+            $classRootDir = addEndingSlash($classRootDir);
+
+            // old style
+            $filename = $classRootDir.$className.Autoloader::CLASS_EXTENSION;
+            if(file_exists($filename)) {
+                require_once $filename;
+                return true;
+            }
+
+            // PSR-4 style
+            $filename = "$classRootDir$className.php";
+            if(file_exists($filename)) {
+                require_once $filename;
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

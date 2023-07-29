@@ -21,11 +21,6 @@ use ReflectionClass;
 class PoolObject
 {
     /**
-     * @constant string the extension of the class files
-     */
-    public const CLASS_EXTENSION = '.class.php';
-
-    /**
      * @var string the full name of the class of the object
      */
     private string $class = '';
@@ -44,55 +39,6 @@ class PoolObject
      * @var bool|null determines whether the class is the POOL base library
      */
     private bool $isPOOL;
-
-    /**
-     * Autoloader for POOL Classes
-     *
-     * @param string $className Klasse
-     * @return bool
-     */
-    public static function autoloadClass(string $className): bool
-    {
-        $hasNamespace = str_contains($className, '\\');
-
-        if($hasNamespace) {
-            $classRootDirs = [
-                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
-            ];
-
-            $className = str_replace('\\', '/', $className);
-        }
-        else {
-            $classRootDirs = [
-                getcwd().'/'.PWD_TILL_CLASSES
-            ];
-            if(defined('DIR_POOL_ROOT')) {
-                $classRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_CLASSES;
-            }
-            if(defined('DIR_COMMON_ROOT')) {
-                $classRootDirs[] = DIR_COMMON_ROOT.'/'.PWD_TILL_CLASSES;
-            }
-        }
-
-        foreach($classRootDirs as $classRootDir) {
-            $classRootDir = addEndingSlash($classRootDir);
-
-            // old style
-            $filename = $classRootDir.$className.PoolObject::CLASS_EXTENSION;
-            if(file_exists($filename)) {
-                require_once $filename;
-                return true;
-            }
-
-            // PSR-4 style
-            $filename = $classRootDir.$className.'.php';
-            if(file_exists($filename)) {
-                require_once $filename;
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
