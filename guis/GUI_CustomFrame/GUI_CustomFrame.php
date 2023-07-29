@@ -200,7 +200,7 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @return string parsed content
      */
-    public function finalize(): string
+    protected function finalize(): string
     {
         $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
 

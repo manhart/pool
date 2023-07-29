@@ -1,23 +1,26 @@
 <?php
-/**
- * POOL
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Language.class.php
- *
- * I have not found a source that includes countries by number of native speakers.
- * So that you can choose the best country based on the number of native speakers.
- *
- * The list comes from chatGPT. Ask 'Create me a PHP array of the best matching locales for each language abbreviation in ISO-639-1 sorted by the keys (ISO-639-1 language codes), pre-filtered by the ISO-639-1 codes available in the PHP intl extension. And write the ISO-639-1 codes with underscore _ instead of hyphen -.'
- *
- * @since 2022-12-30
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace pool\classes;
 
+/**
+ * Class Language
+ * I have not found a source that includes countries by number of native speakers.
+ * So that you can choose the best country based on the number of native speakers.
+ * The list comes from chatGPT. Ask 'Create me a PHP array of the best matching locales for each language abbreviation in ISO-639-1 sorted by the keys
+ * (ISO-639-1 language codes), pre-filtered by the ISO-639-1 codes available in the PHP intl extension. And write the ISO-639-1 codes with underscore _
+ * instead of hyphen -.'
+ *
+ * @package pool\classes
+ * @since 2022-12-30
+ */
 final class Language
 {
     private static array $bestMatchingLocale = [
