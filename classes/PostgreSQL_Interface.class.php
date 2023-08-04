@@ -88,6 +88,7 @@ if(!defined('POSTGRESQL_LAYER'))
 		 * @author Alexander Manhart <alexander.manhart@freenet.de>
 		 * @version $Id: MySQL_Interface.class.php,v 1.8 2006/10/20 08:44:48 manhart Exp $
 		 * @access public
+         * @deprecated currently unmaintained and probably broken
 		 **/
 		class MySQL_Interface extends DataInterface
 		{

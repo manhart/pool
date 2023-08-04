@@ -56,6 +56,7 @@ if(!defined('MYSQL_LAYER'))
      * @author Alexander Manhart <alexander.manhart@freenet.de>
      * @version $Id: MSSQL_Interface.class.php,v 1.1 2005/06/03 07:03:48 manhart Exp $
      * @access public
+     * @deprecated currently unmaintained and probably broken
      **/
     class MSSQL_Interface extends DataInterface
     {
