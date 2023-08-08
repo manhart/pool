@@ -101,8 +101,10 @@ class MySQL_ResultSet extends ResultSet
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
         $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
             Singleton::get('Stopwatch')->start('SQL-QUERY') : null;// start time measurement
-        $result = $this->db->query($sql, $dbname);//run
-        if ($result) {//success
+        try {//run
+            $result = $this->db->query($sql, $dbname);
+        } catch(Exception $e) {}
+        if ($result ??= false) {//success
             switch ($this->db->getLastSQLCommand()) {
                 case 'SELECT':
                 case 'SHOW':
@@ -110,14 +112,14 @@ class MySQL_ResultSet extends ResultSet
                 case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
                     //? ( z.B. UNION
                     if ($this->db->numrows($result) > 0) {
-                        $this->rowset = $this->db->fetchrowset($result, $callbackOnFetchRow, $metaData);
+                        $this->rowset = $this->db->fetchRowSet($result, $callbackOnFetchRow, $metaData);
                         $this->reset();
                     }
                     $this->db->freeresult($result);
                     break;
                 /** @noinspection PhpMissingBreakStatementInspection */
                 case 'INSERT'://DML commands
-                    $last_insert_id = $this->db->nextid();
+                    $last_insert_id = $this->db->nextId();
                     $idColumns = [
                         'last_insert_id' => $last_insert_id,
                         'id' => $last_insert_id,
@@ -133,9 +135,10 @@ class MySQL_ResultSet extends ResultSet
                     $this->reset();
                     break;
             }
+            $result = true;
         }
         else {//statement failed
-            $error_msg = $this->db->getErrormsg() . ' SQL Statement failed: ' . $sql;
+            $error_msg = $e?->getMessage() ?? "{$this->db->getErrormsg()} SQL Statement failed: $sql";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             $error = $this->db->getError();
             $error['sql'] = $sql;
@@ -154,7 +157,7 @@ class MySQL_ResultSet extends ResultSet
                 Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
                     configurationName: Log::SQL_LOG_NAME);
         }
-        return (bool)$result;
+        return $result;
     }
 
     /**
