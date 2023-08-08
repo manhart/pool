@@ -103,7 +103,11 @@ class MySQL_ResultSet extends ResultSet
             Singleton::get('Stopwatch')->start('SQL-QUERY') : null;// start time measurement
         try {//run
             $result = $this->db->query($sql, $dbname);
-        } catch(Exception $e) {}
+        } catch(Exception $e) {
+            if ($e instanceof mysqli_sql_exception){//keeping old behavior for g7Logistics
+                throw $e;
+            }
+        }
         if ($result ??= false) {//success
             switch ($this->db->getLastSQLCommand()) {
                 case 'SELECT':
@@ -139,7 +143,7 @@ class MySQL_ResultSet extends ResultSet
         }
         else {//statement failed
             $error_msg = $e?->getMessage() ?? "{$this->db->getErrormsg()} SQL Statement failed: $sql";
-            $this->raiseError(__FILE__, __LINE__, $error_msg);
+            $this->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
             $error = $this->db->getError();
             $error['sql'] = $sql;
             $this->errorStack[] = $error;
