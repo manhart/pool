@@ -1,5 +1,4 @@
-<?php
-declare (strict_types=1);
+<?php declare (strict_types=1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -204,6 +203,17 @@ abstract class DAO extends PoolObject
     public function getColumns(): array
     {
         return $this->columns;
+    }
+
+    /**
+     * Returns the metadata of the table
+     *
+     * @param string $which
+     * @return array
+     */
+    public function getMetaData(string $which = ''): array
+    {
+        return $which ? $this->metaData[$which] : $this->metaData;
     }
 
     /**
