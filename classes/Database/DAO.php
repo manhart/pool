@@ -274,7 +274,7 @@ abstract class DAO extends PoolObject
      *
      * @throws DAOException
      */
-    public static function createDAO(string $tableDefine, $interface = null, bool $autoFetchColumns = false): DAO
+    public static function createDAO(string $tableDefine, DataInterface|array|null $interface = null, bool $autoFetchColumns = false): DAO
     {
         $type = $dbname = $table = '';
         self::extractTabledefine($tableDefine, $type, $dbname, $table);
