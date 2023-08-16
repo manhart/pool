@@ -45,7 +45,7 @@ class Component extends PoolObject
     protected ?Component $Owner;
 
     /**
-     * contains all components
+     * Contains all components
      *
      * @var array<Component> $components
      */
@@ -59,14 +59,14 @@ class Component extends PoolObject
     private string $name;
 
     /**
-     * guarantees unique component names (continuously)
+     * Guarantees unique component names (continuously)
      *
      * @var array $uniqueNameCounter
      */
     private array $uniqueNameCounter = [];
 
     /**
-     * @var string directory that contains the class
+     * @var string Directory that contains the class
      */
     private string $classDirectory;
 

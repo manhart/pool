@@ -31,21 +31,21 @@ abstract class DAO extends PoolObject
     public const DAO_NO_ESCAPE = 2;
 
     /**
-     * table meta data
+     * Table meta data
      *
      * @var array
      */
     protected array $metaData = [];
 
     /**
-     * primary key of table
+     * Primary key of table
      *
      * @var array|string[]
      */
     protected array $pk = [];
 
     /**
-     * columns of table
+     * Columns of table
      *
      * @var array|string[]
      */

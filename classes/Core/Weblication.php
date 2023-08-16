@@ -69,7 +69,7 @@ class Weblication extends Component
     private ?GUI_CustomFrame $Frame = null;
 
     /**
-     * PHP Session gekapselt in ISession
+     * Session object
      *
      * @var Session|null $Session
      */
@@ -79,11 +79,6 @@ class Weblication extends Component
      * @var Weblication|null
      */
     private static ?Weblication $Instance = null;
-
-    /**
-     * @var int filter that defines which superglobals are passed to input->vars
-     */
-    private int $superglobals = Input::EMPTY;
 
     /**
      * @var Input
@@ -131,11 +126,11 @@ class Weblication extends Component
     private array $interfaces = [];
 
     /**
-     * Zeichensatz
+     * Default charset
      *
      * @var string
      */
-    private string $charset = '';
+    private string $charset = 'utf-8';
 
     /**
      * Programm ID
@@ -255,6 +250,17 @@ class Weblication extends Component
     protected Translator $translator;
 
     /**
+     * Set to true after initialization of the application settings
+     * @var true
+     */
+    private bool $isInitialized = false;
+
+    /**
+     * @var string
+     */
+    private string $sessionClassName = Session::class;
+
+    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -264,7 +270,6 @@ class Weblication extends Component
         self::$isAjax = isAjax();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
-        $this->Settings = new Input(Input::EMPTY);
         // determine the relative client und server path from the application to the pool
         $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
         $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
@@ -1041,14 +1046,17 @@ class Weblication extends Component
     }
 
     /**
-     * starts any session derived from the class ISession
+     * Initializes the settings for the application and sets up the translators.
      *
      * @param array $settings configuration parameters:
      *   application.name
      *   application.title
+     *   application.charset
      *   application.locale
+     *   application.version
      *   application.launchModule - sets the main module that is launched
      *   application.session.className - overrides default session class
+     *   application.languages - array of languages
      *   application.translator Instance of Translator
      *   application.translatorResource Instance of TranslationProviderFactory
      *   application.translatorResourceDir Directory where translation files are stored
@@ -1057,51 +1065,30 @@ class Weblication extends Component
      */
     public function setup(array $settings = []): static
     {
-        $this->Settings->setVars($settings);
-
-        //set well known setting
-        $this->setName($this->Settings->getVar('application.name', $this->getName()));
-        $this->setTitle($this->Settings->getVar('application.title', $this->getTitle()));
-        $this->setCharset($this->Settings->getVar('application.charset', $this->getCharset()));
-        $this->setLaunchModule($this->Settings->getVar('application.launchModule', $this->getLaunchModule()));
-
-        // setup AppTranslator
-        $defaultLocale = $this->Settings->getVar('application.locale', 'en_US');
-        $AppTranslator = $this->Settings->getVar('application.translator');
-        $TranslatorResource = $this->Settings->getVar('application.translatorResource');
-        $translatorResourceDir = $this->Settings->getVar('application.translatorResourceDir');
-        if(!$AppTranslator instanceof Translator)
-            $AppTranslator = new Translator();
-        if(!$TranslatorResource instanceof TranslationProviderFactory) {
-            if($translatorResourceDir)//make a ressource from a given file
-                $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
-            elseif(sizeof($AppTranslator->getTranslationResources()) > 0)//Translator is already loaded
-                $TranslatorResource = null;
-            else//add Fallback or throw
-                $TranslatorResource = TranslationProviderFactory_nop::create();
-        }
-        if($TranslatorResource != null)
-            $AppTranslator->addTranslationResource($TranslatorResource);
-        //Setup Languages (for Application)
-        $AppLanguages = $this->Settings->getVar('application.languages');
-        //Get defaults from browser
-        $AppLanguages ??= $AppTranslator->parseLangHeader(false, $defaultLocale);
-        //Try to load the required languages
-        $AppTranslator->swapLangList($AppLanguages, true);
-        $this->setTranslator($AppTranslator);
-
-        //setup TemplateTranslator
-        $translatorStaticResourceDir = $this->Settings->getVar('application.translatorStaticResourceDir');
-        if($translatorStaticResourceDir) {
-            $staticResource = TranslationProviderFactory_ResourceFile::create($translatorStaticResourceDir);
-            $TemplateTranslator = new Translator($staticResource);
-            //Try to load the required languages
-            $TemplateTranslator->swapLangList($AppLanguages, true);
-            Template::setTranslator($TemplateTranslator);
-        }
-
-        // $this->Input = new Input($this->Settings->getVar('application.superglobals', $this->superglobals));
+        $this->initializeSettings($settings);
+        $this->setupTranslator($settings);
         return $this;
+    }
+
+    /**
+     * Initializes the settings of the application.
+     *
+     * @param array $settings
+     * @return void
+     */
+    protected function initializeSettings(array $settings): void
+    {
+        if($this->isInitialized) return;
+
+        // set well known setting
+        $this->setName($settings['application.name'] ?? $this->getName());
+        $this->setTitle($settings['application.title'] ?? $this->getTitle());
+        $this->setCharset($settings['application.charset'] ?? $this->getCharset());
+        $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
+        $this->setVersion($settings['application.version'] ?? $this->getVersion());
+        $this->sessionClassName = $settings['application.session.className'] ?? $this->sessionClassName;
+
+        $this->isInitialized = true;
     }
 
     /**
@@ -1116,7 +1103,7 @@ class Weblication extends Component
      * @return Session|null
      * @throws Exception
      */
-    public function startPHPSession(string $session_name = 'PHPSESSID', int $use_trans_sid = 0, int $use_cookies = 1,
+    public function startPHPSession(string $session_name = 'WebAppSID', int $use_trans_sid = 0, int $use_cookies = 1,
         int $use_only_cookies = 0, bool $autoClose = true): ?Session
     {
         switch(session_status()) {
@@ -1146,23 +1133,14 @@ class Weblication extends Component
         if($isStatic) {
             return new Session($autoClose);
         }
-        $className = $this->Settings->getVar('application.session.className', Session::class);
+        $className = $this->sessionClassName;
         $this->Session = new $className($autoClose);
 
         return $this->Session;
     }
 
     /**
-     * @param string $key
-     * @return mixed
-     */
-    public function getSetting(string $key): mixed
-    {
-        return $this->Session->getVar($key);
-    }
-
-    /**
-     * Seitentitel setzen
+     * Set page title
      *
      * @param string $title
      * @return Weblication
@@ -1174,7 +1152,7 @@ class Weblication extends Component
     }
 
     /**
-     * Seitentitel auslesen
+     * Returns page title
      *
      * @return string
      */
@@ -1184,7 +1162,7 @@ class Weblication extends Component
     }
 
     /**
-     * return requested ajax module
+     * Returns requested ajax module
      *
      * @return string
      */
@@ -1521,6 +1499,51 @@ class Weblication extends Component
     {
         foreach($this->interfaces as $DataInterface) {
             $DataInterface->close();
+        }
+    }
+
+    /**
+     * Setup AppTranslator and TemplateTranslator
+     *
+     * @param array $settings
+     * @return void
+     * @throws Exception
+     */
+    private function setupTranslator(array $settings): void
+    {
+        // setup AppTranslator
+        $defaultLocale = $settings['application.locale'] ?? $this->defaultLocale;
+        $AppTranslator = $settings['application.translator'] ?? null;
+        $TranslatorResource = $settings['application.translatorResource'] ?? null;
+        $translatorResourceDir = $settings['application.translatorResourceDir'] ?? '';
+        if(!$AppTranslator instanceof Translator)
+            $AppTranslator = new Translator();
+        if(!$TranslatorResource instanceof TranslationProviderFactory) {
+            if($translatorResourceDir)// make a ressource from a given file
+                $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
+            elseif(sizeof($AppTranslator->getTranslationResources()) > 0)// Translator is already loaded
+                $TranslatorResource = null;
+            else  // add Fallback or throw
+                $TranslatorResource = TranslationProviderFactory_nop::create();
+        }
+        if($TranslatorResource != null)
+            $AppTranslator->addTranslationResource($TranslatorResource);
+        // Setup Languages (for Application)
+        $AppLanguages = $settings['application.languages'] ?? null;
+        // Get defaults from browser
+        $AppLanguages ??= $AppTranslator->parseLangHeader(false, $defaultLocale);
+        // Try to load the required languages
+        $AppTranslator->swapLangList($AppLanguages, true);
+        $this->setTranslator($AppTranslator);
+
+        // setup TemplateTranslator
+        $translatorStaticResourceDir = $settings['application.translatorStaticResourceDir'] ?? '';
+        if($translatorStaticResourceDir) {
+            $staticResource = TranslationProviderFactory_ResourceFile::create($translatorStaticResourceDir);
+            $TemplateTranslator = new Translator($staticResource);
+            // Try to load the required languages
+            $TemplateTranslator->swapLangList($AppLanguages, true);
+            Template::setTranslator($TemplateTranslator);
         }
     }
 }
