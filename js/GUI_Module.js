@@ -9,9 +9,9 @@
 
 class GUI_Module
 {
-    /** @var {string} contains the unique name of the module */
+    /** @var {string} name contains the unique name of the module */
     name = '';
-    /** @var {string} contains the ID selector for the HTML Element of the module */
+    /** @var {string} moduleSelector contains the ID selector for the HTML Element of the module */
     moduleSelector = '';
     className = this.constructor.name;
     /** @var {string} fullyQualifiedClassName of the php module - is required by Ajax Calls */
@@ -225,7 +225,7 @@ class GUI_Module
 
     getThenMod = (handler) =>
     {
-        const thenMod = function (onFullfilled, onRejected) {
+        const thenMod = function (onFulfilled, onRejected) {
             console.debug('modded')
             onRejected ??= e => {//create delegating handler
                 //handle rejection
@@ -235,7 +235,7 @@ class GUI_Module
                     handler(e);
             }
             //Execute default and inject delegating handler
-            const newPromise = Object.getPrototypeOf(this).then.apply(this, [onFullfilled, onRejected]);
+            const newPromise = Object.getPrototypeOf(this).then.apply(this, [onFulfilled, onRejected]);
             this.hasNext = true;
             //Pass the modification on to the next Promise in the chain
             newPromise.then = thenMod.bind(newPromise);//more closure magic
