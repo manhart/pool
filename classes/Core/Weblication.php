@@ -22,7 +22,9 @@ use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
+use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
+use pool\classes\Exception\SessionDisabledException;
 use pool\classes\Language;
 use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
@@ -254,11 +256,6 @@ class Weblication extends Component
      * @var true
      */
     private bool $isInitialized = false;
-
-    /**
-     * @var string
-     */
-    private string $sessionClassName = Session::class;
 
     /**
      * is not allowed to call from outside to prevent from creating multiple instances,
@@ -1086,7 +1083,6 @@ class Weblication extends Component
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
         $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
         $this->setVersion($settings['application.version'] ?? $this->getVersion());
-        $this->sessionClassName = $settings['application.session.className'] ?? $this->sessionClassName;
 
         $this->isInitialized = true;
     }
@@ -1096,46 +1092,44 @@ class Weblication extends Component
      * We use the standard php sessions.
      *
      * @param string $session_name Name der Session (Default: sid)
-     * @param integer $use_trans_sid Transparente Session ID (Default: 0)
-     * @param integer $use_cookies Verwende Cookies (Default: 1)
-     * @param integer $use_only_cookies Verwende nur Cookies (Default: 0)
+     * @param bool $useTransSID Transparente Session ID (Default: 0)
+     * @param bool $useCookies Verwende Cookies (Default: 1)
+     * @param bool $useOnlyCookies Verwende nur Cookies (Default: 0)
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
-     * @return Session|null
-     * @throws Exception
+     * @param string $sessionClassName default is session class
+     * @return Session
+     * @throws SessionDisabledException
      */
-    public function startPHPSession(string $session_name = 'WebAppSID', int $use_trans_sid = 0, int $use_cookies = 1,
-        int $use_only_cookies = 0, bool $autoClose = true): ?Session
+    public function startPHPSession(string $session_name = 'WebAppSID', bool $useTransSID = false, bool $useCookies = true,
+        bool $useOnlyCookies = false, bool $autoClose = true, string $sessionClassName = Session::class): Session
     {
         switch(session_status()) {
             case PHP_SESSION_DISABLED:
-                throw new Exception('PHP Session is disabled.');
+                throw new SessionDisabledException();
 
             case PHP_SESSION_NONE:
                 // setting ini is only possible, if the session is not started yet
-                $use_trans_sid = (string)$use_trans_sid;
-                $use_cookies = (string)$use_cookies;
-                $use_only_cookies = (string)$use_only_cookies;
-
                 $sessionConfig = [
                     'session.name' => $session_name,
-                    'session.use_trans_sid' => $use_trans_sid,
-                    'session.use_cookies' => $use_cookies,
-                    'session.use_only_cookies' => $use_only_cookies
+                    'session.use_trans_sid' => $useTransSID,
+                    'session.use_cookies' => $useCookies,
+                    'session.use_only_cookies' => $useOnlyCookies
                 ];
                 foreach($sessionConfig as $option => $value) {
-                    if(ini_get($option) != $value) {
-                        ini_set($option, $value);
-                    }
+                    if(ini_get($option) != $value) ini_set($option, $value);
                 }
+                break;
+
+            case PHP_SESSION_ACTIVE:
+                // session is already started
+                break;
         }
 
-        $isStatic = !(isset($this)); // TODO static calls or static AppSettings
-        if($isStatic) {
-            return new Session($autoClose);
+        // Check if session class is valid
+        if($sessionClassName !== Session::class && !is_subclass_of($sessionClassName, Session::class)) {
+            throw new InvalidArgumentException('Session class must be instance of ' . Session::class);
         }
-        $className = $this->sessionClassName;
-        $this->Session = new $className($autoClose);
-
+        $this->Session ??= new $sessionClassName($autoClose);
         return $this->Session;
     }
 
