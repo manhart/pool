@@ -69,11 +69,11 @@ enum DataType
             DataType::URL => fn($value) => is_string(filter_var($value, FILTER_VALIDATE_URL)) ? $value :
                 throw new \InvalidArgumentException('Value is not a valid URL.'),
             DataType::NO_HTML => fn($value) => htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE),
-            DataType::ALPHANUMERIC => fn($value) => strcspn($value, $alphaNum) === strlen($value) ? $value :
+            DataType::ALPHANUMERIC => fn($value) => strcspn($value, $alphaNum) === 0 ? $value :
                 throw new \InvalidArgumentException('Value is not alphanumeric.'),
-            DataType::ALPHANUMERIC_SPACE => fn($value) => strcspn($value, "$alphaNum ") === strlen($value) ? $value :
+            DataType::ALPHANUMERIC_SPACE => fn($value) => strcspn($value, "$alphaNum ") === 0 ? $value :
                 throw new \InvalidArgumentException('Value is not alphanumeric with spaces.'),
-            DataType::ALPHANUMERIC_SPACE_PUNCTUATION => fn($value) => strcspn($value, "$alphaNum .,;:!?()-+/&") === strlen($value) ? $value :
+            DataType::ALPHANUMERIC_SPACE_PUNCTUATION => fn($value) => strcspn($value, "$alphaNum .,;:!?()-+/&") === 0 ? $value :
                 throw new \InvalidArgumentException('Value is not alphanumeric with spaces and punctuation.'),
         };
         return match ($dataType) {
