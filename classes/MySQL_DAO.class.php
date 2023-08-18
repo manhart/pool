@@ -185,14 +185,14 @@ class MySQL_DAO extends DAO
     protected string $tableAlias = '';
 
     /**
-     * columns to translate
+     * Columns to translate
      *
      * @var array
      */
     protected array $translate = [];
 
     /**
-     * translates field values within filter / sorting methods
+     * Translates field values within filter / sorting methods
      *
      * @var array|string[][]
      */
@@ -856,7 +856,7 @@ SQL;
      */
     protected function translateValues(string $field): string
     {
-        $tokens =& $this->translateValues[$field];
+        $tokens = &$this->translateValues[$field];
         if(!Weblication::getInstance()->hasTranslator() || !$tokens)
             return $field;
         $Translator = Weblication::getInstance()->getTranslator();
@@ -1131,20 +1131,21 @@ SQL;
     }
 
     /**
-     * translate table content
+     * Translate table content
      *
      * @param array $row
      * @return array
      */
     protected function translate(array $row): array
     {
-        if(!Weblication::getInstance()->hasTranslator())//no translator
+        $Weblication = Weblication::getInstance();
+        if(!$Weblication->hasTranslator())//no translator
             return $row;//unchanged
-        $Translator = Weblication::getInstance()->getTranslator();
+        $Translator = $Weblication->getTranslator();
         // another idea to handle columns which should be translated
         // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
         foreach($this->translate as $key)
-            if(isset($row[$key]))
+            if(isset($row[$key]) && is_string($row[$key]))
                 $row[$key] = $Translator->getTranslation($row[$key], $row[$key], noAlter: true);
         return $row;
     }
