@@ -122,6 +122,18 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
+     * Filters elements of the dataset using a callback function
+     *
+     * @param callable $callback
+     * @param int $mode
+     * @return void
+     */
+    public function filter(callable $callback, int $mode = 0): void
+    {
+        $this->rowset = array_values(array_filter($this->rowset, $callback, $mode));
+    }
+
+    /**
      * Verschiebt einen Datensatz innerhalb des Resultsets an die uebergebene Position.
      *
      * @param string $fieldname Feldname
