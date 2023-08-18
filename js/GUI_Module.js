@@ -114,7 +114,7 @@ class GUI_Module
      * @param {object} options Request options e.g. {method:'POST'}
      * @returns {Promise<*>} Resolves to the value returned by the method or rejects with an error thrown by the method
      */
-    request(ajaxMethod, data, options = {})
+    request(ajaxMethod, data = {}, options = {})
     {
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
         let key = 'query';
