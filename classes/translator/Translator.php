@@ -481,6 +481,7 @@ class Translator
             if ($provider == null) //language has  no provider
                 continue;//F skip
             foreach ($keyArray as $key => &$translation) {//Key K
+                $key = strval($key);
                 assert($provider instanceof TranslationProvider);
                 switch ($queryResult = $provider->query($key)) {//Switch S
                     /** @noinspection PhpMissingBreakStatementInspection Stuff that finishes this Lookup */
