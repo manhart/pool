@@ -414,6 +414,16 @@ class MySQL_DAO extends DAO
     }
 
     /**
+     * Returns the data values which will be translated
+     *
+     * @return array|\string[][]
+     */
+    public function getTranslatedValues(): array
+    {
+        return $this->translateValues;
+    }
+
+    /**
      * Liefert den MySQL Datentypen des uebergebenen Feldes
      *
      * @param string $fieldName Spaltenname
