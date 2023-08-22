@@ -158,8 +158,7 @@ class Log
                 $charset = $facility['charset'] ?? 'utf8';
 
                 if($tableDefine) {
-                    $interfaceType = $dbname = $table = '';
-                    DAO::extractTabledefine($tableDefine, $interfaceType, $dbname, $table);
+                    [$interfaceType, $dbname] = DAO::extractTableDefine($tableDefine);
 
                     $Packet = array(
                         'host' => $host,
