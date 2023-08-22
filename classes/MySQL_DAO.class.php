@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 /**
  * # PHP Object Oriented Library (POOL) #
  *
@@ -156,31 +165,17 @@ use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\translator\Translator;
 
-/**
- * MySQL_DAO
- *
- * @package pool
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
- */
 class MySQL_DAO extends DAO
 {
     /**
-     * MySQL_Interface
-     *
-     * @var DataInterface|null
+     * @var string|null name of the default interface type for mysql
      */
-    protected ?DataInterface $db = null;
+    protected static ?string $interfaceType = MySQLi_Interface::class;
 
     /**
      * @var string contains the columns to select
      */
     protected string $column_list = '*';
-
-    /**
-     * @var string contains the table name
-     */
-    protected string $table;
 
     protected string $tableAlias = '';
 
@@ -202,11 +197,6 @@ class MySQL_DAO extends DAO
      * @var Translator
      */
     protected Translator $Translator;
-
-    /**
-     * @var string contains the database name
-     */
-    private string $dbname;
 
     /**
      * @var array|string[] operators for the filter method
@@ -234,13 +224,9 @@ class MySQL_DAO extends DAO
     /**
      * MySQL_DAO constructor.
      */
-    public function __construct(DataInterface $DataInterface, string $dbname, string $table)
+    public function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
     {
-        parent::__construct();
-
-        $this->db = $DataInterface;
-        $this->dbname = $dbname;
-        $this->table = $table;
+        parent::__construct($DataInterface, $databaseName, $table);
 
         // Maybe there are columns in the "columns" property
         // todo rework this shit
@@ -265,7 +251,7 @@ class MySQL_DAO extends DAO
     /**
      * @return string
      */
-    public function getTableName(): string
+    public function getTable(): string
     {
         return $this->table;
     }
@@ -277,15 +263,25 @@ class MySQL_DAO extends DAO
      */
     public function getDataInterface(): DataInterface
     {
-        return $this->db;
+        return $this->DataInterface;
     }
 
     /**
-     * return columns to translate into another language
+     * Return columns to translate into another language
      */
     public function getTranslatedColumns(): array
     {
         return $this->translate;
+    }
+
+    /**
+     * Returns the data values which will be translated
+     *
+     * @return array|\string[][]
+     */
+    public function getTranslatedValues(): array
+    {
+        return $this->translateValues;
     }
 
     /**
@@ -371,7 +367,7 @@ class MySQL_DAO extends DAO
     {
         $this->pk = [];
         $this->columns = [];
-        $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
+        $this->field_list = $this->DataInterface->listfields($this->table, $this->database, $this->columns, $this->pk);
         $this->onSetColumns($this->columns);
         return $this;
     }
@@ -411,16 +407,6 @@ class MySQL_DAO extends DAO
             $column = "`$column`";
         }
         return $column;
-    }
-
-    /**
-     * Returns the data values which will be translated
-     *
-     * @return array|\string[][]
-     */
-    public function getTranslatedValues(): array
-    {
-        return $this->translateValues;
     }
 
     /**
@@ -470,7 +456,7 @@ class MySQL_DAO extends DAO
      */
     public function getFieldEnumValues(string $fieldName): array
     {
-        $fieldInfo = $this->db->listfield($this->dbname, $this->table, $fieldName);
+        $fieldInfo = $this->DataInterface->getColumnMetadata($this->database, $this->table, $fieldName);
         if(!isset($fieldInfo['Type'])) return [];
         $type = substr($fieldInfo['Type'], 0, 4);
         if($type != 'enum') return [];
@@ -550,7 +536,7 @@ class MySQL_DAO extends DAO
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = $this->db->escapeString($value, $this->dbname);
+                $value = $this->DataInterface->escapeString($value, $this->database);
                 $value = "'$value'";
             }
 
@@ -586,8 +572,8 @@ SQL;
      */
     protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_ResultSet
     {
-        $MySQL_ResultSet = new MySQL_ResultSet($this->db);
-        $MySQL_ResultSet->execute($sql, $this->dbname, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
+        $MySQL_ResultSet = new MySQL_ResultSet($this->DataInterface);
+        $MySQL_ResultSet->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
         return $MySQL_ResultSet;
     }
 
@@ -681,7 +667,7 @@ SQL;
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
+                $value = "'{$this->DataInterface->escapeString($value, $this->database)}'";
             }
             if($set == '') $set = "`$field`=$value";
             else $set = "$set,`$field`=$value";
@@ -736,7 +722,7 @@ SQL;
     {
         if(is_int($value) || is_float($value))
             return $value;//not a stringable or a 'subQuery'
-        $value = $noEscape ? $value : $this->db->escapeString($value, $this->dbname);
+        $value = $noEscape ? $value : $this->DataInterface->escapeString($value, $this->database);
         return $noQuotes ? $value : "'$value'"; //quote
     }
 
@@ -894,7 +880,7 @@ SQL;
      * @param integer $id Eindeutige ID eines Datensatzes (Primaerschluessel!!)
      * @return ResultSet
      * @see MySQL_ResultSet
-     **/
+     */
     public function delete($id): ResultSet
     {
         $where = $this->__buildWhere($id, $this->pk);
@@ -1126,7 +1112,7 @@ SQL;
      */
     public function foundRows(): int
     {
-        return $this->db->foundRows();
+        return $this->DataInterface->foundRows();
     }
 
     /**

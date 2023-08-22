@@ -158,15 +158,13 @@ class Log
                 $charset = $facility['charset'] ?? 'utf8';
 
                 if($tableDefine) {
-                    [$interfaceType, $dbname] = DAO::extractTableDefine($tableDefine);
-
                     $Packet = array(
                         'host' => $host,
-                        'database' => $dbname,
+                        'database' => '',
                         'charset' => $charset
                     );
-                    $Db = DataInterface::createDataInterface($Packet, $interfaceType);
-                    $DAO = DAO::createDAO($tableDefine, $Db);
+                    $Db = DataInterface::createDataInterface($Packet, MySQLi_Interface::class);
+                    $DAO = DAO::createDAO($tableDefine, null, $Db);
                     $DAO->fetchColumns();
                 }
 

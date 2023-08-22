@@ -107,7 +107,7 @@ class DBSession extends PoolObject
     {
         $this->ipUserAgentRestriction = $ipUserAgentRestriction;
 
-        $this->DAO_Session = DAO::createDAO($tabledefine, $interfaces);
+        $this->DAO_Session = DAO::createDAO($tabledefine, null, $interfaces);
 
         if(isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             // Proxy Weiterleitung

@@ -1,4 +1,4 @@
-<?php declare (strict_types=1);
+<?php declare (strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -12,8 +12,6 @@ namespace pool\classes\Database;
 
 use Closure;
 use CustomMySQL_DAO;
-use MySQL_DAO;
-use MySQLi_Interface;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\Weblication;
 use pool\classes\Exception\DAOException;
@@ -31,14 +29,34 @@ abstract class DAO extends PoolObject
     public const DAO_NO_ESCAPE = 2;
 
     /**
-     * @var string name of the interface type (must be declared in derived class)
+     * @var string|null name of the interface type (must be declared in derived class)
      */
-    protected string $interfaceType ;
+    protected static ?string $interfaceType = null;
+
+    /**
+     * @var string|null name of the table / file / view
+     */
+    protected static ?string $tableName = null;
+
+    /**
+     * @var string|null
+     */
+    protected static ?string $databaseName = null;
+
+    /**
+     * @var DataInterface instance of the interface
+     */
+    protected DataInterface $DataInterface;
+
+    /**
+     * @var string
+     */
+    protected string $table;
 
     /**
      * @var string name of the database (must be declared in derived class)
      */
-    protected string $databaseName;
+    protected string $database;
 
     /**
      * Table meta data
@@ -77,8 +95,12 @@ abstract class DAO extends PoolObject
     /**
      * Defines the default commands.
      */
-    public function __construct()
+    public function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
     {
+        $this->DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
+        $this->database ??= $databaseName ?? static::$databaseName;
+        $this->table ??= $table ?? static::$tableName;
+
         $commands = [
             Commands::Now->name => 'NOW()',
             Commands::CurrentDate->name => 'CURRENT_DATE()',
@@ -90,6 +112,87 @@ abstract class DAO extends PoolObject
         ];
         $this->commands = $commands;
     }
+
+    /**
+     * escape a column name
+     *
+     * @param string $column
+     * @return string
+     */
+    abstract static function escapeColumn(string $column): string;
+
+    /**
+     * @return string
+     */
+    public static function getDatabaseName(): string
+    {
+        return static::$databaseName;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getTableName(): string
+    {
+        return static::$tableName;
+    }
+
+    /**
+     * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
+     *
+     * @param string|null $tableName Tabellendefinition (siehe database.inc.php)
+     * @param string|null $databaseName <
+     * @param \pool\classes\Database\DataInterface|null $interface
+     * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
+     */
+    public static function createDAO(?string $tableName = null, ?string $databaseName = null, DataInterface|null $interface = null): static
+    {
+        $workaround = false;
+        // @todo remove workaround once relying projects are fixed
+        if($tableName && !$databaseName && str_contains($tableName, '_')) {
+            [$databaseName, $tableName] = explode('_', $tableName, 2);
+            $workaround = true;
+        }
+
+        // class stuff
+        if(!$tableName) {
+            return new static($interface);
+        }
+        elseif(static::$tableName) {
+            throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
+        }
+        else {
+            // workaround
+            $className = static::class === DAO::class ? CustomMySQL_DAO::class : static::class;
+            $interface = $interface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
+            if($workaround) {
+                $class_exists = class_exists($tableName, false);
+
+                $driver = $interface::getDriverName();
+                $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
+                $include = "$dir/$tableName.php";
+                $file_exists = file_exists($include);
+                if(!$class_exists && $file_exists) {
+                    require_once $include;
+                    $class_exists = true;
+                }
+                if($class_exists) {
+                    return new $tableName($interface, $databaseName, $tableName);
+                }
+            }
+
+            $DAO = new $className($interface, $databaseName, $tableName);
+            $DAO->fetchColumns();
+            return $DAO;
+        }
+    }
+
+    /**
+     * fetches the columns automatically from the driver / interface
+     *
+     * @return DAO
+     */
+    abstract public function fetchColumns(): static;
 
     /**
      * Einen Datensatz einfuegen (virtuelle Methode).
@@ -121,15 +224,15 @@ abstract class DAO extends PoolObject
      * Mehrere Datensaetze zurueck geben (virtuelle Methode).
      * Datensaetze werden als Objekt ResultSet zurueck gegeben.
      */
-    abstract public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules=[], array $sorting=[], array $limit=[],
-        array $groupBy=[], array $having=[], array $options=[]): ResultSet;
+    abstract public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
+        array $groupBy = [], array $having = [], array $options = []): ResultSet;
 
     /**
      * Liefert die Anzahl gefundener Datensaete zurueck (virtuelle Methode).
      * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
      * sondern nur die Anzahl.
      */
-    abstract public function getCount(mixed $id = null, mixed $key = null, array $filter_rules=[]): ResultSet;
+    abstract public function getCount(mixed $id = null, mixed $key = null, array $filter_rules = []): ResultSet;
 
     /**
      * set primary key
@@ -152,32 +255,6 @@ abstract class DAO extends PoolObject
     {
         return $this->pk;
     }
-
-    /**
-     * fetches the columns automatically from the driver / interface
-     *
-     * @return DAO
-     */
-    abstract public function fetchColumns(): static;
-
-    /**
-     * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
-     *
-     * @param string ...$columns columns
-     */
-    public function setColumns(string ...$columns): DAO
-    {
-        $this->columns = $columns;
-        $this->onSetColumns($columns);
-        return $this;
-    }
-
-    /**
-     * escape a column name
-     * @param string $column
-     * @return string
-     */
-    abstract static function escapeColumn(string $column): string;
 
     /**
      * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
@@ -216,6 +293,23 @@ abstract class DAO extends PoolObject
     }
 
     /**
+     * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
+     *
+     * @param string ...$columns columns
+     */
+    public function setColumns(string ...$columns): DAO
+    {
+        $this->columns = $columns;
+        $this->onSetColumns($columns);
+        return $this;
+    }
+
+    /**
+     * event is triggered when the columns are set
+     */
+    abstract protected function onSetColumns(array $columns);
+
+    /**
      * Returns the metadata of the table
      *
      * @param string $which
@@ -227,14 +321,11 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * event is triggered when the columns are set
-     */
-    abstract protected function onSetColumns(array $columns);
-
-    /**
      * Liefert ein Array mit "allen" Spaltennamen zurueck
      */
     abstract public function getFieldList(): array;
+
+    // function formatData(&$data) {}
 
     /**
      * Liefert den Typ einer Spalte
@@ -250,94 +341,8 @@ abstract class DAO extends PoolObject
      */
     abstract public function getFieldInfo(string $fieldName): array;
 
-    // function formatData(&$data) {}
-
-    /**
-     * extract definitions of the table variable
-     *
-     * @param string $tableDefine
-     * @return array
-     */
-    static function extractTableDefine(string $tableDefine): array
-    {
-        global $$tableDefine;
-        $tableDefine = $$tableDefine;
-        $interfaceType = $tableDefine[0] ?? null;
-        $dbname = $tableDefine[1] ?? null;
-        $table = $tableDefine[2] ?? null;
-        return [$interfaceType, $dbname, $table];
-    }
-
     /**
      * @return int number of records / rows
      */
     abstract public function foundRows(): int;
-
-    /**
-     * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
-     *
-     * @param string $tableDefineOrClass Tabellendefinition (siehe database.inc.php)
-     * @param \pool\classes\Database\DataInterface|array|null $interface
-     * @param bool $autoFetchColumns
-     * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
-     * @todo add DAO class as first parameter, tableDefine as second parameter
-     */
-    public static function createDAO(string $tableDefineOrClass, DataInterface|array|null $interface = null, bool $autoFetchColumns = false): DAO
-    {
-        // class stuff
-        if(class_exists($tableDefineOrClass)) {
-            $DAO = new $tableDefineOrClass($interface);
-            if($autoFetchColumns) {
-                $DAO->fetchColumns();
-            }
-            return $DAO;
-        }
-
-        // tableDefine stuff
-        if(!global_exists($tableDefineOrClass)) {
-            throw new DAOException("Fatal error: Table definition $tableDefineOrClass is missing in the database.inc.php!", 1);
-        }
-        [$type, $dbname, $table] = self::extractTableDefine($tableDefineOrClass);
-
-        // Interface Objekt
-        $interface = $interface ?? Weblication::getInstance()->getInterfaces();
-
-        if(is_array($interface)) {
-            $interface = $interface[$type] ?? null;
-        }
-
-        // @todo remove switch
-        switch($type) {
-            case MySQLi_Interface::class:
-                $class_exists = class_exists($table, false);
-
-                /** @var $type DataInterface */
-                $driver = $type::getDriverName();
-                $dir = addEndingSlash(DIR_DAOS_ROOT) . "$driver/$dbname";
-                $include = "$dir/$table.php";
-                $file_exists = file_exists($include);
-                if(!$class_exists && $file_exists) {
-                    require_once $include;
-                    $class_exists = true;
-                }
-                if($class_exists) {
-                    /** @var MySQL_DAO $DAO */
-                    $DAO = new $table($interface, $dbname, $table);
-                }
-                else {
-                    // @todo use $driver
-                    // $className = 'Custom'.$driver.'_DAO';
-                    $DAO = new CustomMySQL_DAO($interface, $dbname, $table);
-                }
-                break;
-
-            default:
-                $msg = "Fatal error: DataInterface type $type of table definition $tableDefineOrClass unknown!";
-                throw new DAOException($msg, 1);
-        }
-        if($autoFetchColumns) {
-            $DAO->fetchColumns();
-        }
-        return $DAO;
-    }
 }
