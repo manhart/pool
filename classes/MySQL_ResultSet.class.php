@@ -115,11 +115,11 @@ class MySQL_ResultSet extends ResultSet
                 case 'DESCRIBE':
                 case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
                     //? ( z.B. UNION
-                    if ($this->db->numrows($result) > 0) {
+                    if ($this->db->numRows($result)) {
                         $this->rowset = $this->db->fetchRowSet($result, $callbackOnFetchRow, $metaData);
                         $this->reset();
                     }
-                    $this->db->freeresult($result);
+                    $this->db->freeResult($result);
                     break;
                 /** @noinspection PhpMissingBreakStatementInspection */
                 case 'INSERT'://DML commands
@@ -130,7 +130,7 @@ class MySQL_ResultSet extends ResultSet
                     ];
                 case 'UPDATE':
                 case 'DELETE':
-                    $affected_rows = $this->db->affectedrows();
+                    $affected_rows = $this->db->affectedRows();
                     $row = [//id of inserted record or number of rows
                         0 => $last_insert_id ?? $affected_rows,
                         'affected_rows' => $affected_rows
@@ -142,7 +142,7 @@ class MySQL_ResultSet extends ResultSet
             $result = true;
         }
         else {//statement failed
-            $error_msg = $e?->getMessage() ?? "{$this->db->getErrormsg()} SQL Statement failed: $sql";
+            $error_msg = $e?->getMessage() ?? "{$this->db->getErrorAsText()} SQL Statement failed: $sql";
             $this->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
             $error = $this->db->getError();
             $error['sql'] = $sql;

@@ -41,7 +41,6 @@ enum ConnectionMode: string
 }
 
 
-
 /**
  * MySQLi_Interface
  *
@@ -173,10 +172,7 @@ class MySQLi_Interface extends DataInterface
     }
 
     /**
-     * when using clusters moves random hosts from $this->available_hosts to $this->hosts
-     *
-     * @param ConnectionMode|null $connectionMode
-     * @return int number of remaining alternative hosts
+     * When using clusters moves random hosts from $this->available_hosts to $this->hosts
      * @throws Exception
      */
     private function __findHostForConnection(ConnectionMode $connectionMode = null): int
@@ -212,9 +208,6 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Ermittelt, ob noch Master-/Slave Hosts zur Verfuegung stehen
-     *
-     * @param ConnectionMode $mode
-     * @return boolean
      */
     function hasAnotherHost(ConnectionMode $mode): bool
     {
@@ -226,11 +219,10 @@ class MySQLi_Interface extends DataInterface
     private array $authentications = [];
 
     /**
-     * MySQL_Interface::__get_auth()
      * Liest die Authentication-Daten aus Array und gibt sie als Array zurueck
      *
      * @param ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
-     * @return Array mit Key username und password
+     * @return array mit Key username und password
      * @throws Exception
      */
     private function __get_auth(ConnectionMode $mode): array
@@ -248,9 +240,6 @@ class MySQLi_Interface extends DataInterface
     }
 
     /**
-     * __get_db_conid()
-     * Stellt eine MySQL Verbindung her. Falls die Verbindungs-Kennung bereits existiert,
-     * wird die vorhandene Verbindung verwendet (Resourcen-Sharing)
      *
      * @param $database string Datenbank
      * @param ConnectionMode $mode string Lese- oder Schreibmodus
@@ -268,9 +257,6 @@ class MySQLi_Interface extends DataInterface
     }
 
     /**
-     * @param ConnectionMode $mode
-     * @param string $database
-     * @return mysqli
      * @throws Exception
      */
     private function openNewDBConnection(ConnectionMode $mode, string $database): mysqli
@@ -313,8 +299,6 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Baut eine Verbindung zur Datenbank auf.
-     *
-     * @param string $database Datenbank
      * @throws Exception
      */
     public function open(string $database = ''): bool
@@ -328,10 +312,6 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Ueberprueft ob eine MySQL Verbindung besteht und baut verloren gegangene Verbindung wieder auf (bis PHP 5.0.13)
-     *
-     * @param string $database Datenbank
-     * @param ConnectionMode $mode Lese- oder Schreibmodus
-     * @return boolean Gibt TRUE/FALSE zurueck
      */
     public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
     {
@@ -345,9 +325,7 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Closes all connections and clears them from the register
-     *
-     * @return boolean true
-     **/
+     */
     public function close(): bool
     {
         $readConnections = &$this->connections[ConnectionMode::READ->value];
@@ -377,12 +355,9 @@ class MySQLi_Interface extends DataInterface
      * Gets a conid and saves it to last_connect_id<br>
      * Updates last command on success
      *
-     * @param string $query SQL-Statement
-     * @param string $database Datenbankname (default '')
-     * @return bool|mysqli_result Erfolgsstatus
-     * @throws Exception
+     * @throws \Exception
      * @see MySQLi_Interface::__get_db_conid
-     **/
+     */
     public function query(string $query, string $database = ''): mysqli_result|bool
     {
         //Store query in attribute
@@ -422,21 +397,16 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Returns the first command of the most recently executed statement in uppercase e.g. SELECT
-     *
-     * @return string
      */
-    function getLastSQLCommand()
+    public function getLastSQLCommand(): string
     {
         return $this->last_command;
     }
 
     /**
      * Anzahl gefundener Datensaetze (Rows)
-     *
-     * @param mysqli_result|false $query_result Query Ergebnis-Kennung
-     * @return integer Bei Erfolg einen Integer, bei Misserfolg false
-     **/
-    public function numrows($query_result = false)
+     */
+    public function numRows($query_result = false)
     {
         if (!$query_result)//try object property
             $query_result = $this->query_result ?? false;
@@ -448,48 +418,35 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Anzahl betroffener Datensaetze (Rows) der letzen SQL Abfrage
-     *
-     * @access public
-     * @return integer Bei Erfolg einen Integer Wert, bei Misserfolg false
-     **/
-    function affectedrows()
+     */
+    public function affectedRows(): int|false
     {
         return ($this->last_connect_id) ? mysqli_affected_rows($this->last_connect_id) : false;
     }
 
     /**
      * Ermittelt die Spaltenanzahl einer SQL Abfrage
-     *
-     * @param false|mysqli_result $query_result Query Ergebnis-Kennung
-     * @return integer Bei Erfolg einen Integer Wert, bei Misserfolg false
-     **/
-    public function numFields(false|mysqli_result $query_result = false):int
+     */
+    public function numFields(false|mysqli_result $query_result = false): int
     {
         $query_result = $query_result ?: $this->query_result ?? false;
         return $query_result instanceof mysqli_result ? mysqli_num_fields($query_result) : 0;
     }
 
     /**
-     * Liefert den Namen eines Feldes in einem Ergebnis
-     * Seems to be broken ^^
-     * @param int $offset Feldindex
-     * @param int $query_id Query Ergebnis-Kennung
-     * @return string Bei Erfolg Feldnamen, bei Misserfolg false
-     **/
-    public function fieldName(int $offset, int $query_id = 0):bool
+     * Set result pointer to a specified field offset
+     */
+    public function fieldSeek(int $index, false|mysqli_result $query_result = false): bool
     {
-        $query_id = $query_id ?: $this->query_result ?? 0;
-        return $query_id && mysqli_field_seek($query_id, $offset);
+        $query_result = $query_result ?: $this->query_result ?? false;
+        return $query_result instanceof mysqli_result && mysqli_field_seek($query_result, $index);
     }
 
     /**
      * Liefert den Typ eines Feldes in einem Ergebnis
      * Seems to be broken ^^
-     * @param int $offset Feldindex
-     * @param int $query_id Query Ergebnis-Kennung
-     * @return string Bei Erfolg Feldtyp, bei Misserfolg false
-     **/
-    public function fieldtype(int $offset, int $query_id = 0): false|object
+     */
+    public function fieldType(int $offset, int $query_id = 0): false|object
     {
         $query_id = $query_id ?: $this->query_result ?? 0;
         return ($query_id) ? mysqli_fetch_field_direct($query_id, $offset) : false;
@@ -497,24 +454,15 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Liefert einen Datensatz als assoziatives Array und indiziertes Array
-     *
-     * @param integer $query_id Query Ergebnis-Kennung
-     * @return array Datensatz in einem assoziativen Array
-     **/
-    public function fetchRow($query_resource = false): false|array
+     */
+    public function fetchRow(false|mysqli_result $query_result = false): array|null|false
     {
-        $query_resource = $query_resource ?: $this->query_result;
-        return $query_resource ?
-            mysqli_fetch_assoc($query_resource) : false;
+        $query_result = $query_result ?: $this->query_result;
+        return $query_result ? mysqli_fetch_assoc($query_result) : false;
     }
 
     /**
      * Liefert einen Datensatz als assoziatives Array und numerisches Array
-     *
-     * @param false|mysqli_result $query_result
-     * @param callable|null $callbackOnFetchRow
-     * @param array $metaData
-     * @return array Bei Erfolg ein Array mit allen Datensaetzen ($array[index]['feldname'])
      */
     public function fetchRowSet(false|mysqli_result $query_result = false, ?callable $callbackOnFetchRow = null, array $metaData = []): array
     {
@@ -540,14 +488,9 @@ class MySQLi_Interface extends DataInterface
     }
 
     /**
-     * Liefert ein Objekt mit Feldinformationen aus einem Anfrageergebnis
-     *
-     * @param string $field Feldname
-     * @param integer $rowNum Feld-Offset
-     * @param false|mysqli_result|null $query_resource
-     * @return string Wert eines Feldes
+     * Retrieves the contents of one cell from a MySQLi result set.
      */
-    function fetchField(string $field, int $rowNum = -1, false|mysqli_result|null $query_resource = false):mixed
+    public function fetchField(string $field, int $rowNum = -1, false|mysqli_result|null $query_resource = false): mixed
     {
         $query_resource = $query_resource ?: $this->query_result;
         if ($rowNum <= -1 || !$query_resource)
@@ -556,27 +499,18 @@ class MySQLi_Interface extends DataInterface
     }
 
     /**
-     * Wrapper function fuer die fruehere mysql_result
-     *
-     * @param mysqli_result $query_result
-     * @param int $rowNum
-     * @param int|string $field
-     * @return mixed
+     * Retrieves the contents of one cell from a MySQLi result set.
      */
     private function mysqli_result(mysqli_result $query_result, int $rowNum, int|string $field = 0): mixed
     {
         return mysqli_data_seek($query_result, $rowNum)//nice staged execution
-        && ($row = mysqli_fetch_array($query_result))
-        && array_key_exists($field, $row) ?
-            $row[$field] : false;
+            && ($row = mysqli_fetch_array($query_result))
+            && array_key_exists($field, $row) ?
+                $row[$field] : false;
     }
 
     /**
-     * Bewegt den internen Ergebnis-Zeiger
-     *
-     * @param integer $rowNum Datensatznummer
-     * @param mysqli_result|null $query_id Query Ergebnis-Kennung
-     * @return boolean Bei Erfolg true, bei Misserfolg false
+     * Adjusts the result pointer to an arbitrary row in the result
      */
     public function rowSeek(int $rowNum, mysqli_result $query_id = null): bool
     {
@@ -586,12 +520,11 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * Liefert die ID einer vorherigen INSERT-Operation.
-     *
      * Hinweis:
      * mysql_insert_id() konvertiert den Typ der Rueckgabe der nativen MySQL C API Funktion mysql_insert_id() in den Typ long (als int in PHP bezeichnet). Falls Ihre AUTO_INCREMENT Spalte vom Typ BIGINT ist, ist der Wert den mysql_insert_id() liefert, nicht korrekt. Verwenden Sie in diesem Fall stattdessen die MySQL interne SQL Funktion LAST_INSERT_ID() in einer SQL-Abfrage
      *
-     * @return integer Bei Erfolg die letzte ID einer INSERT-Operation
-     **/
+     * @return false|int|string Bei Erfolg die letzte ID einer INSERT-Operation
+     */
     public function nextId(): false|int|string
     {
         return ($this->last_connect_id) ? mysqli_insert_id($this->last_connect_id) : false;
@@ -601,15 +534,16 @@ class MySQLi_Interface extends DataInterface
      * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurück.
      *
      * @return int Anzahl Zeilen
+     * @throws \Exception
      */
-    function foundRows()
+    public function foundRows(): int
     {
         $sql = 'SELECT FOUND_ROWS() as foundRows';
         $query_id = $this->query($sql);
         if (!$query_id)
             return 0;
         $foundRows = $this->fetchField('foundRows', 0, $query_id);
-        $this->freeresult($query_id);
+        $this->freeResult($query_id);
         assert(is_int($foundRows));
         return $foundRows;
     }
@@ -624,7 +558,6 @@ class MySQLi_Interface extends DataInterface
      * $array['Default'][index]
      * $array['Extra'][index]
      *
-     * @access public
      * @param $table
      * @param $database
      * @param $fields
@@ -632,7 +565,7 @@ class MySQLi_Interface extends DataInterface
      * @return array Liste mit Feldern ($array['name'][index], etc.)
      * @throws Exception
      */
-    function listfields($table, $database, &$fields, &$pk): array
+    public function listfields($table, $database, &$fields, &$pk): array
     {
         $rows = [];
 
@@ -667,65 +600,48 @@ SQL;
                     $pk[] = $row['COLUMN_NAME'];
                 }
             }
-            $this->freeresult($result);
+            $this->freeResult($result);
         }
 
         return $rows;
     }
 
     /**
-     * get information about one column
+     * Get information about a column
      *
-     * @param string $database
-     * @param string $table
-     * @param string $field
-     * @return array
-     * @throws Exception
+     * @throws \Exception
      */
-    public function listfield(string $database, string $table, string $field): array
+    public function getColumnMetadata(string $database, string $table, string $field): array
     {
-        $row = [];
-        $result = mysqli_query($this->__get_db_conid($database, ConnectionMode::READ),
-            'SHOW COLUMNS FROM `' . $table . '` like \''.$field.'\'', MYSQLI_STORE_RESULT);
-        if(mysqli_num_rows($result) > 0) {
-            $row = mysqli_fetch_assoc($result);
+        if(!$database || !$table || !$field) {
+            throw new \pool\classes\Exception\InvalidArgumentException('Database, table and field names must be non-empty strings.');
         }
-        $this->freeresult($result);
+
+        $result = mysqli_query($this->__get_db_conid($database, ConnectionMode::READ),
+            "SHOW COLUMNS FROM `$table` like '$field'");
+        $row = [];
+        if(mysqli_num_rows($result)) $row = mysqli_fetch_assoc($result);
+        $this->freeResult($result);
         return $row;
     }
 
     /**
-     * Gibt belegten Speicher wieder frei
-     * Die Funktion muss nur dann aufgerufen werden, wenn Sie sich bei Anfragen, die grosse Ergebnismengen liefern, Sorgen
-     * ueber den Speicherverbrauch zur Laufzeit des PHP-Skripts machen. Nach Ablauf des PHP-Skripts wird der Speicher ohnehin
-     * freigegeben.
+     * Frees the memory associated with a result
      *
      * @param false|mysqli_result $query_result Query Ergebnis-Kennung
-     * @return boolean Bei Erfolg true, bei Misserfolg false
-     **/
-    public function freeresult(false|mysqli_result $query_result = false):bool
+     * @return void Bei Erfolg true, bei Misserfolg false
+     */
+    public function freeResult(false|mysqli_result $query_result = false): void
     {
-        $result = $query_result ?: $this->query_result;
-        $hasResult = $result instanceof mysqli_result;
-        if ($hasResult
-            // attention: xdebug shows strange error messages: Can't fetch mysqli_result
-            && (!function_exists('xdebug_is_debugger_active') || !xdebug_is_debugger_active()))
-            mysqli_free_result($result);
-        return $hasResult;
+        $query_result = $query_result ?: $this->query_result;
+        if($query_result) mysqli_free_result($query_result);
     }
 
     /**
-     * Liefert den Fehlertext der zuvor ausgefuehrten MySQL Operation und liefert die Nummer einer Fehlermeldung
-     * einer zuvor ausgefuehrten MySQL Operation
-     *
-     * Ergebnis:
-     * $array['message']
-     * $array['code']
-     *
-     * @access public
+     * Returns the mysqli error of the last executed query
      * @return array
-     **/
-    function getError(): array
+     */
+    public function getError(): array
     {
         return [
             'message' => mysqli_error($this->last_connect_id),
@@ -738,22 +654,24 @@ SQL;
      * einer zuvor ausgefuehrten MySQL Operation
      * @return string Fehlercode + ': ' + Fehlertext
      **/
-     public function getErrormsg():string
+    public function getErrorAsText(): string
     {
         $result = $this->getError();
         return "{$result["code"]}: {$result["message"]}";
     }
 
     /** Mit diesem Schalter werden alle Lesevorgänge auf die Backenddatenbank umgeleitet. **/
-    public function enable_force_backend()
+    public function forceMasterRead(): static
     {
         $this->force_backend_read = true;
+        return $this;
     }
 
     /** Deaktiviert Lesevorgänge auf der Backenddatenbank. **/
-    public function disable_force_backend()
+    public function disableMasterRead(): static
     {
         $this->force_backend_read = false;
+        return $this;
     }
 
     /**
@@ -761,22 +679,12 @@ SQL;
      *
      * @param string $string Text
      * @return string Maskierter Text
-     * @throws Exception unable to acquire a database connection
+     * @throws \Exception
      */
     public function escapeString(string $string, $database = ''): string
     {
         $connection = $this->__get_db_conid($database, ConnectionMode::READ);
         return mysqli_real_escape_string($connection, $string);
-    }
-
-    /**
-     * Liefert eine Zeichenkette mit der Version der Client-Bibliothek.
-     *
-     * @return string
-     */
-    function getClientInfo()
-    {
-        return mysqli_get_client_info();
     }
 
     /**
@@ -786,11 +694,9 @@ SQL;
      * @param resource|null $conid Verbindungs-ID/Resource
      * @return boolean
      */
-    function _setNames(string $charset_name, $conid = null): bool
+    private function _setNames(string $charset_name, $conid = null): bool
     {
         return $conid instanceof mysqli && mysqli_set_charset($conid, $charset_name);
         // return mysql_query('SET NAMES \''.$charset_name.'\'', $conid);
     }
-
-
 }
