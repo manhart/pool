@@ -216,7 +216,7 @@ class MySQLi_Interface extends DataInterface
      * @param ConnectionMode $mode
      * @return boolean
      */
-    function hasAnotherHost(ConnectionMode $mode): bool
+    private function hasAnotherHost(ConnectionMode $mode): bool
     {
         return (is_array($hosts = $this->available_hosts[$mode->value]??0)
             && sizeof($hosts)>0);
@@ -463,7 +463,7 @@ class MySQLi_Interface extends DataInterface
      * @param false|mysqli_result $query_result Query Ergebnis-Kennung
      * @return integer Bei Erfolg einen Integer Wert, bei Misserfolg false
      **/
-    public function numFields(false|mysqli_result $query_result = false):int
+    private function numFields(false|mysqli_result $query_result = false):int
     {
         $query_result = $query_result ?: $this->query_result ?? false;
         return $query_result instanceof mysqli_result ? mysqli_num_fields($query_result) : 0;
@@ -476,7 +476,7 @@ class MySQLi_Interface extends DataInterface
      * @param int $query_id Query Ergebnis-Kennung
      * @return string Bei Erfolg Feldnamen, bei Misserfolg false
      **/
-    public function fieldName(int $offset, int $query_id = 0):bool
+    private function fieldName(int $offset, int $query_id = 0):bool
     {
         $query_id = $query_id ?: $this->query_result ?? 0;
         return $query_id && mysqli_field_seek($query_id, $offset);
@@ -489,7 +489,7 @@ class MySQLi_Interface extends DataInterface
      * @param int $query_id Query Ergebnis-Kennung
      * @return string Bei Erfolg Feldtyp, bei Misserfolg false
      **/
-    public function fieldtype(int $offset, int $query_id = 0): false|object
+    private function fieldtype(int $offset, int $query_id = 0): false|object
     {
         $query_id = $query_id ?: $this->query_result ?? 0;
         return ($query_id) ? mysqli_fetch_field_direct($query_id, $offset) : false;
@@ -501,7 +501,7 @@ class MySQLi_Interface extends DataInterface
      * @param integer $query_id Query Ergebnis-Kennung
      * @return array Datensatz in einem assoziativen Array
      **/
-    public function fetchRow($query_resource = false): false|array
+    private function fetchRow($query_resource = false): false|array
     {
         $query_resource = $query_resource ?: $this->query_result;
         return $query_resource ?
@@ -578,7 +578,7 @@ class MySQLi_Interface extends DataInterface
      * @param mysqli_result|null $query_id Query Ergebnis-Kennung
      * @return boolean Bei Erfolg true, bei Misserfolg false
      */
-    public function rowSeek(int $rowNum, mysqli_result $query_id = null): bool
+    private function rowSeek(int $rowNum, mysqli_result $query_id = null): bool
     {
         $query_id = $query_id ?: $this->query_result;
         return $query_id && mysqli_data_seek($query_id, $rowNum);
@@ -774,7 +774,7 @@ SQL;
      *
      * @return string
      */
-    function getClientInfo()
+    private function getClientInfo()
     {
         return mysqli_get_client_info();
     }
@@ -786,7 +786,7 @@ SQL;
      * @param resource|null $conid Verbindungs-ID/Resource
      * @return boolean
      */
-    function _setNames(string $charset_name, $conid = null): bool
+    private function _setNames(string $charset_name, $conid = null): bool
     {
         return $conid instanceof mysqli && mysqli_set_charset($conid, $charset_name);
         // return mysql_query('SET NAMES \''.$charset_name.'\'', $conid);
