@@ -209,7 +209,7 @@ class MySQLi_Interface extends DataInterface
     /**
      * Ermittelt, ob noch Master-/Slave Hosts zur Verfuegung stehen
      */
-    function hasAnotherHost(ConnectionMode $mode): bool
+    private function hasAnotherHost(ConnectionMode $mode): bool
     {
         return (is_array($hosts = $this->available_hosts[$mode->value]??0)
             && sizeof($hosts)>0);
@@ -427,7 +427,7 @@ class MySQLi_Interface extends DataInterface
     /**
      * Ermittelt die Spaltenanzahl einer SQL Abfrage
      */
-    public function numFields(false|mysqli_result $query_result = false): int
+    private function numFields(false|mysqli_result $query_result = false): int
     {
         $query_result = $query_result ?: $this->query_result ?? false;
         return $query_result instanceof mysqli_result ? mysqli_num_fields($query_result) : 0;
@@ -436,7 +436,7 @@ class MySQLi_Interface extends DataInterface
     /**
      * Set result pointer to a specified field offset
      */
-    public function fieldSeek(int $index, false|mysqli_result $query_result = false): bool
+    private function fieldSeek(int $index, false|mysqli_result $query_result = false): bool
     {
         $query_result = $query_result ?: $this->query_result ?? false;
         return $query_result instanceof mysqli_result && mysqli_field_seek($query_result, $index);
@@ -446,7 +446,7 @@ class MySQLi_Interface extends DataInterface
      * Liefert den Typ eines Feldes in einem Ergebnis
      * Seems to be broken ^^
      */
-    public function fieldType(int $offset, int $query_id = 0): false|object
+    private function fieldType(int $offset, int $query_id = 0): false|object
     {
         $query_id = $query_id ?: $this->query_result ?? 0;
         return ($query_id) ? mysqli_fetch_field_direct($query_id, $offset) : false;
@@ -455,7 +455,7 @@ class MySQLi_Interface extends DataInterface
     /**
      * Liefert einen Datensatz als assoziatives Array und indiziertes Array
      */
-    public function fetchRow(false|mysqli_result $query_result = false): array|null|false
+    private function fetchRow(false|mysqli_result $query_result = false): array|null|false
     {
         $query_result = $query_result ?: $this->query_result;
         return $query_result ? mysqli_fetch_assoc($query_result) : false;
@@ -512,7 +512,7 @@ class MySQLi_Interface extends DataInterface
     /**
      * Adjusts the result pointer to an arbitrary row in the result
      */
-    public function rowSeek(int $rowNum, mysqli_result $query_id = null): bool
+    private function rowSeek(int $rowNum, mysqli_result $query_id = null): bool
     {
         $query_id = $query_id ?: $this->query_result;
         return $query_id && mysqli_data_seek($query_id, $rowNum);
@@ -685,6 +685,14 @@ SQL;
     {
         $connection = $this->__get_db_conid($database, ConnectionMode::READ);
         return mysqli_real_escape_string($connection, $string);
+    }
+
+    /**
+     * Liefert eine Zeichenkette mit der Version der Client-Bibliothek.
+     */
+    private function getClientInfo()
+    {
+        return mysqli_get_client_info();
     }
 
     /**
