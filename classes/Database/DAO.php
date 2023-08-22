@@ -31,6 +31,16 @@ abstract class DAO extends PoolObject
     public const DAO_NO_ESCAPE = 2;
 
     /**
+     * @var string name of the interface type (must be declared in derived class)
+     */
+    protected string $interfaceType ;
+
+    /**
+     * @var string name of the database (must be declared in derived class)
+     */
+    protected string $databaseName;
+
+    /**
      * Table meta data
      *
      * @var array
@@ -246,17 +256,16 @@ abstract class DAO extends PoolObject
      * extract definitions of the table variable
      *
      * @param string $tableDefine
-     * @param string $interfaceType
-     * @param string $dbname
-     * @param string $table
+     * @return array
      */
-    static function extractTabledefine(string $tableDefine, string &$interfaceType, string &$dbname, string &$table): void
+    static function extractTableDefine(string $tableDefine): array
     {
         global $$tableDefine;
         $tableDefine = $$tableDefine;
-        $interfaceType = $tableDefine[0] ?? '';
-        $dbname = $tableDefine[1] ?? '';
-        $table = $tableDefine[2] ?? '';
+        $interfaceType = $tableDefine[0] ?? null;
+        $dbname = $tableDefine[1] ?? null;
+        $table = $tableDefine[2] ?? null;
+        return [$interfaceType, $dbname, $table];
     }
 
     /**
@@ -267,17 +276,28 @@ abstract class DAO extends PoolObject
     /**
      * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
      *
-     * @param string $tableDefine Tabellendefinition (siehe database.inc.php)
-     * @param null $interface
+     * @param string $tableDefineOrClass Tabellendefinition (siehe database.inc.php)
+     * @param \pool\classes\Database\DataInterface|array|null $interface
      * @param bool $autoFetchColumns
      * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
-     *
-     * @throws DAOException
+     * @todo add DAO class as first parameter, tableDefine as second parameter
      */
-    public static function createDAO(string $tableDefine, DataInterface|array|null $interface = null, bool $autoFetchColumns = false): DAO
+    public static function createDAO(string $tableDefineOrClass, DataInterface|array|null $interface = null, bool $autoFetchColumns = false): DAO
     {
-        $type = $dbname = $table = '';
-        self::extractTabledefine($tableDefine, $type, $dbname, $table);
+        // class stuff
+        if(class_exists($tableDefineOrClass)) {
+            $DAO = new $tableDefineOrClass($interface);
+            if($autoFetchColumns) {
+                $DAO->fetchColumns();
+            }
+            return $DAO;
+        }
+
+        // tableDefine stuff
+        if(!global_exists($tableDefineOrClass)) {
+            throw new DAOException("Fatal error: Table definition $tableDefineOrClass is missing in the database.inc.php!", 1);
+        }
+        [$type, $dbname, $table] = self::extractTableDefine($tableDefineOrClass);
 
         // Interface Objekt
         $interface = $interface ?? Weblication::getInstance()->getInterfaces();
@@ -294,12 +314,8 @@ abstract class DAO extends PoolObject
                 /** @var $type DataInterface */
                 $driver = $type::getDriverName();
                 $dir = addEndingSlash(DIR_DAOS_ROOT) . "$driver/$dbname";
-                $include = "$dir/$table.class.php";
+                $include = "$dir/$table.php";
                 $file_exists = file_exists($include);
-                if(!$class_exists && !$file_exists) {
-                    $include = "$dir/$table.php";
-                    $file_exists = file_exists($include);
-                }
                 if(!$class_exists && $file_exists) {
                     require_once $include;
                     $class_exists = true;
@@ -316,13 +332,7 @@ abstract class DAO extends PoolObject
                 break;
 
             default:
-                if($table) {
-                    $msg = "Fatal error: DataInterface type $type of table definition $tableDefine unknown!";
-                }
-                else {
-                    $msg = "Fatal error: Table definition $tableDefine is missing in the database.inc.php!";
-                }
-
+                $msg = "Fatal error: DataInterface type $type of table definition $tableDefineOrClass unknown!";
                 throw new DAOException($msg, 1);
         }
         if($autoFetchColumns) {
