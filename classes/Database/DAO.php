@@ -142,10 +142,10 @@ abstract class DAO extends PoolObject
      *
      * @param string|null $tableName Tabellendefinition (siehe database.inc.php)
      * @param string|null $databaseName <
-     * @param \pool\classes\Database\DataInterface|null $interface
+     * @param \pool\classes\Database\DataInterface|null $DataInterface
      * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
      */
-    public static function createDAO(?string $tableName = null, ?string $databaseName = null, DataInterface|null $interface = null): static
+    public static function createDAO(?string $tableName = null, ?string $databaseName = null, DataInterface|null $DataInterface = null): static
     {
         $workaround = false;
         // @todo remove workaround once relying projects are fixed
@@ -156,7 +156,7 @@ abstract class DAO extends PoolObject
 
         // class stuff
         if(!$tableName) {
-            return new static($interface);
+            return new static($DataInterface);
         }
         elseif(static::$tableName) {
             throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
@@ -164,11 +164,11 @@ abstract class DAO extends PoolObject
         else {
             // workaround
             $className = static::class === DAO::class ? CustomMySQL_DAO::class : static::class;
-            $interface = $interface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
+            $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
             if($workaround) {
                 $class_exists = class_exists($tableName, false);
 
-                $driver = $interface::getDriverName();
+                $driver = $DataInterface::getDriverName();
                 $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
                 $include = "$dir/$tableName.php";
                 $file_exists = file_exists($include);
@@ -177,11 +177,11 @@ abstract class DAO extends PoolObject
                     $class_exists = true;
                 }
                 if($class_exists) {
-                    return new $tableName($interface, $databaseName, $tableName);
+                    return new $tableName($DataInterface, $databaseName, $tableName);
                 }
             }
 
-            $DAO = new $className($interface, $databaseName, $tableName);
+            $DAO = new $className($DataInterface, $databaseName, $tableName);
             $DAO->fetchColumns();
             return $DAO;
         }
