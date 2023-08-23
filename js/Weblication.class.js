@@ -55,9 +55,9 @@ class Weblication
     }
 
     /**
-     * register module
+     * Register module
      *
-     * @param GUI_Module Module
+     * @param {GUI_Module} Module
      * @returns {Weblication}
      */
     registerModule(Module)
@@ -72,9 +72,9 @@ class Weblication
     }
 
     /**
-     * unregister module
+     * Unregister module
      *
-     * @param GUI_Module Module
+     * @param {GUI_Module} Module
      * @returns {Weblication}
      */
     unregisterModule(Module)
