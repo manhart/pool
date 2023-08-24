@@ -170,7 +170,7 @@ class MySQL_DAO extends DAO
     /**
      * @var string|null name of the default interface type for mysql
      */
-    protected static ?string $interfaceType = MySQLi_Interface::class;
+    protected static ?string $interfaceType = DataInterface::class;
 
     /**
      * @var string contains the columns to select

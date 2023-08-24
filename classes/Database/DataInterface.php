@@ -1,56 +1,22 @@
 <?php
-/**
- * # PHP Object Oriented Library (POOL) #
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Class MySQLi_Interface ist ein Datenbank-Layer fuer MySQLi.
- * Diese Klasse implementiert die Schnittstelle zu MySQL. Ueber
- * sie ist der Aufbau einer Verbindung moeglich. Sie behandelt
- * alle MySQL spezifischen PHP API Befehle (z.B. mysqli_connect).
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Dabei kapselt sie nicht nur einfach die API Befehle, sondern
- * beherrscht eine komplette Verbindungskennung-Verwaltung
- * zum Resourcen-Sharing.
- * Sie liefert eine Statistik ueber Anzahl der ausgefuehrten
- * Queries in einem Script, hilft beim Debug durch den Log des
- * zuletzt ausgefuehrten SQL Statements und das geilste:
- * sie kann mit einer Cluster-Datenbank, die in ein
- * Schreib und Lese-Cluster aufgeteilt ist, umgehen!!!
- *
- * Verbindungen werden nur einmalig geoffnet und am Ende
- * der Script Ausfuehrung ueber MySQL_Interface::close
- * geschlossen.
- *
- *
- * @version $Id: MySQLi_Interface.class.php 38690 2019-09-03 15:08:59Z manhart $
- * @version $Revision: 38690 $
- *
- * @see DataInterface.class.php
- * @since 2019/02/28
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://www.manhart-it.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
-use pool\classes\Database\DataInterface;
+namespace pool\classes\Database;
+
+use Exception;
+use mysqli;
+use mysqli_result;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Utils\Singleton;
 
-enum ConnectionMode: string
-{
-    case READ = 'READ';
-    case WRITE = 'WRITE';
-}
-
-
-/**
- * MySQLi_Interface
- *
- * MySQL Datenbank Layer (Schnittstelle zum MySQL Server)
- *
- * @package pool
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @version $Id: MySQLi_Interface.class.php 38690 2019-09-03 15:08:59Z manhart $
- **/
-class MySQLi_Interface extends DataInterface
+class DataInterface
 {
     /**
      * @var array<string, int> available cluster modes <br>
@@ -59,8 +25,8 @@ class MySQLi_Interface extends DataInterface
     private array $modes = [ConnectionMode::READ->value => 0, ConnectionMode::WRITE->value => 1];
 
     private array $commands = ['SELECT', 'SHOW', 'INSERT', 'UPDATE', 'DELETE', 'EXPLAIN', 'ALTER', 'CREATE', 'DROP', 'RENAME',
-            'CALL', 'REPLACE', 'TRUNCATE', 'LOAD', 'HANDLER', 'DESCRIBE', 'START', 'COMMIT', 'ROLLBACK',
-            'LOCK', 'SET', 'STOP', 'RESET', 'CHANGE', 'PREPARE', 'EXECUTE', 'DEALLOCATE', 'DECLARE', 'OPTIMIZE'];
+        'CALL', 'REPLACE', 'TRUNCATE', 'LOAD', 'HANDLER', 'DESCRIBE', 'START', 'COMMIT', 'ROLLBACK',
+        'LOCK', 'SET', 'STOP', 'RESET', 'CHANGE', 'PREPARE', 'EXECUTE', 'DEALLOCATE', 'DECLARE', 'OPTIMIZE'];
 
     /** Letzter benutzer MySQL Link */
     private ?mysqli $last_connect_id;
@@ -69,13 +35,13 @@ class MySQLi_Interface extends DataInterface
     public string $last_Query; // for pray to see the active/last sql statement;
 
     /** Saves fetched Mysql results */
-    private array $row = array();
+    private array $row = [];
 
     /** Saves fetched Mysql row-sets */
-    private array $rowset = array();
+    private array $rowset = [];
 
     /** Anzahl insgesamt ausgeführter Queries */
-    private int$num_queries = 0;
+    private int $num_queries = 0;
 
     /** Anzahl insgesamt ausgeführter Lesevorgänge */
     private int $num_local_queries = 0;
@@ -84,7 +50,7 @@ class MySQLi_Interface extends DataInterface
     private int $num_remote_queries = 0;
 
     /** Enthält ein Array bestehend aus zwei Hosts für Lese- und Schreibvorgänge. Sie werden für die Verbindungsherstellung genutzt. */
-    private array $hosts = array();
+    private array $hosts = [];
 
     /**
      * Enthält den Variablennamen des Authentication-Arrays; Der Variablenname wird vor dem Connect aufgelöst;
@@ -96,7 +62,7 @@ class MySQLi_Interface extends DataInterface
     private array $connections = [ConnectionMode::READ->value => [], ConnectionMode::WRITE->value => []];
 
     /** Alle verfügbaren Master u. Slave Hosts */
-    var string|array $available_hosts = array();
+    var string|array $available_hosts = [];
 
     /**
      * Erzwingt Lesevorgänge über den Master-Host für Schreibvorgänge
@@ -127,7 +93,23 @@ class MySQLi_Interface extends DataInterface
     const MAX_DATETIME = '9999-12-31 23:59:59';
 
     /**
-     * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access objects
+     * factory method to create a data interface
+     *
+     * @param array $connectionOptions
+     * @param string|null $interfaceType
+     * @return DataInterface
+     */
+    public static function createDataInterface(array $connectionOptions, ?string $interfaceType = null): DataInterface
+    {
+        $DataInterface = $interfaceType? new $interfaceType() : new static();
+        assert($DataInterface instanceof DataInterface);
+        $DataInterface->setOptions($connectionOptions);
+        return $DataInterface;
+    }
+
+    /**
+     * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access
+     *     objects
      */
     public static function getDriverName(): string
     {
@@ -157,15 +139,15 @@ class MySQLi_Interface extends DataInterface
         $this->default_database = $connectionOptions['database'] ??
             throw new MissingArgumentException('MySQL_Interface::setOptions Bad Packet: no key "database"');
 
-        if (array_key_exists('port', $connectionOptions))
+        if(array_key_exists('port', $connectionOptions))
             $this->port = $connectionOptions['port'];
 
-        if (array_key_exists('charset', $connectionOptions))
+        if(array_key_exists('charset', $connectionOptions))
             $this->default_charset = $connectionOptions['charset'];
 
         $this->auth = $connectionOptions['auth'] ?? 'mysql_auth';// fallback verwendet zentrale, globale Authentifizierung
 
-        /* @noinspection PhpUnhandledExceptionInspection no connection is attempted*/
+        /* @noinspection PhpUnhandledExceptionInspection no connection is attempted */
         $this->__findHostForConnection();
 
         return true;
@@ -173,29 +155,31 @@ class MySQLi_Interface extends DataInterface
 
     /**
      * When using clusters moves random hosts from $this->available_hosts to $this->hosts
+     *
      * @throws Exception
      */
     private function __findHostForConnection(ConnectionMode $connectionMode = null): int
     {
         $available_hosts =& $this->available_hosts;
         $alternativeHosts = 0;
-        if (is_array($available_hosts))
+        if(is_array($available_hosts))
             /** Multiple Clusters: move one random host to the hosts list*/
-            foreach ($this->modes as $clusterMode => $clusterModeSpecificIndexUsedInAvailableHosts) {
+            foreach($this->modes as $clusterMode => $clusterModeSpecificIndexUsedInAvailableHosts) {
                 /** @var array|null $hostList reference to hosts available in this mode */
                 $hostList =& $available_hosts[$clusterMode];
-                if ((!$connectionMode || $connectionMode == $clusterMode) && $hostList) {//targeting that specific mode or no specific one
+                if((!$connectionMode || $connectionMode == $clusterMode) && $hostList) {//targeting that specific mode or no specific one
                     $key = array_rand($hostList);//changed from random int-key
                     $host = $hostList[$key];
                     unset($hostList[$key]);//remove option
-                    if ($clusterMode == ConnectionMode::READ)//is this just an error in the original code?
+                    if($clusterMode == ConnectionMode::READ)//is this just an error in the original code?
                         $hostList = array_values($hostList);//reindex; should be unnecessary with array_rand
                     $alternativeHosts += sizeof($hostList);
-                } else//requested connectionMode isn't matching clusterMode or the cluster mode has no remaining hosts
+                }
+                else//requested connectionMode isn't matching clusterMode or the cluster mode has no remaining hosts
                     // no clue what's going on here I presume this fetches a default
                     $host = $available_hosts[$clusterModeSpecificIndexUsedInAvailableHosts] ?? false;
 
-                if ($host) $this->hosts[$clusterMode] = $host;
+                if($host) $this->hosts[$clusterMode] = $host;
             }
         else /**Ein MySQL Server fuer Lesen und Schreiben*/
             $this->hosts = [
@@ -211,17 +195,16 @@ class MySQLi_Interface extends DataInterface
      */
     private function hasAnotherHost(ConnectionMode $mode): bool
     {
-        return (is_array($hosts = $this->available_hosts[$mode->value]??0)
-            && sizeof($hosts)>0);
+        return (is_array($hosts = $this->available_hosts[$mode->value] ?? 0)
+            && sizeof($hosts) > 0);
     }
-
 
     private array $authentications = [];
 
     /**
      * Liest die Authentication-Daten aus Array und gibt sie als Array zurueck
      *
-     * @param ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
+     * @param \pool\classes\Database\ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
      * @return array mit Key username und password
      * @throws Exception
      */
@@ -236,21 +219,19 @@ class MySQLi_Interface extends DataInterface
         $hostname = $this->hosts[$mode->value];//normalize mode for lookup
         return $auth[$hostname] ??//now testing hostname that is returned instead of reading-host
             throw new Exception("MySQL access denied! No authentication data available (Database: $hostname Mode: $mode->value).");
-
     }
 
     /**
-     *
      * @param $database string Datenbank
-     * @param ConnectionMode $mode string Lese- oder Schreibmodus
+     * @param \pool\classes\Database\ConnectionMode $mode string Lese- oder Schreibmodus
      * @return mysqli Gibt Resource der MySQL Verbindung zurueck
      * @throws Exception
      */
     private function __get_db_conid(string $database, ConnectionMode $mode): mysqli
     {
-        if (!($database || ($database = $this->default_database))) //No DB specified
+        if(!($database || ($database = $this->default_database))) //No DB specified
             throw new Exception('No database selected (__get_db_conid)!');
-        if ($this->hosts[ConnectionMode::READ->value] == $this->hosts[ConnectionMode::WRITE->value])
+        if($this->hosts[ConnectionMode::READ->value] == $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as WRITE
         return $this->connections[$mode->value][$database] ?? //fetch from cache
             $this->openNewDBConnection($mode, $database);
@@ -292,19 +273,20 @@ class MySQLi_Interface extends DataInterface
             return $this->openNewDBConnection($mode, $database);
         }
         else throw new Exception($mysqli_error ?? //no alternative host left
-                "MySQL connection to host '$host' with mode $mode->name failed!"
-                ." Used default database '$database' (MySQL ErrNo "
-                .mysqli_connect_errno().': '.mysqli_connect_error().')!');
+            "MySQL connection to host '$host' with mode $mode->name failed!"
+            ." Used default database '$database' (MySQL ErrNo "
+            .mysqli_connect_errno().': '.mysqli_connect_error().')!');
     }
 
     /**
      * Baut eine Verbindung zur Datenbank auf.
+     *
      * @throws Exception
      */
     public function open(string $database = ''): bool
     {
         $this->__get_db_conid($database, ConnectionMode::READ);
-        if ($this->hosts[ConnectionMode::READ->value] != $this->hosts[ConnectionMode::WRITE->value]) {
+        if($this->hosts[ConnectionMode::READ->value] != $this->hosts[ConnectionMode::WRITE->value]) {
             $this->__get_db_conid($database, ConnectionMode::WRITE);
         }
         return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
@@ -315,7 +297,7 @@ class MySQLi_Interface extends DataInterface
      */
     public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
     {
-        if ($this->hosts[ConnectionMode::READ->value] == $this->hosts[ConnectionMode::WRITE->value])
+        if($this->hosts[ConnectionMode::READ->value] == $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as host
         $database = $database ?: $this->default_database;
         $connection = &$this->connections[$mode->value][$database];
@@ -331,17 +313,17 @@ class MySQLi_Interface extends DataInterface
         $readConnections = &$this->connections[ConnectionMode::READ->value];
         $writeConnections = &$this->connections[ConnectionMode::WRITE->value];
 
-        if (is_array($readConnections)) {
-            foreach ($readConnections as $database => $conid) if ($conid instanceof mysqli) {
+        if(is_array($readConnections)) {
+            foreach($readConnections as $database => $conid) if($conid instanceof mysqli) {
                 @mysqli_close($conid);
                 // workaround, sonst schlägt die Schleife für write mode fehl. // But why? The documentation doesn't say close isn't idempotent
-                if ((isset($writeConnections[$database])) && ($conid == $writeConnections[$database]))
+                if((isset($writeConnections[$database])) && ($conid == $writeConnections[$database]))
                     unset($writeConnections[$database]);
             }
             $readConnections = [];
         }
-        if (is_array($writeConnections)) {
-            foreach ($writeConnections as $conid) if ($conid instanceof mysqli)
+        if(is_array($writeConnections)) {
+            foreach($writeConnections as $conid) if($conid instanceof mysqli)
                 @mysqli_close($conid);
             $writeConnections = [];
         }
@@ -356,7 +338,7 @@ class MySQLi_Interface extends DataInterface
      * Updates last command on success
      *
      * @throws \Exception
-     * @see MySQLi_Interface::__get_db_conid
+     * @see DataInterface::__get_db_conid
      */
     public function query(string $query, string $database = ''): mysqli_result|bool
     {
@@ -364,20 +346,20 @@ class MySQLi_Interface extends DataInterface
         $this->last_Query = $sql = ltrim($query);
         // reset query result
         $this->query_result = false;
-        if (!$sql)//nothing to do
+        if(!$sql)//nothing to do
             return false;
         //identify command
         $offset = strspn($sql, "( \n\t\r");//skip to the meat
         //find position of first whitespace, starting from magic value 2 from old code
         $pos = strcspn($sql, " \n\r\t", $offset + 2) + 2;// TODO MySQL Syntax DO, USE?
         $command = strtoupper(substr($sql, $offset, $pos));//cut command from Query
-        if (IS_TESTSERVER && !in_array($command, $this->commands))
-            echo "Unknown command: '$command'<br>" .
-                "in $sql<hr>" .
+        if(IS_TESTSERVER && !in_array($command, $this->commands))
+            echo "Unknown command: '$command'<br>".
+                "in $sql<hr>".
                 'Please contact Alexander Manhart for MySQL_Interface in the function query()';
         $isSELECT = ($command == 'SELECT');//mode selection
         $mode = !$isSELECT || $this->force_backend_read ? ConnectionMode::WRITE->name : ConnectionMode::READ->name;
-        if ($isSELECT)
+        if($isSELECT)
             $this->num_local_queries++;
         else
             $this->num_remote_queries++;
@@ -385,13 +367,13 @@ class MySQLi_Interface extends DataInterface
         $conid = $this->__get_db_conid($database, ConnectionMode::READ);//connect
         $this->query_result = @mysqli_query($conid, $this->last_Query);//run
         $this->last_connect_id = $conid;
-        if ($this->query_result)//Query successful
+        if($this->query_result)//Query successful
             $this->last_command = $command;
-        if (defined($x='LOG_ENABLED') && constant($x) &&
-            defined($x='ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
+        if(defined($x = 'LOG_ENABLED') && constant($x) &&
+            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
             ($Log = Singleton::get('LogFile'))->isLogging())
             //Logging enabled
-            $Log->addLine('SQL MODE: ' . $mode);
+            $Log->addLine('SQL MODE: '.$mode);
         return $this->query_result;
     }
 
@@ -408,7 +390,7 @@ class MySQLi_Interface extends DataInterface
      */
     public function numRows($query_result = false)
     {
-        if (!$query_result)//try object property
+        if(!$query_result)//try object property
             $query_result = $this->query_result ?? false;
         $result = $query_result instanceof mysqli_result ?
             mysqli_num_rows($query_result) : 0;
@@ -470,7 +452,7 @@ class MySQLi_Interface extends DataInterface
 
         $rowSet = [];
         // todo faster way?
-        while (($row = mysqli_fetch_assoc($query_result)) != null) {
+        while(($row = mysqli_fetch_assoc($query_result)) != null) {
             if($metaData) {
                 // todo faster way?
                 foreach($row as $col => $val) {
@@ -493,7 +475,7 @@ class MySQLi_Interface extends DataInterface
     public function fetchField(string $field, int $rowNum = -1, false|mysqli_result|null $query_resource = false): mixed
     {
         $query_resource = $query_resource ?: $this->query_result;
-        if ($rowNum <= -1 || !$query_resource)
+        if($rowNum <= -1 || !$query_resource)
             return false;//abort
         return $this->mysqli_result($query_resource, $rowNum, $field);
     }
@@ -504,9 +486,9 @@ class MySQLi_Interface extends DataInterface
     private function mysqli_result(mysqli_result $query_result, int $rowNum, int|string $field = 0): mixed
     {
         return mysqli_data_seek($query_result, $rowNum)//nice staged execution
-            && ($row = mysqli_fetch_array($query_result))
-            && array_key_exists($field, $row) ?
-                $row[$field] : false;
+        && ($row = mysqli_fetch_array($query_result))
+        && array_key_exists($field, $row) ?
+            $row[$field] : false;
     }
 
     /**
@@ -521,7 +503,9 @@ class MySQLi_Interface extends DataInterface
     /**
      * Liefert die ID einer vorherigen INSERT-Operation.
      * Hinweis:
-     * mysql_insert_id() konvertiert den Typ der Rueckgabe der nativen MySQL C API Funktion mysql_insert_id() in den Typ long (als int in PHP bezeichnet). Falls Ihre AUTO_INCREMENT Spalte vom Typ BIGINT ist, ist der Wert den mysql_insert_id() liefert, nicht korrekt. Verwenden Sie in diesem Fall stattdessen die MySQL interne SQL Funktion LAST_INSERT_ID() in einer SQL-Abfrage
+     * mysql_insert_id() konvertiert den Typ der Rueckgabe der nativen MySQL C API Funktion mysql_insert_id() in den Typ long (als int in PHP bezeichnet).
+     * Falls Ihre AUTO_INCREMENT Spalte vom Typ BIGINT ist, ist der Wert den mysql_insert_id() liefert, nicht korrekt. Verwenden Sie in diesem Fall
+     * stattdessen die MySQL interne SQL Funktion LAST_INSERT_ID() in einer SQL-Abfrage
      *
      * @return false|int|string Bei Erfolg die letzte ID einer INSERT-Operation
      */
@@ -540,7 +524,7 @@ class MySQLi_Interface extends DataInterface
     {
         $sql = 'SELECT FOUND_ROWS() as foundRows';
         $query_id = $this->query($sql);
-        if (!$query_id)
+        if(!$query_id)
             return 0;
         $foundRows = $this->fetchField('foundRows', 0, $query_id);
         $this->freeResult($query_id);
@@ -583,8 +567,8 @@ SQL;
         // $query = 'SHOW COLUMNS FROM `' . $table . '`';
         $result = mysqli_query($this->__get_db_conid($database, ConnectionMode::READ), $sql, MYSQLI_USE_RESULT);
 
-        if ($result !== false) {
-            while ($row = mysqli_fetch_assoc($result)) {
+        if($result !== false) {
+            while($row = mysqli_fetch_assoc($result)) {
                 $phpType = match ($row['DATA_TYPE']) {
                     'int', 'tinyint', 'bigint', 'smallint', 'mediumint' => 'int',
                     'decimal', 'double', 'float', 'number' => 'float',
@@ -596,7 +580,7 @@ SQL;
                 $row['phpType'] = $phpType;
                 $rows[] = $row;
                 $fields[] = $row['COLUMN_NAME'];
-                if ($row['COLUMN_KEY'] == 'PRI') {
+                if($row['COLUMN_KEY'] == 'PRI') {
                     $pk[] = $row['COLUMN_NAME'];
                 }
             }
@@ -639,19 +623,21 @@ SQL;
 
     /**
      * Returns the mysqli error of the last executed query
+     *
      * @return array
      */
     public function getError(): array
     {
         return [
             'message' => mysqli_error($this->last_connect_id),
-            'code' => mysqli_errno($this->last_connect_id)
+            'code' => mysqli_errno($this->last_connect_id),
         ];
     }
 
     /**
      * Liefert den Fehlertext der zuvor ausgefuehrten MySQL Operation und liefert die Nummer einer Fehlermeldung
      * einer zuvor ausgefuehrten MySQL Operation
+     *
      * @return string Fehlercode + ': ' + Fehlertext
      **/
     public function getErrorAsText(): string
@@ -696,7 +682,8 @@ SQL;
     }
 
     /**
-     * Ändert den Verbindungszeichensatz und -sortierfolge. _setNames ist äquivalent zu den folgenden drei MySQL Anweisungen: SET character_set_client = x; SET character_set_results = x; SET character_set_connection = x;
+     * Ändert den Verbindungszeichensatz und -sortierfolge. _setNames ist äquivalent zu den folgenden drei MySQL Anweisungen: SET character_set_client =
+     * x; SET character_set_results = x; SET character_set_connection = x;
      *
      * @param string $charset_name Zeichensatz
      * @param resource|null $conid Verbindungs-ID/Resource
