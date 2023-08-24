@@ -224,7 +224,7 @@ class MySQL_DAO extends DAO
     /**
      * MySQL_DAO constructor.
      */
-    public function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
+    protected function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
     {
         parent::__construct($DataInterface, $databaseName, $table);
 

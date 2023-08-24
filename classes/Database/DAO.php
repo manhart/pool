@@ -95,7 +95,7 @@ abstract class DAO extends PoolObject
     /**
      * Defines the default commands.
      */
-    public function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
+    protected function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
     {
         $this->DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
         $this->database ??= $databaseName ?? static::$databaseName;
@@ -138,20 +138,41 @@ abstract class DAO extends PoolObject
     }
 
     /**
+     * Creates a Data Access Object
+     */
+    public static function create(?string $tableName = null, ?string $databaseName = null, DataInterface|null $DataInterface = null): static
+    {
+        // class stuff
+        if(!$tableName) {
+            return new static($DataInterface);
+        }
+        elseif(static::$tableName) {
+            throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
+        }
+        else {
+            $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
+
+            $DAO = new static($DataInterface, $databaseName, $tableName);
+            $DAO->fetchColumns();
+            return $DAO;
+        }
+    }
+
+    /**
      * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
      *
-     * @param string|null $tableName Tabellendefinition (siehe database.inc.php)
-     * @param string|null $databaseName <
+     * @param string|null $tableName table definition or the table name
+     * @param string|null $databaseName database name
      * @param \pool\classes\Database\DataInterface|null $DataInterface
      * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
+     * @deprecated use create() instead
+     * @see DAO::create()
      */
     public static function createDAO(?string $tableName = null, ?string $databaseName = null, DataInterface|null $DataInterface = null): static
     {
-        $workaround = false;
         // @todo remove workaround once relying projects are fixed
         if($tableName && !$databaseName && str_contains($tableName, '_')) {
             [$databaseName, $tableName] = explode('_', $tableName, 2);
-            $workaround = true;
         }
 
         // class stuff
@@ -165,20 +186,19 @@ abstract class DAO extends PoolObject
             // workaround
             $className = static::class === DAO::class ? CustomMySQL_DAO::class : static::class;
             $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
-            if($workaround) {
-                $class_exists = class_exists($tableName, false);
 
-                $driver = $DataInterface::getDriverName();
-                $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
-                $include = "$dir/$tableName.php";
-                $file_exists = file_exists($include);
-                if(!$class_exists && $file_exists) {
-                    require_once $include;
-                    $class_exists = true;
-                }
-                if($class_exists) {
-                    return new $tableName($DataInterface, $databaseName, $tableName);
-                }
+            $class_exists = class_exists($tableName, false);
+
+            $driver = $DataInterface::getDriverName();
+            $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
+            $include = "$dir/$tableName.php";
+            $file_exists = file_exists($include);
+            if(!$class_exists && $file_exists) {
+                require_once $include;
+                $class_exists = true;
+            }
+            if($class_exists) {
+                return new $tableName($DataInterface, $databaseName, $tableName);
             }
 
             $DAO = new $className($DataInterface, $databaseName, $tableName);
