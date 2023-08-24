@@ -700,17 +700,17 @@ class GUI_Module extends Module
             $statusCode = 400;
         }
 
-        $errorText = ob_get_contents();
+        $errorText = trim(ob_get_contents());
         ob_end_clean();
 
         if (isset($e)){//ups
             $result = IS_DEVELOP ? $e->getTraceAsString() : '';
             $errorText = $e->getMessage();
-            $errorType = $e::class;
+            $potentialErrorType = $e::class;
         } else
-            $errorType = 'undefined';
+            $potentialErrorType = 'undefined (Spurious output by invoked method)';
         return $this->respondToAjaxCall($result, $errorText,
-            "$callingClassName:$requestedMethod", $errorType, $statusCode??200);
+            "$callingClassName:$requestedMethod", $potentialErrorType, $statusCode??200);
     }
 
     /**
