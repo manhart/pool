@@ -268,8 +268,10 @@ class Weblication extends Component
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
         // determine the relative client und server path from the application to the pool
-        $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
-        $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
+        if(!IS_CLI) {
+            $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
+            $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
+        }
         return $this;
     }
 
