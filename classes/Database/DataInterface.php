@@ -80,7 +80,7 @@ class DataInterface
     var string $last_command = '';
 
     /** Zeichensatz für die MySQL Verbindung */
-    var string $default_charset = '';
+    private ?string $charset = null;
 
     /** Network port for connecting to server */
     var int $port = 3306;
@@ -92,17 +92,25 @@ class DataInterface
     const MAX_DATE = '9999-12-31';
     const MAX_DATETIME = '9999-12-31 23:59:59';
 
+    protected Driver $driver;
+
+    /**
+     * @param \pool\classes\Database\Driver $driver
+     */
+    public function __construct(Driver $driver)
+    {
+        $this->driver = $driver;
+        $this->port = $driver->getDefaultPort();
+    }
+
     /**
      * factory method to create a data interface
      *
-     * @param array $connectionOptions
-     * @param string|null $interfaceType
-     * @return DataInterface
+     * @throws \Exception
      */
-    public static function createDataInterface(array $connectionOptions, ?string $interfaceType = null): DataInterface
+    public static function createDataInterface(array $connectionOptions, ?Driver $driver = null): DataInterface
     {
-        $DataInterface = $interfaceType? new $interfaceType() : new static();
-        assert($DataInterface instanceof DataInterface);
+        $DataInterface = new static($driver ?? Driver\MySQLi::getInstance());
         $DataInterface->setOptions($connectionOptions);
         return $DataInterface;
     }
@@ -111,9 +119,9 @@ class DataInterface
      * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access
      *     objects
      */
-    public static function getDriverName(): string
+    public function getDriverName(): string
     {
-        return 'mysql';
+        return $this->driver->getName();
     }
 
     /**
@@ -143,7 +151,7 @@ class DataInterface
             $this->port = $connectionOptions['port'];
 
         if(array_key_exists('charset', $connectionOptions))
-            $this->default_charset = $connectionOptions['charset'];
+            $this->charset = $connectionOptions['charset'];
 
         $this->auth = $connectionOptions['auth'] ?? 'mysql_auth';// fallback verwendet zentrale, globale Authentifizierung
 
@@ -155,10 +163,8 @@ class DataInterface
 
     /**
      * When using clusters moves random hosts from $this->available_hosts to $this->hosts
-     *
-     * @throws Exception
      */
-    private function __findHostForConnection(ConnectionMode $connectionMode = null): int
+    protected function __findHostForConnection(ConnectionMode $connectionMode = null): int
     {
         $available_hosts =& $this->available_hosts;
         $alternativeHosts = 0;
@@ -242,30 +248,20 @@ class DataInterface
      */
     private function openNewDBConnection(ConnectionMode $mode, string $database): mysqli
     {
-        $host = $this->hosts[$mode->value].':'.$this->port;
+        $host = $this->hosts[$mode->value];
         $auth = $this->__get_auth($mode);
         $credentials = $auth[$database] ?? $auth['all'] ?? [];
         $db_pass = $credentials['password'] ?? '';
         $db_user = $credentials['username'] ?? '';
 
         //open connection
-        $conid = mysqli_connect($host, $db_user, $db_pass, '', $this->port);
-
-        if(defined($x = 'LOG_ENABLED') && constant($x) &&
-            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
-            ($Log = Singleton::get('LogFile'))->isLogging()) {
-            //Logging enabled
-            $sqlTarget = "TO $host MODE: $mode->name DB: $database";
-            $Log->addLine(($conid) ? "CONNECTED $sqlTarget" :
-                "FAILED TO CONNECT $sqlTarget (MySQL-Error: ".mysqli_connect_errno().': '.mysqli_connect_error().')');
+        try {
+            $conid = $this->driver->connect($this, $host, $this->port, $db_user, $db_pass, $database, charset: $this->charset);
         }
-
-        if(($conid && $this->default_charset && !$this->_setNames($this->default_charset, $conid))// failed to set default charset of connection
-            || (!@mysqli_select_db($conid, $database))) {//failed to set default database
-            $mysqli_error = 'MySQL ErrNo '.mysqli_errno($conid).': '.mysqli_error($conid);
-            mysqli_close($conid);//abort new connection due to Error
+        catch(Exception $e) {
             $conid = null;
         }
+
         if($conid) //set default and store connection
             return $this->connections[$mode->value][$database] = $conid;
         elseif($this->hasAnotherHost($mode)) {//connection errored out but alternative hosts exist -> recurse

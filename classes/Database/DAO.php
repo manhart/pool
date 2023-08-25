@@ -189,7 +189,7 @@ abstract class DAO extends PoolObject
 
             $class_exists = class_exists($tableName, false);
 
-            $driver = $DataInterface::getDriverName();
+            $driver = $DataInterface->getDriverName();
             $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
             $include = "$dir/$tableName.php";
             $file_exists = file_exists($include);
