@@ -265,12 +265,7 @@ class ResultSet extends PoolObject implements Countable
      **/
     public function seek(int $index): array
     {
-        if($this->count() > $index) {
-            $this->index = $index;
-        }
-        else {
-            $this->index = -1;
-        }
+        $this->index = $index < $this->count() ? $index : -1;
         return $this->getRow();
     }
 
@@ -285,31 +280,31 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Zum naechsten Datensatz. Bewegt den internen Zeiger um eins hoeher (Iterator).
+     * Advances the index by one position until the end is reached
      *
-     * @return array naechster Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
+     * @return array the then current dataset, or an empty array if the end is already reached
+     * @see self::getRow()
      */
     public function next(): array
     {
-        if($this->index < $this->count()) {
-            $this->index++;
-            return $this->getRow();
-        }
-        return [];
+        if($this->index >= $this->count() - 1)
+            return [];
+        $this->index++;
+        return $this->getRow();
     }
 
     /**
-     * Zum vorherigen Datensatz. Bewegt den internen Zeiger um eins tiefer (Iterator).
+     * Rewinds the index by one position until the beginning is reached
      *
-     * @return array vorheriger Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
+     * @return array the then current dataset, or an empty array if the beginning is already reached
+     * @see self::getRow()
      */
     public function prev(): array
     {
-        if($this->index > 0) {
-            $this->index--;
-            return $this->getRow();
-        }
-        return [];
+        if($this->index <= 0)
+            return [];
+        $this->index--;
+        return $this->getRow();
     }
 
     /**
@@ -323,28 +318,6 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * eof gibt an, ob der letzte Datensatz der Datenmenge aktiv ist. (end of file)
-     *
-     * @return bool
-     */
-    public function eof(): bool
-    {
-        return $this->isLast();
-    }
-
-    /**
-     * bof gibt an, ob der erste Datensatz der Datenmenge aktiv ist. (begin of file)
-     *
-     * Mit Bof (Beginning Of File) können Sie feststellen, ob der erste Datensatz der Datenmenge aktiv ist, also eindeutig die erste Zeile in der Datenmenge darstellt. In diesem Fall hat die Eigenschaft den Wert true.
-     *
-     * @return bool
-     */
-    public function bof(): bool
-    {
-        return $this->isFirst();
-    }
-
-    /**
      * Returns a value of a field of the current record
      *
      * @param string $key name of column (fieldname)
@@ -353,8 +326,7 @@ class ResultSet extends PoolObject implements Countable
      */
     public function getValue(string $key, mixed $default = null): mixed
     {
-        if(!isset($this->rowset[$this->index])) return $default;
-        if(!array_key_exists($key, $this->rowset[$this->index])) return $default;
+        if(!array_key_exists($key, $this->rowset[$this->index] ?? [])) return $default;
         return $this->rowset[$this->index][$key];
     }
 
@@ -438,18 +410,15 @@ class ResultSet extends PoolObject implements Countable
     public function getValueAsDateTime(string $key, $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
         $value = $this->getValue($key, $default);
-        if($value instanceof DateTime) {
+        if($value instanceof DateTime)
             return $value;
-        }
-        if(!is_null($value) and $value !== '' and $value !== '0000-00-00' and $value !== '0000-00-00 00:00:00') {
-            if(!str_contains($value, '-') and is_numeric($value)) {
-                $value = '@' . $value; // should be an unix timestamp (integer)
-            }
+        if($value && $value !== '0000-00-00' && $value !== '0000-00-00 00:00:00') {
+            if(!str_contains($value, '-') && is_numeric($value))
+                $value = "@$value";
             try {
                 return new DateTime($value, $timezone);
             }
-            catch(Exception) {
-            }
+            catch(Exception) {}
         }
         return null;
     }
@@ -548,9 +517,8 @@ class ResultSet extends PoolObject implements Countable
      */
     public function setValues(array $assoc): ResultSet
     {
-        if($this->count() == 0) {
+        if($this->count() == 0)
             return $this->addValues($assoc);
-        }
         $this->rowset[$this->index] = $assoc + $this->rowset[$this->index];
         return $this;
     }
@@ -561,19 +529,13 @@ class ResultSet extends PoolObject implements Countable
      * @param array|string $key Spaltenname oder Array[Spalte] = Wert
      * @param string $value Wert des neuen Feldes
      */
-    public function addFields(array|string $key, string $value = ''): void
+    public function addFields(array|string $key, string $value = ''): ResultSet
     {
-        if($this->count() == 0) {
-            $this->addValue($key, $value);
-        }
-        else {
-            if(!is_array($key)) {
-                $this->rowset[$this->index][$key] = $value;
-            }
-            else {
-                $this->rowset[$this->index] = array_merge($this->rowset[$this->index], $key);
-            }
-        }
+        if($this->count() == 0)
+            return is_array($key)? $this->addValues($key) : $this->addValue($key, $value);
+        $insert = is_array($key) ? $key : [$key => $value];
+        $this->rowset[$this->index] = array_merge($this->rowset[$this->index], $insert);
+        return $this;
     }
 
     /**
@@ -673,7 +635,6 @@ class ResultSet extends PoolObject implements Countable
      *        return $row;
      * }
      *
-     * @access public
      * @param callable $callback_function
      * @return ResultSet
      */
@@ -688,7 +649,7 @@ class ResultSet extends PoolObject implements Countable
      *
      * @param string $key Schlüssel
      * @param string $value Wert
-     * @return ResultSet true
+     * @return ResultSet
      */
     public function fillValues(string $key, string $value): static
     {
@@ -702,43 +663,37 @@ class ResultSet extends PoolObject implements Countable
     /**
      * Liefert einen ganzen Datensatz als Array zurueck.
      *
-     * @param integer $index Record-Offset
-     * @return array Datensatz
+     * @param integer $index Record-Offset identical to calling {@link static::seek() seek}
+     * @return array Dataset at current position, if position is out of range returns an empty array
      */
     public function getRow(int $index = -1): array
     {
-        if($index != $this->index and $index >= 0) {
-            $this->seek($index);
-        }
-        if($this->index >= 0 and $this->index < $this->count()) {
-            return $this->rowset[$this->index];
-        }
-        else {
-            return [];
-        }
+        return $index >= 0 && $index != $this->index ?
+            $this->seek($index)
+            : $this->rowset[$this->index] ?? [];
     }
 
     /**
-     * Loescht eine Zeile und setzt internen Zeiger auf vorherigen Datensatz zurueck.
+     * Deletes a specified amount of records from the set. Iterator will be set to the record preceding the removed record(s).
+     * Failure results in the Iterator being reset to -1
      *
-     * @access public
-     * @param integer $index Index
-     * @return boolean Erfolgsstatus
+     * @param int $amount number of records to delete including the selected.
+     * @param integer $index start from this index defaults to the current position in the set
+     * @return boolean success
      */
-    public function deleteRow(int $index = -1): bool
+    public function deleteRows(int $amount = 1, int $index = -1): bool
     {
-        if($index != $this->index and $index >= 0) {
+        if($index >= 0 && $index != $this->index)
             $this->seek($index);
-        }
         if($this->index >= 0) {
-            unset($this->rowset[$this->index]);
-            $this->rowset = array_values($this->rowset);
-            $this->index--;
+            $end = $this->index + $amount - $amount/abs($amount);
+            if($end < 0 || $this->count() <= $end) return false;
+            $index = min($this->index, $end);
+            array_splice($this->rowset, $index, abs($amount));
+            $this->index = $index - 1;
             return true;
         }
-        else {
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -765,7 +720,7 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Fügt ein anderes Resultset an das eigene Resultset an. Satzzeiger wird nicht beeinflusst.
+     * Fügt ein anderes Resultset an das eigene Resultset an. Satzzeiger wird auf ersten Satz gelegt.
      *
      * @param array $rowSet
      * @return ResultSet
