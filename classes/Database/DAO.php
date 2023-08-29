@@ -114,7 +114,7 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * escape a column name
+     * Escape a column name
      *
      * @param string $column
      * @return string

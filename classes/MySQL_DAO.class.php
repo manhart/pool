@@ -367,7 +367,7 @@ class MySQL_DAO extends DAO
     {
         $this->pk = [];
         $this->columns = [];
-        $this->field_list = $this->DataInterface->listfields($this->table, $this->database, $this->columns, $this->pk);
+        [$this->field_list, $this->columns, $this->pk] = $this->DataInterface->getTableColumnsInfo($this->database, $this->table);
         $this->onSetColumns($this->columns);
         return $this;
     }
@@ -399,7 +399,7 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * escape column name
+     * Escape column name
      */
     static function escapeColumn(string $column): string
     {
@@ -536,7 +536,7 @@ class MySQL_DAO extends DAO
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = $this->DataInterface->escapeString($value, $this->database);
+                $value = $this->DataInterface->escape($value, $this->database);
                 $value = "'$value'";
             }
 
@@ -667,7 +667,7 @@ SQL;
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->DataInterface->escapeString($value, $this->database)}'";
+                $value = "'{$this->DataInterface->escape($value, $this->database)}'";
             }
             if($set == '') $set = "`$field`=$value";
             else $set = "$set,`$field`=$value";
@@ -722,7 +722,7 @@ SQL;
     {
         if(is_int($value) || is_float($value))
             return $value;//not a stringable or a 'subQuery'
-        $value = $noEscape ? $value : $this->DataInterface->escapeString($value, $this->database);
+        $value = $noEscape ? $value : $this->DataInterface->escape($value, $this->database);
         return $noQuotes ? $value : "'$value'"; //quote
     }
 
@@ -1109,6 +1109,7 @@ SQL;
      * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurück
      *
      * @return int
+     * @throws \Exception
      */
     public function foundRows(): int
     {

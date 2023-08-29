@@ -10,6 +10,7 @@
 
 namespace pool\classes\Database\Driver;
 
+use pool\classes\Database\ConnectionWrapper;
 use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
@@ -21,6 +22,9 @@ class MySQLi extends Driver
     protected static string $provider = 'mysqli';
     private \mysqli $mysqli;
 
+    /**
+     * @var string Default charset
+     */
     private string $charset = 'utf8';
 
     /**
@@ -31,10 +35,10 @@ class MySQLi extends Driver
      * @param string $password
      * @param string $database
      * @param mixed ...$options
-     * @return \mysqli
+     * @return ConnectionWrapper
      */
     public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options): \mysqli
+        string $database = '', ...$options): ConnectionWrapper
     {
         $this->mysqli = mysqli_init();
         try {
@@ -43,7 +47,7 @@ class MySQLi extends Driver
         } catch(\mysqli_sql_exception $e) {
             throw new DatabaseConnectionException($e->getMessage(), $e->getCode(), $e);
         }
-        return $this->mysqli;
+        return new ConnectionWrapper($this->mysqli, $this);
     }
 
     public function setCharset(string $charset): static
@@ -52,8 +56,96 @@ class MySQLi extends Driver
         return $this;
     }
 
-    public function close(): void
+    public function close(ConnectionWrapper $connectionWrapper): void
     {
-        $this->mysqli->close();
+        $connectionWrapper->getConnection()->close();
+    }
+
+    public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed
+    {
+        return @$connectionWrapper->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
+    }
+
+    public function fetch(mixed $result): array|null|false
+    {
+        return $result->fetch_assoc();
+    }
+
+    /**
+     * @param \mysqli_result $result
+     * @return int
+     */
+    public static function numRows(mixed $result): int
+    {
+        return $result->num_rows;
+    }
+
+    public function errors(?ConnectionWrapper $connectionWrapper = null): array
+    {
+        $errors = $connectionWrapper?->getConnection()->error_list ?: [];
+        mysqli_connect_errno() && $errors[] = [
+            'errno' => mysqli_connect_errno(),
+            'error' => mysqli_connect_error(),
+            'sqlstate' => ''
+        ];
+        return $errors;
+    }
+
+    public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false
+    {
+        return $connectionWrapper->getConnection()->affected_rows;
+    }
+
+    public function free(mixed $result): void
+    {
+        $result->free();
+    }
+
+    public function escape(ConnectionWrapper $connectionWrapper, string $string): string
+    {
+        return $connectionWrapper->getConnection()->real_escape_string($string);
+    }
+
+    public function getLastId(ConnectionWrapper $connectionWrapper): int|string
+    {
+        return $connectionWrapper->getConnection()->insert_id;
+    }
+
+    public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array
+    {
+        $query = <<<SQL
+SELECT
+    COLUMN_NAME,
+    DATA_TYPE,
+    COLUMN_TYPE,
+    COLUMN_KEY
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = '$database'
+  AND TABLE_NAME = '$table'
+SQL;
+        $result = $this->query($connectionWrapper, $query, result_mode: MYSQLI_USE_RESULT);
+        $fieldList = $fields = $pk = [];
+        while($row = $this->fetch($result)) {
+            $phpType = match ($row['DATA_TYPE']) {
+                'int', 'tinyint', 'bigint', 'smallint', 'mediumint' => 'int',
+                'decimal', 'double', 'float', 'number' => 'float',
+                default => 'string',
+            };
+            if(str_starts_with($row['COLUMN_TYPE'], 'tinyint(1)')) {
+                $phpType = 'bool';
+            }
+            $row['phpType'] = $phpType;
+            $fieldList[] = $row;
+            $fields[] = $row['COLUMN_NAME'];
+            if($row['COLUMN_KEY'] == 'PRI') {
+                $pk[] = $row['COLUMN_NAME'];
+            }
+        }
+        $this->free($result);
+        return [
+            $fieldList,
+            $fields,
+            $pk,
+        ];
     }
 }

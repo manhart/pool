@@ -15,18 +15,22 @@ use Exception;
 abstract class Driver
 {
     protected static int $port;
+
     protected static string $name;
+
     protected static string $provider = '';
 
     private static array $instances = [];
 
     /**
      * Driver constructor (protected to prevent instantiation) - checks if the provider is loaded
+     *
      * @throws \Exception
      */
-    protected function __construct() {
+    protected function __construct()
+    {
         if(static::$provider && !extension_loaded(static::$provider)) {
-            throw new Exception('Provider ' . static::$provider . ' not loaded');
+            throw new Exception('Provider '.static::$provider.' not loaded');
         }
     }
 
@@ -63,10 +67,38 @@ abstract class Driver
      * Connects to the database
      */
     abstract public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options);
+        string $database = '', ...$options): ConnectionWrapper;
+
+    /**
+     * Executes a query and returns the query result
+     *
+     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param string $query SQL query
+     * @param ...$params
+     * @return mixed query result
+     */
+    abstract public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed;
+
+    abstract public function fetch(mixed $result): array|null|false;
+
+    abstract public function free(mixed $result): void;
+
+    abstract public function escape(ConnectionWrapper $connectionWrapper, string $string): string;
 
     /**
      * Closes the connection
      */
-    abstract public function close();
+    abstract public function close(ConnectionWrapper $connectionWrapper): void;
+
+    abstract public function errors(?ConnectionWrapper $connectionWrapper = null): array;
+
+    abstract public function getLastId(ConnectionWrapper $connectionWrapper): int|string;
+
+    // everything below is handling the result
+
+    abstract public static function numRows(mixed $result): int;
+
+    abstract public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false;
+
+    abstract public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array;
 }
