@@ -17,9 +17,24 @@ use pool\classes\Database\Exception\DatabaseConnectionException;
 
 class MySQLi extends Driver
 {
+    /**
+     * @var int Default port
+     */
     protected static int $port = 3306;
+
+    /**
+     * @var string Driver name
+     */
     protected static string $name = 'mysql';
+
+    /**
+     * @var string Extension name
+     */
     protected static string $provider = 'mysqli';
+
+    /**
+     * @var \mysqli MySQLi connection
+     */
     private \mysqli $mysqli;
 
     /**
@@ -44,73 +59,84 @@ class MySQLi extends Driver
         try {
             $this->mysqli->real_connect($hostname, $username, $password, $database, $port);
             $this->setCharset($options['charset'] ?? $this->charset);
-        } catch(\mysqli_sql_exception $e) {
+        }
+        catch(\mysqli_sql_exception $e) {
             throw new DatabaseConnectionException($e->getMessage(), $e->getCode(), $e);
         }
         return new ConnectionWrapper($this->mysqli, $this);
     }
 
+    /**
+     * Sets the charset for the connection
+     */
     public function setCharset(string $charset): static
     {
         $this->mysqli->set_charset($charset);
         return $this;
     }
 
+    /**
+     * Closes the connection
+     */
     public function close(ConnectionWrapper $connectionWrapper): void
     {
         $connectionWrapper->getConnection()->close();
     }
 
-    public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed
-    {
-        return @$connectionWrapper->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
-    }
-
-    public function fetch(mixed $result): array|null|false
-    {
-        return $result->fetch_assoc();
-    }
-
     /**
-     * @param \mysqli_result $result
-     * @return int
+     * Returns a list of errors from the last command executed
      */
-    public static function numRows(mixed $result): int
-    {
-        return $result->num_rows;
-    }
-
     public function errors(?ConnectionWrapper $connectionWrapper = null): array
     {
         $errors = $connectionWrapper?->getConnection()->error_list ?: [];
         mysqli_connect_errno() && $errors[] = [
             'errno' => mysqli_connect_errno(),
             'error' => mysqli_connect_error(),
-            'sqlstate' => ''
+            'sqlstate' => '',
         ];
         return $errors;
     }
 
+    /**
+     * @param \mysqli_result $result
+     * @return int
+     */
+    public function numRows(mixed $result): int
+    {
+        return $result->num_rows;
+    }
+
+    /**
+     * Gets the number of affected rows in a previous SQL operation
+     *
+     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param \mysqli_result $result
+     * @return int|false
+     */
     public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false
     {
         return $connectionWrapper->getConnection()->affected_rows;
     }
 
-    public function free(mixed $result): void
-    {
-        $result->free();
-    }
-
+    /**
+     * Escapes special characters in a string for use in an SQL statement, taking into account the current charset of the connection
+     */
     public function escape(ConnectionWrapper $connectionWrapper, string $string): string
     {
         return $connectionWrapper->getConnection()->real_escape_string($string);
     }
 
+    /**
+     * Returns the value generated for an AUTO_INCREMENT column by the last query
+     */
     public function getLastId(ConnectionWrapper $connectionWrapper): int|string
     {
         return $connectionWrapper->getConnection()->insert_id;
     }
 
+    /**
+     * Get the columns info of a table
+     */
     public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array
     {
         $query = <<<SQL
@@ -147,5 +173,38 @@ SQL;
             $fields,
             $pk,
         ];
+    }
+
+    /**
+     * Executes a query and returns the query result
+     *
+     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param string $query SQL query
+     * @param ...$params
+     * @return mixed query result
+     */
+    public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed
+    {
+        return @$connectionWrapper->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
+    }
+
+    /**
+     * Fetch the next row of a result set as an associative array
+     *
+     * @param \mysqli_result $result
+     */
+    public function fetch(mixed $result): array|null|false
+    {
+        return $result->fetch_assoc();
+    }
+
+    /**
+     * Frees the memory associated with a result
+     *
+     * @param \mysqli_result $result
+     */
+    public function free(mixed $result): void
+    {
+        $result->free();
     }
 }

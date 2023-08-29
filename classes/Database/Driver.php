@@ -14,12 +14,24 @@ use Exception;
 
 abstract class Driver
 {
+    /**
+     * @var int Default port
+     */
     protected static int $port;
 
+    /**
+     * @var string Driver name
+     */
     protected static string $name;
 
+    /**
+     * @var string Extension name
+     */
     protected static string $provider = '';
 
+    /**
+     * @var array Instances of the drivers
+     */
     private static array $instances = [];
 
     /**
@@ -41,6 +53,11 @@ abstract class Driver
     {
         return self::$instances[static::class] ??= new static;
     }
+
+    /**
+     * Gets the number of rows in the result set
+     */
+    abstract public function numRows(mixed $result): int;
 
     /**
      * Returns the default port for the driver
@@ -79,10 +96,19 @@ abstract class Driver
      */
     abstract public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed;
 
+    /**
+     * Fetch the next row of a result set as an associative array
+     */
     abstract public function fetch(mixed $result): array|null|false;
 
+    /**
+     * Frees the memory associated with a result
+     */
     abstract public function free(mixed $result): void;
 
+    /**
+     * Escapes special characters in a string for use in an SQL statement, taking into account the current charset of the connection
+     */
     abstract public function escape(ConnectionWrapper $connectionWrapper, string $string): string;
 
     /**
@@ -90,15 +116,23 @@ abstract class Driver
      */
     abstract public function close(ConnectionWrapper $connectionWrapper): void;
 
+    /**
+     * Returns a list of errors from the last command executed
+     */
     abstract public function errors(?ConnectionWrapper $connectionWrapper = null): array;
 
+    /**
+     * Returns the value generated for an AUTO_INCREMENT column by the last query
+     */
     abstract public function getLastId(ConnectionWrapper $connectionWrapper): int|string;
 
-    // everything below is handling the result
-
-    abstract public static function numRows(mixed $result): int;
-
+    /**
+     * Gets the number of affected rows in a previous SQL operation
+     */
     abstract public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false;
 
+    /**
+     * Get the columns info of a table
+     */
     abstract public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array;
 }

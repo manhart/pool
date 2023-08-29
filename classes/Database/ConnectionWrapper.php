@@ -57,7 +57,7 @@ class ConnectionWrapper
 
     public function getNumRows(mixed $result): int
     {
-        return $this->driver::numRows($result);
+        return $this->driver->numRows($result);
     }
 
     public function getAffectedRows(mixed $result): int|false

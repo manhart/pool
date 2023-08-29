@@ -20,6 +20,36 @@ use function defined;
 
 class DataInterface
 {
+    /**---- class constants ----*/
+    public const ZERO_DATE = '0000-00-00';
+
+    public const ZERO_TIME = '00:00:00';
+
+    public const ZERO_DATETIME = '0000-00-00 00:00:00';
+
+    public const MAX_DATE = '9999-12-31';
+
+    public const MAX_DATETIME = '9999-12-31 23:59:59';
+
+    /**
+     * @var string Last executed query for debugging purposes
+     */
+    public string $last_Query;
+
+    /** Alle verfügbaren Master u. Slave Hosts */
+    var string|array $available_hosts = [];
+
+    /**
+     * Erzwingt Lesevorgänge über den Master-Host für Schreibvorgänge
+     * (Wird gebraucht, wenn geschrieben wird, anschließend wieder gelesen. Die Replikation hinkt etwas nach.)
+     */
+    public bool $force_backend_read = false;
+
+    /**
+     * @var \pool\classes\Database\Driver
+     */
+    protected Driver $driver;
+
     /**
      * @var array<string, int> available cluster modes <br>
      * Its unclear what the array values mean, they seem to refer to a default inside $this->available_hosts
@@ -35,11 +65,6 @@ class DataInterface
      * @see DataInterface::_query()
      */
     private ?ConnectionWrapper $lastConnectionWrapper;
-
-    /**
-     * @var string Last executed query for debugging purposes
-     */
-    public string $last_Query;
 
     /**
      * @var int Total number of queries executed
@@ -68,15 +93,6 @@ class DataInterface
     /** @var array<String, array<String, resource>>  Array of Mysql Links; Aufbau $var[$mode][$database] = resource */
     private array $connections = [ConnectionMode::READ->value => [], ConnectionMode::WRITE->value => []];
 
-    /** Alle verfügbaren Master u. Slave Hosts */
-    var string|array $available_hosts = [];
-
-    /**
-     * Erzwingt Lesevorgänge über den Master-Host für Schreibvorgänge
-     * (Wird gebraucht, wenn geschrieben wird, anschließend wieder gelesen. Die Replikation hinkt etwas nach.)
-     */
-    public bool $force_backend_read = false;
-
     /**
      * @var string Default database
      */
@@ -102,14 +118,7 @@ class DataInterface
      */
     private int $port;
 
-    /**---- class constants ----*/
-    public const ZERO_DATE = '0000-00-00';
-    public const ZERO_TIME = '00:00:00';
-    public const ZERO_DATETIME = '0000-00-00 00:00:00';
-    public const MAX_DATE = '9999-12-31';
-    public const MAX_DATETIME = '9999-12-31 23:59:59';
-
-    protected Driver $driver;
+    private array $authentications = [];
 
     /**
      * @param \pool\classes\Database\Driver $driver
@@ -130,15 +139,6 @@ class DataInterface
         $DataInterface = new static($driver ?? Driver\MySQLi::getInstance());
         $DataInterface->setOptions($connectionOptions);
         return $DataInterface;
-    }
-
-    /**
-     * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access
-     *     objects
-     */
-    public function getDriverName(): string
-    {
-        return $this->driver->getName();
     }
 
     /**
@@ -213,34 +213,26 @@ class DataInterface
     }
 
     /**
-     * Ermittelt, ob noch Master-/Slave Hosts zur Verfuegung stehen
+     * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access
+     *     objects
      */
-    private function hasAnotherHost(ConnectionMode $mode): bool
+    public function getDriverName(): string
     {
-        return (is_array($hosts = $this->available_hosts[$mode->value] ?? 0)
-            && sizeof($hosts) > 0);
+        return $this->driver->getName();
     }
 
-    private array $authentications = [];
-
     /**
-     * Liest die Authentication-Daten aus Array und gibt sie als Array zurueck
+     * Baut eine Verbindung zur Datenbank auf.
      *
-     * @param \pool\classes\Database\ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
-     * @return array mit Key username und password
      * @throws Exception
      */
-    private function __get_auth(ConnectionMode $mode): array
+    public function open(string $database = ''): bool
     {
-        $auth = &$this->authentications[$this->auth];
-        $auth ??=
-            (file_exists($authFile = constant('DBACCESSFILE')))
-                ? (require $authFile)[$this->auth] ?? []
-                : [];
-
-        $hostname = $this->hosts[$mode->value];//normalize mode for lookup
-        return $auth[$hostname] ??//now testing hostname that is returned instead of reading-host
-            throw new Exception("MySQL access denied! No authentication data available (Database: $hostname Mode: $mode->value).");
+        $this->__get_db_conid($database, ConnectionMode::READ);
+        if($this->hosts[ConnectionMode::READ->value] != $this->hosts[ConnectionMode::WRITE->value]) {
+            $this->__get_db_conid($database, ConnectionMode::WRITE);
+        }
+        return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
     }
 
     /**
@@ -293,17 +285,32 @@ class DataInterface
     }
 
     /**
-     * Baut eine Verbindung zur Datenbank auf.
+     * Liest die Authentication-Daten aus Array und gibt sie als Array zurueck
      *
+     * @param \pool\classes\Database\ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
+     * @return array mit Key username und password
      * @throws Exception
      */
-    public function open(string $database = ''): bool
+    private function __get_auth(ConnectionMode $mode): array
     {
-        $this->__get_db_conid($database, ConnectionMode::READ);
-        if($this->hosts[ConnectionMode::READ->value] != $this->hosts[ConnectionMode::WRITE->value]) {
-            $this->__get_db_conid($database, ConnectionMode::WRITE);
-        }
-        return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
+        $auth = &$this->authentications[$this->auth];
+        $auth ??=
+            (file_exists($authFile = constant('DBACCESSFILE')))
+                ? (require $authFile)[$this->auth] ?? []
+                : [];
+
+        $hostname = $this->hosts[$mode->value];//normalize mode for lookup
+        return $auth[$hostname] ??//now testing hostname that is returned instead of reading-host
+            throw new Exception("MySQL access denied! No authentication data available (Database: $hostname Mode: $mode->value).");
+    }
+
+    /**
+     * Ermittelt, ob noch Master-/Slave Hosts zur Verfuegung stehen
+     */
+    private function hasAnotherHost(ConnectionMode $mode): bool
+    {
+        return (is_array($hosts = $this->available_hosts[$mode->value] ?? 0)
+            && sizeof($hosts) > 0);
     }
 
     /**
@@ -343,67 +350,11 @@ class DataInterface
     }
 
     /**
-     * Executes a SQL-Statement.<br>
-     * Saves query to this->sql<br>
-     * Resets query_result<br>
-     * Gets a conid and saves it to last_connect_id<br>
-     * Updates last command on success
-     *
-     * @return mixed query result / query resource
-     * @throws \Exception
-     * @see DataInterface::__get_db_conid
-     */
-    public function query(string $query, string $database = ''): mixed
-    {
-        //Store query in attribute
-        $this->last_Query = $sql = ltrim($query);
-        // reset query result
-        $this->query_resource = false;
-        if(!$sql)//nothing to do
-            return false;
-        //identify command
-        $command = $this->identifyCommand($sql);
-        if(IS_TESTSERVER && !in_array($command, $this->commands))
-            echo "Unknown command: '$command'<br>".
-                "in $sql<hr>".
-                'Please contact the POOL\'s maintainer to analyze the DataInterface in the query() function.';
-        $isSELECT = $command == 'SELECT';//mode selection
-        $mode = !$isSELECT || $this->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
-        if($isSELECT)
-            $this->totalReads++;
-        else
-            $this->totalWrites++;
-        $this->totalQueries++;
-
-        $connectionWrapper = $this->__get_db_conid($database, $mode);//connect
-        $this->query_resource = $connectionWrapper->query($sql);//run
-        $this->lastConnectionWrapper = $connectionWrapper;
-        if($this->query_resource) $this->last_command = $command;
-        if(defined($x = 'LOG_ENABLED') && constant($x) &&
-            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
-            ($Log = Singleton::get('LogFile'))->isLogging())
-            //Logging enabled
-            $Log->addLine('SQL MODE: '.$mode->name);
-        return $this->query_resource;
-    }
-
-    /**
      * Returns the first command of the most recently executed statement in uppercase e.g. SELECT
      */
     public function getLastQueryCommand(): string
     {
         return $this->last_command;
-    }
-
-    /**
-     * Returns the number of rows in a query resource
-     */
-    public function numRows(mixed $query_resource = null): int
-    {
-        $query_resource ??= $this->query_resource;
-        $result = $this->lastConnectionWrapper?->getNumRows($query_resource) ?? 0;
-        assert(is_int($result));
-        return $result;
     }
 
     /**
@@ -413,15 +364,6 @@ class DataInterface
     {
         $affectedRows = $this->lastConnectionWrapper?->getAffectedRows($query_resource ?? $this->query_resource);
         return $affectedRows === -1 ? false : $affectedRows ?? false;
-    }
-
-    /**
-     * Liefert einen Datensatz als assoziatives Array und indiziertes Array
-     */
-    private function fetchRow(mixed $query_resource = null): array|null|false
-    {
-        $query_resource ??= $this->query_resource;
-        return $query_resource ? $this->driver->fetch($query_resource) : false;
     }
 
     /**
@@ -478,6 +420,86 @@ class DataInterface
     }
 
     /**
+     * Executes a SQL-Statement.<br>
+     * Saves query to this->sql<br>
+     * Resets query_result<br>
+     * Gets a conid and saves it to last_connect_id<br>
+     * Updates last command on success
+     *
+     * @return mixed query result / query resource
+     * @throws \Exception
+     * @see DataInterface::__get_db_conid
+     */
+    public function query(string $query, string $database = ''): mixed
+    {
+        //Store query in attribute
+        $this->last_Query = $sql = ltrim($query);
+        // reset query result
+        $this->query_resource = false;
+        if(!$sql)//nothing to do
+            return false;
+        //identify command
+        $command = $this->identifyCommand($sql);
+        if(IS_TESTSERVER && !in_array($command, $this->commands))
+            echo "Unknown command: '$command'<br>".
+                "in $sql<hr>".
+                'Please contact the POOL\'s maintainer to analyze the DataInterface in the query() function.';
+        $isSELECT = $command == 'SELECT';//mode selection
+        $mode = !$isSELECT || $this->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
+        if($isSELECT)
+            $this->totalReads++;
+        else
+            $this->totalWrites++;
+        $this->totalQueries++;
+
+        $connectionWrapper = $this->__get_db_conid($database, $mode);//connect
+        $this->query_resource = $connectionWrapper->query($sql);//run
+        $this->lastConnectionWrapper = $connectionWrapper;
+        if($this->query_resource) $this->last_command = $command;
+        if(defined($x = 'LOG_ENABLED') && constant($x) &&
+            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
+            ($Log = Singleton::get('LogFile'))->isLogging())
+            //Logging enabled
+            $Log->addLine('SQL MODE: '.$mode->name);
+        return $this->query_resource;
+    }
+
+    /**
+     * Identifies the command of a query
+     *
+     * @param string $sql
+     * @return string command (e.g. SELECT, INSERT, UPDATE, DELETE)
+     */
+    private function identifyCommand(string $sql): string
+    {
+        $offset = strspn($sql, "( \n\t\r");//skip to the meat
+        //find position of first whitespace, starting from magic value 2 from old code
+        $pos = strcspn($sql, " \n\r\t", $offset + 2) + 2;// TODO MySQL Syntax DO, USE?
+        return strtoupper(substr($sql, $offset, $pos));//cut command from Query
+    }
+
+    /**
+     * Liefert einen Datensatz als assoziatives Array und indiziertes Array
+     */
+    private function fetchRow(mixed $query_resource = null): array|null|false
+    {
+        $query_resource ??= $this->query_resource;
+        return $query_resource ? $this->driver->fetch($query_resource) : false;
+    }
+
+    /**
+     * Frees the memory associated with a result
+     *
+     * @param mixed $query_resource Query Ergebnis-Kennung
+     * @return void Bei Erfolg true, bei Misserfolg false
+     */
+    public function free(mixed $query_resource = null): void
+    {
+        $query_resource ??= $this->query_resource;
+        $this->driver->free($query_resource);
+    }
+
+    /**
      * Returns three lists (fieldList with metadata, fieldNames, primary key) of a table
      *
      * @param string $database
@@ -515,25 +537,14 @@ class DataInterface
     }
 
     /**
-     * Frees the memory associated with a result
-     *
-     * @param mixed $query_resource Query Ergebnis-Kennung
-     * @return void Bei Erfolg true, bei Misserfolg false
+     * Returns the number of rows in a query resource
      */
-    public function free(mixed $query_resource = null): void
+    public function numRows(mixed $query_resource = null): int
     {
         $query_resource ??= $this->query_resource;
-        $this->driver->free($query_resource);
-    }
-
-    /**
-     * Returns the error of the last executed query
-     *
-     * @return array
-     */
-    public function getError(): array
-    {
-        return $this->driver->errors($this->lastConnectionWrapper)[0] ?? [];
+        $result = $this->lastConnectionWrapper?->getNumRows($query_resource) ?? 0;
+        assert(is_int($result));
+        return $result;
     }
 
     /**
@@ -545,6 +556,16 @@ class DataInterface
     {
         $result = $this->getError();
         return "{$result["code"]}: {$result["message"]}";
+    }
+
+    /**
+     * Returns the error of the last executed query
+     *
+     * @return array
+     */
+    public function getError(): array
+    {
+        return $this->driver->errors($this->lastConnectionWrapper)[0] ?? [];
     }
 
     /** Mit diesem Schalter werden alle Lesevorgänge auf die Backenddatenbank umgeleitet. **/
@@ -580,19 +601,5 @@ class DataInterface
     public function getLastQuery(): string
     {
         return $this->last_Query;
-    }
-
-    /**
-     * Identifies the command of a query
-     *
-     * @param string $sql
-     * @return string command (e.g. SELECT, INSERT, UPDATE, DELETE)
-     */
-    private function identifyCommand(string $sql): string
-    {
-        $offset = strspn($sql, "( \n\t\r");//skip to the meat
-        //find position of first whitespace, starting from magic value 2 from old code
-        $pos = strcspn($sql, " \n\r\t", $offset + 2) + 2;// TODO MySQL Syntax DO, USE?
-        return strtoupper(substr($sql, $offset, $pos));//cut command from Query
     }
 }

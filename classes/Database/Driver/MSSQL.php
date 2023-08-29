@@ -17,10 +17,24 @@ use pool\classes\Database\Exception\DatabaseConnectionException;
 
 class MSSQL extends Driver
 {
+    /**
+     * @var int Default port
+     */
     protected static int $port = 1433;
+
+    /**
+     * @var string Driver name
+     */
     protected static string $name = 'mssql';
+
+    /**
+     * @var string Extension name
+     */
     protected static string $provider = 'sqlsrv';
-    /** @var resource */
+
+    /**
+     * @var resource SQLSRV connection
+     */
     private $sqlsrv;
 
     /**
@@ -45,10 +59,10 @@ class MSSQL extends Driver
             'Database' => $database,
             'UID' => $username,
             'PWD' => $password,
-            'CharacterSet' => $this->charset = $options['charset'] ?? $this->charset
+            'CharacterSet' => $this->charset = $options['charset'] ?? $this->charset,
         ];
         if(($resource = sqlsrv_connect($hostname, $connection_info)) === false) {
-            throw new DatabaseConnectionException(print_r( sqlsrv_errors(), true));
+            throw new DatabaseConnectionException(print_r(sqlsrv_errors(), true));
         }
         return new ConnectionWrapper($resource, $this);
     }
@@ -64,41 +78,14 @@ class MSSQL extends Driver
         sqlsrv_close($connectionWrapper->getConnection());
     }
 
-    public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed
-    {
-        return sqlsrv_query($connectionWrapper->getConnection(), $query, $params);
-    }
-
-    public static function numRows(mixed $result): int
-    {
-        return sqlsrv_num_rows($result);
-    }
-
     public function errors(?ConnectionWrapper $connectionWrapper = null): array
     {
         return sqlsrv_errors() ?? [];
     }
 
-    public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false
-    {
-        return sqlsrv_rows_affected($result);
-    }
-
-    public function fetch(mixed $result): array|null|false
-    {
-        return sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC);
-    }
-
-    public function free(mixed $result): void
-    {
-        sqlsrv_free_stmt($result);
-    }
-
-    public function escape(ConnectionWrapper $connectionWrapper, string $string): string
-    {
-        return $string;
-    }
-
+    /**
+     * Returns the value generated for an AUTO_INCREMENT column by the last query
+     */
     public function getLastId(ConnectionWrapper $connectionWrapper): int|string
     {
         $stmt = $this->query($connectionWrapper, 'SELECT SCOPE_IDENTITY() AS last_id');
@@ -108,6 +95,68 @@ class MSSQL extends Driver
         return $last_id;
     }
 
+    /**
+     * Executes a query and returns the query result
+     *
+     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param string $query SQL query
+     * @param ...$params
+     * @return mixed query result
+     */
+    public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed
+    {
+        return sqlsrv_query($connectionWrapper->getConnection(), $query, $params);
+    }
+
+    /**
+     * Fetch the next row of a result set as an associative array
+     */
+    public function fetch(mixed $result): array|null|false
+    {
+        return sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC);
+    }
+
+    /**
+     * Frees the memory associated with a result
+     */
+    public function free(mixed $result): void
+    {
+        sqlsrv_free_stmt($result);
+    }
+
+    /**
+     * Gets the number of rows in the result set
+     *
+     * @param resource $result
+     */
+    public function numRows(mixed $result): int
+    {
+        return sqlsrv_num_rows($result);
+    }
+
+    /**
+     * Gets the number of affected rows in a previous SQL operation
+     *
+     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param resource $result
+     * @return int|false
+     */
+    public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false
+    {
+        return sqlsrv_rows_affected($result);
+    }
+
+    /**
+     * Escaping special characters not available for MSSQL
+     */
+    public function escape(ConnectionWrapper $connectionWrapper, string $string): string
+    {
+        return $string;
+    }
+
+    /**
+     * Get the columns info of a table
+     */
     public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array
     {
         $query = <<<SQL
@@ -140,7 +189,7 @@ SQL;
             $row['phpType'] = $phpType;
             $fieldList[] = $row;
             $fields[] = $row['COLUMN_NAME'];
-            if ($row['COLUMN_KEY'] == 'PRI') {
+            if($row['COLUMN_KEY'] == 'PRI') {
                 $pk[] = $row['COLUMN_NAME'];
             }
         }
@@ -149,7 +198,7 @@ SQL;
         return [
             $fieldList,
             $fields,
-            $pk
+            $pk,
         ];
     }
 }
