@@ -18,6 +18,7 @@ class ConnectionWrapper
      * @var \pool\classes\Database\Driver
      */
     private Driver $driver;
+    private bool $closed = false;
 
     public function __construct(mixed $connection, Driver $driver)
     {
@@ -46,7 +47,10 @@ class ConnectionWrapper
      */
     public function close(): void
     {
-        $this->driver->close($this);
+        if(!$this->closed) {
+            $this->driver->close($this);
+            $this->closed = true;
+        }
     }
 
     public function fetch(mixed $result): array|false

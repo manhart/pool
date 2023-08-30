@@ -333,12 +333,8 @@ class DataInterface
         $writeConnections = &$this->connections[ConnectionMode::WRITE->value];
 
         if(is_array($readConnections)) {
-            foreach($readConnections as $database => $conid) if($conid instanceof ConnectionWrapper) {
+            foreach($readConnections as $database => $conid) if($conid instanceof ConnectionWrapper)
                 $conid->close();
-                // workaround, sonst schlägt die Schleife für write mode fehl. // But why? The documentation doesn't say close isn't idempotent
-                if((isset($writeConnections[$database])) && ($conid == $writeConnections[$database]))
-                    unset($writeConnections[$database]);
-            }
             $readConnections = [];
         }
         if(is_array($writeConnections)) {
