@@ -261,6 +261,7 @@ class MySQL_DAO extends DAO
 
     /**
      * Set the table alias
+     * @todo rethink / rework setTableAlias
      */
     public function setTableAlias($alias): void
     {
@@ -527,7 +528,6 @@ SQL;
      * @param boolean $skip_next_operator False setzt zu Beginn keinen Operator
      * @param string $initialOperator
      * @return string filter part of sql statement
-     * @throws \Exception
      */
     protected function __buildFilter(array $filter_rules, string $operator = 'and', bool $skip_next_operator = false, string $initialOperator = ' and'): string
     {
