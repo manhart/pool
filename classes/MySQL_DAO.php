@@ -256,7 +256,7 @@ class MySQL_DAO extends DAO
         $type = substr($fieldInfo['Type'], 0, 4);
         if($type != 'enum') return [];
         $buf = substr($fieldInfo['Type'], 5, -1);
-        return explode('\',\'', substr($buf, 1, -1));
+        return explode("','", substr($buf, 1, -1));
     }
 
     /**
