@@ -1,4 +1,4 @@
-<?php declare (strict_types = 1);
+<?php
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -17,6 +17,12 @@ use pool\classes\Core\Weblication;
 use pool\classes\Exception\DAOException;
 use ResultSet;
 
+/**
+ * Class DAO - Data Access Object
+ *
+ * @package pool\classes\Database
+ * @since 2003/07/10
+ */
 abstract class DAO extends PoolObject
 {
     /**
@@ -34,12 +40,12 @@ abstract class DAO extends PoolObject
     protected static ?string $interfaceType = null;
 
     /**
-     * @var string|null name of the table / file / view
+     * @var string|null Name of the table / file / view (must be declared in derived class)
      */
     protected static ?string $tableName = null;
 
     /**
-     * @var string|null
+     * @var string|null Name of the database (must be declared in derived class)
      */
     protected static ?string $databaseName = null;
 
@@ -49,12 +55,12 @@ abstract class DAO extends PoolObject
     protected DataInterface $DataInterface;
 
     /**
-     * @var string
+     * @var string Internal Name of the table
      */
     protected string $table;
 
     /**
-     * @var string name of the database (must be declared in derived class)
+     * @var string Internal Name of the database
      */
     protected string $database;
 
@@ -159,6 +165,13 @@ abstract class DAO extends PoolObject
     }
 
     /**
+     * fetches the columns automatically from the driver / interface
+     *
+     * @return DAO
+     */
+    abstract public function fetchColumns(): static;
+
+    /**
      * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
      *
      * @param string|null $tableName table definition or the table name
@@ -208,57 +221,61 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * fetches the columns automatically from the driver / interface
+     * Return DataInterface
      *
-     * @return DAO
+     * @return DataInterface
      */
-    abstract public function fetchColumns(): static;
+    public function getDataInterface(): DataInterface
+    {
+        return $this->DataInterface;
+    }
 
     /**
-     * Einen Datensatz einfuegen (virtuelle Methode).
+     * @return string
+     */
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
+    /**
+     * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
      */
     abstract public function insert(array $data): ResultSet;
 
     /**
-     * Einen Datensatz aendern (virtuelle Methode).
+     * Update a record by primary key (put the primary key in the data array)
      */
     abstract public function update(array $data): ResultSet;
 
     /**
-     * Einen Datensatz loeschen (virtuelle Methode).
+     * Delete a record by primary key
      */
-    abstract public function delete($id): ResultSet;
+    abstract public function delete(int|string|array $id): ResultSet;
 
     /**
-     * @return ResultSet
+     * Delete multiple records at once
      */
-    abstract public function deleteMultiple(): ResultSet;
+    abstract public function deleteMultiple(array $filter_rules = []): ResultSet;
 
     /**
-     * Einen Datensatz zurueck geben (virtuelle Methode).
-     * Datensaetze werden als Objekt ResultSet zurueck gegeben.
+     * Returns a single record e.g. by primary key
      */
-    abstract public function get($id, $key = null): ResultSet;
+    abstract public function get(int|string|array $id, null|string|array $key = null): ResultSet;
 
     /**
-     * Mehrere Datensaetze zurueck geben (virtuelle Methode).
-     * Datensaetze werden als Objekt ResultSet zurueck gegeben.
+     * Returns all data records of the assembled SQL statement as a ResultSet
      */
-    abstract public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
+    abstract public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
         array $groupBy = [], array $having = [], array $options = []): ResultSet;
 
     /**
-     * Liefert die Anzahl gefundener Datensaete zurueck (virtuelle Methode).
-     * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
-     * sondern nur die Anzahl.
+     * Returns the number of records of the assembled SQL statement as a ResultSet
      */
-    abstract public function getCount(mixed $id = null, mixed $key = null, array $filter_rules = []): ResultSet;
+    abstract public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): ResultSet;
 
     /**
-     * set primary key
-     *
-     * @param string ...$primaryKey
-     * @return DAO
+     * Set primary key
      */
     public function setPrimaryKey(string ...$primaryKey): static
     {
@@ -267,67 +284,54 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * returns primary key
+     * Returns primary key
      *
      * @return array primary key
-     **/
+     */
     public function getPrimaryKey(): array
     {
         return $this->pk;
     }
 
     /**
-     * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
+     * Setzt die Spalten, die abgefragt werden.
      *
      * @param string $columns columns as string with separator
      * @param string $separator Trenner (Spaltentrenner im String)
      **/
-    public function setColumnsAsString(string $columns, string $separator = ';'): DAO
+    public function setColumnsAsString(string $columns, string $separator = ';'): static
     {
-        $this->columns = explode($separator, $columns);
-        $this->onSetColumns($this->columns);
+        $this->setColumns(...explode($separator, $columns));
         return $this;
     }
 
     /**
-     * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
-     *
-     * @param array $columns Spalten
-     * @return DAO
+     * Set columns as array
      */
-    public function setColumnsAsArray(array $columns): DAO
+    public function setColumnsAsArray(array $columns): static
     {
-        $this->columns = $columns;
-        $this->onSetColumns($columns);
+        $this->setColumns(...$columns);
         return $this;
     }
 
     /**
-     * Liefert ein Array mit Spaltennamen zurueck (nicht unbedingt alle Spalten der Tabelle)
+     * Returns the columns you want to query.
      *
      * @return array Spalten
-     **/
+     */
     public function getColumns(): array
     {
         return $this->columns;
     }
 
     /**
-     * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
-     *
-     * @param string ...$columns columns
+     * Sets the columns you want to query.
      */
-    public function setColumns(string ...$columns): DAO
+    public function setColumns(string ...$columns): static
     {
         $this->columns = $columns;
-        $this->onSetColumns($columns);
         return $this;
     }
-
-    /**
-     * event is triggered when the columns are set
-     */
-    abstract protected function onSetColumns(array $columns);
 
     /**
      * Returns the metadata of the table
@@ -341,28 +345,26 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * Liefert ein Array mit "allen" Spaltennamen zurueck
+     * Returns a column list of the table with information about the columns
      */
     abstract public function getFieldList(): array;
-
-    // function formatData(&$data) {}
 
     /**
      * Liefert den Typ einer Spalte
      *
-     * @param string $fieldName
+     * @param string $column
      * @return string
      */
-    abstract public function getFieldType(string $fieldName): string;
+    abstract public function getColumnDataType(string $column): string;
 
     /**
-     * @param string $fieldName
+     * @param string $column
      * @return array
      */
-    abstract public function getFieldInfo(string $fieldName): array;
+    abstract public function getColumnInfo(string $column): array;
 
     /**
-     * @return int number of records / rows
+     * @return int Number of records / rows
      */
     abstract public function foundRows(): int;
 }
