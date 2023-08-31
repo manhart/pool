@@ -1008,13 +1008,6 @@ class RecordSet extends PoolObject implements Countable
     {
         $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
         $xml .= '<rows total_count=\''.$total_count.'\' pos=\''.$pos.'\'>';
-        /*				if($row = $this->getRow()) {
-                        $xml .= '<head>';
-                        foreach($row as $key => $val) {
-                            $xml .= '<column type="dyn" width="50">'.$key.'</column>';
-                        }
-                        $xml .= '</head>';
-                    }*/
         $count = $this->count();
         if($count) {
             // Schluessel bzw. Felder im Voraus ermitteln
