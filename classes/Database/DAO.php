@@ -367,4 +367,18 @@ abstract class DAO extends PoolObject
      * @return int Number of records / rows
      */
     abstract public function foundRows(): int;
+
+    abstract function fetchingRow(array $row): array;
+
+    /**
+     * Executes sql statement and returns resultset
+     *
+     * @param string $sql sql statement to execute
+     * @param callable|null $customCallback
+     * @return \ResultSet
+     */
+    protected function execute(string $sql, ?callable $customCallback = null): ResultSet
+    {
+        return $this->getDataInterface()->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
+    }
 }

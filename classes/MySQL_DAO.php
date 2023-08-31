@@ -331,19 +331,7 @@ INSERT INTO `$this->table`
 VALUES
     ($values)
 SQL;
-        return $this->__createMySQL_Resultset($sql);
-    }
-
-    /**
-     * Executes sql statement and returns resultset
-     *
-     * @param string $sql sql statement to execute
-     * @param callable|null $customCallback
-     * @return \ResultSet
-     */
-    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): ResultSet
-    {
-        return $this->getDataInterface()->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
+        return $this->execute($sql);
     }
 
     /**
@@ -391,7 +379,7 @@ SET
 WHERE
     $where
 SQL;
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
@@ -504,7 +492,7 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
@@ -639,7 +627,7 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
@@ -656,7 +644,7 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
@@ -675,7 +663,7 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
@@ -713,7 +701,7 @@ WHERE
     $limit
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
@@ -812,7 +800,7 @@ WHERE
     $filter
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
