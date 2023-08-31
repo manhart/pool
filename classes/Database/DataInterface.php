@@ -14,11 +14,11 @@ use Exception;
 use Log;
 use mysqli_sql_exception;
 use pool\classes\Core\PoolObject;
+use pool\classes\Core\RecordSet;
 use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Utils\Singleton;
-use ResultSet;
 use Stopwatch;
 use function constant;
 use function defined;
@@ -225,11 +225,12 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Execute an SQL statement and return the result as a ResultSet.
+     * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
+     *
+     * @throws \Exception
      */
-    public function execute(string $sql, string $dbname = '', ?callable $callbackOnFetchRow = null, array $metaData = []): ResultSet
+    public function execute(string $sql, string $dbname = '', ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
     {
-        $ResultSet = new ResultSet();
 
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
@@ -251,7 +252,10 @@ class DataInterface extends PoolObject
                 case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
                     //? ( z.B. UNION
                     if($this->numRows($query_resource)) {
-                        $ResultSet->setRowSet($this->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
+                        $RecordSet = new RecordSet($this->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
+                    }
+                    else {
+                        $RecordSet = new RecordSet();
                     }
                     $this->free($query_resource);
                     break;
@@ -269,8 +273,10 @@ class DataInterface extends PoolObject
                             0 => $last_insert_id ?? $affected_rows,
                             'affected_rows' => $affected_rows,
                         ] + ($idColumns ?? []);//for insert save value db->nextid()
-                    $ResultSet->setRowSet([0 => $row]);
+                    $RecordSet = new RecordSet([0 => $row]);
                     break;
+                default:
+                    throw new Exception("Unknown command: '{$this->getLastQueryCommand()}' in $sql");
             }
         }
         else {//statement failed
@@ -278,7 +284,7 @@ class DataInterface extends PoolObject
             $this->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
             $error = $this->getError();
             $error['sql'] = $sql;
-            $ResultSet->addError($error);
+            $RecordSet = (new RecordSet())->addError($error);
             // SQL Statement Error Logging:
             if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) == 1)
                 Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
@@ -293,7 +299,7 @@ class DataInterface extends PoolObject
                 Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
                     configurationName: Log::SQL_LOG_NAME);
         }
-        return $ResultSet;
+        return $RecordSet;
     }
 
     /**
