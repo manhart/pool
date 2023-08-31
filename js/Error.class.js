@@ -60,3 +60,6 @@ class PoolAjaxResponseError extends PoolError {
         return this.responseText;
     }
 }
+
+class PoolInvalidArgumentError extends PoolError {
+}
