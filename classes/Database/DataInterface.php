@@ -523,7 +523,7 @@ class DataInterface extends PoolObject
         if(IS_TESTSERVER && !in_array($command, $this->commands))
             echo "Unknown command: '$command'<br>".
                 "in $sql<hr>".
-                'Please contact the POOL\'s maintainer to analyze the DataInterface in the query() function.';
+                "Please contact the POOL's maintainer to analyze the DataInterface in the query() function.";
         $isSELECT = $command == 'SELECT';//mode selection
         $mode = !$isSELECT || $this->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
         if($isSELECT)
