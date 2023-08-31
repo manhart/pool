@@ -39,7 +39,7 @@ class GUI_Module
     /**
      * Initializes the module
      *
-     * @param {object} options options for the module
+     * @param {object} options - options passed to the module
      */
     init(options = {})
     {
