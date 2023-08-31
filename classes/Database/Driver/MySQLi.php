@@ -10,7 +10,7 @@
 
 namespace pool\classes\Database\Driver;
 
-use pool\classes\Database\ConnectionWrapper;
+use pool\classes\Database\Connection;
 use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
@@ -50,10 +50,10 @@ class MySQLi extends Driver
      * @param string $password
      * @param string $database
      * @param mixed ...$options
-     * @return ConnectionWrapper
+     * @return Connection
      */
     public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options): ConnectionWrapper
+        string $database = '', ...$options): Connection
     {
         $this->mysqli = mysqli_init();
         try {
@@ -63,7 +63,7 @@ class MySQLi extends Driver
         catch(\mysqli_sql_exception $e) {
             throw new DatabaseConnectionException($e->getMessage(), $e->getCode(), $e);
         }
-        return new ConnectionWrapper($this->mysqli, $this);
+        return new Connection($this->mysqli, $this);
     }
 
     /**
@@ -78,17 +78,17 @@ class MySQLi extends Driver
     /**
      * Closes the connection
      */
-    public function close(ConnectionWrapper $connectionWrapper): void
+    public function close(Connection $connection): void
     {
-        $connectionWrapper->getConnection()->close();
+        $connection->getConnection()->close();
     }
 
     /**
      * Returns a list of errors from the last command executed
      */
-    public function errors(?ConnectionWrapper $connectionWrapper = null): array
+    public function errors(?Connection $connection = null): array
     {
-        $errors = $connectionWrapper?->getConnection()->error_list ?: [];
+        $errors = $connection?->getConnection()->error_list ?: [];
         mysqli_connect_errno() && $errors[] = [
             'errno' => mysqli_connect_errno(),
             'error' => mysqli_connect_error(),
@@ -109,35 +109,35 @@ class MySQLi extends Driver
     /**
      * Gets the number of affected rows in a previous SQL operation
      *
-     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param \pool\classes\Database\Connection $connection
      * @param \mysqli_result $result
      * @return int|false
      */
-    public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false
+    public function affectedRows(Connection $connection, mixed $result): int|false
     {
-        return $connectionWrapper->getConnection()->affected_rows;
+        return $connection->getConnection()->affected_rows;
     }
 
     /**
      * Escapes special characters in a string for use in an SQL statement, taking into account the current charset of the connection
      */
-    public function escape(ConnectionWrapper $connectionWrapper, string $string): string
+    public function escape(Connection $connection, string $string): string
     {
-        return $connectionWrapper->getConnection()->real_escape_string($string);
+        return $connection->getConnection()->real_escape_string($string);
     }
 
     /**
      * Returns the value generated for an AUTO_INCREMENT column by the last query
      */
-    public function getLastId(ConnectionWrapper $connectionWrapper): int|string
+    public function getLastId(Connection $connection): int|string
     {
-        return $connectionWrapper->getConnection()->insert_id;
+        return $connection->getConnection()->insert_id;
     }
 
     /**
      * Get the columns info of a table
      */
-    public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array
+    public function getTableColumnsInfo(Connection $connection, string $database, string $table): array
     {
         $query = <<<SQL
 SELECT
@@ -149,7 +149,7 @@ FROM information_schema.COLUMNS
 WHERE TABLE_SCHEMA = '$database'
   AND TABLE_NAME = '$table'
 SQL;
-        $result = $this->query($connectionWrapper, $query, result_mode: MYSQLI_USE_RESULT);
+        $result = $this->query($connection, $query, result_mode: MYSQLI_USE_RESULT);
         $fieldList = $fields = $pk = [];
         while($row = $this->fetch($result)) {
             $phpType = match ($row['DATA_TYPE']) {
@@ -178,14 +178,14 @@ SQL;
     /**
      * Executes a query and returns the query result
      *
-     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param \pool\classes\Database\Connection $connection
      * @param string $query SQL query
      * @param ...$params
      * @return mixed query result
      */
-    public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed
+    public function query(Connection $connection, string $query, ...$params): mixed
     {
-        return @$connectionWrapper->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
+        return @$connection->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
     }
 
     /**

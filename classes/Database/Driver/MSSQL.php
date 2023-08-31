@@ -10,7 +10,7 @@
 
 namespace pool\classes\Database\Driver;
 
-use pool\classes\Database\ConnectionWrapper;
+use pool\classes\Database\Connection;
 use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
@@ -53,7 +53,7 @@ class MSSQL extends Driver
      * @return resource
      */
     public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options): ConnectionWrapper
+        string $database = '', ...$options): Connection
     {
         $connection_info = [
             'Database' => $database,
@@ -64,7 +64,7 @@ class MSSQL extends Driver
         if(($resource = sqlsrv_connect($hostname, $connection_info)) === false) {
             throw new DatabaseConnectionException(print_r(sqlsrv_errors(), true));
         }
-        return new ConnectionWrapper($resource, $this);
+        return new Connection($resource, $this);
     }
 
     public function setCharset(string $charset): static
@@ -73,12 +73,12 @@ class MSSQL extends Driver
         return $this;
     }
 
-    public function close(ConnectionWrapper $connectionWrapper): void
+    public function close(Connection $connection): void
     {
-        sqlsrv_close($connectionWrapper->getConnection());
+        sqlsrv_close($connection->getConnection());
     }
 
-    public function errors(?ConnectionWrapper $connectionWrapper = null): array
+    public function errors(?Connection $connection = null): array
     {
         return sqlsrv_errors() ?? [];
     }
@@ -86,9 +86,9 @@ class MSSQL extends Driver
     /**
      * Returns the value generated for an AUTO_INCREMENT column by the last query
      */
-    public function getLastId(ConnectionWrapper $connectionWrapper): int|string
+    public function getLastId(Connection $connection): int|string
     {
-        $stmt = $this->query($connectionWrapper, 'SELECT SCOPE_IDENTITY() AS last_id');
+        $stmt = $this->query($connection, 'SELECT SCOPE_IDENTITY() AS last_id');
         if(!$stmt) return 0;
         $last_id = $this->fetch($stmt)['last_id'] ?: 0;
         $this->free($stmt);
@@ -98,14 +98,14 @@ class MSSQL extends Driver
     /**
      * Executes a query and returns the query result
      *
-     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param \pool\classes\Database\Connection $connection
      * @param string $query SQL query
      * @param ...$params
      * @return mixed query result
      */
-    public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed
+    public function query(Connection $connection, string $query, ...$params): mixed
     {
-        return sqlsrv_query($connectionWrapper->getConnection(), $query, $params);
+        return sqlsrv_query($connection->getConnection(), $query, $params);
     }
 
     /**
@@ -137,11 +137,11 @@ class MSSQL extends Driver
     /**
      * Gets the number of affected rows in a previous SQL operation
      *
-     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param \pool\classes\Database\Connection $connection
      * @param resource $result
      * @return int|false
      */
-    public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false
+    public function affectedRows(Connection $connection, mixed $result): int|false
     {
         return sqlsrv_rows_affected($result);
     }
@@ -149,7 +149,7 @@ class MSSQL extends Driver
     /**
      * Escaping special characters not available for MSSQL
      */
-    public function escape(ConnectionWrapper $connectionWrapper, string $string): string
+    public function escape(Connection $connection, string $string): string
     {
         return $string;
     }
@@ -157,7 +157,7 @@ class MSSQL extends Driver
     /**
      * Get the columns info of a table
      */
-    public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array
+    public function getTableColumnsInfo(Connection $connection, string $database, string $table): array
     {
         $query = <<<SQL
 SELECT
@@ -177,7 +177,7 @@ LEFT JOIN
 WHERE
     c.object_id = OBJECT_ID('$database.dbo.$table')
 SQL;
-        $result = $this->query($connectionWrapper, $query);
+        $result = $this->query($connection, $query);
         $fieldList = $fields = $pk = [];
 
         while($row = $this->fetch($result)) {
