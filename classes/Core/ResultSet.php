@@ -8,12 +8,13 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\PoolObject;
-use pool\classes\Core\Weblication;
+namespace pool\classes\Core;
+
 use pool\classes\Exception\InvalidJsonException;
 
 /**
- * Class ResultSet
+ * Class pool\classes\Core\ResultSet
+ *
  * @package pool\classes\Core
  * @since 2003-07-10
  */
@@ -41,7 +42,6 @@ class ResultSet extends PoolObject implements Countable
 
     /**
      * Sortiert eine oder mehrere Spalten.
-     *
      * Beispiel Code-Schnipsel:
      * <code>
      * // einspaltig
@@ -55,7 +55,6 @@ class ResultSet extends PoolObject implements Countable
         if(!$this->records) return;
 
         if(is_string($column)) {
-
             $sortarr = array_column($this->records, $column);
             if($sortType == SORT_STRING) {
                 $sortarr = array_map('strtolower', $sortarr);
@@ -72,8 +71,8 @@ class ResultSet extends PoolObject implements Countable
                     if($z == 0) {
                         if($params != '') $params .= ', ';
                         $params .= "\$sortarr['$col_name']";
-                        $params .= ', ' . ($col[1] ?? $sort);
-                        $params .= ', ' . ($col[2] ?? $sortType);
+                        $params .= ', '.($col[1] ?? $sort);
+                        $params .= ', '.($col[2] ?? $sortType);
                     }
                     $sortarr[$col_name][] = $row[$col_name];
                     if($sortType == SORT_STRING) {
@@ -285,7 +284,7 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Returns the number of records in the ResultSet
+     * Returns the number of records in the pool\classes\Core\ResultSet
      */
     public function count(): int
     {
@@ -393,7 +392,8 @@ class ResultSet extends PoolObject implements Countable
             try {
                 return new DateTime($value, $timezone);
             }
-            catch(Exception) {}
+            catch(Exception) {
+            }
         }
         return null;
     }
@@ -427,7 +427,7 @@ class ResultSet extends PoolObject implements Countable
     {
         $DateTime = $this->getValueAsDateTime($key, $default);
         if(is_null($DateTime)) return null;
-        $format = Weblication::getInstance()->getDefaultFormat('php.date.time' . ($seconds ? '.sec' : ''));
+        $format = Weblication::getInstance()->getDefaultFormat('php.date.time'.($seconds ? '.sec' : ''));
         return $DateTime->format($format);
     }
 
@@ -507,7 +507,7 @@ class ResultSet extends PoolObject implements Countable
     public function addFields(array|string $key, string $value = ''): ResultSet
     {
         if($this->count() == 0)
-            return is_array($key)? $this->addValues($key) : $this->addValue($key, $value);
+            return is_array($key) ? $this->addValues($key) : $this->addValue($key, $value);
         $insert = is_array($key) ? $key : [$key => $value];
         $this->records[$this->index] = array_merge($this->records[$this->index], $insert);
         return $this;
@@ -551,12 +551,13 @@ class ResultSet extends PoolObject implements Countable
 
     /**
      * Deletes a field (key) including its content (value) from all data records
+     *
      * @param string $key
      * @return $this
      */
     public function delKeyFromAll(string $key): static
     {
-        foreach ($this->records as &$row) {
+        foreach($this->records as &$row) {
             unset($row[$key]);
         }
         return $this;
@@ -564,13 +565,14 @@ class ResultSet extends PoolObject implements Countable
 
     /**
      * Deletes fields (keys) including their content (values) from all data records
+     *
      * @param array $keys
      * @return $this
      */
     public function delKeysFromAll(array $keys): static
     {
-        foreach ($this->records as &$row) {
-            foreach ($keys as $key) {
+        foreach($this->records as &$row) {
+            foreach($keys as $key) {
                 unset($row[$key]);
             }
         }
@@ -587,9 +589,9 @@ class ResultSet extends PoolObject implements Countable
     public function changeKeysFromAll(array $old_key, array $new_key): static
     {
         $oldCount = count($old_key);
-        foreach ($this->records as &$row) {
-            for ($k = 0; $k < $oldCount; $k++) {
-                if (isset($row[$old_key[$k]])) {
+        foreach($this->records as &$row) {
+            for($k = 0; $k < $oldCount; $k++) {
+                if(isset($row[$old_key[$k]])) {
                     $row[$new_key[$k]] = $row[$old_key[$k]];
                     unset($row[$old_key[$k]]);
                 }
@@ -625,6 +627,7 @@ class ResultSet extends PoolObject implements Countable
 
     /**
      * Returns the current record (dataset) or an empty array if the position (index) is out of range
+     *
      * @see static::seek()
      */
     public function getRow(int $index = -1): array
@@ -647,7 +650,7 @@ class ResultSet extends PoolObject implements Countable
         if($index >= 0 && $index != $this->index)
             $this->seek($index);
         if($this->index >= 0) {
-            $end = $this->index + $amount - $amount/abs($amount);
+            $end = $this->index + $amount - $amount / abs($amount);
             if($end < 0 || $this->count() <= $end) return false;
             $index = min($this->index, $end);
             array_splice($this->records, $index, abs($amount));
@@ -668,7 +671,8 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Füllt das Resultset mit Daten. Als Übergabeparameter erwartet die Funktion ein indiziertes Array (enthaelt je Satz ein assoziatives Array mit Feldnamen). Satzzeiger wird auf ersten Satz gelegt.
+     * Füllt das Resultset mit Daten. Als Übergabeparameter erwartet die Funktion ein indiziertes Array (enthaelt je Satz ein assoziatives Array mit
+     * Feldnamen). Satzzeiger wird auf ersten Satz gelegt.
      *
      * @param array $rowSet
      * @return ResultSet
@@ -699,9 +703,16 @@ class ResultSet extends PoolObject implements Countable
      * und ersetzt diese durch die Elemente des Arrays replacement, wenn angegeben und gibt ein
      * Array mit den entfernten Elemente zurueck
      *
-     * @param int $offset Ist offset positiv, beginnt der zu entfernende Bereich bei diesem Offset vom Anfang der Ergebnismenge. Ist offset negativ, beginnt der zu entfernende Bereich offset Elemente vor dem Ende der Ergebnismenge.
-     * @param int|null $length Ist length nicht angegeben, wird alles von offset bis zum Ende der Ergebnismenge entfernt. Ist length positiv, wird die angegebene Anzahl Elemente entfernt. Ist length negativ, dann wird der Bereich von length Elementen vor dem Ende, bis zum Ende der Ergebnismenge entfernt. Tipp: Um alles von offset bis zum Ende der Ergebenismenge zu entfernen wenn replacement ebenfalls angegeben ist, verwenden Sie Resultset::count() als length. (optional)
-     * @param array $replacement Ist das Array replacement angegeben, werden die entfernten Elemente durch die Elemente dieses Arrays ersetzt. Sind offset und length so angegeben dass nichts entfernt wird, werden die Elemente von replacement an der von offset spezifizierten Stelle eingefuegt. Tipp: Soll die Ersetzung durch nur ein Element erfolgen ist es nicht noetig ein Array zu anzugeben es sei denn, dieses Element ist selbst ein Array. (optional)
+     * @param int $offset Ist offset positiv, beginnt der zu entfernende Bereich bei diesem Offset vom Anfang der Ergebnismenge. Ist offset negativ,
+     *     beginnt der zu entfernende Bereich offset Elemente vor dem Ende der Ergebnismenge.
+     * @param int|null $length Ist length nicht angegeben, wird alles von offset bis zum Ende der Ergebnismenge entfernt. Ist length positiv, wird die
+     *     angegebene Anzahl Elemente entfernt. Ist length negativ, dann wird der Bereich von length Elementen vor dem Ende, bis zum Ende der
+     *     Ergebnismenge entfernt. Tipp: Um alles von offset bis zum Ende der Ergebenismenge zu entfernen wenn replacement ebenfalls angegeben ist,
+     *     verwenden Sie Resultset::count() als length. (optional)
+     * @param array $replacement Ist das Array replacement angegeben, werden die entfernten Elemente durch die Elemente dieses Arrays ersetzt. Sind offset
+     *     und length so angegeben dass nichts entfernt wird, werden die Elemente von replacement an der von offset spezifizierten Stelle eingefuegt.
+     *     Tipp: Soll die Ersetzung durch nur ein Element erfolgen ist es nicht noetig ein Array zu anzugeben es sei denn, dieses Element ist selbst ein
+     *     Array. (optional)
      * @return array Gibt das Array mit den entfernten Element zurueck.
      */
     public function spliceRowSet(int $offset, ?int $length = null, array $replacement = []): array
@@ -730,7 +741,7 @@ class ResultSet extends PoolObject implements Countable
         else {
             foreach($this->records as $row) {
                 if(isset($row[$fieldName])) {
-                    $row[$fieldName] = match($type) {
+                    $row[$fieldName] = match ($type) {
                         'int' => (int)$row[$fieldName],
                         'float' => (float)$row[$fieldName],
                         'bool' => (bool)$row[$fieldName],
@@ -841,16 +852,16 @@ class ResultSet extends PoolObject implements Countable
         $csv = '';
         if($this->count()) {
             if($with_headline) {
-                $csv .= implode($separator, array_keys($this->records[0])) . $line_break;
+                $csv .= implode($separator, array_keys($this->records[0])).$line_break;
             }
             foreach($this->records as $row) {
                 $line = '';
                 $values = array_values($row);
                 foreach($values as $val) {
                     $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
-                    $line .= ($line != '') ? ($separator . $val) : ($val);
+                    $line .= ($line != '') ? ($separator.$val) : ($val);
                 }
-                $csv .= $line . $line_break;
+                $csv .= $line.$line_break;
             }
         }
         return $csv;
@@ -880,7 +891,7 @@ class ResultSet extends PoolObject implements Countable
         $csv = '';
         if($this->count()) {
             if($this->returnFields) {
-                if($with_headline) $csv .= implode($separator, array_values(($this->returnFields))) . $line_break;
+                if($with_headline) $csv .= implode($separator, array_values(($this->returnFields))).$line_break;
                 $row = '';
                 foreach($this->returnFields as $key) {
                     if($row != '') $row .= $separator;
@@ -893,14 +904,14 @@ class ResultSet extends PoolObject implements Countable
             }
             else {
                 if($with_headline) {
-                    $csv .= implode($separator, array_keys($this->records[$this->index])) . $line_break;
+                    $csv .= implode($separator, array_keys($this->records[$this->index])).$line_break;
                 }
 
                 $values = array_values($this->getRow());
                 $i = 0;
                 foreach($values as $val) {
                     $val = self::maskTextCSVcompliant((string)$val, $separator, $text_clinch);
-                    $csv .= ($i == 0) ? $val : $separator . $val;
+                    $csv .= ($i == 0) ? $val : $separator.$val;
                     $i++;
                 }
                 $csv .= $line_break;
@@ -936,10 +947,10 @@ class ResultSet extends PoolObject implements Countable
             $hasTextClinch = strpos($val, $text_clinch);
         }
         if($hasTextClinch !== false) {
-            $val = str_replace($text_clinch, $text_clinch . $text_clinch, $val);
+            $val = str_replace($text_clinch, $text_clinch.$text_clinch, $val);
         }
         if($hasTextClinch !== false or str_contains($val, $separator) or str_contains($val, chr(10)) or str_contains($val, chr(13))) {
-            $val = $text_clinch . $val . $text_clinch;
+            $val = $text_clinch.$val.$text_clinch;
         }
         return $val;
     }
@@ -957,7 +968,7 @@ class ResultSet extends PoolObject implements Countable
         if($this->records) {
             foreach($this->records[$this->index] as $key => $val) {
                 if($string != '') $string .= $separator;
-                $string .= $key . $key_value_separator . $val;
+                $string .= $key.$key_value_separator.$val;
             }
         }
         return $string;
@@ -967,7 +978,8 @@ class ResultSet extends PoolObject implements Countable
      * Creates data format for the bootstrap table
      *
      * @param int $total
-     * @param int|null $totalNotFiltered (optional) Use totalNotFilteredField parameter to set the field from the json response which will used for showExtendedPagination
+     * @param int|null $totalNotFiltered (optional) Use totalNotFilteredField parameter to set the field from the json response which will used for
+     *     showExtendedPagination
      * @return array
      */
     public function getRowSetAsBSTable(int $total, int $totalNotFiltered = null): array
@@ -997,8 +1009,8 @@ class ResultSet extends PoolObject implements Countable
     public function getRowsetAsXGrid(array $pk, int $total_count, int $pos = 0, bool $without_pk = true, string $encoding = 'ISO-8859-1',
         bool $encode = false, array $callbackRow = [], array $callbackCell = []): string
     {
-        $xml = '<?xml version=\'1.0\' encoding=\'' . $encoding . '\'?>';
-        $xml .= '<rows total_count=\'' . $total_count . '\' pos=\'' . $pos . '\'>';
+        $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
+        $xml .= '<rows total_count=\''.$total_count.'\' pos=\''.$pos.'\'>';
         /*				if($row = $this->getRow()) {
                         $xml .= '<head>';
                         foreach($row as $key => $val) {
@@ -1034,27 +1046,27 @@ class ResultSet extends PoolObject implements Countable
                 }
                 $rowSettings = '';
                 if($callbackRow) {
-                    $rowSettings = ' ' . $callbackRow[0]->$callbackRow[1]($id, $row, $z, $count);
+                    $rowSettings = ' '.$callbackRow[0]->$callbackRow[1]($id, $row, $z, $count);
                 }
-                $xml .= '<row id=\'' . $id . '\'' . $rowSettings . '>';
+                $xml .= '<row id=\''.$id.'\''.$rowSettings.'>';
 
                 foreach($keys as $key) {
                     $val = $row[$key];
 
                     $cellSettings = '';
-                    if($callbackCell) $cellSettings = ' ' . $callbackCell[0]->$callbackCell[1]($key, $val, $row, $z, $count);
-                    $xml .= '<cell' . $cellSettings . '>';
+                    if($callbackCell) $cellSettings = ' '.$callbackCell[0]->$callbackCell[1]($key, $val, $row, $z, $count);
+                    $xml .= '<cell'.$cellSettings.'>';
                     if(is_numeric($val)) {
                         $xml .= $val;
                     }
                     else {
                         // Any encoding to UTF-8 using mbstring: mb_convert_encoding($string, 'UTF-8', mb_list_encodings());
-                        $xml .= '<![CDATA[' . str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val) . ']]>';
+                        $xml .= '<![CDATA['.str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val).']]>';
                     }
                     $xml .= '</cell>';
                 }
 
-                $xml .= '</row>' . chr(10);
+                $xml .= '</row>'.chr(10);
                 $z++;
             }
         }
@@ -1075,12 +1087,12 @@ class ResultSet extends PoolObject implements Countable
     public function getRowsetAsXCombo(array $pkAsValue, string $fieldnameAsOption, ?bool $add = null, string $encoding = 'ISO-8859-1'): string
     {
         /*$xml = getXmlHeader('utf8');*/
-        $xml = '<?xml version=\'1.0\' encoding=\'' . $encoding . '\'?>';
+        $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
         if(is_null($add)) {
             $xml .= '<complete>';
         }
         else {
-            $xml .= '<complete add="' . bool2string($add) . '">';
+            $xml .= '<complete add="'.bool2string($add).'">';
         }
         if($this->count()) {
             foreach($this->records as $row) {
@@ -1099,13 +1111,13 @@ class ResultSet extends PoolObject implements Countable
                 $css = '';
                 if(isset($row['css'])) $css = $row['css'];
 
-                $xml .= '<option value="' . $id . '"';
-                if($css) $xml .= ' css="' . $css . '"';
-                if($img_src) $xml .= ' img_src="' . $img_src . '"';
-                if($checked) $xml .= ' checked="' . $checked . '"';
-                if($selected) $xml .= ' selected="' . $selected . '"';
+                $xml .= '<option value="'.$id.'"';
+                if($css) $xml .= ' css="'.$css.'"';
+                if($img_src) $xml .= ' img_src="'.$img_src.'"';
+                if($checked) $xml .= ' checked="'.$checked.'"';
+                if($selected) $xml .= ' selected="'.$selected.'"';
                 //$xml .= '<option value="'.$id.'">a</option>';
-                $xml .= '><![CDATA[' . (str_replace('&', '&amp;', $row[$fieldnameAsOption])) . ']]></option>';
+                $xml .= '><![CDATA['.(str_replace('&', '&amp;', $row[$fieldnameAsOption])).']]></option>';
             }
         }
 
@@ -1120,7 +1132,7 @@ class ResultSet extends PoolObject implements Countable
     {
         $error = [];
         if($this->errorStack) {
-            $error = $this->errorStack[count($this->errorStack)-1];
+            $error = $this->errorStack[count($this->errorStack) - 1];
         }
         return $error;
     }
