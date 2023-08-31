@@ -280,10 +280,6 @@ class MySQL_DAO extends DAO
 
     /**
      * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
-     *
-     * @return \MySQL_ResultSet
-     * @throws \Exception
-     * @see MySQL_ResultSet
      */
     public function insert(array $data): ResultSet
     {
@@ -323,7 +319,7 @@ class MySQL_DAO extends DAO
         }
 
         if(!$columns) {
-            return (new ResultSet())->addError('DAO::insert failed. No columns specified!');
+            return (new ResultSet())->addErrorMessage('DAO::insert failed. No columns specified!');
         }
         $columns = implode(',', $columns);
         $values = implode(',', $values);
@@ -343,13 +339,11 @@ SQL;
      *
      * @param string $sql sql statement to execute
      * @param callable|null $customCallback
-     * @return MySQL_ResultSet
+     * @return \ResultSet
      */
-    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_ResultSet
+    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): ResultSet
     {
-        $MySQL_ResultSet = new MySQL_ResultSet($this->DataInterface);
-        $MySQL_ResultSet->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
-        return $MySQL_ResultSet;
+        return $this->getDataInterface()->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
     }
 
     /**
@@ -360,7 +354,7 @@ SQL;
         // Check if all primary keys are set in the data array
         $missingKeys = array_diff($this->pk, array_keys($data));
         if (!empty($missingKeys)) {
-            return (new ResultSet())->addError('Update is wrong. Missing primary keys: ' . implode(', ', $missingKeys));
+            return (new ResultSet())->addErrorMessage('Update is wrong. Missing primary keys: ' . implode(', ', $missingKeys));
         }
 
         $pk = [];
@@ -692,7 +686,7 @@ SQL;
      * @see MySQL_DAO::__buildSorting
      * @see MySQL_DAO::__buildLimit
      * @see MySQL_DAO::__buildGroupBy
-     * @see MySQL_ResultSet
+     * @see ResultSet
      */
     public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
         array $groupBy = [], array $having = [], array $options = []): ResultSet
@@ -803,7 +797,7 @@ SQL;
     /**
      * Returns the number of records of the assembled SQL statement as a ResultSet
      *
-     * @see MySQL_ResultSet
+     * @see ResultSet
      * @see MySQL_DAO::__buildFilter
      */
     public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): ResultSet
@@ -935,5 +929,29 @@ SQL;
         }
         else /** Malformed date TODO */ ;
         return $filterByValue;
+    }
+
+    /**
+     * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
+     *
+     * @param string $table
+     * @param \ResultSet $ResultSet
+     * @return string
+     * @todo Rethink this method
+     */
+    public function getSQLInserts(string $table, ResultSet $ResultSet): string
+    {
+        $sql = '';
+
+        if(!$ResultSet->count()) {
+            return '';
+        }
+        $rowSet = $ResultSet->getRowSet();
+        foreach($rowSet as $row) {
+            $sql .= 'INSERT INTO '.$table.' (';
+            $sql .= implode(',', array_keys($rowSet[0]));
+            $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.chr(10);
+        }
+        return $sql;
     }
 }
