@@ -13,9 +13,9 @@ namespace pool\classes\Database;
 use Closure;
 use CustomMySQL_DAO;
 use pool\classes\Core\PoolObject;
+use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Exception\DAOException;
-use ResultSet;
 
 /**
  * Class DAO - Data Access Object
@@ -241,38 +241,38 @@ abstract class DAO extends PoolObject
     /**
      * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
      */
-    abstract public function insert(array $data): ResultSet;
+    abstract public function insert(array $data): RecordSet;
 
     /**
      * Update a record by primary key (put the primary key in the data array)
      */
-    abstract public function update(array $data): ResultSet;
+    abstract public function update(array $data): RecordSet;
 
     /**
      * Delete a record by primary key
      */
-    abstract public function delete(int|string|array $id): ResultSet;
+    abstract public function delete(int|string|array $id): RecordSet;
 
     /**
      * Delete multiple records at once
      */
-    abstract public function deleteMultiple(array $filter_rules = []): ResultSet;
+    abstract public function deleteMultiple(array $filter_rules = []): RecordSet;
 
     /**
      * Returns a single record e.g. by primary key
      */
-    abstract public function get(int|string|array $id, null|string|array $key = null): ResultSet;
+    abstract public function get(int|string|array $id, null|string|array $key = null): RecordSet;
 
     /**
-     * Returns all data records of the assembled SQL statement as a ResultSet
+     * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
      */
     abstract public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
-        array $groupBy = [], array $having = [], array $options = []): ResultSet;
+        array $groupBy = [], array $having = [], array $options = []): RecordSet;
 
     /**
-     * Returns the number of records of the assembled SQL statement as a ResultSet
+     * Returns the number of records of the assembled SQL statement as a pool\classes\Core\ResultSet
      */
-    abstract public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): ResultSet;
+    abstract public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): RecordSet;
 
     /**
      * Set primary key
@@ -375,9 +375,9 @@ abstract class DAO extends PoolObject
      *
      * @param string $sql sql statement to execute
      * @param callable|null $customCallback
-     * @return \ResultSet
+     * @return \pool\classes\Core\RecordSet
      */
-    protected function execute(string $sql, ?callable $customCallback = null): ResultSet
+    protected function execute(string $sql, ?callable $customCallback = null): RecordSet
     {
         return $this->getDataInterface()->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
     }

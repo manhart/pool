@@ -8,6 +8,7 @@
  * file that was distributed with this source code.
  */
 
+use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\Commands;
 use pool\classes\Database\DAO;
@@ -281,7 +282,7 @@ class MySQL_DAO extends DAO
     /**
      * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
      */
-    public function insert(array $data): ResultSet
+    public function insert(array $data): RecordSet
     {
         $columns = [];
         $values = [];
@@ -319,7 +320,7 @@ class MySQL_DAO extends DAO
         }
 
         if(!$columns) {
-            return (new ResultSet())->addErrorMessage('DAO::insert failed. No columns specified!');
+            return (new RecordSet())->addErrorMessage('DAO::insert failed. No columns specified!');
         }
         $columns = implode(',', $columns);
         $values = implode(',', $values);
@@ -337,12 +338,12 @@ SQL;
     /**
      * Update a record by primary key (put the primary key in the data array)
      */
-    public function update(array $data): ResultSet
+    public function update(array $data): RecordSet
     {
         // Check if all primary keys are set in the data array
         $missingKeys = array_diff($this->pk, array_keys($data));
         if (!empty($missingKeys)) {
-            return (new ResultSet())->addErrorMessage('Update is wrong. Missing primary keys: ' . implode(', ', $missingKeys));
+            return (new RecordSet())->addErrorMessage('Update is wrong. Missing primary keys: ' . implode(', ', $missingKeys));
         }
 
         $pk = [];
@@ -361,7 +362,7 @@ SQL;
         $set = $this->__buildAssignmentList($data);
 
         if(!$set) {
-            return new ResultSet();
+            return new RecordSet();
         }
 
         $where = $this->__buildWhere($pk, $this->pk);
@@ -466,14 +467,14 @@ SQL;
      *
      * @param array $data
      * @param array $filter_rules
-     * @return ResultSet
+     * @return RecordSet
      */
-    public function updateMultiple(array $data, array $filter_rules): ResultSet
+    public function updateMultiple(array $data, array $filter_rules): RecordSet
     {
         $set = $this->__buildAssignmentList($data);
 
         if(!$set) {
-            return new ResultSet();
+            return new RecordSet();
         }
 
         $where = $this->__buildFilter($filter_rules, 'and', true);
@@ -612,7 +613,7 @@ SQL;
     /**
      * Delete a record by primary key
      */
-    public function delete(int|string|array $id): ResultSet
+    public function delete(int|string|array $id): RecordSet
     {
         $where = $this->__buildWhere($id, $this->pk);
         if($where == '1') {
@@ -633,7 +634,7 @@ SQL;
     /**
      * Delete multiple records at once
      */
-    public function deleteMultiple(array $filter_rules = []): ResultSet
+    public function deleteMultiple(array $filter_rules = []): RecordSet
     {
         $where = $this->__buildFilter($filter_rules, 'and', true);
         /** @noinspection SqlResolve */
@@ -650,7 +651,7 @@ SQL;
     /**
      * Returns a single record e.g. by primary key
      */
-    public function get($id, null|string|array $key = null): ResultSet
+    public function get($id, null|string|array $key = null): RecordSet
     {
         $id = $id ?? 0;
         $where = $this->__buildWhere($id, $key);
@@ -667,17 +668,17 @@ SQL;
     }
 
     /**
-     * Returns all data records of the assembled SQL statement as a ResultSet
+     * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
-     * @return ResultSet Ergebnismenge
+     * @return RecordSet Ergebnismenge
      * @see MySQL_DAO::__buildFilter
      * @see MySQL_DAO::__buildSorting
      * @see MySQL_DAO::__buildLimit
      * @see MySQL_DAO::__buildGroupBy
-     * @see ResultSet
+     * @see RecordSet
      */
     public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
-        array $groupBy = [], array $having = [], array $options = []): ResultSet
+        array $groupBy = [], array $having = [], array $options = []): RecordSet
     {
         $options = implode(' ', $options);
 
@@ -783,12 +784,12 @@ SQL;
     }
 
     /**
-     * Returns the number of records of the assembled SQL statement as a ResultSet
+     * Returns the number of records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
-     * @see ResultSet
+     * @see RecordSet
      * @see MySQL_DAO::__buildFilter
      */
-    public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): ResultSet
+    public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): RecordSet
     {
         $where = $this->__buildWhere($id, $key);
         $filter = $this->__buildFilter($filter_rules);
@@ -923,18 +924,18 @@ SQL;
      * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
      *
      * @param string $table
-     * @param \ResultSet $ResultSet
+     * @param \pool\classes\Core\RecordSet $ResultSet
      * @return string
      * @todo Rethink this method
      */
-    public function getSQLInserts(string $table, ResultSet $ResultSet): string
+    public function getSQLInserts(string $table, RecordSet $ResultSet): string
     {
         $sql = '';
 
         if(!$ResultSet->count()) {
             return '';
         }
-        $rowSet = $ResultSet->getRowSet();
+        $rowSet = $ResultSet->getRaw();
         foreach($rowSet as $row) {
             $sql .= 'INSERT INTO '.$table.' (';
             $sql .= implode(',', array_keys($rowSet[0]));
