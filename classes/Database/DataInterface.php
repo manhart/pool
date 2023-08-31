@@ -11,14 +11,19 @@
 namespace pool\classes\Database;
 
 use Exception;
+use Log;
+use mysqli_sql_exception;
+use pool\classes\Core\PoolObject;
 use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Utils\Singleton;
+use ResultSet;
+use Stopwatch;
 use function constant;
 use function defined;
 
-class DataInterface
+class DataInterface extends PoolObject
 {
     /**---- class constants ----*/
     public const ZERO_DATE = '0000-00-00';
@@ -61,10 +66,10 @@ class DataInterface
         'LOCK', 'SET', 'STOP', 'RESET', 'CHANGE', 'PREPARE', 'EXECUTE', 'DEALLOCATE', 'DECLARE', 'OPTIMIZE'];
 
     /**
-     * @var \pool\classes\Database\ConnectionWrapper|null Last used connection link in query()
+     * @var \pool\classes\Database\Connection|null Last used connection link in query()
      * @see DataInterface::_query()
      */
-    private ?ConnectionWrapper $lastConnectionWrapper;
+    private ?Connection $lastConnection;
 
     /**
      * @var int Total number of queries executed
@@ -81,7 +86,9 @@ class DataInterface
      */
     private int $totalWrites = 0;
 
-    /** Enthält ein Array bestehend aus zwei Hosts für Lese- und Schreibvorgänge. Sie werden für die Verbindungsherstellung genutzt. */
+    /**
+     * @var array array of hosts for read and write operations
+     */
     private array $hosts = [];
 
     /**
@@ -92,6 +99,11 @@ class DataInterface
 
     /** @var array<String, array<String, resource>>  Array of Mysql Links; Aufbau $var[$mode][$database] = resource */
     private array $connections = [ConnectionMode::READ->value => [], ConnectionMode::WRITE->value => []];
+
+    /**
+     * Register with all DataInterfaces
+     */
+    private static array $instances = [];
 
     /**
      * @var string Default database
@@ -213,6 +225,78 @@ class DataInterface
     }
 
     /**
+     * Execute an SQL statement and return the result as a ResultSet.
+     */
+    public function execute(string $sql, string $dbname = '', ?callable $callbackOnFetchRow = null, array $metaData = []): ResultSet
+    {
+        $ResultSet = new ResultSet();
+
+        /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
+        $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
+        $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
+            Singleton::get('Stopwatch')->start('SQL-QUERY') : null;// start time measurement
+        try {//run
+            $query_resource = $this->query($sql, $dbname);
+        }
+        catch(Exception $e) {
+            if($e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
+                throw $e;
+            }
+        }
+        if($query_resource ??= false) {//success
+            switch($this->getLastQueryCommand()) {
+                case 'SELECT':
+                case 'SHOW':
+                case 'DESCRIBE':
+                case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
+                    //? ( z.B. UNION
+                    if($this->numRows($query_resource)) {
+                        $ResultSet->setRowSet($this->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
+                    }
+                    $this->free($query_resource);
+                    break;
+                /** @noinspection PhpMissingBreakStatementInspection */
+                case 'INSERT'://DML commands
+                    $last_insert_id = $this->lastId();
+                    $idColumns = [
+                        'last_insert_id' => $last_insert_id,
+                        'id' => $last_insert_id,
+                    ];
+                case 'UPDATE':
+                case 'DELETE':
+                    $affected_rows = $this->affectedRows();
+                    $row = [//id of inserted record or number of rows
+                            0 => $last_insert_id ?? $affected_rows,
+                            'affected_rows' => $affected_rows,
+                        ] + ($idColumns ?? []);//for insert save value db->nextid()
+                    $ResultSet->setRowSet([0 => $row]);
+                    break;
+            }
+        }
+        else {//statement failed
+            $error_msg = $e?->getMessage() ?? "{$this->getErrorAsText()} SQL Statement failed: $sql";
+            $this->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
+            $error = $this->getError();
+            $error['sql'] = $sql;
+            $ResultSet->addError($error);
+            // SQL Statement Error Logging:
+            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) == 1)
+                Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
+        }
+
+        // SQL Statement Performance Logging:
+        if($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
+            $timeSpent = $Stopwatch->stop('SQL-QUERY')->getDiff('SQL-QUERY');
+            $onlySlowQueries = defined($x = 'ACTIVATE_RESULTSET_SQL_ONLY_SLOW_QUERIES') && constant($x);
+            $slowQueriesThreshold = defined($x = 'ACTIVATE_RESULTSET_SQL_SLOW_QUERIES_THRESHOLD') ? constant($x) : 0.01;
+            if(!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
+                Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
+                    configurationName: Log::SQL_LOG_NAME);
+        }
+        return $ResultSet;
+    }
+
+    /**
      * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access
      *     objects
      */
@@ -222,9 +306,9 @@ class DataInterface
     }
 
     /**
-     * Baut eine Verbindung zur Datenbank auf.
+     * Opens a connection to a database
      *
-     * @throws Exception
+     * @throws \Exception
      */
     public function open(string $database = ''): bool
     {
@@ -238,10 +322,10 @@ class DataInterface
     /**
      * @param $database string Datenbank
      * @param \pool\classes\Database\ConnectionMode $mode string Lese- oder Schreibmodus
-     * @return ConnectionWrapper Gibt Resource der MySQL Verbindung zurueck
+     * @return Connection Gibt Resource der MySQL Verbindung zurueck
      * @throws Exception
      */
-    private function __get_db_conid(string $database, ConnectionMode $mode): ConnectionWrapper
+    private function __get_db_conid(string $database, ConnectionMode $mode): Connection
     {
         if(!($database || ($database = $this->default_database))) //No DB specified
             throw new Exception('No database selected (__get_db_conid)!');
@@ -254,7 +338,7 @@ class DataInterface
     /**
      * @throws Exception
      */
-    private function openNewDBConnection(ConnectionMode $mode, string $database): ConnectionWrapper
+    private function openNewDBConnection(ConnectionMode $mode, string $database): Connection
     {
         $host = $this->hosts[$mode->value];
         $auth = $this->__get_auth($mode);
@@ -333,12 +417,12 @@ class DataInterface
         $writeConnections = &$this->connections[ConnectionMode::WRITE->value];
 
         if(is_array($readConnections)) {
-            foreach($readConnections as $database => $conid) if($conid instanceof ConnectionWrapper)
+            foreach($readConnections as $database => $conid) if($conid instanceof Connection)
                 $conid->close();
             $readConnections = [];
         }
         if(is_array($writeConnections)) {
-            foreach($writeConnections as $conid) if($conid instanceof ConnectionWrapper)
+            foreach($writeConnections as $conid) if($conid instanceof Connection)
                 $conid->close();
             $writeConnections = [];
         }
@@ -358,7 +442,7 @@ class DataInterface
      */
     public function affectedRows(mixed $query_resource = null): int|false
     {
-        $affectedRows = $this->lastConnectionWrapper?->getAffectedRows($query_resource ?? $this->query_resource);
+        $affectedRows = $this->lastConnection?->getAffectedRows($query_resource ?? $this->query_resource);
         return $affectedRows === -1 ? false : $affectedRows ?? false;
     }
 
@@ -396,7 +480,7 @@ class DataInterface
      */
     public function lastId(): int|string
     {
-        return $this->driver->getLastId($this->lastConnectionWrapper);
+        return $this->driver->getLastId($this->lastConnection);
     }
 
     /**
@@ -448,9 +532,9 @@ class DataInterface
             $this->totalWrites++;
         $this->totalQueries++;
 
-        $connectionWrapper = $this->__get_db_conid($database, $mode);//connect
-        $this->query_resource = $connectionWrapper->query($sql);//run
-        $this->lastConnectionWrapper = $connectionWrapper;
+        $Connection = $this->__get_db_conid($database, $mode);//connect
+        $this->query_resource = $Connection->query($sql);//run
+        $this->lastConnection = $Connection;
         if($this->query_resource) $this->last_command = $command;
         if(defined($x = 'LOG_ENABLED') && constant($x) &&
             defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
@@ -538,7 +622,7 @@ class DataInterface
     public function numRows(mixed $query_resource = null): int
     {
         $query_resource ??= $this->query_resource;
-        $result = $this->lastConnectionWrapper?->getNumRows($query_resource) ?? 0;
+        $result = $this->lastConnection?->getNumRows($query_resource) ?? 0;
         assert(is_int($result));
         return $result;
     }
@@ -561,7 +645,7 @@ class DataInterface
      */
     public function getError(): array
     {
-        return $this->driver->errors($this->lastConnectionWrapper)[0] ?? [];
+        return $this->driver->errors($this->lastConnection)[0] ?? [];
     }
 
     /** Mit diesem Schalter werden alle Lesevorgänge auf die Backenddatenbank umgeleitet. **/
