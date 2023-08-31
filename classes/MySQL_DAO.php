@@ -812,7 +812,7 @@ SQL;
      */
     public function foundRows(): int
     {
-        return $this->DataInterface->foundRows();
+        return $this->DataInterface->foundRows($this->database);
     }
 
     /**

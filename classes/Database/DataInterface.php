@@ -229,7 +229,7 @@ class DataInterface extends PoolObject
      *
      * @throws \Exception
      */
-    public function execute(string $sql, string $dbname = '', ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
+    public function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
     {
 
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
@@ -333,7 +333,7 @@ class DataInterface extends PoolObject
      */
     private function __get_db_conid(string $database, ConnectionMode $mode): Connection
     {
-        if(!($database || ($database = $this->default_database))) //No DB specified
+        if(!($database || ($database = $this->default_database))) //No DB specified and no default given
             throw new Exception('No database selected (__get_db_conid)!');
         if($this->hosts[ConnectionMode::READ->value] == $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as WRITE
@@ -495,10 +495,10 @@ class DataInterface extends PoolObject
      * @return int Anzahl Zeilen
      * @throws \Exception
      */
-    public function foundRows(): int
+    public function foundRows(string $database): int
     {
         $sql = 'SELECT FOUND_ROWS() as foundRows';
-        $query_resource = $this->query($sql);
+        $query_resource = $this->query($sql, $database);
         if(!$query_resource) return 0;
         $row = $this->fetchRow($query_resource);//fetch first row (only row
         $this->free($query_resource);
@@ -516,7 +516,7 @@ class DataInterface extends PoolObject
      * @throws \Exception
      * @see DataInterface::__get_db_conid
      */
-    public function query(string $query, string $database = ''): mixed
+    public function query(string $query, string $database): mixed
     {
         //Store query in attribute
         $this->last_Query = $sql = ltrim($query);
