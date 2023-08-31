@@ -10,7 +10,9 @@
 
 namespace pool\classes\Database;
 
-class ConnectionWrapper
+use pool\classes\Core\PoolObject;
+
+class Connection extends PoolObject
 {
     private mixed $connection;
 
@@ -77,5 +79,17 @@ class ConnectionWrapper
     public function getTableColumnsInfo(string $database, string $table): array
     {
         return $this->driver->getTableColumnsInfo($this, $database, $table);
+    }
+
+    public function startTransaction(): void
+    {
+    }
+
+    public function commit(): void
+    {
+    }
+
+    public function rollback(): void
+    {
     }
 }

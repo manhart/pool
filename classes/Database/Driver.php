@@ -84,17 +84,17 @@ abstract class Driver
      * Connects to the database
      */
     abstract public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options): ConnectionWrapper;
+        string $database = '', ...$options): Connection;
 
     /**
      * Executes a query and returns the query result
      *
-     * @param \pool\classes\Database\ConnectionWrapper $connectionWrapper
+     * @param \pool\classes\Database\Connection $connection
      * @param string $query SQL query
      * @param ...$params
      * @return mixed query result
      */
-    abstract public function query(ConnectionWrapper $connectionWrapper, string $query, ...$params): mixed;
+    abstract public function query(Connection $connection, string $query, ...$params): mixed;
 
     /**
      * Fetch the next row of a result set as an associative array
@@ -109,30 +109,30 @@ abstract class Driver
     /**
      * Escapes special characters in a string for use in an SQL statement, taking into account the current charset of the connection
      */
-    abstract public function escape(ConnectionWrapper $connectionWrapper, string $string): string;
+    abstract public function escape(Connection $connection, string $string): string;
 
     /**
      * Closes the connection
      */
-    abstract public function close(ConnectionWrapper $connectionWrapper): void;
+    abstract public function close(Connection $connection): void;
 
     /**
      * Returns a list of errors from the last command executed
      */
-    abstract public function errors(?ConnectionWrapper $connectionWrapper = null): array;
+    abstract public function errors(?Connection $connection = null): array;
 
     /**
      * Returns the value generated for an AUTO_INCREMENT column by the last query
      */
-    abstract public function getLastId(ConnectionWrapper $connectionWrapper): int|string;
+    abstract public function getLastId(Connection $connection): int|string;
 
     /**
      * Gets the number of affected rows in a previous SQL operation
      */
-    abstract public function affectedRows(ConnectionWrapper $connectionWrapper, mixed $result): int|false;
+    abstract public function affectedRows(Connection $connection, mixed $result): int|false;
 
     /**
      * Get the columns info of a table
      */
-    abstract public function getTableColumnsInfo(ConnectionWrapper $connectionWrapper, string $database, string $table): array;
+    abstract public function getTableColumnsInfo(Connection $connection, string $database, string $table): array;
 }
