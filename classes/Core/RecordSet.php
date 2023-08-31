@@ -1,47 +1,34 @@
 <?php
-/**
- * -= Rapid Module Library (RML) =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Resultset.class.php
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Resultsets als Mittel zur komfortablen Suche. Resultsets verwalten effektiv Mengen von Datensaetze.
- * Ein Resultset besteht aus einem Container (Array) und Iteratoren. Ein kleiner Filter und eine Sortiermethode verfeinern
- * die Ergebnisse im Container.
- *
- * Resultsets werden im Zusammenhang mit Data Access Objects benutzt. Data Access Objekte liefern immer ein Resultset als
- * Ergebnis zurueck (egal ob dahinter eine MySQL, PostgreSQL, XML Datenbank steckt).
- *
- * @date $Date: 2007/08/06 11:59:39 $
- * @version $Id: Resultset.class.php,v 1.34 2007/08/06 11:59:39 manhart Exp $
- * @version $Revision 1.0$
- * @version
- *
- * @since 2003-07-10
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
-use pool\classes\Core\PoolObject;
-use pool\classes\Core\Weblication;
+namespace pool\classes\Core;
+
+use Countable;
+use DateTime;
+use DateTimeZone;
+use Exception;
 use pool\classes\Exception\InvalidJsonException;
+use UConverter;
 
 /**
- * Resultset
+ * Class pool\classes\Core\ResultSet
  *
- * Abstrakte Klasse Resultset als Mittel zur komfortablen Datenverwaltung.
- *
- * @package pool
- * @access public
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @version $Id: Resultset.class.php,v 1.34 2007/08/06 11:59:39 manhart Exp $
- * @access public
+ * @package pool\classes\Core
+ * @since 2003-07-10
  */
-class ResultSet extends PoolObject implements Countable
+class RecordSet extends PoolObject implements Countable
 {
     /**
      * @var array records
      */
-    protected array $rowset = [];
+    protected array $records = [];
 
     /**
      * @var int internal pointer
@@ -59,8 +46,16 @@ class ResultSet extends PoolObject implements Countable
     protected array $returnFields = [];
 
     /**
+     * Constructor
+     */
+    public function __construct(array $records = [])
+    {
+        $this->records = $records;
+        if($records) $this->reset();
+    }
+
+    /**
      * Sortiert eine oder mehrere Spalten.
-     *
      * Beispiel Code-Schnipsel:
      * <code>
      * // einspaltig
@@ -68,35 +63,30 @@ class ResultSet extends PoolObject implements Countable
      * // mehrspaltig
      * $Resultset -> sort(array(array('nachname', SORT_ASC, SORT_STRING), array('vorname', SORT_ASC, SORT_STRING)));
      * </code>
-     *
-     * @param array|string $column Spaltenname oder Array.
-     * @param int $sort PHP Konstante SORT_ASC oder SORT_DESC
-     * @param int $sortType PHP Konstante SORT_REGULAR, SORT_NUMERIC, SORT_STRING
      */
     public function sort(array|string $column, int $sort = SORT_ASC, int $sortType = SORT_REGULAR): void
     {
-        if(!$this->rowset) return;
+        if(!$this->records) return;
 
         if(is_string($column)) {
-
-            $sortarr = array_column($this->rowset, $column);
+            $sortarr = array_column($this->records, $column);
             if($sortType == SORT_STRING) {
                 $sortarr = array_map('strtolower', $sortarr);
             }
 
-            array_multisort($sortarr, $sort, $sortType, $this->rowset);
+            array_multisort($sortarr, $sort, $sortType, $this->records);
         }
         else {
             $params = '';
             $z = 0;
-            foreach($this->rowset as $row) {
+            foreach($this->records as $row) {
                 foreach($column as $col) {
                     $col_name = $col[0];
                     if($z == 0) {
                         if($params != '') $params .= ', ';
                         $params .= "\$sortarr['$col_name']";
-                        $params .= ', ' . ($col[1] ?? $sort);
-                        $params .= ', ' . ($col[2] ?? $sortType);
+                        $params .= ', '.($col[1] ?? $sort);
+                        $params .= ', '.($col[2] ?? $sortType);
                     }
                     $sortarr[$col_name][] = $row[$col_name];
                     if($sortType == SORT_STRING) {
@@ -118,7 +108,19 @@ class ResultSet extends PoolObject implements Countable
      */
     public function usort(callable $cmp_function): void
     {
-        usort($this->rowset, $cmp_function);
+        usort($this->records, $cmp_function);
+    }
+
+    /**
+     * Filters elements of the dataset using a callback function
+     *
+     * @param callable $callback
+     * @param int $mode
+     * @return void
+     */
+    public function filter(callable $callback, int $mode = 0): void
+    {
+        $this->records = array_values(array_filter($this->records, $callback, $mode));
     }
 
     /**
@@ -133,11 +135,11 @@ class ResultSet extends PoolObject implements Countable
     {
         $ok = false;
         $new_rowSet = [];
-        $count = count($this->rowset);
+        $count = count($this->records);
         $z = -1;
         $pos = ($pos - 1);
         for($r = 0; $r < $count; $r++) {
-            $row = $this->rowset[$r];
+            $row = $this->records[$r];
             if($row[$fieldname] == $unique_value) {
                 if($r == 0 and $pos == 0) {
                     return true;
@@ -156,7 +158,7 @@ class ResultSet extends PoolObject implements Countable
             }
         }
         if($ok) {
-            $this->rowset = $new_rowSet;
+            $this->records = $new_rowSet;
         }
         return $ok;
     }
@@ -169,7 +171,7 @@ class ResultSet extends PoolObject implements Countable
     public function getColumns(): array
     {
         if($this->count() > 0) {
-            return array_keys($this->rowset[$this->index]);
+            return array_keys($this->records[$this->index]);
         }
         else {
             return [];
@@ -195,7 +197,7 @@ class ResultSet extends PoolObject implements Countable
     public function first(): array
     {
         $this->reset();
-        return $this->getRow();
+        return $this->getRecord();
     }
 
     /**
@@ -222,7 +224,7 @@ class ResultSet extends PoolObject implements Countable
         else {
             $this->index = -1;
         }
-        return $this->getRow();
+        return $this->getRecord();
     }
 
     /**
@@ -242,7 +244,7 @@ class ResultSet extends PoolObject implements Countable
      */
     public function current(): array
     {
-        return $this->getRow();
+        return $this->getRecord();
     }
 
     /**
@@ -253,13 +255,8 @@ class ResultSet extends PoolObject implements Countable
      **/
     public function seek(int $index): array
     {
-        if($this->count() > $index) {
-            $this->index = $index;
-        }
-        else {
-            $this->index = -1;
-        }
-        return $this->getRow();
+        $this->index = $index < $this->count() ? $index : -1;
+        return $this->getRecord();
     }
 
     /**
@@ -273,63 +270,39 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Zum naechsten Datensatz. Bewegt den internen Zeiger um eins hoeher (Iterator).
+     * Advances the index by one position until the end is reached
      *
-     * @return array naechster Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
+     * @return array the then current dataset, or an empty array if the end is already reached
+     * @see self::getRecord()
      */
     public function next(): array
     {
-        if($this->index < $this->count()) {
-            $this->index++;
-            return $this->getRow();
-        }
-        return [];
+        if($this->index >= $this->count() - 1)
+            return [];
+        $this->index++;
+        return $this->getRecord();
     }
 
     /**
-     * Zum vorherigen Datensatz. Bewegt den internen Zeiger um eins tiefer (Iterator).
+     * Rewinds the index by one position until the beginning is reached
      *
-     * @return array vorheriger Datensatz (falls kein Datensatz an dieser Position existiert, wird false zurueck gegeben)
+     * @return array the then current dataset, or an empty array if the beginning is already reached
+     * @see self::getRecord()
      */
     public function prev(): array
     {
-        if($this->index > 0) {
-            $this->index--;
-            return $this->getRow();
-        }
-        return [];
+        if($this->index <= 0)
+            return [];
+        $this->index--;
+        return $this->getRecord();
     }
 
     /**
-     * returns the number of records in the ResultSet
-     *
-     * @return int record count
+     * Returns the number of records in the pool\classes\Core\ResultSet
      */
     public function count(): int
     {
-        return count($this->rowset);
-    }
-
-    /**
-     * eof gibt an, ob der letzte Datensatz der Datenmenge aktiv ist. (end of file)
-     *
-     * @return bool
-     */
-    public function eof(): bool
-    {
-        return $this->isLast();
-    }
-
-    /**
-     * bof gibt an, ob der erste Datensatz der Datenmenge aktiv ist. (begin of file)
-     *
-     * Mit Bof (Beginning Of File) können Sie feststellen, ob der erste Datensatz der Datenmenge aktiv ist, also eindeutig die erste Zeile in der Datenmenge darstellt. In diesem Fall hat die Eigenschaft den Wert true.
-     *
-     * @return bool
-     */
-    public function bof(): bool
-    {
-        return $this->isFirst();
+        return count($this->records);
     }
 
     /**
@@ -341,9 +314,8 @@ class ResultSet extends PoolObject implements Countable
      */
     public function getValue(string $key, mixed $default = null): mixed
     {
-        if(!isset($this->rowset[$this->index])) return $default;
-        if(!array_key_exists($key, $this->rowset[$this->index])) return $default;
-        return $this->rowset[$this->index][$key];
+        if(!array_key_exists($key, $this->records[$this->index] ?? [])) return $default;
+        return $this->records[$this->index][$key];
     }
 
     /**
@@ -426,13 +398,11 @@ class ResultSet extends PoolObject implements Countable
     public function getValueAsDateTime(string $key, $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
         $value = $this->getValue($key, $default);
-        if($value instanceof DateTime) {
+        if($value instanceof DateTime)
             return $value;
-        }
-        if(!is_null($value) and $value !== '' and $value !== '0000-00-00' and $value !== '0000-00-00 00:00:00') {
-            if(!str_contains($value, '-') and is_numeric($value)) {
-                $value = '@' . $value; // should be an unix timestamp (integer)
-            }
+        if($value && $value !== '0000-00-00' && $value !== '0000-00-00 00:00:00') {
+            if(!str_contains($value, '-') && is_numeric($value))
+                $value = "@$value";
             try {
                 return new DateTime($value, $timezone);
             }
@@ -471,7 +441,7 @@ class ResultSet extends PoolObject implements Countable
     {
         $DateTime = $this->getValueAsDateTime($key, $default);
         if(is_null($DateTime)) return null;
-        $format = Weblication::getInstance()->getDefaultFormat('php.date.time' . ($seconds ? '.sec' : ''));
+        $format = Weblication::getInstance()->getDefaultFormat('php.date.time'.($seconds ? '.sec' : ''));
         return $DateTime->format($format);
     }
 
@@ -519,12 +489,12 @@ class ResultSet extends PoolObject implements Countable
      * @param mixed $value value
      * @return $this
      */
-    public function setValue(string $key, mixed $value): ResultSet
+    public function setValue(string $key, mixed $value): RecordSet
     {
         if($this->count() == 0) {
             return $this->addValue($key, $value);
         }
-        $this->rowset[$this->index][$key] = $value;
+        $this->records[$this->index][$key] = $value;
         return $this;
     }
 
@@ -534,12 +504,11 @@ class ResultSet extends PoolObject implements Countable
      * @param array $assoc
      * @return $this
      */
-    public function setValues(array $assoc): ResultSet
+    public function setValues(array $assoc): RecordSet
     {
-        if($this->count() == 0) {
+        if($this->count() == 0)
             return $this->addValues($assoc);
-        }
-        $this->rowset[$this->index] = $assoc + $this->rowset[$this->index];
+        $this->records[$this->index] = $assoc + $this->records[$this->index];
         return $this;
     }
 
@@ -549,19 +518,13 @@ class ResultSet extends PoolObject implements Countable
      * @param array|string $key Spaltenname oder Array[Spalte] = Wert
      * @param string $value Wert des neuen Feldes
      */
-    public function addFields(array|string $key, string $value = ''): void
+    public function addFields(array|string $key, string $value = ''): RecordSet
     {
-        if($this->count() == 0) {
-            $this->addValue($key, $value);
-        }
-        else {
-            if(!is_array($key)) {
-                $this->rowset[$this->index][$key] = $value;
-            }
-            else {
-                $this->rowset[$this->index] = array_merge($this->rowset[$this->index], $key);
-            }
-        }
+        if($this->count() == 0)
+            return is_array($key) ? $this->addValues($key) : $this->addValue($key, $value);
+        $insert = is_array($key) ? $key : [$key => $value];
+        $this->records[$this->index] = array_merge($this->records[$this->index], $insert);
+        return $this;
     }
 
     /**
@@ -570,20 +533,20 @@ class ResultSet extends PoolObject implements Countable
      * @param string $key Schluessel (bzw. Name des Feldes)
      * @param mixed $value Wert der Variable
      */
-    public function addValue(string $key, mixed $value): ResultSet
+    public function addValue(string $key, mixed $value): RecordSet
     {
-        $this->rowset[$this->count()][$key] = $value;
+        $this->records[$this->count()][$key] = $value;
         $this->index = $this->count() - 1;
         return $this;
     }
 
     /**
      * @param array $assoc
-     * @return ResultSet
+     * @return RecordSet
      */
-    public function addValues(array $assoc): ResultSet
+    public function addValues(array $assoc): RecordSet
     {
-        $this->rowset[$this->count()] = $assoc;
+        $this->records[$this->count()] = $assoc;
         $this->index = $this->count() - 1;
         return $this;
     }
@@ -592,22 +555,23 @@ class ResultSet extends PoolObject implements Countable
      * Deletes a field (key) including its content (value) from the data record
      *
      * @param string $key
-     * @return ResultSet
+     * @return RecordSet
      */
     public function delKey(string $key): static
     {
-        unset($this->rowset[$this->index][$key]);
+        unset($this->records[$this->index][$key]);
         return $this;
     }
 
     /**
      * Deletes a field (key) including its content (value) from all data records
+     *
      * @param string $key
      * @return $this
      */
     public function delKeyFromAll(string $key): static
     {
-        foreach ($this->rowset as &$row) {
+        foreach($this->records as &$row) {
             unset($row[$key]);
         }
         return $this;
@@ -615,13 +579,14 @@ class ResultSet extends PoolObject implements Countable
 
     /**
      * Deletes fields (keys) including their content (values) from all data records
+     *
      * @param array $keys
      * @return $this
      */
     public function delKeysFromAll(array $keys): static
     {
-        foreach ($this->rowset as &$row) {
-            foreach ($keys as $key) {
+        foreach($this->records as &$row) {
+            foreach($keys as $key) {
                 unset($row[$key]);
             }
         }
@@ -633,41 +598,28 @@ class ResultSet extends PoolObject implements Countable
      *
      * @param array $old_key old key name
      * @param array $new_key new key name
-     * @return ResultSet
+     * @return RecordSet
      */
-    public function changeKeysFromAll(array $old_key, array $new_key): self
+    public function changeKeysFromAll(array $old_key, array $new_key): static
     {
         $oldCount = count($old_key);
-
-        foreach ($this->rowset as &$row) {
-            for ($k = 0; $k < $oldCount; $k++) {
-                if (isset($row[$old_key[$k]])) {
+        foreach($this->records as &$row) {
+            for($k = 0; $k < $oldCount; $k++) {
+                if(isset($row[$old_key[$k]])) {
                     $row[$new_key[$k]] = $row[$old_key[$k]];
                     unset($row[$old_key[$k]]);
                 }
             }
         }
-
         return $this;
     }
 
     /**
-     * Format ein Feld mittels einer benutzerdefinierten Formatierungsfunktion.
-     *
-     * z.B.
-     * function formatDate($row)
-     * {
-     *        $row['date'] = date('d.m.Y', $row['date']);
-     *        return $row;
-     * }
-     *
-     * @access public
-     * @param callable $callback_function
-     * @return ResultSet
+     * Applies the callback to the records
      */
-    public function uformat(callable $callback_function): static
+    public function applyCallbackToRows(callable $callback_function): static
     {
-        $this->rowset = array_map($callback_function, $this->rowset);
+        $this->records = array_map($callback_function, $this->records);
         return $this;
     }
 
@@ -676,57 +628,50 @@ class ResultSet extends PoolObject implements Countable
      *
      * @param string $key Schlüssel
      * @param string $value Wert
-     * @return ResultSet true
+     * @return RecordSet
      */
     public function fillValues(string $key, string $value): static
     {
         $count = $this->count();
         for($i = 0; $i < $count; $i++) {
-            $this->rowset[$i][$key] = $value;
+            $this->records[$i][$key] = $value;
         }
         return $this;
     }
 
     /**
-     * Liefert einen ganzen Datensatz als Array zurueck.
+     * Returns the current record (dataset) or an empty array if the position (index) is out of range
      *
-     * @param integer $index Record-Offset
-     * @return array Datensatz
+     * @see static::seek()
      */
-    public function getRow(int $index = -1): array
+    public function getRecord(int $index = -1): array
     {
-        if($index != $this->index and $index >= 0) {
-            $this->seek($index);
-        }
-        if($this->index >= 0 and $this->index < $this->count()) {
-            return $this->rowset[$this->index];
-        }
-        else {
-            return [];
-        }
+        return $index >= 0 && $index != $this->index ?
+            $this->seek($index)
+            : $this->records[$this->index] ?? [];
     }
 
     /**
-     * Loescht eine Zeile und setzt internen Zeiger auf vorherigen Datensatz zurueck.
+     * Deletes a specified amount of records from the set. Iterator will be set to the record preceding the removed record(s).
+     * Failure results in the Iterator being reset to -1
      *
-     * @access public
-     * @param integer $index Index
-     * @return boolean Erfolgsstatus
+     * @param int $amount number of records to delete including the selected.
+     * @param integer $index start from this index defaults to the current position in the set
+     * @return boolean success
      */
-    public function deleteRow(int $index = -1): bool
+    public function deleteRows(int $amount = 1, int $index = -1): bool
     {
-        if($index != $this->index and $index >= 0) {
+        if($index >= 0 && $index != $this->index)
             $this->seek($index);
-        }
         if($this->index >= 0) {
-            unset($this->rowset[$this->index]);
-            $this->rowset = array_values($this->rowset);
-            $this->index--;
+            $end = $this->index + $amount - $amount / abs($amount);
+            if($end < 0 || $this->count() <= $end) return false;
+            $index = min($this->index, $end);
+            array_splice($this->records, $index, abs($amount));
+            $this->index = $index - 1;
             return true;
         }
-        else {
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -734,33 +679,17 @@ class ResultSet extends PoolObject implements Countable
      *
      * @return array Recordset
      */
-    public function getRowSet(): array
+    public function getRaw(): array
     {
-        return $this->rowset;
+        return $this->records;
     }
 
     /**
-     * Füllt das Resultset mit Daten. Als Übergabeparameter erwartet die Funktion ein indiziertes Array (enthaelt je Satz ein assoziatives Array mit Feldnamen). Satzzeiger wird auf ersten Satz gelegt.
-     *
-     * @param array $rowSet
-     * @return ResultSet
+     * Prepends a record to the record set
      */
-    public function setRowSet(array $rowSet): static
+    public function prepend(array $record): static
     {
-        $this->rowset = $rowSet;
-        $this->reset();
-        return $this;
-    }
-
-    /**
-     * Fügt ein anderes Resultset an das eigene Resultset an. Satzzeiger wird nicht beeinflusst.
-     *
-     * @param array $rowSet
-     * @return ResultSet
-     */
-    public function addRowSet(array $rowSet): static
-    {
-        $this->rowset = array_merge($this->rowset, $rowSet);
+        array_unshift($this->records, $record);
         $this->reset();
         return $this;
     }
@@ -771,14 +700,21 @@ class ResultSet extends PoolObject implements Countable
      * und ersetzt diese durch die Elemente des Arrays replacement, wenn angegeben und gibt ein
      * Array mit den entfernten Elemente zurueck
      *
-     * @param int $offset Ist offset positiv, beginnt der zu entfernende Bereich bei diesem Offset vom Anfang der Ergebnismenge. Ist offset negativ, beginnt der zu entfernende Bereich offset Elemente vor dem Ende der Ergebnismenge.
-     * @param int|null $length Ist length nicht angegeben, wird alles von offset bis zum Ende der Ergebnismenge entfernt. Ist length positiv, wird die angegebene Anzahl Elemente entfernt. Ist length negativ, dann wird der Bereich von length Elementen vor dem Ende, bis zum Ende der Ergebnismenge entfernt. Tipp: Um alles von offset bis zum Ende der Ergebenismenge zu entfernen wenn replacement ebenfalls angegeben ist, verwenden Sie Resultset::count() als length. (optional)
-     * @param array $replacement Ist das Array replacement angegeben, werden die entfernten Elemente durch die Elemente dieses Arrays ersetzt. Sind offset und length so angegeben dass nichts entfernt wird, werden die Elemente von replacement an der von offset spezifizierten Stelle eingefuegt. Tipp: Soll die Ersetzung durch nur ein Element erfolgen ist es nicht noetig ein Array zu anzugeben es sei denn, dieses Element ist selbst ein Array. (optional)
+     * @param int $offset Ist offset positiv, beginnt der zu entfernende Bereich bei diesem Offset vom Anfang der Ergebnismenge. Ist offset negativ,
+     *     beginnt der zu entfernende Bereich offset Elemente vor dem Ende der Ergebnismenge.
+     * @param int|null $length Ist length nicht angegeben, wird alles von offset bis zum Ende der Ergebnismenge entfernt. Ist length positiv, wird die
+     *     angegebene Anzahl Elemente entfernt. Ist length negativ, dann wird der Bereich von length Elementen vor dem Ende, bis zum Ende der
+     *     Ergebnismenge entfernt. Tipp: Um alles von offset bis zum Ende der Ergebenismenge zu entfernen wenn replacement ebenfalls angegeben ist,
+     *     verwenden Sie Resultset::count() als length. (optional)
+     * @param array $replacement Ist das Array replacement angegeben, werden die entfernten Elemente durch die Elemente dieses Arrays ersetzt. Sind offset
+     *     und length so angegeben dass nichts entfernt wird, werden die Elemente von replacement an der von offset spezifizierten Stelle eingefuegt.
+     *     Tipp: Soll die Ersetzung durch nur ein Element erfolgen ist es nicht noetig ein Array zu anzugeben es sei denn, dieses Element ist selbst ein
+     *     Array. (optional)
      * @return array Gibt das Array mit den entfernten Element zurueck.
      */
     public function spliceRowSet(int $offset, ?int $length = null, array $replacement = []): array
     {
-        return array_splice($this->rowset, $offset, $length, $replacement);
+        return array_splice($this->records, $offset, $length, $replacement);
     }
 
     /**
@@ -794,15 +730,15 @@ class ResultSet extends PoolObject implements Countable
         $arrResult = [];
         if(is_array($fieldName)) {
             $fieldName = array_flip($fieldName);
-            foreach($this->rowset as $row) {
+            foreach($this->records as $row) {
                 $record = array_intersect_key($row, $fieldName);
                 $arrResult[] = $record;
             }
         }
         else {
-            foreach($this->rowset as $row) {
+            foreach($this->records as $row) {
                 if(isset($row[$fieldName])) {
-                    $row[$fieldName] = match($type) {
+                    $row[$fieldName] = match ($type) {
                         'int' => (int)$row[$fieldName],
                         'float' => (float)$row[$fieldName],
                         'bool' => (bool)$row[$fieldName],
@@ -883,17 +819,17 @@ class ResultSet extends PoolObject implements Countable
     /**
      * Vergleicht ein Resultset, ob es identisch ist. Ist das Resultset nicht identisch, bleibt der Satzzeiger auf diesem stehen.
      *
-     * @param ResultSet $ResultSet
+     * @param RecordSet $ResultSet
      * @return boolean
      */
-    public function isEqual(ResultSet $ResultSet): bool
+    public function isEqual(RecordSet $ResultSet): bool
     {
         if($this->count() != $ResultSet->count()) return false;
         $this->first();
         $ResultSet->first();
         do {
-            if(count(array_diff_assoc($this->getRow(), $ResultSet->getRow())) != 0 or
-                count(array_diff_assoc($ResultSet->getRow(), $this->getRow())) != 0) return false;
+            if(count(array_diff_assoc($this->getRecord(), $ResultSet->getRecord())) != 0 or
+                count(array_diff_assoc($ResultSet->getRecord(), $this->getRecord())) != 0) return false;
         } while($this->next() and $ResultSet->next());
         return true;
     }
@@ -913,16 +849,16 @@ class ResultSet extends PoolObject implements Countable
         $csv = '';
         if($this->count()) {
             if($with_headline) {
-                $csv .= implode($separator, array_keys($this->rowset[0])) . $line_break;
+                $csv .= implode($separator, array_keys($this->records[0])).$line_break;
             }
-            foreach($this->rowset as $row) {
+            foreach($this->records as $row) {
                 $line = '';
                 $values = array_values($row);
                 foreach($values as $val) {
                     $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
-                    $line .= ($line != '') ? ($separator . $val) : ($val);
+                    $line .= ($line != '') ? ($separator.$val) : ($val);
                 }
-                $csv .= $line . $line_break;
+                $csv .= $line.$line_break;
             }
         }
         return $csv;
@@ -947,16 +883,16 @@ class ResultSet extends PoolObject implements Countable
      * @param string $text_clinch Textklammer
      * @return string
      */
-    function getRowAsCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
+    function getRecordAsCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
     {
         $csv = '';
         if($this->count()) {
             if($this->returnFields) {
-                if($with_headline) $csv .= implode($separator, array_values(($this->returnFields))) . $line_break;
+                if($with_headline) $csv .= implode($separator, array_values(($this->returnFields))).$line_break;
                 $row = '';
                 foreach($this->returnFields as $key) {
                     if($row != '') $row .= $separator;
-                    $val = self::maskTextCSVcompliant((string)$this->rowset[$this->index][$key], $separator, $text_clinch);
+                    $val = self::maskTextCSVcompliant((string)$this->records[$this->index][$key], $separator, $text_clinch);
                     $row .= $val;
                 }
                 $row .= $line_break;
@@ -965,14 +901,14 @@ class ResultSet extends PoolObject implements Countable
             }
             else {
                 if($with_headline) {
-                    $csv .= implode($separator, array_keys($this->rowset[$this->index])) . $line_break;
+                    $csv .= implode($separator, array_keys($this->records[$this->index])).$line_break;
                 }
 
-                $values = array_values($this->getRow());
+                $values = array_values($this->getRecord());
                 $i = 0;
                 foreach($values as $val) {
                     $val = self::maskTextCSVcompliant((string)$val, $separator, $text_clinch);
-                    $csv .= ($i == 0) ? $val : $separator . $val;
+                    $csv .= ($i == 0) ? $val : $separator.$val;
                     $i++;
                 }
                 $csv .= $line_break;
@@ -982,15 +918,15 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * returns rowset as json
+     * Returns records as json
      *
      * @param int $flags
      * @param int $depth
      * @return string
      */
-    public function getRowSetAsJSON(int $flags, int $depth = 512): string
+    public function getRecordsAsJSON(int $flags, int $depth = 512): string
     {
-        return json_encode($this->rowset, $flags, $depth);
+        return json_encode($this->records, $flags, $depth);
     }
 
     /**
@@ -1008,10 +944,10 @@ class ResultSet extends PoolObject implements Countable
             $hasTextClinch = strpos($val, $text_clinch);
         }
         if($hasTextClinch !== false) {
-            $val = str_replace($text_clinch, $text_clinch . $text_clinch, $val);
+            $val = str_replace($text_clinch, $text_clinch.$text_clinch, $val);
         }
         if($hasTextClinch !== false or str_contains($val, $separator) or str_contains($val, chr(10)) or str_contains($val, chr(13))) {
-            $val = $text_clinch . $val . $text_clinch;
+            $val = $text_clinch.$val.$text_clinch;
         }
         return $val;
     }
@@ -1023,13 +959,13 @@ class ResultSet extends PoolObject implements Countable
      * @param string $separator
      * @return string
      */
-    function getRowAsIni(string $key_value_separator = '=', string $separator = "\n"/*, $text_clinch=''*/): string
+    function getRecordAsIni(string $key_value_separator = '=', string $separator = "\n"/*, $text_clinch=''*/): string
     {
         $string = '';
-        if($this->rowset) {
-            foreach($this->rowset[$this->index] as $key => $val) {
+        if($this->records) {
+            foreach($this->records[$this->index] as $key => $val) {
                 if($string != '') $string .= $separator;
-                $string .= $key . $key_value_separator . $val;
+                $string .= $key.$key_value_separator.$val;
             }
         }
         return $string;
@@ -1039,16 +975,17 @@ class ResultSet extends PoolObject implements Countable
      * Creates data format for the bootstrap table
      *
      * @param int $total
-     * @param int|null $totalNotFiltered (optional) Use totalNotFilteredField parameter to set the field from the json response which will used for showExtendedPagination
+     * @param int|null $totalNotFiltered (optional) Use totalNotFilteredField parameter to set the field from the json response which will used for
+     *     showExtendedPagination
      * @return array
      */
-    public function getRowSetAsBSTable(int $total, int $totalNotFiltered = null): array
+    public function getRecordsAsBSTable(int $total, int $totalNotFiltered = null): array
     {
-        // todo move into GUI_Table and get Keys from Configuration e.g. https://bootstrap-table.com/docs/api/table-options/#datafield
+        // @todo move into GUI_Table and get Keys from Configuration e.g. https://bootstrap-table.com/docs/api/table-options/#datafield
         $return = [];
         $return['total'] = $total;
         $return['totalNotFiltered'] = $totalNotFiltered ?? $total;
-        $return['rows'] = $this->rowset;
+        $return['rows'] = $this->records;
         return $return;
     }
 
@@ -1064,19 +1001,13 @@ class ResultSet extends PoolObject implements Countable
      * @param array $callbackRow
      * @param array $callbackCell
      * @return string
+     * @todo move into GUI_Table for dhtmlxGrid
      */
     public function getRowsetAsXGrid(array $pk, int $total_count, int $pos = 0, bool $without_pk = true, string $encoding = 'ISO-8859-1',
         bool $encode = false, array $callbackRow = [], array $callbackCell = []): string
     {
-        $xml = '<?xml version=\'1.0\' encoding=\'' . $encoding . '\'?>';
-        $xml .= '<rows total_count=\'' . $total_count . '\' pos=\'' . $pos . '\'>';
-        /*				if($row = $this->getRow()) {
-                        $xml .= '<head>';
-                        foreach($row as $key => $val) {
-                            $xml .= '<column type="dyn" width="50">'.$key.'</column>';
-                        }
-                        $xml .= '</head>';
-                    }*/
+        $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
+        $xml .= '<rows total_count=\''.$total_count.'\' pos=\''.$pos.'\'>';
         $count = $this->count();
         if($count) {
             // Schluessel bzw. Felder im Voraus ermitteln
@@ -1084,7 +1015,7 @@ class ResultSet extends PoolObject implements Countable
                 $keys = $this->returnFields;
             }
             else {
-                $keys = array_keys($this->rowset[0]);
+                $keys = array_keys($this->records[0]);
             }
 
             // Primärschlüssel entfernen (AM, 18.11.2010, optimiert)
@@ -1097,7 +1028,7 @@ class ResultSet extends PoolObject implements Countable
             //					}
 
             $z = 1;
-            foreach($this->rowset as $row) {
+            foreach($this->records as $row) {
                 $id = '';
                 foreach($pk as $val) {
                     if($id != '') $id .= '-';
@@ -1105,27 +1036,27 @@ class ResultSet extends PoolObject implements Countable
                 }
                 $rowSettings = '';
                 if($callbackRow) {
-                    $rowSettings = ' ' . $callbackRow[0]->$callbackRow[1]($id, $row, $z, $count);
+                    $rowSettings = ' '.$callbackRow[0]->$callbackRow[1]($id, $row, $z, $count);
                 }
-                $xml .= '<row id=\'' . $id . '\'' . $rowSettings . '>';
+                $xml .= '<row id=\''.$id.'\''.$rowSettings.'>';
 
                 foreach($keys as $key) {
                     $val = $row[$key];
 
                     $cellSettings = '';
-                    if($callbackCell) $cellSettings = ' ' . $callbackCell[0]->$callbackCell[1]($key, $val, $row, $z, $count);
-                    $xml .= '<cell' . $cellSettings . '>';
+                    if($callbackCell) $cellSettings = ' '.$callbackCell[0]->$callbackCell[1]($key, $val, $row, $z, $count);
+                    $xml .= '<cell'.$cellSettings.'>';
                     if(is_numeric($val)) {
                         $xml .= $val;
                     }
                     else {
                         // Any encoding to UTF-8 using mbstring: mb_convert_encoding($string, 'UTF-8', mb_list_encodings());
-                        $xml .= '<![CDATA[' . str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val) . ']]>';
+                        $xml .= '<![CDATA['.str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val).']]>';
                     }
                     $xml .= '</cell>';
                 }
 
-                $xml .= '</row>' . chr(10);
+                $xml .= '</row>'.chr(10);
                 $z++;
             }
         }
@@ -1141,19 +1072,20 @@ class ResultSet extends PoolObject implements Countable
      * @param boolean|null $add [optional]
      * @param string $encoding
      * @return string
+     * @todo move into GUI_Combo for dhtmlxCombo
      */
     public function getRowsetAsXCombo(array $pkAsValue, string $fieldnameAsOption, ?bool $add = null, string $encoding = 'ISO-8859-1'): string
     {
         /*$xml = getXmlHeader('utf8');*/
-        $xml = '<?xml version=\'1.0\' encoding=\'' . $encoding . '\'?>';
+        $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
         if(is_null($add)) {
             $xml .= '<complete>';
         }
         else {
-            $xml .= '<complete add="' . bool2string($add) . '">';
+            $xml .= '<complete add="'.bool2string($add).'">';
         }
         if($this->count()) {
-            foreach($this->rowset as $row) {
+            foreach($this->records as $row) {
                 $id = '';
                 foreach($pkAsValue as $val) {
                     if($id != '') $id .= '-';
@@ -1169,13 +1101,13 @@ class ResultSet extends PoolObject implements Countable
                 $css = '';
                 if(isset($row['css'])) $css = $row['css'];
 
-                $xml .= '<option value="' . $id . '"';
-                if($css) $xml .= ' css="' . $css . '"';
-                if($img_src) $xml .= ' img_src="' . $img_src . '"';
-                if($checked) $xml .= ' checked="' . $checked . '"';
-                if($selected) $xml .= ' selected="' . $selected . '"';
+                $xml .= '<option value="'.$id.'"';
+                if($css) $xml .= ' css="'.$css.'"';
+                if($img_src) $xml .= ' img_src="'.$img_src.'"';
+                if($checked) $xml .= ' checked="'.$checked.'"';
+                if($selected) $xml .= ' selected="'.$selected.'"';
                 //$xml .= '<option value="'.$id.'">a</option>';
-                $xml .= '><![CDATA[' . (str_replace('&', '&amp;', $row[$fieldnameAsOption])) . ']]></option>';
+                $xml .= '><![CDATA['.(str_replace('&', '&amp;', $row[$fieldnameAsOption])).']]></option>';
             }
         }
 
@@ -1184,21 +1116,19 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Letzte Fehlermeldung ausgeben.
-     *
-     * @return array Fehlercode und Fehlermeldung oder false (falls kein Fehler auftrat)
+     * Get the last error in the error stack. If there is no error, an empty array is returned.
      */
     public function getLastError(): array
     {
-        $result = [];
+        $error = [];
         if($this->errorStack) {
-            $result = $this->errorStack[count($this->errorStack)-1];
+            $error = $this->errorStack[count($this->errorStack) - 1];
         }
-        return $result;
+        return $error;
     }
 
     /**
-     * Liefert eine Liste aller Fehlermeldungen
+     * Returns the error stack
      *
      * @return array
      */
@@ -1208,15 +1138,29 @@ class ResultSet extends PoolObject implements Countable
     }
 
     /**
-     * Fügt dem Fehler-Stack einen Fehler hinzu.
-     *
-     * @param string $message Fehlermeldung
-     * @param int $code Fehler-Code (Standard 0)
-     * @return $this
+     * Add error message to the error stack
      */
-    public function addError(string $message, int $code = 0): static
+    public function addErrorMessage(string $message, int $code = 0): static
     {
-        $this->errorStack[] = array('message' => $message, 'code' => $code);
+        $this->errorStack[] = ['message' => $message, 'code' => $code];
+        return $this;
+    }
+
+    /**
+     * Add the error to the error stack as an array with message and code
+     */
+    public function addError(array $error): static
+    {
+        $this->errorStack[] = $error;
+        return $this;
+    }
+
+    /**
+     * Clear the error stack
+     */
+    public function clearErrorStack(): static
+    {
+        $this->errorStack = [];
         return $this;
     }
 }

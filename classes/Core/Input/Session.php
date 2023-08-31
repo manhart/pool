@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -8,17 +8,23 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
+namespace pool\classes\Core\Input;
 
-class InputSession extends Input
+/**
+ * Class Session
+ *
+ * @package pool\classes\Core\Input
+ * @since 2003-07-10
+ */
+class Session extends Input
 {
     /**
-     * @var boolean Flag, ob Session initiiert wurde.
+     * @var boolean mark session as started
      */
     private bool $session_started = false;
 
     /**
-     * @var bool Schreibe u. entsperre Session
+     * @var bool writes session every time a data change occurs and closes the session
      */
     private bool $autoClose = true;
 
@@ -46,51 +52,63 @@ class InputSession extends Input
     }
 
     /**
+     * Set auto close session
+     *
      * @param $autoClose
-     * @return InputSession
+     * @return Session
      */
-    function setAutoClose($autoClose): static
+    public function setAutoClose($autoClose): static
     {
         $this->autoClose = $autoClose;
         return $this;
     }
 
     /**
-     * assign data to a variable
+     * Set a value to a variable
      *
-     * @param string $key name of variable
-     * @param mixed $value value of variable
+     * @param string $key
+     * @param mixed $value
+     * @param bool $suppressException
+     * @return Session
      */
-    public function setVar(string $key, mixed $value = ''): static
+    public function setVar(string $key, mixed $value = '', bool $suppressException = false): static
     {
         $this->start();
-        parent::setVar($key, $value);
-        $this->write_close();
+        try {
+            parent::setVar($key, $value, $suppressException);
+        }
+        finally {
+            $this->write_close();
+        }
         return $this;
     }
 
     /**
-     * assign data as array
+     * Set more values as array to variables
      *
      * @param array $assoc
-     * @return Input
+     * @param bool $suppressException
+     * @return Session
      */
-    public function setVars(array $assoc): Input
+    public function setVars(array $assoc, bool $suppressException = false): static
     {
         $this->start();
-        parent::setVars($assoc);
+        foreach($assoc as $key => $value) {
+            parent::setVar($key, $value, $suppressException);
+        }
         $this->write_close();
         return $this;
     }
 
     /**
-     * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming variable.
+     * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming
+     * variable.
      *
      * @param string $key name of variable
      * @param mixed $value value of variable
      * @param int $filter
      * @param mixed $filterOptions
-     * @return InputSession Erfolgsstatus
+     * @return Session Erfolgsstatus
      */
     public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
     {
@@ -109,13 +127,16 @@ class InputSession extends Input
     public function addVars(array $vars): static
     {
         $this->start();
-        parent::addVars($vars);
+        foreach($vars as $key => $value) {
+            parent::addVar($key, $value);
+        }
+
         $this->write_close();
         return $this;
     }
 
     /**
-     * Delete a variable from the session
+     * Delete a session variable
      *
      * @param string $key name of variable
      */
@@ -128,7 +149,7 @@ class InputSession extends Input
     }
 
     /**
-     * Setzt die Daten f�r Input.
+     * Overwrites the data of the session with the data of the array
      *
      * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
      */
@@ -145,7 +166,7 @@ class InputSession extends Input
      *
      * @param Input $Input Objekt vom Typ Input
      * @param boolean $flip Fuegt die Daten in umgekehrter Reihenfolge zusammen (true), Standard ist false (Parameter nicht erforderlich)
-     **/
+     */
     public function mergeVars(Input $Input, bool $flip = false): Input
     {
         $this->start();
@@ -155,7 +176,7 @@ class InputSession extends Input
     }
 
     /**
-     * sets the data type of variable
+     * Sets the data type of variable
      *
      * @param string $key variable name
      * @param string $type data type
@@ -170,7 +191,7 @@ class InputSession extends Input
     }
 
     /**
-     * Gibt die maximale Lebenszeit der Session zur�ck
+     * Delivers the maximum session lifetime
      *
      * @return int Maximale Lebenszeit in Sekunden
      */
@@ -200,7 +221,6 @@ class InputSession extends Input
 
     /**
      * write session and close it. Zu empfehlen bei lang laufenden Programmen, damit andere Scripte nicht gesperrt werden
-     *
      */
     public function write_close(): static
     {

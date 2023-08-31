@@ -10,8 +10,7 @@
 
 //namespace pool\classes;
 
-use pool\classes\Core\Component;
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 
 trait Configurable
 {
@@ -149,9 +148,9 @@ trait Configurable
 
     /**
      * @param string $new_name
-     * @return Component
+     * @return Configurable
      */
-    public function setName(string $new_name): Component
+    public function setName(string $new_name): static
     {
         $this->defaultInspectorProperties['moduleName']['value'] = $new_name;
         $this->Input->setVar('moduleName', $new_name);

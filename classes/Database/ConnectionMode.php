@@ -8,7 +8,10 @@
  * file that was distributed with this source code.
  */
 
-// base classes
-require_once __DIR__ . '/GUI_Module.php';
-require_once __DIR__ . '/Configurable.php';
-require_once __DIR__ . '/Net_Ping.class.php';
+namespace pool\classes\Database;
+
+enum ConnectionMode: string
+{
+    case READ = 'READ';
+    case WRITE = 'WRITE';
+}

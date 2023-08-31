@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
 
 /**
@@ -25,6 +25,8 @@ class GUI_Schema extends GUI_Module
      * directory - a constant or directory
      * category - a subdirectory
      * alternate - if schema was not found, redirect to this schema
+     * vhostMode - 0-> category only, 1-> vhost/category/, 2-> category/vhost/, other-> vhost as alternative for category
+     * errorFallbackDefaultSchema - if alternate schema was not found, redirect to the default schema
      * @var int $superglobals takes parameter schema from request
      */
     protected int $superglobals = Input::REQUEST;
@@ -62,7 +64,7 @@ class GUI_Schema extends GUI_Module
         } elseif ($vhostMode)//no category and vHost to be included
             $this->appendVHost($directory);
         /** @var string $alternate Alternative schema if the target-schema was not found */
-        $alternate = $this->getInternalParam('alternate', Weblication::getInstance()->getDefaultSchema());
+        $alternate = $this->getInternalParam('alternate', $this->getInternalParam('errorFallbackDefaultSchema') ? Weblication::getInstance()->getDefaultSchema() : '');
         //Prep template-engine
         $this->templates = [];
         $this->Template->setDirectory($directory);

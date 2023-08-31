@@ -14,6 +14,7 @@ namespace pool\classes\Core;
 
 use JetBrains\PhpStorm\NoReturn;
 use JsonSerializable;
+use pool\classes\Core\Input\Input;
 use pool\classes\Exception\InvalidArgumentException;
 use SensitiveParameter;
 use Stringable;

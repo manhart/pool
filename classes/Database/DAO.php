@@ -1,5 +1,4 @@
 <?php
-declare (strict_types=1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -13,13 +12,17 @@ namespace pool\classes\Database;
 
 use Closure;
 use CustomMySQL_DAO;
-use MySQL_DAO;
-use MySQLi_Interface;
 use pool\classes\Core\PoolObject;
+use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Exception\DAOException;
-use ResultSet;
 
+/**
+ * Class DAO - Data Access Object
+ *
+ * @package pool\classes\Database
+ * @since 2003/07/10
+ */
 abstract class DAO extends PoolObject
 {
     /**
@@ -32,21 +35,51 @@ abstract class DAO extends PoolObject
     public const DAO_NO_ESCAPE = 2;
 
     /**
-     * table meta data
+     * @var string|null name of the interface type (must be declared in derived class)
+     */
+    protected static ?string $interfaceType = null;
+
+    /**
+     * @var string|null Name of the table / file / view (must be declared in derived class)
+     */
+    protected static ?string $tableName = null;
+
+    /**
+     * @var string|null Name of the database (must be declared in derived class)
+     */
+    protected static ?string $databaseName = null;
+
+    /**
+     * @var DataInterface instance of the interface
+     */
+    protected DataInterface $DataInterface;
+
+    /**
+     * @var string Internal Name of the table
+     */
+    protected string $table;
+
+    /**
+     * @var string Internal Name of the database
+     */
+    protected string $database;
+
+    /**
+     * Table meta data
      *
      * @var array
      */
     protected array $metaData = [];
 
     /**
-     * primary key of table
+     * Primary key of table
      *
      * @var array|string[]
      */
     protected array $pk = [];
 
     /**
-     * columns of table
+     * Columns of table
      *
      * @var array|string[]
      */
@@ -68,8 +101,12 @@ abstract class DAO extends PoolObject
     /**
      * Defines the default commands.
      */
-    public function __construct()
+    protected function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
     {
+        $this->DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
+        $this->database ??= $databaseName ?? static::$databaseName;
+        $this->table ??= $table ?? static::$tableName;
+
         $commands = [
             Commands::Now->name => 'NOW()',
             Commands::CurrentDate->name => 'CURRENT_DATE()',
@@ -83,65 +120,48 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * Einen Datensatz einfuegen (virtuelle Methode).
-     */
-    abstract public function insert(array $data): ResultSet;
-
-    /**
-     * Einen Datensatz aendern (virtuelle Methode).
-     */
-    abstract public function update(array $data): ResultSet;
-
-    /**
-     * Einen Datensatz loeschen (virtuelle Methode).
-     */
-    abstract public function delete($id): ResultSet;
-
-    /**
-     * @return ResultSet
-     */
-    abstract public function deleteMultiple(): ResultSet;
-
-    /**
-     * Einen Datensatz zurueck geben (virtuelle Methode).
-     * Datensaetze werden als Objekt ResultSet zurueck gegeben.
-     */
-    abstract public function get($id, $key = null): ResultSet;
-
-    /**
-     * Mehrere Datensaetze zurueck geben (virtuelle Methode).
-     * Datensaetze werden als Objekt ResultSet zurueck gegeben.
-     */
-    abstract public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules=[], array $sorting=[], array $limit=[],
-        array $groupBy=[], array $having=[], array $options=[]): ResultSet;
-
-    /**
-     * Liefert die Anzahl gefundener Datensaete zurueck (virtuelle Methode).
-     * Gleicher Aufbau wie DAO::getMultiple() mit dem Unterschied, es liefert keine riesige Ergebnismenge zurueck,
-     * sondern nur die Anzahl.
-     */
-    abstract public function getCount(mixed $id = null, mixed $key = null, array $filter_rules=[]): ResultSet;
-
-    /**
-     * set primary key
+     * Escape a column name
      *
-     * @param string ...$primaryKey
-     * @return DAO
+     * @param string $column
+     * @return string
      */
-    public function setPrimaryKey(string ...$primaryKey): static
+    abstract static function escapeColumn(string $column): string;
+
+    /**
+     * @return string
+     */
+    public static function getDatabaseName(): string
     {
-        $this->pk = $primaryKey;
-        return $this;
+        return static::$databaseName;
     }
 
     /**
-     * returns primary key
-     *
-     * @return array primary key
-     **/
-    public function getPrimaryKey(): array
+     * @return string
+     */
+    public static function getTableName(): string
     {
-        return $this->pk;
+        return static::$tableName;
+    }
+
+    /**
+     * Creates a Data Access Object
+     */
+    public static function create(?string $tableName = null, ?string $databaseName = null, DataInterface|null $DataInterface = null): static
+    {
+        // class stuff
+        if(!$tableName) {
+            return new static($DataInterface);
+        }
+        elseif(static::$tableName) {
+            throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
+        }
+        else {
+            $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
+
+            $DAO = new static($DataInterface, $databaseName, $tableName);
+            $DAO->fetchColumns();
+            return $DAO;
+        }
     }
 
     /**
@@ -152,172 +172,213 @@ abstract class DAO extends PoolObject
     abstract public function fetchColumns(): static;
 
     /**
-     * Sets the columns you want to query. The event DAO::onSetColumns() is triggered.
+     * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
      *
-     * @param string ...$columns columns
+     * @param string|null $tableName table definition or the table name
+     * @param string|null $databaseName database name
+     * @param \pool\classes\Database\DataInterface|null $DataInterface
+     * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
+     * @deprecated use create() instead
+     * @see DAO::create()
      */
-    public function setColumns(string ...$columns): DAO
+    public static function createDAO(?string $tableName = null, ?string $databaseName = null, DataInterface|null $DataInterface = null): static
     {
-        $this->columns = $columns;
-        $this->onSetColumns($columns);
+        // @todo remove workaround once relying projects are fixed
+        if($tableName && !$databaseName && str_contains($tableName, '_')) {
+            [$databaseName, $tableName] = explode('_', $tableName, 2);
+        }
+
+        // class stuff
+        if(!$tableName) {
+            return new static($DataInterface);
+        }
+        elseif(static::$tableName) {
+            throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
+        }
+        else {
+            // workaround
+            $className = static::class === DAO::class ? CustomMySQL_DAO::class : static::class;
+            $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
+
+            $class_exists = class_exists($tableName, false);
+
+            $driver = $DataInterface->getDriverName();
+            $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
+            $include = "$dir/$tableName.php";
+            $file_exists = file_exists($include);
+            if(!$class_exists && $file_exists) {
+                require_once $include;
+                $class_exists = true;
+            }
+            if($class_exists) {
+                return new $tableName($DataInterface, $databaseName, $tableName);
+            }
+
+            $DAO = new $className($DataInterface, $databaseName, $tableName);
+            $DAO->fetchColumns();
+            return $DAO;
+        }
+    }
+
+    /**
+     * Return DataInterface
+     *
+     * @return DataInterface
+     */
+    public function getDataInterface(): DataInterface
+    {
+        return $this->DataInterface;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
+    /**
+     * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
+     */
+    abstract public function insert(array $data): RecordSet;
+
+    /**
+     * Update a record by primary key (put the primary key in the data array)
+     */
+    abstract public function update(array $data): RecordSet;
+
+    /**
+     * Delete a record by primary key
+     */
+    abstract public function delete(int|string|array $id): RecordSet;
+
+    /**
+     * Delete multiple records at once
+     */
+    abstract public function deleteMultiple(array $filter_rules = []): RecordSet;
+
+    /**
+     * Returns a single record e.g. by primary key
+     */
+    abstract public function get(int|string|array $id, null|string|array $key = null): RecordSet;
+
+    /**
+     * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
+     */
+    abstract public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
+        array $groupBy = [], array $having = [], array $options = []): RecordSet;
+
+    /**
+     * Returns the number of records of the assembled SQL statement as a pool\classes\Core\ResultSet
+     */
+    abstract public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): RecordSet;
+
+    /**
+     * Set primary key
+     */
+    public function setPrimaryKey(string ...$primaryKey): static
+    {
+        $this->pk = $primaryKey;
         return $this;
     }
 
     /**
-     * escape a column name
-     * @param string $column
-     * @return string
+     * Returns primary key
+     *
+     * @return array primary key
      */
-    abstract static function escapeColumn(string $column): string;
+    public function getPrimaryKey(): array
+    {
+        return $this->pk;
+    }
 
     /**
-     * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
+     * Setzt die Spalten, die abgefragt werden.
      *
      * @param string $columns columns as string with separator
      * @param string $separator Trenner (Spaltentrenner im String)
      **/
-    public function setColumnsAsString(string $columns, string $separator = ';'): DAO
+    public function setColumnsAsString(string $columns, string $separator = ';'): static
     {
-        $this->columns = explode($separator, $columns);
-        $this->onSetColumns($this->columns);
+        $this->setColumns(...explode($separator, $columns));
         return $this;
     }
 
     /**
-     * Setzt die Spalten, die abgefragt werden. Dabei wird das Ereignis DAO::onSetColumns() ausgeloest.
-     *
-     * @param array $columns Spalten
-     * @return DAO
+     * Set columns as array
      */
-    public function setColumnsAsArray(array $columns): DAO
+    public function setColumnsAsArray(array $columns): static
     {
-        $this->columns = $columns;
-        $this->onSetColumns($columns);
+        $this->setColumns(...$columns);
         return $this;
     }
 
     /**
-     * Liefert ein Array mit Spaltennamen zurueck (nicht unbedingt alle Spalten der Tabelle)
+     * Returns the columns you want to query.
      *
      * @return array Spalten
-     **/
+     */
     public function getColumns(): array
     {
         return $this->columns;
     }
 
     /**
-     * event is triggered when the columns are set
+     * Sets the columns you want to query.
      */
-    abstract protected function onSetColumns(array $columns);
+    public function setColumns(string ...$columns): static
+    {
+        $this->columns = $columns;
+        return $this;
+    }
 
     /**
-     * Liefert ein Array mit "allen" Spaltennamen zurueck
+     * Returns the metadata of the table
+     *
+     * @param string $which
+     * @return array
+     */
+    public function getMetaData(string $which = ''): array
+    {
+        return $which ? $this->metaData[$which] : $this->metaData;
+    }
+
+    /**
+     * Returns a column list of the table with information about the columns
      */
     abstract public function getFieldList(): array;
 
     /**
      * Liefert den Typ einer Spalte
      *
-     * @param string $fieldName
+     * @param string $column
      * @return string
      */
-    abstract public function getFieldType(string $fieldName): string;
+    abstract public function getColumnDataType(string $column): string;
 
     /**
-     * @param string $fieldName
+     * @param string $column
      * @return array
      */
-    abstract public function getFieldInfo(string $fieldName): array;
-
-    // function formatData(&$data) {}
+    abstract public function getColumnInfo(string $column): array;
 
     /**
-     * extract definitions of the table variable
-     *
-     * @param string $tableDefine
-     * @param string $interfaceType
-     * @param string $dbname
-     * @param string $table
-     */
-    static function extractTabledefine(string $tableDefine, string &$interfaceType, string &$dbname, string &$table): void
-    {
-        global $$tableDefine;
-        $tableDefine = $$tableDefine;
-        $interfaceType = $tableDefine[0] ?? '';
-        $dbname = $tableDefine[1] ?? '';
-        $table = $tableDefine[2] ?? '';
-    }
-
-    /**
-     * @return int number of records / rows
+     * @return int Number of records / rows
      */
     abstract public function foundRows(): int;
 
+    abstract function fetchingRow(array $row): array;
+
     /**
-     * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
+     * Executes sql statement and returns resultset
      *
-     * @param string $tableDefine Tabellendefinition (siehe database.inc.php)
-     * @param null $interface
-     * @param bool $autoFetchColumns
-     * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
-     *
-     * @throws DAOException
+     * @param string $sql sql statement to execute
+     * @param callable|null $customCallback
+     * @return \pool\classes\Core\RecordSet
      */
-    public static function createDAO(string $tableDefine, $interface = null, bool $autoFetchColumns = false): DAO
+    protected function execute(string $sql, ?callable $customCallback = null): RecordSet
     {
-        $type = $dbname = $table = '';
-        self::extractTabledefine($tableDefine, $type, $dbname, $table);
-
-        // Interface Objekt
-        $interface = $interface ?? Weblication::getInstance()->getInterfaces();
-
-        if(is_array($interface)) {
-            $interface = $interface[$type] ?? null;
-        }
-
-        // @todo remove switch
-        switch($type) {
-            case MySQLi_Interface::class:
-                $class_exists = class_exists($table, false);
-
-                /** @var $type DataInterface */
-                $driver = $type::getDriverName();
-                $dir = addEndingSlash(DIR_DAOS_ROOT) . "$driver/$dbname";
-                $include = "$dir/$table.class.php";
-                $file_exists = file_exists($include);
-                if(!$class_exists && !$file_exists) {
-                    $include = "$dir/$table.php";
-                    $file_exists = file_exists($include);
-                }
-                if(!$class_exists && $file_exists) {
-                    require_once $include;
-                    $class_exists = true;
-                }
-                if($class_exists) {
-                    /** @var MySQL_DAO $DAO */
-                    $DAO = new $table($interface, $dbname, $table);
-                }
-                else {
-                    // @todo use $driver
-                    // $className = 'Custom'.$driver.'_DAO';
-                    $DAO = new CustomMySQL_DAO($interface, $dbname, $table);
-                }
-                break;
-
-            default:
-                if($table) {
-                    $msg = "Fatal error: DataInterface type $type of table definition $tableDefine unknown!";
-                }
-                else {
-                    $msg = "Fatal error: Table definition $tableDefine is missing in the database.inc.php!";
-                }
-
-                throw new DAOException($msg, 1);
-        }
-        if($autoFetchColumns) {
-            $DAO->fetchColumns();
-        }
-        return $DAO;
+        return $this->getDataInterface()->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
     }
 }

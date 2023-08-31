@@ -13,17 +13,28 @@ use PHPUnit\Framework\TestCase;
 
 class UrlTest extends TestCase
 {
+    public function init()
+    {
+        $_SERVER['SERVER_NAME'] = 'g7system.local';
+        $_SERVER['SERVER_PORT'] = '80';
+        require_once __DIR__.'/../configs/config.inc.php';
+        if(!class_exists(\pool\classes\Core\PoolObject::class)) {
+            include __DIR__.'/../classes/Core/PoolObject.php';
+        }
+        if(!class_exists(\pool\classes\Core\Url::class)) {
+            include __DIR__.'/../classes/Core/Url.php';
+        }
+    }
     public function testUrl()
     {
-        require_once __DIR__.'/../configs/config.inc.php';
-        require_once __DIR__.'/../pool.lib.php';
+        $this->init();
 
-        $url = new \pool\classes\Core\Url('http://www.example.com:80/foo/bar?test=1#fragment');
+        $url = \pool\classes\Core\Url::fromString('http://www.example.com:80/foo/bar?test=1#fragment');
         $this->assertEquals('http', $url->getScheme());
         $this->assertEquals('www.example.com', $url->getHost());
         $this->assertEquals(80, $url->getPort());
-        $this->assertEquals('foo/bar', $url->getPath());
-        $this->assertEquals('test=1', $url->getQuery());
+        $this->assertEquals('/foo/bar', $url->getPath());
+        $this->assertEquals('test=1', http_build_query($url->getQuery()));
         $this->assertEquals('fragment', $url->getFragment());
     }
 }

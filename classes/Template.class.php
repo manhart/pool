@@ -740,7 +740,7 @@ class TempFile extends TempCoreHandle
         $dir = $this->getDirectory();
         $filename = $this->filename;
         $filePath = buildFilePath($dir, $filename);
-        if (!file_exists($filePath)){
+        if (!file_exists($filePath)) {
             //trying parent directory to compensate for translated templates including templates until Template engine gets fixed
             $filePath = buildFilePath($dir, '..', $filename);//
             if (Template::isCacheTranslations() && file_exists($filePath))

@@ -22,6 +22,7 @@
 * @link https://alexander-manhart.de
 */
 
+use pool\classes\Core\Input\Session;
 use pool\classes\Core\PoolObject;
 
 /**
@@ -173,14 +174,13 @@ class ImageMagick extends PoolObject
 
     /**
      * ImageMagick::saveIntoSession()
-     *
      * Speichert die History in die Session.
      *
      * @access public
      * @param object $Session ISession
-     * @see InputSession
      * @return boolean Erfolgsstatus
-     **/
+     **@see Session
+     */
     function saveIntoSession(& $Session)
     {
         $Session -> setVar('ImageMagick_targetfile', $this -> targetfile);

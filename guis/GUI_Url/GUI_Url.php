@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 use pool\classes\Core\Url;
 
 /**

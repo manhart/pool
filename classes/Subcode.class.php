@@ -15,7 +15,7 @@
  */
 
 use pool\classes\Core\Component;
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
 
 /**

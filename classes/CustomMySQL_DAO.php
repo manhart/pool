@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -8,12 +8,6 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
-
-class InputFiles extends Input
+class CustomMySQL_DAO extends MySQL_DAO
 {
-    function __construct(int $superglobals = Input::FILES)
-    {
-        parent::__construct($superglobals);
-    }
 }

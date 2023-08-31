@@ -10,7 +10,7 @@
 
 use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
@@ -158,16 +158,13 @@ class Log
                 $charset = $facility['charset'] ?? 'utf8';
 
                 if($tableDefine) {
-                    $interfaceType = $dbname = $table = '';
-                    DAO::extractTabledefine($tableDefine, $interfaceType, $dbname, $table);
-
                     $Packet = array(
                         'host' => $host,
-                        'database' => $dbname,
+                        'database' => '',
                         'charset' => $charset
                     );
-                    $Db = DataInterface::createDataInterface($Packet, $interfaceType);
-                    $DAO = DAO::createDAO($tableDefine, $Db);
+                    $Db = DataInterface::createDataInterface($Packet);
+                    $DAO = DAO::createDAO($tableDefine, null, $Db);
                     $DAO->fetchColumns();
                 }
 

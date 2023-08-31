@@ -2415,7 +2415,7 @@ function checkRunningProcess(string $pidDir, string $jobName): void
 function str_contains_any(string $haystack, array $needles, bool $case_sensitive = true): bool
 {
     foreach ($needles as $needle) {
-        if (str_contains($haystack, $needle) || (($case_sensitive === false) && str_contains(strtolower($haystack), strtolower($needle)))) {
+        if (str_contains($haystack, $needle) || (!$case_sensitive && str_contains(strtolower($haystack), strtolower($needle)))) {
             return true;
         }
     }

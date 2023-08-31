@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -8,12 +8,11 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Core\Input;
+namespace pool\classes\Database\Exception;
 
-class InputServer extends Input
+use pool\classes\Exception\PoolExceptionInterface;
+use RuntimeException as PhpRuntimeException;
+
+class DatabaseConnectionException extends PhpRuntimeException implements PoolExceptionInterface
 {
-    function __construct(int $superglobals = Input::SERVER)
-    {
-        parent::__construct($superglobals);
-    }
 }

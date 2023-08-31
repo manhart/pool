@@ -8,13 +8,18 @@
  * file that was distributed with this source code.
  */
 
-namespace pool\classes\Exception;
-
-use JsonException as PhpJsonException;
+namespace pool\classes\Core\Input;
 
 /**
- * Thrown to indicate that the argument received is not valid.
+ * Class Files
+ *
+ * @package pool\classes\Core\Input
+ * @since 2003-07-10
  */
-class InvalidJsonException extends PhpJsonException implements PoolExceptionInterface
+class Files extends Input
 {
+    public function __construct(int $superglobals = Input::FILES)
+    {
+        parent::__construct($superglobals);
+    }
 }

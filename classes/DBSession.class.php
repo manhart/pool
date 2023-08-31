@@ -31,7 +31,7 @@
 * @link http://www.misterelsa.de
 */
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 use pool\classes\Core\PoolObject;
 use pool\classes\Database\DAO;
 
@@ -107,7 +107,7 @@ class DBSession extends PoolObject
     {
         $this->ipUserAgentRestriction = $ipUserAgentRestriction;
 
-        $this->DAO_Session = DAO::createDAO($tabledefine, $interfaces);
+        $this->DAO_Session = DAO::createDAO($tabledefine, null, $interfaces);
 
         if(isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             // Proxy Weiterleitung

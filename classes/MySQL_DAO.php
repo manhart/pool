@@ -1,198 +1,49 @@
 <?php
-/**
- * # PHP Object Oriented Library (POOL) #
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Class MySQL_DAO abgeleitet von der abstrakten Basisklasse DAO.
- * Diese Klasse kapselt die MySQL Aktionen "select, select count(), insert, update, delete"!
- * Dabei wurden die Basisfunktionen "get, getMultiple, update, insert, delete" so angepasst, dass
- * die korrekte SQL Syntax fuer die Kommunikation mit dem MySQL Server erstellt wird.
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * $Log: MySQL_DAO.class.php,v $
- * Revision 1.39  2007/05/02 11:35:41  manhart
- * -/-
- *
- * Revision 1.38  2007/04/04 10:43:06  manhart
- * Fix 'leerzeichen' in Spaltennamen
- *
- * Revision 1.37  2007/03/29 09:20:57  manhart
- * n/a
- *
- * Revision 1.36  2007/02/16 07:45:03  manhart
- * no message
- *
- * Revision 1.35  2007/02/12 14:14:36  manhart
- * Fix: primarykey exception
- *
- * Revision 1.34  2007/02/01 13:43:15  manhart
- * Fixed: "mysql_escape_string am falschen Platz"
- *
- * Revision 1.33  2007/01/30 13:04:06  manhart
- * Fixed constructor call in CustomMySQL_DAO
- *
- * Revision 1.32  2007/01/30 12:32:10  manhart
- * Fix reserved words in column_list
- *
- * Revision 1.30  2006/12/28 17:28:43  manhart
- * Fixed "tableAlias in __buildWhere"
- *
- * Revision 1.26  2006/09/27 11:24:59  manhart
- * n/a
- *
- * Revision 1.25  2006/09/22 12:31:40  manhart
- * new function deleteMultiple
- *
- * Revision 1.24  2006/09/07 14:16:58  manhart
- * new setTableAlias
- *
- * Revision 1.23  2006/08/07 11:36:59  manhart
- * Exception -> Xception (PHP5 kompatibel)
- *
- * Revision 1.22  2006/05/03 09:09:27  manhart
- * new feature update mit KEY
- *
- * Revision 1.21  2006/05/02 08:15:37  manhart
- * Fix
- *
- * Revision 1.20  2006/04/11 11:57:53  manhart
- * Aenderung listfields, Fix E_NOTICE
- *
- * Revision 1.19  2006/03/21 09:57:26  manhart
- * new foundRows()
- *
- * Revision 1.18  2006/02/23 08:40:33  manhart
- * na
- *
- * Revision 1.17  2006/02/17 09:41:46  schmidseder
- * no message
- *
- * Revision 1.16  2006/02/15 09:08:43  manhart
- * Bugfix bei Verwendung von get ohne Parameter
- *
- * Revision 1.15  2006/02/02 10:05:53  manhart
- * no message
- *
- * Revision 1.14  2005/12/30 12:45:06  manhart
- * no message
- *
- * Revision 1.12  2005/11/16 16:26:42  manhart
- * Big Improvement: check variable type for sql statement
- *
- * Revision 1.11  2005/10/06 14:21:28  schmidseder
- * Bruttoabschluss
- *
- * Revision 1.10  2005/10/04 11:05:04  manhart
- * no message
- *
- * Revision 1.9  2005/10/04 11:04:06  manhart
- * Fix null in update
- *
- * Revision 1.8  2005/10/04 11:00:12  manhart
- * reserved word list in update
- *
- * Revision 1.7  2005/09/15 14:33:17  manhart
- * Spezielle MySQL Kommandos nicht maskieren!
- *
- * Revision 1.5  2005/06/16 10:31:32  manhart
- * Fix undefined Variable
- *
- * Revision 1.4  2005/06/14 11:47:12  manhart
- * Fix raise Xception
- *
- * Revision 1.3  2005/02/18 10:49:38  manhart
- * k
- *
- * Revision 1.2  2005/01/07 14:01:49  manhart
- * debug!
- *
- * Revision 1.1.1.1  2004/09/21 07:49:25  manhart
- * initial import
- *
- * Revision 1.31  2004/09/02 12:44:09  manhart
- * Fix: fieldnames with space aborted!
- *
- * Revision 1.30  2004/08/19 15:05:58  manhart
- * Fix rueckgabe bei MySQL_DAO::update muss immer ein Objekt sein
- *
- * Revision 1.29  2004/08/19 06:48:50  manhart
- * fix reference at MySQL_DAO::__createMySQLResultset
- *
- * Revision 1.28  2004/08/03 16:14:42  manhart
- * Fix debug
- *
- * Revision 1.27  2004/08/02 11:16:13  manhart
- * New: Debugging Rows
- *
- * Revision 1.26  2004/06/29 14:10:45  manhart
- * Fix in getCount. * instead of primary keys
- *
- * Revision 1.25  2004/04/29 14:42:44  manhart
- * __buildFilter now supports operators like or, and, ( ...
- *
- * Revision 1.24  2004/04/29 10:39:28  manhart
- * New Feature, or Verkn�pfungen
- *
- * Revision 1.23  2004/04/20 16:17:57  manhart
- * update
- *
- * Revision 1.22  2004/04/01 15:11:44  manhart
- * Interface Types implemented, Comments/Description
- *
- *
- * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
- * @version $Revision: 1.39 $
- *
- * @see DAO.class.php
- * @see MySQL_Interface.class.php
- * @see MySQL_Resultset.class.php
- *
- * @since 2003/07/10
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
+use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\Commands;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
+use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
 
 /**
  * MySQL_DAO
- *
  * @package pool
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @version $Id: MySQL_DAO.class.php,v 1.39 2007/05/02 11:35:41 manhart Exp $
+ * @since 2003/07/10
  */
 class MySQL_DAO extends DAO
 {
     /**
-     * MySQL_Interface
-     *
-     * @var DataInterface|null
+     * @var string|null Default DataInterface
      */
-    protected ?DataInterface $db = null;
+    protected static ?string $interfaceType = DataInterface::class;
 
     /**
-     * @var string contains the columns to select
+     * @var string Contains the columns to select
      */
     protected string $column_list = '*';
-
-    /**
-     * @var string contains the table name
-     */
-    protected string $table;
 
     protected string $tableAlias = '';
 
     /**
-     * columns to translate
+     * Columns to translate
      *
      * @var array
      */
     protected array $translate = [];
 
     /**
-     * translates field values within filter / sorting methods
+     * Translates field values within filter / sorting methods
      *
      * @var array|string[][]
      */
@@ -204,14 +55,9 @@ class MySQL_DAO extends DAO
     protected Translator $Translator;
 
     /**
-     * @var string contains the database name
-     */
-    private string $dbname;
-
-    /**
      * @var array|string[] operators for the filter method
      */
-    private array $MySQL_trans = [
+    private array $operatorMap = [
         'equal' => '=',
         'unequal' => '!=',
         'greater' => '>',
@@ -232,23 +78,22 @@ class MySQL_DAO extends DAO
     ];
 
     /**
-     * MySQL_DAO constructor.
+     * @var array|true[] valid logical operators
      */
-    public function __construct(DataInterface $DataInterface, string $dbname, string $table)
+    private array $validLogicalOperators = ['or' => true, 'and' => true, 'xor' => true];
+
+    /**
+     * Constructor.
+     */
+    protected function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
     {
-        parent::__construct();
-
-        $this->db = $DataInterface;
-        $this->dbname = $dbname;
-        $this->table = $table;
-
-        // Maybe there are columns in the "columns" property
-        // todo rework this shit
+        parent::__construct($DataInterface, $databaseName, $table);
         $this->rebuildColumnList();
     }
 
     /**
-     * rebuild column list
+     * Rebuild column list
+     * @todo rethink / rework rebuildColumnList
      */
     private function rebuildColumnList(): void
     {
@@ -263,25 +108,7 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * @return string
-     */
-    public function getTableName(): string
-    {
-        return $this->table;
-    }
-
-    /**
-     * return DataInterface e.g. MySQL-Connection like MySQLi_Interface
-     *
-     * @return DataInterface
-     */
-    public function getDataInterface(): DataInterface
-    {
-        return $this->db;
-    }
-
-    /**
-     * return columns to translate into another language
+     * Return columns to translate into another language
      */
     public function getTranslatedColumns(): array
     {
@@ -289,21 +116,26 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * set columns for translation into another language
+     * Returns the data values which will be translated
      *
-     * @param array $translate
-     * @return $this
+     * @return array|\string[][]
      */
-    public function setTranslatedColumns(array $translate): static
+    public function getTranslatedValues(): array
     {
-        $this->translate = $translate;
+        return $this->translateValues;
+    }
+
+    /**
+     * Set columns for translation into another language
+     */
+    public function setTranslatedColumns(array $columns): static
+    {
+        $this->translate = $columns;
         return $this;
     }
 
     /**
      * Sets columns to be translated
-     *
-     * @param array $columns
      */
     public function setTranslationColumns(array $columns): void
     {
@@ -311,9 +143,7 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * enables auto translation of the columns defined in the property $translate
-     *
-     * @return $this
+     * Enables auto translation of the columns defined in the property $translate
      */
     public function enableTranslation(): static
     {
@@ -323,9 +153,7 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * disables auto translation of the columns defined in the property $translate
-     *
-     * @return $this
+     * Disables auto translation of the columns defined in the property $translate
      */
     public function disableTranslation(): static
     {
@@ -338,74 +166,44 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * returns columns comma separated
-     *
-     * @return string
+     * Returns the defined columns of the table or rebuilds the column list by fetching the columns from the database
      */
-    public function getColumnList(): string
+    public function getFieldList(bool $rebuild = false): array
     {
-        return $this->column_list;
-    }
-
-    /**
-     * Liefert alle Felder der Tabelle.
-     *
-     * @param boolean $reInit Feldliste erneuern
-     * @return array Felder der Tabelle
-     */
-    public function getFieldList(bool $reInit = false): array
-    {
-        if(count($this->getColumns()) == 0 or $reInit) {
+        if(count($this->getColumns()) == 0 or $rebuild) {
             $this->fetchColumns();
         }
         return $this->getColumns();
     }
 
     /**
-     * fetches the columns automatically from the driver / interface
-     *
-     * Beim Setzen der Spalten/Felder wird das Ereignis
-     * $this -> onSetColumns() aufgerufen
+     * Fetches the columns automatically from the DataInterface / Driver
+     * @see DataInterface::getTableColumnsInfo()
      */
     public function fetchColumns(): static
     {
-        $this->pk = [];
-        $this->columns = [];
-        $this->field_list = $this->db->listfields($this->table, $this->dbname, $this->columns, $this->pk);
-        $this->onSetColumns($this->columns);
+        [$this->field_list, $columns, $this->pk] = $this->DataInterface->getTableColumnsInfo($this->database, $this->table);
+        $this->setColumns(...$columns);
         return $this;
     }
 
     /**
-     * Das Ereignis "onSetColumns" wird immer nachdem setzen der Columns
-     * mit der Funktion "setColumns" ausgefuehrt und baut die Eigenschaft
-     * $this→column_list fuer die Funktionen $this -> get und
-     * $this→getMultiple zusammen.
+     * Is called automatically after the columns are set
      */
-    protected function onSetColumns(array $columns): void
+    public function setColumns(string ...$columns): static
     {
-        $column_list = '';
-        $count = count($columns);
-        $last = $count - 1;
-
-        // todo add table alias
-        // todo introduce expression columns
-        // todo consider column properties (e.g. type, length, ...)
-
-        for($i = 0; $i < $count; $i++) {
-            // don't escape column if it has already backticks, is an expression or contains a dot
-            $column = static::escapeColumn($columns[$i]);
-            // add column separator
-            $column_list .= $i < $last ? "$column, " : $column;
-        }
-
-        $this->column_list = $column_list;
+        parent::setColumns(...$columns);
+        // Escape each column
+        $escapedColumns = array_map([static::class, 'escapeColumn'], $this->columns);
+        // Concatenate the columns into a single string
+        $this->column_list = implode(', ', $escapedColumns);
+        return $this;
     }
 
     /**
-     * escape column name
+     * Escape column name
      */
-    static function escapeColumn(string $column): string
+    public static function escapeColumn(string $column): string
     {
         if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
             $column = "`$column`";
@@ -415,15 +213,15 @@ class MySQL_DAO extends DAO
 
     /**
      * Liefert den MySQL Datentypen des uebergebenen Feldes
-     *
-     * @param string $fieldName Spaltenname
-     * @return string Datentyp
      */
-    public function getFieldType(string $fieldName): string
+    public function getColumnDataType(string $column): string
     {
-        if(!$this->field_list) $this->fetchColumns();
+        if(!$this->field_list)
+            $this->fetchColumns();
+
+        // Loop through each field to find the matching column
         foreach($this->field_list as $field) {
-            if($field['COLUMN_NAME'] == $fieldName) {
+            if($field['COLUMN_NAME'] === $column) {
                 $buf = explode(' ', $field['COLUMN_TYPE']);
                 $type = $buf[0];
                 if(($pos = strpos($type, '(')) !== false) {
@@ -432,47 +230,39 @@ class MySQL_DAO extends DAO
                 return $type;
             }
         }
-        return '';
+        throw new DAOException("Column $column not found in table $this->table");
     }
 
     /**
-     * Liefert alle Informationen zu dieser Spalte (siehe SHOW COLUMNS FROM <table>)
-     *
-     * @param string $fieldName
-     * @return array
+     * Returns the column info details
      */
-    public function getFieldInfo(string $fieldName): array
+    public function getColumnInfo(string $column): array
     {
         if(!$this->field_list) $this->fetchColumns();
         foreach($this->field_list as $field) {
-            if($field['COLUMN_NAME'] == $fieldName) {
+            if($field['COLUMN_NAME'] == $column) {
                 return $field;
             }
         }
-        return [];
+        throw new DAOException("Column $column not found in table $this->table");
     }
 
     /**
-     * get enumerable values from field
-     *
-     * @param string $fieldName
-     * @return array|string[]
+     * Get enumerable values from field
      */
-    public function getFieldEnumValues(string $fieldName): array
+    public function getColumnEnumValues(string $column): array
     {
-        $fieldInfo = $this->db->listfield($this->dbname, $this->table, $fieldName);
+        $fieldInfo = $this->DataInterface->getColumnMetadata($this->database, $this->table, $column);
         if(!isset($fieldInfo['Type'])) return [];
         $type = substr($fieldInfo['Type'], 0, 4);
         if($type != 'enum') return [];
         $buf = substr($fieldInfo['Type'], 5, -1);
-        return explode('\',\'', substr($buf, 1, -1));
+        return explode("','", substr($buf, 1, -1));
     }
 
     /**
      * Set the table alias
-     *
-     * @param $alias
-     * @return void
+     * @todo rethink / rework setTableAlias
      */
     public function setTableAlias($alias): void
     {
@@ -480,9 +270,7 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * get columns with table alias
-     *
-     * @return array
+     * Get columns with table alias
      */
     public function getColumnsWithTableAlias(): array
     {
@@ -492,31 +280,16 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * Die Funktion "insert" fuegt einen neuen Datensatz in die MySQL Tabelle ein.
-     *
-     * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "last_insert_id"! Sie kann
-     * ueber MySQL_Resultset::getValue('last_insert_id') ausgegeben werden.
-     *
-     * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
-     * Feldname und als Wert/Value den einzufuegenden Feldwert
-     * @return MySQL_ResultSet
-     * @see MySQL_ResultSet
-     **/
-    public function insert(array $data): ResultSet
+     * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
+     */
+    public function insert(array $data): RecordSet
     {
-        $columns = '';
-        $values = '';
-
-        foreach($data as $field => $value) {
-            // key concatenation
-            if($columns == '') {
-                $columns = "`$field`";
-            }
-            else {
-                $columns = "$columns,`$field`";
-            }
-
-            // value concatenating
+        $columns = [];
+        $values = [];
+        foreach($data as $column => $value) {
+            // make column
+            $columns[] = "`$column`";
+            // make value
             if(is_null($value)) {
                 $value = 'NULL';
             }
@@ -530,7 +303,7 @@ class MySQL_DAO extends DAO
                 // reserved keywords don't need to be masked
                 $expression = $this->commands[$value->name];
                 if($expression instanceof Closure) {
-                    $value = $expression($field);
+                    $value = $expression($column);
                 }
                 else {
                     $value = $expression;
@@ -540,21 +313,17 @@ class MySQL_DAO extends DAO
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = $this->db->escapeString($value, $this->dbname);
+                $value = $this->DataInterface->escape($value, $this->database);
                 $value = "'$value'";
             }
-
-            if($values == '') {
-                $values = $value;
-            }
-            else {
-                $values = "$values,$value";
-            }
+            $values[] = $value;
         }
 
-        if('' == $columns) {
-            return (new ResultSet())->addError('MySQL_DAO::insert failed. No fields stated!');
+        if(!$columns) {
+            return (new RecordSet())->addErrorMessage('DAO::insert failed. No columns specified!');
         }
+        $columns = implode(',', $columns);
+        $values = implode(',', $values);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
@@ -563,63 +332,37 @@ INSERT INTO `$this->table`
 VALUES
     ($values)
 SQL;
-
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
-     * executes sql statement and returns resultset
-     *
-     * @param string $sql sql statement to execute
-     * @param callable|null $customCallback
-     * @return MySQL_ResultSet
+     * Update a record by primary key (put the primary key in the data array)
      */
-    protected function __createMySQL_Resultset(string $sql, ?callable $customCallback = null): MySQL_ResultSet
+    public function update(array $data): RecordSet
     {
-        $MySQL_ResultSet = new MySQL_ResultSet($this->db);
-        $MySQL_ResultSet->execute($sql, $this->dbname, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
-        return $MySQL_ResultSet;
-    }
+        // Check if all primary keys are set in the data array
+        $missingKeys = array_diff($this->pk, array_keys($data));
+        if (!empty($missingKeys)) {
+            return (new RecordSet())->addErrorMessage('Update is wrong. Missing primary keys: ' . implode(', ', $missingKeys));
+        }
 
-    /**
-     * Die Funktion "update" aendert einen Datensatz. Ein Datensatz kann nur geaendert
-     * werden, wenn auch der entsprechende Primaerschluessel mituebergeben wurde!! Der
-     * Schluessel wird automatisch erkannt und die Daten landen in den richtigen Datensatz.
-     * Der Primaerschluessel ist nicht aenderbar!
-     *
-     * Bei Erfolg enthaelt das Objekt MySQL_Resultset die "affected_rows"! Sie kann
-     * ueber MySQL_Resultset::getValue('affected_rows') ausgegeben werden.
-     *
-     * @param array $data Das assoziative Array (Parameter) erwartet als Schluessel/Key einen
-     * Feldname und als Wert/Value den einzufuegenden Feldwert
-     * @return ResultSet
-     * @see MySQL_ResultSet
-     **/
-    public function update(array $data): ResultSet
-    {
-        $sizeof = count($this->pk);
         $pk = [];
-        for($i = 0; $i < $sizeof; $i++) {
-            if(!isset($data[$this->pk[$i]])) {
-                return (new ResultSet())->addError('Update is wrong. No primary key found.');
+        foreach($this->pk as $key) {
+            $pkValue = $data[$key];
+            if(is_array($pkValue)) {
+                $pk[] = $pkValue[0];
+                $data[$key] = $pkValue[1];
             }
             else {
-                $pkValue = $data[$this->pk[$i]];
-                if(is_array($pkValue)) {
-                    $pk[] = $pkValue[0];
-                    $data[$this->pk[$i]] = $pkValue[1];
-                }
-                else {
-                    $pk[] = $pkValue;
-                    unset($data[$this->pk[$i]]);
-                }
+                $pk[] = $pkValue;
+                unset($data[$key]);
             }
         }
 
         $set = $this->__buildAssignmentList($data);
 
         if(!$set) {
-            return new ResultSet();
+            return new RecordSet();
         }
 
         $where = $this->__buildWhere($pk, $this->pk);
@@ -637,19 +380,15 @@ SET
 WHERE
     $where
 SQL;
-
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
      * Build assignment list for update statements
-     *
-     * @param array $data
-     * @return string
      */
     protected function __buildAssignmentList(array $data): string
     {
-        $set = '';
+        $assignments = [];
         foreach($data as $field => $value) {
             if(is_null($value)) {
                 $value = 'NULL';
@@ -671,12 +410,11 @@ SQL;
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->db->escapeString($value, $this->dbname)}'";
+                $value = "'{$this->DataInterface->escape($value, $this->database)}'";
             }
-            if($set == '') $set = "`$field`=$value";
-            else $set = "$set,`$field`=$value";
+            $assignments[] = "`$field`=$value";
         }
-        return $set;
+        return implode(', ', $assignments);
     }
 
     /**
@@ -688,7 +426,7 @@ SQL;
      */
     protected function __buildWhere(mixed $id, mixed $key): string
     {
-        $result = '';
+        $conditions = [];
         if(is_null($id)) {
             return '1';
         }
@@ -703,30 +441,24 @@ SQL;
             $count = count($key);
             for($i = 0; $i < $count; $i++) {
                 $keyName = $key[$i];
-                $result = "$result$alias$keyName={$this->escapeWhereConditionValue($id[$i], false, false)}";
+                $conditions[] = "$alias$keyName={$this->escapeWhereConditionValue($id[$i], false, false)}";
                 if(!isset($id[$i + 1])) break;
-                $result .= ' and ';
             }
         }
         else {
-            $result = "$alias$key={$this->escapeWhereConditionValue($id, false, false)}";
+            $conditions[] = "$alias$key={$this->escapeWhereConditionValue($id, false, false)}";
         }
-        return $result;
+        return implode(' AND ', $conditions);
     }
 
     /**
-     * add value to where condition
-     *
-     * @param mixed $value
-     * @param false|int $noEscape
-     * @param false|int $noQuotes
-     * @return string
+     * Add value to where condition
      */
-    private function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): string
+    private function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): int|float|string
     {
         if(is_int($value) || is_float($value))
-            return $value;//not a stringable or a 'subQuery'
-        $value = $noEscape ? $value : $this->db->escapeString($value, $this->dbname);
+            return $value;// If the value is not a string that can be directly used in SQL escape and quote it.
+        $value = $noEscape ? $value : $this->DataInterface->escape($value, $this->database);
         return $noQuotes ? $value : "'$value'"; //quote
     }
 
@@ -735,14 +467,14 @@ SQL;
      *
      * @param array $data
      * @param array $filter_rules
-     * @return ResultSet
+     * @return RecordSet
      */
-    public function updateMultiple(array $data, array $filter_rules): ResultSet
+    public function updateMultiple(array $data, array $filter_rules): RecordSet
     {
         $set = $this->__buildAssignmentList($data);
 
         if(!$set) {
-            return new ResultSet();
+            return new RecordSet();
         }
 
         $where = $this->__buildFilter($filter_rules, 'and', true);
@@ -761,12 +493,11 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
      * Erstellt einen Filter anhand der uebergebenen Regeln. (teils TODO!)
-     *
      * Verfuegbare Regeln:
      * equal : '='
      * unequal : '!='
@@ -785,14 +516,17 @@ SQL;
     {
         if(!$filter_rules)//not filter anything (terminate floating operators)
             return $skip_next_operator ? '1' : '';
+
+        $queryParts = [];
         $firstRule = $filter_rules[0];
-        $query = !is_array($firstRule) && !in_array(strtolower($firstRule), ['or', 'and']) ?//1. rule is a non joining operator
-            $initialOperator : '';//* we add an initial 'and' operator.
+        if(!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)]))//1. rule is a non joining operator
+            $queryParts[] = $initialOperator;//* we add an initial 'and' operator.
+
         foreach($filter_rules as $record) {
             $skipAutomaticOperator = $skip_next_operator;
             if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
-                $record = " $record "; //operator e.g. or, and
-                $skipAutomaticOperator = true;
+                $queryParts[] = " $record "; //operator e.g. or, and
+                continue;
             }
             elseif(is_array($record[0]))// nesting detected
                 $record = "({$this->__buildFilter($record[0], $record[1], true)})";//"($subFilter)"
@@ -800,7 +534,7 @@ SQL;
                 $field = $this->translateValues ? //get field 'name'
                     $this->translateValues($record[0]) : $record[0];//inject replace command?
                 $rawInnerOperator = $record[1];
-                $innerOperator = strtr($rawInnerOperator, $this->MySQL_trans);//map operators for DBMS
+                $innerOperator = $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator;//map operators for DBMS
                 $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
                 //parse quotation options (defaults to false)
                 $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
@@ -817,8 +551,8 @@ SQL;
                             break;
                         default://enlist all values e.g. in, not in
                             //apply quotation rules
-                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values) ?: ['NULL'];
-                            $values = implode(', ', $values);
+                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
+                            $values = implode(', ', $values) ?: 'NULL';
                             $value = "($values)";
                             break;
                     }
@@ -844,30 +578,29 @@ SQL;
                 //assemble record
                 $record = "$field $innerOperator $value";
             }
-            $query .= !$skipAutomaticOperator ? //automatic operator?
+            $queryParts[] = !$skipAutomaticOperator ? //automatic operator?
                 " $operator $record" : $record;//automation puts operator between the last record and this one
         }
-        return $query;
+        return implode('', $queryParts);
     }
 
     /**
-     * @param string $field
-     * @return string
+     * Check if the column has translation enabled and translate the values
      */
-    protected function translateValues(string $field): string
+    protected function translateValues(string $column): string
     {
-        $tokens =& $this->translateValues[$field];
+        $tokens = &$this->translateValues[$column];
         if(!Weblication::getInstance()->hasTranslator() || !$tokens)
-            return $field;
+            return $column;
         $Translator = Weblication::getInstance()->getTranslator();
-        $tmp = "case $field";
+        $tmp = "case $column";
         foreach($tokens as $token)
             $tmp .= " when '$token' then '{$Translator->getTranslation($token, $token)}'";
-        return "$tmp else $field end";
+        return "$tmp else $column end";
     }
 
     /**
-     * checks value for subquery
+     * Checks value for sub-query
      *
      * @param mixed $value string?
      * @return bool
@@ -878,20 +611,13 @@ SQL;
     }
 
     /**
-     * Die Funktion "delete" loescht einen Datensatz! Dabei muss der Primaerschluessel
-     * (z.B. id) uebergeben werden. Es kann pro Aufruf nur ein Datensatz geloescht werden.
-     *
-     * @param integer $id Eindeutige ID eines Datensatzes (Primaerschluessel!!)
-     * @return ResultSet
-     * @see MySQL_ResultSet
-     **/
-    public function delete($id): ResultSet
+     * Delete a record by primary key
+     */
+    public function delete(int|string|array $id): RecordSet
     {
         $where = $this->__buildWhere($id, $this->pk);
         if($where == '1') {
-            $error_msg = 'Delete maybe wrong! Do you really want to delete all records in the table: ' . $this->table;
-            $this->raiseError(__FILE__, __LINE__, $error_msg);
-            die($error_msg);
+            throw new DAOException("Delete maybe wrong! Do you really want to delete all records in the table: $this->table");
         }
 
         /** @noinspection SqlResolve */
@@ -902,18 +628,13 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
-     * L�scht einen oder mehrere Datens�tze anhand des �bergebenen Filters! Achtung: immer auf korrekte Filter-Syntax achten.
-     *
-     * @param array $filter_rules Filter-Regeln (siehe MySQL_DAO::__buildFilter())
-     * @return ResultSet Ergebnismenge
-     * @see MySQL_DAO::__buildFilter
-     * @see MySQL_ResultSet
+     * Delete multiple records at once
      */
-    public function deleteMultiple(array $filter_rules = []): ResultSet
+    public function deleteMultiple(array $filter_rules = []): RecordSet
     {
         $where = $this->__buildFilter($filter_rules, 'and', true);
         /** @noinspection SqlResolve */
@@ -924,21 +645,13 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
-     * Holt einen Datensatz anhand der uebergebenen ID aus einer Tabelle.
-     * Wenn ein anderer unique Index abgefragt werden soll und nicht standardmaessig
-     * der Primaer Schluessel, kann dieser Feldname (/Spaltenname) ueber den
-     * 2. Parameter "$key" gesetzt werden.
-     *
-     * @param mixed $id Eindeutige Wert (z.B. ID) eines Datensatzes
-     * @param mixed $key Spaltenname (Primaer Schluessel oder Index); kein Pflichtparameter
-     * @return ResultSet Ergebnismenge
-     * @see MySQL_ResultSet
+     * Returns a single record e.g. by primary key
      */
-    public function get($id, $key = null): ResultSet
+    public function get($id, null|string|array $key = null): RecordSet
     {
         $id = $id ?? 0;
         $where = $this->__buildWhere($id, $key);
@@ -951,29 +664,21 @@ WHERE
     $where
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
-     * Liefert mehrere Datensaetze anhand uebergebener ID's, Filter-Regeln.
+     * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
-     * @param mixed|null $id ID's (array oder integer)
-     * @param mixed|null $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
-     * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
-     * @param array $sorting Sortierung (siehe MySQL_DAO::__buildSorting())
-     * @param array $limit Limit -> array(Position, Anzahl Datensaetze)
-     * @param array $groupBy Gruppierung
-     * @param array $having Filter Regeln auf die Gruppierung
-     * @param array $options Optionale Parameter in der Select-Anweisung
-     * @return ResultSet Ergebnismenge
-     * @see MySQL_ResultSet
+     * @return RecordSet Ergebnismenge
      * @see MySQL_DAO::__buildFilter
      * @see MySQL_DAO::__buildSorting
      * @see MySQL_DAO::__buildLimit
      * @see MySQL_DAO::__buildGroupBy
+     * @see RecordSet
      */
-    public function getMultiple(mixed $id = null, mixed $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
-        array $groupBy = [], array $having = [], array $options = []): ResultSet
+    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
+        array $groupBy = [], array $having = [], array $options = []): RecordSet
     {
         $options = implode(' ', $options);
 
@@ -997,14 +702,11 @@ WHERE
     $limit
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
      * Erstelle Gruppierung fuer das SQL-Statement
-     *
-     * @param array $groupBy
-     * @return string SQL-Statement
      */
     protected function __buildGroupBy(array $groupBy): string
     {
@@ -1034,9 +736,6 @@ SQL;
 
     /**
      * Build a having statement for a SQL query
-     *
-     * @param array $filter_rules Filter Regeln (siehe __buildFilter)
-     * @return string SQL-Abfrage
      */
     protected function __buildHaving(array $filter_rules): string
     {
@@ -1085,16 +784,12 @@ SQL;
     }
 
     /**
-     * Liefert die Anzahl getroffener Datensaetze
+     * Returns the number of records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
-     * @param mixed|null $id ID's (array oder integer)
-     * @param mixed|null $key Spalten (array oder string) - Anzahl Spalten muss identisch mit der Anzahl ID's sein!!
-     * @param array $filter_rules Filter Regeln (siehe MySQL_DAO::__buildFilter())
-     * @return ResultSet Ergebnismenge
-     * @see MySQL_ResultSet
+     * @see RecordSet
      * @see MySQL_DAO::__buildFilter
      */
-    public function getCount(mixed $id = null, mixed $key = null, array $filter_rules = []): ResultSet
+    public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): RecordSet
     {
         $where = $this->__buildWhere($id, $key);
         $filter = $this->__buildFilter($filter_rules);
@@ -1106,21 +801,22 @@ WHERE
     $filter
 SQL;
 
-        return $this->__createMySQL_Resultset($sql);
+        return $this->execute($sql);
     }
 
     /**
      * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurück
      *
      * @return int
+     * @throws \Exception
      */
     public function foundRows(): int
     {
-        return $this->db->foundRows();
+        return $this->DataInterface->foundRows($this->database);
     }
 
     /**
-     * fetching rows
+     * Fetching row (hook)
      *
      * @param array $row
      * @return array
@@ -1131,20 +827,21 @@ SQL;
     }
 
     /**
-     * translate table content
+     * Translate table content
      *
      * @param array $row
      * @return array
      */
     protected function translate(array $row): array
     {
-        if(!Weblication::getInstance()->hasTranslator())//no translator
+        $Weblication = Weblication::getInstance();
+        if(!$Weblication->hasTranslator())//no translator
             return $row;//unchanged
-        $Translator = Weblication::getInstance()->getTranslator();
+        $Translator = $Weblication->getTranslator();
         // another idea to handle columns which should be translated
         // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
         foreach($this->translate as $key)
-            if(isset($row[$key]))
+            if(isset($row[$key]) && is_string($row[$key]))
                 $row[$key] = $Translator->getTranslation($row[$key], $row[$key], noAlter: true);
         return $row;
     }
@@ -1221,5 +918,29 @@ SQL;
         }
         else /** Malformed date TODO */ ;
         return $filterByValue;
+    }
+
+    /**
+     * Gibt die komplette Ergebnismenge im als SQL Insert Anweisungen (String) zurueck.
+     *
+     * @param string $table
+     * @param \pool\classes\Core\RecordSet $ResultSet
+     * @return string
+     * @todo Rethink this method
+     */
+    public function getSQLInserts(string $table, RecordSet $ResultSet): string
+    {
+        $sql = '';
+
+        if(!$ResultSet->count()) {
+            return '';
+        }
+        $rowSet = $ResultSet->getRaw();
+        foreach($rowSet as $row) {
+            $sql .= 'INSERT INTO '.$table.' (';
+            $sql .= implode(',', array_keys($rowSet[0]));
+            $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.chr(10);
+        }
+        return $sql;
     }
 }

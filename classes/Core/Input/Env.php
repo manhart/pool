@@ -8,7 +8,18 @@
  * file that was distributed with this source code.
  */
 
-// base classes
-require_once __DIR__ . '/GUI_Module.php';
-require_once __DIR__ . '/Configurable.php';
-require_once __DIR__ . '/Net_Ping.class.php';
+namespace pool\classes\Core\Input;
+
+/**
+ * Class Env
+ *
+ * @package pool\classes\Core\Input
+ * @since 2003-07-10
+ */
+class Env extends Input
+{
+    function __construct(int $superglobals = Input::ENV)
+    {
+        parent::__construct($superglobals);
+    }
+}

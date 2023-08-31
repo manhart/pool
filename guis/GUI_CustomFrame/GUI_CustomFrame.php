@@ -71,7 +71,6 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * @param Component|null $Owner
      * @param array $params
-     *
      * @throws ModulNotFoundException|Exception
      */
     function __construct(?Component $Owner, array $params = [])
@@ -91,7 +90,7 @@ class GUI_CustomFrame extends GUI_Module
     public function loadFiles()
     {
         parent::loadFiles();
-        if (@\pool\classes\translator\TranslationProvider_ToolDecorator::isActive()){
+        if(@\pool\classes\translator\TranslationProvider_ToolDecorator::isActive()) {
             $this->HeadData->addStyleSheet($this->Weblication->findStyleSheet('translatorToolInline.css', '', false));
             $this->HeadData->addJavaScript($this->Weblication->findJavaScript('translatorToolInline.js', '', true));
         }
@@ -115,10 +114,8 @@ class GUI_CustomFrame extends GUI_Module
      * Adds a window event to the html body
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body?retiredLocale=de
-     *
      * @param string $event an event like onload
      * @param string $function
-     *
      * @return GUI_CustomFrame
      */
     public function addBodyEvent(string $event, string $function): static
@@ -177,7 +174,6 @@ class GUI_CustomFrame extends GUI_Module
      * set callable for event on add file
      *
      * @param callable $addFileFct
-     *
      * @return GUI_CustomFrame
      * @see GUI_CustomFrame::addScriptFileAtTheEnd()
      */
@@ -204,14 +200,14 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @return string parsed content
      */
-    public function finalize(): string
+    protected function finalize(): string
     {
         $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
 
         $scriptFilesAtTheEnd = '';
         if(count($this->scriptFilesAtTheEnd)) {
             foreach($this->scriptFilesAtTheEnd as $scriptFile) {
-                $scriptFilesAtTheEnd .= '<script src="' . $scriptFile . '"></script>' . chr(10);
+                $scriptFilesAtTheEnd .= '<script src="'.$scriptFile.'"></script>'.chr(10);
             }
         }
 

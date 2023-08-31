@@ -10,11 +10,15 @@
 
 namespace pool\classes\Exception;
 
-use JsonException as PhpJsonException;
+use RuntimeException as PhpRuntimeException;
 
 /**
  * Thrown to indicate that the argument received is not valid.
  */
-class InvalidJsonException extends PhpJsonException implements PoolExceptionInterface
+class SessionDisabledException extends PhpRuntimeException implements PoolExceptionInterface
 {
+    public function __construct(string $message = 'Session is disabled', int $code = 0, \Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
 }

@@ -13,7 +13,7 @@
  * @link https://alexander-manhart.de
  */
 
-use pool\classes\Core\Input;
+use pool\classes\Core\Input\Input;
 
 /**
  * GUI_Textarea
@@ -177,7 +177,7 @@ class GUI_Textarea extends GUI_Universal
         $value = '';
 
         $buf_save = $Input->getVar('save');
-        if(is_a($Session, 'InputSession') and $Input->getVar('use_session') == 1) {
+        if(is_a($Session, 'pool\classes\Core\Input\Session') and $Input->getVar('use_session') == 1) {
             if(empty($buf_save) == false and $Input->getVar($buf_save) == 1) {
                 $Session->setVar($session_variable, $Input->getVar('value') == '' ? $valueByName : $Input->getVar('value'));
             }
