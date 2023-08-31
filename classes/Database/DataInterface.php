@@ -36,6 +36,8 @@ class DataInterface extends PoolObject
 
     public const MAX_DATETIME = '9999-12-31 23:59:59';
 
+    private static array $register = [];
+
     /**
      * @var string Last executed query for debugging purposes
      */
@@ -163,7 +165,7 @@ class DataInterface extends PoolObject
      *
      * @param array $connectionOptions Einstellungen
      * @return boolean Erfolgsstatus
-     * @throws Exception
+     * @throws \pool\classes\Exception\MissingArgumentException
      */
     public function setOptions(array $connectionOptions): bool
     {
@@ -173,8 +175,10 @@ class DataInterface extends PoolObject
         $this->available_hosts = $connectionOptions['host'] ??
             throw new MissingArgumentException('MySQL_Interface::setOptions Bad Packet: no key "host"');
 
-        $this->default_database = $connectionOptions['database'] ??
-            throw new MissingArgumentException('MySQL_Interface::setOptions Bad Packet: no key "database"');
+        $dataBases = (array)$connectionOptions['database'] ?? null;
+
+        $this->default_database = $dataBases[0] ?? throw new MissingArgumentException('MySQL_Interface::setOptions Bad Packet: no key "database"');
+
 
         if(array_key_exists('port', $connectionOptions))
             $this->port = $connectionOptions['port'];
@@ -184,8 +188,12 @@ class DataInterface extends PoolObject
 
         $this->auth = $connectionOptions['auth'] ?? 'mysql_auth';// fallback verwendet zentrale, globale Authentifizierung
 
-        /* @noinspection PhpUnhandledExceptionInspection no connection is attempted */
         $this->__findHostForConnection();
+        foreach($dataBases as $alias => $dataBase) {
+            if(!is_string($alias))
+                $alias = $dataBase;
+            self::registerResource([$alias => ['interface' => $this, 'name' => $dataBase]]);
+        }
         return true;
     }
 
@@ -224,20 +232,36 @@ class DataInterface extends PoolObject
         return $alternativeHosts;
     }
 
+    public static function registerResource(array $resourceDefinition):void
+    {
+        foreach($resourceDefinition as $alias => $item){
+            if(array_key_exists($alias, self::$register)){
+                throw new InvalidArgumentException("A database with the alias '$alias' has already been registered before");
+            }
+            self::$register[$alias] = $item;
+        }
+    }
+
+    public static function getInterfaceForResource(string $database):self
+    {
+        return self::$register[$database]['interface'] ?? throw new InvalidArgumentException("The requested database '$database' has not (yet) registered an interface");
+    }
+
     /**
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
      * @throws \Exception
      */
-    public function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
+    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
     {
 
+        $interface = static::getInterfaceForResource($dbname);
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
         $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
             Singleton::get('Stopwatch')->start('SQL-QUERY') : null;// start time measurement
         try {//run
-            $query_resource = $this->query($sql, $dbname);
+            $query_resource = $interface->query($sql, $dbname);
         }
         catch(Exception $e) {
             if($e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
@@ -245,30 +269,30 @@ class DataInterface extends PoolObject
             }
         }
         if($query_resource ??= false) {//success
-            switch($this->getLastQueryCommand()) {
+            switch($interface->getLastQueryCommand()) {
                 case 'SELECT':
                 case 'SHOW':
                 case 'DESCRIBE':
                 case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
                     //? ( z.B. UNION
-                    if($this->numRows($query_resource)) {
-                        $RecordSet = new RecordSet($this->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
+                    if($interface->numRows($query_resource)) {
+                        $RecordSet = new RecordSet($interface->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
                     }
                     else {
                         $RecordSet = new RecordSet();
                     }
-                    $this->free($query_resource);
+                    $interface->free($query_resource);
                     break;
                 /** @noinspection PhpMissingBreakStatementInspection */
                 case 'INSERT'://DML commands
-                    $last_insert_id = $this->lastId();
+                    $last_insert_id = $interface->lastId();
                     $idColumns = [
                         'last_insert_id' => $last_insert_id,
                         'id' => $last_insert_id,
                     ];
                 case 'UPDATE':
                 case 'DELETE':
-                    $affected_rows = $this->affectedRows();
+                    $affected_rows = $interface->affectedRows();
                     $row = [//id of inserted record or number of rows
                             0 => $last_insert_id ?? $affected_rows,
                             'affected_rows' => $affected_rows,
@@ -276,13 +300,13 @@ class DataInterface extends PoolObject
                     $RecordSet = new RecordSet([0 => $row]);
                     break;
                 default:
-                    throw new Exception("Unknown command: '{$this->getLastQueryCommand()}' in $sql");
+                    throw new Exception("Unknown command: '{$interface->getLastQueryCommand()}' in $sql");
             }
         }
         else {//statement failed
-            $error_msg = $e?->getMessage() ?? "{$this->getErrorAsText()} SQL Statement failed: $sql";
-            $this->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
-            $error = $this->getError();
+            $error_msg = $e?->getMessage() ?? "{$interface->getErrorAsText()} SQL Statement failed: $sql";
+            $interface->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
+            $error = $interface->getError();
             $error['sql'] = $sql;
             $RecordSet = (new RecordSet())->addError($error);
             // SQL Statement Error Logging:
@@ -300,6 +324,52 @@ class DataInterface extends PoolObject
                     configurationName: Log::SQL_LOG_NAME);
         }
         return $RecordSet;
+    }
+
+    /**
+     * Executes a SQL-Statement.<br>
+     * Saves query to this->sql<br>
+     * Resets query_result<br>
+     * Gets a conid and saves it to last_connect_id<br>
+     * Updates last command on success
+     *
+     * @return mixed query result / query resource
+     * @throws \Exception
+     * @see DataInterface::__get_db_conid
+     */
+    public static function query(string $query, string $database): mixed
+    {
+        $interface = static::getInterfaceForResource($database);
+        //Store query in attribute
+        $interface->last_Query = $sql = ltrim($query);
+        // reset query result
+        $interface->query_resource = false;
+        if(!$sql)//nothing to do
+            return false;
+        //identify command
+        $command = $interface->identifyCommand($sql);
+        if(IS_TESTSERVER && !in_array($command, $interface->commands))
+            echo "Unknown command: '$command'<br>".
+                "in $sql<hr>".
+                "Please contact the POOL's maintainer to analyze the DataInterface in the query() function.";
+        $isSELECT = $command == 'SELECT';//mode selection
+        $mode = !$isSELECT || $interface->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
+        if($isSELECT)
+            $interface->totalReads++;
+        else
+            $interface->totalWrites++;
+        $interface->totalQueries++;
+
+        $Connection = $interface->__get_db_conid($database, $mode);//connect
+        $interface->query_resource = $Connection->query($sql);//run
+        $interface->lastConnection = $Connection;
+        if($interface->query_resource) $interface->last_command = $command;
+        if(defined($x = 'LOG_ENABLED') && constant($x) &&
+            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
+            ($Log = Singleton::get('LogFile'))->isLogging())
+            //Logging enabled
+            $Log->addLine('SQL MODE: '.$mode->name);
+        return $interface->query_resource;
     }
 
     /**
@@ -505,50 +575,7 @@ class DataInterface extends PoolObject
         return (int)$row['foundRows'];//default to 0
     }
 
-    /**
-     * Executes a SQL-Statement.<br>
-     * Saves query to this->sql<br>
-     * Resets query_result<br>
-     * Gets a conid and saves it to last_connect_id<br>
-     * Updates last command on success
-     *
-     * @return mixed query result / query resource
-     * @throws \Exception
-     * @see DataInterface::__get_db_conid
-     */
-    public function query(string $query, string $database): mixed
-    {
-        //Store query in attribute
-        $this->last_Query = $sql = ltrim($query);
-        // reset query result
-        $this->query_resource = false;
-        if(!$sql)//nothing to do
-            return false;
-        //identify command
-        $command = $this->identifyCommand($sql);
-        if(IS_TESTSERVER && !in_array($command, $this->commands))
-            echo "Unknown command: '$command'<br>".
-                "in $sql<hr>".
-                "Please contact the POOL's maintainer to analyze the DataInterface in the query() function.";
-        $isSELECT = $command == 'SELECT';//mode selection
-        $mode = !$isSELECT || $this->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
-        if($isSELECT)
-            $this->totalReads++;
-        else
-            $this->totalWrites++;
-        $this->totalQueries++;
 
-        $Connection = $this->__get_db_conid($database, $mode);//connect
-        $this->query_resource = $Connection->query($sql);//run
-        $this->lastConnection = $Connection;
-        if($this->query_resource) $this->last_command = $command;
-        if(defined($x = 'LOG_ENABLED') && constant($x) &&
-            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
-            ($Log = Singleton::get('LogFile'))->isLogging())
-            //Logging enabled
-            $Log->addLine('SQL MODE: '.$mode->name);
-        return $this->query_resource;
-    }
 
     /**
      * Identifies the command of a query
