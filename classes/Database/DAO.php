@@ -233,6 +233,14 @@ abstract class DAO extends PoolObject
     /**
      * @return string
      */
+    public function getDatabase(): string
+    {
+        return $this->database;
+    }
+
+    /**
+     * @return string
+     */
     public function getTable(): string
     {
         return $this->table;

@@ -292,6 +292,14 @@ class DataInterface extends PoolObject
                     ];
                 case 'UPDATE':
                 case 'DELETE':
+                case 'CREATE':
+                case 'ALTER':
+                case 'DROP':
+                case 'RENAME':
+                case 'TRUNCATE':
+                case 'OPTIMIZE':
+                case 'ANALYZE':
+                case 'CHECK':
                     $affected_rows = $interface->affectedRows();
                     $row = [//id of inserted record or number of rows
                             0 => $last_insert_id ?? $affected_rows,
