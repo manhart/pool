@@ -17,7 +17,6 @@ use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\InvalidArgumentException;
-use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Utils\Singleton;
 use Stopwatch;
 use function constant;
@@ -165,7 +164,7 @@ class DataInterface extends PoolObject
      *
      * @param array $connectionOptions Einstellungen
      * @return boolean Erfolgsstatus
-     * @throws \pool\classes\Exception\MissingArgumentException
+     * @throws \pool\classes\Exception\InvalidArgumentException
      */
     public function setOptions(array $connectionOptions): bool
     {
@@ -173,12 +172,11 @@ class DataInterface extends PoolObject
         $this->force_backend_read = $connectionOptions['force_backend_read'] ?? false;
 
         $this->available_hosts = $connectionOptions['host'] ??
-            throw new MissingArgumentException('MySQL_Interface::setOptions Bad Packet: no key "host"');
+            throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "host"');
 
         $dataBases = (array)$connectionOptions['database'] ?? null;
 
-        $this->default_database = $dataBases[0] ?? throw new MissingArgumentException('MySQL_Interface::setOptions Bad Packet: no key "database"');
-
+        $this->default_database = $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
 
         if(array_key_exists('port', $connectionOptions))
             $this->port = $connectionOptions['port'];
@@ -232,7 +230,10 @@ class DataInterface extends PoolObject
         return $alternativeHosts;
     }
 
-    public static function registerResource(array $resourceDefinition):void
+    /**
+     * Registers a resource for the DataInterface
+     */
+    public static function registerResource(array $resourceDefinition): void
     {
         foreach($resourceDefinition as $alias => $item){
             if(array_key_exists($alias, self::$register)){
