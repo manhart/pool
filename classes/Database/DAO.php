@@ -241,6 +241,14 @@ abstract class DAO extends PoolObject
     /**
      * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
      */
+    public function getDatabase(): string
+    {
+        return $this->database;
+    }
+
+    /**
+     * @return string
+     */
     public function getTable(): string
     {
         return $this->table;
