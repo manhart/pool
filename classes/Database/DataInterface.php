@@ -190,6 +190,7 @@ class DataInterface extends PoolObject
         foreach($dataBases as $alias => $dataBase) {
             if(!is_string($alias))
                 $alias = $dataBase;
+             $alias = "{$this->hosts[ConnectionMode::READ->value]}|{$this->hosts[ConnectionMode::WRITE->value]}|$alias";
             self::registerResource([$alias => ['interface' => $this, 'name' => $dataBase]]);
         }
         return true;
@@ -243,9 +244,17 @@ class DataInterface extends PoolObject
         }
     }
 
-    public static function getInterfaceForResource(string $database):self
+    public static function getInterfaceForResource(string $alias):self
     {
-        return self::$register[$database]['interface'] ?? throw new InvalidArgumentException("The requested database '$database' has not (yet) registered an interface");
+        return self::$register[$alias]['interface'] ?? throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
+    }
+
+    /**
+     * Create alias for a database
+     */
+    public function getAlias(string $database): string
+    {
+        return "{$this->hosts[ConnectionMode::READ->value]}|{$this->hosts[ConnectionMode::WRITE->value]}|$database";
     }
 
     /**
@@ -253,10 +262,9 @@ class DataInterface extends PoolObject
      *
      * @throws \Exception
      */
-    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
+    public function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
     {
-
-        $interface = static::getInterfaceForResource($dbname);
+        $interface = static::getInterfaceForResource($this->getAlias($dbname));
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
         $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
@@ -346,9 +354,16 @@ class DataInterface extends PoolObject
      * @throws \Exception
      * @see DataInterface::__get_db_conid
      */
-    public static function query(string $query, string $database): mixed
+    public function query(string $query, string $database): mixed
     {
-        $interface = static::getInterfaceForResource($database);
+        try {
+            $interface = static::getInterfaceForResource($this->getAlias($database));
+        }
+        catch(Exception $e) {
+            if($e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
+                throw $e;
+            }
+        }
         //Store query in attribute
         $interface->last_Query = $sql = ltrim($query);
         // reset query result
@@ -356,7 +371,7 @@ class DataInterface extends PoolObject
         if(!$sql)//nothing to do
             return false;
         //identify command
-        $command = $interface->identifyCommand($sql);
+        $command = $interface::identifyCommand($sql);
         if(IS_TESTSERVER && !in_array($command, $interface->commands))
             echo "Unknown command: '$command'<br>".
                 "in $sql<hr>".
@@ -584,15 +599,13 @@ class DataInterface extends PoolObject
         return (int)$row['foundRows'];//default to 0
     }
 
-
-
     /**
      * Identifies the command of a query
      *
      * @param string $sql
      * @return string command (e.g. SELECT, INSERT, UPDATE, DELETE)
      */
-    private function identifyCommand(string $sql): string
+    private static function identifyCommand(string $sql): string
     {
         $offset = strspn($sql, "( \n\t\r");//skip to the meat
         //find position of first whitespace, starting from magic value 2 from old code
