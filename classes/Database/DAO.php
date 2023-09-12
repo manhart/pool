@@ -239,7 +239,7 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * @return string
+     * Insert a new record into the database.
      */
     public function getTable(): string
     {
