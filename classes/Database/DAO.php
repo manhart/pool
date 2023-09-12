@@ -195,7 +195,7 @@ abstract class DAO extends PoolObject
     abstract public function fetchColumns(): static;
 
     /**
-     * Einen Datensatz einfuegen (virtuelle Methode).
+     * Insert a new record into the database.
      */
     abstract public function insert(array $data): ResultSet;
 
