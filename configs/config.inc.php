@@ -44,7 +44,7 @@ const INTERNAL_DOMAIN = 'local';
 
 // check if we are in command line mode
 if(!defined('IS_CLI')) {
-    define('IS_CLI', php_sapi_name() == 'cli');
+    define('IS_CLI', PHP_SAPI === 'cli');
 }
 
 // Default for old partly deprecated PHP dependent functions.
