@@ -261,7 +261,7 @@ class Weblication extends Component
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
-    private final function __construct()
+    final private function __construct()
     {
         parent::__construct(null);
         self::$isAjax = isAjax();
@@ -269,12 +269,11 @@ class Weblication extends Component
         Input::processJsonPostRequest();
         // determine the relative client und server path from the application to the pool
         if(!defined('IS_CLI'))// check if we are in command line interface
-            define('IS_CLI', php_sapi_name() == 'cli');
+            define('IS_CLI', php_sapi_name() === 'cli');
         if(!IS_CLI) {
             $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
             $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         }
-        return $this;
     }
 
     /**
