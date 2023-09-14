@@ -41,11 +41,9 @@ class LogFile extends PoolObject
 
     /**
      * Datei-Resource
-     *
-     * @access private
      * @var resource $fp
      */
-    var $fp=null;
+    private $fp;
 
     /**
      * Logfiles rotieren (Standard ausgeschaltet)
@@ -285,12 +283,14 @@ class LogFile extends PoolObject
     }
 
     /**
-     * Logfile schlie�en
+     * Close the file
      */
-    public function close()
+    public function close(): void
     {
-        $this->cache = array();
-        fclose($this->fp);
+        $this->cache = [];
+        if($this->fp) {
+            fclose($this->fp);
+        }
         $this->fp = null;
     }
 }
