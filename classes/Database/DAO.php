@@ -239,7 +239,7 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * Insert a new record into the database.
+     * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
      */
     public function getTable(): string
     {
@@ -250,11 +250,6 @@ abstract class DAO extends PoolObject
      * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
      */
     abstract public function insert(array $data): RecordSet;
-
-    /**
-     * Update a record by primary key (put the primary key in the data array)
-     */
-    abstract public function update(array $data): RecordSet;
 
     /**
      * Delete a record by primary key
@@ -272,13 +267,13 @@ abstract class DAO extends PoolObject
     abstract public function get(int|string|array $id, null|string|array $key = null): RecordSet;
 
     /**
-     * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
+     * Returns all data records of the assembled SQL statement as a RecordSet
      */
     abstract public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
         array $groupBy = [], array $having = [], array $options = []): RecordSet;
 
     /**
-     * Returns the number of records of the assembled SQL statement as a pool\classes\Core\ResultSet
+     * Returns the number of records of the assembled SQL statement as a RecordSet
      */
     abstract public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): RecordSet;
 
@@ -379,7 +374,7 @@ abstract class DAO extends PoolObject
     abstract function fetchingRow(array $row): array;
 
     /**
-     * Executes sql statement and returns resultset
+     * Executes sql statement and returns RecordSet
      *
      * @param string $sql sql statement to execute
      * @param callable|null $customCallback
