@@ -482,7 +482,7 @@ class GUI_Table extends GUI_Module
     }
 
     /**
-     * redraw html element
+     * Redraw html element
      * @param options
      */
     redraw(options = {})
@@ -519,7 +519,16 @@ class GUI_Table extends GUI_Module
      */
     getOption(option)
     {
-        return this.getTable().bootstrapTable('getOptions')[option];
+        return this.getOptions()[option];
+    }
+
+    /**
+     * Get the options of table
+     * @return {*}
+     */
+    getOptions()
+    {
+        return this.getTable().bootstrapTable('getOptions');
     }
 
 
@@ -1006,7 +1015,14 @@ class GUI_Table extends GUI_Module
      */
     responseHandler(res)
     {
-        let uniqueId = this.getUniqueId();
+        // Check the selected page against the response data (final safeguard)
+        const pageSize = this.getOption('pageSize');
+        const pageNumber = this.getOption('pageNumber');
+        if((pageNumber * pageSize - pageSize) > res.total) {
+            this.selectPageByIndex(Math.ceil(res.total/pageSize));
+        }
+
+        const uniqueId = this.getUniqueId();
         if(!uniqueId) {
             return res;
         }
