@@ -284,8 +284,9 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function backward(): bool
     {
-        if($this->index <= 0)
+        if($this->index <= 0) {
             return false;
+        }
         $this->index--;
         return true;
     }
@@ -422,7 +423,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Returns a value of a field of the current record as formatted date.time string
+     * Returns a value of a field of the current record as formatted "date.time" string
      *
      * @param string $key
      * @param null $default
