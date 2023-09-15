@@ -252,6 +252,11 @@ abstract class DAO extends PoolObject
     abstract public function insert(array $data): RecordSet;
 
     /**
+     * Update a record by primary key (put the primary key in the data array)
+     */
+    abstract public function update(array $data): RecordSet;
+
+    /**
      * Delete a record by primary key
      */
     abstract public function delete(int|string|array $id): RecordSet;
