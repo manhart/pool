@@ -14,6 +14,7 @@ use Countable;
 use DateTime;
 use DateTimeZone;
 use Exception;
+use Iterator;
 use pool\classes\Exception\InvalidJsonException;
 use UConverter;
 
@@ -23,7 +24,7 @@ use UConverter;
  * @package pool\classes\Core
  * @since 2003-07-10
  */
-class RecordSet extends PoolObject implements Countable
+class RecordSet extends PoolObject implements Iterator, Countable
 {
     /**
      * @var array records
@@ -33,7 +34,7 @@ class RecordSet extends PoolObject implements Countable
     /**
      * @var int internal pointer
      */
-    private int $index = -1;
+    protected int $index = -1;
 
     /**
      * @var array error stack
@@ -51,54 +52,49 @@ class RecordSet extends PoolObject implements Countable
     public function __construct(array $records = [])
     {
         $this->records = $records;
-        if($records) $this->reset();
+        if($records) {
+            $this->reset();
+        }
     }
 
     /**
-     * Sortiert eine oder mehrere Spalten.
-     * Beispiel Code-Schnipsel:
-     * <code>
-     * // einspaltig
-     * $Resultset -> sort('vorname', SORT_DESC, SORT_STRING);
-     * // mehrspaltig
-     * $Resultset -> sort(array(array('nachname', SORT_ASC, SORT_STRING), array('vorname', SORT_ASC, SORT_STRING)));
-     * </code>
+     * Sort by a field / column
      */
-    public function sort(array|string $column, int $sort = SORT_ASC, int $sortType = SORT_REGULAR): void
+    public function sort(string $fieldName, int $sort = SORT_ASC, int $sortType = SORT_REGULAR): void
     {
-        if(!$this->records) return;
-
-        if(is_string($column)) {
-            $sortarr = array_column($this->records, $column);
-            if($sortType == SORT_STRING) {
-                $sortarr = array_map('strtolower', $sortarr);
-            }
-
-            array_multisort($sortarr, $sort, $sortType, $this->records);
+        $sortArr = array_column($this->records, $fieldName);
+        if($sortType === SORT_STRING) {
+            $sortArr = array_map('strtolower', $sortArr);
         }
-        else {
-            $params = '';
-            $z = 0;
-            foreach($this->records as $row) {
-                foreach($column as $col) {
-                    $col_name = $col[0];
-                    if($z == 0) {
-                        if($params != '') $params .= ', ';
-                        $params .= "\$sortarr['$col_name']";
-                        $params .= ', '.($col[1] ?? $sort);
-                        $params .= ', '.($col[2] ?? $sortType);
-                    }
-                    $sortarr[$col_name][] = $row[$col_name];
-                    if($sortType == SORT_STRING) {
-                        $sortarr[$col_name] = array_map('strtolower', $sortarr[$col_name]);
-                    }
-                }
-                $z++;
-            }
 
-            // echo "array_multisort($params, \$this -> rowset);";
-            eval ("array_multisort($params, \$this->rowset);");
+        array_multisort($sortArr, $sort, $sortType, $this->records);
+    }
+
+    /**
+     * Sorts by multiple columns
+     */
+    public function sortComplex(array $fieldNames, array|int $sort = SORT_ASC, array|int $sortType = SORT_REGULAR): void
+    {
+        $args = [];
+        foreach ($fieldNames as $fieldName) {
+            $sortArr = array_column($this->records, $fieldName);
+            if ($sortType === SORT_STRING) {
+                $sortArr = array_map('strtolower', $sortArr);
+            }
+            $args[] = $sortArr;
         }
+
+        // Add sorting direction and type for each column
+        foreach ($fieldNames as $i => $fieldName) {
+            $args[] = $sort[$i] ?? $sort;
+            $args[] = $sortType[$i] ?? $sortType;
+        }
+
+        // Add the main array as the last argument
+        $args[] = &$this->records;
+
+        // Invoke array_multisort with dynamic arguments
+        array_multisort(...$args);
     }
 
     /**
@@ -126,29 +122,27 @@ class RecordSet extends PoolObject implements Countable
     /**
      * Verschiebt einen Datensatz innerhalb des Resultsets an die uebergebene Position.
      *
-     * @param string $fieldname Feldname
+     * @param string $fieldName Feldname
      * @param mixed $unique_value Eindeutiger Wert
      * @param integer $pos Position wohin der Datensatz verschoben werden soll (beginnend mit 1)
      * @return boolean
      */
-    public function move(string $fieldname, mixed $unique_value, int $pos): bool
+    public function move(string $fieldName, mixed $unique_value, int $pos): bool
     {
         $ok = false;
         $new_rowSet = [];
-        $count = count($this->records);
         $z = -1;
-        $pos = ($pos - 1);
-        for($r = 0; $r < $count; $r++) {
-            $row = $this->records[$r];
-            if($row[$fieldname] == $unique_value) {
-                if($r == 0 and $pos == 0) {
+        --$pos;
+        foreach($this->records as $r => $row) {
+            if($row[$fieldName] === $unique_value) {
+                if($r === 0 && $pos === 0) {
                     return true;
                 }
                 $new_rowSet[$pos] = $row;
                 $ok = true;
             }
             else {
-                if(($z + 1) == $pos) {
+                if(($z + 1) === $pos) {
                     $z += 2;
                 }
                 else {
@@ -164,24 +158,18 @@ class RecordSet extends PoolObject implements Countable
     }
 
     /**
-     * Liefert alle Spalten der Ergebnismenge.
-     *
-     * @return array alle Spalten der Ergebnismenge, wenn keine Daten da sind, wird false zurueck gegeben.
+     * Returns all columns of the current record
      */
     public function getColumns(): array
     {
         if($this->count() > 0) {
             return array_keys($this->records[$this->index]);
         }
-        else {
-            return [];
-        }
+        return [];
     }
 
     /**
-     * reset pointer to first record
-     *
-     * @return int
+     * Reset pointer to first record
      */
     public function reset(): int
     {
@@ -190,9 +178,7 @@ class RecordSet extends PoolObject implements Countable
     }
 
     /**
-     * Setzt den internen Zeiger auf den ersten Datensatz zurueck (Iterator).
-     *
-     * @return array Datensatz (oder false; wenn es keine Datensaetze gibt)
+     * Goes to the first record
      */
     public function first(): array
     {
@@ -201,20 +187,16 @@ class RecordSet extends PoolObject implements Countable
     }
 
     /**
-     * Fraegt ab, ob es sich um den ersten Datensatz handelt.
-     *
-     * @return boolean Ergebnisstatus
-     **/
+     * Is the pointer at the first record?
+     */
     public function isFirst(): bool
     {
-        return $this->index == 0;
+        return $this->index === 0;
     }
 
     /**
-     * Setzt den internen Zeiger auf den letzten Datensatz (Iterator).
-     *
-     * @return array Datensatz als Array oder FALSE
-     **/
+     * Set pointer to last record and return it
+     */
     public function last(): array
     {
         $count = $this->count();
@@ -228,31 +210,53 @@ class RecordSet extends PoolObject implements Countable
     }
 
     /**
-     * Fraegt ab, ob es sich um den letzten Datensatz handelt.
-     *
-     * @return boolean Erfolgsstatus
+     * Is the pointer at the last record?
      */
     public function isLast(): bool
     {
-        return $this->index == ($this->count() - 1);
+        return $this->index === ($this->count() - 1);
     }
 
     /**
-     * Liefert den aktuellen Datensatz
-     *
-     * @return array Datensatz
+     * Returns the current record (dataset) or an empty array if the position (index) is out of range
      */
     public function current(): array
     {
-        return $this->getRecord();
+        return $this->getRecord($this->index);
     }
 
     /**
-     * Sucht einen Datensatz  (Iterator).
-     *
-     * @param integer $index Record-Offset
-     * @return array Datensatz
-     **/
+     * Returns the current position / index (Iterator).
+     */
+    public function key(): int
+    {
+        return $this->index;
+    }
+
+    /**
+     * Move forward to next record
+     */
+    public function next(): void
+    {
+        $this->index++;
+    }
+
+    /**
+     * Reset the index
+     */
+    public function rewind(): void
+    {
+        $this->reset();
+    }
+
+    public function valid(): bool
+    {
+        return $this->index !== -1 && isset($this->records[$this->index]);
+    }
+
+    /**
+     * Sets the pointer to the specified position and returns the record or an empty array if the position is out of range
+     */
     public function seek(int $index): array
     {
         $this->index = $index < $this->count() ? $index : -1;
@@ -260,41 +264,30 @@ class RecordSet extends PoolObject implements Countable
     }
 
     /**
-     * current pointer position  (Iterator).
+     * Forwards the index by one position until the end is reached
      *
-     * @return int (beginnend bei 0 fuer den ersten Datensatz; -1 entspricht einer leeren Ergebnismenge)
-     **/
-    public function pos(): int
-    {
-        return $this->index;
-    }
-
-    /**
-     * Advances the index by one position until the end is reached
-     *
-     * @return array the then current dataset, or an empty array if the end is already reached
-     * @see self::getRecord()
+     * @return bool true if the end is not reached yet, false otherwise
      */
-    public function next(): array
+    public function forward(): bool
     {
-        if($this->index >= $this->count() - 1)
-            return [];
+        if($this->index >= $this->count() - 1) {
+            return false;
+        }
         $this->index++;
-        return $this->getRecord();
+        return true;
     }
 
     /**
-     * Rewinds the index by one position until the beginning is reached
+     * Backwards the index by one position until the beginning is reached
      *
-     * @return array the then current dataset, or an empty array if the beginning is already reached
-     * @see self::getRecord()
+     * @return bool true if the beginning is not reached yet, false otherwise
      */
-    public function prev(): array
+    public function backward(): bool
     {
         if($this->index <= 0)
-            return [];
+            return false;
         $this->index--;
-        return $this->getRecord();
+        return true;
     }
 
     /**
@@ -308,7 +301,7 @@ class RecordSet extends PoolObject implements Countable
     /**
      * Returns a value of a field of the current record
      *
-     * @param string $key name of column (fieldname)
+     * @param string $key name of column (field)
      * @param mixed|null $default
      * @return mixed value
      */
@@ -646,7 +639,7 @@ class RecordSet extends PoolObject implements Countable
      */
     public function getRecord(int $index = -1): array
     {
-        return $index >= 0 && $index != $this->index ?
+        return $index >= 0 && $index !== $this->index ?
             $this->seek($index)
             : $this->records[$this->index] ?? [];
     }
@@ -767,29 +760,35 @@ class RecordSet extends PoolObject implements Countable
      */
     public function find(string|array $fieldName, string|array $value, bool $begin = true): false|int
     {
-        if($fieldName == '') return false;
+        if($fieldName === '') {
+            return false;
+        }
 
         if($begin) {
-            if(!$this->first()) return false;
+            if(!$this->first()) {
+                return false;
+            }
         }
-        else {
-            if(!$this->next()) return false;
+        else if(!$this->forward()) {
+            return false;
         }
 
         // Mehrere Spalten überprüfen (Array-Übergabe)
-        if(is_array($fieldName) and is_array($value)) {
+        if(is_array($fieldName) && is_array($value)) {
             // Suche solange bis der Wert des Feldes übereinstimmt oder das Ende erreicht wurde
-            $len = sizeof($fieldName) - 1;
+            $len = count($fieldName) - 1;
             do {
                 $found = false;
                 for($i = 0; $i <= $len; $i++) {
                     $found = ($this->getValue($fieldName[$i]) == $value[$i]);
-                    if(!$found) break;
+                    if(!$found) {
+                        break;
+                    }
                 }
                 if($found) {
                     return $this->index;
                 }
-            } while($this->next());
+            } while($this->forward());
         }
         // Eine Spalte überprüfen
         else {
@@ -798,7 +797,7 @@ class RecordSet extends PoolObject implements Countable
                 if($this->getValue($fieldName) == $value) {
                     return $this->index;
                 }
-            } while($this->next());
+            } while($this->forward());
         }
 
         return false;
@@ -830,8 +829,57 @@ class RecordSet extends PoolObject implements Countable
         do {
             if(count(array_diff_assoc($this->getRecord(), $ResultSet->getRecord())) != 0 or
                 count(array_diff_assoc($ResultSet->getRecord(), $this->getRecord())) != 0) return false;
-        } while($this->next() and $ResultSet->next());
+        } while($this->forward() and $ResultSet->forward());
         return true;
+    }
+
+    /**
+     * Get the last error in the error stack. If there is no error, an empty array is returned.
+     */
+    public function getLastError(): array
+    {
+        $error = [];
+        if($this->errorStack) {
+            $error = $this->errorStack[count($this->errorStack) - 1];
+        }
+        return $error;
+    }
+
+    /**
+     * Returns the error stack
+     *
+     * @return array
+     */
+    public function getErrorList(): array
+    {
+        return $this->errorStack;
+    }
+
+    /**
+     * Add error message to the error stack
+     */
+    public function addErrorMessage(string $message, int $code = 0): static
+    {
+        $this->errorStack[] = ['message' => $message, 'code' => $code];
+        return $this;
+    }
+
+    /**
+     * Add the error to the error stack as an array with message and code
+     */
+    public function addError(array $error): static
+    {
+        $this->errorStack[] = $error;
+        return $this;
+    }
+
+    /**
+     * Clear the error stack
+     */
+    public function clearErrorStack(): static
+    {
+        $this->errorStack = [];
+        return $this;
     }
 
     /**
@@ -876,12 +924,6 @@ class RecordSet extends PoolObject implements Countable
 
     /**
      * Zeile als CSV ausgeben
-     *
-     * @param boolean $with_headline
-     * @param string $separator
-     * @param string $line_break
-     * @param string $text_clinch Textklammer
-     * @return string
      */
     function getRecordAsCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
     {
@@ -908,7 +950,7 @@ class RecordSet extends PoolObject implements Countable
                 $i = 0;
                 foreach($values as $val) {
                     $val = self::maskTextCSVcompliant((string)$val, $separator, $text_clinch);
-                    $csv .= ($i == 0) ? $val : $separator.$val;
+                    $csv .= ($i === 0) ? $val : $separator.$val;
                     $i++;
                 }
                 $csv .= $line_break;
@@ -920,13 +962,11 @@ class RecordSet extends PoolObject implements Countable
     /**
      * Returns records as json
      *
-     * @param int $flags
-     * @param int $depth
-     * @return string
+     * @throws \JsonException
      */
     public function getRecordsAsJSON(int $flags, int $depth = 512): string
     {
-        return json_encode($this->records, $flags, $depth);
+        return json_encode($this->records, JSON_THROW_ON_ERROR | $flags, $depth);
     }
 
     /**
@@ -1113,54 +1153,5 @@ class RecordSet extends PoolObject implements Countable
 
         $xml .= '</complete>';
         return $xml;
-    }
-
-    /**
-     * Get the last error in the error stack. If there is no error, an empty array is returned.
-     */
-    public function getLastError(): array
-    {
-        $error = [];
-        if($this->errorStack) {
-            $error = $this->errorStack[count($this->errorStack) - 1];
-        }
-        return $error;
-    }
-
-    /**
-     * Returns the error stack
-     *
-     * @return array
-     */
-    public function getErrorList(): array
-    {
-        return $this->errorStack;
-    }
-
-    /**
-     * Add error message to the error stack
-     */
-    public function addErrorMessage(string $message, int $code = 0): static
-    {
-        $this->errorStack[] = ['message' => $message, 'code' => $code];
-        return $this;
-    }
-
-    /**
-     * Add the error to the error stack as an array with message and code
-     */
-    public function addError(array $error): static
-    {
-        $this->errorStack[] = $error;
-        return $this;
-    }
-
-    /**
-     * Clear the error stack
-     */
-    public function clearErrorStack(): static
-    {
-        $this->errorStack = [];
-        return $this;
     }
 }
