@@ -48,7 +48,7 @@ class PoolObject extends stdClass
      */
     public function getClass(): string
     {
-        if($this->class == '') {
+        if($this->class === '') {
             $this->class = get_class($this);
         }
 
@@ -86,7 +86,7 @@ class PoolObject extends stdClass
      */
     public function getClassFilename(): string
     {
-        if($this->classFilename == '') {
+        if($this->classFilename === '') {
             $this->classFilename = (new ReflectionClass($this))->getFileName();
         }
         return $this->classFilename;
@@ -101,7 +101,7 @@ class PoolObject extends stdClass
      */
     protected function raiseError(string $file, int $line, string $msg, $error_level = E_USER_NOTICE): void
     {
-        if(error_reporting() == 0) {
+        if(error_reporting() === 0) {
             return;
         }
         $error = $msg;
@@ -117,7 +117,7 @@ class PoolObject extends stdClass
      */
     public function getClassName(): string
     {
-        if($this->className == '') {
+        if($this->className === '') {
             $this->className = (new ReflectionClass($this))->getShortName();
         }
         return $this->className;
