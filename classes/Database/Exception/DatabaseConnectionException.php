@@ -10,9 +10,8 @@
 
 namespace pool\classes\Database\Exception;
 
-use pool\classes\Exception\PoolExceptionInterface;
-use RuntimeException as PhpRuntimeException;
+use pool\classes\Exception\RuntimeException;
 
-class DatabaseConnectionException extends PhpRuntimeException implements PoolExceptionInterface
+class DatabaseConnectionException extends RuntimeException
 {
 }

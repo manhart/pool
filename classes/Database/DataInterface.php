@@ -17,6 +17,7 @@ use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\InvalidArgumentException;
+use pool\classes\Exception\RuntimeException;
 use pool\classes\Utils\Singleton;
 use Stopwatch;
 use function constant;
@@ -24,17 +25,18 @@ use function defined;
 
 class DataInterface extends PoolObject
 {
-    /**---- class constants ----*/
+    /**
+     * Date and time constants (@todo rethink maybe move to a separate database class?)
+     */
     public const ZERO_DATE = '0000-00-00';
-
     public const ZERO_TIME = '00:00:00';
-
     public const ZERO_DATETIME = '0000-00-00 00:00:00';
-
     public const MAX_DATE = '9999-12-31';
-
     public const MAX_DATETIME = '9999-12-31 23:59:59';
 
+    /**
+     * @var array Array of registered resources
+     */
     private static array $register = [];
 
     /**
@@ -43,7 +45,7 @@ class DataInterface extends PoolObject
     public string $last_Query;
 
     /** Alle verfügbaren Master u. Slave Hosts */
-    var string|array $available_hosts = [];
+    private string|array $available_hosts = [];
 
     /**
      * Erzwingt Lesevorgänge über den Master-Host für Schreibvorgänge
@@ -93,18 +95,12 @@ class DataInterface extends PoolObject
     private array $hosts = [];
 
     /**
-     * Enthält den Variablennamen des Authentication-Arrays; Der Variablenname wird vor dem Connect aufgelöst;
-     * Das Database Objekt soll keine USER und PASSWOERTER intern speichern. Vorsicht wegem ERRORHANDLER!
+     * Enthält den Variablennamen des Authentication-Arrays
      */
-    private string $auth = "";
+    private string $auth = '';
 
     /** @var array<String, array<String, resource>>  Array of Mysql Links; Aufbau $var[$mode][$database] = resource */
     private array $connections = [ConnectionMode::READ->value => [], ConnectionMode::WRITE->value => []];
-
-    /**
-     * Register with all DataInterfaces
-     */
-    private static array $instances = [];
 
     /**
      * @var string Default database
@@ -156,28 +152,32 @@ class DataInterface extends PoolObject
 
     /**
      * Sets up the object.
-     * Einstellungen:
-     * persistency = (boolean) Persistente Verbindung (Default true)
-     * host = (array)|(string) Hosts des MySQL Servers (es koennen auch Cluster bedient werden host[0] = read; host[1] = write)
-     * database = (string) Standard Datenbank
-     * auth = (array) Authentication Array, Default 'mysql_auth' (siehe access.inc.php)
+     * Available options
+     * host = (array)|(string) Hosts of the database servers (clusters can also be defined: host[0] = read; host[1] = write)
+     * database = (array)|(string) Databases to connect to
+     * port = (int) Port to connect to
+     * charset = (string) Character set for the connection
+     * auth = (array) Authentication Array, Default 'mysql_auth'
+     * force_backend_read = (bool) Enforce read operations over the master host for write operations
      *
+     * @see access.inc.php
      * @param array $connectionOptions Einstellungen
      * @return boolean Erfolgsstatus
      * @throws \pool\classes\Exception\InvalidArgumentException
      */
     public function setOptions(array $connectionOptions): bool
     {
-        // $this->persistency = array_key_exists('persistency', $Packet) ? $Packet['persistency'] : false;
+        // $this->persistence = array_key_exists('persistence', $Packet) ? $Packet['persistence'] : false;
         $this->force_backend_read = $connectionOptions['force_backend_read'] ?? false;
 
         $this->available_hosts = $connectionOptions['host'] ??
             throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "host"');
 
-        $dataBases = (array)$connectionOptions['database'] ?? null;
+        $dataBases = (array)($connectionOptions['database'] ?? []);
 
         $this->default_database = $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
 
+        // @todo eliminate port and put it into the host string
         if(array_key_exists('port', $connectionOptions))
             $this->port = $connectionOptions['port'];
 
@@ -186,7 +186,7 @@ class DataInterface extends PoolObject
 
         $this->auth = $connectionOptions['auth'] ?? 'mysql_auth';// fallback verwendet zentrale, globale Authentifizierung
 
-        $this->__findHostForConnection();
+        $this->findHostForConnection();
         foreach($dataBases as $alias => $dataBase) {
             if(!is_string($alias))
                 $alias = $dataBase;
@@ -199,7 +199,7 @@ class DataInterface extends PoolObject
     /**
      * When using clusters moves random hosts from $this->available_hosts to $this->hosts
      */
-    protected function __findHostForConnection(ConnectionMode $connectionMode = null): int
+    protected function findHostForConnection(ConnectionMode $connectionMode = null): int
     {
         $available_hosts =& $this->available_hosts;
         $alternativeHosts = 0;
@@ -208,13 +208,13 @@ class DataInterface extends PoolObject
             foreach($this->modes as $clusterMode => $clusterModeSpecificIndexUsedInAvailableHosts) {
                 /** @var array|null $hostList reference to hosts available in this mode */
                 $hostList =& $available_hosts[$clusterMode];
-                if((!$connectionMode || $connectionMode == $clusterMode) && $hostList) {//targeting that specific mode or no specific one
+                if((!$connectionMode || $connectionMode === $clusterMode) && $hostList) {//targeting that specific mode or no specific one
                     $key = array_rand($hostList);//changed from random int-key
                     $host = $hostList[$key];
                     unset($hostList[$key]);//remove option
-                    if($clusterMode == ConnectionMode::READ)//is this just an error in the original code?
+                    if($clusterMode === ConnectionMode::READ)//is this just an error in the original code?
                         $hostList = array_values($hostList);//reindex; should be unnecessary with array_rand
-                    $alternativeHosts += sizeof($hostList);
+                    $alternativeHosts += count($hostList);
                 }
                 else//requested connectionMode isn't matching clusterMode or the cluster mode has no remaining hosts
                     // no clue what's going on here I presume this fetches a default
@@ -222,11 +222,13 @@ class DataInterface extends PoolObject
 
                 if($host) $this->hosts[$clusterMode] = $host;
             }
-        else /**Ein MySQL Server fuer Lesen und Schreiben*/
+        else {
+            /** One database server for reading and writing */
             $this->hosts = [
                 ConnectionMode::READ->value => $available_hosts,
                 ConnectionMode::WRITE->value => $available_hosts,
             ];
+        }
 
         return $alternativeHosts;
     }
@@ -244,6 +246,10 @@ class DataInterface extends PoolObject
         }
     }
 
+    /**
+     * Retrieves a registered resource
+     * @throws \pool\classes\Exception\InvalidArgumentException
+     */
     public static function getInterfaceForResource(string $alias):self
     {
         return self::$register[$alias]['interface'] ?? throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
@@ -267,8 +273,8 @@ class DataInterface extends PoolObject
         $interface = static::getInterfaceForResource($this->getAlias($dbname));
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
-        $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) == 1 ?
-            Singleton::get('Stopwatch')->start('SQL-QUERY') : null;// start time measurement
+        $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) === 1 ?
+            Singleton::get('Stopwatch')?->start('SQL-QUERY') : null;// start time measurement
         try {//run
             $query_resource = $interface->query($sql, $dbname);
         }
@@ -313,11 +319,11 @@ class DataInterface extends PoolObject
                     $row = [//id of inserted record or number of rows
                             0 => $last_insert_id ?? $affected_rows,
                             'affected_rows' => $affected_rows,
-                        ] + ($idColumns ?? []);//for insert save value db->nextid()
+                        ] + ($idColumns ?? []);
                     $RecordSet = new RecordSet([0 => $row]);
                     break;
                 default:
-                    throw new Exception("Unknown command: '{$interface->getLastQueryCommand()}' in $sql");
+                    throw new RuntimeException("Unknown command: '{$interface->getLastQueryCommand()}' in $sql");
             }
         }
         else {//statement failed
@@ -327,7 +333,7 @@ class DataInterface extends PoolObject
             $error['sql'] = $sql;
             $RecordSet = (new RecordSet())->addError($error);
             // SQL Statement Error Logging:
-            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) == 1)
+            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) === 1)
                 Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
         }
 
@@ -351,32 +357,26 @@ class DataInterface extends PoolObject
      * Updates last command on success
      *
      * @return mixed query result / query resource
-     * @throws \Exception
-     * @see DataInterface::__get_db_conid
+     * @throws \pool\classes\Exception\InvalidArgumentException|\Exception
+     *@see DataInterface::getDBConnection
      */
     public function query(string $query, string $database): mixed
     {
-        try {
-            $interface = static::getInterfaceForResource($this->getAlias($database));
-        }
-        catch(Exception $e) {
-            if($e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
-                throw $e;
-            }
-        }
+        $interface = static::getInterfaceForResource($this->getAlias($database));
         //Store query in attribute
         $interface->last_Query = $sql = ltrim($query);
         // reset query result
         $interface->query_resource = false;
-        if(!$sql)//nothing to do
+        if(!$sql) {//nothing to do
             return false;
+        }
         //identify command
         $command = $interface::identifyCommand($sql);
-        if(IS_TESTSERVER && !in_array($command, $interface->commands))
+        if(IS_TESTSERVER && !in_array($command, $interface->commands, true))
             echo "Unknown command: '$command'<br>".
                 "in $sql<hr>".
                 "Please contact the POOL's maintainer to analyze the DataInterface in the query() function.";
-        $isSELECT = $command == 'SELECT';//mode selection
+        $isSELECT = $command === 'SELECT';//mode selection
         $mode = !$isSELECT || $interface->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
         if($isSELECT)
             $interface->totalReads++;
@@ -384,12 +384,12 @@ class DataInterface extends PoolObject
             $interface->totalWrites++;
         $interface->totalQueries++;
 
-        $Connection = $interface->__get_db_conid($database, $mode);//connect
+        $Connection = $interface->getDBConnection($database, $mode);//connect
         $interface->query_resource = $Connection->query($sql);//run
         $interface->lastConnection = $Connection;
         if($interface->query_resource) $interface->last_command = $command;
         if(defined($x = 'LOG_ENABLED') && constant($x) &&
-            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) == 2 &&
+            defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) === 2 &&
             ($Log = Singleton::get('LogFile'))->isLogging())
             //Logging enabled
             $Log->addLine('SQL MODE: '.$mode->name);
@@ -412,36 +412,34 @@ class DataInterface extends PoolObject
      */
     public function open(string $database = ''): bool
     {
-        $this->__get_db_conid($database, ConnectionMode::READ);
-        if($this->hosts[ConnectionMode::READ->value] != $this->hosts[ConnectionMode::WRITE->value]) {
-            $this->__get_db_conid($database, ConnectionMode::WRITE);
+        $this->getDBConnection($database, ConnectionMode::READ);
+        if($this->hosts[ConnectionMode::READ->value] !== $this->hosts[ConnectionMode::WRITE->value]) {
+            $this->getDBConnection($database, ConnectionMode::WRITE);
         }
         return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
     }
 
     /**
-     * @param $database string Datenbank
-     * @param \pool\classes\Database\ConnectionMode $mode string Lese- oder Schreibmodus
-     * @return Connection Gibt Resource der MySQL Verbindung zurueck
-     * @throws Exception
+     * Returns an existing DB connection for a specific database or creates a new connection
+     * @throws DatabaseConnectionException|RuntimeException|\Exception
      */
-    private function __get_db_conid(string $database, ConnectionMode $mode): Connection
+    private function getDBConnection(string $database, ConnectionMode $mode): Connection
     {
         if(!($database || ($database = $this->default_database))) //No DB specified and no default given
-            throw new Exception('No database selected (__get_db_conid)!');
-        if($this->hosts[ConnectionMode::READ->value] == $this->hosts[ConnectionMode::WRITE->value])
+            throw new RuntimeException('No database selected!');
+        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as WRITE
         return $this->connections[$mode->value][$database] ?? //fetch from cache
             $this->openNewDBConnection($mode, $database);
     }
 
     /**
-     * @throws Exception
+     * @throws DatabaseConnectionException|\Exception
      */
     private function openNewDBConnection(ConnectionMode $mode, string $database): Connection
     {
         $host = $this->hosts[$mode->value];
-        $auth = $this->__get_auth($mode);
+        $auth = $this->getAuth($mode);
         $credentials = $auth[$database] ?? $auth['all'] ?? [];
         $db_pass = $credentials['password'] ?? '';
         $db_user = $credentials['username'] ?? '';
@@ -457,25 +455,25 @@ class DataInterface extends PoolObject
         if($Connection) //set default and store connection
             return $this->connections[$mode->value][$database] = $Connection;
         elseif($this->hasAnotherHost($mode)) {//connection errored out but alternative hosts exist -> recurse
-            $this->__findHostForConnection($mode);
+            $this->findHostForConnection($mode);
             return $this->openNewDBConnection($mode, $database);
         }
         else {
             $errors = $this->driver->errors()[0] ?? ['errno' => 0, 'error' => 'Unknown'];
-            throw new Exception("Database connection to host '$host' with mode $mode->name failed!"
+            throw new DatabaseConnectionException("Database connection to host '$host' with mode $mode->name failed!"
                 ." Used default database '$database' (ErrNo "
                 .$errors['errno'].': '.$errors['error'].')!');
         }
     }
 
     /**
-     * Liest die Authentication-Daten aus Array und gibt sie als Array zurueck
+     * Reads the authentication data and returns it
      *
      * @param \pool\classes\Database\ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
-     * @return array mit Key username und password
+     * @return array contains database, username and password
      * @throws Exception
      */
-    private function __get_auth(ConnectionMode $mode): array
+    private function getAuth(ConnectionMode $mode): array
     {
         $auth = &$this->authentications[$this->auth];
         $auth ??=
@@ -485,24 +483,24 @@ class DataInterface extends PoolObject
 
         $hostname = $this->hosts[$mode->value];//normalize mode for lookup
         return $auth[$hostname] ??//now testing hostname that is returned instead of reading-host
-            throw new Exception("MySQL access denied! No authentication data available (Database: $hostname Mode: $mode->value).");
+            throw new DatabaseConnectionException("Access Denied: No authentication data available for host $hostname with $mode->value mode.");
     }
 
     /**
-     * Ermittelt, ob noch Master-/Slave Hosts zur Verfuegung stehen
+     * Determines if master/slave hosts are still available
      */
     private function hasAnotherHost(ConnectionMode $mode): bool
     {
         return (is_array($hosts = $this->available_hosts[$mode->value] ?? 0)
-            && sizeof($hosts) > 0);
+            && count($hosts) > 0);
     }
 
     /**
-     * Ueberprueft ob eine MySQL Verbindung besteht und baut verloren gegangene Verbindung wieder auf (bis PHP 5.0.13)
+     * Checks if a database connection exists
      */
     public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
     {
-        if($this->hosts[ConnectionMode::READ->value] == $this->hosts[ConnectionMode::WRITE->value])
+        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as host
         $database = $database ?: $this->default_database;
         return isset($this->connections[$mode->value][$database]);
@@ -517,8 +515,9 @@ class DataInterface extends PoolObject
         $writeConnections = &$this->connections[ConnectionMode::WRITE->value];
 
         if(is_array($readConnections)) {
-            foreach($readConnections as $database => $conid) if($conid instanceof Connection)
-                $conid->close();
+            foreach($readConnections as $conid)
+                if($conid instanceof Connection)
+                    $conid->close();
             $readConnections = [];
         }
         if(is_array($writeConnections)) {
@@ -563,18 +562,16 @@ class DataInterface extends PoolObject
                     }
                 }
             }
-            if($callbackOnFetchRow) $row = call_user_func($callbackOnFetchRow, $row);
+            if($callbackOnFetchRow) {
+                $row = $callbackOnFetchRow($row);
+            }
             $rowSet[] = $row;
         }
         return $rowSet;
     }
 
     /**
-     * Liefert die ID einer vorherigen INSERT-Operation.
-     * Hinweis:
-     * mysql_insert_id() konvertiert den Typ der Rueckgabe der nativen MySQL C API Funktion mysql_insert_id() in den Typ long (als int in PHP bezeichnet).
-     * Falls Ihre AUTO_INCREMENT Spalte vom Typ BIGINT ist, ist der Wert den mysql_insert_id() liefert, nicht korrekt. Verwenden Sie in diesem Fall
-     * stattdessen die MySQL interne SQL Funktion LAST_INSERT_ID() in einer SQL-Abfrage
+     * Returns the ID of auto_increment primary keys from a previous INSERT operation.
      *
      * @return int|string Bei Erfolg die letzte ID einer INSERT-Operation
      */
@@ -647,7 +644,7 @@ class DataInterface extends PoolObject
         if(!$database || !$table) {
             throw new InvalidArgumentException('Database and table names must be non-empty strings.');
         }
-        return $this->__get_db_conid($database, ConnectionMode::READ)->getTableColumnsInfo($database, $table);
+        return $this->getDBConnection($database, ConnectionMode::READ)->getTableColumnsInfo($database, $table);
     }
 
     /**
@@ -661,9 +658,9 @@ class DataInterface extends PoolObject
             throw new InvalidArgumentException('Database, table and field names must be non-empty strings.');
         }
 
-        $query_resource = $this->__get_db_conid($database, ConnectionMode::READ)->query("SHOW COLUMNS FROM `$table` like '$field'");
+        $query_resource = $this->getDBConnection($database, ConnectionMode::READ)->query("SHOW COLUMNS FROM `$table` like '$field'");
         if(!$query_resource) {
-            throw new Exception("Could not get column metadata for $database.$table.$field");
+            throw new RuntimeException("Could not get column metadata for $database.$table.$field");
         }
         $row = [];
         if($this->numRows($query_resource)) $row = $this->fetchRow($query_resource);
@@ -726,7 +723,7 @@ class DataInterface extends PoolObject
      */
     public function escape(string $string, $database = ''): string
     {
-        $connection = $this->__get_db_conid($database, ConnectionMode::READ);
+        $connection = $this->getDBConnection($database, ConnectionMode::READ);
         return $this->driver->escape($connection, $string);
     }
 
