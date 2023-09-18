@@ -16,6 +16,7 @@ use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Exception\DAOException;
+use pool\classes\Exception\InvalidArgumentException;
 
 /**
  * Class DAO - Data Access Object
@@ -104,8 +105,8 @@ abstract class DAO extends PoolObject
     protected function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
     {
         $this->DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
-        $this->database ??= $databaseName ?? static::$databaseName;
-        $this->table ??= $table ?? static::$tableName;
+        $this->database ??= $databaseName ?? static::$databaseName ?: throw new InvalidArgumentException('The static property databaseName is not defined within DAO '.static::class.'!');
+        $this->table ??= $table ?? static::$tableName ?: throw new InvalidArgumentException('The static property tableName is not defined within DAO '.static::class.'!');
 
         $commands = [
             Commands::Now->name => 'NOW()',
