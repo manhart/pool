@@ -132,18 +132,16 @@ class Net_Ping extends PoolObject
 
     /**
     * Factory for Net_Ping
-    *
-    * @access public
     */
-    function factory()
+    public static function factory()
     {
         $sysname = Net_Ping::_setSystemName();
 
         if (($ping_path = Net_Ping::_setPingPath($sysname)) == NET_PING_CANT_LOCATE_PING_BINARY) {
         	throw new Exception(NET_PING_CANT_LOCATE_PING_BINARY_MSG, NET_PING_CANT_LOCATE_PING_BINARY);
-        } else {
-            return new Net_Ping($ping_path, $sysname);
         }
+
+        return new Net_Ping($ping_path, $sysname);
     } /* function factory() */
 
     /**
@@ -151,7 +149,7 @@ class Net_Ping extends PoolObject
      *
      * @access private
      */
-    function _setSystemName()
+    private static function _setSystemName()
     {
         /*$OS_Guess  = new OS_Guess;*/
         $sysname   = /*$OS_Guess->getSysname();*/ 'linux';
@@ -230,13 +228,13 @@ class Net_Ping extends PoolObject
     *
     * @access private
     */
-    function _setPingPath($sysname)
+    private static function _setPingPath($sysname)
     {
         $status    = '';
         $output    = array();
         $ping_path = '';
 
-        if ("windows" == $sysname) {
+        if ("windows" === $sysname) {
             return "ping";
         } else {
             $ping_path = exec("which ping", $output, $status);
@@ -254,7 +252,7 @@ class Net_Ping extends PoolObject
     * @return string Argument line
     * @access private
     */
-    function _createArgList()
+    private function _createArgList()
     {
         $retval     = array();
 
@@ -359,11 +357,11 @@ class Net_Ping extends PoolObject
     /**
     * Execute ping
     *
-    * @param  string    $host   hostname
+    * @param string $host   hostname
     * @return Net_Ping_Result  String on error or array with the result
     * @access public
     */
-    function ping($host)
+    public function ping(string $host)
     {
         if($this->_noArgs) {
             $this->setArgs(array('count' => 3));
@@ -387,14 +385,13 @@ class Net_Ping extends PoolObject
         if (count($this->_result) == 0) {
         	throw new Exception(NET_PING_HOST_NOT_FOUND_MSG, NET_PING_HOST_NOT_FOUND);
         }
-        else {
-            // Here we pass $this->_sysname to the factory(), but it is
-            // not actually used by the class. It's only maintained in
-            // the Net_Ping_Result class because the
-            // Net_Ping_Result::getSysName() method needs to be retained
-            // for backwards compatibility.
-            return Net_Ping_Result::factory($this->_result, $this->_sysname);
-        }
+
+        // Here we pass $this->_sysname to the factory(), but it is
+        // not actually used by the class. It's only maintained in
+        // the Net_Ping_Result class because the
+        // Net_Ping_Result::getSysName() method needs to be retained
+        // for backwards compatibility.
+        return Net_Ping_Result::factory($this->_result, $this->_sysname);
     } /* function ping() */
 
     /**
@@ -569,7 +566,7 @@ class Net_Ping extends PoolObject
 * @package  Net
 * @access   private
 */
-class Net_Ping_Result
+#[AllowDynamicProperties] class Net_Ping_Result
 {
     /**
     * ICMP sequence number and associated time in ms
@@ -638,10 +635,8 @@ class Net_Ping_Result
 
     /**
     * Constructor for the Class
-    *
-    * @access private
     */
-    function __construct($result, $sysname)
+    public function __construct($result, $sysname)
     {
         $this->_raw_data = $result;
 
@@ -660,7 +655,7 @@ class Net_Ping_Result
     * @param array $result Net_Ping result
     * @param string $sysname OS_Guess::sysname
     */
-    function factory($result, $sysname)
+    public static function factory($result, $sysname)
     {
         return new Net_Ping_Result($result, $sysname);
     }  /* function factory() */
@@ -670,7 +665,7 @@ class Net_Ping_Result
     *
     * @access private
     */
-    function _parseResult()
+    private function _parseResult()
     {
         // MAINTAINERS:
         //
@@ -926,9 +921,9 @@ class Net_Ping_Result
      *
      * @access private
      */
-    function _parseResultDetailTransmitted($lower)
+    private function _parseResultDetailTransmitted(array $lower)
     {
-        for ( $i=1; $i<count($lower); $i++ ) {
+        for ($i=1, $iMax = count($lower); $i< $iMax; $i++ ) {
             // the first number on the line
             if ( preg_match('/^\D*(\d+)/', $lower[$i], $matches) ) {
                 $this->_transmitted = (int)$matches[1];
