@@ -14,6 +14,7 @@ use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
+use const pool\PWD_TILL_GUIS;
 
 const REQUEST_PARAM_MODULE = 'module';
 const REQUEST_PARAM_METHOD = 'method';

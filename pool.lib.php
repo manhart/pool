@@ -8,25 +8,27 @@
  * file that was distributed with this source code.
  */
 
-const POOL = 'POOL';
-const pool = 'pool';
+namespace pool {
 
-if(!defined('DIR_POOL_ROOT')) {
-    define('DIR_POOL_ROOT', __DIR__);
+    use pool\classes\Autoloader;
+
+    if(!defined('DIR_POOL_ROOT')) {
+        define('DIR_POOL_ROOT', __DIR__);
+    }
+
+    const PWD_TILL_INCLUDES = 'includes'; // todo remove after refactoring to PSR-4
+    const PWD_TILL_CLASSES = 'classes'; // todo remove after refactoring to PSR-4
+    const PWD_TILL_GUIS = 'guis'; // todo remove after refactoring to PSR-4
+    const PWD_TILL_SCHEMES = 'schemes';
+    const PWD_TILL_SKINS = 'skins';
+    const PWD_TILL_JS = 'js';
+    const PWD_TILL_SUBCODES = 'subcodes';
+
+    require_once(__DIR__ . '/' . PWD_TILL_CLASSES . '/Autoloader.php');
+    Autoloader::getLoader()->register();
+
+    // @todo replace against Utils classes after refactoring to PSR-4
+    require __DIR__ . '/' . PWD_TILL_INCLUDES . '/includes.lib.php';
+    // @todo load from autoloader
+    require __DIR__ . '/' . PWD_TILL_CLASSES . '/classes.lib.php';
 }
-
-const PWD_TILL_INCLUDES = 'includes';
-const PWD_TILL_CLASSES = 'classes';
-const PWD_TILL_GUIS = 'guis';
-const PWD_TILL_SCHEMES = 'schemes';
-const PWD_TILL_SKINS = 'skins';
-const PWD_TILL_JAVASCRIPTS = 'js';
-const PWD_TILL_SUBCODES = 'subcodes';
-
-require_once(__DIR__ . '/' . PWD_TILL_CLASSES . '/Autoloader.php');
-\pool\classes\Autoloader::getLoader()->register();
-
-// @todo replace against Utils classes
-require __DIR__ . '/' . PWD_TILL_INCLUDES . '/includes.lib.php';
-// @todo load from autoloader
-require __DIR__ . '/' . PWD_TILL_CLASSES . '/classes.lib.php';

@@ -11,6 +11,7 @@
 namespace pool\classes;
 
 use GUI_Module;
+use const pool\PWD_TILL_CLASSES;
 
 class Autoloader
 {
@@ -27,12 +28,12 @@ class Autoloader
     /**
      * @return Autoloader
      */
-    static function getLoader(): Autoloader
+    public static function getLoader(): Autoloader
     {
         if(isset(self::$PoolLoader)) {
             return self::$PoolLoader;
         }
-        self::$PoolLoader = new Autoloader();
+        self::$PoolLoader = new self();
         return self::$PoolLoader;
     }
 
@@ -45,20 +46,19 @@ class Autoloader
     }
 
     /**
-     * loads class
+     * Loads POOL classes and GUIs
      *
      * @param string $class
      * @return bool
      */
     public function loadClass(string $class): bool
     {
-        $isGUI = str_starts_with($class, 'GUI');
+        $isGUI = str_starts_with($class, 'GUI_');
         if($isGUI) {
             return GUI_Module::autoloadGUIModule($class);
         }
-        else {
-            return self::autoloadClass($class);
-        }
+
+        return self::autoloadClass($class);
     }
 
     /**
@@ -94,7 +94,7 @@ class Autoloader
             $classRootDir = addEndingSlash($classRootDir);
 
             // old style
-            $filename = $classRootDir.$className.Autoloader::CLASS_EXTENSION;
+            $filename = $classRootDir.$className.self::CLASS_EXTENSION;
             if(file_exists($filename)) {
                 require_once $filename;
                 return true;

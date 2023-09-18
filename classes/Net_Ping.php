@@ -26,17 +26,17 @@
 
 use pool\classes\Core\PoolObject;
 
-define('NET_PING_FAILED_MSG',                     'execution of ping failed'        );
-define('NET_PING_HOST_NOT_FOUND_MSG',             'unknown host'                    );
-define('NET_PING_INVALID_ARGUMENTS_MSG',          'invalid argument array'          );
-define('NET_PING_CANT_LOCATE_PING_BINARY_MSG',    'unable to locate the ping binary');
-define('NET_PING_RESULT_UNSUPPORTED_BACKEND_MSG', 'Backend not Supported'           );
+const NET_PING_FAILED_MSG = 'execution of ping failed';
+const NET_PING_HOST_NOT_FOUND_MSG = 'unknown host';
+const NET_PING_INVALID_ARGUMENTS_MSG = 'invalid argument array';
+const NET_PING_CANT_LOCATE_PING_BINARY_MSG = 'unable to locate the ping binary';
+const NET_PING_RESULT_UNSUPPORTED_BACKEND_MSG = 'Backend not Supported';
 
-define('NET_PING_FAILED',                     0);
-define('NET_PING_HOST_NOT_FOUND',             1);
-define('NET_PING_INVALID_ARGUMENTS',          2);
-define('NET_PING_CANT_LOCATE_PING_BINARY',    3);
-define('NET_PING_RESULT_UNSUPPORTED_BACKEND', 4);
+const NET_PING_FAILED = 0;
+const NET_PING_HOST_NOT_FOUND = 1;
+const NET_PING_INVALID_ARGUMENTS = 2;
+const NET_PING_CANT_LOCATE_PING_BINARY = 3;
+const NET_PING_RESULT_UNSUPPORTED_BACKEND = 4;
 
 
 /**

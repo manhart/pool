@@ -32,6 +32,9 @@ use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
 use ReflectionException;
 use Template;
+use const pool\PWD_TILL_GUIS;
+use const pool\PWD_TILL_JS;
+use const pool\PWD_TILL_SKINS;
 
 /**
  * Class Weblication represents the main class of a web application
@@ -596,7 +599,7 @@ class Weblication extends Component
      * @param string $skin
      * @return bool
      */
-    function skin_exists(string $skin = ''): bool
+    public function skin_exists(string $skin = ''): bool
     {
         $skin = addEndingSlash(($skin ?: $this->skin));
         $pathSkin = addEndingSlash(getcwd()).addEndingSlash(PWD_TILL_SKINS).$skin;
@@ -913,7 +916,7 @@ class Weblication extends Component
     function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true,
         bool $clientSideRelativePath = true): string
     {
-        $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JAVASCRIPTS);
+        $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JS);
         $serverSide_folder_guis = $clientSide_folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classFolder);
         //Ordner BaseLib -> look in POOL instead
         if($baseLib) {

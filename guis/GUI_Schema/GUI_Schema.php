@@ -10,6 +10,7 @@
 
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
+use const pool\PWD_TILL_SCHEMES;
 
 /**
  * GUI_Scheme loads various Html schemas (Html templates) and searches for further GUIs in them.
