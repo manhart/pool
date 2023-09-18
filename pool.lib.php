@@ -29,6 +29,4 @@ namespace pool {
 
     // @todo replace against Utils classes after refactoring to PSR-4
     require __DIR__ . '/' . PWD_TILL_INCLUDES . '/includes.lib.php';
-    // @todo load from autoloader
-    require __DIR__ . '/' . PWD_TILL_CLASSES . '/classes.lib.php';
 }
