@@ -1,15 +1,16 @@
 <?php
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Date.class.php created at 13.05.22, 14:55
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author a.manhart <a.manhart@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
+namespace pool\utils;
 
-final class DateUtils
+final class Date
 {
     /**
      * Calculates a custom week number
@@ -20,7 +21,7 @@ final class DateUtils
      * @param int $breakpoint calendar week based on this weekday
      * @return string
      */
-    static function getCustomWeekNumber(int $mon, int $day, int $year, int $breakpoint = 4): string
+    public static function getCustomWeekNumber(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
         $date = mktime(0, 0, 0, $mon, $day, $year);
         $kw = date('W', $date); // KW nach ISO 8601:1988
@@ -41,7 +42,7 @@ final class DateUtils
      * @param int $breakpoint calendar week based on this weekday
      * @return string
      */
-    static function getCustomMonth(int $mon, int $day, int $year, int $breakpoint = 4): string
+    public static function getCustomMonth(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
         $date = mktime(0, 0, 0, $mon, $day, $year);
         $monat = date('m', $date);
@@ -62,7 +63,7 @@ final class DateUtils
      * @param int $breakpoint calendar week based on this weekday
      * @return string
      */
-    static function getCustomYear(int $mon, int $day, int $year, int $breakpoint = 4): string
+    public static function getCustomYear(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
         $date = mktime(0, 0, 0, $mon, $day, $year);
         $jahr = date('Y', $date);
