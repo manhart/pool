@@ -125,7 +125,7 @@ abstract class DAO extends PoolObject
      * @param string $column
      * @return string
      */
-    abstract static function escapeColumn(string $column): string;
+    abstract public static function escapeColumn(string $column): string;
 
     /**
      * @return string
@@ -152,16 +152,16 @@ abstract class DAO extends PoolObject
         if(!$tableName) {
             return new static($DataInterface);
         }
-        elseif(static::$tableName) {
+
+        if(static::$tableName) {
             throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
         }
-        else {
-            $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
 
-            $DAO = new static($DataInterface, $databaseName, $tableName);
-            $DAO->fetchColumns();
-            return $DAO;
-        }
+        $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
+
+        $DAO = new static($DataInterface, $databaseName, $tableName);
+        $DAO->fetchColumns();
+        return $DAO;
     }
 
     /**
@@ -376,7 +376,7 @@ abstract class DAO extends PoolObject
      */
     abstract public function foundRows(): int;
 
-    abstract function fetchingRow(array $row): array;
+    abstract public function fetchingRow(array $row): array;
 
     /**
      * Executes sql statement and returns RecordSet
