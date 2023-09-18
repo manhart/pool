@@ -12,8 +12,6 @@ namespace pool\classes\Core;
 
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
-use ReflectionClass;
-use ReflectionException;
 
 /**
  * Core class for POOL components. Provides unique names for all components.
@@ -64,11 +62,6 @@ class Component extends PoolObject
      * @var array $uniqueNameCounter
      */
     private array $uniqueNameCounter = [];
-
-    /**
-     * @var string Directory that contains the class
-     */
-    private string $classDirectory;
 
     /**
      * Can have an owner of type Component
@@ -142,10 +135,8 @@ class Component extends PoolObject
      */
     public function setName(string $new_name): static
     {
-        if($this->name != $new_name) {
-            if($this->validateName($new_name)) {
-                $this->name = $new_name;
-            }
+        if($this->name !== $new_name && $this->validateName($new_name)) {
+            $this->name = $new_name;
         }
         return $this;
     }
@@ -178,30 +169,6 @@ class Component extends PoolObject
     }
 
     /**
-     * Returns the directory of the class
-     *
-     * @return string directory of the class
-     * @throws ReflectionException
-     */
-    public function getClassDirectory(): string
-    {
-        if(!isset($this->classDirectory)) {
-            $this->classDirectory = dirname((new ReflectionClass(self::theClass()))->getFileName());
-        }
-        return $this->classDirectory;
-    }
-
-    /**
-     * Returns the fully qualified class name
-     *
-     * @return string fully qualified class name
-     */
-    public static function theClass(): string
-    {
-        return static::class;
-    }
-
-    /**
      * Returns the Owner of this component
      *
      * @return Component Owner of this component
@@ -212,7 +179,7 @@ class Component extends PoolObject
     }
 
     /**
-     * Gibt das Objekt Weblication zurueck, falls der Eigentuemer vom Typ Weblication ist.
+     * Returns the Weblication
      *
      * @return Weblication|null Weblication
      * @see Weblication
@@ -222,9 +189,8 @@ class Component extends PoolObject
         if($this->Owner instanceof Weblication) {
             return $this->Owner;
         }
-        else {
-            return null;
-        }
+
+        return null;
     }
 
     /**

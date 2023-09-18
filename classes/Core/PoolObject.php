@@ -22,19 +22,24 @@ use stdClass;
 class PoolObject extends stdClass
 {
     /**
+     * @var string Directory that contains the class
+     */
+    private string $classDirectory;
+
+    /**
      * @var string the full name of the class of the object
      */
-    private string $class = '';
+    private string $class;
 
     /**
      * @var string the short name of the class of the object
      */
-    private string $className = '';
+    private string $className;
 
     /**
      * @var string the filename of the file in which the class has been defined
      */
-    private string $classFilename = '';
+    private string $classFilename;
 
     /**
      * @var bool|null determines whether the class is the POOL base library
@@ -42,17 +47,26 @@ class PoolObject extends stdClass
     private bool $isPOOL;
 
     /**
+     * The ReflectionClass object
+     */
+    private ReflectionClass $ReflectionClass;
+
+    /**
      * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
-     *
-     * @return string name of the class
      */
     public function getClass(): string
     {
-        if($this->class === '') {
-            $this->class = get_class($this);
-        }
+        return $this->class ??= self::theClass();
+    }
 
-        return $this->class;
+    /**
+     * Returns the fully qualified class name
+     *
+     * @return string fully qualified class name
+     */
+    public static function theClass(): string
+    {
+        return static::class;
     }
 
     /**
@@ -66,6 +80,30 @@ class PoolObject extends stdClass
     }
 
     /**
+     * Returns the absolute directory of the class
+     */
+    public function getClassDirectory(): string
+    {
+        return $this->classDirectory ??= dirname($this->getClassFile());
+    }
+
+    /**
+     * Gets the file in which the class has been defined
+     */
+    public function getClassFile(): string
+    {
+        return $this->classFilename ??= $this->getReflectionClass()->getFileName();
+    }
+
+    /**
+     * Instantiates a ReflectionClass object and returns it
+     */
+    public function getReflectionClass(): ReflectionClass
+    {
+        return $this->ReflectionClass ??= new ReflectionClass($this);
+    }
+
+    /**
      * Determines whether the class is inside the POOL (base library)
      *
      * @return bool
@@ -74,22 +112,9 @@ class PoolObject extends stdClass
     {
         if(!isset($this->isPOOL)) {
             $poolRealpath = realpath(DIR_POOL_ROOT);
-            $this->isPOOL = substr_compare($this->getClassFilename(), $poolRealpath, 0, strlen($poolRealpath)) === 0;
+            $this->isPOOL = substr_compare($this->getClassFile(), $poolRealpath, 0, strlen($poolRealpath)) === 0;
         }
         return $this->isPOOL;
-    }
-
-    /**
-     * Gets the filename of the file in which the class has been defined
-     *
-     * @return string
-     */
-    public function getClassFilename(): string
-    {
-        if($this->classFilename === '') {
-            $this->classFilename = (new ReflectionClass($this))->getFileName();
-        }
-        return $this->classFilename;
     }
 
     /**
@@ -112,14 +137,9 @@ class PoolObject extends stdClass
 
     /**
      * Determines the short name of the class of the object, stores it temporarily and returns it.
-     *
-     * @return string
      */
     public function getClassName(): string
     {
-        if($this->className === '') {
-            $this->className = (new ReflectionClass($this))->getShortName();
-        }
-        return $this->className;
+        return $this->className ??= $this->getReflectionClass()->getShortName();
     }
 }
