@@ -8,6 +8,10 @@
  * file that was distributed with this source code.
  */
 
+namespace pool\classes\Database\DAO;
+
+use Closure;
+use DateTimeInterface;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\Commands;
@@ -17,7 +21,8 @@ use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
 
 /**
- * MySQL_DAO
+ * pool\classes\Database\DAO\MySQL_DAO
+ *
  * @package pool
  * @since 2003/07/10
  */
@@ -66,7 +71,7 @@ class MySQL_DAO extends DAO
         'less than' => '<=',
         'in' => 'in',
         'not in' => 'not in',
-        'is' => 'is'
+        'is' => 'is',
     ];
 
     /**
@@ -74,7 +79,7 @@ class MySQL_DAO extends DAO
      */
     private array $cache = [
         'translatedValues' => [],
-        'translate' => []
+        'translate' => [],
     ];
 
     /**
@@ -93,6 +98,7 @@ class MySQL_DAO extends DAO
 
     /**
      * Rebuild column list
+     *
      * @todo rethink / rework rebuildColumnList
      */
     private function rebuildColumnList(): void
@@ -104,7 +110,18 @@ class MySQL_DAO extends DAO
 
         $table = "`$this->table`";
         $glue = "`, $table.`";
-        $this->column_list = $table . '.`' . implode($glue, $this->getColumns()) . '`';
+        $this->column_list = $table.'.`'.implode($glue, $this->getColumns()).'`';
+    }
+
+    /**
+     * Escape column name
+     */
+    public static function escapeColumn(string $column): string
+    {
+        if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
+            $column = "`$column`";
+        }
+        return $column;
     }
 
     /**
@@ -179,7 +196,7 @@ class MySQL_DAO extends DAO
     /**
      * Fetches the columns automatically from the DataInterface / Driver
      *
-     * @throws \pool\classes\Exception\InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException|RuntimeException|\Exception
+     * @throws \pool\classes\Exception\InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException|\pool\classes\Exception\RuntimeException|\Exception
      * @see DataInterface::getTableColumnsInfo()
      */
     public function fetchColumns(): static
@@ -200,17 +217,6 @@ class MySQL_DAO extends DAO
         // Concatenate the columns into a single string
         $this->column_list = implode(', ', $escapedColumns);
         return $this;
-    }
-
-    /**
-     * Escape column name
-     */
-    public static function escapeColumn(string $column): string
-    {
-        if(!str_contains_any($column, ['`', '*', '.', '(', 'as', '\''])) {
-            $column = "`$column`";
-        }
-        return $column;
     }
 
     /**
@@ -271,6 +277,7 @@ class MySQL_DAO extends DAO
 
     /**
      * Set the table alias
+     *
      * @todo rethink / rework setTableAlias
      */
     public function setTableAlias($alias): void
@@ -351,8 +358,8 @@ SQL;
     {
         // Check if all primary keys are set in the data array
         $missingKeys = array_diff($this->pk, array_keys($data));
-        if (!empty($missingKeys)) {
-            return (new RecordSet())->addErrorMessage('Update is wrong. Missing primary keys: ' . implode(', ', $missingKeys));
+        if(!empty($missingKeys)) {
+            return (new RecordSet())->addErrorMessage('Update is wrong. Missing primary keys: '.implode(', ', $missingKeys));
         }
 
         $pk = [];
@@ -441,7 +448,7 @@ SQL;
         }
         if(is_array($key)) {
             if(!is_array($id)) {
-                $id = array($id);
+                $id = [$id];
             }
             $count = count($key);
             for($i = 0; $i < $count; $i++) {
@@ -512,7 +519,8 @@ SQL;
      * @return string conditions for where clause
      * @see MySQL_DAO::$operatorMap
      */
-    protected function buildFilter(array $filter_rules, string $operator = 'and', bool $skip_next_operator = false, string $initialOperator = ' and'): string
+    protected function buildFilter(array $filter_rules, string $operator = 'and', bool $skip_next_operator = false,
+        string $initialOperator = ' and'): string
     {
         if(!$filter_rules) {//not filter anything (terminate floating operators)
             return $skip_next_operator ? '1' : '';
@@ -530,9 +538,11 @@ SQL;
                 $queryParts[] = " $record "; //operator e.g. or, and
                 continue;
             }
-            elseif(is_array($record[0])) {// nesting detected
+
+            if(is_array($record[0])) {// nesting detected
                 $record = "({$this->buildFilter($record[0], $record[1], true)})";
-            }//"($subFilter)"
+            }
+            //"($subFilter)"
             else {//normal record
                 $field = $this->translateValues ? //get field 'name'
                     $this->translateValues($record[0]) : $record[0];//inject replace command?
@@ -683,7 +693,8 @@ SQL;
      * @see MySQL_DAO::buildSorting
      * @see MySQL_DAO::buildLimit
      */
-    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [], array $limit = [],
+    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [],
+        array $limit = [],
         array $groupBy = [], array $having = [], array $options = []): RecordSet
     {
         $options = implode(' ', $options);
@@ -713,7 +724,8 @@ SQL;
     /**
      * Build a group by statement for a SQL query
      *
-     * @param array $groupBy Group by columns with sort order in following format ['column1' => 'ASC', 'column2' => 'DESC']. With rollup is also possible, e.g. ['column1' => 'ASC', 'WITH ROLLUP']
+     * @param array $groupBy Group by columns with sort order in following format ['column1' => 'ASC', 'column2' => 'DESC']. With rollup is also possible,
+     *     e.g. ['column1' => 'ASC', 'WITH ROLLUP']
      * @return string GROUP BY statement
      */
     protected function buildGroupBy(array $groupBy): string
@@ -779,7 +791,7 @@ SQL;
                     $sql .= ', ';
                 }
 
-                $column = $alias . $column;
+                $column = $alias.$column;
                 if($this->translateValues) {
                     $column = $this->translateValues($column);
                 }
@@ -797,7 +809,7 @@ SQL;
      */
     protected function buildLimit(array $limit): string
     {
-        return $limit ? ' LIMIT ' . implode(', ', $limit) : '';
+        return $limit ? ' LIMIT '.implode(', ', $limit) : '';
     }
 
     /**
@@ -930,6 +942,7 @@ SQL;
 
     /**
      * Returns the SQL statement for inserting the data into the table
+     *
      * @todo Rethink this method
      */
     public function getSQLInserts(string $table, RecordSet $ResultSet): string

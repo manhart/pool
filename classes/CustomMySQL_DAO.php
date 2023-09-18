@@ -8,6 +8,8 @@
  * file that was distributed with this source code.
  */
 
+use pool\classes\Database\DAO\MySQL_DAO;
+
 class CustomMySQL_DAO extends MySQL_DAO
 {
 }

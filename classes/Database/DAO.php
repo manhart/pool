@@ -177,7 +177,7 @@ abstract class DAO extends PoolObject
      * @param string|null $tableName table definition or the table name
      * @param string|null $databaseName database name
      * @param \pool\classes\Database\DataInterface|null $DataInterface
-     * @return DAO Data Access Object (edited DAO->MySQL_DAO f�r ZDE)
+     * @return DAO Data Access Object (edited DAO->pool\classes\Database\DAO\MySQL_DAO f�r ZDE)
      * @deprecated use create() instead
      * @see DAO::create()
      */

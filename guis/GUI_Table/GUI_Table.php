@@ -12,6 +12,7 @@
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\DAO;
+use pool\classes\Database\DAO\MySQL_DAO;
 
 /**
  * Class GUI_Table
