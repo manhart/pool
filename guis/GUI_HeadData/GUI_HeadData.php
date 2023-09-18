@@ -19,10 +19,10 @@ use pool\classes\Core\Url;
  */
 class GUI_HeadData extends GUI_Module
 {
-    const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
-    const ROBOTS_INDEX = 'index';        # Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (index = Indizierung).
-    const ROBOTS_NOFOLLOW = 'nofollow';    # Damit erlauben Sie einem Suchprogramm, Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (nofollow = nicht folgen). Sie verbieten dem Suchprogramm jedoch, untergeordnete Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen.
-    const ROBOTS_FOLLOW = 'follow';        # Damit erlauben Sie einem Suchprogramm ausdruecklich, Inhalte aus der aktuellen HTML-Datei und aus untergeordneten Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen und an seine Suchdatenbank zu uebermitteln (follow = folgen).
+    public const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
+    public const ROBOTS_INDEX = 'index';        # Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (index = Indizierung).
+    public const ROBOTS_NOFOLLOW = 'nofollow';    # Damit erlauben Sie einem Suchprogramm, Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (nofollow = nicht folgen). Sie verbieten dem Suchprogramm jedoch, untergeordnete Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen.
+    public const ROBOTS_FOLLOW = 'follow';        # Damit erlauben Sie einem Suchprogramm ausdruecklich, Inhalte aus der aktuellen HTML-Datei und aus untergeordneten Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen und an seine Suchdatenbank zu uebermitteln (follow = folgen).
 
     // @var integer Datei von Originaladresse laden; z.B. 12 Stunden = 43200; (vertraegt auch String siehe Selfhtml)
     // @access private
@@ -276,7 +276,7 @@ class GUI_HeadData extends GUI_Module
      */
     public function addJavaScript(string $file, array $attributes = []): self
     {
-        if($file == '') {
+        if($file === '') {
             return $this;
         }
         if(isset($this->javaScriptFiles[$file])) {
@@ -344,7 +344,9 @@ class GUI_HeadData extends GUI_Module
     public function setClientData(Module $Module, ?array $initOptions = null): self
     {
         $clientData = $this->clientData[$Module->getName()] ?? ['className' => $Module->getClassName(), 'fullyQualifiedClassName' => $Module::class];
-        if($initOptions) $clientData['initOptions'] = array_merge($clientData['initOptions'] ?? [], $initOptions);
+        if($initOptions) {
+            $clientData['initOptions'] = array_merge($clientData['initOptions'] ?? [], $initOptions);
+        }
         $this->clientData[$Module->getName()] = $clientData;
         return $this;
     }
@@ -427,10 +429,8 @@ class GUI_HeadData extends GUI_Module
                     $ScriptBlock->setVar('NAME', $name);
                     $ScriptBlock->setVar('CODE', $code);
                 }
-                else {
-                    if($this->Weblication->isXdebugEnabled()) {
-                        xdebug_print_function_stack('SCRIPT_CODE is missing in tpl_head.html');
-                    }
+                else if($this->Weblication->isXdebugEnabled()) {
+                    xdebug_print_function_stack('SCRIPT_CODE is missing in tpl_head.html');
                 }
             }
         }
