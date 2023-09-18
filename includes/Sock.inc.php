@@ -138,47 +138,6 @@ function getFromHost($host, $port=80, $path, &$errno, &$errstr, $extra='', $time
 //	    return $res;
 //	}
 
-/**
- * Testet über ICMP, ob ein Host verfügbar ist. Gibt die PING-Zeit zurück.
- * Andernfalls kann mit socket_strerror(socket_last_error()) der letzte
- * Fehler ermittelt werden.
- *
- * @param string $host
- * @param int $sec Timeout, 1 sec
- * @param int $usec Timeout
- * @return boolean
- */
-function ping($host, $sec=1, $usec=0)
-{
-    $result = false;
-
-    $package = "\x08\x00\x19\x2f\x00\x00\x00\x00\x70\x69\x6e\x67";
-
-    /* create the socket, the last '1' denotes ICMP */
-    $socket = socket_create(AF_INET, SOCK_RAW, getprotobyname('ICMP'));
-    if(is_resource($socket)) {
-        /* set socket receive timeout to 1 second */
-        socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => $sec, 'usec' => $usec));
-
-        /* connect to socket */
-        if(!@socket_connect($socket, $host, null)) {
-            @socket_close($socket);
-            return $result;
-        }
-
-        /* record start time */
-        $start_time = getMicrotime();
-        socket_send($socket, $package, strlen($package), 0);
-        if(@socket_read($socket, 255)) {
-            $end_time = getMicrotime();
-            $total_time = $end_time - $start_time;
-            $result = $total_time;
-        }
-        socket_close($socket);
-    }
-
-    return $result;
-}
 
 /**
  * Link überprüfen

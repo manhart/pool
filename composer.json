@@ -12,7 +12,8 @@
     "ext-mbstring": "*",
     "ext-intl": "*",
     "ext-gd": "*",
-    "ext-sysvsem": "*"
+    "ext-sysvsem": "*",
+    "ext-sockets": "*"
   },
   "suggest": {
     "ext-mysqli": "*"
