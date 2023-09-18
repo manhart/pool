@@ -12,12 +12,11 @@ use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
+use pool\classes\Core\Weblication;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use const pool\PWD_TILL_GUIS;
 
-const REQUEST_PARAM_MODULE = 'module';
-const REQUEST_PARAM_METHOD = 'method';
 // const FIXED_PARAM_CONFIG = 'config';
 
 /**
@@ -139,9 +138,9 @@ class GUI_Module extends Module
     {
         parent::__construct($Owner, $params);
 
-        $this->ajaxMethod = $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
-        $this->isAjax = isAjax() && $_REQUEST[REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
-            ($_REQUEST[REQUEST_PARAM_MODULE] == static::class || $_REQUEST[REQUEST_PARAM_MODULE] == $this->getClassName());
+        $this->ajaxMethod = $_REQUEST[Weblication::REQUEST_PARAM_METHOD] ?? '';
+        $this->isAjax = isAjax() && $_REQUEST[Weblication::REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
+            ($_REQUEST[Weblication::REQUEST_PARAM_MODULE] == static::class || $_REQUEST[Weblication::REQUEST_PARAM_MODULE] == $this->getClassName());
 
         $this->Template = new Template();
     }
@@ -239,7 +238,7 @@ class GUI_Module extends Module
                 $parent_directory = '';
                 $parent_directory_without_frame = '';
                 do {
-                    if ($ParentGUI instanceof GUI_Schema) { // GUI_Schema ist nicht schachtelbar
+                    if ($ParentGUI instanceof GUI_Schema) { // GUI_Schema is not nestable
                         $ParentGUI = $ParentGUI->getParent();
                         continue;
                     }
@@ -248,15 +247,15 @@ class GUI_Module extends Module
                     }
                     $parent_directory = "{$ParentGUI->getClassName()}/$parent_directory";
                     $ParentGUI = $ParentGUI->getParent();
-                } while ($ParentGUI != null);
+                } while ($ParentGUI !== null);
 
-                $filename = "$GUIRootDir$parent_directory$GUIClassName".Autoloader::CLASS_EXTENSION;
+                $filename = "$GUIRootDir$parent_directory$GUIClassName.php";
                 if (file_exists($filename)) {
                     require_once $filename;
                     return true;
                 }
 
-                $filename = "$GUIRootDir$parent_directory_without_frame$GUIClassName".Autoloader::CLASS_EXTENSION;
+                $filename = "$GUIRootDir$parent_directory_without_frame$GUIClassName.php";
                 if (file_exists($filename)) {
                     require_once $filename;
                     return true;
@@ -264,6 +263,20 @@ class GUI_Module extends Module
             }
         }
         return false;
+    }
+
+    /**
+     * Returns the part of the path that is after the guis directory
+     */
+    public function getNestedDirectories(): string
+    {
+        $path = $this->getClassDirectory();
+        $guis = PWD_TILL_GUIS.'/';
+        $pos = strpos($path, $guis);
+        if ($pos === false) {
+            return '';
+        }
+        return substr($path, $pos + strlen($guis));
     }
 
     /**
@@ -287,7 +300,7 @@ class GUI_Module extends Module
         $class_exists = class_exists($GUIClassName, false);
 
         if (!$class_exists) {
-            GUI_Module::autoloadGUIModule($GUIClassName, $ParentGUI);
+            self::autoloadGUIModule($GUIClassName, $ParentGUI);
 
             // retest
             $class_exists = class_exists($GUIClassName, false);
@@ -306,14 +319,15 @@ class GUI_Module extends Module
             }
             if ($autoLoadFiles && $GUI->autoLoadFiles) {
                 $GUI->loadFiles();
-                if ($search)
+                if ($search) {
                     $GUI->searchGUIsInPreloadedContent();
+                }
             }
             return $GUI;
         }
-        else {//Class not found
-            throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
-        }
+
+        //Class not found
+        throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
     }
 
     /**
@@ -495,11 +509,6 @@ class GUI_Module extends Module
 
     /**
      * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication. It also includes the CSS file.
-     *
-     * @param string $className
-     * @param bool $includeJS
-     * @param bool $includeCSS
-     * @return bool
      */
     protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $includeCSS = true): bool
     {
@@ -507,20 +516,26 @@ class GUI_Module extends Module
             return false;
         }
 
-        if ($this->getWeblication()->hasFrame())
-            $Frame = $this->getWeblication()->getFrame();
-        elseif ($this instanceof GUI_CustomFrame)
+        if ($this->getWeblication()?->hasFrame()) {
+            $Frame = $this->getWeblication()?->getFrame();
+        }
+        elseif ($this instanceof GUI_CustomFrame) {
             $Frame = $this;
-        else
+        }
+        else {
             return false;
+        }
 
         $className = $className ?: $this->getClassName();
+        $nestedDirectories = $this->getNestedDirectories();
         //associated Stylesheet
-        if($includeCSS && ($css = $this->Weblication->findStyleSheet("$className.css", $className, $this->isPOOL(), false)))
+        if($includeCSS && ($css = $this->Weblication->findStyleSheet("$className.css", $nestedDirectories, $this->isPOOL(), false))) {
             $Frame->getHeadData()->addStyleSheet($css);
+        }
         //associated Script
-        if($includeJS && ($jsFile = $this->Weblication->findJavaScript("$className.js", $className, $this->isPOOL(), false)))
+        if($includeJS && ($jsFile = $this->Weblication->findJavaScript("$className.js", $nestedDirectories, $this->isPOOL(), false))) {
             $Frame->getHeadData()->addJavaScript($jsFile);
+        }
         return (bool)($jsFile??true);//result of JS-lookup or true
     }
 
@@ -589,7 +604,7 @@ class GUI_Module extends Module
         $this->prepare();
         $this->prepareChildren();
 
-        if ($this->js_createGUIModule($this->getClassName()) && $Head = $this->Weblication->getHead()) {
+        if (($Head = $this->Weblication->getHead()) && $this->js_createGUIModule($this->getClassName())) {
             $Head->setClientData($this, $this->getClientVars());
         }
     }
@@ -775,10 +790,11 @@ class GUI_Module extends Module
     {
         if ($this->enabled()) {
             $this->finalizeChildren();
-            if ($this->isAjax) {//GUI is target of the Ajax-Call
+            if($this->isAjax) {//GUI is target of the Ajax-Call
                 //Start the Ajax Method -> returns JSON
                 $content = $this->invokeAjaxMethod($this->ajaxMethod);
-            } else {
+            }
+            else {
                 //Parse Templates or get the finished Content from a specific implementation
                 $content = $this->finalize();
                 //Wrap a GUI_Box around the content
@@ -791,9 +807,8 @@ class GUI_Module extends Module
             }
             return $this->pasteChildren($content);
         }
-        else {
-            return "";
-        }
+
+        return '';
     }
 
     /**

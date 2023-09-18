@@ -44,6 +44,9 @@ use const pool\PWD_TILL_SKINS;
  */
 class Weblication extends Component
 {
+    public const REQUEST_PARAM_MODULE = 'module';
+    public const REQUEST_PARAM_METHOD = 'method';
+
     /**
      * Is this request an ajax call
      */
@@ -913,7 +916,7 @@ class Weblication extends Component
      *     server side.
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
      */
-    function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true,
+    public function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true,
         bool $clientSideRelativePath = true): string
     {
         $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JS);
@@ -1169,7 +1172,7 @@ class Weblication extends Component
      */
     static public function getRequestedAjaxModule(): string
     {
-        return $_REQUEST[REQUEST_PARAM_MODULE] ?? '';
+        return $_REQUEST[self::REQUEST_PARAM_MODULE] ?? '';
     }
 
     /**
@@ -1179,7 +1182,7 @@ class Weblication extends Component
      */
     static public function getRequestedAjaxMethod(): string
     {
-        return $_REQUEST[REQUEST_PARAM_METHOD] ?? '';
+        return $_REQUEST[self::REQUEST_PARAM_METHOD] ?? '';
     }
 
     /**
@@ -1292,7 +1295,7 @@ class Weblication extends Component
      */
     public function getLaunchModule(): string
     {
-        return $_GET[REQUEST_PARAM_MODULE] ?? $this->launchModule;
+        return $_GET[self::REQUEST_PARAM_MODULE] ?? $this->launchModule;
     }
 
     /**
