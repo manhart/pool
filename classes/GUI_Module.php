@@ -8,7 +8,6 @@
  * file that was distributed with this source code.
  */
 
-use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
@@ -219,12 +218,6 @@ class GUI_Module extends Module
         // try to load class
         foreach ($GUIRootDirs as $GUIRootDir) {
             $GUIRootDir = addEndingSlash($GUIRootDir);
-
-            $filename = "$GUIRootDir$GUIClassName".Autoloader::CLASS_EXTENSION;
-            if (file_exists($filename)) {
-                require_once $filename;
-                return true;
-            }
 
             // PSR-4 style
             $filename = "$GUIRootDir$GUIClassName.php";

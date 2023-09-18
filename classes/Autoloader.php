@@ -93,13 +93,6 @@ class Autoloader
         foreach($classRootDirs as $classRootDir) {
             $classRootDir = addEndingSlash($classRootDir);
 
-            // old style
-            $filename = $classRootDir.$className.self::CLASS_EXTENSION;
-            if(file_exists($filename)) {
-                require_once $filename;
-                return true;
-            }
-
             // PSR-4 style
             $filename = "$classRootDir$className.php";
             if(file_exists($filename)) {
