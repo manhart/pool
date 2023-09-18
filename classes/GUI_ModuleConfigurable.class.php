@@ -7,6 +7,9 @@
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 
+/**
+ * @deprecated
+ */
 class GUI_ModuleConfigurable extends GUI_Module
 {
     use Configurable;

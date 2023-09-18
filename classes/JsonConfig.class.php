@@ -7,6 +7,9 @@
  * @author A.Manhart <alexander@manhart-it.de>
  */
 
+/**
+ * @deprecated
+ */
 interface JsonConfig {
     public function loadConfig(string $json): bool;
     public function getConfigurationAsJSON(): string;

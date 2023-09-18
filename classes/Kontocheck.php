@@ -180,7 +180,7 @@ if(!defined('KONTOCHECK_CLASS'))
 		function getDir ()
 		{
 			$pfad = '';
-			$scriptName = realpath ('./Kontocheck.class.php');
+			$scriptName = realpath ('./Kontocheck.php');
 			$subDir = explode ('/', $scriptName);
 			for ($i = 0; $i <= sizeof ($subDir) - 1; $i++) {
 				if ($i != 0 && $i != sizeof ($subDir) - 1) {

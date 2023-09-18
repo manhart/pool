@@ -194,7 +194,7 @@ if(!defined('CLASS_LPC')) {
         {
             exec($this -> makeSSH_Command('lpstat -p'), $output);
             foreach($output as $val){
-                list($dummy, $printer, $rest)= split(' ', $val, 3);
+                [$dummy, $printer, $rest]= split(' ', $val, 3);
                 if (preg_match('/^[^@]+$/', $printer)){
                     $result[]=$printer;
                 }
@@ -215,7 +215,7 @@ if(!defined('CLASS_LPC')) {
                 if(empty($line)) $begin = false;
 
                 if($begin) {
-                    list($Rank, $Pri, $Owner, $Job, $Files, $Total, $Size) = preg_split('/\s+/', $line);
+                    [$Rank, $Pri, $Owner, $Job, $Files, $Total, $Size] = preg_split('/\s+/', $line);
                     $result[$z]['Rank'] = $Rank;
                     $result[$z]['Pri'] = $Pri;
                     $result[$z]['Owner'] = $Owner;
