@@ -637,7 +637,7 @@ class DataInterface extends PoolObject
      * @param string $database
      * @param string $table
      * @return array<string, array<string, array<string, string>|string>> fieldList, fieldNames, primary key
-     * @throws \Exception
+     * @throws InvalidArgumentException|\Exception
      */
     public function getTableColumnsInfo(string $database, string $table): array
     {

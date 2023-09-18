@@ -89,7 +89,9 @@ class MSSQL extends Driver
     public function getLastId(Connection $connection): int|string
     {
         $stmt = $this->query($connection, 'SELECT SCOPE_IDENTITY() AS last_id');
-        if(!$stmt) return 0;
+        if(!$stmt) {
+            return 0;
+        }
         $last_id = $this->fetch($stmt)['last_id'] ?: 0;
         $this->free($stmt);
         return $last_id;
@@ -159,6 +161,7 @@ class MSSQL extends Driver
      */
     public function getTableColumnsInfo(Connection $connection, string $database, string $table): array
     {
+        /** @noinspection SqlResolve */
         $query = <<<SQL
 SELECT
     c.name AS COLUMN_NAME,
@@ -189,7 +192,7 @@ SQL;
             $row['phpType'] = $phpType;
             $fieldList[] = $row;
             $fields[] = $row['COLUMN_NAME'];
-            if($row['COLUMN_KEY'] == 'PRI') {
+            if($row['COLUMN_KEY'] === 'PRI') {
                 $pk[] = $row['COLUMN_NAME'];
             }
         }

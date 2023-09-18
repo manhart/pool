@@ -1546,7 +1546,7 @@ class GUI_Table extends GUI_Module
      * @param array $mandatoryFilter it involves strict and mandatory constraints.
      * @param array $searchFilter it involves additional search patterns
      * @return array
-     * @see MySQL_DAO::__buildFilter()
+     * @see MySQL_DAO::buildFilter()
      */
     public function buildFilter(MySQL_DAO $DAO, string $search, string $filter, array $mandatoryFilter = [], array $searchFilter = []): array
     {
@@ -1573,7 +1573,7 @@ class GUI_Table extends GUI_Module
      * @param string $order sort order (e.g. from client side request)
      * @param array|null $multiSort optional: multiple sort columns from client side request
      * @return array
-     * @see MySQL_DAO::__buildSorting()
+     * @see MySQL_DAO::buildSorting()
      */
     public function buildSorting(string $sort, string $order, ?array $multiSort = null): array
     {
@@ -1601,7 +1601,7 @@ class GUI_Table extends GUI_Module
      * @param int|null $limit limit (e.g. from client side request)
      * @param int|null $total optional: total number of rows
      * @return array
-     * @see MySQL_DAO::__buildLimit()
+     * @see MySQL_DAO::buildLimit()
      */
     public function buildLimit(int $offset = 0, ?int $limit = null, ?int $total = null): array
     {
