@@ -158,13 +158,12 @@ class Log
                 $charset = $facility['charset'] ?? 'utf8';
 
                 if($tableDefine) {
-                    $Packet = array(
+                    DataInterface::createDataInterface([//todo is this broken no db specified?
                         'host' => $host,
                         'database' => '',
                         'charset' => $charset
-                    );
-                    $Db = DataInterface::createDataInterface($Packet);
-                    $DAO = DAO::createDAO($tableDefine, null, $Db);
+                    ]);
+                    $DAO = DAO::createDAO($tableDefine, null);
                     $DAO->fetchColumns();
                 }
 

@@ -90,9 +90,9 @@ class MySQL_DAO extends DAO
     /**
      * Constructor.
      */
-    protected function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
+    protected function __construct(?string $databaseName = null, ?string $table = null)
     {
-        parent::__construct($DataInterface, $databaseName, $table);
+        parent::__construct($databaseName, $table);
         $this->rebuildColumnList();
     }
 
@@ -201,7 +201,7 @@ class MySQL_DAO extends DAO
      */
     public function fetchColumns(): static
     {
-        [$this->field_list, $columns, $this->pk] = $this->DataInterface->getTableColumnsInfo($this->database, $this->table);
+        [$this->field_list, $columns, $this->pk] = $this->getDataInterface()->getTableColumnsInfo($this->database, $this->table);
         $this->setColumns(...$columns);
         return $this;
     }
@@ -263,7 +263,7 @@ class MySQL_DAO extends DAO
      */
     public function getColumnEnumValues(string $column): array
     {
-        $fieldInfo = $this->DataInterface->getColumnMetadata($this->database, $this->table, $column);
+        $fieldInfo = $this->getDataInterface()->getColumnMetadata($this->database, $this->table, $column);
         if(!isset($fieldInfo['Type'])) {
             return [];
         }
@@ -329,7 +329,7 @@ class MySQL_DAO extends DAO
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = $this->DataInterface->escape($value, $this->database);
+                $value = $this->escapeSQL($value);
                 $value = "'$value'";
             }
             $values[] = $value;
@@ -426,7 +426,7 @@ SQL;
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             elseif(!is_int($value) && !is_float($value)) {
-                $value = "'{$this->DataInterface->escape($value, $this->database)}'";
+                $value = "'{$this->escapeSQL($value)}'";
             }
             $assignments[] = "`$field`=$value";
         }
@@ -473,7 +473,7 @@ SQL;
         if(is_int($value) || is_float($value)) {
             return $value;
         }// If the value is not a string that can be directly used in SQL escape and quote it.
-        $value = $noEscape ? $value : $this->DataInterface->escape($value, $this->database);
+        $value = $noEscape ? $value : $this->escapeSQL($value);
         return $noQuotes ? $value : "'$value'"; //quote
     }
 
@@ -838,7 +838,7 @@ SQL;
      */
     public function foundRows(): int
     {
-        return $this->DataInterface->foundRows($this->database);
+        return $this->getDataInterface()->foundRows($this->database);
     }
 
     /**
@@ -959,5 +959,15 @@ SQL;
             $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.chr(10);
         }
         return $sql;
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     * @throws \Exception
+     */
+    public function escapeSQL(mixed $value): string
+    {
+        return $this->getDataInterface()->escape($value, $this->database);
     }
 }

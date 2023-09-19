@@ -51,7 +51,7 @@ class DataInterface extends PoolObject
     public const MAX_DATETIME = '9999-12-31 23:59:59';
 
     /**
-     * @var array Array of registered resources
+     * @var array Array of registered resources <br>[$alias => ['interface' => $this, 'name' => $dataBase]]
      */
     private static array $register = [];
 
@@ -191,8 +191,7 @@ class DataInterface extends PoolObject
 
         $dataBases = (array)($connectionOptions['database'] ?? []);
 
-        $this->default_database = $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
-
+        $this->default_database = is_string($key = array_key_first($dataBases)) ? $key : $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
         // @todo eliminate port and put it into the host string
         if(array_key_exists('port', $connectionOptions)) {
             $this->port = $connectionOptions['port'];
@@ -268,7 +267,7 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Retrieves a registered resource
+     * Retrieves DataInterface of a registered resource
      * @throws \pool\classes\Exception\InvalidArgumentException
      */
     public static function getInterfaceForResource(string $alias): self
@@ -277,9 +276,19 @@ class DataInterface extends PoolObject
     }
 
     /**
+     * Retrieves database name for a registered resource
+     * @throws \pool\classes\Exception\InvalidArgumentException
+     */
+    public static function getDatabaseForResource(string $alias): string
+    {
+        return self::$register[$alias]['name'] ?? throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
+    }
+
+    /**
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
-     * @throws \Exception
+     * @throws \pool\classes\Exception\InvalidArgumentException
+     * @throws \mysqli_sql_exception
      */
     public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
     {
@@ -336,7 +345,7 @@ class DataInterface extends PoolObject
                     $RecordSet = new RecordSet([0 => $row]);
                     break;
                 default:
-                    throw new RuntimeException("Unknown command: '{$interface->getLastQueryCommand()}' in $sql");
+                    throw new InvalidArgumentException("Unknown command: '{$interface->getLastQueryCommand()}' in $sql");
             }
         }
         else {//statement failed
@@ -451,8 +460,9 @@ class DataInterface extends PoolObject
     /**
      * @throws DatabaseConnectionException|\Exception
      */
-    private function openNewDBConnection(ConnectionMode $mode, string $database): Connection
+    private function openNewDBConnection(ConnectionMode $mode, string $databaseAlias): Connection
     {
+        $database = static::getDatabaseForResource($databaseAlias);
         $host = $this->hosts[$mode->value];
         $auth = $this->getAuth($mode);
         $credentials = $auth[$database] ?? $auth['all'] ?? [];
@@ -468,17 +478,17 @@ class DataInterface extends PoolObject
         }
 
         if($Connection) {//set default and store connection
-            return $this->connections[$mode->value][$database] = $Connection;
+            return $this->connections[$mode->value][$databaseAlias] = $Connection;
         }
 
         if($this->hasAnotherHost($mode)) {//connection errored out but alternative hosts exist -> recurse
             $this->findHostForConnection($mode);
-            return $this->openNewDBConnection($mode, $database);
+            return $this->openNewDBConnection($mode, $databaseAlias);
         }
 
         $errors = $this->driver->errors()[0] ?? ['errno' => 0, 'error' => 'Unknown'];
         throw new DatabaseConnectionException("Database connection to host '$host' with mode $mode->name failed!"
-            ." Used default database '$database' (ErrNo "
+            ." Used default database '$database' alias '$databaseAlias' (ErrNo "
             .$errors['errno'].': '.$errors['error'].')!');
     }
 

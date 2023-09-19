@@ -14,7 +14,6 @@ use Closure;
 use CustomMySQL_DAO;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
-use pool\classes\Core\Weblication;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use function addEndingSlash;
@@ -53,11 +52,6 @@ abstract class DAO extends PoolObject
      * @var string|null Name of the database (must be declared in derived class)
      */
     protected static ?string $databaseName = null;
-
-    /**
-     * @var DataInterface instance of the interface
-     */
-    protected DataInterface $DataInterface;
 
     /**
      * @var string Internal Name of the table
@@ -100,9 +94,8 @@ abstract class DAO extends PoolObject
     /**
      * Defines the default commands.
      */
-    protected function __construct(?DataInterface $DataInterface = null, ?string $databaseName = null, ?string $table = null)
+    protected function __construct(?string $databaseName = null, ?string $table = null)
     {
-        $this->DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
         $this->database ??= $databaseName ?? static::$databaseName ?: throw new InvalidArgumentException('The static property databaseName is not defined within DAO '.static::class.'!');
         $this->table ??= $table ?? static::$tableName ?: throw new InvalidArgumentException('The static property tableName is not defined within DAO '.static::class.'!');
 
@@ -145,20 +138,18 @@ abstract class DAO extends PoolObject
     /**
      * Creates a Data Access Object
      */
-    public static function create(?string $tableName = null, ?string $databaseName = null, DataInterface|null $DataInterface = null): static
+    public static function create(?string $tableName = null, ?string $databaseName = null): static
     {
         // class stuff
         if(!$tableName) {
-            return new static($DataInterface);
+            return new static();
         }
 
         if(static::$tableName) {
             throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
         }
 
-        $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface(static::$interfaceType);
-
-        $DAO = new static($DataInterface, $databaseName, $tableName);
+        $DAO = new static($databaseName, $tableName);
         $DAO->fetchColumns();
         return $DAO;
     }
@@ -175,12 +166,11 @@ abstract class DAO extends PoolObject
      *
      * @param string|null $tableName table definition or the table name
      * @param string|null $databaseName database name
-     * @param \pool\classes\Database\DataInterface|null $DataInterface
      * @return DAO Data Access Object (edited DAO->pool\classes\Database\DAO\MySQL_DAO f�r ZDE)
      * @deprecated use create() instead
      * @see DAO::create()
      */
-    public static function createDAO(?string $tableName = null, ?string $databaseName = null, DataInterface|null $DataInterface = null): static
+    public static function createDAO(?string $tableName = null, ?string $databaseName = null): static
     {
         // @todo remove workaround once relying projects are fixed
         if($tableName && !$databaseName && str_contains($tableName, '_')) {
@@ -189,7 +179,7 @@ abstract class DAO extends PoolObject
 
         // class stuff
         if(!$tableName) {
-            return new static($DataInterface);
+            return new static();
         }
 
         if(static::$tableName) {
@@ -198,11 +188,10 @@ abstract class DAO extends PoolObject
 
         // workaround
         $className = static::class === __CLASS__ ? CustomMySQL_DAO::class : static::class;
-        $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
 
         $class_exists = class_exists($tableName, false);
 
-        $driver = $DataInterface->getDriverName();
+        $driver = DataInterface::getInterfaceForResource($databaseName)->getDriverName();
         $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
         $include = "$dir/$tableName.php";
         $file_exists = file_exists($include);
@@ -211,10 +200,10 @@ abstract class DAO extends PoolObject
             $class_exists = true;
         }
         if($class_exists) {
-            return new $tableName($DataInterface, $databaseName, $tableName);
+            return new $tableName($databaseName, $tableName);
         }
 
-        $DAO = new $className($DataInterface, $databaseName, $tableName);
+        $DAO = new $className($databaseName, $tableName);
         $DAO->fetchColumns();
         return $DAO;
     }
@@ -226,7 +215,7 @@ abstract class DAO extends PoolObject
      */
     public function getDataInterface(): DataInterface
     {
-        return $this->DataInterface;
+        return DataInterface::getInterfaceForResource($this->getDatabase());
     }
 
     /**
@@ -383,9 +372,11 @@ abstract class DAO extends PoolObject
      * @param string $sql sql statement to execute
      * @param callable|null $customCallback
      * @return \pool\classes\Core\RecordSet
+     * @throws \mysqli_sql_exception
+     * @throws \pool\classes\Exception\InvalidArgumentException
      */
     protected function execute(string $sql, ?callable $customCallback = null): RecordSet
     {
-        return $this->getDataInterface()->execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
+        return DataInterface::execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
     }
 }
