@@ -13,10 +13,10 @@
     "ext-intl": "*",
     "ext-gd": "*",
     "ext-sysvsem": "*",
-    "ext-sockets": "*"
+    "ext-sockets": "*",
+    "ext-mysqli": "*"
   },
   "suggest": {
-    "ext-mysqli": "*"
   },
   "autoload": {
     "psr-4": {
