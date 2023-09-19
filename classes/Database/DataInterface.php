@@ -178,19 +178,21 @@ class DataInterface extends PoolObject
         $this->default_database = $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
 
         // @todo eliminate port and put it into the host string
-        if(array_key_exists('port', $connectionOptions))
+        if(array_key_exists('port', $connectionOptions)) {
             $this->port = $connectionOptions['port'];
+        }
 
-        if(array_key_exists('charset', $connectionOptions))
+        if(array_key_exists('charset', $connectionOptions)) {
             $this->charset = $connectionOptions['charset'];
+        }
 
         $this->auth = $connectionOptions['auth'] ?? 'mysql_auth';// fallback verwendet zentrale, globale Authentifizierung
 
         $this->findHostForConnection();
         foreach($dataBases as $alias => $dataBase) {
-            if(!is_string($alias))
+            if(!is_string($alias)) {
                 $alias = $dataBase;
-             $alias = "{$this->hosts[ConnectionMode::READ->value]}|{$this->hosts[ConnectionMode::WRITE->value]}|$alias";
+            }
             self::registerResource([$alias => ['interface' => $this, 'name' => $dataBase]]);
         }
         return true;
@@ -204,7 +206,7 @@ class DataInterface extends PoolObject
         $available_hosts =& $this->available_hosts;
         $alternativeHosts = 0;
         if(is_array($available_hosts))
-            /** Multiple Clusters: move one random host to the hosts list*/
+            /** Multiple Clusters: move one random host to the hosts list*/ {
             foreach($this->modes as $clusterMode => $clusterModeSpecificIndexUsedInAvailableHosts) {
                 /** @var array|null $hostList reference to hosts available in this mode */
                 $hostList =& $available_hosts[$clusterMode];
@@ -220,8 +222,11 @@ class DataInterface extends PoolObject
                     // no clue what's going on here I presume this fetches a default
                     $host = $available_hosts[$clusterModeSpecificIndexUsedInAvailableHosts] ?? false;
 
-                if($host) $this->hosts[$clusterMode] = $host;
+                if($host) {
+                    $this->hosts[$clusterMode] = $host;
+                }
             }
+        }
         else {
             /** One database server for reading and writing */
             $this->hosts = [
@@ -256,27 +261,19 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Create alias for a database
-     */
-    public function getAlias(string $database): string
-    {
-        return "{$this->hosts[ConnectionMode::READ->value]}|{$this->hosts[ConnectionMode::WRITE->value]}|$database";
-    }
-
-    /**
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
      * @throws \Exception
      */
-    public function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
+    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
     {
-        $interface = static::getInterfaceForResource($this->getAlias($dbname));
+        $interface = static::getInterfaceForResource($dbname);
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
         $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) === 1 ?
             Singleton::get('Stopwatch')?->start('SQL-QUERY') : null;// start time measurement
         try {//run
-            $query_resource = $interface->query($sql, $dbname);
+            $query_resource = $interface::query($sql, $dbname);
         }
         catch(Exception $e) {
             if($e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
@@ -360,9 +357,9 @@ class DataInterface extends PoolObject
      * @throws \pool\classes\Exception\InvalidArgumentException|\Exception
      *@see DataInterface::getDBConnection
      */
-    public function query(string $query, string $database): mixed
+    public static function query(string $query, string $database): mixed
     {
-        $interface = static::getInterfaceForResource($this->getAlias($database));
+        $interface = static::getInterfaceForResource($database);
         //Store query in attribute
         $interface->last_Query = $sql = ltrim($query);
         // reset query result
@@ -378,10 +375,12 @@ class DataInterface extends PoolObject
                 "Please contact the POOL's maintainer to analyze the DataInterface in the query() function.";
         $isSELECT = $command === 'SELECT';//mode selection
         $mode = !$isSELECT || $interface->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
-        if($isSELECT)
+        if($isSELECT) {
             $interface->totalReads++;
-        else
+        }
+        else {
             $interface->totalWrites++;
+        }
         $interface->totalQueries++;
 
         $Connection = $interface->getDBConnection($database, $mode);//connect
@@ -425,10 +424,12 @@ class DataInterface extends PoolObject
      */
     private function getDBConnection(string $database, ConnectionMode $mode): Connection
     {
-        if(!($database || ($database = $this->default_database))) //No DB specified and no default given
+        if(!($database || ($database = $this->default_database))): //No DB specified and no default given
             throw new RuntimeException('No database selected!');
-        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
+        endif;
+        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]):
             $mode = ConnectionMode::READ; // same as WRITE
+        endif;
         return $this->connections[$mode->value][$database] ?? //fetch from cache
             $this->openNewDBConnection($mode, $database);
     }
@@ -452,18 +453,19 @@ class DataInterface extends PoolObject
             $Connection = null;
         }
 
-        if($Connection) //set default and store connection
+        if($Connection) {//set default and store connection
             return $this->connections[$mode->value][$database] = $Connection;
-        elseif($this->hasAnotherHost($mode)) {//connection errored out but alternative hosts exist -> recurse
+        }
+
+        if($this->hasAnotherHost($mode)) {//connection errored out but alternative hosts exist -> recurse
             $this->findHostForConnection($mode);
             return $this->openNewDBConnection($mode, $database);
         }
-        else {
-            $errors = $this->driver->errors()[0] ?? ['errno' => 0, 'error' => 'Unknown'];
-            throw new DatabaseConnectionException("Database connection to host '$host' with mode $mode->name failed!"
-                ." Used default database '$database' (ErrNo "
-                .$errors['errno'].': '.$errors['error'].')!');
-        }
+
+        $errors = $this->driver->errors()[0] ?? ['errno' => 0, 'error' => 'Unknown'];
+        throw new DatabaseConnectionException("Database connection to host '$host' with mode $mode->name failed!"
+            ." Used default database '$database' (ErrNo "
+            .$errors['errno'].': '.$errors['error'].')!');
     }
 
     /**
@@ -500,8 +502,9 @@ class DataInterface extends PoolObject
      */
     public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
     {
-        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
-            $mode = ConnectionMode::READ; // same as host
+        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]) {
+            $mode = ConnectionMode::READ;
+        } // same as host
         $database = $database ?: $this->default_database;
         return isset($this->connections[$mode->value][$database]);
     }
@@ -589,7 +592,7 @@ class DataInterface extends PoolObject
     public function foundRows(string $database): int
     {
         $sql = 'SELECT FOUND_ROWS() as foundRows';
-        $query_resource = $this->query($sql, $database);
+        $query_resource = $this::query($sql, $database);
         if(!$query_resource) return 0;
         $row = $this->fetchRow($query_resource);//fetch first row (only row
         $this->free($query_resource);

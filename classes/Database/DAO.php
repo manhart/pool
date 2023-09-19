@@ -193,32 +193,32 @@ abstract class DAO extends PoolObject
         if(!$tableName) {
             return new static($DataInterface);
         }
-        elseif(static::$tableName) {
+
+        if(static::$tableName) {
             throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
         }
-        else {
-            // workaround
-            $className = static::class === DAO::class ? CustomMySQL_DAO::class : static::class;
-            $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
 
-            $class_exists = class_exists($tableName, false);
+        // workaround
+        $className = static::class === __CLASS__ ? CustomMySQL_DAO::class : static::class;
+        $DataInterface = $DataInterface ?? Weblication::getInstance()->getInterface($className::$interfaceType);
 
-            $driver = $DataInterface->getDriverName();
-            $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
-            $include = "$dir/$tableName.php";
-            $file_exists = file_exists($include);
-            if(!$class_exists && $file_exists) {
-                require_once $include;
-                $class_exists = true;
-            }
-            if($class_exists) {
-                return new $tableName($DataInterface, $databaseName, $tableName);
-            }
+        $class_exists = class_exists($tableName, false);
 
-            $DAO = new $className($DataInterface, $databaseName, $tableName);
-            $DAO->fetchColumns();
-            return $DAO;
+        $driver = $DataInterface->getDriverName();
+        $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
+        $include = "$dir/$tableName.php";
+        $file_exists = file_exists($include);
+        if(!$class_exists && $file_exists) {
+            require_once $include;
+            $class_exists = true;
         }
+        if($class_exists) {
+            return new $tableName($DataInterface, $databaseName, $tableName);
+        }
+
+        $DAO = new $className($DataInterface, $databaseName, $tableName);
+        $DAO->fetchColumns();
+        return $DAO;
     }
 
     /**
