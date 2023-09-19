@@ -20,8 +20,24 @@ use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Utils\Singleton;
 use Stopwatch;
+use function array_key_exists;
+use function array_rand;
+use function array_values;
+use function assert;
 use function constant;
+use function count;
 use function defined;
+use function file_exists;
+use function in_array;
+use function is_array;
+use function is_int;
+use function is_string;
+use function ltrim;
+use function settype;
+use function strcspn;
+use function strspn;
+use function strtoupper;
+use function substr;
 
 class DataInterface extends PoolObject
 {
@@ -243,8 +259,8 @@ class DataInterface extends PoolObject
      */
     public static function registerResource(array $resourceDefinition): void
     {
-        foreach($resourceDefinition as $alias => $item){
-            if(array_key_exists($alias, self::$register)){
+        foreach($resourceDefinition as $alias => $item) {
+            if(array_key_exists($alias, self::$register)) {
                 throw new InvalidArgumentException("A database with the alias '$alias' has already been registered before");
             }
             self::$register[$alias] = $item;
@@ -255,7 +271,7 @@ class DataInterface extends PoolObject
      * Retrieves a registered resource
      * @throws \pool\classes\Exception\InvalidArgumentException
      */
-    public static function getInterfaceForResource(string $alias):self
+    public static function getInterfaceForResource(string $alias): self
     {
         return self::$register[$alias]['interface'] ?? throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
     }
@@ -424,12 +440,10 @@ class DataInterface extends PoolObject
      */
     private function getDBConnection(string $database, ConnectionMode $mode): Connection
     {
-        if(!($database || ($database = $this->default_database))): //No DB specified and no default given
+        if(!($database || ($database = $this->default_database))) //No DB specified and no default given
             throw new RuntimeException('No database selected!');
-        endif;
-        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]):
+        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as WRITE
-        endif;
         return $this->connections[$mode->value][$database] ?? //fetch from cache
             $this->openNewDBConnection($mode, $database);
     }

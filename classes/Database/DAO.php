@@ -17,6 +17,10 @@ use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
+use function addEndingSlash;
+use function class_exists;
+use function explode;
+use function file_exists;
 
 /**
  * Class DAO - Data Access Object
@@ -66,23 +70,17 @@ abstract class DAO extends PoolObject
     protected string $database;
 
     /**
-     * Table meta data
-     *
-     * @var array
+     * @var array Table meta data
      */
     protected array $metaData = [];
 
     /**
-     * Primary key of table
-     *
-     * @var array|string[]
+     * @var array|string[] Primary key of table
      */
     protected array $pk = [];
 
     /**
-     * Columns of table
-     *
-     * @var array|string[]
+     * @var array|string[] Columns of table
      */
     protected array $columns = [];
 
@@ -93,7 +91,7 @@ abstract class DAO extends PoolObject
     protected array $commands;
 
     /**
-     * Spalten in detaillierter Form (siehe MySQL: SHOW COLUMNS)
+     * Columns in detailed form (siehe MySQL: SHOW COLUMNS)
      *
      * @var array
      */
@@ -166,7 +164,7 @@ abstract class DAO extends PoolObject
     }
 
     /**
-     * fetches the columns automatically from the driver / interface
+     * Fetches the columns automatically from the driver / interface
      *
      * @return DAO
      */
