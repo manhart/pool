@@ -19,6 +19,31 @@ use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
+use function array_diff;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_pop;
+use function array_push;
+use function array_values;
+use function bool2string;
+use function chr;
+use function count;
+use function date_parse;
+use function explode;
+use function gettype;
+use function implode;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_null;
+use function is_string;
+use function sprintf;
+use function str_contains_any;
+use function strpos;
+use function strtolower;
+use function substr;
 
 /**
  * pool\classes\Database\DAO\MySQL_DAO
@@ -697,26 +722,26 @@ SQL;
         array $limit = [],
         array $groupBy = [], array $having = [], array $options = []): RecordSet
     {
-        $options = implode(' ', $options);
+        $optionsStr = implode(' ', $options);
 
         $where = $this->buildWhere($id, $key);
         $filter = $this->buildFilter($filter_rules);
-        $groupBy = $this->buildGroupBy($groupBy);
-        $having = $this->buildHaving($having);
-        $sorting = $this->buildSorting($sorting);
-        $limit = $this->buildLimit($limit);
+        $groupByClause = $this->buildGroupBy($groupBy);
+        $havingClause = $this->buildHaving($having);
+        $sortingClause = $this->buildSorting($sorting);
+        $limitClause = $this->buildLimit($limit);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-SELECT $options $this->column_list
+SELECT $optionsStr $this->column_list
 FROM `$this->table`
 WHERE
     $where
     $filter
-    $groupBy
-    $having
-    $sorting
-    $limit
+$groupByClause
+$havingClause
+$sortingClause
+$limitClause
 SQL;
         return $this->execute($sql);
     }
