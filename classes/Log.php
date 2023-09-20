@@ -424,7 +424,7 @@ class Log
                 'message' => substr($message, 0, 2048),
                 'level' => self::$TEXT_LEVEL[$level]
             ] + $extra);
-        $Data = $Data->filter($DAO->getFieldlist());
+        $Data = $Data->filter($DAO->getColumns());
         $DAO->insert($Data->getData());
     }
 
