@@ -158,6 +158,11 @@ abstract class DAO extends PoolObject implements IDatabaseAccess
     private array $nonWrapSymbols = ['*', '.', '(', 'as', '\''];
 
     /**
+     * @var string Dummy always true where clause
+     */
+    protected string $dummyWhere = '1=1';
+
+    /**
      * Defines the default commands.
      */
     protected function __construct(?string $databaseName = null, ?string $table = null)
@@ -279,8 +284,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess
 SELECT $optionsStr $this->column_list
 FROM $this->quotedTable
 WHERE
-    $where
-    $filter
+    $where $filter
 $groupByClause
 $havingClause
 $sortingClause
@@ -441,7 +445,7 @@ SQL;
     public function delete(int|string|array $id): RecordSet
     {
         $where = $this->buildWhere($id, $this->pk);
-        if($where === '1') {
+        if($where === $this->dummyWhere) {
             throw new DAOException("Delete maybe wrong! Do you really want to delete all records in the table: $this->table");
         }
         /** @noinspection SqlResolve */
@@ -541,7 +545,7 @@ SQL;
         }
 
         $where = $this->buildWhere($pk, $this->pk);
-        if($where === '1') {
+        if($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
@@ -592,7 +596,7 @@ SQL;
         }
 
         $where = $this->buildFilter($filter_rules, 'and', true);
-        if($where === '1') {
+        if($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
@@ -631,7 +635,7 @@ SQL;
         string $initialOperator = ' and'): string
     {
         if(!$filter_rules) {//not filter anything (terminate floating operators)
-            return $skip_next_operator ? '1' : '';
+            return $skip_next_operator ? $this->dummyWhere : '';
         }
 
         $queryParts = [];
@@ -754,7 +758,7 @@ SQL;
     {
         $conditions = [];
         if(is_null($id)) {
-            return '1';
+            return $this->dummyWhere;
         }
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
         if(is_null($key)) {
@@ -841,29 +845,30 @@ SQL;
     /**
      * Build a sorting statement for a SQL query
      *
-     * @param null|array $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
+     * @param array $sorting sorting format ['column1' => 'ASC', 'column2' => 'DESC']
      * @return string ORDER BY statement
      */
-    protected function buildSorting(?array $sorting): string
+    protected function buildSorting(array $sorting): string
     {
+        if(!count($sorting)) {
+            return '';
+        }
         $sql = '';
-        if(is_array($sorting) && count($sorting)) {
-            $alias = $this->tableAlias ? "$this->tableAlias." : '';
+        $alias = $this->tableAlias ? "$this->tableAlias." : '';
 
-            foreach($sorting as $column => $sort) {
-                if($sql === '') {
-                    $sql = ' ORDER BY ';
-                }
-                else {
-                    $sql .= ', ';
-                }
-
-                $column = $alias.$column;
-                if($this->translateValues) {
-                    $column = $this->translateValues($column);
-                }
-                $sql .= "$column $sort";
+        foreach($sorting as $column => $sort) {
+            if($sql === '') {
+                $sql = ' ORDER BY ';
             }
+            else {
+                $sql .= ', ';
+            }
+
+            $column = $alias.$column;
+            if($this->translateValues) {
+                $column = $this->translateValues($column);
+            }
+            $sql .= "$column $sort";
         }
         return $sql;
     }
