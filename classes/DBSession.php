@@ -103,7 +103,7 @@ class DBSession extends PoolObject
      * @param string $sid Session ID
      * @param boolean $ipUserAgentRestriction Beschraenkung der DBSession auf IP/Browser (solange nicht die Gefahr besteht, dass man die URL z.B. in Foren kopiert, kann man dieses Feature ausschalten)
      **/
-    function __construct(&$interfaces, $tabledefine, $sid='', $ipUserAgentRestriction=true)
+    function __construct($tabledefine, $sid='', $ipUserAgentRestriction=true)
     {
         $this->ipUserAgentRestriction = $ipUserAgentRestriction;
 
