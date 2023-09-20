@@ -1155,4 +1155,12 @@ class RecordSet extends PoolObject implements Iterator, Countable
         $xml .= '</complete>';
         return $xml;
     }
+
+    /** @noinspection ForgottenDebugOutputInspection */
+    public function dump(): void
+    {
+        echo '<pre>';
+        \var_dump($this->records);
+        echo '</pre>';
+    }
 }
