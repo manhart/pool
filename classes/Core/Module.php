@@ -11,6 +11,7 @@
 namespace pool\classes\Core;
 
 use pool\classes\Core\Input\Input;
+use function array_merge;
 
 /**
  * Core class for POOL modules. Provides the basic functionality for modules.
@@ -93,7 +94,7 @@ class Module extends Component
      * @param Component|null $Owner Owner
      * @param array $params internal parameters
      */
-    function __construct(?Component $Owner, array $params = [])
+    public function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner);
         $this->childModules = [];
@@ -166,7 +167,7 @@ class Module extends Component
      */
     public function exportInternalParams(array $otherParams = []): string
     {
-        return base64url_encode(http_build_query(array_merge($otherParams, $this->getInternalParams())));
+        return \base64url_encode(\http_build_query(array_merge($otherParams, $this->getInternalParams())));
     }
 
     /**
@@ -304,7 +305,7 @@ class Module extends Component
      */
     public function removeModule(Module $Module): static
     {
-        $this->childModules = array_diff($this->childModules, [$Module]);
+        $this->childModules = \array_diff($this->childModules, [$Module]);
         return $this;
     }
 
@@ -317,7 +318,7 @@ class Module extends Component
     public function findChild(string $moduleName): ?Module
     {
         foreach($this->childModules as $Module) {
-            if(strcasecmp($Module->getName(), $moduleName) === 0) {
+            if(\strcasecmp($Module->getName(), $moduleName) === 0) {
                 return $Module;
             }
         }
@@ -360,7 +361,7 @@ class Module extends Component
      */
     protected function importHandoff(array $handoff): self
     {
-        if(count($handoff)) {
+        if(\count($handoff)) {
             $this->addHandoffVar($handoff)->Input->setVars($handoff);
         }
         return $this;
@@ -374,7 +375,7 @@ class Module extends Component
      */
     public function addHandoffVar(mixed $key, mixed $value = ''): static
     {
-        if(!is_array($key)) {
+        if(!\is_array($key)) {
             $this->handoff[$key] = $value;
         }
         else {

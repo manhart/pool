@@ -161,7 +161,7 @@ class Component extends PoolObject
     public function findComponent(string $name): ?Component
     {
         foreach($this->components as $Component) {
-            if(strcasecmp($Component->getName(), $name) === 0) {
+            if(\strcasecmp($Component->getName(), $name) === 0) {
                 return $Component;
             }
         }
@@ -200,7 +200,7 @@ class Component extends PoolObject
      */
     public function getComponentCount(): int
     {
-        return count($this->components);
+        return \count($this->components);
     }
 
     /**
@@ -210,7 +210,7 @@ class Component extends PoolObject
      */
     public function removeComponent(Component $Component): static
     {
-        $this->components = array_diff($this->components, [$Component]);
+        $this->components = \array_diff($this->components, [$Component]);
         return $this;
     }
 }
