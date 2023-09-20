@@ -92,4 +92,12 @@ class Connection extends PoolObject
     public function rollback(): void
     {
     }
+
+    /**
+     * Ask the driver if the result has rows
+     */
+    public function hasRows(mixed $result): bool
+    {
+        return $this->driver->hasRows($result);
+    }
 }

@@ -14,6 +14,15 @@ use pool\classes\Database\Connection;
 use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
+use function print_r;
+use function sqlsrv_close;
+use function sqlsrv_connect;
+use function sqlsrv_errors;
+use function sqlsrv_fetch_array;
+use function sqlsrv_free_stmt;
+use function sqlsrv_num_rows;
+use function sqlsrv_query;
+use function sqlsrv_rows_affected;
 
 class MSSQL extends Driver
 {
@@ -115,7 +124,7 @@ class MSSQL extends Driver
      */
     public function fetch(mixed $result): array|null|false
     {
-        return sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC);
+        return sqlsrv_fetch_array($result, \SQLSRV_FETCH_ASSOC);
     }
 
     /**
@@ -134,6 +143,16 @@ class MSSQL extends Driver
     public function numRows(mixed $result): int
     {
         return sqlsrv_num_rows($result);
+    }
+
+    /**
+     * Indicates whether a specified statement has rows
+     *
+     * @param resource $result
+     */
+    public function hasRows(mixed $result): bool
+    {
+        return \sqlsrv_has_rows($result);
     }
 
     /**

@@ -312,7 +312,7 @@ class DataInterface extends PoolObject
                 case 'DESCRIBE':
                 case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
                     //? ( z.B. UNION
-                    if($interface->numRows($query_resource)) {
+                    if($interface->hasRows($query_resource)) {
                         $RecordSet = new RecordSet($interface->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
                     }
                     else {
@@ -704,6 +704,14 @@ class DataInterface extends PoolObject
         $result = $this->lastConnection?->getNumRows($query_resource) ?? 0;
         assert(is_int($result));
         return $result;
+    }
+
+    /**
+     * Returns if a query resource has rows
+     */
+    public function hasRows(mixed $query_resource = null): bool
+    {
+        return $this->lastConnection->hasRows($query_resource ?? $this->query_resource);
     }
 
     /**

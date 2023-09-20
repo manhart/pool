@@ -55,7 +55,7 @@ class MySQLi extends Driver
     public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
         string $database = '', ...$options): Connection
     {
-        $this->mysqli = mysqli_init();
+        $this->mysqli = \mysqli_init();
         try {
             $this->mysqli->real_connect($hostname, $username, $password, $database, $port);
             $this->setCharset($options['charset'] ?? $this->charset);
@@ -89,9 +89,9 @@ class MySQLi extends Driver
     public function errors(?Connection $connection = null): array
     {
         $errors = $connection?->getConnection()->error_list ?: [];
-        mysqli_connect_errno() && $errors[] = [
-            'errno' => mysqli_connect_errno(),
-            'error' => mysqli_connect_error(),
+        \mysqli_connect_errno() && $errors[] = [
+            'errno' => \mysqli_connect_errno(),
+            'error' => \mysqli_connect_error(),
             'sqlstate' => '',
         ];
         return $errors;
@@ -104,6 +104,15 @@ class MySQLi extends Driver
     public function numRows(mixed $result): int
     {
         return $result->num_rows;
+    }
+
+    /**
+     * @param \mysqli_result $result
+     * @return bool
+     */
+    public function hasRows(mixed $result): bool
+    {
+        return $result->num_rows > 0;
     }
 
     /**
@@ -149,7 +158,7 @@ FROM information_schema.COLUMNS
 WHERE TABLE_SCHEMA = '$database'
   AND TABLE_NAME = '$table'
 SQL;
-        $result = $this->query($connection, $query, result_mode: MYSQLI_USE_RESULT);
+        $result = $this->query($connection, $query, result_mode: \MYSQLI_USE_RESULT);
         $fieldList = $fields = $pk = [];
         while($row = $this->fetch($result)) {
             $phpType = match ($row['DATA_TYPE']) {
@@ -163,7 +172,7 @@ SQL;
             $row['phpType'] = $phpType;
             $fieldList[] = $row;
             $fields[] = $row['COLUMN_NAME'];
-            if($row['COLUMN_KEY'] == 'PRI') {
+            if($row['COLUMN_KEY'] === 'PRI') {
                 $pk[] = $row['COLUMN_NAME'];
             }
         }
@@ -185,7 +194,7 @@ SQL;
      */
     public function query(Connection $connection, string $query, ...$params): mixed
     {
-        return @$connection->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
+        return @$connection->getConnection()->query($query, $params['result_mode'] ?? \MYSQLI_STORE_RESULT);
     }
 
     /**
