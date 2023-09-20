@@ -14,7 +14,8 @@
     "ext-gd": "*",
     "ext-sysvsem": "*",
     "ext-sockets": "*",
-    "ext-mysqli": "*"
+    "ext-mysqli": "*",
+    "ext-sqlsrv": "*"
   },
   "suggest": {
   },
@@ -32,6 +33,5 @@
     "sort-packages": true,
     "optimize-autoloader": true
   },
-  "minimum-stability": "stable",
   "prefer-stable": true
 }
