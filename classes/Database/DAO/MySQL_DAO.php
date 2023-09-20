@@ -17,6 +17,7 @@ use pool\classes\Core\Weblication;
 use pool\classes\Database\Commands;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
+use pool\classes\Database\SqlStatement;
 use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
 use function array_diff;
@@ -604,13 +605,13 @@ SQL;
                     $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
                     $value = "'$dateTime'";
                 }
-                else {//sub query moved to escapeWhereConditionValue
+                else {
                     $value = match (gettype($values)) {//handle by type
                         'NULL' => 'NULL',
                         'boolean' => bool2string($values),
                         'double', 'integer' => $values,//float and int
-                        default => match ($this->isSubQuery($values)) {// TODO fix insecure sub-query check
-                            true => $values,
+                        default => match ($values instanceof SqlStatement) {
+                            true => $values->getStatement(),
                             default => $this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
                         }
                     };
@@ -639,17 +640,6 @@ SQL;
             $tmp .= " WHEN '$token' THEN '{$Translator->getTranslation($token, $token)}'";
         }
         return "$tmp ELSE $column END";
-    }
-
-    /**
-     * Checks value for sub-query
-     *
-     * @param mixed $value string?
-     * @return bool
-     */
-    private function isSubQuery(mixed $value): bool
-    {
-        return str_contains($value, '(SELECT ');
     }
 
     /**
