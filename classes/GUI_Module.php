@@ -8,6 +8,7 @@
  * file that was distributed with this source code.
  */
 
+use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
@@ -159,9 +160,9 @@ class GUI_Module extends Module
      *
      * @param string $GUIClassName
      * @param Module|null $ParentGUI
-     * @return bool
+     * @return string|false
      */
-    public static function autoloadGUIModule(string $GUIClassName, ?Module $ParentGUI = null): bool
+    public static function autoloadGUIModule(string $GUIClassName, ?Module $ParentGUI = null): string|false
     {
         $hasNamespace = str_contains($GUIClassName, '\\');
 
@@ -193,9 +194,8 @@ class GUI_Module extends Module
 
             // PSR-4 style
             $filename = "$GUIRootDir$GUIClassName.php";
-            if(file_exists($filename)) {
-                require_once $filename;
-                return true;
+            if(Autoloader::requireFile($filename)) {
+                return $filename;
             }
 
             if ($ParentGUI instanceof Module) {
@@ -215,15 +215,13 @@ class GUI_Module extends Module
                 } while ($ParentGUI !== null);
 
                 $filename = "$GUIRootDir$parent_directory$GUIClassName.php";
-                if (file_exists($filename)) {
-                    require_once $filename;
-                    return true;
+                if(Autoloader::requireFile($filename)) {
+                    return $filename;
                 }
 
                 $filename = "$GUIRootDir$parent_directory_without_frame$GUIClassName.php";
-                if (file_exists($filename)) {
-                    require_once $filename;
-                    return true;
+                if(Autoloader::requireFile($filename)) {
+                    return $filename;
                 }
             }
         }

@@ -11,15 +11,11 @@
 namespace pool\classes;
 
 use GUI_Module;
+use function defined;
 use const pool\PWD_TILL_CLASSES;
 
 class Autoloader
 {
-    /**
-     * @constant string the extension of the class files
-     */
-    public const CLASS_EXTENSION = '.class.php';
-
     /**
      * @var Autoloader
      */
@@ -42,16 +38,16 @@ class Autoloader
      */
     public function register(): void
     {
-        spl_autoload_register([$this, 'loadClass']);
+        \spl_autoload_register([$this, 'loadClass']);
     }
 
     /**
      * Loads POOL classes and GUIs
      *
      * @param string $class
-     * @return bool
+     * @return string|false
      */
-    public function loadClass(string $class): bool
+    public function loadClass(string $class): string|false
     {
         $isGUI = str_starts_with($class, 'GUI_') && $class !== 'GUI_Module';
         if($isGUI) {
@@ -65,22 +61,22 @@ class Autoloader
      * Autoloader for POOL Classes
      *
      * @param string $className Klasse
-     * @return bool
+     * @return string|false
      */
-    public static function autoloadClass(string $className): bool
+    public static function autoloadClass(string $className): string|false
     {
         $hasNamespace = str_contains($className, '\\');
 
         if($hasNamespace) {
             $classRootDirs = [
-                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
+                defined('BASE_NAMESPACE_PATH') ? \constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];
 
-            $className = str_replace('\\', '/', $className);
+            $className = \str_replace('\\', '/', $className);
         }
         else {
             $classRootDirs = [
-                getcwd().'/'.PWD_TILL_CLASSES
+                \getcwd().'/'.PWD_TILL_CLASSES
             ];
             if(defined('DIR_POOL_ROOT')) {
                 $classRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_CLASSES;
@@ -91,14 +87,25 @@ class Autoloader
         }
 
         foreach($classRootDirs as $classRootDir) {
-            $classRootDir = addEndingSlash($classRootDir);
+            $classRootDir = \addEndingSlash($classRootDir);
 
             // PSR-4 style
-            $filename = "$classRootDir$className.php";
-            if(file_exists($filename)) {
-                require_once $filename;
-                return true;
+            $file = "$classRootDir$className.php";
+            if(self::requireFile($file)) {
+                return $file;
             }
+        }
+        return false;
+    }
+
+    /**
+     * If file exists, require it from the file system.
+     */
+    public static function requireFile(string $file): bool
+    {
+        if(\file_exists($file)) {
+            require_once $file;
+            return true;
         }
         return false;
     }
@@ -108,6 +115,6 @@ class Autoloader
      */
     public function unregister(): void
     {
-        spl_autoload_unregister([$this, 'loadClass']);
+        \spl_autoload_unregister([$this, 'loadClass']);
     }
 }
