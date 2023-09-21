@@ -539,26 +539,42 @@ namespace pool\classes\Core\Input
          * Filters variables based on a callable function.
          * Very handy when inserting data into a database. You can remove unnecessary data.
          *
-         * @param array $keys_must_exists Variables that must remain
+         * @param array $requiredKeys Variables that must remain
          * @param string $prefix use only variable names with this prefix
          * @param boolean $removePrefix removes the variables with prefix from the returned object
          * @return Input The result in a new input object
-         **/
-        public function filter(array $keys_must_exists, ?callable $filter = null, string $prefix = '', bool $removePrefix = false): Input
+         */
+        public function filter(array $requiredKeys, ?callable $filterFn = null, string $prefix = '', bool $removePrefix = false): Input
         {
-            $Input = new Input(self::EMPTY);
-            $new_prefix = ($removePrefix) ? '' : $prefix;
-            foreach($keys_must_exists as $key) {
+            $NewInput = new Input();
+            $new_prefix = $removePrefix ? '' : $prefix;
+            foreach($requiredKeys as $key) {
+                $prefixedKey = $prefix.$key;
                 // AM, 22.04.09, modified (isset nimmt kein NULL)
-                if(array_key_exists($prefix.$key, $this->vars)) {
-                    if($filter) {
-                        $remove = call_user_func($filter, $this->vars[$prefix.$key], $prefix.$key);
-                        if($remove) continue;
+                if(\array_key_exists($prefixedKey, $this->vars)) {
+                    $value = $this->vars[$prefixedKey];
+                    if($filterFn && $filterFn($value, $prefixedKey)) {
+                        continue;
                     }
-                    $Input->setVar($new_prefix.$key, $this->vars[$prefix.$key]);
+                    $NewInput->setVar($new_prefix.$key, $value);
                 }
             }
-            return $Input;
+            return $NewInput;
+        }
+
+        /**
+         * Filters the internal variable storage to only include entries with specified keys.
+         *
+         * This method performs an efficient key-based filtering operation, equivalent to using
+         * array_intersect_key() on the internal $this->vars array. After this operation, $this->vars
+         * will only contain entries whose keys are present in the provided $keys array.
+         *
+         * @param array $keys An array of keys to retain in the internal variable storage.
+         * @return void
+         */
+        public function filterByKeys(array $keys): void
+        {
+            $this->vars = \array_intersect_key($this->vars, \array_flip($keys));
         }
 
         /**
