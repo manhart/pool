@@ -15,8 +15,17 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use Iterator;
+use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\InvalidJsonException;
 use UConverter;
+use function array_column;
+use function array_keys;
+use function array_map;
+use function array_multisort;
+use function array_values;
+use function count;
+use function is_array;
+use function str_contains;
 
 /**
  * Class pool\classes\Core\ResultSet
@@ -60,11 +69,11 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Sort by a field / column
      */
-    public function sort(string $fieldName, int $sort = SORT_ASC, int $sortType = SORT_REGULAR): void
+    public function sort(string $fieldName, int $sort = \SORT_ASC, int $sortType = \SORT_REGULAR): void
     {
         $sortArr = array_column($this->records, $fieldName);
-        if($sortType === SORT_STRING) {
-            $sortArr = array_map('strtolower', $sortArr);
+        if($sortType === \SORT_STRING) {
+            $sortArr = array_map('\strtolower', $sortArr);
         }
 
         array_multisort($sortArr, $sort, $sortType, $this->records);
@@ -73,13 +82,13 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Sorts by multiple columns
      */
-    public function sortComplex(array $fieldNames, array|int $sort = SORT_ASC, array|int $sortType = SORT_REGULAR): void
+    public function sortComplex(array $fieldNames, array|int $sort = \SORT_ASC, array|int $sortType = \SORT_REGULAR): void
     {
         $args = [];
         foreach ($fieldNames as $fieldName) {
             $sortArr = array_column($this->records, $fieldName);
-            if ($sortType === SORT_STRING) {
-                $sortArr = array_map('strtolower', $sortArr);
+            if ($sortType === \SORT_STRING) {
+                $sortArr = array_map('\strtolower', $sortArr);
             }
             $args[] = $sortArr;
         }
@@ -104,7 +113,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function usort(callable $cmp_function): void
     {
-        usort($this->records, $cmp_function);
+        \usort($this->records, $cmp_function);
     }
 
     /**
@@ -116,45 +125,44 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function filter(callable $callback, int $mode = 0): void
     {
-        $this->records = array_values(array_filter($this->records, $callback, $mode));
+        $this->records = array_values(\array_filter($this->records, $callback, $mode));
     }
 
     /**
-     * Verschiebt einen Datensatz innerhalb des Resultsets an die uebergebene Position.
+     * Moves a record within the result set to the specified position
      *
-     * @param string $fieldName Feldname
-     * @param mixed $unique_value Eindeutiger Wert
-     * @param integer $pos Position wohin der Datensatz verschoben werden soll (beginnend mit 1)
+     * @param string $fieldName field name
+     * @param mixed $uniqueValue unique value to search for
+     * @param integer $newPos Position where the record should be moved
      * @return boolean
      */
-    public function move(string $fieldName, mixed $unique_value, int $pos): bool
+    public function move(string $fieldName, mixed $uniqueValue, int $newPos): bool
     {
-        $ok = false;
-        $new_rowSet = [];
-        $z = -1;
-        --$pos;
-        foreach($this->records as $r => $row) {
-            if($row[$fieldName] === $unique_value) {
-                if($r === 0 && $pos === 0) {
-                    return true;
-                }
-                $new_rowSet[$pos] = $row;
-                $ok = true;
-            }
-            else {
-                if(($z + 1) === $pos) {
-                    $z += 2;
-                }
-                else {
-                    $z++;
-                }
-                $new_rowSet[$z] = $row;
+        $currentPos = null;
+
+        // find the current position of the item
+        foreach ($this->records as $index => $row) {
+            if ($row[$fieldName] === $uniqueValue) {
+                $currentPos = $index;
+                break;
             }
         }
-        if($ok) {
-            $this->records = $new_rowSet;
+
+        // if the item is not found cancel early
+        if ($currentPos === null) {
+            return false;
         }
-        return $ok;
+
+        // No action required if the current and new positions are the same
+        if ($currentPos === $newPos - 1) {
+            return true;
+        }
+
+        // Remove the element and insert it in the new position
+        $movedElement = $this->spliceRowSet($currentPos, 1)[0];
+        $this->spliceRowSet($newPos - 1, 0, [$movedElement]);
+
+        return true;
     }
 
     /**
@@ -301,23 +309,15 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Returns a value of a field of the current record
-     *
-     * @param string $key name of column (field)
-     * @param mixed|null $default
-     * @return mixed value
      */
     public function getValue(string $key, mixed $default = null): mixed
     {
-        if(!array_key_exists($key, $this->records[$this->index] ?? [])) return $default;
+        if(!\array_key_exists($key, $this->records[$this->index] ?? [])) return $default;
         return $this->records[$this->index][$key];
     }
 
     /**
      * Returns a value of a field of the current record as a string
-     *
-     * @param string $key
-     * @param string $default
-     * @return string
      */
     public function getValueAsString(string $key, string $default = ''): string
     {
@@ -326,27 +326,19 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Returns a value of a field of the current record as a decoded json
-     *
-     * @param string $key
-     * @param string $defaultJson
-     * @return string
      * @throws InvalidJsonException
      */
     public function getValueAsJson(string $key, string $defaultJson = '{}'): mixed
     {
         $json = (string)$this->getValue($key, $defaultJson) ?: $defaultJson;
-        if(!isValidJSON($json)) {
+        if(!\isValidJSON($json)) {
             throw new InvalidJsonException();
         }
-        return json_decode($json, true);
+        return \json_decode($json, true);
     }
 
     /**
      * Returns a value of a field of the current record as an integer. It is also possible to return null as default value.
-     *
-     * @param string $key
-     * @param int|null $default
-     * @return int|null
      */
     public function getValueAsInt(string $key, ?int $default = 0): ?int
     {
@@ -357,10 +349,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Returns a value of a field of the current record as a float
-     *
-     * @param string $key
-     * @param float|null $default
-     * @return float|null
      */
     public function getValueAsFloat(string $key, ?float $default = 0.00): ?float
     {
@@ -371,23 +359,14 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Returns a value of a field of the current record as a boolean
-     *
-     * @param string $key
-     * @param bool $default
-     * @return bool
      */
     public function getValueAsBool(string $key, bool $default = false): bool
     {
-        return boolval($this->getValue($key, $default));
+        return (bool)$this->getValue($key, $default);
     }
 
     /**
      * Returns a value of a field of the current record as DateTime object
-     *
-     * @param string $key
-     * @param null $default
-     * @param DateTimeZone|null $timezone
-     * @return DateTime|null
      */
     public function getValueAsDateTime(string $key, $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
@@ -395,7 +374,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         if($value instanceof DateTime)
             return $value;
         if($value && $value !== '0000-00-00' && $value !== '0000-00-00 00:00:00') {
-            if(!str_contains($value, '-') && is_numeric($value))
+            if(\is_numeric($value) && !str_contains($value, '-'))
                 $value = "@$value";
             try {
                 return new DateTime($value, $timezone);
@@ -408,52 +387,36 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Returns a value of a field of the current record as formatted date string
-     *
-     * @param string $key
-     * @param null $default
-     * @return string|null
-     * @throws Exception
      */
     public function getValueAsFormattedDate(string $key, $default = null): ?string
     {
         $DateTime = $this->getValueAsDateTime($key, $default);
-        if(is_null($DateTime)) return null;
+        if(\is_null($DateTime)) return null;
         $format = Weblication::getInstance()->getDefaultFormat('php.date');
         return $DateTime->format($format);
     }
 
     /**
      * Returns a value of a field of the current record as formatted "date.time" string
-     *
-     * @param string $key
-     * @param null $default
-     * @param bool $seconds
-     * @return string|null
-     * @throws Exception
      */
     public function getValueAsFormattedDateTime(string $key, $default = null, bool $seconds = true): ?string
     {
         $DateTime = $this->getValueAsDateTime($key, $default);
-        if(is_null($DateTime)) return null;
+        if(\is_null($DateTime)) return null;
         $format = Weblication::getInstance()->getDefaultFormat('php.date.time'.($seconds ? '.sec' : ''));
         return $DateTime->format($format);
     }
 
     /**
      * Returns a value of a field of the current record as formatted number
-     *
-     * @param string $key
-     * @param null $default
-     * @param null $decimals
-     * @return mixed|string
      * @see Weblication::setDefaultFormats()
      */
     public function getValueAsNumber(string $key, $default = null, $decimals = null): ?string
     {
         $value = $this->getValue($key, $default);
-        if(!is_null($value)) {
+        if(!\is_null($value)) {
             $number = Weblication::getInstance()->getDefaultFormat('number');
-            $value = number_format($value, $decimals ?? $number['decimals'], $number['decimal_separator'],
+            $value = \number_format($value, $decimals ?? $number['decimals'], $number['decimal_separator'],
                 $number['thousands_separator']);
         }
         return $value;
@@ -461,31 +424,22 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Returns a value of a field of the current record as an array
-     *
-     * @param string $key
-     * @param array $default
-     * @param string $separator
-     * @return array
      */
     public function getValueAsArray(string $key, array $default = [], string $separator = ','): array
     {
         $value = $this->getValue($key, $default);
         if(!is_array($value)) {
-            $value = explode($separator, $value);
+            $value = \explode($separator, $value);
         }
         return $value;
     }
 
     /**
      * Sets a new/overwrites a value of a field in the result set.
-     *
-     * @param string $key name of key/field
-     * @param mixed $value value
-     * @return $this
      */
     public function setValue(string $key, mixed $value): RecordSet
     {
-        if($this->count() == 0) {
+        if(!$this->count()) {
             return $this->addValue($key, $value);
         }
         $this->records[$this->index][$key] = $value;
@@ -494,38 +448,30 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Sets new/overwrites values of fields in the result set.
-     *
-     * @param array $assoc
-     * @return $this
      */
     public function setValues(array $assoc): RecordSet
     {
-        if($this->count() == 0)
+        if(!$this->count()) {
             return $this->addValues($assoc);
+        }
         $this->records[$this->index] = $assoc + $this->records[$this->index];
         return $this;
     }
 
     /**
-     * Das ist das equivalent zur Funktion setValue, nur dass die Felder hinten an das Array angefuegt werden
-     *
-     * @param array|string $key Spaltenname oder Array[Spalte] = Wert
-     * @param string $value Wert des neuen Feldes
+     * This is the equivalent of the setValue function, except that the fields are appended to the back of the array
      */
     public function addFields(array|string $key, string $value = ''): RecordSet
     {
-        if($this->count() == 0)
+        if(!$this->count())
             return is_array($key) ? $this->addValues($key) : $this->addValue($key, $value);
         $insert = is_array($key) ? $key : [$key => $value];
-        $this->records[$this->index] = array_merge($this->records[$this->index], $insert);
+        $this->records[$this->index] = \array_merge($this->records[$this->index], $insert);
         return $this;
     }
 
     /**
-     * Fuegt einen neuen Datensatz in die Ergebnismenge ein.
-     *
-     * @param string $key Schluessel (bzw. Name des Feldes)
-     * @param mixed $value Wert der Variable
+     * Add a value as a new record to the record set
      */
     public function addValue(string $key, mixed $value): RecordSet
     {
@@ -535,8 +481,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * @param array $assoc
-     * @return RecordSet
+     * Adds a new record into the record set.
      */
     public function addValues(array $assoc): RecordSet
     {
@@ -547,9 +492,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Deletes a field (key) including its content (value) from the data record
-     *
-     * @param string $key
-     * @return RecordSet
      */
     public function delKey(string $key): static
     {
@@ -559,9 +501,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Deletes a field (key) including its content (value) from all data records
-     *
-     * @param string $key
-     * @return $this
      */
     public function delKeyFromAll(string $key): static
     {
@@ -655,13 +594,13 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function deleteRows(int $amount = 1, int $index = -1): bool
     {
-        if($index >= 0 && $index != $this->index)
+        if($index >= 0 && $index !== $this->index)
             $this->seek($index);
         if($this->index >= 0) {
-            $end = $this->index + $amount - $amount / abs($amount);
+            $end = $this->index + $amount - $amount / \abs($amount);
             if($end < 0 || $this->count() <= $end) return false;
-            $index = min($this->index, $end);
-            array_splice($this->records, $index, abs($amount));
+            $index = \min($this->index, $end);
+            \array_splice($this->records, $index, \abs($amount));
             $this->index = $index - 1;
             return true;
         }
@@ -669,7 +608,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Liefert die komplette Ergebnismenge als indiziertes Array (enthaelt je Satz ein assoziatives Array mit Feldnamen) zurueck.
+     * Returns the complete result set as an indexed array in raw format.
      *
      * @return array Recordset
      */
@@ -683,81 +622,57 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function prepend(array $record): static
     {
-        array_unshift($this->records, $record);
+        \array_unshift($this->records, $record);
         $this->reset();
         return $this;
     }
 
     /**
-     * Entfernt einen Teil der Ergebnismenge und ersetzt ihn optional durch etwas anderes.
-     * Die Funktion entfernt die durch offset und length angegebenen Elemente der Ergebnismenge,
-     * und ersetzt diese durch die Elemente des Arrays replacement, wenn angegeben und gibt ein
-     * Array mit den entfernten Elemente zurueck
+     * Remove a portion of the record set (array) and replace it with something else.
+     * Removes the elements designated by offset and length from the array array, and replaces them with the elements of the replacement array, if supplied.
      *
-     * @param int $offset Ist offset positiv, beginnt der zu entfernende Bereich bei diesem Offset vom Anfang der Ergebnismenge. Ist offset negativ,
-     *     beginnt der zu entfernende Bereich offset Elemente vor dem Ende der Ergebnismenge.
-     * @param int|null $length Ist length nicht angegeben, wird alles von offset bis zum Ende der Ergebnismenge entfernt. Ist length positiv, wird die
-     *     angegebene Anzahl Elemente entfernt. Ist length negativ, dann wird der Bereich von length Elementen vor dem Ende, bis zum Ende der
-     *     Ergebnismenge entfernt. Tipp: Um alles von offset bis zum Ende der Ergebenismenge zu entfernen wenn replacement ebenfalls angegeben ist,
-     *     verwenden Sie Resultset::count() als length. (optional)
-     * @param array $replacement Ist das Array replacement angegeben, werden die entfernten Elemente durch die Elemente dieses Arrays ersetzt. Sind offset
-     *     und length so angegeben dass nichts entfernt wird, werden die Elemente von replacement an der von offset spezifizierten Stelle eingefuegt.
-     *     Tipp: Soll die Ersetzung durch nur ein Element erfolgen ist es nicht noetig ein Array zu anzugeben es sei denn, dieses Element ist selbst ein
-     *     Array. (optional)
-     * @return array Gibt das Array mit den entfernten Element zurueck.
+     * @see array_splice()
+     * @link https://www.php.net/manual/en/function.array-splice
      */
-    public function spliceRowSet(int $offset, ?int $length = null, array $replacement = []): array
+    public function spliceRowSet(int $offset, ?int $length = null, mixed $replacement = []): array
     {
-        return array_splice($this->records, $offset, $length, $replacement);
+        return \array_splice($this->records, $offset, $length, $replacement);
     }
 
     /**
-     * Liefert alle Werte eines Feldes bzw. einer Tabellenspalte zurueck.
+     * returns all values of a field name
      *
-     * @param array|string $fieldName Feldname bzw. Spaltenname
-     * @param string $fieldNameAsKey dieses Feld als Schlüssel
+     * @param array|string $fieldNames
+     * @param array|string $keyByFields
      * @param string $type type conversion (int, float, bool, string)
      * @return array Felddaten als Array z.B. array('Alex', 'Florian', 'Andreas')
      */
-    public function getFieldData(array|string $fieldName, string $fieldNameAsKey = '', string $type = ''): array
+    public function getFieldData(array|string $fieldNames, array|string $keyByFields = '', string $type = ''): array
     {
-        $arrResult = [];
-        if(is_array($fieldName)) {
-            $fieldName = array_flip($fieldName);
-            foreach($this->records as $row) {
-                $record = array_intersect_key($row, $fieldName);
-                $arrResult[] = $record;
+        if(is_array($fieldNames)) {
+            $keyByFields = (array)$keyByFields;
+            if(!$keyByFields) {
+                $keyFields = [];
             }
+            else {
+                $keyFields = (count($keyByFields) === count($fieldNames) ? $keyByFields : throw new InvalidArgumentException('The number of key fields does not match the number of fields to be returned.'));
+            }
+
+            $result = $this->getMultipleFields($fieldNames, $keyFields);
         }
         else {
-            foreach($this->records as $row) {
-                if(isset($row[$fieldName])) {
-                    $row[$fieldName] = match ($type) {
-                        'int' => (int)$row[$fieldName],
-                        'float' => (float)$row[$fieldName],
-                        'bool' => (bool)$row[$fieldName],
-                        'string' => (string)$row[$fieldName],
-                        default => $row[$fieldName],
-                    };
-                    if($fieldNameAsKey) {
-                        $arrResult[$row[$fieldNameAsKey]] = $row[$fieldName];
-                    }
-                    else {
-                        $arrResult[] = $row[$fieldName];
-                    }
-                }
-            }
+            $result = $this->getSingleField($fieldNames, $keyByFields, $type);
         }
-        return $arrResult;
+        return $result;
     }
 
     /**
-     * Sucht Spalte und Wert innerhalb der Ergebnismenge und liefert bei Erfolg Index zurueck. Andernfalls false.
+     * Searches column and value within the result set and returns index on success. Otherwise, false.
      *
-     * @param string|array $fieldName Spaltenname
-     * @param string|array $value Wert
-     * @param bool $begin True=beginnt mit der Suche ab ersten Datensatz, False=beginnt mit der Suche ab dem aktuellen Datensatz
-     * @return int|false Index oder False
+     * @param string|array $fieldName field name
+     * @param string|array $value value to search for
+     * @param bool $begin start from the beginning
+     * @return int|false index or false
      */
     public function find(string|array $fieldName, string|array $value, bool $begin = true): false|int
     {
@@ -774,9 +689,9 @@ class RecordSet extends PoolObject implements Iterator, Countable
             return false;
         }
 
-        // Mehrere Spalten überprüfen (Array-Übergabe)
+        // check multiple columns
         if(is_array($fieldName) && is_array($value)) {
-            // Suche solange bis der Wert des Feldes übereinstimmt oder das Ende erreicht wurde
+            // Search until the value of the field matches or the end has been reached
             $len = count($fieldName) - 1;
             do {
                 $found = false;
@@ -791,9 +706,9 @@ class RecordSet extends PoolObject implements Iterator, Countable
                 }
             } while($this->forward());
         }
-        // Eine Spalte überprüfen
+        // check only one column
         else {
-            // Suche solange bis der Wert des Feldes übereinstimmt oder das Ende erreicht wurde
+            // Search until the value of the field matches or the end has been reached
             do {
                 if($this->getValue($fieldName) == $value) {
                     return $this->index;
@@ -824,12 +739,12 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function isEqual(RecordSet $ResultSet): bool
     {
-        if($this->count() != $ResultSet->count()) return false;
+        if($this->count() !== $ResultSet->count()) return false;
         $this->first();
         $ResultSet->first();
         do {
-            if(count(array_diff_assoc($this->getRecord(), $ResultSet->getRecord())) != 0 or
-                count(array_diff_assoc($ResultSet->getRecord(), $this->getRecord())) != 0) return false;
+            if(count(\array_diff_assoc($this->getRecord(), $ResultSet->getRecord())) !== 0 ||
+                count(\array_diff_assoc($ResultSet->getRecord(), $this->getRecord())) !== 0) return false;
         } while($this->forward() and $ResultSet->forward());
         return true;
     }
@@ -893,19 +808,19 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $text_clinch text clinch
      * @return string csv string
      */
-    function getCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
+    public function getCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
     {
         $csv = '';
         if($this->count()) {
             if($with_headline) {
-                $csv .= implode($separator, array_keys($this->records[0])).$line_break;
+                $csv .= \implode($separator, array_keys($this->records[0])).$line_break;
             }
             foreach($this->records as $row) {
                 $line = '';
                 $values = array_values($row);
                 foreach($values as $val) {
-                    $val = self::maskTextCSVcompliant($val, $separator, $text_clinch);
-                    $line .= ($line != '') ? ($separator.$val) : ($val);
+                    $val = self::maskTextCSVCompliant($val, $separator, $text_clinch);
+                    $line .= ($line !== '') ? ($separator.$val) : ($val);
                 }
                 $csv .= $line.$line_break;
             }
@@ -926,16 +841,16 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Zeile als CSV ausgeben
      */
-    function getRecordAsCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
+    public function getRecordAsCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
     {
         $csv = '';
         if($this->count()) {
             if($this->returnFields) {
-                if($with_headline) $csv .= implode($separator, array_values(($this->returnFields))).$line_break;
+                if($with_headline) $csv .= \implode($separator, array_values(($this->returnFields))).$line_break;
                 $row = '';
                 foreach($this->returnFields as $key) {
-                    if($row != '') $row .= $separator;
-                    $val = self::maskTextCSVcompliant((string)$this->records[$this->index][$key], $separator, $text_clinch);
+                    if($row !== '') $row .= $separator;
+                    $val = self::maskTextCSVCompliant((string)$this->records[$this->index][$key], $separator, $text_clinch);
                     $row .= $val;
                 }
                 $row .= $line_break;
@@ -944,13 +859,13 @@ class RecordSet extends PoolObject implements Iterator, Countable
             }
             else {
                 if($with_headline) {
-                    $csv .= implode($separator, array_keys($this->records[$this->index])).$line_break;
+                    $csv .= \implode($separator, array_keys($this->records[$this->index])).$line_break;
                 }
 
                 $values = array_values($this->getRecord());
                 $i = 0;
                 foreach($values as $val) {
-                    $val = self::maskTextCSVcompliant((string)$val, $separator, $text_clinch);
+                    $val = self::maskTextCSVCompliant((string)$val, $separator, $text_clinch);
                     $csv .= ($i === 0) ? $val : $separator.$val;
                     $i++;
                 }
@@ -967,7 +882,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function getRecordsAsJSON(int $flags, int $depth = 512): string
     {
-        return json_encode($this->records, JSON_THROW_ON_ERROR | $flags, $depth);
+        return \json_encode($this->records, \JSON_THROW_ON_ERROR | $flags, $depth);
     }
 
     /**
@@ -978,16 +893,16 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $text_clinch Zeichen für Textklammer
      * @return string
      */
-    static function maskTextCSVcompliant(string $val, string $separator = ';', string $text_clinch = '"'): string
+    public static function maskTextCSVCompliant(string $val, string $separator = ';', string $text_clinch = '"'): string
     {
         $hasTextClinch = false;
-        if($text_clinch != '') {
-            $hasTextClinch = strpos($val, $text_clinch);
+        if($text_clinch !== '') {
+            $hasTextClinch = \strpos($val, $text_clinch);
         }
         if($hasTextClinch !== false) {
-            $val = str_replace($text_clinch, $text_clinch.$text_clinch, $val);
+            $val = \str_replace($text_clinch, $text_clinch.$text_clinch, $val);
         }
-        if($hasTextClinch !== false or str_contains($val, $separator) or str_contains($val, chr(10)) or str_contains($val, chr(13))) {
+        if($hasTextClinch !== false || str_contains($val, $separator) || str_contains($val, \chr(10)) || str_contains($val, \chr(13))) {
             $val = $text_clinch.$val.$text_clinch;
         }
         return $val;
@@ -1000,12 +915,12 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $separator
      * @return string
      */
-    function getRecordAsIni(string $key_value_separator = '=', string $separator = "\n"/*, $text_clinch=''*/): string
+    public function getRecordAsIni(string $key_value_separator = '=', string $separator = "\n"/*, $text_clinch=''*/): string
     {
         $string = '';
         if($this->records) {
             foreach($this->records[$this->index] as $key => $val) {
-                if($string != '') $string .= $separator;
+                if($string !== '') $string .= $separator;
                 $string .= $key.$key_value_separator.$val;
             }
         }
@@ -1044,7 +959,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @return string
      * @todo move into GUI_Table for dhtmlxGrid
      */
-    public function getRowsetAsXGrid(array $pk, int $total_count, int $pos = 0, bool $without_pk = true, string $encoding = 'ISO-8859-1',
+    public function getRecordsAsXGrid(array $pk, int $total_count, int $pos = 0, bool $without_pk = true, string $encoding = 'ISO-8859-1',
         bool $encode = false, array $callbackRow = [], array $callbackCell = []): string
     {
         $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
@@ -1061,7 +976,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
             // Primärschlüssel entfernen (AM, 18.11.2010, optimiert)
             if($without_pk) {
-                $keys = array_diff($keys, $pk);
+                $keys = \array_diff($keys, $pk);
             }
 
             //					foreach($keys as $key => $val) {
@@ -1072,7 +987,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
             foreach($this->records as $row) {
                 $id = '';
                 foreach($pk as $val) {
-                    if($id != '') $id .= '-';
+                    if($id !== '') $id .= '-';
                     $id .= $row[$val];
                 }
                 $rowSettings = '';
@@ -1087,17 +1002,17 @@ class RecordSet extends PoolObject implements Iterator, Countable
                     $cellSettings = '';
                     if($callbackCell) $cellSettings = ' '.$callbackCell[0]->$callbackCell[1]($key, $val, $row, $z, $count);
                     $xml .= '<cell'.$cellSettings.'>';
-                    if(is_numeric($val)) {
+                    if(\is_numeric($val)) {
                         $xml .= $val;
                     }
                     else {
                         // Any encoding to UTF-8 using mbstring: mb_convert_encoding($string, 'UTF-8', mb_list_encodings());
-                        $xml .= '<![CDATA['.str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val).']]>';
+                        $xml .= '<![CDATA['.\str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val).']]>';
                     }
                     $xml .= '</cell>';
                 }
 
-                $xml .= '</row>'.chr(10);
+                $xml .= '</row>'.\chr(10);
                 $z++;
             }
         }
@@ -1109,30 +1024,30 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * Liefert alle Daten im XML Format fuer die JS Komponente dhtmlXCombo
      *
      * @param array $pkAsValue Primärschlüssel
-     * @param string $fieldnameAsOption Feldname als Option-Text
+     * @param string $fieldNameAsOption Feldname als Option-Text
      * @param boolean|null $add [optional]
      * @param string $encoding
      * @return string
      * @todo move into GUI_Combo for dhtmlxCombo
      */
-    public function getRowsetAsXCombo(array $pkAsValue, string $fieldnameAsOption, ?bool $add = null, string $encoding = 'ISO-8859-1'): string
+    public function getRecordsAsXCombo(array $pkAsValue, string $fieldNameAsOption, ?bool $add = null, string $encoding = 'ISO-8859-1'): string
     {
         /*$xml = getXmlHeader('utf8');*/
         $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
-        if(is_null($add)) {
+        if(\is_null($add)) {
             $xml .= '<complete>';
         }
         else {
-            $xml .= '<complete add="'.bool2string($add).'">';
+            $xml .= '<complete add="'.\bool2string($add).'">';
         }
         if($this->count()) {
             foreach($this->records as $row) {
                 $id = '';
                 foreach($pkAsValue as $val) {
-                    if($id != '') $id .= '-';
+                    if($id !== '') $id .= '-';
                     $id .= $row[$val];
                 }
-                if(!isset($row[$fieldnameAsOption])) break;
+                if(!isset($row[$fieldNameAsOption])) break;
                 $img_src = '';
                 if(isset($row['img_src'])) $img_src = $row['img_src'];
                 $selected = '';
@@ -1148,7 +1063,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
                 if($checked) $xml .= ' checked="'.$checked.'"';
                 if($selected) $xml .= ' selected="'.$selected.'"';
                 //$xml .= '<option value="'.$id.'">a</option>';
-                $xml .= '><![CDATA['.(str_replace('&', '&amp;', $row[$fieldnameAsOption])).']]></option>';
+                $xml .= '><![CDATA['.(\str_replace('&', '&amp;', $row[$fieldNameAsOption])).']]></option>';
             }
         }
 
@@ -1162,5 +1077,63 @@ class RecordSet extends PoolObject implements Iterator, Countable
         echo '<pre>';
         \var_dump($this->records);
         echo '</pre>';
+    }
+
+    /**
+     * Returns an array of the values of multiple columns from a record set
+     */
+    private function getMultipleFields(array $fieldNames, array $keyByFields): array
+    {
+        $result = [];
+
+        if(!$keyByFields) {
+            foreach($fieldNames as $fieldName) {
+                $result[$fieldName] = array_column($this->records, $fieldName);
+            }
+            return $result;
+        }
+
+        foreach($this->records as $row) {
+            foreach($fieldNames as $index => $fieldName) {
+                if(isset($row[$fieldName])) {
+                    $keyField = $keyByFields[$index] ?? null;
+                    if($keyField && isset($row[$keyField])) {
+                        $key = $row[$keyField];
+                        $result[$key] = $row[$fieldName];
+                        continue; // Skip to the next record
+                    }
+
+                    $result[$fieldName][] = $row[$fieldName];
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * returns a single field stacked in an array
+     */
+    private function getSingleField(string $fieldName, string $keyByField, string $type): array
+    {
+        $result = [];
+        foreach($this->records as $row) {
+            if(!isset($row[$fieldName])) {
+                continue;
+            }
+            $row[$fieldName] = match ($type) {
+                'int' => (int)$row[$fieldName],
+                'float' => (float)$row[$fieldName],
+                'bool' => (bool)$row[$fieldName],
+                'string' => (string)$row[$fieldName],
+                default => $row[$fieldName],
+            };
+            if($keyByField) {
+                $result[$row[$keyByField]] = $row[$fieldName];
+            }
+            else {
+                $result[] = $row[$fieldName];
+            }
+        }
+        return $result;
     }
 }
