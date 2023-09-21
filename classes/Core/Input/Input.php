@@ -109,6 +109,15 @@ namespace pool\classes\Core\Input
         }
 
         /**
+         * Set filter rules for filtering incoming variables
+         */
+        public function setFilter(array $filter): static
+        {
+            $this->filter = $filter;
+            return $this;
+        }
+
+        /**
          * Initializes selected superglobals and writes the variables into the internal variable container.
          * Except: SESSION: The super global variable $_SESSION is referenced to the internal container!
          *
@@ -175,6 +184,73 @@ namespace pool\classes\Core\Input
                 $this->addVar($key, $value);
             }
             return $this;
+        }
+
+        /**
+         * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming
+         * variable.
+         *
+         * @param string $key name of the variable
+         * @param mixed $value value of the variable
+         * @param int $filter filter type
+         * @param mixed $filterOptions
+         * @return Input
+         * @deprecated for filtering with Defaults in GUI_Module::init()
+         * @see https://www.php.net/manual/de/filter.filters.php
+         */
+        public function addVar(string $key, mixed $value = '', int $filter = 0, array|int $filterOptions = 0): static
+        {
+            if(!array_key_exists($key, $this->vars)) {
+                $this->setVar($key, $value, true);
+            }
+            if($filter) {
+                $this->filterRules[$key] = [$filter, $filterOptions];
+            }
+            return $this;
+        }
+
+        /**
+         * Assign data to a variable. If the module has an input filter, the data is filtered and can throw an InvalidArgumentException.
+         *
+         * @param string $key variable name
+         * @param mixed $value value
+         * @param bool $suppressException
+         * @return Input
+         */
+        public function setVar(string $key, mixed $value = '', bool $suppressException = false): static
+        {
+            try {
+                $filter = $this->filter[$key] ?? null;
+                if($filter) {
+                    $value = $this->runFilter($filter, $value);
+                }
+            }
+            catch(\InvalidArgumentException $e) {
+                if(!array_key_exists($key, $this->vars) && array_key_exists(1, $filter)) {
+                    $this->vars[$key] = $filter[1]; // new value
+                }
+                return $suppressException ? $this : throw $e;
+            }
+            $this->vars[$key] = $value;
+            return $this;
+        }
+
+        /**
+         * Runs a filter on a value
+         *
+         * @param array $filter
+         * @param mixed $value
+         * @return mixed
+         * @throws \InvalidArgumentException
+         */
+        private function runFilter(array $filter, mixed $value): mixed
+        {
+            $pipeline = \is_array($filter[0]) ? $filter[0] : [$filter[0]];
+            foreach($pipeline as $dataType) {
+                $filterFunction = DataType::getFilter($dataType);
+                $value = $filterFunction($value);
+            }
+            return $value;
         }
 
         /**
@@ -382,29 +458,6 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming
-         * variable.
-         *
-         * @param string $key name of the variable
-         * @param mixed $value value of the variable
-         * @param int $filter filter type
-         * @param mixed $filterOptions
-         * @deprecated for filtering with Defaults in GUI_Module::init()
-         * @return Input
-         * @see https://www.php.net/manual/de/filter.filters.php
-         */
-        public function addVar(string $key, mixed $value = '', int $filter = 0, array|int $filterOptions = 0): static
-        {
-            if(!array_key_exists($key, $this->vars)) {
-                $this->setVar($key, $value, true);
-            }
-            if($filter) {
-                $this->filterRules[$key] = [$filter, $filterOptions];
-            }
-            return $this;
-        }
-
-        /**
          * @param array $assoc
          * @return $this
          */
@@ -494,50 +547,6 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Assign data to a variable. If the module has an input filter, the data is filtered and can throw an InvalidArgumentException.
-         *
-         * @param string $key variable name
-         * @param mixed $value value
-         * @param bool $suppressException
-         * @return Input
-         */
-        public function setVar(string $key, mixed $value = '', bool $suppressException = false): static
-        {
-            try {
-                $filter = $this->filter[$key] ?? null;
-                if($filter) {
-                    $value = $this->runFilter($filter, $value);
-                }
-            }
-            catch(\InvalidArgumentException $e) {
-                if(!array_key_exists($key, $this->vars) && array_key_exists(1, $filter)) {
-                    $this->vars[$key] = $filter[1]; // new value
-                }
-                return $suppressException ? $this : throw $e;
-            }
-            $this->vars[$key] = $value;
-            return $this;
-        }
-
-        /**
-         * Runs a filter on a value
-         *
-         * @param array $filter
-         * @param mixed $value
-         * @return mixed
-         * @throws \InvalidArgumentException
-         */
-        private function runFilter(array $filter, mixed $value): mixed
-        {
-            $pipeline = \is_array($filter[0]) ? $filter[0] : [$filter[0]];
-            foreach($pipeline as $dataType) {
-                $filterFunction = DataType::getFilter($dataType);
-                $value = $filterFunction($value);
-            }
-            return $value;
-        }
-
-        /**
          * Filters variables based on a callable function.
          * Very handy when inserting data into a database. You can remove unnecessary data.
          *
@@ -566,7 +575,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Filters the internal variable storage to only include entries with specified keys.
-         *
          * This method performs an efficient key-based filtering operation, equivalent to using
          * array_intersect_key() on the internal $this->vars array. After this operation, $this->vars
          * will only contain entries whose keys are present in the provided $keys array.
@@ -789,15 +797,6 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Set filter rules for filtering incoming variables
-         */
-        public function setFilter(array $filter): static
-        {
-            $this->filter = $filter;
-            return $this;
-        }
-
-        /**
          * Generate URL-encoded query string
          *
          * @param string $numeric_prefix If numeric indices are used in the base array and this parameter is provided, it will be prepended to the numeric
@@ -806,8 +805,8 @@ namespace pool\classes\Core\Input
          * @param string|null $arg_separator The argument separator. If not set or null, arg_separator.output is used to separate arguments.
          * @param int $encoding_type By default, PHP_QUERY_RFC1738.
          * If encoding_type is PHP_QUERY_RFC1738, then encoding is performed per » RFC 1738 and the application/x-www-form-urlencoded media type, which
-         *     implies that spaces are encoded as plus (+) signs. If encoding_type is PHP_QUERY_RFC3986, then encoding is performed according to » RFC 3986,
-         *     and spaces will be percent encoded (%20).
+         *     implies that spaces are encoded as plus (+) signs. If encoding_type is PHP_QUERY_RFC3986, then encoding is performed according to » RFC
+         *     3986, and spaces will be percent encoded (%20).
          * @return string Url-conform query string
          */
         public function buildQuery(string $numeric_prefix = '', ?string $arg_separator = null,
