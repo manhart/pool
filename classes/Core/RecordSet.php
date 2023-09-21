@@ -184,7 +184,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Remove a portion of the record set (array) and replace it with something else.
-     * Removes the elements designated by offset and length from the array array, and replaces them with the elements of the replacement array, if
+     * Removes the elements designated by offset and length from the array, and replaces them with the elements of the replacement array, if
      * supplied.
      *
      * @see array_splice()
@@ -561,7 +561,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Füllt eine Spalte über das ganze Ergebnis (Rowset) mit einem Wert (verschiebt nicht den Satzzeiger).
+     * Fills a column over the entire result (Record Set) with a value (does not move the sentence pointer).
      *
      * @param string $key Schlüssel
      * @param string $value Wert
@@ -620,7 +620,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * returns all values of a field name
+     * Returns all values of a field name
      *
      * @param array|string $fieldNames
      * @param array|string $keyByFields
@@ -914,9 +914,10 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Setzt die Felder, bzw. die Reihenfolge der Felder die zurückegegeben werden soll
+     * Sets the fields, or the order of the fields to be returned
      *
      * @param array $fields
+     * @see RecordSet::getRecordAsCSV()
      */
     public function setReturnFields(array $fields): void
     {
@@ -1007,10 +1008,8 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $return;
     }
 
-    /** @noinspection ForgottenDebugOutputInspection */
-
     /**
-     * Liefert alle Daten im XML Format fuer die JS Komponente DHtmlXGrid
+     * Returns all data in XML format for the JS component DHtmlXGrid
      *
      * @param array $pk
      * @param int $total_count
@@ -1030,7 +1029,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
         $xml .= '<rows total_count=\''.$total_count.'\' pos=\''.$pos.'\'>';
         $count = $this->count();
         if($count) {
-            // Schluessel bzw. Felder im Voraus ermitteln
             if($this->returnFields) {
                 $keys = $this->returnFields;
             }
@@ -1070,7 +1068,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
                         $xml .= $val;
                     }
                     else {
-                        // Any encoding to UTF-8 using mbstring: mb_convert_encoding($string, 'UTF-8', mb_list_encodings());
+                        // Any encoding to UTF-8 using multibyte string: mb_convert_encoding($string, 'UTF-8', mb_list_encodings());
                         $xml .= '<![CDATA['.\str_replace('&', '&amp;', ($encode) ? UConverter::transcode($val, 'UTF8', 'ISO-8859-1') : $val).']]>';
                     }
                     $xml .= '</cell>';
@@ -1085,10 +1083,10 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Liefert alle Daten im XML Format fuer die JS Komponente dhtmlXCombo
+     * Returns all data in XML format for the JS component dhtmlXCombo
      *
-     * @param array $pkAsValue Primärschlüssel
-     * @param string $fieldNameAsOption Feldname als Option-Text
+     * @param array $pkAsValue primary key
+     * @param string $fieldNameAsOption field name as option text
      * @param boolean|null $add [optional]
      * @param string $encoding
      * @return string
@@ -1138,6 +1136,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     public function dump(): void
     {
         echo '<pre>';
+        /** @noinspection ForgottenDebugOutputInspection */
         \var_dump($this->records);
         echo '</pre>';
     }
