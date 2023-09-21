@@ -16,6 +16,7 @@ use mysqli_sql_exception;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\Exception\DatabaseConnectionException;
+use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Utils\Singleton;
@@ -289,8 +290,9 @@ class DataInterface extends PoolObject
      *
      * @throws \pool\classes\Exception\InvalidArgumentException
      * @throws \mysqli_sql_exception
+     * @throws \pool\classes\Exception\DAOException
      */
-    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = []): RecordSet
+    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = [], $useExceptions = false): RecordSet
     {
         $interface = static::getInterfaceForResource($dbname);
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
@@ -349,14 +351,17 @@ class DataInterface extends PoolObject
             }
         }
         else {//statement failed
-            $error_msg = $e?->getMessage() ?? "{$interface->getErrorAsText()} SQL Statement failed: $sql";
+            $error_msg = $e??null?->getMessage() ?? "{$interface->getErrorAsText()} SQL Statement failed: $sql";
+            // SQL Statement Error Logging:
+            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) === 1)
+                Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
+            if($useExceptions){
+               throw new DAOException($error_msg, previous: $e??null);
+            }
             $interface->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
             $error = $interface->getError();
             $error['sql'] = $sql;
             $RecordSet = (new RecordSet())->addError($error);
-            // SQL Statement Error Logging:
-            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) === 1)
-                Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
         }
 
         // SQL Statement Performance Logging:
@@ -379,7 +384,7 @@ class DataInterface extends PoolObject
      * Updates last command on success
      *
      * @return mixed query result / query resource
-     * @throws \pool\classes\Exception\InvalidArgumentException|\Exception
+     * @throws \pool\classes\Exception\InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException
      *@see DataInterface::getDBConnection
      */
     public static function query(string $query, string $database): mixed
@@ -445,12 +450,12 @@ class DataInterface extends PoolObject
 
     /**
      * Returns an existing DB connection for a specific database or creates a new connection
-     * @throws DatabaseConnectionException|RuntimeException|\Exception
+     * @throws DatabaseConnectionException|\pool\classes\Exception\InvalidArgumentException
      */
     private function getDBConnection(string $database, ConnectionMode $mode): Connection
     {
         if(!($database || ($database = $this->default_database))) //No DB specified and no default given
-            throw new RuntimeException('No database selected!');
+            throw new InvalidArgumentException('No database selected!');
         if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as WRITE
         return $this->connections[$mode->value][$database] ?? //fetch from cache
@@ -458,7 +463,7 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * @throws DatabaseConnectionException|\Exception
+     * @throws DatabaseConnectionException
      */
     private function openNewDBConnection(ConnectionMode $mode, string $databaseAlias): Connection
     {
@@ -473,7 +478,7 @@ class DataInterface extends PoolObject
         try {
             $Connection = $this->driver->connect($this, $host, $this->port, $db_user, $db_pass, $database, charset: $this->charset);
         }
-        catch(DatabaseConnectionException|Exception) {
+        catch(Exception) {
             $Connection = null;
         }
 
@@ -497,7 +502,7 @@ class DataInterface extends PoolObject
      *
      * @param \pool\classes\Database\ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
      * @return array contains database, username and password
-     * @throws Exception
+     * @throws \pool\classes\Database\Exception\DatabaseConnectionException
      */
     private function getAuth(ConnectionMode $mode): array
     {
@@ -581,17 +586,12 @@ class DataInterface extends PoolObject
 
         $rowSet = [];
         while(($row = $this->driver->fetch($query_resource))) {
-            if($metaData) {
-                // convert to php types
-                foreach($row as $col => $val) {
-                    if(isset($metaData['columns'][$col]) && $val !== null) {
+            if($metaData)// convert to php types
+                foreach($row as $col => $val)
+                    if(isset($metaData['columns'][$col]) && $val !== null)
                         settype($row[$col], $metaData['columns'][$col]['phpType']);
-                    }
-                }
-            }
-            if($callbackOnFetchRow) {
+            if($callbackOnFetchRow)
                 $row = $callbackOnFetchRow($row);
-            }
             $rowSet[] = $row;
         }
         return $rowSet;
