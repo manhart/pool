@@ -16,6 +16,7 @@ use DateTimeInterface;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
+use pool\classes\Database\DAO\IsolationLevel;
 use pool\classes\Database\DAO\MySQL_DAO;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
@@ -1004,5 +1005,22 @@ SQL;
             $assignments[] = "`$field`=$value";
         }
         return implode(', ', $assignments);
+    }
+
+    /**
+     * Changes the transaction isolation level for the current session.
+     * This is a utility function that allows for dirty reads when needed.
+     * Use cautiously, as changing the isolation level can have implications for data consistency.
+     *
+     * @param \pool\classes\Database\DAO\IsolationLevel $level The isolation level to set (e.g., 'READ UNCOMMITTED', 'READ COMMITTED', etc.)
+     * @return \pool\classes\Database\DAO
+     */
+    public function setTransactionIsolationLevel(IsolationLevel $level): static
+    {
+        $query = <<<SQL
+SET TRANSACTION ISOLATION LEVEL $level->value
+SQL;
+        $this->execute($query);
+        return $this;
     }
 }
