@@ -14,6 +14,8 @@ namespace pool\classes\Core\Input
     use Countable;
     use pool\classes\Core\Input\Filter\DataType;
     use pool\classes\Core\PoolObject;
+    use function array_key_exists;
+    use function strlen;
 
     /**
      * Core class for incoming data on the server
@@ -114,7 +116,7 @@ namespace pool\classes\Core\Input
          */
         protected function init(int $superglobals = self::EMPTY): void
         {
-            if($superglobals == 0) {
+            if($superglobals === 0) {
                 return;
             }
             $this->superglobals = $superglobals;
@@ -155,7 +157,7 @@ namespace pool\classes\Core\Input
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.session.php
-            if($superglobals != self::ALL and $superglobals & self::SESSION) { // only $_SESSION assigned directly (not combinable)
+            if($superglobals !== self::ALL && $superglobals & self::SESSION) { // only $_SESSION assigned directly (not combinable)
                 $this->vars = &$_SESSION; // PHP Session Handling (see php manual)
             }
         }
@@ -181,11 +183,11 @@ namespace pool\classes\Core\Input
         public static function processJsonPostRequest(): void
         {
             // decode POST requests with JSON-Data
-            if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' and ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
-                $json = file_get_contents('php://input');
-                if(isValidJSON($json)) {
-                    $_POST = json_decode($json, true);
-                    $_REQUEST = $_REQUEST + $_POST;
+            if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
+                $json = \file_get_contents('php://input');
+                if(\isValidJSON($json)) {
+                    $_POST = \json_decode($json, true);
+                    $_REQUEST += $_POST;
                 }
             }
         }
@@ -254,7 +256,7 @@ namespace pool\classes\Core\Input
          */
         public function allEmpty(): bool
         {
-            if($this->count() == 0) {
+            if($this->count() === 0) {
                 return true;
             }
             foreach($this->vars as $value) {
@@ -272,7 +274,7 @@ namespace pool\classes\Core\Input
          */
         public function count(): int
         {
-            return count($this->vars);
+            return \count($this->vars);
         }
 
         /**
@@ -320,7 +322,7 @@ namespace pool\classes\Core\Input
          */
         public function getAsBool(string $key, bool $default = false): bool
         {
-            return boolval($this->getVar($key, $default));
+            return (bool)$this->getVar($key, $default);
         }
 
         /**
@@ -340,7 +342,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * assign data as array
+         * Assign data as array
          *
          * @param array $assoc
          * @param bool $suppressException
@@ -424,7 +426,7 @@ namespace pool\classes\Core\Input
          */
         public function getType(string $key): string
         {
-            return $this->exists($key) ? gettype($this->vars[$key]) : '';
+            return $this->exists($key) ? \gettype($this->vars[$key]) : '';
         }
 
         /**
@@ -437,7 +439,7 @@ namespace pool\classes\Core\Input
         public function setType(string $key, string $type): static
         {
             if($this->exists($key)) {
-                settype($this->vars[$key], $type);
+                \settype($this->vars[$key], $type);
             }
             return $this;
         }
@@ -450,7 +452,7 @@ namespace pool\classes\Core\Input
          */
         public function getXOREncrypted(string $name, string $secretKey): string
         {
-            return $this->xorEnDecryption(base64_decode($this->getVar($name)), $secretKey);
+            return $this->xorEnDecryption(\base64_decode($this->getVar($name)), $secretKey);
         }
 
         /**
@@ -473,7 +475,7 @@ namespace pool\classes\Core\Input
             $new_value = '';
             for($v = 0; $v < $value_len; $v++) {
                 $k = $v % $key_len;
-                $new_value .= chr(ord($value[$v]) ^ ord($secretKey[$k]));
+                $new_value .= \chr(\ord($value[$v]) ^ \ord($secretKey[$k]));
             }
             return $new_value;
         }
@@ -487,7 +489,7 @@ namespace pool\classes\Core\Input
          */
         public function setXOREncrypted(string $name, string $value, string $secretKey): static
         {
-            $this->setVar($name, base64_encode($this->xorEnDecryption($value, $secretKey)));
+            $this->setVar($name, \base64_encode($this->xorEnDecryption($value, $secretKey)));
             return $this;
         }
 
@@ -527,9 +529,9 @@ namespace pool\classes\Core\Input
          */
         private function runFilter(array $filter, mixed $value): mixed
         {
-            $pipeline = is_array($filter[0]) ? $filter[0] : [$filter[0]];
-            foreach($pipeline as $filter) {
-                $filterFunction = DataType::getFilter($filter);
+            $pipeline = \is_array($filter[0]) ? $filter[0] : [$filter[0]];
+            foreach($pipeline as $dataType) {
+                $filterFunction = DataType::getFilter($dataType);
                 $value = $filterFunction($value);
             }
             return $value;
@@ -551,7 +553,7 @@ namespace pool\classes\Core\Input
             foreach($requiredKeys as $key) {
                 $prefixedKey = $prefix.$key;
                 // AM, 22.04.09, modified (isset nimmt kein NULL)
-                if(\array_key_exists($prefixedKey, $this->vars)) {
+                if(array_key_exists($prefixedKey, $this->vars)) {
                     $value = $this->vars[$prefixedKey];
                     if($filterFn && $filterFn($value, $prefixedKey)) {
                         continue;
@@ -604,7 +606,7 @@ namespace pool\classes\Core\Input
          * @param array $keyNames
          * @return Input
          */
-        function renameKeys(array $keyNames): Input
+        public function renameKeys(array $keyNames): Input
         {
             foreach($keyNames as $oldKeyName => $newKeyName) {
                 $this->rename($oldKeyName, $newKeyName);
@@ -613,7 +615,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Renames a variable
+         * Rename a variable
          *
          * @param string $oldKeyName Old key name
          * @param string $newKeyName New key name
@@ -646,7 +648,7 @@ namespace pool\classes\Core\Input
          */
         public function diff(array $array): array
         {
-            return array_diff($this->vars, $array);
+            return \array_diff($this->vars, $array);
         }
 
         /**
@@ -657,7 +659,7 @@ namespace pool\classes\Core\Input
          */
         public function diff_assoc(array $array): array
         {
-            return array_diff_assoc($this->vars, $array);
+            return \array_diff_assoc($this->vars, $array);
         }
 
         /**
@@ -669,7 +671,7 @@ namespace pool\classes\Core\Input
          */
         public function getByteStream(): string
         {
-            return serialize($this->vars);
+            return \serialize($this->vars);
         }
 
         /**
@@ -682,7 +684,7 @@ namespace pool\classes\Core\Input
          */
         public function setByteStream(string $data): static
         {
-            return $this->addVars(unserialize($data));
+            return $this->addVars(\unserialize($data, ['allowed_classes' => false]));
         }
 
         /**
@@ -695,7 +697,7 @@ namespace pool\classes\Core\Input
          */
         public function dump(bool $print = true, string $key = ''): string
         {
-            $output = pray($key ? $this->getVar($key) : $this->vars);
+            $output = \pray($key ? $this->getVar($key) : $this->vars);
 
             if($print) {
                 print ($output);
@@ -711,10 +713,10 @@ namespace pool\classes\Core\Input
          */
         public function setParams(string $params): static
         {
-            if(strlen($params) == 0) {
+            if(!$params) {
                 return $this;
             }
-            parse_str($params, $parsedParams);
+            \parse_str($params, $parsedParams);
             foreach($parsedParams as $key => $value) {
                 $this->setVar($key, $value);
             }
@@ -730,10 +732,10 @@ namespace pool\classes\Core\Input
         public function mergeVars(Input $Input, bool $flip = false): Input
         {
             if($flip) {
-                $this->vars = array_merge($Input->vars, $this->vars);
+                $this->vars = \array_merge($Input->vars, $this->vars);
             }
             else {
-                $this->vars = array_merge($this->vars, $Input->vars);
+                $this->vars = \array_merge($this->vars, $Input->vars);
             }
             return $this;
         }
@@ -746,7 +748,7 @@ namespace pool\classes\Core\Input
          */
         public function mergeVarsIfNotSet(Input $Input): static
         {
-            if($Input->count() == 0) {
+            if(!$Input->count()) {
                 return $this;
             }
             $this->filterRules = $Input->getFilterRules();
@@ -781,7 +783,7 @@ namespace pool\classes\Core\Input
             if(!isset($this->filterRules[$key])) {
                 return;
             }
-            $filteredVar = filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+            $filteredVar = \filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
             if($filteredVar !== false)
                 $this->vars[$key] = $filteredVar;
         }
@@ -809,16 +811,16 @@ namespace pool\classes\Core\Input
          * @return string Url-conform query string
          */
         public function buildQuery(string $numeric_prefix = '', ?string $arg_separator = null,
-            int $encoding_type = PHP_QUERY_RFC3986): string
+            int $encoding_type = \PHP_QUERY_RFC3986): string
         {
             $query = '';
-            $session_name = session_name();
+            $session_name = \session_name();
             foreach($this->vars as $key => $value) {
-                if($key === $session_name || is_object($value)) {
+                if($key === $session_name || \is_object($value)) {
                     continue;
                 }
 
-                $query .= http_build_query([$key => $value], $numeric_prefix, $arg_separator, $encoding_type);
+                $query .= \http_build_query([$key => $value], $numeric_prefix, $arg_separator, $encoding_type);
             }
             return $query;
         }
