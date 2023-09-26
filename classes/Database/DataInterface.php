@@ -68,7 +68,7 @@ class DataInterface extends PoolObject
     public bool $force_backend_read = false;
 
     /**
-     * @var \pool\classes\Database\Driver
+     * @var Driver
      */
     protected Driver $driver;
 
@@ -86,7 +86,7 @@ class DataInterface extends PoolObject
         'LOCK', 'SET', 'STOP', 'RESET', 'CHANGE', 'PREPARE', 'EXECUTE', 'DEALLOCATE', 'DECLARE', 'OPTIMIZE'];
 
     /**
-     * @var \pool\classes\Database\Connection|null Last used connection link in query()
+     * @var Connection|null Last used connection link in query()
      * @see DataInterface::_query()
      */
     private ?Connection $lastConnection;
@@ -146,13 +146,21 @@ class DataInterface extends PoolObject
 
     private array $authentications = [];
 
+//    private static \Memcached $memcached;
+
     /**
-     * @param \pool\classes\Database\Driver $driver
+     * @param Driver $driver
      */
     public function __construct(Driver $driver)
     {
         $this->driver = $driver;
         $this->port = $driver->getDefaultPort();
+/*        self::$memcached = new \Memcached('pool');
+        self::$memcached->setOption(\Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+        if (!count(self::$memcached->getServerList())) {
+            self::$memcached->addServer('localhost', 11211);
+        }
+*/
     }
 
     /**
@@ -273,11 +281,16 @@ class DataInterface extends PoolObject
      *
      * @throws InvalidArgumentException
      * @throws \mysqli_sql_exception
-     * @throws \pool\classes\Exception\DAOException
+     * @throws DAOException
      */
     public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = [],
         $useExceptions = false): RecordSet
     {
+//        $cacheKey = md5($sql);
+//        if(($rowSet = self::$memcached->get($cacheKey)) !== false) {
+//            assert(is_array($rowSet));
+//            return new RecordSet($rowSet);
+//        }
         $interface = static::getInterfaceForResource($dbname);
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
@@ -300,6 +313,7 @@ class DataInterface extends PoolObject
                     //? ( z.B. UNION
                     if($interface->hasRows($query_resource)) {
                         $RecordSet = new RecordSet($interface->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
+                        // self::$memcached->set($cacheKey, $rowSet);
                     }
                     else {
                         $RecordSet = new RecordSet();
@@ -379,7 +393,7 @@ class DataInterface extends PoolObject
      * Updates last command on success
      *
      * @return mixed query result / query resource
-     * @throws InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException
+     * @throws InvalidArgumentException|DatabaseConnectionException
      * @see DataInterface::getDBConnection
      */
     public static function query(string $query, string $database): mixed
@@ -498,9 +512,9 @@ class DataInterface extends PoolObject
     /**
      * Reads the authentication data and returns it
      *
-     * @param \pool\classes\Database\ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
+     * @param ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
      * @return array contains database, username and password
-     * @throws \pool\classes\Database\Exception\DatabaseConnectionException
+     * @throws DatabaseConnectionException
      */
     private function getAuth(ConnectionMode $mode): array
     {
