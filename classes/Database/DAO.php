@@ -17,8 +17,10 @@ use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO\MySQL_DAO;
+use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
+use pool\classes\Exception\RuntimeException;
 use function addEndingSlash;
 use function array_diff;
 use function array_keys;
@@ -224,7 +226,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
     /**
      * Fetches the columns automatically from the DataInterface / Driver
      *
-     * @throws \pool\classes\Exception\InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException|\pool\classes\Exception\RuntimeException|\Exception
+     * @throws InvalidArgumentException|DatabaseConnectionException|RuntimeException|\Exception
      * @see DataInterface::getTableColumnsInfo()
      */
     public function fetchColumns(): static
@@ -594,9 +596,9 @@ SQL;
      *
      * @param string $sql sql statement to execute
      * @param callable|null $customCallback
-     * @return \pool\classes\Core\RecordSet
+     * @return RecordSet
      * @throws \mysqli_sql_exception
-     * @throws \pool\classes\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     protected function execute(string $sql, ?callable $customCallback = null): RecordSet
     {

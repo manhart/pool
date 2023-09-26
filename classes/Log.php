@@ -163,7 +163,12 @@ class Log
                         'database' => '',
                         'charset' => $charset
                     ]);
-                    $DAO = DAO::createDAO($tableDefine, null);
+                    if(is_array($tableDefine)) {
+                        $DAO = $tableDefine[1]::create(databaseName: $tableDefine[0]);
+                    }
+                    else {
+                        $DAO = DAO::createDAO($tableDefine);
+                    }
                     $DAO->fetchColumns();
                 }
 
