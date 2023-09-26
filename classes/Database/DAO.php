@@ -16,7 +16,6 @@ use DateTimeInterface;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
-use pool\classes\Database\DAO\IsolationLevel;
 use pool\classes\Database\DAO\MySQL_DAO;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
@@ -48,7 +47,7 @@ use function strtolower;
  * @package pool\classes\Database
  * @since 2003/07/10
  */
-abstract class DAO extends PoolObject implements IDatabaseAccess
+abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
 {
     /**
      * don't quote the value in the (sql) query
@@ -75,7 +74,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess
     protected readonly string $table;
 
     /**
-     * @var string Internal Name of the database
+     * @var string Internal Name of the database or alias
      */
     protected string $database;
 
@@ -199,7 +198,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess
     {
         // class stuff
         if(!$tableName) {
-            return new static();
+            return new static($databaseName);
         }
 
         if(static::$tableName) {
@@ -377,7 +376,10 @@ SQL;
     public function setColumns(string ...$columns): static
     {
         $this->columns = $columns;
-        return $this;
+        // Escape each column
+        $escapedColumns = array_map([$this, 'wrapColumn'], $this->columns);
+        // Concatenate the columns into a single string
+        $this->column_list = implode(', ', $escapedColumns);        return $this;
     }
 
     /**
@@ -616,6 +618,9 @@ SQL;
 
     /**
      * Returns the number of affected rows with no limit
+     *
+     * Warning: When used after a CALL statement, this function returns the number of rows selected by the last query in the procedure, not by the whole procedure.
+     * Attention: Statements using the FOUND_ROWS() function are not safe for replication.
      */
     public function foundRows(): int
     {
@@ -814,7 +819,7 @@ SQL;
             else {
                 $sql .= ', ';
             }
-            $sql .= "$alias.$column $sort";
+            $sql .= "$alias$column $sort";
         }
         return $sql;
     }
@@ -1008,19 +1013,10 @@ SQL;
     }
 
     /**
-     * Changes the transaction isolation level for the current session.
-     * This is a utility function that allows for dirty reads when needed.
-     * Use cautiously, as changing the isolation level can have implications for data consistency.
-     *
-     * @param \pool\classes\Database\DAO\IsolationLevel $level The isolation level to set (e.g., 'READ UNCOMMITTED', 'READ COMMITTED', etc.)
-     * @return \pool\classes\Database\DAO
+     * @return string Returns the database and table name in the format `database`.`table`
      */
-    public function setTransactionIsolationLevel(IsolationLevel $level): static
+    public function __toString(): string
     {
-        $query = <<<SQL
-SET TRANSACTION ISOLATION LEVEL $level->value
-SQL;
-        $this->execute($query);
-        return $this;
+        return "{$this->wrapSymbols(self::getDatabaseName())}.{$this->wrapSymbols(self::getTableName())}";
     }
 }

@@ -82,19 +82,6 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * Is called automatically after the columns are set
-     */
-    public function setColumns(string ...$columns): static
-    {
-        parent::setColumns(...$columns);
-        // Escape each column
-        $escapedColumns = array_map([$this, 'wrapColumn'], $this->columns);
-        // Concatenate the columns into a single string
-        $this->column_list = implode(', ', $escapedColumns);
-        return $this;
-    }
-
-    /**
      * Return columns to translate into another language
      */
     public function getTranslatedColumns(): array
