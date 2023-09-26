@@ -275,7 +275,7 @@ class Weblication extends Component
         Input::processJsonPostRequest();
         // determine the relative client und server path from the application to the pool
         if(!defined('IS_CLI')) {// check if we are in command line interface
-            define('IS_CLI', PHP_SAPI === 'cli');
+            \define('IS_CLI', \PHP_SAPI === 'cli');
         }
         if(!IS_CLI) {
             $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
@@ -1438,7 +1438,7 @@ class Weblication extends Component
      */
     public function measurePageSpeed(): void
     {
-        register_shutdown_function(function() {
+        \register_shutdown_function(function() {
             // print only when html content type is set
             if(!isHtmlContentTypeHeaderSet()) {
                 return;
