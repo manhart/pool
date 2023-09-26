@@ -260,8 +260,9 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
      * @param string|null $tableName table definition or the table name
      * @param string|null $databaseAlias database name
      * @return DAO Data Access Object (edited DAO->pool\classes\Database\DAO\MySQL_DAO f�r ZDE)
-     * @deprecated use create() instead
+     * @throws DAOException|\Exception
      * @see DAO::create()
+     * @deprecated use create() instead
      */
     public static function createDAO(?string $tableName = null, ?string $databaseAlias = null): static
     {
