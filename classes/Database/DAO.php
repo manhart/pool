@@ -221,7 +221,6 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
      */
     public static function createDAO(?string $tableName = null, ?string $databaseAlias = null): static
     {
-        $databaseName = DataInterface::getDatabaseForResource($databaseAlias);
         // @todo remove workaround once relying projects are fixed
         if($tableName && !$databaseAlias && str_contains($tableName, '_')) {
             [$databaseAlias, $tableName] = explode('_', $tableName, 2);
@@ -242,6 +241,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
         $class_exists = class_exists($tableName, false);
 
         $driver = DataInterface::getInterfaceForResource($databaseAlias)->getDriverName();
+        $databaseName = DataInterface::getDatabaseForResource($databaseAlias);
         $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
         $include = "$dir/$tableName.php";
         $file_exists = file_exists($include);
