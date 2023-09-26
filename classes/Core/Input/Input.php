@@ -261,9 +261,11 @@ namespace pool\classes\Core\Input
             // decode POST requests with JSON-Data
             if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
                 $json = \file_get_contents('php://input');
-                if(\isValidJSON($json)) {
-                    $_POST = \json_decode($json, true);
+                try {
+                    $_POST = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
                     $_REQUEST += $_POST;
+                }
+                catch(\JsonException) {
                 }
             }
         }
