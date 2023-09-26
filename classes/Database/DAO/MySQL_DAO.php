@@ -57,9 +57,9 @@ class MySQL_DAO extends DAO
     /**
      * Constructor.
      */
-    protected function __construct(?string $databaseName = null, ?string $table = null)
+    protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
-        parent::__construct($databaseName, $table);
+        parent::__construct($databaseAlias, $table);
         $this->rebuildColumnList();
     }
 

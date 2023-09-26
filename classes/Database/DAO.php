@@ -165,9 +165,9 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
     /**
      * Defines the default commands.
      */
-    protected function __construct(?string $databaseName = null, ?string $table = null)
+    protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
-        $this->database ??= $databaseName ?? static::$databaseName ?: throw new InvalidArgumentException('The static property databaseName is not defined within DAO '.static::class.'!');
+        $this->database ??= $databaseAlias ?? static::$databaseName ?: throw new InvalidArgumentException('The static property databaseName is not defined within DAO '.static::class.'!');
         $this->table ??= $table ?? static::$tableName ?: throw new InvalidArgumentException('The static property tableName is not defined within DAO '.static::class.'!');
 
         $this->quotedTable = $this->wrapSymbols($this->table);
@@ -214,16 +214,17 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
      * Erzeugt ein Data Access Object (anhand einer Tabellendefinition)
      *
      * @param string|null $tableName table definition or the table name
-     * @param string|null $databaseName database name
+     * @param string|null $databaseAlias database name
      * @return DAO Data Access Object (edited DAO->pool\classes\Database\DAO\MySQL_DAO f�r ZDE)
      * @deprecated use create() instead
      * @see DAO::create()
      */
-    public static function createDAO(?string $tableName = null, ?string $databaseName = null): static
+    public static function createDAO(?string $tableName = null, ?string $databaseAlias = null): static
     {
+        $databaseName = DataInterface::getDatabaseForResource($databaseAlias);
         // @todo remove workaround once relying projects are fixed
-        if($tableName && !$databaseName && str_contains($tableName, '_')) {
-            [$databaseName, $tableName] = explode('_', $tableName, 2);
+        if($tableName && !$databaseAlias && str_contains($tableName, '_')) {
+            [$databaseAlias, $tableName] = explode('_', $tableName, 2);
         }
 
         // class stuff
@@ -240,7 +241,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
 
         $class_exists = class_exists($tableName, false);
 
-        $driver = DataInterface::getInterfaceForResource($databaseName)->getDriverName();
+        $driver = DataInterface::getInterfaceForResource($databaseAlias)->getDriverName();
         $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
         $include = "$dir/$tableName.php";
         $file_exists = file_exists($include);
@@ -249,10 +250,10 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
             $class_exists = true;
         }
         if($class_exists) {
-            return new $tableName($databaseName, $tableName);
+            return new $tableName($databaseAlias, $tableName);
         }
 
-        $DAO = new $className($databaseName, $tableName);
+        $DAO = new $className($databaseAlias, $tableName);
         $DAO->fetchColumns();
         return $DAO;
     }
