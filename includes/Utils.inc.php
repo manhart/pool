@@ -50,17 +50,17 @@ function pray(mixed $data, bool $functions=false): string
     $result = '';
 
     if (isset ($data)) {
-        if ((is_array($data) and count($data)) || (is_object($data) and !isEmptyObject($data))) {
+        if ((is_array($data) && count($data)) || (is_object($data) && !isEmptyObject($data))) {
             $result .= "<OL>\n";
             foreach($data as $key => $value) {
 	            // while (list ($key, $value) = each ($data)) {
                 $type = gettype($value);
 
-                if ($type == "array" || $type == "object") {
+                if ($type === "array" || $type === "object") {
                     $result .= sprintf("<li>(%s) <b>%s</b>:\n", $type, $key);
 
-                    if (strtolower($key) != 'owner' and (strtolower($key) != 'weblication')
-                        and strtolower($key) != 'parent' and strtolower($key) != 'backtrace') { // prevent recursion
+                    if (strtolower($key) !== 'owner' and (strtolower($key) !== 'weblication')
+                        && strtolower($key) !== 'parent' and strtolower($key) !== 'backtrace') { // prevent recursion
                         $result .= pray($value, $functions);
                     }
                     else {
@@ -69,14 +69,12 @@ function pray(mixed $data, bool $functions=false): string
                 }
                 elseif (stripos($type, 'function') !== false) {
                     if ($functions) {
+                        /** @noinspection PrintfScanfArgumentsInspection */
                         $result .= sprintf("<li>(%s) <b>%s</b> </LI>\n", $type, $key, $value);
                         // There doesn't seem to be anything traversable inside functions.
                     }
                 }
                 else {
-                    /*	if (!$value){
-                        $value = "(none)";
-                    }*/
                     $result .= sprintf("<li>(%s) <b>%s</b> = %s</LI>\n", $type, $key, $value);
                 }
                 unset($key, $value);
@@ -1229,7 +1227,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
     //loop backwards through the parts of the path
     while (false !== ($part = current($bufferInput))){
         //ignore self-references and separator errors
-        if ($part === '' || $part === '.');
+        if ($part === '' || $part === '.') /** @noinspection SuspiciousSemicolonInspection */ ;
         //normal element -> add to buffer
         elseif ($part !== '..'){
             if ($stepsOut>0)//element was stepped out of again later in the Path
@@ -1489,7 +1487,7 @@ function readFilesRecursive(string $path, bool $absolute = true, string $filePat
  * @param string $path
  * @return array|false
  */
-function readDirs(string $path)
+function readDirs(string $path): false|array
 {
     return glob(addEndingSlash($path).'*', GLOB_ONLYDIR);
 }
@@ -1501,7 +1499,7 @@ function readDirs(string $path)
  */
 function checkRegExOutcome(string $regEX, string $content): bool
 {
-    if (($lastErrorCode = preg_last_error()) != PREG_NO_ERROR) {
+    if (($lastErrorCode = preg_last_error()) !== PREG_NO_ERROR) {
         $errormessage = preg_last_error_message($lastErrorCode);
         $errormessage = "RegularExpression $regEX failed with error code $lastErrorCode :$errormessage";
         $detailsFile = '';
@@ -1509,7 +1507,8 @@ function checkRegExOutcome(string $regEX, string $content): bool
             $detailsFile = \Log::makeDetailsFile(
                 "$errormessage\nParsed string:\n$content"
             );
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
         }
         if (!empty($detailsFile))
             $errormessage .= ' Details have been saved to: ' . $detailsFile;
@@ -1519,7 +1518,8 @@ function checkRegExOutcome(string $regEX, string $content): bool
         return true;
 }
 
-/**Produces a key-value array of variables given as parameters
+/**
+ * Produces a key-value array of variables given as parameters
  * @param Closure $closure fn()=>[varX.varY...]
  * @param mixed ...$namedValues optional named Arguments that get merged with the variables
  * @return array The resulting array keyed by the variable/parameter names
@@ -1530,7 +1530,6 @@ function packArray(Closure $closure, ... $namedValues ):array{
         (new ReflectionFunction($closure))->getClosureUsedVariables(),
         $namedValues);
 }
-
 
 /**
  * Sortiert mehrere oder multidimensionale Arrays
@@ -2178,7 +2177,7 @@ function preg_last_error_message(int $lastErrorCode): string
  */
 function isHTML(string $string): bool
 {
-    return $string != strip_tags($string);
+    return $string !== strip_tags($string);
 }
 
 /**
@@ -2189,11 +2188,11 @@ function isHTML(string $string): bool
  */
 function isValidJSON(string $string): bool
 {
-    if($string != '' && $string[0] !== '{' && $string[0] !== '[') {
+    if($string !== '' && $string[0] !== '{' && $string[0] !== '[') {
         return false;
     }
-    json_decode($string);
-    return json_last_error() == JSON_ERROR_NONE;
+    \json_decode($string);
+    return \json_last_error() === JSON_ERROR_NONE;
 }
 
 /**
