@@ -56,7 +56,7 @@ class MSSQL_DAO extends DAO
      */
     protected function buildLimit(array $limit): string
     {
-        if (!$limit) return '';
+        if(!$limit) return '';
         $offset = $limit[0] ?? 0;
         $rowCount = $limit[1] ?? 0;
 

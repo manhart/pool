@@ -20,6 +20,7 @@ class Connection extends PoolObject
      * @var Driver
      */
     private Driver $driver;
+
     private bool $closed = false;
 
     public function __construct(mixed $connection, Driver $driver)
@@ -59,7 +60,6 @@ class Connection extends PoolObject
     {
         return $this->driver->fetch($result);
     }
-
 
     public function getNumRows(mixed $result): int
     {

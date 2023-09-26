@@ -294,8 +294,8 @@ SQL;
     public function getTransactionIsolationLevel(Connection $connection): string
     {
         // needs GRANT VIEW SERVER STATE TO YourUsername;
-        /** @noinspection SqlResolve **/
-$result = $connection->query('SELECT CASE transaction_isolation_level
+        /** @noinspection SqlResolve * */
+        $result = $connection->query('SELECT CASE transaction_isolation_level
             WHEN 0 THEN \'Unspecified\'
             WHEN 1 THEN \'ReadUncommitted\'
             WHEN 2 THEN \'ReadCommitted\'

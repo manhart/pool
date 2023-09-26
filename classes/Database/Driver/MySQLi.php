@@ -297,7 +297,8 @@ SQL;
      */
     public function inTransaction(Connection $connection): bool
     {
-        $result = $connection->getConnection()->query('SELECT count(1) as inTransaction FROM information_schema.innodb_trx WHERE trx_mysql_thread_id = CONNECTION_ID()');
+        $result = $connection->getConnection()
+            ->query('SELECT count(1) as inTransaction FROM information_schema.innodb_trx WHERE trx_mysql_thread_id = CONNECTION_ID()');
         $row = $this->fetch($result);
         $this->free($result);
         return (int)$row['inTransaction'] > 0;

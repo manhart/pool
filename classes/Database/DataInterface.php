@@ -62,9 +62,6 @@ class DataInterface extends PoolObject
      */
     public string $last_Query;
 
-    /** Alle verfügbaren Master u. Slave Hosts */
-    private string|array $available_hosts = [];
-
     /**
      * Erzwingt Lesevorgänge über den Master-Host für Schreibvorgänge
      * (Wird gebraucht, wenn geschrieben wird, anschließend wieder gelesen. Die Replikation hinkt etwas nach.)
@@ -75,6 +72,9 @@ class DataInterface extends PoolObject
      * @var \pool\classes\Database\Driver
      */
     protected Driver $driver;
+
+    /** Alle verfügbaren Master u. Slave Hosts */
+    private string|array $available_hosts = [];
 
     /**
      * @var array<string, int> available cluster modes <br>
@@ -194,7 +194,8 @@ class DataInterface extends PoolObject
 
         $dataBases = (array)($connectionOptions['database'] ?? []);
 
-        $this->default_database = is_string($key = \array_key_first($dataBases)) ? $key : $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
+        $this->default_database = is_string($key = \array_key_first($dataBases)) ? $key :
+            $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
 
         if(array_key_exists('port', $connectionOptions)) {
             $this->port = $connectionOptions['port'];
@@ -223,8 +224,7 @@ class DataInterface extends PoolObject
     {
         $available_hosts =& $this->available_hosts;
         $alternativeHosts = 0;
-        if(is_array($available_hosts))
-            /** Multiple Clusters: move one random host to the hosts list*/ {
+        if(is_array($available_hosts)) /** Multiple Clusters: move one random host to the hosts list*/ {
             foreach($this->modes as $clusterMode => $clusterModeSpecificIndexUsedInAvailableHosts) {
                 /** @var array|null $hostList reference to hosts available in this mode */
                 $hostList =& $available_hosts[$clusterMode];
@@ -270,31 +270,14 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Retrieves DataInterface of a registered resource
-     * @throws InvalidArgumentException
-     */
-    public static function getInterfaceForResource(string $alias): self
-    {
-        return self::$register[$alias]['interface'] ?? throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
-    }
-
-    /**
-     * Retrieves database name for a registered resource
-     * @throws InvalidArgumentException
-     */
-    public static function getDatabaseForResource(string $alias): string
-    {
-        return self::$register[$alias]['name'] ?? throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
-    }
-
-    /**
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
      * @throws InvalidArgumentException
      * @throws \mysqli_sql_exception
      * @throws \pool\classes\Exception\DAOException
      */
-    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = [], $useExceptions = false): RecordSet
+    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = [],
+        $useExceptions = false): RecordSet
     {
         $interface = static::getInterfaceForResource($dbname);
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
@@ -353,12 +336,12 @@ class DataInterface extends PoolObject
             }
         }
         else {//statement failed
-            $error_msg = $e??null?->getMessage() ?? "{$interface->getErrorAsText()} SQL Statement failed: $sql";
+            $error_msg = $e ?? null?->getMessage() ?? "{$interface->getErrorAsText()} SQL Statement failed: $sql";
             // SQL Statement Error Logging:
             if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) === 1)
                 Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
-            if($useExceptions){
-               throw new DAOException($error_msg, previous: $e??null);
+            if($useExceptions) {
+                throw new DAOException($error_msg, previous: $e ?? null);
             }
             $interface->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
             $error = $interface->getError();
@@ -379,6 +362,17 @@ class DataInterface extends PoolObject
     }
 
     /**
+     * Retrieves DataInterface of a registered resource
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function getInterfaceForResource(string $alias): self
+    {
+        return self::$register[$alias]['interface'] ??
+            throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
+    }
+
+    /**
      * Executes a SQL-Statement.<br>
      * Saves query to this->sql<br>
      * Resets query_result<br>
@@ -387,7 +381,7 @@ class DataInterface extends PoolObject
      *
      * @return mixed query result / query resource
      * @throws InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException
-     *@see DataInterface::getDBConnection
+     * @see DataInterface::getDBConnection
      */
     public static function query(string $query, string $database): mixed
     {
@@ -428,30 +422,22 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access
-     *     objects
-     */
-    public function getDriverName(): string
-    {
-        return $this->driver->getName();
-    }
-
-    /**
-     * Opens a connection to a database
+     * Identifies the command of a query
      *
-     * @throws \Exception
+     * @param string $sql
+     * @return string command (e.g. SELECT, INSERT, UPDATE, DELETE)
      */
-    public function open(string $database = ''): bool
+    private static function identifyCommand(string $sql): string
     {
-        $this->getDBConnection($database, ConnectionMode::READ);
-        if($this->hosts[ConnectionMode::READ->value] !== $this->hosts[ConnectionMode::WRITE->value]) {
-            $this->getDBConnection($database, ConnectionMode::WRITE);
-        }
-        return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
+        $offset = strspn($sql, "( \n\t\r");//skip to the meat
+        //find position of first whitespace, starting from magic value 2 from old code
+        $pos = strcspn($sql, " \n\r\t", $offset + 2) + 2;// TODO MySQL Syntax DO, USE?
+        return strtoupper(substr($sql, $offset, $pos));//cut command from Query
     }
 
     /**
      * Returns an existing DB connection for a specific database or creates a new connection
+     *
      * @throws DatabaseConnectionException|\pool\classes\Exception\InvalidArgumentException
      */
     private function getDBConnection(string $database, ConnectionMode $mode): Connection
@@ -500,6 +486,17 @@ class DataInterface extends PoolObject
     }
 
     /**
+     * Retrieves database name for a registered resource
+     *
+     * @throws InvalidArgumentException
+     */
+    public static function getDatabaseForResource(string $alias): string
+    {
+        return self::$register[$alias]['name'] ??
+            throw new InvalidArgumentException("The requested database '$alias' has not (yet) registered an interface");
+    }
+
+    /**
      * Reads the authentication data and returns it
      *
      * @param \pool\classes\Database\ConnectionMode $mode Beschreibt den Zugriffsmodus Schreib-Lesevorgang
@@ -529,40 +526,6 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Checks if a database connection exists
-     */
-    public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
-    {
-        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]) {
-            $mode = ConnectionMode::READ;
-        } // same as host
-        $database = $database ?: $this->default_database;
-        return isset($this->connections[$mode->value][$database]);
-    }
-
-    /**
-     * Closes all connections and clears them from the register
-     */
-    public function close(): bool
-    {
-        $readConnections = &$this->connections[ConnectionMode::READ->value];
-        $writeConnections = &$this->connections[ConnectionMode::WRITE->value];
-
-        if(is_array($readConnections)) {
-            foreach($readConnections as $conid)
-                if($conid instanceof Connection)
-                    $conid->close();
-            $readConnections = [];
-        }
-        if(is_array($writeConnections)) {
-            foreach($writeConnections as $conid) if($conid instanceof Connection)
-                $conid->close();
-            $writeConnections = [];
-        }
-        return true;
-    }
-
-    /**
      * Returns the first command of the most recently executed statement in uppercase e.g. SELECT
      */
     public function getLastQueryCommand(): string
@@ -571,12 +534,11 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Returns the number of rows affected by a previous INSERT, UPDATE, or DELETE operation.
+     * Returns if a query resource has rows
      */
-    public function affectedRows(mixed $query_resource = null): int|false
+    public function hasRows(mixed $query_resource = null): bool
     {
-        $affectedRows = $this->lastConnection?->getAffectedRows($query_resource ?? $this->query_resource);
-        return $affectedRows === -1 ? false : $affectedRows ?? false;
+        return $this->lastConnection->hasRows($query_resource ?? $this->query_resource);
     }
 
     /**
@@ -600,63 +562,6 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Returns the ID of auto_increment primary keys from a previous INSERT operation.
-     *
-     * @return int|string Bei Erfolg die letzte ID einer INSERT-Operation
-     */
-    public function lastId(): int|string
-    {
-        return $this->driver->getLastId($this->lastConnection);
-    }
-
-    /**
-     * A SELECT statement may include a LIMIT clause to restrict the number of rows the server returns to the client. In some cases, it is desirable
-     * to know how many rows the statement would have returned without the LIMIT, but without running the statement again. To obtain this row count,
-     * include a SQL_CALC_FOUND_ROWS option in the SELECT statement, and then invoke FOUND_ROWS() afterward.
-     * You can also use FOUND_ROWS() to obtain the number of rows returned by a SELECT which does not contain a LIMIT clause. In this case you don't
-     * need to use the SQL_CALC_FOUND_ROWS option. This can be useful for example in a stored procedure.
-     *
-     * Warning: When used after a CALL statement, this function returns the number of rows selected by the last query in the procedure, not by the
-     * whole procedure.
-     * Attention: Statements using the FOUND_ROWS() function are not safe for replication.
-     *
-     * @return int Number of found rows
-     * @throws \Exception
-     */
-    public function foundRows(string $database): int
-    {
-        $sql = 'SELECT FOUND_ROWS() as foundRows';
-        $query_resource = $this::query($sql, $database);
-        if(!$query_resource) return 0;
-        $row = $this->fetchRow($query_resource);//fetch first row (only row
-        $this->free($query_resource);
-        return (int)$row['foundRows'];//default to 0
-    }
-
-    /**
-     * Identifies the command of a query
-     *
-     * @param string $sql
-     * @return string command (e.g. SELECT, INSERT, UPDATE, DELETE)
-     */
-    private static function identifyCommand(string $sql): string
-    {
-        $offset = strspn($sql, "( \n\t\r");//skip to the meat
-        //find position of first whitespace, starting from magic value 2 from old code
-        $pos = strcspn($sql, " \n\r\t", $offset + 2) + 2;// TODO MySQL Syntax DO, USE?
-        return strtoupper(substr($sql, $offset, $pos));//cut command from Query
-    }
-
-    /**
-     * Liefert einen Datensatz als assoziatives Array und indiziertes Array
-     */
-    private function fetchRow(mixed $query_resource = null): array|null|false
-    {
-        $query_resource ??= $this->query_resource;
-        return $query_resource ? $this->driver->fetch($query_resource) : false;
-    }
-
-    /**
      * Frees the memory associated with a result
      *
      * @param mixed $query_resource Query Ergebnis-Kennung
@@ -669,59 +574,22 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Returns three lists (fieldList with metadata, fieldNames, primary key) of a table
+     * Returns the ID of auto_increment primary keys from a previous INSERT operation.
      *
-     * @param string $database
-     * @param string $table
-     * @return array<string, array<string, array<string, string>|string>> fieldList, fieldNames, primary key
-     * @throws InvalidArgumentException|\Exception
+     * @return int|string Bei Erfolg die letzte ID einer INSERT-Operation
      */
-    public function getTableColumnsInfo(string $database, string $table): array
+    public function lastId(): int|string
     {
-        if(!$database || !$table) {
-            throw new InvalidArgumentException('Database and table names must be non-empty strings.');
-        }
-        return $this->getDBConnection($database, ConnectionMode::READ)->getTableColumnsInfo($database, $table);
+        return $this->driver->getLastId($this->lastConnection);
     }
 
     /**
-     * Get information about a column
-     *
-     * @throws \Exception
+     * Returns the number of rows affected by a previous INSERT, UPDATE, or DELETE operation.
      */
-    public function getColumnMetadata(string $database, string $table, string $field): array
+    public function affectedRows(mixed $query_resource = null): int|false
     {
-        if(!$database || !$table || !$field) {
-            throw new InvalidArgumentException('Database, table and field names must be non-empty strings.');
-        }
-
-        $query_resource = $this->getDBConnection($database, ConnectionMode::READ)->query("SHOW COLUMNS FROM `$table` like '$field'");
-        if(!$query_resource) {
-            throw new RuntimeException("Could not get column metadata for $database.$table.$field");
-        }
-        $row = [];
-        if($this->numRows($query_resource)) $row = $this->fetchRow($query_resource);
-        $this->free($query_resource);
-        return $row;
-    }
-
-    /**
-     * Returns the number of rows in a query resource
-     */
-    public function numRows(mixed $query_resource = null): int
-    {
-        $query_resource ??= $this->query_resource;
-        $result = $this->lastConnection?->getNumRows($query_resource) ?? 0;
-        assert(is_int($result));
-        return $result;
-    }
-
-    /**
-     * Returns if a query resource has rows
-     */
-    public function hasRows(mixed $query_resource = null): bool
-    {
-        return $this->lastConnection->hasRows($query_resource ?? $this->query_resource);
+        $affectedRows = $this->lastConnection?->getAffectedRows($query_resource ?? $this->query_resource);
+        return $affectedRows === -1 ? false : $affectedRows ?? false;
     }
 
     /**
@@ -743,41 +611,6 @@ class DataInterface extends PoolObject
     public function getError(): array
     {
         return $this->driver->errors($this->lastConnection)[0] ?? [];
-    }
-
-    /** Mit diesem Schalter werden alle Lesevorgänge auf die Backenddatenbank umgeleitet. **/
-    public function forceMasterRead(): static
-    {
-        $this->force_backend_read = true;
-        return $this;
-    }
-
-    /** Deaktiviert Lesevorgänge auf der Backenddatenbank. **/
-    public function disableMasterRead(): static
-    {
-        $this->force_backend_read = false;
-        return $this;
-    }
-
-    /**
-     * Escapes special characters in a string for use in an SQL statement, taking into account the current charset of the connection
-     *
-     * @param string $string string
-     * @return string escaped string
-     * @throws \Exception
-     */
-    public function escape(string $string, $database = ''): string
-    {
-        $connection = $this->getDBConnection($database, ConnectionMode::READ);
-        return $this->driver->escape($connection, $string);
-    }
-
-    /**
-     * For debugging purposes
-     */
-    public function getLastQuery(): string
-    {
-        return $this->last_Query;
     }
 
     /**
@@ -874,5 +707,177 @@ class DataInterface extends PoolObject
     {
         $Interface = static::getInterfaceForResource($databaseAlias);
         return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->rollbackToSavePoint($savepoint);
+    }
+
+    /**
+     * @return string name of the driver. it is used to identify the driver in the configuration and for the factory to load the correct data access
+     *     objects
+     */
+    public function getDriverName(): string
+    {
+        return $this->driver->getName();
+    }
+
+    /**
+     * Opens a connection to a database
+     *
+     * @throws \Exception
+     */
+    public function open(string $database = ''): bool
+    {
+        $this->getDBConnection($database, ConnectionMode::READ);
+        if($this->hosts[ConnectionMode::READ->value] !== $this->hosts[ConnectionMode::WRITE->value]) {
+            $this->getDBConnection($database, ConnectionMode::WRITE);
+        }
+        return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
+    }
+
+    /**
+     * Checks if a database connection exists
+     */
+    public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
+    {
+        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]) {
+            $mode = ConnectionMode::READ;
+        } // same as host
+        $database = $database ?: $this->default_database;
+        return isset($this->connections[$mode->value][$database]);
+    }
+
+    /**
+     * Closes all connections and clears them from the register
+     */
+    public function close(): bool
+    {
+        $readConnections = &$this->connections[ConnectionMode::READ->value];
+        $writeConnections = &$this->connections[ConnectionMode::WRITE->value];
+
+        if(is_array($readConnections)) {
+            foreach($readConnections as $conid)
+                if($conid instanceof Connection)
+                    $conid->close();
+            $readConnections = [];
+        }
+        if(is_array($writeConnections)) {
+            foreach($writeConnections as $conid) if($conid instanceof Connection)
+                $conid->close();
+            $writeConnections = [];
+        }
+        return true;
+    }
+
+    /**
+     * A SELECT statement may include a LIMIT clause to restrict the number of rows the server returns to the client. In some cases, it is desirable
+     * to know how many rows the statement would have returned without the LIMIT, but without running the statement again. To obtain this row count,
+     * include a SQL_CALC_FOUND_ROWS option in the SELECT statement, and then invoke FOUND_ROWS() afterward.
+     * You can also use FOUND_ROWS() to obtain the number of rows returned by a SELECT which does not contain a LIMIT clause. In this case you don't
+     * need to use the SQL_CALC_FOUND_ROWS option. This can be useful for example in a stored procedure.
+     * Warning: When used after a CALL statement, this function returns the number of rows selected by the last query in the procedure, not by the
+     * whole procedure.
+     * Attention: Statements using the FOUND_ROWS() function are not safe for replication.
+     *
+     * @return int Number of found rows
+     * @throws \Exception
+     */
+    public function foundRows(string $database): int
+    {
+        $sql = 'SELECT FOUND_ROWS() as foundRows';
+        $query_resource = $this::query($sql, $database);
+        if(!$query_resource) return 0;
+        $row = $this->fetchRow($query_resource);//fetch first row (only row
+        $this->free($query_resource);
+        return (int)$row['foundRows'];//default to 0
+    }
+
+    /**
+     * Liefert einen Datensatz als assoziatives Array und indiziertes Array
+     */
+    private function fetchRow(mixed $query_resource = null): array|null|false
+    {
+        $query_resource ??= $this->query_resource;
+        return $query_resource ? $this->driver->fetch($query_resource) : false;
+    }
+
+    /**
+     * Returns three lists (fieldList with metadata, fieldNames, primary key) of a table
+     *
+     * @param string $database
+     * @param string $table
+     * @return array<string, array<string, array<string, string>|string>> fieldList, fieldNames, primary key
+     * @throws InvalidArgumentException|\Exception
+     */
+    public function getTableColumnsInfo(string $database, string $table): array
+    {
+        if(!$database || !$table) {
+            throw new InvalidArgumentException('Database and table names must be non-empty strings.');
+        }
+        return $this->getDBConnection($database, ConnectionMode::READ)->getTableColumnsInfo($database, $table);
+    }
+
+    /**
+     * Get information about a column
+     *
+     * @throws \Exception
+     */
+    public function getColumnMetadata(string $database, string $table, string $field): array
+    {
+        if(!$database || !$table || !$field) {
+            throw new InvalidArgumentException('Database, table and field names must be non-empty strings.');
+        }
+
+        $query_resource = $this->getDBConnection($database, ConnectionMode::READ)->query("SHOW COLUMNS FROM `$table` like '$field'");
+        if(!$query_resource) {
+            throw new RuntimeException("Could not get column metadata for $database.$table.$field");
+        }
+        $row = [];
+        if($this->numRows($query_resource)) $row = $this->fetchRow($query_resource);
+        $this->free($query_resource);
+        return $row;
+    }
+
+    /**
+     * Returns the number of rows in a query resource
+     */
+    public function numRows(mixed $query_resource = null): int
+    {
+        $query_resource ??= $this->query_resource;
+        $result = $this->lastConnection?->getNumRows($query_resource) ?? 0;
+        assert(is_int($result));
+        return $result;
+    }
+
+    /** Mit diesem Schalter werden alle Lesevorgänge auf die Backenddatenbank umgeleitet. **/
+    public function forceMasterRead(): static
+    {
+        $this->force_backend_read = true;
+        return $this;
+    }
+
+    /** Deaktiviert Lesevorgänge auf der Backenddatenbank. **/
+    public function disableMasterRead(): static
+    {
+        $this->force_backend_read = false;
+        return $this;
+    }
+
+    /**
+     * Escapes special characters in a string for use in an SQL statement, taking into account the current charset of the connection
+     *
+     * @param string $string string
+     * @return string escaped string
+     * @throws \Exception
+     */
+    public function escape(string $string, $database = ''): string
+    {
+        $connection = $this->getDBConnection($database, ConnectionMode::READ);
+        return $this->driver->escape($connection, $string);
+    }
+
+    /**
+     * For debugging purposes
+     */
+    public function getLastQuery(): string
+    {
+        return $this->last_Query;
     }
 }

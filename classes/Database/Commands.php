@@ -11,7 +11,7 @@
 namespace pool\classes\Database;
 
 /**
- * define general commands for DAO's
+ * Define general commands for DAO's
  */
 enum Commands
 {

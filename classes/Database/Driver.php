@@ -80,6 +80,7 @@ abstract class Driver
 
     /**
      * Connects to the database
+     *
      * @throws \pool\classes\Database\Exception\DatabaseConnectionException
      */
     abstract public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
