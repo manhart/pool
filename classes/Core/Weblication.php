@@ -437,7 +437,7 @@ class Weblication extends Component
      *
      * @return bool
      */
-    static public function isAjax(): bool
+    public static function isAjax(): bool
     {
         return self::$isAjax;
     }
