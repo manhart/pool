@@ -184,14 +184,14 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * calls Weblication->run on the client
+     * Calls Weblication->run on the client
      *
      * @return void
      */
     public function prepareContent(): void
     {
+        $this->Template->setVar('lang', $this->Weblication->getLanguage());
         parent::prepareContent();
-
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('run.js', '', true));
     }
 
