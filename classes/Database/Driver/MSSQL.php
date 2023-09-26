@@ -52,7 +52,7 @@ class MSSQL extends Driver
     private string $charset = 'UTF-8';
 
     /**
-     * @param \pool\classes\Database\DataInterface $dataInterface
+     * @param DataInterface $dataInterface
      * @param string $hostname
      * @param int $port
      * @param string $username
@@ -109,7 +109,7 @@ class MSSQL extends Driver
     /**
      * Executes a query and returns the query result
      *
-     * @param \pool\classes\Database\Connection $connection
+     * @param Connection $connection
      * @param string $query SQL query
      * @param ...$params
      * @return mixed query result
@@ -158,7 +158,7 @@ class MSSQL extends Driver
     /**
      * Gets the number of affected rows in a previous SQL operation
      *
-     * @param \pool\classes\Database\Connection $connection
+     * @param Connection $connection
      * @param resource $result
      * @return int|false
      */
@@ -222,5 +222,129 @@ SQL;
             $fields,
             $pk,
         ];
+    }
+
+    /**
+     * Turns on or off auto-committing database modifications
+     */
+    public function autocommit(Connection $connection, bool $enable): bool
+    {
+        return true;
+    }
+
+    /**
+     * Starts a transaction
+     */
+    public function beginTransaction(Connection $connection): bool
+    {
+        return \sqlsrv_begin_transaction($connection->getConnection());
+    }
+
+    /**
+     * Commits a transaction
+     */
+    public function commit(Connection $connection): bool
+    {
+        return \sqlsrv_commit($connection->getConnection());
+    }
+
+    /**
+     * Rolls back a transaction
+     */
+    public function rollback(Connection $connection): bool
+    {
+        return \sqlsrv_rollback($connection->getConnection());
+    }
+
+    /**
+     * Creates a savepoint
+     */
+    public function createSavePoint(Connection $connection, string $savepoint): bool
+    {
+        return \is_resource($connection->query("SAVE TRANSACTION $savepoint"));
+    }
+
+    /**
+     * Releases a savepoint
+     */
+    public function releaseSavePoint(Connection $connection, string $savepoint): bool
+    {
+        return \is_resource($connection->rollbackToSavePoint($connection, $savepoint));
+    }
+
+    /**
+     * Rolls back a savepoint
+     */
+    public function rollbackToSavePoint(Connection $connection, string $savepoint): bool
+    {
+        return \is_resource($connection->query("ROLLBACK TRANSACTION $savepoint"));
+    }
+
+    /**
+     * Sets the transaction isolation level
+     */
+    public function setTransactionIsolationLevel(Connection $connection, string $level): bool
+    {
+        return \is_resource($connection->query("SET TRANSACTION ISOLATION LEVEL $level"));
+    }
+
+    /**
+     * Returns the transaction isolation level
+     */
+    public function getTransactionIsolationLevel(Connection $connection): string
+    {
+        // needs GRANT VIEW SERVER STATE TO YourUsername;
+        /** @noinspection SqlResolve **/
+$result = $connection->query('SELECT CASE transaction_isolation_level
+            WHEN 0 THEN \'Unspecified\'
+            WHEN 1 THEN \'ReadUncommitted\'
+            WHEN 2 THEN \'ReadCommitted\'
+            WHEN 3 THEN \'RepeatableRead\'
+            WHEN 4 THEN \'Serializable\'
+            WHEN 5 THEN \'Snapshot\'
+        END AS TRANSACTION_ISOLATION_LEVEL
+        FROM sys.dm_exec_sessions
+        WHERE session_id = @@SPID');
+        $row = $this->fetch($result);
+        $this->free($result);
+        return $row['TRANSACTION_ISOLATION_LEVEL'];
+    }
+
+    /**
+     * Returns the transaction state
+     */
+    public function inTransaction(Connection $connection): bool
+    {
+        $result = $connection->query('SELECT @@trancount');
+        $row = $this->fetch($result);
+        $this->free($result);
+        return (int)$row['@@trancount'] > 0;
+    }
+
+    /**
+     * Returns the version of the server
+     */
+    public function getServerVersion(Connection $connection): string
+    {
+        $result = $connection->query('SELECT @@version');
+        $row = $this->fetch($result);
+        $this->free($result);
+        return $row['@@version'];
+    }
+
+    /**
+     * Returns information about the server
+     */
+    public function getServerInfo(Connection $connection): array
+    {
+        return \sqlsrv_server_info($connection->getConnection());
+    }
+
+    /**
+     * Returns information about the client and specified connection
+     */
+    public function getClientInfo(Connection $connection): array
+    {
+        return \sqlsrv_client_info($connection->getConnection());
     }
 }

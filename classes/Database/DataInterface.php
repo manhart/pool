@@ -15,6 +15,7 @@ use Log;
 use mysqli_sql_exception;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
+use pool\classes\Database\DAO\IsolationLevel;
 use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
@@ -177,23 +178,24 @@ class DataInterface extends PoolObject
      * auth = (array) Authentication Array, Default 'mysql_auth'
      * force_backend_read = (bool) Enforce read operations over the master host for write operations
      *
-     * @see access.inc.php
      * @param array $connectionOptions Einstellungen
      * @return boolean Erfolgsstatus
-     * @throws \pool\classes\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
+     * @see access.inc.php
      */
     public function setOptions(array $connectionOptions): bool
     {
         // $this->persistence = array_key_exists('persistence', $Packet) ? $Packet['persistence'] : false;
         $this->force_backend_read = $connectionOptions['force_backend_read'] ?? false;
 
+        // @todo maybe switch to a connectionString
         $this->available_hosts = $connectionOptions['host'] ??
             throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "host"');
 
         $dataBases = (array)($connectionOptions['database'] ?? []);
 
-        $this->default_database = is_string($key = array_key_first($dataBases)) ? $key : $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
-        // @todo eliminate port and put it into the host string
+        $this->default_database = is_string($key = \array_key_first($dataBases)) ? $key : $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
+
         if(array_key_exists('port', $connectionOptions)) {
             $this->port = $connectionOptions['port'];
         }
@@ -269,7 +271,7 @@ class DataInterface extends PoolObject
 
     /**
      * Retrieves DataInterface of a registered resource
-     * @throws \pool\classes\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public static function getInterfaceForResource(string $alias): self
     {
@@ -278,7 +280,7 @@ class DataInterface extends PoolObject
 
     /**
      * Retrieves database name for a registered resource
-     * @throws \pool\classes\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public static function getDatabaseForResource(string $alias): string
     {
@@ -288,7 +290,7 @@ class DataInterface extends PoolObject
     /**
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
-     * @throws \pool\classes\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      * @throws \mysqli_sql_exception
      * @throws \pool\classes\Exception\DAOException
      */
@@ -384,45 +386,45 @@ class DataInterface extends PoolObject
      * Updates last command on success
      *
      * @return mixed query result / query resource
-     * @throws \pool\classes\Exception\InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException
+     * @throws InvalidArgumentException|\pool\classes\Database\Exception\DatabaseConnectionException
      *@see DataInterface::getDBConnection
      */
     public static function query(string $query, string $database): mixed
     {
-        $interface = static::getInterfaceForResource($database);
+        $Interface = static::getInterfaceForResource($database);
         //Store query in attribute
-        $interface->last_Query = $sql = ltrim($query);
+        $Interface->last_Query = $sql = ltrim($query);
         // reset query result
-        $interface->query_resource = false;
+        $Interface->query_resource = false;
         if(!$sql) {//nothing to do
             return false;
         }
         //identify command
-        $command = $interface::identifyCommand($sql);
-        if(IS_TESTSERVER && !in_array($command, $interface->commands, true))
+        $command = $Interface::identifyCommand($sql);
+        if(IS_TESTSERVER && !in_array($command, $Interface->commands, true))
             echo "Unknown command: '$command'<br>".
                 "in $sql<hr>".
                 "Please contact the POOL's maintainer to analyze the DataInterface in the query() function.";
         $isSELECT = $command === 'SELECT';//mode selection
-        $mode = !$isSELECT || $interface->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
+        $mode = !$isSELECT || $Interface->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
         if($isSELECT) {
-            $interface->totalReads++;
+            $Interface->totalReads++;
         }
         else {
-            $interface->totalWrites++;
+            $Interface->totalWrites++;
         }
-        $interface->totalQueries++;
+        $Interface->totalQueries++;
 
-        $Connection = $interface->getDBConnection($database, $mode);//connect
-        $interface->query_resource = $Connection->query($sql);//run
-        $interface->lastConnection = $Connection;
-        if($interface->query_resource) $interface->last_command = $command;
+        $Connection = $Interface->getDBConnection($database, $mode);//connect
+        $Interface->query_resource = $Connection->query($sql);//run
+        $Interface->lastConnection = $Connection;
+        if($Interface->query_resource) $Interface->last_command = $command;
         if(defined($x = 'LOG_ENABLED') && constant($x) &&
             defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) === 2 &&
             ($Log = Singleton::get('LogFile'))->isLogging())
             //Logging enabled
             $Log->addLine('SQL MODE: '.$mode->name);
-        return $interface->query_resource;
+        return $Interface->query_resource;
     }
 
     /**
@@ -608,9 +610,17 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Liefert Anzahl betroffener Zeilen (Rows) ohne Limit zurück.
+     * A SELECT statement may include a LIMIT clause to restrict the number of rows the server returns to the client. In some cases, it is desirable
+     * to know how many rows the statement would have returned without the LIMIT, but without running the statement again. To obtain this row count,
+     * include a SQL_CALC_FOUND_ROWS option in the SELECT statement, and then invoke FOUND_ROWS() afterward.
+     * You can also use FOUND_ROWS() to obtain the number of rows returned by a SELECT which does not contain a LIMIT clause. In this case you don't
+     * need to use the SQL_CALC_FOUND_ROWS option. This can be useful for example in a stored procedure.
      *
-     * @return int Anzahl Zeilen
+     * Warning: When used after a CALL statement, this function returns the number of rows selected by the last query in the procedure, not by the
+     * whole procedure.
+     * Attention: Statements using the FOUND_ROWS() function are not safe for replication.
+     *
+     * @return int Number of found rows
      * @throws \Exception
      */
     public function foundRows(string $database): int
@@ -768,5 +778,101 @@ class DataInterface extends PoolObject
     public function getLastQuery(): string
     {
         return $this->last_Query;
+    }
+
+    /**
+     * Changes the transaction isolation level for the current session.
+     * This is a utility function that allows for dirty reads when needed.
+     * Use cautiously, as changing the isolation level can have implications for data consistency.
+     *
+     * @param IsolationLevel $level The isolation level to set (e.g., 'READ UNCOMMITTED', 'READ COMMITTED', etc.)
+     * @param string $databaseAlias
+     * @return bool
+     * @throws Exception
+     */
+    public static function setTransactionIsolationLevel(IsolationLevel $level, string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->setTransactionIsolationLevel($level->value);
+    }
+
+    /**
+     * Turns on or off auto-committing database modifications
+     *
+     * @throws Exception
+     */
+    public static function autocommit(bool $autoCommit, string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->autocommit($autoCommit);
+    }
+
+    /**
+     * Starts a new transaction.
+     *
+     * @throws Exception
+     */
+    public static function beginTransaction(string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->beginTransaction();
+    }
+
+    /**
+     * The COMMIT statement ends a transaction, saving any changes to the data so that they become visible to subsequent transactions.
+     * Also, unlocks metadata changed by current transaction.
+     *
+     * @throws Exception
+     */
+    public static function commit(string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->commit();
+    }
+
+    /**
+     * The ROLLBACK statement rolls back (ends) a transaction, destroying any changes to SQL-data so that they never become visible to subsequent
+     * transactions.
+     *
+     * @throws Exception
+     */
+    public static function rollback(string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->rollback();
+    }
+
+    /**
+     * InnoDB supports the SQL statements SAVEPOINT, ROLLBACK TO SAVEPOINT, and RELEASE SAVEPOINT to enable saving and later rollback of portions of a
+     * transaction.
+     * If SAVEPOINT is issued and no transaction was started, no error is reported but no savepoint is created.
+     *
+     * @throws Exception
+     */
+    public static function createSavePoint(string $savepoint, string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->createSavePoint($savepoint);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function releaseSavePoint(string $savepoint, string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->releaseSavePoint($savepoint);
+    }
+
+    /**
+     * Normally ROLLBACK undoes the changes performed by the whole transaction. When used with the TO clause, it undoes the changes performed after
+     * the specified savepoint, and erases all subsequent savepoints. However, all locks that have been acquired after the save point will survive.
+     *
+     * @throws Exception
+     */
+    public static function rollbackToSavePoint(string $savepoint, string $databaseAlias): bool
+    {
+        $Interface = static::getInterfaceForResource($databaseAlias);
+        return $Interface->getDBConnection($databaseAlias, ConnectionMode::WRITE)->rollbackToSavePoint($savepoint);
     }
 }

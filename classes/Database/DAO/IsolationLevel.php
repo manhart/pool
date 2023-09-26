@@ -12,7 +12,7 @@ namespace pool\classes\Database\DAO;
 
 enum IsolationLevel: string
 {
-    case READ_UNCOMMITTED = 'READ UNCOMMITTED';
+    case READ_UNCOMMITTED = 'READ UNCOMMITTED'; // dirty reads
     case READ_COMMITTED = 'READ COMMITTED';
     case REPEATABLE_READ = 'REPEATABLE READ';
     case SERIALIZABLE = 'SERIALIZABLE';

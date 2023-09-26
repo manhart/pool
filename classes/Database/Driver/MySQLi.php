@@ -216,4 +216,122 @@ SQL;
     {
         $result->free();
     }
+
+    /**
+     * Turns on or off auto-committing database modifications
+     */
+    public function autocommit(Connection $connection, bool $enable): bool
+    {
+        return $connection->getConnection()->autocommit($enable);
+    }
+
+    /**
+     * Starts a transaction
+     */
+    public function beginTransaction(Connection $connection): bool
+    {
+        return $connection->getConnection()->begin_transaction();
+    }
+
+    /**
+     * Commits a transaction
+     */
+    public function commit(Connection $connection): bool
+    {
+        return $connection->getConnection()->commit();
+    }
+
+    /**
+     * Rolls back a transaction
+     */
+    public function rollback(Connection $connection): bool
+    {
+        return $connection->getConnection()->rollback();
+    }
+
+    /**
+     * Creates a savepoint
+     */
+    public function createSavePoint(Connection $connection, string $savepoint): bool
+    {
+        return $connection->getConnection()->query("SAVEPOINT $savepoint");
+    }
+
+    /**
+     * Releases a savepoint
+     */
+    public function releaseSavePoint(Connection $connection, string $savepoint): bool
+    {
+        return $connection->getConnection()->query("RELEASE SAVEPOINT $savepoint");
+    }
+
+    /**
+     * Rolls back a savepoint
+     */
+    public function rollbackToSavePoint(Connection $connection, string $savepoint): bool
+    {
+        return $connection->getConnection()->query("ROLLBACK TO SAVEPOINT $savepoint");
+    }
+
+    /**
+     * Sets the transaction isolation level
+     */
+    public function setTransactionIsolationLevel(Connection $connection, string $level): bool
+    {
+        return $connection->getConnection()->query("SET TRANSACTION ISOLATION LEVEL $level");
+    }
+
+    /**
+     * Returns the transaction isolation level
+     */
+    public function getTransactionIsolationLevel(Connection $connection): string
+    {
+        $result = $connection->getConnection()->query('SELECT @@tx_isolation');
+        $row = $this->fetch($result);
+        $this->free($result);
+        return $row['@@tx_isolation'];
+    }
+
+    /**
+     * Returns the transaction state
+     */
+    public function inTransaction(Connection $connection): bool
+    {
+        $result = $connection->getConnection()->query('SELECT count(1) as inTransaction FROM information_schema.innodb_trx WHERE trx_mysql_thread_id = CONNECTION_ID()');
+        $row = $this->fetch($result);
+        $this->free($result);
+        return (int)$row['inTransaction'] > 0;
+    }
+
+    /**
+     * Returns the version of the MySQL server as an integer
+     */
+    public function getServerVersion(Connection $connection): string
+    {
+        return $connection->getConnection()->server_version;
+    }
+
+    /**
+     * Returns the version of the MySQL server as a string
+     */
+    public function getServerInfo(Connection $connection): string
+    {
+        return $connection->getConnection()->server_info;
+    }
+
+    /**
+     * Returns a string representing the type of connection used
+     */
+    public function getHostInfo(Connection $connection): string
+    {
+        return $connection->getConnection()->host_info;
+    }
+
+    /**
+     * Returns the version of the client library as a string
+     */
+    public function getClientInfo(Connection $connection): string
+    {
+        return $connection->getConnection()->client_info;
+    }
 }

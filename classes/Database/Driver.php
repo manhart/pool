@@ -10,8 +10,6 @@
 
 namespace pool\classes\Database;
 
-use Exception;
-
 abstract class Driver
 {
     /**
@@ -41,8 +39,8 @@ abstract class Driver
      */
     protected function __construct()
     {
-        if(static::$provider && !extension_loaded(static::$provider)) {
-            throw new Exception('Provider '.static::$provider.' not loaded');
+        if(static::$provider && !\extension_loaded(static::$provider)) {
+            throw new \RuntimeException('Provider '.static::$provider.' not loaded');
         }
     }
 
@@ -90,7 +88,7 @@ abstract class Driver
     /**
      * Executes a query and returns the query result
      *
-     * @param \pool\classes\Database\Connection $connection
+     * @param Connection $connection
      * @param string $query SQL query
      * @param ...$params
      * @return mixed query result
@@ -136,4 +134,59 @@ abstract class Driver
      * Get the columns info of a table
      */
     abstract public function getTableColumnsInfo(Connection $connection, string $database, string $table): array;
+
+    /**
+     * Set transaction isolation level
+     */
+    abstract public function setTransactionIsolationLevel(Connection $connection, string $level): bool;
+
+    /**
+     * Returns the transaction isolation level
+     */
+    abstract public function getTransactionIsolationLevel(Connection $connection): string;
+
+    /**
+     * Starts a transaction
+     */
+    abstract public function beginTransaction(Connection $connection): bool;
+
+    /**
+     * Commits a transaction
+     */
+    abstract public function commit(Connection $connection): bool;
+
+    /**
+     * Rolls back a transaction
+     */
+    abstract public function rollback(Connection $connection): bool;
+
+    /**
+     * Turns on or off auto-committing database modifications
+     */
+    abstract public function autocommit(Connection $connection, bool $enable): bool;
+
+    /**
+     * Returns the current transaction state
+     */
+    abstract public function inTransaction(Connection $connection): bool;
+
+    /**
+     * Creates a new savepoint
+     */
+    abstract public function createSavePoint(Connection $connection, string $savepoint): bool;
+
+    /**
+     * Rolls back to a savepoint
+     */
+    abstract public function rollbackToSavePoint(Connection $connection, string $savepoint): bool;
+
+    /**
+     * Releases a savepoint
+     */
+    abstract public function releaseSavePoint(Connection $connection, string $savepoint): bool;
+
+    /**
+     * Returns the server version
+     */
+    abstract public function getServerVersion(Connection $connection): string;
 }

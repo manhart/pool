@@ -17,7 +17,7 @@ class Connection extends PoolObject
     private mixed $connection;
 
     /**
-     * @var \pool\classes\Database\Driver
+     * @var Driver
      */
     private Driver $driver;
     private bool $closed = false;
@@ -39,7 +39,7 @@ class Connection extends PoolObject
     /**
      * Executes a query and returns the query result
      */
-    public function query(string $query, ...$params)
+    public function query(string $query, ...$params): mixed
     {
         return $this->driver->query($this, $query, ...$params);
     }
@@ -81,16 +81,68 @@ class Connection extends PoolObject
         return $this->driver->getTableColumnsInfo($this, $database, $table);
     }
 
-    public function startTransaction(): void
+    /**
+     * Sets the transaction isolation level
+     */
+    public function setTransactionIsolationLevel(string $level): bool
     {
+        return $this->driver->setTransactionIsolationLevel($this, $level);
     }
 
-    public function commit(): void
+    /**
+     * Turns on or off auto-committing database modifications
+     */
+    public function autocommit(bool $enable): bool
     {
+        return $this->driver->autocommit($this, $enable);
     }
 
-    public function rollback(): void
+    /**
+     * Starts a transaction
+     */
+    public function beginTransaction(): bool
     {
+        return $this->driver->beginTransaction($this);
+    }
+
+    /**
+     * Commits a transaction
+     */
+    public function commit(): bool
+    {
+        return $this->driver->commit($this);
+    }
+
+    /**
+     * Rolls back a transaction
+     */
+    public function rollback(): bool
+    {
+        return $this->driver->rollback($this);
+    }
+
+    /**
+     * Creates a savepoint
+     */
+    public function createSavePoint(string $savepoint): bool
+    {
+        return $this->driver->createSavePoint($this, $savepoint);
+    }
+
+    /**
+     * Releases a savepoint
+     */
+    public function releaseSavePoint(string $savepoint): bool
+    {
+        return $this->driver->releaseSavePoint($this, $savepoint);
+    }
+
+    /**
+     * Rolls back to a savepoint
+     */
+    public function rollbackToSavePoint(string $savepoint): bool
+    {
+        return $this->driver->rollbackToSavePoint($this, $savepoint);
     }
 
     /**
