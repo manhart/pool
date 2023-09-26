@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace pool\classes\Database\DAO;
+namespace pool\classes\Database;
 
 enum IsolationLevel: string
 {

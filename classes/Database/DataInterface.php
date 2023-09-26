@@ -15,7 +15,6 @@ use Log;
 use mysqli_sql_exception;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
-use pool\classes\Database\DAO\IsolationLevel;
 use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
