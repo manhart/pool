@@ -30,8 +30,11 @@ use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
-use ReflectionException;
 use Template;
+use function addEndingSlash;
+use function defined;
+use function file_exists;
+use function is_dir;
 use const pool\PWD_TILL_GUIS;
 use const pool\PWD_TILL_JS;
 use const pool\PWD_TILL_SKINS;
@@ -211,19 +214,19 @@ class Weblication extends Component
     /**
      * locale unchanged / as is.
      */
-    const LOCALE_UNCHANGED = 0;
+    public const LOCALE_UNCHANGED = 0;
     /**
      * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
      */
-    const LOCALE_FORCE_REGION = 1;
+    public const LOCALE_FORCE_REGION = 1;
     /**
      * The application's charset is appended if no charset is attached to the locale.
      */
-    const LOCALE_FORCE_CHARSET = 2;
+    public const LOCALE_FORCE_CHARSET = 2;
     /**
      * Removes possible charsets.
      */
-    const LOCALE_WITHOUT_CHARSET = 4;
+    public const LOCALE_WITHOUT_CHARSET = 4;
 
     /**
      * @var array all possible default formats
@@ -270,7 +273,7 @@ class Weblication extends Component
     final private function __construct()
     {
         parent::__construct(null);
-        self::$isAjax = isAjax();
+        self::$isAjax = \isAjax();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
         // determine the relative client und server path from the application to the pool
@@ -278,7 +281,7 @@ class Weblication extends Component
             \define('IS_CLI', \PHP_SAPI === 'cli');
         }
         if(!IS_CLI) {
-            $poolRelativePath = makeRelativePathsFrom(dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
+            $poolRelativePath = \makeRelativePathsFrom(\dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
             $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
         }
     }
@@ -382,7 +385,7 @@ class Weblication extends Component
      */
     public function setCharset(string $charset): Weblication
     {
-        header('content-type: text/html; charset='.$charset);
+        \header('content-type: text/html; charset='.$charset);
         $this->charset = $charset;
         return $this;
     }
@@ -395,7 +398,7 @@ class Weblication extends Component
      */
     public function setDefaultFormats(array $formats): Weblication
     {
-        $this->formats = array_merge($this->formats, $formats);
+        $this->formats = \array_merge($this->formats, $formats);
         return $this;
     }
 
@@ -416,7 +419,7 @@ class Weblication extends Component
      * @param int $progId
      * @return Weblication
      */
-    function setProgId(int $progId): Weblication
+    public function setProgId(int $progId): Weblication
     {
         $this->progId = $progId;
         return $this;
@@ -427,7 +430,7 @@ class Weblication extends Component
      *
      * @return int|null
      */
-    function getProgId(): ?int
+    public function getProgId(): ?int
     {
         return $this->progId;
     }
@@ -513,17 +516,15 @@ class Weblication extends Component
     }
 
     /**
-     * returns the main frame
+     * Returns the main frame
      *
      * @return GUI_CustomFrame|null
      */
     public function getFrame(): ?GUI_CustomFrame
     {
-        if(!$this->Frame) {
-            if($this->hasFrame()) {
-                assert($this->Main instanceof GUI_CustomFrame);
-                $this->Frame = $this->Main;
-            }
+        if(!$this->Frame && $this->hasFrame()) {
+            \assert($this->Main instanceof GUI_CustomFrame);
+            $this->Frame = $this->Main;
         }
         return $this->Frame;
     }
@@ -570,10 +571,10 @@ class Weblication extends Component
         # Ordner Skins
         $folder_skins = addEndingSlash(PWD_TILL_SKINS).$this->getCommonSkinFolder();
         if($absolute) {
-            $folder_skins = addEndingSlash(getcwd()).$folder_skins;
+            $folder_skins = addEndingSlash(\getcwd()).$folder_skins;
         }
         $folder_language = $folder_skins.addEndingSlash($this->language);
-        if($additionalDir != '') {
+        if($additionalDir !== '') {
             $folder_skin_dir = addEndingSlash($folder_skins).$additionalDir;
             $folder_language_dir = addEndingSlash($folder_language).$additionalDir;
         }
@@ -589,7 +590,7 @@ class Weblication extends Component
             $path = $folder_skin_dir;
         }
         else {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' and \'%s\' not found (@getCommonSkinPath)!',
+            $this->raiseError(__FILE__, __LINE__, \sprintf('Path \'%s\' and \'%s\' not found (@getCommonSkinPath)!',
                 $folder_skin_dir, $folder_language_dir));
         }
 
@@ -605,7 +606,7 @@ class Weblication extends Component
     public function skin_exists(string $skin = ''): bool
     {
         $skin = addEndingSlash(($skin ?: $this->skin));
-        $pathSkin = addEndingSlash(getcwd()).addEndingSlash(PWD_TILL_SKINS).$skin;
+        $pathSkin = addEndingSlash(\getcwd()).addEndingSlash(PWD_TILL_SKINS).$skin;
         return file_exists($pathSkin);
     }
 
@@ -616,7 +617,7 @@ class Weblication extends Component
      * @param bool $absolute
      * @return string
      */
-    function getSkinPath(string $additionalDir = '', bool $absolute = true): string
+    public function getSkinPath(string $additionalDir = '', bool $absolute = true): string
     {
         $path = '';
         $skin = addEndingSlash($this->skin);
@@ -625,10 +626,10 @@ class Weblication extends Component
         # Ordner Skins
         $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skin;
         if($absolute) {
-            $folder_skins = addEndingSlash(getcwd()).$folder_skins;
+            $folder_skins = addEndingSlash(\getcwd()).$folder_skins;
         }
         $folder_language = $folder_skins.$language;
-        if($additionalDir != '') {
+        if($additionalDir !== '') {
             $folder_skin_dir = addEndingSlash($folder_skins).$additionalDir;
             $folder_language_dir = addEndingSlash($folder_language).$additionalDir;
         }
@@ -644,7 +645,7 @@ class Weblication extends Component
             $path = $folder_skin_dir;
         }
         else {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Path \'%s\' and \'%s\' not found (@getSkinPath)!',
+            $this->raiseError(__FILE__, __LINE__, \sprintf('Path \'%s\' and \'%s\' not found (@getSkinPath)!',
                 $folder_skin_dir, $folder_language_dir));
         }
 
@@ -660,13 +661,12 @@ class Weblication extends Component
     {
         // detect skins
         if(!($this->skins)) {
-            $skinPath = getcwd().'/'.PWD_TILL_SKINS;
-            $skinDirs = readDirs($skinPath);
-            $numDirs = sizeof($skinDirs);
+            $skinPath = \getcwd().'/'.PWD_TILL_SKINS;
+            $skinDirs = \readDirs($skinPath);
             $skins = [];
-            for($i = 0; $i < $numDirs; $i++) {
-                $skinName = basename($skinDirs[$i]);
-                if($skinName != $this->getCommonSkinFolder()) {
+            foreach($skinDirs as $iValue) {
+                $skinName = \basename($iValue);
+                if($skinName !== $this->getCommonSkinFolder()) {
                     $skins[] = $skinName;
                 }
             }
@@ -692,18 +692,16 @@ class Weblication extends Component
         $folder_images = $folder_skins.$images;
         $folder_language = $folder_skins.addEndingSlash($language).$images;
 
-        if(is_dir($folder_language)) { // Language Ordner
-            if(file_exists($folder_language.$filename)) {
-                return $folder_language.$filename;
-            }
+        // Language Ordner
+        if(is_dir($folder_language) && file_exists($folder_language.$filename)) {
+            return $folder_language.$filename;
         }
-        if(is_dir($folder_images)) { // Images Ordner
-            if(file_exists($folder_images.$filename)) {
-                return $folder_images.$filename;
-            }
+        // Images Ordner
+        if(is_dir($folder_images) && file_exists($folder_images.$filename)) {
+            return $folder_images.$filename;
         }
 
-        $this->raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@Weblication->findImage)!', $folder_images.$filename));
+        $this->raiseError(__FILE__, __LINE__, \sprintf('Image \'%s\' not found (@Weblication->findImage)!', $folder_images.$filename));
         return '';
     }
 
@@ -715,14 +713,14 @@ class Weblication extends Component
      */
     public function hasCommonSkinFolder(?string $subFolder = null): bool
     {
-        if(is_null($this->hasCommonSkinFolder)) {
+        if(\is_null($this->hasCommonSkinFolder)) {
             $this->hasCommonSkinFolder = [];
             $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->commonSkinFolder);
         }
-        if($subFolder != null and $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
+        if($subFolder !== null && $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
             if(!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] =
                 null;
-            if(is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) {
+            if(\is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) {
                 $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = [];
                 $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] =
                     is_dir(PWD_TILL_SKINS.'/'.$this->commonSkinFolder.'/'.$subFolder);
@@ -735,45 +733,43 @@ class Weblication extends Component
     /**
      * Does the project have the skin?
      *
-     * @param string|null $subfolder
+     * @param string|null $subFolder
      * @param string|null $language
      * @param string|null $translated
      * @return bool
      */
-    public function hasSkinFolder(?string $subfolder = null, ?string $language = null, ?string $translated = null): bool
+    public function hasSkinFolder(?string $subFolder = null, ?string $language = null, ?string $translated = null): bool
     {
         if(!isset($this->hasSkinFolder[$this->skin])) {
             $this->hasSkinFolder[$this->skin] = [];
             $this->hasSkinFolder[$this->skin]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin);
         }
-        if($subfolder != null and $this->hasSkinFolder[$this->skin]['__exists']) {
-            if(!isset($this->hasSkinFolder[$this->skin][$subfolder])) {
-                $this->hasSkinFolder[$this->skin][$subfolder] = [];
-                $this->hasSkinFolder[$this->skin][$subfolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subfolder);
+        if($subFolder !== null && $this->hasSkinFolder[$this->skin]['__exists']) {
+            if(!isset($this->hasSkinFolder[$this->skin][$subFolder])) {
+                $this->hasSkinFolder[$this->skin][$subFolder] = [];
+                $this->hasSkinFolder[$this->skin][$subFolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder);
             }
-            if(is_null($language) and is_null($translated)) {
-                return $this->hasSkinFolder[$this->skin][$subfolder]['__exists'];
+            if(\is_null($language) && \is_null($translated)) {
+                return $this->hasSkinFolder[$this->skin][$subFolder]['__exists'];
             }
-            else {
-                if($this->hasSkinFolder[$this->skin][$subfolder]['__exists']) {
-                    if(!isset($this->hasSkinFolder[$this->skin][$subfolder][$language])) {
-                        $this->hasSkinFolder[$this->skin][$subfolder][$language] = [];
-                        $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'] =
-                            is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subfolder.'/'.$language);
+
+            if($this->hasSkinFolder[$this->skin][$subFolder]['__exists']) {
+                if(!isset($this->hasSkinFolder[$this->skin][$subFolder][$language])) {
+                    $this->hasSkinFolder[$this->skin][$subFolder][$language] = [];
+                    $this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists'] =
+                        is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language);
+                }
+                if(\is_null($translated)) {
+                    return $this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists'];
+                }
+
+                if($this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists']) {
+                    if(!isset($this->hasSkinFolder[$this->skin][$subFolder][$language][$translated])) {
+                        $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated] = [];
+                        $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated]['__exists'] =
+                            is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language.'/'.$translated);
                     }
-                    if(is_null($translated)) {
-                        return $this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists'];
-                    }
-                    else {
-                        if($this->hasSkinFolder[$this->skin][$subfolder][$language]['__exists']) {
-                            if(!isset($this->hasSkinFolder[$this->skin][$subfolder][$language][$translated])) {
-                                $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated] = [];
-                                $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated]['__exists'] =
-                                    is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subfolder.'/'.$language.'/'.$translated);
-                            }
-                            return $this->hasSkinFolder[$this->skin][$subfolder][$language][$translated]['__exists'];
-                        }
-                    }
+                    return $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated]['__exists'];
                 }
             }
         }
@@ -802,7 +798,7 @@ class Weblication extends Component
         if($template) return $template;
 
         $msg = "Template $filename in ".__METHOD__." not found!";
-        if(!$this->getPoolServerSideRelativePath() and $baseLib) {
+        if($baseLib && !$this->getPoolServerSideRelativePath()) {
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
         }
@@ -834,15 +830,15 @@ class Weblication extends Component
         }
 
         //TODO Remove or define use of skins for included Projekts and merge with findBestElement
-        if(!$baseLib) {//Common-common-skin
-            if(defined('DIR_COMMON_ROOT_REL')) {
-                $stylesheet = buildFilePath(
-                    DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-                if(file_exists($stylesheet)) return $stylesheet;
-            }
+        //Common-common-skin
+        if(!$baseLib && defined('DIR_COMMON_ROOT_REL')) {
+            $stylesheet = \buildFilePath(
+                DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
+            if(file_exists($stylesheet))
+                return $stylesheet;
         }
 
-        if($raiseError) $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
+        if($raiseError) $this->raiseError(__FILE__, __LINE__, \sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
         return '';
     }
 
@@ -862,28 +858,28 @@ class Weblication extends Component
         $places = [];
         //Getting list of Places to search
         if($this->hasCommonSkinFolder($elementSubFolder)) //Project? -> Special common-skin
-            $places[] = buildDirPath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
+            $places[] = \buildDirPath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
         if($this->hasSkinFolder($elementSubFolder)) //Project? -> Skin
-            $places[] = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
-        $places[] = buildDirPath($elementSubFolder);
+            $places[] = \buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
+        $places[] = \buildDirPath($elementSubFolder);
         if($classFolder) {//Projects -> GUI
             //Path from Project root to the specific GUI folder
-            $folder_guis = buildDirPath(PWD_TILL_GUIS, $classFolder);
+            $folder_guis = \buildDirPath(PWD_TILL_GUIS, $classFolder);
             //current Project
             $places[] = $folder_guis;
             //common Project
             if(defined('DIR_COMMON_ROOT_REL'))
-                $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
+                $places[] = \buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
             //POOL Library Project
             if($baseLib)
-                $places[] = buildDirPath($this->getPoolServerSideRelativePath(), $folder_guis);
+                $places[] = \buildDirPath($this->getPoolServerSideRelativePath(), $folder_guis);
         }
         $finds = [];
         //Searching
         foreach($places as $folder_guis) {
-            $file = buildFilePath($folder_guis, $filename);
+            $file = \buildFilePath($folder_guis, $filename);
             if(file_exists($file)) {
-                $translatedFile = buildFilePath($folder_guis, $language, $filename);
+                $translatedFile = \buildFilePath($folder_guis, $language, $filename);
                 if(Template::isCacheTranslations() && file_exists($translatedFile)) {
                     // Language specific Ordner
                     $finds[] = $translatedFile;
@@ -899,7 +895,7 @@ class Weblication extends Component
             }
         }
         //grab first element for now
-        return reset($finds) ?: "";
+        return \reset($finds) ?: "";
     }
 
     /**
@@ -935,13 +931,13 @@ class Weblication extends Component
         if(file_exists($javaScriptFile))
             return $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;//found
         if(defined('DIR_COMMON_ROOT_REL')) {
-            $folder_common = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
+            $folder_common = \buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
             $javaScriptFile = $folder_common.$filename;
             if(file_exists($javaScriptFile))
                 return $javaScriptFile;//found
         }
         if($raiseError)
-            $this->raiseError(__FILE__, __LINE__, sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
+            $this->raiseError(__FILE__, __LINE__, \sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
         return '';
     }
 
@@ -988,9 +984,9 @@ class Weblication extends Component
     {
         $Input = new Input();
         if(isset($_SERVER['PATH_INFO'])) {
-            $pathInfo = trim($_SERVER['PATH_INFO'], '/');
-            $segments = explode('/', $pathInfo);
-            $count = count($segments);
+            $pathInfo = \trim($_SERVER['PATH_INFO'], '/');
+            $segments = \explode('/', $pathInfo);
+            $count = \count($segments);
 
             for($i = 0; $i < $count; $i += 2) {
                 $name = $segments[$i];
@@ -1113,11 +1109,11 @@ class Weblication extends Component
     public function startPHPSession(string $session_name = 'WebAppSID', bool $useTransSID = false, bool $useCookies = true,
         bool $useOnlyCookies = false, bool $autoClose = true, string $sessionClassName = Session::class): Session
     {
-        switch(session_status()) {
-            case PHP_SESSION_DISABLED:
+        switch(\session_status()) {
+            case \PHP_SESSION_DISABLED:
                 throw new SessionDisabledException();
 
-            case PHP_SESSION_NONE:
+            case \PHP_SESSION_NONE:
                 // setting ini is only possible, if the session is not started yet
                 $sessionConfig = [
                     'session.name' => $session_name,
@@ -1126,17 +1122,17 @@ class Weblication extends Component
                     'session.use_only_cookies' => $useOnlyCookies
                 ];
                 foreach($sessionConfig as $option => $value) {
-                    if(ini_get($option) != $value) ini_set($option, $value);
+                    if(\ini_get($option) !== $value) \ini_set($option, $value);
                 }
                 break;
 
-            case PHP_SESSION_ACTIVE:
+            case \PHP_SESSION_ACTIVE:
                 // session is already started
                 break;
         }
 
         // Check if session class is valid
-        if($sessionClassName !== Session::class && !is_subclass_of($sessionClassName, Session::class)) {
+        if($sessionClassName !== Session::class && !\is_subclass_of($sessionClassName, Session::class)) {
             throw new InvalidArgumentException('Session class must be instance of ' . Session::class);
         }
         $this->Session ??= new $sessionClassName($autoClose);
@@ -1170,17 +1166,17 @@ class Weblication extends Component
      *
      * @return string
      */
-    static public function getRequestedAjaxModule(): string
+    public static function getRequestedAjaxModule(): string
     {
         return $_REQUEST[self::REQUEST_PARAM_MODULE] ?? '';
     }
 
     /**
-     * return requested ajax method
+     * Return requested ajax method
      *
      * @return string
      */
-    static public function getRequestedAjaxMethod(): string
+    public static function getRequestedAjaxMethod(): string
     {
         return $_REQUEST[self::REQUEST_PARAM_METHOD] ?? '';
     }
@@ -1219,7 +1215,7 @@ class Weblication extends Component
             $this->setLocale($this->getTranslator()->getPrimaryLocale());
         }
 
-        if($type == self::LOCALE_UNCHANGED) {
+        if($type === self::LOCALE_UNCHANGED) {
             return $this->locale;
         }
 
@@ -1234,8 +1230,8 @@ class Weblication extends Component
             $locale = "$locale.$this->charset";
         }
         // without charset
-        if($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {
-            $locale = substr($locale, 0, $pos);
+        if($type & self::LOCALE_WITHOUT_CHARSET && $pos = \strrpos($locale, '.')) {
+            $locale = \substr($locale, 0, $pos);
         }
         return $locale;
     }
@@ -1303,7 +1299,6 @@ class Weblication extends Component
      *
      * @return void
      * @throws ModulNotFoundException
-     * @throws ReflectionException
      * @throws Exception
      */
     public function render(): void
@@ -1313,7 +1308,7 @@ class Weblication extends Component
             echo $this->finalizeContent();
         }
 
-        $measurePageSpeed = IS_DEVELOP || ($_REQUEST['measurePageSpeed'] ?? 0);
+        $measurePageSpeed = IS_DEVELOP || ((int)($_REQUEST['measurePageSpeed'] ?? 0));
         if($measurePageSpeed && defined('POOL_START')) {
             $this->measurePageSpeed();
         }
@@ -1329,8 +1324,8 @@ class Weblication extends Component
     public function run(string $className = GUI_CustomFrame::class): static
     {
         // An application name is required. For example, the application name is used for creating directories in the data folder.
-        if($this->getName() == '') {
-            throw new Exception('The application name must be defined.');
+        if($this->getName() === '') {
+            throw new InvalidArgumentException('The application name must be defined.');
         }
 
         $mainGUI = GUI_Module::createGUIModule($className, $this, null, '', true, false);
@@ -1365,7 +1360,6 @@ class Weblication extends Component
      * Error handling wrapper around finalizeContent of the Main-GUI
      *
      * @return string website content
-     * @throws ReflectionException
      */
     protected function finalizeContent(): string
     {
@@ -1416,7 +1410,7 @@ class Weblication extends Component
      */
     public function getTimezone(): string
     {
-        return date_default_timezone_get();
+        return \date_default_timezone_get();
     }
 
     /**
@@ -1425,7 +1419,7 @@ class Weblication extends Component
     public function isXdebugEnabled(): bool
     {
         if($this->xdebug === null) {
-            $this->xdebug = extension_loaded('xdebug');
+            $this->xdebug = \extension_loaded('xdebug');
         }
         return $this->xdebug;
     }
@@ -1438,13 +1432,13 @@ class Weblication extends Component
      */
     public function measurePageSpeed(): void
     {
-        \register_shutdown_function(function() {
+        \register_shutdown_function(static function() {
             // print only when html content type is set
-            if(!isHtmlContentTypeHeaderSet()) {
+            if(!\isHtmlContentTypeHeaderSet()) {
                 return;
             }
 
-            $timeSpent = microtime(true) - POOL_START;
+            $timeSpent = \microtime(true) - POOL_START;
             $htmlStartTags = $htmlCloseTags = '';
             if(IS_CLI) {
                 $what = 'Script';
@@ -1460,7 +1454,7 @@ class Weblication extends Component
     }
 
     /**
-     * terminates Ajax requests with a caller-defined error
+     * Terminates Ajax requests with a caller-defined error
      *
      * @param $messageKey
      * @param $defaultMessage
@@ -1469,8 +1463,8 @@ class Weblication extends Component
      */
     public function denyAJAX_Request($messageKey, $defaultMessage, $response_code, $errorType): void
     {
-        if($this->isAjax()) {
-            header('Content-type: application/json', true, $response_code);
+        if(self::isAjax()) {
+            \header('Content-type: application/json', true, $response_code);
             $message = $this->getTranslator()->getTranslation($messageKey, $defaultMessage);
             $return = [
                 'success' => false,
@@ -1479,7 +1473,7 @@ class Weblication extends Component
                     'message' => $message
                 ]
             ];
-            die(json_encode($return));
+            die(\json_encode($return));
         }
     }
 
@@ -1525,12 +1519,12 @@ class Weblication extends Component
         if(!$TranslatorResource instanceof TranslationProviderFactory) {
             if($translatorResourceDir)// make a ressource from a given file
                 $TranslatorResource = TranslationProviderFactory_ResourceFile::create($translatorResourceDir);
-            elseif(sizeof($AppTranslator->getTranslationResources()) > 0)// Translator is already loaded
+            elseif(\count($AppTranslator->getTranslationResources()) > 0)// Translator is already loaded
                 $TranslatorResource = null;
             else  // add Fallback or throw
                 $TranslatorResource = TranslationProviderFactory_nop::create();
         }
-        if($TranslatorResource != null)
+        if($TranslatorResource !== null)
             $AppTranslator->addTranslationResource($TranslatorResource);
         // Setup Languages (for Application)
         $AppLanguages = $settings['application.languages'] ?? null;
