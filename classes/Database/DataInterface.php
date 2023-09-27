@@ -832,15 +832,15 @@ class DataInterface extends PoolObject
      *
      * @throws \Exception
      */
-    public function getColumnMetadata(string $database, string $table, string $field): array
+    public function getColumnMetadata(string $databaseAlias, string $table, string $field): array
     {
-        if(!$database || !$table || !$field) {
+        if(!$databaseAlias || !$table || !$field) {
             throw new InvalidArgumentException('Database, table and field names must be non-empty strings.');
         }
 
-        $query_resource = $this->getDBConnection($database, ConnectionMode::READ)->query("SHOW COLUMNS FROM `$table` like '$field'");
+        $query_resource = self::query("SHOW COLUMNS FROM `$table` like '$field'", $databaseAlias);
         if(!$query_resource) {
-            throw new RuntimeException("Could not get column metadata for $database.$table.$field");
+            throw new RuntimeException("Could not get column metadata for $databaseAlias.$table.$field");
         }
         $row = [];
         if($this->numRows($query_resource)) $row = $this->fetchRow($query_resource);

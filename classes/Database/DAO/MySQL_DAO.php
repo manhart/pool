@@ -183,7 +183,7 @@ class MySQL_DAO extends DAO
      */
     public function getColumnEnumValues(string $column): array
     {
-        $fieldInfo = $this->getDataInterface()->getColumnMetadata($this->database, $this->table, $column);
+        $fieldInfo = $this->getDataInterface()->getColumnMetadata($this->getDatabase(), static::getTableName(), $column);
         if(!isset($fieldInfo['Type'])) {
             return [];
         }
