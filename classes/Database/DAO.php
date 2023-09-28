@@ -226,7 +226,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
     /**
      * Fetches the columns automatically from the DataInterface / Driver
      *
-     * @throws InvalidArgumentException|DatabaseConnectionException|RuntimeException|\Exception
+     * @throws InvalidArgumentException|DatabaseConnectionException|RuntimeException|
      * @see DataInterface::getTableColumnsInfo()
      */
     public function fetchColumns(): static
@@ -260,7 +260,7 @@ abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
      * @param string|null $tableName table definition or the table name
      * @param string|null $databaseAlias database name
      * @return DAO Data Access Object (edited DAO->pool\classes\Database\DAO\MySQL_DAO f�r ZDE)
-     * @throws DAOException|\Exception
+     * @throws DAOException|
      * @see DAO::create()
      * @deprecated use create() instead
      */
