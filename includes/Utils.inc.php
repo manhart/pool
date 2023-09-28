@@ -1313,9 +1313,9 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
  * @param string $toThis The absolute target path.
  * @param string $separator The directory separator to use (optional, defaults to DIRECTORY_SEPARATOR).
  *
- * @return array An array containing the serverside and clientside relative paths.
+ * @return array|false An array containing the serverside and clientside relative paths.
  */
-function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = DIRECTORY_SEPARATOR): array
+function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = DIRECTORY_SEPARATOR): array|false
 {
     $scriptDir = dirname($_SERVER['SCRIPT_FILENAME']);
     $base ??= $scriptDir;
@@ -1354,7 +1354,7 @@ function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = 
     $ssToThis = realpath($toThis);
 
     // if serverside resolved paths are not equal, then stack the paths, because they are different
-    if($ssHere != $here && $ssToThis != $toThis) {
+    if($ssHere !== $here && $ssToThis !== $toThis) {
         $paths['serverside'] = [
             'here' => $ssHere,
             'toThis' => $ssToThis,
@@ -1369,7 +1369,7 @@ function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = 
 
         // Find the number of common path components.
         $commonPathComponents = 0;
-        while (isset($paths[$side]['hereParts'][$commonPathComponents]) && isset($paths[$side]['toThisParts'][$commonPathComponents]) &&
+        while (isset($paths[$side]['hereParts'][$commonPathComponents], $paths[$side]['toThisParts'][$commonPathComponents]) &&
             $paths[$side]['hereParts'][$commonPathComponents] === $paths[$side]['toThisParts'][$commonPathComponents]) {
             $commonPathComponents++;
         }
