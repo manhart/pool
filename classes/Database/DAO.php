@@ -49,7 +49,7 @@ use function strtolower;
  * @package pool\classes\Database
  * @since 2003/07/10
  */
-abstract class DAO extends PoolObject implements IDatabaseAccess, \Stringable
+abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, \Stringable
 {
     /**
      * don't quote the value in the (sql) query

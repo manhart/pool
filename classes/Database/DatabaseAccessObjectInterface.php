@@ -12,7 +12,7 @@ namespace pool\classes\Database;
 
 use pool\classes\Core\RecordSet;
 
-interface IDatabaseAccess
+interface DatabaseAccessObjectInterface
 {
     /**
      * Fetches the columns automatically from the driver / interface
