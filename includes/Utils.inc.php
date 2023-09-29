@@ -2371,7 +2371,7 @@ function umlauts(string $string, bool $reverse = false): string
 }
 
 /**
- * Check if a process is already running and abort if so.
+ * Check if a process is already running and abort if so. Needs a writable directory for the PID file.
  * @param string $pidDir
  * @param string $jobName
  * @return void
