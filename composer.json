@@ -15,7 +15,8 @@
     "ext-sysvsem": "*",
     "ext-sockets": "*",
     "ext-mysqli": "*",
-    "ext-sqlsrv": "*"
+    "ext-sqlsrv": "*",
+    "ext-posix": "*"
   },
   "suggest": {
   },
