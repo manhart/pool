@@ -32,7 +32,7 @@ class GUI_DBLookupSelect extends GUI_Select
      **/
     function init(?int $superglobals= Input::EMPTY)
     {
-        $this->Defaults->addVar('tabledefine', '');
+        $this->Defaults->addVar('tabledefine', []);
         $this->Defaults->addVar('keyValue', false); 	// separated by ;
         $this->Defaults->addVar('keyField', ''); 	// separated by ;
         $this->Defaults->addVar('keyOperator', 'equal');
@@ -59,7 +59,13 @@ class GUI_DBLookupSelect extends GUI_Select
 
         $utf8 = $Input->getVar('utf8');
 
-        $DAO = DAO::createDAO($Input->getVar('tabledefine'));
+        $tableDefine = $this->Input->getVar('tabledefine');
+        if(is_array($tableDefine)) {
+            /** @var array{1: DAO, 0: string} $tableDefine */
+            $DAO = $tableDefine[1]::create(databaseName: $tableDefine[0]);
+        }
+        else
+            $DAO = DAO::createDAO($tableDefine);
 
         # filter
         $filter = $Input->getVar('filter');
