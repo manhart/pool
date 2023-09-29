@@ -20,9 +20,9 @@ final class Cron
      */
     public static function acquireSemaphoreLock(string $file, string $projectId): bool
     {
-        $semaphore = sem_get(ftok($file, $projectId));
-        if(sem_acquire($semaphore, true)) {
-            register_shutdown_function(static fn() => sem_release($semaphore));
+        $semaphore = \sem_get(\ftok($file, $projectId));
+        if(\sem_acquire($semaphore, true)) {
+            \register_shutdown_function(static fn() => \sem_release($semaphore));
             return true;
         }
         return false;
