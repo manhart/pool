@@ -1012,7 +1012,7 @@ class Weblication extends Component
     }
 
     /**
-     * client-side relative path to the pool root directory
+     * Client-side relative path to the pool root directory
      *
      * @param string $subDir
      * @return string path from the application to the pool
@@ -1023,7 +1023,7 @@ class Weblication extends Component
     }
 
     /**
-     * server-side relative path to the pool root directory
+     * Server-side relative path to the pool root directory
      *
      * @param string $subDir
      * @return string path from the application to the pool
@@ -1085,7 +1085,7 @@ class Weblication extends Component
     }
 
     /**
-     * returns a DataInterface
+     * Returns a DataInterface
      *
      * @param string $interface_name
      * @return DataInterface|null Interface Objekt
@@ -1100,7 +1100,7 @@ class Weblication extends Component
      *
      * @return array Interface Objekte
      * @see DAO::createDAO()
-     **/
+     */
     public function getInterfaces(): array
     {
         return $this->interfaces;
@@ -1313,7 +1313,7 @@ class Weblication extends Component
     }
 
     /**
-     * returns the primary language based on the set locale
+     * Returns the primary language based on the set locale
      *
      * @return string language code
      */
@@ -1326,7 +1326,7 @@ class Weblication extends Component
     }
 
     /**
-     * returns cookie for this application
+     * Returns cookie for this application
      *
      * @return Cookie
      */
@@ -1349,7 +1349,7 @@ class Weblication extends Component
     }
 
     /**
-     * returns module that should be launched
+     * Returns module that should be launched
      *
      * @return string
      */
@@ -1359,7 +1359,7 @@ class Weblication extends Component
     }
 
     /**
-     * render application
+     * Render application
      *
      * @return void
      * @throws ModulNotFoundException
@@ -1379,7 +1379,7 @@ class Weblication extends Component
     }
 
     /**
-     * Erzeugt das erste GUI_Module in der Kette (Momentan wird hier der Seitentitel mit dem Projektnamen gefuellt).
+     * Creates the first GUI_Module in the chain (the page title is filled with the project name).
      *
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
      * @return Weblication
@@ -1409,7 +1409,7 @@ class Weblication extends Component
     }
 
     /**
-     * main logic of the front controller. compile main content.
+     * Main logic of the front controller. compile main content.
      */
     protected function prepareContent(): void
     {
@@ -1420,7 +1420,7 @@ class Weblication extends Component
     }
 
     /**
-     * return finished HTML content
+     * Return finished HTML content
      * Error handling wrapper around finalizeContent of the Main-GUI
      *
      * @return string website content
@@ -1468,7 +1468,7 @@ class Weblication extends Component
     }
 
     /**
-     * returns the current timezone
+     * Returns the current timezone
      *
      * @return string
      */
@@ -1489,7 +1489,7 @@ class Weblication extends Component
     }
 
     /**
-     * measure page speed and print it in the footer
+     * Measure page speed and print it in the footer
      *
      * @return void
      * @todo ajax requests?
