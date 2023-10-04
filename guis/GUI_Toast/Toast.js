@@ -190,9 +190,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
                 </svg>
                 <strong class="mr-auto">${title}</strong>
                 <small class="text-muted text-nowrap ml-1">${subtitle}</small>
-                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
             <div class="toast-body">
                 ${message}
