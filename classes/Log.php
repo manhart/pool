@@ -77,7 +77,7 @@ class Log
      */
     public static function setup(array $facilities, string $configurationName = Log::COMMON): void
     {
-        if(!defined('IS_CLI')) define('IS_CLI', php_sapi_name() === 'cli');
+        if(!defined('IS_CLI')) define('IS_CLI', PHP_SAPI === 'cli');
         if(!defined('LINE_BREAK')) define('LINE_BREAK', (IS_CLI) ? chr(10) : '<br>');
 
         $level = self::$facilities[$configurationName][self::OUTPUT_SCREEN]['level'] ?? 0;
@@ -112,9 +112,8 @@ class Log
                 $level = $facility['level'] ?? 0;
                 $file = $facility['file'] ?? '';
 
-                $LogFile = new LogFile();
+                $LogFile = new LogFile($file);
                 $LogFile->setSeparator(' ');
-                $LogFile->open($file);
 
                 $facilities[self::OUTPUT_FILE]['LogFile'] = $LogFile;
             }
@@ -339,7 +338,7 @@ class Log
             self::writeDAO($text, $level, $extra, $configurationName);
         }
 
-        if($level == self::getExitLevel($configurationName)) {
+        if($level === self::getExitLevel($configurationName)) {
             exit(1);
         }
     }

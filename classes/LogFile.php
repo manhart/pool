@@ -37,13 +37,15 @@ class LogFile extends PoolObject
      *
      * @var string $file
      */
-    private string $file='';
+    private readonly string $file;
+
+    private string $mode = 'ab';
 
     /**
      * Datei-Resource
      * @var resource $fp
      */
-    private $fp;
+    private mixed $fp;
 
     /**
      * Logfiles rotieren (Standard ausgeschaltet)
@@ -98,8 +100,8 @@ class LogFile extends PoolObject
      */
     protected $enableCache = false;
 
-    var $sid = 0000;
-    var $withSID = true;
+    private int $sid = 0;
+    private bool $withSID = true;
 
     /**
      * Format des Zeitstempels
@@ -111,9 +113,15 @@ class LogFile extends PoolObject
     /**
      * Konstruktor
      */
-    public function __construct()
+    public function __construct(string $file)
     {
-        $this->sid = rand(0, 9999);
+        $this->file = $file;
+        try {
+            $this->sid = random_int(0, 9999);
+        }
+        catch(Exception $e) {
+            $this->sid = 0;
+        }
     }
 
     /**
@@ -135,30 +143,27 @@ class LogFile extends PoolObject
     }
 
     /**
-     * �ffnet Logfile
+     * Open the file
      *
-     * @param string $file
+     * @return bool
      */
-    function open($file, $mode='a')
+    private function open(): bool
     {
-        $this->file = $file;
-        if(file_exists($file)) {
-            $filesize = filesize($file);
+        if(file_exists($this->file)) {
+            $filesize = filesize($this->file);
             if($this->logRotate) {
                 if($this->rotateByDate) {
-                    $newDate = (floor(filemtime($file)/86400) != floor(time()/86400));
-                    if($newDate) $this->rotate($file);
+                    $newDate = (floor(filemtime($this->file) / 86400) !== floor(time() / 86400));
+                    if($newDate) $this->rotate($this->file);
                 }
                 else if($filesize > $this->maxFileSize) {
-                    $this->rotate($file);
+                    $this->rotate($this->file);
                 }
                 // $mode = 'w';
             }
         }
-        else {
-            // $mode = 'w';
-        }
-        $this->_open($mode);
+        $this->fp = fopen($this->file, $this->mode);
+        return $this->opened();
     }
 
     /**
@@ -169,7 +174,7 @@ class LogFile extends PoolObject
     function rotate($file)
     {
         $reOpen = false;
-        if($this->isLogging()) {
+        if($this->opened()) {
             $reOpen = true;
             $this->close();
         }
@@ -189,18 +194,8 @@ class LogFile extends PoolObject
         @unlink($file);
 
         if($reOpen) {
-            $this->_open();
+            $this->fp = fopen($this->file, 'ab');
         }
-    }
-
-    /**
-     * �ffnet die Datei zum Schreiben
-     *
-     * @param string $mode
-     */
-    function _open($mode='a')
-    {
-        $this->fp = fopen($this->file, $mode);
     }
 
     /**
@@ -208,9 +203,9 @@ class LogFile extends PoolObject
      *
      * @return boolean
      */
-    function isLogging()
+    private function opened(): bool
     {
-        return ($this->fp != null);
+        return isset($this->fp) && is_resource($this->fp);
     }
 
     /**
@@ -254,32 +249,39 @@ class LogFile extends PoolObject
     }
 
     /**
-     * Zeilenformat-Anfang
+     * Creating Formatted Initial Strings
      *
      * @return string
-     * @throws Exception
      */
-    protected function __lineFormat(): string
+    protected function generateFormattedInitialLogString(): string
     {
-        return formatDateTime(time(), $this->formatDateTime) . (($this->withSID) ? $this->separator . '{' .
+        try {
+            $formattedDateTime = formatDateTime(time(), $this->formatDateTime);
+        }
+        catch(Exception) {
+            $formattedDateTime = (string)time();
+        }
+        return $formattedDateTime. (($this->withSID) ? $this->separator . '{' .
             sprintf('%04d', $this -> sid) . '}' : '').$this->separator.'%s';
     }
 
     /**
-     * Ergaenzt einen Logeintrag.
+     * Adds a log entry.
      *
      * @param string $text
-     * @param string $separator
      */
-    public function addLine($text)
+    public function addLine(string $text): false|int
     {
-        $text = sprintf($this->__lineFormat(), $text);
+        if(!$this->opened()) {
+            $this->open();
+        }
+        $text = sprintf($this->generateFormattedInitialLogString(), $text);
         if($this->enableCache) {
             $this->cache[] = $text;
         }
         $text .= $this->lineFeed;
 
-        fwrite($this->fp, $text, strlen($text));
+        return fwrite($this->fp, $text);
     }
 
     /**
@@ -288,7 +290,7 @@ class LogFile extends PoolObject
     public function close(): void
     {
         $this->cache = [];
-        if($this->fp) {
+        if($this->opened()) {
             fclose($this->fp);
         }
         $this->fp = null;
