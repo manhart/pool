@@ -329,7 +329,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Returns a value of a field of the current record as a decoded json
      *
-     * @throws InvalidJsonException
+     * @throws InvalidJsonException|\JsonException
      */
     public function getValueAsJson(string $key, string $defaultJson = '{}'): mixed
     {
@@ -337,13 +337,13 @@ class RecordSet extends PoolObject implements Iterator, Countable
         if(!\isValidJSON($json)) {
             throw new InvalidJsonException();
         }
-        return \json_decode($json, true);
+        return \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
     }
 
     /**
      * Returns a value of a field of the current record as an integer. It is also possible to return null as default value.
      */
-    public function getValueAsInt(string $key, ?int $default = 0): ?int
+    public function getValueAsInt(string $key, int $default = 0): int
     {
         $value = $this->getValue($key, $default);
         if($value === null) return $default;
@@ -353,7 +353,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Returns a value of a field of the current record as a float
      */
-    public function getValueAsFloat(string $key, ?float $default = 0.00): ?float
+    public function getValueAsFloat(string $key, float $default = 0.00): float
     {
         $value = $this->getValue($key, $default);
         if($value === null) return $default;
