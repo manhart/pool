@@ -114,7 +114,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
         // initialize with current url
         $this->scheme = $_SERVER['REQUEST_SCHEME'] ?? 'https';
         $this->host = $_SERVER['SERVER_NAME'];
-        $this->port = (int)($_SERVER['SERVER_PORT'] ?? 0);
+        $this->port = ($_SERVER['SERVER_PORT'] ?? 0);
         $this->path = $_SERVER['SCRIPT_NAME'] ?? '';
         if($withQuery) {
             $this->withQuery($_GET);
