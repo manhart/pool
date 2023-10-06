@@ -81,6 +81,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected string $database;
 
     /**
+     * @var string Quoted database name
+     */
+    protected readonly string $quotedDatabase;
+
+    /**
      * @var string Quoted table name
      */
     protected readonly string $quotedTable;
@@ -175,6 +180,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $this->table ??= $table ?? static::$tableName ?:
             throw new InvalidArgumentException('The static property tableName is not defined within DAO '.static::class.'!');
 
+        $this->quotedDatabase = $this->wrapSymbols($this->database);
         $this->quotedTable = $this->wrapSymbols($this->table);
         $this->commands = $this->createCommands();
         $this->nonWrapSymbols = array_merge($this->symbolQuote, $this->nonWrapSymbols);
@@ -1008,7 +1014,7 @@ SQL;
      */
     public function __toString(): string
     {
-        return "{$this->wrapSymbols($this->database)}.{$this->wrapSymbols($this->table)}";
+        return "$this->quotedDatabase.$this->quotedTable";
     }
 
     /**
