@@ -17,6 +17,7 @@ use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
 use Locale;
+use pool\classes\Cache\Memory;
 use pool\classes\Core\Input\Cookie;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
@@ -267,6 +268,26 @@ class Weblication extends Component
     private bool $isInitialized = false;
 
     /**
+     * @var Memory Cache (Memcached)
+     */
+    private readonly Memory $memory;
+
+    /**
+     * @var int Cache time to live
+     */
+    private int $cacheTTL = 86400;
+
+    /**
+     * Enable or disable caching
+     */
+    private static bool $cache = true;
+
+    /**
+     * Cache file system accesses
+     */
+    private static bool $cacheFileSystemAccess = true;
+
+    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -276,13 +297,21 @@ class Weblication extends Component
         self::$isAjax = \isAjax();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
+        if(static::$cache) {
+            $this->memory = Memory::getInstance();
+            $this->memory->setDefaultExpiration($this->cacheTTL);
+        }
+        else
+            static::$cacheFileSystemAccess = false;
         // determine the relative client und server path from the application to the pool
         if(!defined('IS_CLI')) {// check if we are in command line interface
             \define('IS_CLI', \PHP_SAPI === 'cli');
         }
         if(!IS_CLI) {
-            $poolRelativePath = \makeRelativePathsFrom(\dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
+            $poolRelativePath = $this->getCachedAppItem('poolRelativePath') ?:
+                \makeRelativePathsFrom(\dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
             $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
+            $this->cacheAppItem('poolRelativePath', $poolRelativePath);
         }
     }
 
@@ -681,7 +710,7 @@ class Weblication extends Component
      * @param string $filename wanted image
      * @return string Filename or empty string in case of failure
      */
-    function findImage(string $filename): string
+    public function findImage(string $filename): string
     {
         $skin = addEndingSlash($this->skin);
         $language = addEndingSlash($this->language);
@@ -756,8 +785,7 @@ class Weblication extends Component
             if($this->hasSkinFolder[$this->skin][$subFolder]['__exists']) {
                 if(!isset($this->hasSkinFolder[$this->skin][$subFolder][$language])) {
                     $this->hasSkinFolder[$this->skin][$subFolder][$language] = [];
-                    $this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists'] =
-                        is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language);
+                    $this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language);
                 }
                 if(\is_null($translated)) {
                     return $this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists'];
@@ -766,8 +794,7 @@ class Weblication extends Component
                 if($this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists']) {
                     if(!isset($this->hasSkinFolder[$this->skin][$subFolder][$language][$translated])) {
                         $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated] = [];
-                        $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated]['__exists'] =
-                            is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language.'/'.$translated);
+                        $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language.'/'.$translated);
                     }
                     return $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated]['__exists'];
                 }
@@ -794,8 +821,15 @@ class Weblication extends Component
         $language = $this->language;
         $elementSubFolder = 'templates';
         $translate = (bool)Template::getTranslator();
+        $memKey = "findTemplate.$language.$classFolder.$filename.$baseLib";
+        if(($template = $this->getCachedFileAccessResult($memKey)) !== false) {
+            return $template;
+        }
         $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
-        if($template) return $template;
+        if($template) {
+            $this->cacheFileAccessResult($memKey, $template);
+            return $template;
+        }
 
         $msg = "Template $filename in ".__METHOD__." not found!";
         if($baseLib && !$this->getPoolServerSideRelativePath()) {
@@ -821,11 +855,16 @@ class Weblication extends Component
     {
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
+        $memKey = "findStyleSheet.$language.$classFolder.$elementSubFolder.$filename.$baseLib";
+        if(($stylesheet = $this->getCachedFileAccessResult($memKey)) !== false) {
+            return $stylesheet;
+        }
         $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
         if($stylesheet) {
             if($baseLib) {
                 $stylesheet = strtr($stylesheet, [$this->getPoolServerSideRelativePath() => $this->getPoolClientSideRelativePath()]);
             }
+            $this->cacheFileAccessResult($memKey, $stylesheet);
             return $stylesheet;
         }
 
@@ -834,11 +873,16 @@ class Weblication extends Component
         if(!$baseLib && defined('DIR_COMMON_ROOT_REL')) {
             $stylesheet = \buildFilePath(
                 DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-            if(file_exists($stylesheet))
+            if(file_exists($stylesheet)) {
+                $this->cacheFileAccessResult($memKey, $stylesheet);
                 return $stylesheet;
+            }
         }
 
-        if($raiseError) $this->raiseError(__FILE__, __LINE__, \sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
+        if($raiseError)
+            $this->raiseError(__FILE__, __LINE__, \sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
+        else
+            $this->cacheFileAccessResult($memKey, '');
         return '';
     }
 
@@ -915,6 +959,10 @@ class Weblication extends Component
     public function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true,
         bool $clientSideRelativePath = true): string
     {
+        $memKey = "findJavaScript.$classFolder.$filename.$baseLib.$clientSideRelativePath";
+        if(($javaScriptFile = $this->getCachedFileAccessResult($memKey)) !== false) {
+            return $javaScriptFile;
+        }
         $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JS);
         $serverSide_folder_guis = $clientSide_folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classFolder);
         //Ordner BaseLib -> look in POOL instead
@@ -925,19 +973,29 @@ class Weblication extends Component
             $clientSide_folder_guis = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_guis));
         }
         $javaScriptFile = $serverSide_folder_javaScripts.$filename;
-        if(file_exists($javaScriptFile))
-            return $clientSideRelativePath ? "$clientSide_folder_javaScripts$filename" : $javaScriptFile;//found
+        if(file_exists($javaScriptFile)) {
+            $javaScriptFile = $clientSideRelativePath ? "$clientSide_folder_javaScripts$filename" : $javaScriptFile;
+            $this->cacheFileAccessResult($memKey, $javaScriptFile);
+            return $javaScriptFile;//found
+        }
         $javaScriptFile = $serverSide_folder_guis.$filename;
-        if(file_exists($javaScriptFile))
-            return $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;//found
+        if(file_exists($javaScriptFile)) {
+            $javaScriptFile = $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;
+            $this->cacheFileAccessResult($memKey, $javaScriptFile);
+            return $javaScriptFile;
+        }//found
         if(defined('DIR_COMMON_ROOT_REL')) {
             $folder_common = \buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
             $javaScriptFile = $folder_common.$filename;
-            if(file_exists($javaScriptFile))
+            if(file_exists($javaScriptFile)) {
+                $this->cacheFileAccessResult($memKey, $javaScriptFile);
                 return $javaScriptFile;//found
+            }
         }
         if($raiseError)
             $this->raiseError(__FILE__, __LINE__, \sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
+        else
+            $this->cacheFileAccessResult($memKey, '');
         return '';
     }
 
@@ -1089,6 +1147,12 @@ class Weblication extends Component
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
         $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
         $this->setVersion($settings['application.version'] ?? $this->getVersion());
+        if($this->getCachedAppItem("version") !== $this->getVersion()) {
+            // clear fs cache
+            $this->clearCacheFileAccess();
+            $this->cacheAppItem('version', $this->getVersion());
+        }
+
 
         $this->isInitialized = true;
     }
@@ -1543,5 +1607,74 @@ class Weblication extends Component
             $TemplateTranslator->swapLangList($AppLanguages, true);
             Template::setTranslator($TemplateTranslator);
         }
+    }
+
+    /**
+     * Caching the found file or whether a file exists or not. This is used to speed up the search for files. The cache keys are generated and prefixed with "fs:".
+     */
+    public function cacheFileAccessResult(string $key, string $file): bool
+    {
+        if(!self::$cacheFileSystemAccess)
+            return false;
+        $memKey = $this->generateCacheKey($key, 'fs');
+        return $this->memory->setValue($memKey, $file);
+    }
+
+    /**
+     * Returns the cached file or false if the file was not found. The cache keys are generated and prefixed with "fs:".
+     */
+    public function getCachedFileAccessResult(string $key): mixed
+    {
+        if(!self::$cacheFileSystemAccess)
+            return false;
+        $memKey = $this->generateCacheKey($key, 'fs');
+        return $this->memory->get($memKey);
+    }
+
+    /**
+     * Cache an item in the application
+     */
+    public function cacheAppItem(string $key, mixed $value): bool
+    {
+        if(!self::$cache)
+            return false;
+        $memKey = $this->generateCacheKey($key);
+        return $this->memory->setValue($memKey, $value);
+    }
+
+    /**
+     * Returns the cached item or false if the item was not found.
+     */
+    public function getCachedAppItem(string $key): mixed
+    {
+        if(!self::$cache)
+            return false;
+        $memKey = $this->generateCacheKey($key);
+        return $this->memory->get($memKey);
+    }
+
+    /**
+     * Generate a cache key
+     */
+    private function generateCacheKey(string $key, string $topicAbbr = 'app'): string
+    {
+        return "$topicAbbr:{$this->getName()}.$key";
+    }
+
+    /**
+     * Clear the cache for file system access (prefix "fs:")
+     */
+    private function clearCacheFileAccess(): void
+    {
+        if(!self::$cache)
+            return;
+        $allKeys = $this->memory->getAllKeys();
+        $keys = [];
+        foreach($allKeys as $key) {
+            if(str_starts_with($key, 'fs:')) {
+                $keys[] = $key;
+            }
+        }
+        $this->memory->deleteMulti($keys);
     }
 }
