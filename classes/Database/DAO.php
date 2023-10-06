@@ -158,7 +158,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected string $dummyWhere = '1=1';
 
-    private string $quotedTableAlias = '';
+    protected string $quotedTableAlias = '';
 
     /**
      * @var array|string[] Contains the characters that do not need to be escaped
@@ -1008,7 +1008,7 @@ SQL;
      */
     public function __toString(): string
     {
-        return "{$this->wrapSymbols(self::getDatabaseName())}.{$this->wrapSymbols(self::getTableName())}";
+        return "{$this->wrapSymbols($this->database)}.{$this->wrapSymbols($this->table)}";
     }
 
     /**
