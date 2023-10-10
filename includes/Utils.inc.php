@@ -317,14 +317,13 @@ function mkdirs(string $strPath, int $mode = 0777): bool
     if (@is_dir($strPath)) {
         return true;
     }
-    else {
-        $pStrPath = dirname($strPath);
-        if (!mkdirs($pStrPath, $mode)) {
-            return false;
-        }
 
-        return @mkdir($strPath, $mode);
+    $pStrPath = dirname($strPath);
+    if (!mkdirs($pStrPath, $mode)) {
+        return false;
     }
+
+    return @mkdir($strPath, $mode);
 }
 
 /**
