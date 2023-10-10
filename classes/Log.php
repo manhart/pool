@@ -339,7 +339,7 @@ class Log
             self::writeDAO($text, $level, $extra, $configurationName);
         }
 
-        if($level == self::getExitLevel($configurationName)) {
+        if($level === self::getExitLevel($configurationName)) {
             exit(1);
         }
     }
