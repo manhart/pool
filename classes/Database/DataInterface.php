@@ -525,8 +525,8 @@ class DataInterface extends PoolObject
                 : [];
 
         $hostname = $this->hosts[$mode->value];//normalize mode for lookup
-        return $auth[$hostname] ??//now testing hostname that is returned instead of reading-host
-            throw new DatabaseConnectionException("Access Denied: No authentication data available for host $hostname with $mode->value mode.");
+        return $auth[$hostname] ?? [];//now testing hostname that is returned instead of reading-host
+            //throw new DatabaseConnectionException("Access Denied: No authentication data available for host $hostname with $mode->value mode.");
     }
 
     /**
