@@ -991,6 +991,29 @@ SQL;
     }
 
     /**
+     * Truncate table
+     */
+    public function truncate(): RecordSet
+    {
+        $sql = <<<SQL
+TRUNCATE TABLE $this->quotedTable
+SQL;
+        return $this->execute($sql);
+    }
+
+    /**
+     * Reset auto increment
+     */
+    public function resetAutoIncrement(): RecordSet
+    {
+        $sql = <<<SQL
+ALTER TABLE $this->quotedTable AUTO_INCREMENT = 1
+SQL;
+        return $this->execute($sql);
+    }
+
+
+    /**
      * Quote column name
      */
     public function wrapColumn(string $column): string

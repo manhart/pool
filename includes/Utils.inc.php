@@ -427,7 +427,7 @@ function deleteDir(string $dir, bool $rmSelf = true): bool
 }
 
 /**
- * determines the extension of the file without the dot
+ * Determines the extension of the file without the dot
  * @see pathinfo() buildin function since PHP 4.0.3
  *
  * @param string $file filename
