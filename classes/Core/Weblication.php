@@ -1677,4 +1677,12 @@ class Weblication extends Component
         }
         $this->memory->deleteMulti($keys);
     }
+
+    /**
+     * En- disable Caching
+     */
+    protected static function caching(bool $enable = true): void
+    {
+        self::$cache = $enable;
+    }
 }
