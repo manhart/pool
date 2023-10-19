@@ -15,3 +15,4 @@ Features:
 + Cross Platform (Linux, Windows, MacOS)
 + Developer Friendly (einfache Lernkurve)
 + API Documentation
++ GitLab Push Test
