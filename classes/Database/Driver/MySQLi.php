@@ -57,10 +57,10 @@ class MySQLi extends Driver
     {
         $this->mysqli = \mysqli_init();
         $scheme = \parse_url($hostname, \PHP_URL_SCHEME);
-        $connectionParameters = \parse_url($scheme ? '' : '//' . $hostname);
+        $connectionParameters = \parse_url(($scheme ? '' : '//') . $hostname);
         try {
             $this->mysqli->real_connect($connectionParameters["host"]??null, $connectionParameters["user"] ?? $username,
-                $password, $database, $connectionParameters["port"] ?? $port, $connectionParameters["path"] ?? null);
+                $connectionParameters['pass'] ?? $password, $database, $connectionParameters["port"] ?? $port, $connectionParameters["path"] ?? null);
             $this->setCharset($options['charset'] ?? $this->charset);
         } catch (\mysqli_sql_exception $e) {
             throw new DatabaseConnectionException($e->getMessage(), $e->getCode(), $e);
