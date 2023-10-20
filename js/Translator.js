@@ -13,7 +13,7 @@ class Translator {
      * @todo receive data from server-side
      * @type {string}
      */
-    directory = '/resources/dict/runtime';
+    directory = '/commons/resources/dict/runtime';
 
     /**
      *
