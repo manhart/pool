@@ -14,6 +14,7 @@ use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
+use pool\classes\Exception\InvalidArgumentException;
 
 /**
  * Class Log
@@ -157,17 +158,29 @@ class Log
                 $charset = $facility['charset'] ?? 'utf8';
 
                 if($tableDefine) {
-                    DataInterface::createDataInterface([//todo is this broken no db specified?
-                        'host' => $host,
-                        'database' => '',
-                        'charset' => $charset
-                    ]);
-                    if(is_array($tableDefine)) {
-                        $DAO = $tableDefine[1]::create(databaseName: $tableDefine[0]);
+                    $databaseName = $tableDefine[0];
+                    try {
+                        DataInterface::getInterfaceForResource($databaseName);
                     }
-                    else {
-                        $DAO = DAO::createDAO($tableDefine);
+                    catch(InvalidArgumentException) {
+                        DataInterface::createDataInterface([
+                            'host' => $host,
+                            'database' => $databaseName,
+                            'charset' => $charset
+                        ]);
                     }
+                    /** @var DAO\MySQL_DAO $table */
+                    $table = $tableDefine[1];
+                    if(is_object($table)) {
+                        if(!$table instanceof DAO\MySQL_DAO) {
+                            throw new \RuntimeException('Invalid DAO class');
+                        }
+                        $DAO = $table::create(databaseName: $databaseName);
+                    }
+                    else if(is_string($table)) {
+                        $DAO = DAO\MySQL_DAO::create($table, $databaseName);
+                    }
+
                     $DAO->fetchColumns();
                 }
 
@@ -418,7 +431,7 @@ class Log
     {
         $message = $text;
         $DAO = self::$facilities[$configurationName][self::OUTPUT_DAO]['DAO'];
-        if(self::$dao_strip_tags and isHTML($message)) {
+        if(self::$dao_strip_tags && isHTML($message)) {
             // no html
             $message = trim(str_replace(['&nbsp;', '<br>', '<hr>'], [' ', chr(10), ''], $message));
             $message = strip_tags($message);
