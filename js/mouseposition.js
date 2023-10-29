@@ -1,37 +1,37 @@
-/**
- * -= mouseposition.js =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Ermittelt die korrekte Mausposition!
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @require browser.js
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
  *
- * @version $Id: mouseposition.js,v 1.1.1.1 2004/09/21 07:49:30 manhart Exp $
- * @version $Revision 1.0$
- * @version
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
  *
- * @since 2003-08-21
- * @author Alexander Manhart <alexander.manhart@freenet.de>
- * @link http://www.misterelsa.de
- *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
+// @todo: remove this file?
+
 MousePosition = function() {
-	this.mousePosY = 0;
-	this.mousePosX = 0;
+    this.mousePosY = 0;
+this.mousePosX = 0;
 }
 MousePosition.prototype.getBody = function(e) {
-	return (document.compatMode && document.compatMode != "BackCompat") ? document.documentElement : document.body;
+    return (document.compatMode && document.compatMode != "BackCompat") ? document.documentElement : document.body;
 }
 MousePosition.prototype.detect = function(e) {
-	mousePosY = (is.ns) ? (e.pageY) : (event.clientY + this.getBody().scrollTop);
-	mousePosX = (is.ns) ? (e.pageX) : (event.clientX + this.getBody().scrollLeft);
+    mousePosY = (is.ns) ? (e.pageY) : (e.clientY + this.getBody().scrollTop);
+    mousePosX = (is.ns) ? (e.pageX) : (e.clientX + this.getBody().scrollLeft);
 
-	if (is.mac && is.ie5) {
-		mousePosY += parseInt('0' + document.getTrueBody().currentStyle.marginTop, 10);
-	}
-	this.mousePosY = mousePosY;
-	this.mousePosX = mousePosX;
-	//window.status = 'Y: ' + mousePosY + ' X:' + mousePosX;
+    if (is.mac && is.ie5) {
+        mousePosY += parseInt('0' + document.getTrueBody().currentStyle.marginTop, 10);
+    }
+    this.mousePosY = mousePosY;
+    this.mousePosX = mousePosX;
 }
 
 MousePosition = new MousePosition();

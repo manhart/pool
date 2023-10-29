@@ -95,8 +95,8 @@ class GUI_CustomFrame extends GUI_Module
             $this->HeadData->addJavaScript($this->Weblication->findJavaScript('translatorToolInline.js', '', true));
         }
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('helpers.js', '', true));
-        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Error.class.js', '', true));
-        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.class.js', '', true));
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Error.js', '', true));
+        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.js', '', true));
     }
 

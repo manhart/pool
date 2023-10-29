@@ -145,6 +145,8 @@
     test, toJSON, toString
 */
 
+// @todo remove this file if it is not used anymore?
+
 if (!this.JSON) {
 
 // Create a JSON object only if one does not already exist. We create the

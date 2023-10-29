@@ -1,11 +1,17 @@
 /*
- * POOL
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * [P]HP [O]bject-[O]riented [L]ibrary
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * php.js created at 11.01.22, 15:03
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
  *
- * @author A.Manhart <alexander@manhart-it.de>
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 function php_serialize(obj) {

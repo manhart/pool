@@ -1,23 +1,25 @@
-/**
- * -= helpers.js =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * Ermittelt Informationen �ber den Browser: Name, Version, Plattform, DOM kompatibel
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @version $Id: helpers.js,v 1.16 2007/07/11 07:57:20 manhart Exp $
- * @version $Revision 1.0$
- * @version
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
  *
- * @since 2003-08-21
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
  *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 /**
+ * Returns a string representation of the attributes of an object. Each attribute is listed in a new line.
  *
- * @param value
- * @param newline
- * @returns {string}
+ * @param {object} value - The object whose attributes are to be displayed.
+ * @param {string} [newline='\n'] - The line separator to be used between each attribute.
+ * @return {string} - A string representation of the attributes of the object.
  */
 function pray(value, newline = '\n') {
     let TextAttributes = function (ObjName, Object, NewLine) {
