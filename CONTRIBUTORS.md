@@ -1,22 +1,29 @@
-# Mitwirkende
+# Contributors
 
-Dieses Dokument listet alle Personen auf, die zum Projekt beigetragen haben. Das Projekt existiert dank der Unterstützung und der Beiträge von Freiwilligen. Wenn Sie zum Projekt beitragen, zögern Sie bitte nicht, Ihren Namen hinzuzufügen.
+We would like to acknowledge the contributions of the following people to the [POOL (PHP Object-Oriented Library)](https://github.com/manhart/pool) project.
 
-## Gründer
+## Founder
 
 - **Alexander Manhart** - [Profilseite](https://alexander-manhart.de)
 
-## Mitwirkende
+## Contributors
 
 - **Philipp Lehfeld**
-- **Christian Schmidseder**
+- **Christian Schmidseder** 
 
 ---
 
-## Wie man sich selbst hinzufügt
+## How to add yourself
 
-Wenn Sie zu diesem Projekt beigetragen haben und Ihren Namen in dieser Liste sehen möchten, folgen Sie bitte diesen Schritten:
+If you contribute to this project and would like to receive acknowledgment, please follow these steps:
 
-1. Erstellen Sie einen Pull-Request, in dem Sie Ihren Namen und Ihre Beiträge in diesem Dokument in der oben gezeigten Weise aufführen.
-2. In der Beschreibung des Pull Requests, fügen Sie eine Zusammenfassung Ihrer Beiträge hinzu.
-3. Senden Sie den Pull Request zur Überprüfung und Zusammenführung.
+1. Add your name, your contribution description, and your email (or any other contact link) to the list of contributors in the format shown above.
+2. Submit a pull request with the changes.
+
+Your addition will be reviewed, and once approved, will appear in the next update to this file.
+
+---
+
+Contributions of any kind are welcome, including, but not limited to, bug fixes, code improvements, documentation, translations, and more.
+
+We appreciate all the help we receive that makes this project better. Thank you, contributors!
