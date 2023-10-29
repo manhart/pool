@@ -1,14 +1,20 @@
 <?php
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * JS_File.php created at 07.10.22, 08:25
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author p.lehfeld <p.lehfeld@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
-/** @noinspection PhpMultipleClassesDeclarationsInOneFile */
 namespace pool\includes\Resources\dir{
 
     use GUI_HeadData;
@@ -26,26 +32,28 @@ namespace pool\includes\Resources\dir{
 
         public static function addResourceTo(GUI_HeadData $Head, bool $min, string $version = '', array $resource = null): int
         {
-            $className = get_called_class();
+            $className = static::class;
             //try to load default if no subresource is specified
             $resource ??= (defined(static::class . '::_') ? static::_ : null);
             $nameFilter = $resource[0] ?? '';
             $extension = $resource[1] ?? '';
 
-            if (is_subclass_of($className, JavaScriptResource::class)) {
+            if(is_subclass_of($className, JavaScriptResource::class)) {
                 $items = $className::getFiles($min, $version, $nameFilter, $extension);
                 foreach ($items as $item)
                     $Head->addJavaScript($item);
                 return count($items);
-            } elseif (is_subclass_of($className, StylesheetResource::class)) {
+            }
+
+            if (is_subclass_of($className, StylesheetResource::class)) {
                 $items = $className::getFiles($min, $version, $nameFilter, $extension);
                 foreach ($items as $item)
                     $Head->addStyleSheet($item);
                 return count($items);
-            } else {
-                //no valid Resource
-                return -1;
             }
+
+            //no valid Resource
+            return -1;
         }
 
         /**Builds a path based on the called subclasses attributes<br>
@@ -83,9 +91,9 @@ namespace pool\includes\Resources\dir{
         {
             if ($extension === '') {
                 return buildDirPath(static::getPath($version), static::SUB_PATH);
-            } else {
-                return buildDirPath(static::getPath($version), static::EXTENSION_PATH, $extension);
             }
+
+            return buildDirPath(static::getPath($version), static::EXTENSION_PATH, $extension);
         }
 
         /**Pick minified/non-minified variants of files from a list of filenames<br>
@@ -97,7 +105,7 @@ namespace pool\includes\Resources\dir{
          * @param string $path the path to prefix the files with
          * @return array the resulting file list prefixed with the path
          */
-        public static final function chooseVariant(array $files, bool $min, string $fileExtension, string $path = ''): array
+        final public static function chooseVariant(array $files, bool $min, string $fileExtension, string $path = ''): array
         {
             sort($files);
             $returnFiles = array();
@@ -140,11 +148,10 @@ namespace pool\includes\Resources\dir{
 namespace pool\includes\Resources {
     interface JavaScriptResource
     {
-        const DEFAULT_FILE_EXT = 'js';
+        public const DEFAULT_FILE_EXT = 'js';
     }
     interface StylesheetResource
     {
-        const DEFAULT_FILE_EXT = '(css|scss)'; //todo scss less?
+        public const DEFAULT_FILE_EXT = '(css|scss)'; //todo scss less?
     }
-
 }
