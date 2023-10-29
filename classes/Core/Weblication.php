@@ -1509,8 +1509,8 @@ class Weblication extends Component
             }
             else {
                 $what = 'Page';
-                $color = $timeSpent > 0.2 ? 'red' : 'green';
-                $htmlStartTags = "<footer class=\"container-fluid text-center\"><p style=\"font-weight: bold; color: $color\">";
+                $color = $timeSpent > 0.2 ? 'dange' : 'success';
+                $htmlStartTags = "<footer class=\"container-fluid text-center\"><p class=\"fw-bold text-$color\">";
                 $htmlCloseTags = '</p></footer>';
             }
             echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
