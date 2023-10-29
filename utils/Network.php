@@ -23,7 +23,7 @@ final class Network
     public static function ping(string $host, int $count = 4, bool $detailed = false): array|bool
     {
         // remove port from host
-        $parsedUrl = parse_url($host);
+        $parsedUrl = \parse_url($host);
         if(isset($parsedUrl['host'])) {
             $host = $parsedUrl['host'];
         }
@@ -36,13 +36,12 @@ final class Network
         $ipv6Option = $isIPv6 ? '-6' : '';
 
         // shell secure arguments
-        $host = escapeshellarg($host);
-        $count = escapeshellarg($count);
+        $host = \escapeshellarg($host);
 
         // Ausführen des Befehls
         $output = [];
         $result = null;
-        exec("ping $ipv6Option -c $count $host", $output, $result);
+        \exec("ping $ipv6Option -c $count $host", $output, $result);
 
         if($detailed) {
             return [
@@ -62,31 +61,31 @@ final class Network
         $package = "\x08\x00\x19\x2f\x00\x00\x00\x00\x70\x69\x6e\x67";
 
         /* create the socket, the last '1' denotes ICMP */
-        $socket = socket_create(AF_INET, SOCK_RAW, getprotobyname('ICMP'));
-        if(!is_resource($socket)) {
+        $socket = \socket_create(\AF_INET, \SOCK_RAW, \getprotobyname('ICMP'));
+        if(!\is_resource($socket)) {
             return false;
         }
 
         /* set socket receive timeout to 1 second */
-        $sec = floor($timeoutMillis / 1000);
-        socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => $sec, 'usec' => $timeoutMillis - ($sec * 1000) * 1000]);
+        $sec = \floor($timeoutMillis / 1000);
+        \socket_set_option($socket, \SOL_SOCKET, \SO_RCVTIMEO, ['sec' => $sec, 'usec' => $timeoutMillis - ($sec * 1000) * 1000]);
 
         /* connect to socket */
-        if(!@socket_connect($socket, $host)) {
-            @socket_close($socket);
+        if(!@\socket_connect($socket, $host)) {
+            @\socket_close($socket);
             return false;
         }
 
         $result = false;
         /* record start time */
-        $start_time = getMicrotime();
-        socket_send($socket, $package, strlen($package), 0);
-        if(@socket_read($socket, 255)) {
-            $end_time = getMicrotime();
+        $start_time = \getMicrotime();
+        \socket_send($socket, $package, strlen($package), 0);
+        if(@\socket_read($socket, 255)) {
+            $end_time = \getMicrotime();
             $total_time = $end_time - $start_time;
             $result = $total_time;
         }
-        socket_close($socket);
+        \socket_close($socket);
 
         return $result;
     }
@@ -101,7 +100,7 @@ final class Network
      */
     public static function isPortReachable(string $host, int $port, int $timeout = 1): bool
     {
-        $parsedUrl = parse_url($host);
+        $parsedUrl = \parse_url($host);
         if(isset($parsedUrl['host'])) {
             $host = $parsedUrl['host'];
         }
@@ -109,11 +108,11 @@ final class Network
             $host = $parsedUrl['path'];
         }
 
-        $fp = @fsockopen($host, $port, $errno, $error, $timeout);
+        $fp = @\fsockopen($host, $port, $errno, $error, $timeout);
         if(!$fp) {
             return false;
         }
-        fclose($fp);
+        \fclose($fp);
         return true;
     }
 }
