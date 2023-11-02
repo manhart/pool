@@ -290,6 +290,9 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $className = static::class === __CLASS__ ? CustomMySQL_DAO::class : static::class;
 
         $class_exists = class_exists($tableName, false);
+        if ($class_exists) {
+            $qualifiedClassName = $tableName;
+        }
 
         $driver = DataInterface::getInterfaceForResource($databaseAlias)->getDriverName();
         $databaseName = DataInterface::getDatabaseForResource($databaseAlias);
@@ -299,9 +302,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         if(!$class_exists && $file_exists) {
             require_once $include;
             $class_exists = true;
+            $baseNamespace =  str_replace( '/', '\\', addEndingSlash(substr(DIR_DAOS_ROOT, strlen(addEndingSlash(DIR_DOCUMENT_ROOT)))));
+            $qualifiedClassName = class_exists($tableName, false) ? $tableName : "$baseNamespace$driver\\$databaseName\\$tableName";
         }
         if($class_exists) {
-            return new $tableName($databaseAlias, $tableName);
+            return new $qualifiedClassName($databaseAlias, $tableName);
         }
 
         $DAO = new $className($databaseAlias, $tableName);
