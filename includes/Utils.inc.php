@@ -90,13 +90,14 @@ function pray(mixed $data, bool $functions=false): string
 }
 
 /**
- * formatBytes()
+ * Formats the given number of bytes into a human-readable size.
  *
- * @param integer $bytes Anzahl der Bytes
- * @param bool $shortVersion Abgekuerzt
- * @param int $decimals
- * @param string $blank
- * @return string Formatierter String z.B. 33,44 MBytes
+ * @param int $bytes The number of bytes.
+ * @param bool $shortVersion Determines whether to use the short version for units (e.g. KB, MB) or the full version (e.g. KBytes, MBytes). Defaults to false.
+ * @param int $decimals The number of decimal places to round the size to. Defaults to 2.
+ * @param string $blank The string to use as a separator between the size and the unit. Defaults to a space character.
+ *
+ * @return string The formatted size in human-readable format.
  */
 function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, string $blank = ' '): string
 {
@@ -106,27 +107,75 @@ function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, 
     }
 
     // KBytes
-    $bytes = $bytes / 1024;
+    $bytes /= 1024;
     if ($bytes < 1024) {
         return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'KB' : 'KBytes'));
     }
 
     // MBytes
-    $bytes = $bytes / 1024;
+    $bytes /= 1024;
     if ($bytes < 1024) {
         return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'MB' : 'MBytes'));
     }
 
     // GBytes
-    $bytes = $bytes / 1024;
+    $bytes /= 1024;
     if ($bytes < 1024) {
         return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'GB' : 'GBytes'));
     }
 
     // TBytes
-    $bytes = $bytes / 1024;
+    $bytes /= 1024;
     return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'TB' : 'TBytes'));
 }
+
+/**
+ * Abbreviates a large number for display.
+ * If the number is less than 1000, it is returned as is.
+ * If the number is between 1000 and 999999, it is divided by 1000 and suffixed with "K".
+ * If the number is between 1000000 and 999999999, it is divided by 1000000 and suffixed with "M".
+ * If the number is between 1000000000 and 999999999999, it is divided by 1000000000 and suffixed with "B".
+ * If the number is between 1000000000000 and 999999999999999, it is divided by 1000000000000 and suffixed with "T".
+ * If the number is greater than 999999999999999, it is divided by 1000000000000000 and suffixed with "Q".
+ *
+ * @param int $number - The number to abbreviate.
+ * @param int $decimals - The number of decimals to round the result to. Default is 2.
+ * @param string $decimal_separator - The symbol used as the decimal separator. Default is ','.
+ * @param string $thousands_separator - The symbol used as the thousands separator. Default is '.'.
+ * @param string $blank - The string to insert between the abbreviated number and the suffix. Default is an empty string.
+ *
+ * @return string - The abbreviated number.
+ */
+function abbreviateNumber(int $number, int $decimals = 2, string $decimal_separator = ',', string $thousands_separator = '.', string $blank = ''): string
+{
+    if($number < 1000) {
+        return number_format($number, $decimals, $decimal_separator, $thousands_separator);
+    }
+
+    // Thousands
+    if($number < 1000000) {
+        return number_format($number / 1000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}K";
+    }
+
+    // Millions
+    if($number < 1000000000) {
+        return number_format($number / 1000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}M";
+    }
+
+    // Billions
+    if($number < 1000000000000) {
+        return number_format($number / 1000000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}B";
+    }
+
+    // Trillions
+    if($number < 1000000000000000) {
+        return number_format($number / 1000000000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}T";
+    }
+
+    // Quadrillions
+    return number_format($number / 1000000000000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}Q";
+}
+
 
 /**
  * @param $val
