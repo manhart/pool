@@ -210,7 +210,7 @@ class MySQL_DAO extends DAO
      */
     public function fetchingRow(array $row): array
     {
-        return $this->translate ? $this->translate($row) : $row;
+        return parent::fetchingRow($this->translate ? $this->translate($row) : $row);
     }
 
     /**

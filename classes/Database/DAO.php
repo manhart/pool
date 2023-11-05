@@ -171,6 +171,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     private array $nonWrapSymbols = ['*', '.', '(', 'as', '\''];
 
     /**
+     * @var array $formatter An array used for storing formatter functions for columns.
+     */
+    private array $formatter = [];
+
+    /**
      * Defines the default commands.
      */
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
@@ -696,11 +701,28 @@ SQL;
     }
 
     /**
-     * Fetching row is a hook that goes through all the retrieved rows. Can be used to modify the row (column content) before it is returned.
+     * Fetching row is a hook that goes through all the retrieved rows and applies column formatters. Can be overridden to modify the row / column values before it is returned
+     *
+     * @return array The fetched row with applied column formatters
      */
     public function fetchingRow(array $row): array
     {
+        // Formatter for the columns
+        foreach($this->formatter as $column => $formatter) {
+            if(isset($row[$column])) {
+                $row[$column] = $formatter($row[$column], $row);
+            }
+        }
         return $row;
+    }
+
+    /**
+     * Set a formatter for a column
+     */
+    public function setFormatter(string $column, callable $formatter): static
+    {
+        $this->formatter[$column] = $formatter;
+        return $this;
     }
 
     /**
