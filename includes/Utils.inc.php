@@ -360,7 +360,7 @@ if (!function_exists('removeBeginningSlash')) {
  * @param string $strPath
  * @param integer $mode
  * @return boolean success
- **/
+ */
 function mkdirs(string $strPath, int $mode = 0777): bool
 {
     if (@is_dir($strPath)) {
