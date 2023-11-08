@@ -228,20 +228,6 @@ class GUI_Module extends Module
     }
 
     /**
-     * Returns the part of the path that is after the guis directory
-     */
-    public function getNestedDirectories(): string
-    {
-        $path = $this->getClassDirectory();
-        $guis = PWD_TILL_GUIS.'/';
-        $pos = strpos($path, $guis);
-        if ($pos === false) {
-            return '';
-        }
-        return substr($path, $pos + strlen($guis));
-    }
-
-    /**
      * Creates a new GUI module based on the class name.
      * The owner of the GUI's in an application is the class Weblication. It can also be another owner of type Component (@todo rethink).
      *
@@ -428,17 +414,11 @@ class GUI_Module extends Module
     }
 
     /**
-     * Get the folder of the GUI class (supports stackable GUI's).
-     *
-     * @return string The folder path of the GUI class.
+     * Returns the parts of the path that is after the guis directory (supports stackable GUI's).
      */
     public function getGUIClassFolder(): string
     {
-        $className = static::class;
-        if(Autoloader::hasNamespace($className)) {
-            $className = Str::sliceAfter($this->getClassDirectory(), PWD_TILL_GUIS.DIRECTORY_SEPARATOR);
-        }
-        return $className;
+        return Str::sliceAfter($this->getClassDirectory(), PWD_TILL_GUIS.DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -505,13 +485,13 @@ class GUI_Module extends Module
         }
 
         $className = $className ?: $this->getClassName();
-        $nestedDirectories = $this->getNestedDirectories();
+        $guiClassFolder = $this->getGUIClassFolder();
         //associated Stylesheet
-        if($includeCSS && ($css = $this->Weblication->findStyleSheet("$className.css", $nestedDirectories, $this->isPOOL(), false))) {
+        if($includeCSS && ($css = $this->Weblication->findStyleSheet("$className.css", $guiClassFolder, $this->isPOOL(), false))) {
             $Frame->getHeadData()->addStyleSheet($css);
         }
         //associated Script
-        if($includeJS && ($jsFile = $this->Weblication->findJavaScript("$className.js", $nestedDirectories, $this->isPOOL(), false))) {
+        if($includeJS && ($jsFile = $this->Weblication->findJavaScript("$className.js", $guiClassFolder, $this->isPOOL(), false))) {
             $Frame->getHeadData()->addJavaScript($jsFile);
         }
         return (bool)($jsFile??true);//result of JS-lookup or true
