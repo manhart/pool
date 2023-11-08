@@ -101,32 +101,10 @@ function pray(mixed $data, bool $functions=false): string
  */
 function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, string $blank = ' '): string
 {
-    // Bytes
-    if ($bytes < 1024) {
-        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'b' : 'Bytes'));
-    }
-
-    // KBytes
-    $bytes /= 1024;
-    if ($bytes < 1024) {
-        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'KB' : 'KBytes'));
-    }
-
-    // MBytes
-    $bytes /= 1024;
-    if ($bytes < 1024) {
-        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'MB' : 'MBytes'));
-    }
-
-    // GBytes
-    $bytes /= 1024;
-    if ($bytes < 1024) {
-        return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'GB' : 'GBytes'));
-    }
-
-    // TBytes
-    $bytes /= 1024;
-    return (number_format($bytes, $decimals, ',', '.').$blank.(($shortVersion) ? 'TB' : 'TBytes'));
+    $units = [['B','Bytes'],['KB', 'KBytes'],['MB', 'MBytes'], ['GB', 'GBytes'], ['TB', 'TBytes']];
+    $level = min((int)log($bytes, 1024), count($units) -1);
+    $unit = $blank . $units[$level][(int)!$shortVersion];
+    return number_format($bytes / pow(1024, $level), $decimals, ',', '.') . $unit;
 }
 
 /**
