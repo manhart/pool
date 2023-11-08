@@ -304,12 +304,8 @@ class Weblication extends Component
         self::$isAjax = \isAjax();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
-        if(static::$cache) {
-            $this->memory = Memory::getInstance();
-            $this->memory->setDefaultExpiration($this->cacheTTL);
-        }
-        else
-            static::$cacheFileSystemAccess = false;
+        $this->memory = Memory::getInstance();
+        $this->memory->setDefaultExpiration($this->cacheTTL);
         // determine the relative client und server path from the application to the pool
         if(!defined('IS_CLI')) {// check if we are in command line interface
             \define('IS_CLI', \PHP_SAPI === 'cli');
@@ -1691,5 +1687,6 @@ class Weblication extends Component
     protected static function caching(bool $enable = true): void
     {
         self::$cache = $enable;
+        self::$cacheFileSystemAccess = $enable;
     }
 }
