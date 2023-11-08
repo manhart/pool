@@ -148,32 +148,10 @@ function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, 
  */
 function abbreviateNumber(int $number, int $decimals = 2, string $decimal_separator = ',', string $thousands_separator = '.', string $blank = ''): string
 {
-    if($number < 1000) {
-        return number_format($number, $decimals, $decimal_separator, $thousands_separator);
-    }
-
-    // Thousands
-    if($number < 1000000) {
-        return number_format($number / 1000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}K";
-    }
-
-    // Millions
-    if($number < 1000000000) {
-        return number_format($number / 1000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}M";
-    }
-
-    // Billions
-    if($number < 1000000000000) {
-        return number_format($number / 1000000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}B";
-    }
-
-    // Trillions
-    if($number < 1000000000000000) {
-        return number_format($number / 1000000000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}T";
-    }
-
-    // Quadrillions
-    return number_format($number / 1000000000000000, $decimals, $decimal_separator, $thousands_separator) . "{$blank}Q";
+    $units = ['','K','M', 'B', 'T', 'Q'];
+    $level = min((int)log($number, 1000), count($units) -1);
+    $unit = $level? "$blank$units[$level]": '';
+    return number_format($number / pow(1000, $level), $decimals, $decimal_separator, $thousands_separator) . $unit;
 }
 
 
