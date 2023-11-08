@@ -569,27 +569,16 @@ SQL;
      */
     protected function buildSorting(array $sorting): string
     {
-        if(!count($sorting)) {
-            return '';
-        }
-        $sql = '';
+        if(!$sorting) return '';
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
-
+        $sql = [];
         foreach($sorting as $column => $sort) {
-            if($sql === '') {
-                $sql = ' ORDER BY ';
-            }
-            else {
-                $sql .= ', ';
-            }
-
             $column = $alias.$column;
-            if($this->translateValues) {
+            if($this->translateValues)
                 $column = $this->translateValues($column);
-            }
-            $sql .= "$column $sort";
+            $sql[] = "$column $sort";
         }
-        return $sql;
+        return ' ORDER BY ' . implode(', ', $sql);
     }
 
     /**
