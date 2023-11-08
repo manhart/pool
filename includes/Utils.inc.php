@@ -281,8 +281,8 @@ if (!function_exists('removeEndingSlash')) {
      */
     function removeEndingSlash(string $value): string
     {
-        if ($value != '') {
-            if ($value[-1] == '/' || $value[-1] == '\\') {
+        if ($value !== '') {
+            if ($value[-1] === '/' || $value[-1] === '\\') {
                 $value = substr($value, 0, -1);
             }
         }
@@ -300,8 +300,8 @@ if (!function_exists('removeBeginningSlash')) {
      */
     function removeBeginningSlash(string $value): string
     {
-        if (!empty($value)) {
-            if ($value[0] == '/' || $value[0] == '\\') {
+        if ($value !== '') {
+            if ($value[0] === '/' || $value[0] === '\\') {
                 $value = substr($value, 1);
             }
         }
@@ -451,27 +451,6 @@ function file_extension(string $file = ""): string
 function remove_extension(string $file = ''): string
 {
     return substr($file, 0, (strrpos($file, '.') ?: strlen($file)));
-}
-
-/**
- * Removes the first segment from a string
- * Example usage:
- * removeFirstSegment('path/to/file'); // Returns 'to/file'
- *
- * @param string $string The input string
- * @param string $separator The separator used to split the string (default is DIRECTORY_SEPARATOR)
- * @return string The string with the first segment removed. If the separator is not found or the string is empty, an empty string is returned.
- */
-function removeFirstSegment(string $string, string $separator = DIRECTORY_SEPARATOR): string
-{
-    $pos = strpos($string, $separator);
-
-    // Falls ein Slash gefunden wurde und nicht am Anfang steht, schneide den String dahinter aus
-    if ($pos !== false) {
-        return substr($string, $pos + 1);
-    }
-
-    return '';
 }
 
 /**
