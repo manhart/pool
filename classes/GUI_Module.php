@@ -15,6 +15,7 @@ use pool\classes\Core\Module;
 use pool\classes\Core\Weblication;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
+use pool\utils\Str;
 use const pool\PWD_TILL_GUIS;
 
 // const FIXED_PARAM_CONFIG = 'config';
@@ -427,6 +428,20 @@ class GUI_Module extends Module
     }
 
     /**
+     * Get the folder of the GUI class (supports stackable GUI's).
+     *
+     * @return string The folder path of the GUI class.
+     */
+    public function getGUIClassFolder(): string
+    {
+        $className = static::class;
+        if(Autoloader::hasNamespace($className)) {
+            $className = Str::sliceAfter($this->getClassDirectory(), PWD_TILL_GUIS.DIRECTORY_SEPARATOR);
+        }
+        return $className;
+    }
+
+    /**
      * Autoload templates, css- and js-files
      * @return \GUI_Module
      */
@@ -436,10 +451,10 @@ class GUI_Module extends Module
             return $this;
         }
 
-        $className = $this->getClassName();
+        $guiClassFolder = $this->getGUIClassFolder();
 
         foreach ($this->templates as $handle => $file) {
-            $template = $this->Weblication->findTemplate($file, $className);
+            $template = $this->Weblication->findTemplate($file, $guiClassFolder);
             $this->Template->setFilePath($handle, $template);
         }
 
@@ -454,12 +469,12 @@ class GUI_Module extends Module
         }
 
         foreach ($this->cssFiles as $cssFile) {
-            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $className);
+            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $guiClassFolder);
             $Frame->getHeadData()->addStyleSheet($cssFile);
         }
 
         foreach ($this->jsFiles as $jsFile) {
-            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $className);
+            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $guiClassFolder);
             $Frame->getHeadData()->addJavaScript($jsFile);
         }
 
