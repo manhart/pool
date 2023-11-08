@@ -29,7 +29,7 @@
  **/
 function getMicrotime($seed = 1): float
 {
-    list($usec, $sec) = explode(' ', microtime());
+    [$usec, $sec] = explode(' ', microtime());
     return ((float)$usec + ((float)$sec * $seed));
 }
 
@@ -454,6 +454,27 @@ function remove_extension(string $file = ''): string
 }
 
 /**
+ * Removes the first segment from a string
+ * Example usage:
+ * removeFirstSegment('path/to/file'); // Returns 'to/file'
+ *
+ * @param string $string The input string
+ * @param string $separator The separator used to split the string (default is DIRECTORY_SEPARATOR)
+ * @return string The string with the first segment removed. If the separator is not found or the string is empty, an empty string is returned.
+ */
+function removeFirstSegment(string $string, string $separator = DIRECTORY_SEPARATOR): string
+{
+    $pos = strpos($string, $separator);
+
+    // Falls ein Slash gefunden wurde und nicht am Anfang steht, schneide den String dahinter aus
+    if ($pos !== false) {
+        return substr($string, $pos + 1);
+    }
+
+    return '';
+}
+
+/**
  * Verkuerzt einen Text auf eine bestimme Laenge. Beim Abschneiden geht die Funktion jedoch bis zum letzten Leerzeichen zurueck, damit
  * er ein Wort nicht in der Mitte teilt.
  * Wenn der Text laenger ist als der Ausschnitt, kann mittels dem Parameter more == 1 die Zeichenfolge '...' angehaengt werden.
@@ -622,7 +643,7 @@ function getClientBrowser(): array
 {
     $userAgent = $_SERVER['HTTP_USER_AGENT'];
     if (($pos = strpos($userAgent, 'MSIE')) !== false) {
-        list($version) = sscanf(substr($userAgent, $pos), 'MSIE %f; ');
+        [$version] = sscanf(substr($userAgent, $pos), 'MSIE %f; ');
         $browser = 'IE';
     }
     else if (strpos($userAgent, 'Opera')) {
