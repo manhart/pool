@@ -164,9 +164,7 @@ class GUI_Module extends Module
      */
     public static function autoloadGUIModule(string $GUIClassName, ?Module $ParentGUI = null): string|false
     {
-        $hasNamespace = str_contains($GUIClassName, '\\');
-
-        if($hasNamespace) {
+        if(Autoloader::hasNamespace($GUIClassName)) {
             $GUIRootDirs = [
                 defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];

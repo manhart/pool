@@ -58,6 +58,14 @@ class Autoloader
     }
 
     /**
+     * Determines whether a given class name has a namespace.
+     */
+    public static function hasNamespace(string $className): bool
+    {
+        return str_contains($className, '\\');
+    }
+
+    /**
      * Autoloader for POOL Classes
      *
      * @param string $className Klasse
@@ -65,9 +73,7 @@ class Autoloader
      */
     public static function autoloadClass(string $className): string|false
     {
-        $hasNamespace = str_contains($className, '\\');
-
-        if($hasNamespace) {
+        if(static::hasNamespace($className)) {
             $classRootDirs = [
                 defined('BASE_NAMESPACE_PATH') ? \constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];
