@@ -324,13 +324,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * @see MySQL_DAO::buildSorting
      * @see MySQL_DAO::buildLimit
      */
-    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [],
-        array $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
+    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter = [], array $sorting = [],
+                                array                 $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
     {
         $optionsStr = implode(' ', $options);
 
         $where = $this->buildWhere($id, $key);
-        $filter = $this->buildFilter($filter_rules);
+        $filter = $this->buildFilter($filter);
         $groupByClause = $this->buildGroupBy($groupBy);
         $havingClause = $this->buildHaving($having);
         $sortingClause = $this->buildSorting($sorting);

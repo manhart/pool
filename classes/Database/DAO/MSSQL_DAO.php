@@ -38,14 +38,14 @@ class MSSQL_DAO extends DAO
     /**
      * MSSQL requires a ORDER BY-clause if there is a LIMIT-clause. By default, if nothing is given we sort by the primary key.
      */
-    public function getMultiple(array|int|string|null $id = null, array|string|null $key = null, array $filter_rules = [], array $sorting = [],
-        array $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
+    public function getMultiple(array|int|string|null $id = null, array|string|null $key = null, array $filter = [], array $sorting = [],
+                                array                 $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
     {
         if($limit && !$sorting) {
             // sort by primary key ascending
             $sorting = \array_fill_keys($this->getPrimaryKey(), 'ASC');
         }
-        return parent::getMultiple($id, $key, $filter_rules, $sorting, $limit, $groupBy, $having, $options);
+        return parent::getMultiple($id, $key, $filter, $sorting, $limit, $groupBy, $having, $options);
     }
 
     /**
