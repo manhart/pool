@@ -37,7 +37,7 @@ interface DatabaseAccessObjectInterface
     /**
      * Returns the number of records of the assembled SQL statement as a RecordSet
      */
-    public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): RecordSet;
+    public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter = []): RecordSet;
 
     /**
      * Returns a single record e.g. by primary key

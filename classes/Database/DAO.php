@@ -997,17 +997,15 @@ SQL;
      * @see RecordSet
      * @see MySQL_DAO::buildFilter
      */
-    public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = []): RecordSet
+    public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter = []): RecordSet
     {
-        $where = $this->buildWhere($id, $key);
-        $filter = $this->buildFilter($filter_rules);
+        $whereClause = $this->buildWhere($id, $key).' '.$this->buildFilter($filter);
         $count = $this->wrapSymbols('count');
         $sql = <<<SQL
 SELECT COUNT(*) AS $count
 FROM $this->quotedTable$this->quotedTableAlias
 WHERE
-    $where
-    $filter
+    $whereClause
 SQL;
         return $this->execute($sql);
     }
