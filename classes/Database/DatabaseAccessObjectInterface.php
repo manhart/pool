@@ -47,7 +47,7 @@ interface DatabaseAccessObjectInterface
     /**
      * Returns all data records of the assembled SQL statement as a RecordSet
      */
-    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter_rules = [], array $sorting = [],
+    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter = [], array $sorting = [],
         array $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet;
 
     /**
