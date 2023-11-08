@@ -445,13 +445,13 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * set only the path of the url
-     *
+     * set only the path of the url dropping any queries
      * @param string $scriptPath
      * @return Url
      */
     public function setScriptPath(string $scriptPath): static
     {
+        $scriptPath = preg_replace('/\?.*/', '', $scriptPath);
         $script = \pathinfo($this->path, \PATHINFO_BASENAME);
         if(!empty($script) && str_contains($script, '.')) {
             $this->path = \addEndingSlash($scriptPath) . $script;
