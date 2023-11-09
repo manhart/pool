@@ -451,7 +451,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function setScriptPath(string $scriptPath): static
     {
-        $scriptPath = preg_replace('/\?.*/', '', $scriptPath);
+        $scriptPath = \preg_replace('/\?.*/', '', $scriptPath);
         $script = \pathinfo($this->path, \PATHINFO_BASENAME);
         if(!empty($script) && str_contains($script, '.')) {
             $this->path = \addEndingSlash($scriptPath) . $script;
