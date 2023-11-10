@@ -1456,13 +1456,12 @@ class Weblication extends Component
     /**
      * Creates an array with references to the variadic default values for ajax results
      *
-     * @param array $result
      * @param mixed ...$defaults
      * @return mixed
      */
-    public static function &makeResultArray(array &$result = [], ...$defaults): array
+    public static function &makeResultArray(...$defaults): array
     {
-        $references = [];
+        $references = [&$result];
         foreach($defaults as $key => $value) {
             $result[$key] ??= $value;
             $references[] = &$result[$key];
