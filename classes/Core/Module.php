@@ -101,6 +101,9 @@ class Module extends Component
         $this->handoff = [];
         $this->Defaults = new Input(Input::EMPTY);
         $this->internalParams = $params;
+        // assign the module name
+        $moduleName = $this->getInternalParam('moduleName');
+        if($moduleName) $this->setName($moduleName);
         $this->init();
     }
 
@@ -123,9 +126,8 @@ class Module extends Component
             $this->Input->mergeVarsIfNotSet($this->getDefaults());
         }
 
-        // Assigns also the module name
-        $moduleName = $this->Input->setVars($this->internalParams)->getVar('moduleName');
-        if($moduleName) $this->setName($moduleName);
+        // Assigns internal parameters to the input container
+        $this->Input->setVars($this->internalParams);
     }
 
     /**
