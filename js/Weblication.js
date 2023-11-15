@@ -17,14 +17,14 @@
 class Weblication
 {
     /**
-     * all registered modules
+     * All registered modules
      *
      * @type {[]}
      */
     #modules = [];
 
     /**
-     * class mapping
+     * Class mapping
      * @type {{}}
      */
     static classMapping = {};
@@ -51,7 +51,7 @@ class Weblication
     }
 
     /**
-     * register class
+     * Register class
      *
      * @param Class
      * @returns {Weblication}
@@ -127,6 +127,18 @@ class Weblication
     }
 
     /**
+     * Marks the HTML element as controlled by a pool module.
+     *
+     * @return {void}
+     */
+    #initializeModule()
+    {
+        if(this instanceof GUI_Module) {
+            this.element()?.classList.add('pool-module');
+        }
+    }
+
+    /**
      * Create all JavaScript modules with the options passed by the server
      */
     run()
@@ -162,13 +174,16 @@ class Weblication
             const $Module = this.getModule(moduleName);
 
             const initOptions = clientData[moduleName].initOptions ?? [];
-            ready(() => $Module.init(initOptions));
+            ready(() => {
+                this.#initializeModule.apply($Module);
+                $Module.init(initOptions);
+            });
         }
     }
 }
 
 const $Weblication = Weblication.getInstance();
-console.debug('Weblication.class.js loaded');
+console.debug('Weblication.js loaded');
 
 // Must be removed if not necessary anymore
 // @deprecated
