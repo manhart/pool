@@ -170,9 +170,12 @@ class Weblication
             }
             // console.debug('GUI_Module.createGUIModule ' + moduleName + ' created');
 
-            if(!this.module_exists(moduleName)) continue;
-            const $Module = this.getModule(moduleName);
+            if(!this.module_exists(moduleName)) {
+                console.error('Created module ' + moduleName + ' does not exist in Weblication');
+                continue;
+            }
 
+            const $Module = this.getModule(moduleName);
             const initOptions = clientData[moduleName].initOptions ?? [];
             ready(() => {
                 this.#initializeModule.apply($Module);
