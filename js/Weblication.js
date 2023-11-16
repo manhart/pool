@@ -87,13 +87,12 @@ class Weblication
      */
     unregisterModule(Module)
     {
-        let moduleName = Module.getName();
-        delete this.#modules[moduleName];
+        delete this.#modules[Module.getName()];
         return this;
     }
 
     /**
-     * returns module
+     * Returns module
      *
      * @param moduleName
      * @returns {GUI_Module}
@@ -104,6 +103,19 @@ class Weblication
             throw new PoolError('Module with Name ' + moduleName + ' was not found!');
         }
         return this.#modules[moduleName];
+    }
+
+    /**
+     * Destroys the specified module.
+     *
+     * @param {string} moduleName - The name of the module to be destroyed.
+     * @return {Weblication}
+     */
+    destroyModule(moduleName)
+    {
+        this.getModule(moduleName).destroy();
+        window['$' + moduleName] = undefined;
+        return this;
     }
 
     /**

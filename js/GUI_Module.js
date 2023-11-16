@@ -44,6 +44,16 @@ class GUI_Module
     }
 
     /**
+     * Destroys the current module by unregistering it from the Weblication instance.
+     *
+     * @return {void}
+     */
+    destroy()
+    {
+        Weblication.getInstance().unregisterModule(this);
+    }
+
+    /**
      * Initializes the module
      *
      * @param {object} options - options passed to the module
