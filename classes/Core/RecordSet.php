@@ -351,6 +351,15 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
+     * Shorthand of getValueAsInt('count')
+     * @return int
+     */
+    public function getCountValue(): int
+    {
+        return  $this->getValueAsInt('count');
+    }
+
+    /**
      * shorthand for getValueAsInt('last_insert_id')
      * @return int
      */
