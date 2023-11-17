@@ -1573,7 +1573,7 @@ class Weblication extends Component
      * @return void
      * @throws Exception
      */
-    protected function setupTranslator(array $settings): void
+    public function setupTranslator(array $settings): void
     {
         // setup AppTranslator
         $defaultLocale = $settings['application.locale'] ?? $this->defaultLocale;
