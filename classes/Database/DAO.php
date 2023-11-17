@@ -105,6 +105,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected array $columns = [];
 
+    private array|false|null $defaultColumns;
+
     /**
      * @var array<string, string|Closure> overwrite this array in the constructor to create the commands needed for the database.
      * @see Commands
@@ -242,9 +244,14 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function fetchColumns(): static
     {
-        [$this->field_list, $columns, $this->pk] = $this->getDataInterface()->getTableColumnsInfo($this->database, $this->table);
+        $columns = $this->fetchColumnsList();
         $this->setColumns(...$columns);
         return $this;
+    }
+
+    private function fetchColumnsList():array{
+        [$this->field_list, $columns, $this->pk] = $this->getDataInterface()->getTableColumnsInfo($this->database, $this->table);
+        return $columns;
     }
 
     /**
@@ -670,12 +677,24 @@ SQL;
      */
     public function setColumns(string ...$columns): static
     {
+        $this->defaultColumns ??= ($this->columns ?: false);
         $this->columns = $columns;
         // Escape each column
         $escapedColumns = array_map([$this, 'wrapColumn'], $this->columns);
         // Concatenate the columns into a single string
         $this->column_list = implode(', ', $escapedColumns);
         return $this;
+    }
+
+    /**
+     * @return array|string[] The value getColumns would return if this DAO had just been created
+     * @see self::getColumns()
+     */
+    public function getDefaultColumns():array{
+        if ($this->defaultColumns === false)
+            return $this->defaultColumns = $this->fetchColumnsList();
+        return $this->defaultColumns ??=
+            $this->getColumns();
     }
 
     /**
