@@ -107,6 +107,11 @@ class Module extends Component
         $this->init();
     }
 
+    protected function getInput(): Input
+    {
+        return $this->Input;
+    }
+
     /**
      * Set default values for external inputs
      *
