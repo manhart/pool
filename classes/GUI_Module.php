@@ -466,6 +466,20 @@ class GUI_Module extends Module
     }
 
     /**
+     * Creates a new Template object based on the given file and handle.
+     *
+     * @param string $file The path to the template file.
+     * @param string $handle The handle to be used for the template file. Default is 'stdout'.
+     * @return Template The created Template object.
+     */
+    protected function createTemplate(string $file, string $handle = 'stdout'): Template
+    {
+        $template = new Template();
+        $template->setFilePath($handle, $file);
+        return $template;
+    }
+
+    /**
      * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication. It also includes the CSS file.
      */
     protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $includeCSS = true): bool
