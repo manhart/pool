@@ -213,4 +213,14 @@ class Component extends PoolObject
         $this->components = \array_diff($this->components, [$Component]);
         return $this;
     }
+
+    /**
+     * Create simple default NumberFormatter
+     *
+     * @return \NumberFormatter|null|false Returns the created NumberFormatter or null if creation fails
+     */
+    protected function createNumberFormatter(): \NumberFormatter|null|false
+    {
+        return \NumberFormatter::create($this->Weblication->getLocale(), \NumberFormatter::PATTERN_DECIMAL, '#,##0.00');
+    }
 }
