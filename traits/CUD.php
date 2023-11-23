@@ -100,6 +100,38 @@ Trait CUD{
         $success = true;
         return $result;
     }
+
+    /**
+     * @param DAO $DAO
+     * @param int $id
+     * @param int $deleted
+     * @param string $softDeleteMark
+     * @return mixed
+     */
+    protected function cudDelete(DAO $DAO, int $id, int $deleted = 1, string $softDeleteMark = 'deleted'): mixed
+    {
+        [&$result, &$success, &$message] = Weblication::makeResultArray(success: false, message: '');
+
+        $dbColumns = $DAO->getDefaultColumns();
+        if (array_search($softDeleteMark, $dbColumns)) {
+            $pk = $DAO->getPrimaryKey()[0];
+            $data = [
+                $pk => $id,
+                $softDeleteMark => $deleted,
+            ];
+            if (array_search('modifier', $dbColumns))
+                $data['modifier'] = $this->idUser();
+            $DeleteSet = $DAO->update($data);
+        } elseif (!$deleted){
+            $message = "Can't restore record, soft delete is not supported by table $DAO";
+            return $result;
+        } else
+            $DeleteSet = $DAO->delete($id);
+        $lastError = $DeleteSet->getLastError();
+        $message = $lastError['message'] ?? '';
+        $success = !$lastError;
+        return $result;
+    }
 }
 
 
