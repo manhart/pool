@@ -64,7 +64,12 @@ Trait CUD{
             $data = array_intersect_key($this->getInput()->getData(), array_flip($dataMask));
 
         //preprocess data
-        $savePreHook?->call($this, $DAO, $persistId, $pk);
+        try {
+            $savePreHook?->call($this, $DAO, $persistId, $pk);
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            return $result;
+        }
 
         //db transaction
         $dbColumns = $DAO->getDefaultColumns();
@@ -86,7 +91,12 @@ Trait CUD{
         }
 
         //postprocess hook
-        $savePostHook?->call($this, $DAO, $persistId, $pk);
+        try {
+            $savePostHook?->call($this, $DAO, $persistId, $pk);
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            return $result;
+        }
 
         //craft result
         $rowSet = $rowGenerator?->call($this, $DAO, $persistId, $pk)
