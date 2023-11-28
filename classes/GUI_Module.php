@@ -241,7 +241,7 @@ class GUI_Module extends Module
      * @throws ModulNotFoundException
      * @see GUI_Module::searchGUIsInPreloadedContent()
      */
-    public static function createGUIModule(string $GUIClassName, ?Component $Owner, ?Module $ParentGUI, string $params = '',
+    public static function createGUIModule(string $GUIClassName, ?Component $Owner = null, ?Module $ParentGUI = null, string $params = '',
                                            bool   $autoLoadFiles = true, bool $search = true): GUI_Module
     {
         $class_exists = class_exists($GUIClassName, false);

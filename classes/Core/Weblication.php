@@ -1395,7 +1395,7 @@ class Weblication extends Component
             throw new InvalidArgumentException('The application name must be defined.');
         }
 
-        $mainGUI = GUI_Module::createGUIModule($className, $this, null, '', true, false);
+        $mainGUI = GUI_Module::createGUIModule($className, $this, search: false);
         //maybe an Ajax Call could run here and return its result
         $this->setMain($mainGUI);
 
