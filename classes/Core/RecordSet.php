@@ -15,6 +15,7 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use Iterator;
+use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\InvalidJsonException;
 use UConverter;
@@ -405,7 +406,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         $value = $this->getValue($key, $default);
         if($value instanceof DateTime)
             return $value;
-        if($value && $value !== '0000-00-00' && $value !== '0000-00-00 00:00:00') {
+        if($value && $value !== DataInterface::ZERO_DATE && $value !== DataInterface::ZERO_DATETIME) {
             if(\is_numeric($value) && !str_contains($value, '-'))
                 $value = "@$value";
             try {
