@@ -990,10 +990,11 @@ class Template extends PoolObject
      * @param string $handle Handle-Name (array erlaubt)
      * @param string $filename Pfad und Dateiname (Template)
      */
-    public function setFilePath(string $handle, string $filename = ''): void
+    public function setFilePath(string $handle, string $filename = ''): Template
     {
         $this->setDirectory(dirname($filename));
         $this->addFile($handle, basename($filename));
+        return $this;
     }
 
     /**

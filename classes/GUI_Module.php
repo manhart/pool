@@ -392,14 +392,9 @@ class GUI_Module extends Module
     public function enableBox(string $title = '', string $template = 'tpl_box.html'): static
     {
         $file = $this->Weblication->findTemplate($template, $this->getClassName());
+        $this->enabledBox = (bool)$file;
         if ($file) {
-            $this->TemplateBox = new Template();
-            $this->TemplateBox->setFilePath('stdout', $file);
-            $this->TemplateBox->setVar('TITLE', $title);
-            $this->enabledBox = true;
-        }
-        else {
-            $this->enabledBox = false;
+            $this->TemplateBox = (new Template())->setFilePath('stdout', $file)->setVar('TITLE', $title);
         }
         return $this;
     }
