@@ -12,6 +12,7 @@ namespace pool\classes;
 
 use GUI_Module;
 use function defined;
+use const pool\NAMESPACE_SEPARATOR;
 use const pool\PWD_TILL_CLASSES;
 
 class Autoloader
@@ -62,7 +63,7 @@ class Autoloader
      */
     public static function hasNamespace(string $className): bool
     {
-        return str_contains($className, '\\');
+        return str_contains($className, NAMESPACE_SEPARATOR);
     }
 
     /**
@@ -78,7 +79,7 @@ class Autoloader
                 defined('BASE_NAMESPACE_PATH') ? \constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];
 
-            $className = \str_replace('\\', '/', $className);
+            $className = \str_replace(NAMESPACE_SEPARATOR, '/', $className);
         }
         else {
             $classRootDirs = [

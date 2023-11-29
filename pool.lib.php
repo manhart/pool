@@ -12,8 +12,10 @@ namespace pool {
 
     use pool\classes\Autoloader;
 
-    if(!defined('DIR_POOL_ROOT')) {
-        define('DIR_POOL_ROOT', __DIR__);
+    const NAMESPACE_SEPARATOR = '\\';
+
+    if(!\defined('DIR_POOL_ROOT')) {
+        \define('DIR_POOL_ROOT', __DIR__);
     }
 
     const PWD_TILL_INCLUDES = 'includes'; // todo remove after refactoring to PSR-4

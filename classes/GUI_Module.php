@@ -16,6 +16,7 @@ use pool\classes\Core\Weblication;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\utils\Str;
+use const pool\NAMESPACE_SEPARATOR;
 use const pool\PWD_TILL_GUIS;
 
 // const FIXED_PARAM_CONFIG = 'config';
@@ -170,7 +171,7 @@ class GUI_Module extends Module
                 defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
             ];
 
-            $GUIClassName = str_replace('\\', '/', $GUIClassName);
+            $GUIClassName = str_replace(NAMESPACE_SEPARATOR, '/', $GUIClassName);
         }
         else {
             $GUIRootDirs = [
