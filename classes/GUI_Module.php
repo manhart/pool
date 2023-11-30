@@ -604,35 +604,26 @@ class GUI_Module extends Module
 
         $result = '';
         if (!$this->enabled()) {
-            $this->respondToAjaxCall(null, 'GUI '.self::class.' is not enabled', __METHOD__, 'access-denied', 403);
+            return $this->respondToAjaxCall(null, 'GUI '.self::class.' is not enabled', __METHOD__, 'access-denied', 403);
         }
         $this->registerAjaxCalls();
         $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
         $Closure = $ajaxMethod['method'] ?? null;
+        $this->plainJSON = $ajaxMethod['noFormat'] ?? false;
 
-        // 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
-        if ($Closure) {
-            $this->plainJSON = $ajaxMethod['noFormat'];
-        } elseif (!is_callable([$this, $requestedMethod])) {
+        if (!$Closure instanceof Closure) {
+            if (is_callable([$this, $requestedMethod]))// 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
+                return $this->respondToAjaxCall(null,
+                    "Method $requestedMethod is not registered for GUI" . self::class, __METHOD__, 'access-denied', 403);
             return $this->respondToAjaxCall(null,
-                "The method '$requestedMethod' in the class {$this->getClassName()} is not callable",
-                __METHOD__, 'not-callable');
+                "The method '$requestedMethod' in the class {$this->getClassName()} is not a callable", __METHOD__, 'not-callable', 501);
         }
 
         // @todo validate parameters?
-
         try {
-            $ReflectionMethod = $Closure ? new ReflectionFunction($Closure) : new ReflectionMethod($this, $requestedMethod);
-            $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
-        } catch (ReflectionException) {
-            return $this->respondToAjaxCall(null, "Error calling method $requestedMethod on {$this->getClassName()}",
-                __METHOD__, 'reflection');
-        }
-
-        // collect succeeding ajax calls that are not closures
-        if (!$Closure) {
-            Log::info("The method {$this->getClassName()}:$requestedMethod is not used as Closure ", ['className' => $this->getClassName(),
-                'method' => $requestedMethod], 'ajaxCallLog');
+            $ReflectionMethod = new ReflectionFunction($Closure);
+        } catch (ReflectionException $e) {
+            return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500);
         }
 
         error_clear_last();
@@ -641,10 +632,11 @@ class GUI_Module extends Module
         $callingClassName = $this->getClassName();
         try {
             $args = [];
-            if ($numberOfParameters) {
+            if ($ReflectionMethod->getNumberOfParameters()) {
                 $parameters = $ReflectionMethod->getParameters();
                 foreach ($parameters as $Parameter) {
-                    $value = $this->Input->getVar($Parameter->getName()) ?? ($Parameter->isOptional() ? $Parameter->getDefaultValue() : throw new MissingArgumentException('Missing parameter ' . $Parameter->getName()));
+                    $value = $this->Input->getVar($Parameter->getName()) ?? ($Parameter->isOptional() ? $Parameter->getDefaultValue()
+                        : throw new MissingArgumentException('Missing parameter ' . $Parameter->getName()));
                     if (is_string($value)) {
                         if ($Parameter->hasType() && $Parameter->getType()->getName() !== 'mixed') {
                             $value = match ($Parameter->getType()->getName()) {
@@ -657,23 +649,16 @@ class GUI_Module extends Module
                             $value = $value === 'true';
                         }
                     }
-
                     $args[] = $value;
                 }
             }
             try {
-                if ($Closure) {
-                    //TODO check Authorisation
-                    //if (!$accessGranted)
-                    //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
+                //TODO check Authorisation
+                //if (!$accessGranted)
+                //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
 
-                    // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
-                    /** @var mixed $result */
-                    $result = $Closure(...$args);
-                } else {
-                    $result = $ReflectionMethod->invokeArgs($this, $args);
-                    $callingClassName = $ReflectionMethod->getDeclaringClass()->getName();
-                }
+                // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
+                $result = $Closure(...$args);
             } catch (Throwable $e) {
                 $this->plainJSON = false;
                 $statusCode = 418;
@@ -719,6 +704,8 @@ class GUI_Module extends Module
      */
     protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType='', int $statusCode = 200): string
     {
+            Log::info($error, ['className' => $this->getClassName(), 'method' => $this->ajaxMethod, 'errorType' => $errorType, 'status' => $statusCode],
+                'ajaxCallLog');
         header('Content-type: application/json', true, $statusCode);
         if (!$this->plainJSON) {
             $clientData = [//standard client data-format
