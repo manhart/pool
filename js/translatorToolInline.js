@@ -20,8 +20,8 @@ class translatorToolInline{
     translationMarker = 'trnsl';
     languageStyles  = [];
     constructor() {
-        if (document.referrer != '') {
-            const origin = new URL(window.document.referrer).origin;
+        {
+            const origin = opener.origin;
             //check that origin is whitelisted
             //setup receiver
             window.addEventListener('message', (event) => {
