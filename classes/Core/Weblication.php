@@ -824,7 +824,7 @@ class Weblication extends Component
         $language = $this->language;
         $elementSubFolder = 'templates';
         $translate = (bool)Template::getTranslator();
-        $memKey = "findTemplate.$language.$classFolder.$filename.$baseLib";
+        $memKey = "findTemplate.$this->skin.$language.$classFolder.$filename.$baseLib";
         if(($template = $this->getCachedFileAccessResult($memKey)) !== false) {
             return $template;
         }
@@ -858,7 +858,7 @@ class Weblication extends Component
     {
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
-        $memKey = "findStyleSheet.$language.$classFolder.$elementSubFolder.$filename.$baseLib";
+        $memKey = "findStyleSheet.$this->skin.$language.$classFolder.$elementSubFolder.$filename.$baseLib";
         if(($stylesheet = $this->getCachedFileAccessResult($memKey)) !== false) {
             return $stylesheet;
         }
