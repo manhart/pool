@@ -144,6 +144,11 @@ class GUI_Module extends Module
         $this->isAjax = isAjax() && $_REQUEST[Weblication::REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
             ($_REQUEST[Weblication::REQUEST_PARAM_MODULE] === static::class || $_REQUEST[Weblication::REQUEST_PARAM_MODULE] === $this->getClassName());
 
+        // set the module name (if it is necessary for ajax calls)
+        if($this->isAjax) {
+            $moduleName = $_REQUEST['moduleName'] ?? null;
+            if($moduleName) $this->setName($moduleName);
+        }
         $this->Template = new Template();
     }
 
