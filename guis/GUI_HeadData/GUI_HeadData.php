@@ -120,14 +120,10 @@ class GUI_HeadData extends GUI_Module
      */
     private array $clientData = [];
 
-
     /**
-     * Konstruktor
-     *
-     * @param Component|null $Owner Besitzer vom Typ Component
-     * @param array $params
+     * Set the default values
      */
-    function __construct(?Component $Owner, array $params = [])
+    public function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
         $this->baseHref = $_SERVER['PHP_SELF'];
@@ -338,12 +334,12 @@ class GUI_HeadData extends GUI_Module
     /**
      * @param Module $Module
      * @param array|null $initOptions
-     *
+     * @param string|null $jsClassName if null, the Module's class name is used
      * @return GUI_HeadData
      */
-    public function setClientData(Module $Module, ?array $initOptions = null): self
+    public function setClientData(Module $Module, ?array $initOptions = null, string $jsClassName = null): self
     {
-        $clientData = $this->clientData[$Module->getName()] ?? ['className' => $Module->getClassName(), 'fullyQualifiedClassName' => $Module::class];
+        $clientData = $this->clientData[$Module->getName()] ?? ['className' => $jsClassName ?? $Module->getClassName(), 'fullyQualifiedClassName' => $Module::class];
         if($initOptions) {
             $clientData['initOptions'] = array_merge($clientData['initOptions'] ?? [], $initOptions);
         }
