@@ -97,8 +97,6 @@ class TranslationProvider_ResourceFile implements TranslationProvider
             return self::Error;
         }
         try {
-            //refresh
-            $this->loadTranslations();
             //manipulate Translations
             $this->translations[$key] = $value;
             $code = var_export($this->translations, true);
