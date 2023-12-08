@@ -73,7 +73,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param array $params
      * @throws ModulNotFoundException|Exception
      */
-    function __construct(?Component $Owner, array $params = [])
+    public function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
         $GUI_Module = GUI_Module::createGUIModule(GUI_HeadData::class, $this->Weblication, $this);
