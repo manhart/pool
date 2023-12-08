@@ -1306,14 +1306,16 @@ class Template extends PoolObject
      */
     public function getContent(string $handle = ''): string
     {
-        if($handle !== '') {
+        if($handle)
             $this->useFile($handle);
+        if(!$this->ActiveFile)
+            return '';
+        $parsedContent = $this->ActiveFile->getParsedContent();
+        if (constant("IS_DEVELOP")) {
+            $name = $this->ActiveFile->getFilename();
+            $parsedContent = "<!-- begin $name -->$parsedContent<!-- end $name -->";
         }
-
-        if($this->ActiveFile) {
-            return $this->ActiveFile->getParsedContent();
-        }
-        return '';
+        return $parsedContent;
     }
 
     /**
