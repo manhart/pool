@@ -25,11 +25,11 @@ class Translator
      *The Content should avoid constructs like )?? )} in args and >} in default to avoid failure of the RegEx<br>
      *key and args are retrieved as handle in group 2<br>
      */
-    const CURLY_TAG_REGEX = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?>\?\?<((?>[^>]*(?>>(?!}))?)*)>)?}/u';
+    public const CURLY_TAG_REGEX = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?>\?\?<((?>[^>]*(?>>(?!}))?)*)>)?}/u';
     /**
      *Matches Blocks like <code><!-- TRANSL handle -->freeform-text<!-- END handle --></code>
      */
-    const COMMENT_TAG_REGEX = '/<!-- (TRANSL) ([^>]+) -->(.*?)<!-- END \1 -->/s';
+    public const COMMENT_TAG_REGEX = '/<!-- (TRANSL) ([^>]+) -->(.*?)<!-- END \1 -->/s';
 
     /**
      * @var bool Determines whether text-translations with args should be resolved<br>
@@ -111,7 +111,7 @@ class Translator
      */
     public function addTranslationResource(TranslationProviderFactory $translationResource): self
     {
-        if (!in_array($translationResource, $this->translationResources))
+        if (!\in_array($translationResource, $this->translationResources, true))
             $this->translationResources[] = $translationResource;
         return $this;
     }
@@ -124,7 +124,7 @@ class Translator
     public function removeTranslationResource(TranslationProviderFactory $translationResource): bool
     {
         $resources = $this->translationResources;
-        if (($key = array_search($translationResource, $resources)) !== false) {
+        if (($key = \array_search($translationResource, $resources)) !== false) {
             unset($resources[$key]);
             return true;
         } else
@@ -149,10 +149,12 @@ class Translator
     }
 
     /**Gets the first language that is loaded or offered by a registered TranslationProviderFactory
+     *
      * @param string $lang langauge to look for
      * @param bool $dryRun whether the Provider found should be instantiated and added to the loaded languages
      * @param mixed|null $provider set to the provider Found
      * @return bool success
+     * @throws Exception
      */
     private function fetchLanguage(string $lang, bool $dryRun = false, mixed &$provider = null): bool
     {
@@ -165,7 +167,7 @@ class Translator
             $provider = null;
             $providerName = $factory->getBestProvider($lang);
             //we could also check the fitness of this offer to decide for a factory
-            if ($providerName != null) {
+            if ($providerName !== null) {
                 if (!$dryRun) {
                     //take this element
                     $provider = $factory->getProvider($providerName, $lang);
@@ -196,19 +198,19 @@ class Translator
         //insure we have an array
         $newActiveLanguages = (array)$language;
         //insure the languages are the array keys
-        if (array_is_list($newActiveLanguages)) $newActiveLanguages = array_flip($newActiveLanguages);
+        if (\array_is_list($newActiveLanguages)) $newActiveLanguages = \array_flip($newActiveLanguages);
 
         foreach ($newActiveLanguages as $lang => &$provider) {
             if (!$provider instanceof TranslationProvider) {//for this language no ProviderArray was passed
                 $loaded = $this->fetchLanguage($lang, false, $provider);
                 if (!$loaded) {//fetch failed
                     if (!$softFail)
-                        throw new Exception("Language $lang could not be loaded");
+                        throw new \RuntimeException("Language $lang could not be loaded");
                     unset($newActiveLanguages[$lang]);
                 }
             }
         }
-        if ($this->defaultLanguage != null)
+        if ($this->defaultLanguage !== null)
             $newActiveLanguages['lang0'] = $this->defaultLanguage;
         $oldActiveLanguages = $this->activeLanguages;
         $this->activeLanguages = $newActiveLanguages;
@@ -231,29 +233,29 @@ class Translator
     public function translateFile(string $sourceFile, string $lang): string
     {
         //get variables
-        $translatedDir = buildDirPath(dirname($sourceFile), $lang);
-        if (!is_dir($translatedDir))
-            mkdir($translatedDir) && chmod($translatedDir, 0775);
-        $filename = basename($sourceFile);
+        $translatedDir = \buildDirPath(\dirname($sourceFile), $lang);
+        if (!\is_dir($translatedDir))
+            mkdir($translatedDir) && \chmod($translatedDir, 0775);
+        $filename = \basename($sourceFile);
         $translatedFile = $translatedDir . $filename;
-        $manualPreTranslatedFile = buildFilePath($translatedDir, 'man', $filename);
+        $manualPreTranslatedFile = \buildFilePath($translatedDir, 'man', $filename);
         //manual Translation exists
-        if (file_exists($manualPreTranslatedFile))
+        if (\file_exists($manualPreTranslatedFile))
             //override source
             $sourceFile = $manualPreTranslatedFile;
-        $sourceContent = file_get_contents($sourceFile);
+        $sourceContent = \file_get_contents($sourceFile);
         //parse static tags
         $defaultFormatDirective = $this->suppressFormatting();
         $countChanges = 0;
         $translatedContent = $this->parse($sourceContent, $lang, $countChanges);
         $this->suppressFormatting($defaultFormatDirective);
         //save translation
-        @unlink($translatedFile);
+        @\unlink($translatedFile);
         if ($countChanges)
             //save translation
-            file_put_contents($translatedFile, $translatedContent);
+            \file_put_contents($translatedFile, $translatedContent);
         else //hardlink unchanged file
-            symlink("../$filename", $translatedFile);
+            \symlink("../$filename", $translatedFile);
         return $translatedFile;
     }
 
@@ -275,7 +277,7 @@ class Translator
         $this->translateWithRegEx($templateContent, self::CURLY_TAG_REGEX, $changes);
         //Do replacement
         $translatedContent = strtr($templateContent, $changes);
-        $countChanges = count($changes);
+        $countChanges = \count($changes);
         unset($changes);
         //Restore active languages
         $this->swapLangList($defaultLangList);
@@ -292,7 +294,7 @@ class Translator
     public function translateWithRegEx(string $content, string $regEX, array &$changes): bool
     {
         //More specific copy of code from \TempCoreHandle::findPattern
-        preg_match_all($regEX, $content, $matches, PREG_SET_ORDER);
+        \preg_match_all($regEX, $content, $matches, \PREG_SET_ORDER);
         $outcome = checkRegExOutcome($regEX, $content);
         foreach ($matches as $match) {
             //the entire Comment Block
@@ -319,13 +321,13 @@ class Translator
      */
     public function translateTag(string $handle, ?string $tagContent): string
     {
-        $keyLength = strpos($handle, '(');
+        $keyLength = \strpos($handle, '(');
         if (!$keyLength) {
             $key = $handle;
             $args = null;
         } else {
-            $key = substr($handle, 0, $keyLength);
-            $args = substr($handle, $keyLength, -1);
+            $key = \substr($handle, 0, $keyLength);
+            $args = \substr($handle, $keyLength, -1);
             $Params = new Input(Input::EMPTY);
             $Params->setParams($args);
             $args = $Params->getData();
@@ -391,17 +393,17 @@ class Translator
         $keyArray = [$key => null];
         $this->queryTranslations($keyArray, $noAlter, $language);
         $translation = $keyArray[$key]??null;
-        assert($translation == null || $translation instanceof Translation);
+        \assert($translation === null || $translation instanceof Translation);
         //message processing
         if (@TranslationProvider_ToolDecorator::isActive())
-            @TranslationProvider_ToolDecorator::writeQueryToPostbox(self::getTranslationResources(), $key, default:$defaultMessage, args:$args, noAlter:$noAlter);
+            @TranslationProvider_ToolDecorator::writeQueryToPostbox($this->getTranslationResources(), $key, default:$defaultMessage, args:$args, noAlter:$noAlter);
         $message = $translation?->getMessage();
         $success = $message !== null;
         $message ??= $defaultMessage;
         if ($message === null) {
             $message = "String $key not found";
         } elseif ($args) {
-            $locale ??= $translation?->getProvider()->getLocale() ?? self::getPrimaryLocale();
+            $locale ??= $translation?->getProvider()->getLocale() ?? $this->getPrimaryLocale();
             $formatter = MessageFormatter::create($locale, $message);
             $formattedTranslation = $formatter->format($args);
             if ($formattedTranslation === false) {
@@ -413,13 +415,13 @@ class Translator
         return $message;//static::postprocessTranslation($message, $success, $noAlter, $key, $message, $args, $defaultMessage);
     }
 
-
     /**
      * detects locales and languages from browser
      *
      * @param bool $all
      * @param string $defaultLocale
      * @return array<string, string> [locale => primary language]
+     * @throws Exception
      */
     public function parseLangHeader(bool $all = false, string $defaultLocale = 'en_US'): array
     {
@@ -428,13 +430,13 @@ class Translator
         if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             foreach (explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']) as $el) {
                 $temp = explode(';q=', $el);
-                $l = trim($temp[0]);
-                $l = str_replace('-', '_', $l);
+                $l = \trim($temp[0]);
+                $l = \str_replace('-', '_', $l);
                 $q = (float)($temp[1] ?? 1);
                 $header[$l] = $q;
             }
         }
-        arsort($header);
+        \arsort($header);
 
         $languages = [];
         foreach ($header as $locale => $irrelevant) {
@@ -444,13 +446,13 @@ class Translator
                 $lang = /*array_key_first($fetched) ??*/
                     static::getPrimaryLanguage($locale);
                 //add to the list of languages if not defined yet
-                if (!array_key_exists($lang, $languages)) {
+                if (!\array_key_exists($lang, $languages)) {
                     $languages[$lang] = $locale;
                 }
             }
         }
         //make keys specific and the primary languages the values
-        return array_flip($languages);
+        return \array_flip($languages);
     }
 
     /**
@@ -461,8 +463,8 @@ class Translator
      */
     public static function getPrimaryLanguage(string $locale): string
     {
-        if (function_exists('locale_get_primary_language'))
-            $language = locale_get_primary_language($locale);
+        if (\function_exists('locale_get_primary_language'))
+            $language = \locale_get_primary_language($locale);
         else
             [$language,] = explode('_', $locale);
         return $language;
@@ -477,12 +479,13 @@ class Translator
      */
     private function queryTranslations(array &$keyArray, bool $noAlter = false, string &$language = "", ?Exception &$exception = null): bool
     {
+        /** @noinspection SuspiciousLoopInspection */
         foreach ($this->activeLanguages as $language => $provider) {//Language F
-            if ($provider == null) //language has  no provider
+            if ($provider === null) //language has  no provider
                 continue;//F skip
             foreach ($keyArray as $key => &$translation) {//Key K
-                $key = strval($key);
-                assert($provider instanceof TranslationProvider);
+                $key = (string)$key;
+                \assert($provider instanceof TranslationProvider);
                 switch ($queryResult = $provider->query($key)) {//Switch S
                     /** @noinspection PhpMissingBreakStatementInspection Stuff that finishes this Lookup */
                     case $provider::TranslationInadequate:
@@ -504,16 +507,17 @@ class Translator
                         continue 3;//F
                 }//END S
                 //Key was not resolved -> add Translation to Provider
-                $notMissing = $queryResult != $provider::TranslationNotExistent;
-                if (!(is_string($translation) && isNotEmptyString($translation))) {//no valid default
+                $notMissing = $queryResult !== $provider::TranslationNotExistent;
+                if (!(\is_string($translation) && \isNotEmptyString($translation))) {//no valid default
                     $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
                     //Try next Language
                     continue 2;//F
-                } else {//default specified
-                    $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationInadequate, $translation, $key);
-                    $translation = new Translation($provider, $translation, $key);
-                    //next iteration of K
                 }
+
+                //default specified
+                $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationInadequate, $translation, $key);
+                $translation = new Translation($provider, $translation, $key);
+                //next iteration of K
             }//END K
             //all Keys successfully looked up or default was provided
             return true;
