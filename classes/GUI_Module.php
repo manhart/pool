@@ -324,8 +324,9 @@ class GUI_Module extends Module
         //GUIs found
         $newContent = [];
         $caret = 0;
-        foreach ($matches as [$pattern, $guiName]) {
-            $params = trim(current($matches)[2] ?? '', '()');
+        foreach ($matches as $match) {
+            [$pattern, $guiName, $params] = $match + [2 => '']; /* 2: params; php doesn't allow null coalescing when destructuring arrays  */
+            $params = trim($params, '()');
             //try building the GUI found
             $new_GUI = self::createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
             //get unique identifier
