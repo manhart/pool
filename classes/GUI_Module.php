@@ -324,8 +324,8 @@ class GUI_Module extends Module
         //GUIs found
         $newContent = [];
         $caret = 0;
-        foreach ($matches as [$pattern, $guiName, $params]) {
-            $params = trim($params ?? '', '()');
+        foreach ($matches as [$pattern, $guiName]) {
+            $params = trim(current($matches)[2] ?? '', '()');
             //try building the GUI found
             $new_GUI = self::createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
             //get unique identifier
