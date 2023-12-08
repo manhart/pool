@@ -607,7 +607,7 @@ class GUI_Module extends Module
 
         $result = '';
         if (!$this->enabled()) {
-            return $this->respondToAjaxCall(null, 'GUI '.self::class.' is not enabled', __METHOD__, 'access-denied', 403);
+            return $this->respondToAjaxCall(null, "GUI {$this->getClassName()} is not enabled", __METHOD__, 'access-denied', 403);
         }
         $this->registerAjaxCalls();
         $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
@@ -617,7 +617,7 @@ class GUI_Module extends Module
         if (!$Closure instanceof Closure) {
             if (is_callable([$this, $requestedMethod]))// 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
                 return $this->respondToAjaxCall(null,
-                    "Method $requestedMethod is not registered for GUI" . self::class, __METHOD__, 'access-denied', 403);
+                    "Method $requestedMethod is not registered for GUI {$this->getClassName()}", __METHOD__, 'access-denied', 403);
             return $this->respondToAjaxCall(null,
                 "The method '$requestedMethod' in the class {$this->getClassName()} is not a callable", __METHOD__, 'not-callable', 501);
         }
