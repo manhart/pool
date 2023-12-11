@@ -1311,7 +1311,7 @@ class Template extends PoolObject
         if(!$this->ActiveFile)
             return '';
         $parsedContent = $this->ActiveFile->getParsedContent();
-        if (constant("IS_DEVELOP")) {
+        if ($this->ActiveFile instanceof TempFile && constant("IS_DEVELOP")) {
             $name = $this->ActiveFile->getFilename();
             if(str_ends_with($name, '.html')) {
                 $parsedContent = "<!-- begin $name -->$parsedContent<!-- end $name -->";
