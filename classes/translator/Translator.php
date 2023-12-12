@@ -234,8 +234,9 @@ class Translator
     {
         //get variables
         $translatedDir = \buildDirPath(\dirname($sourceFile), $lang);
-        if (!\is_dir($translatedDir))
-            mkdir($translatedDir) && \chmod($translatedDir, 0775);
+        if (!\is_dir($translatedDir) && !\mkdirs($translatedDir, 0775)) {
+            throw new \RuntimeException("Could not create directory $translatedDir for translation");
+        }
         $filename = \basename($sourceFile);
         $translatedFile = $translatedDir . $filename;
         $manualPreTranslatedFile = \buildFilePath($translatedDir, 'man', $filename);
