@@ -713,14 +713,14 @@ class Weblication extends Component
      * @param string $filename wanted image
      * @return string Filename or empty string in case of failure
      */
-    public function findImage(string $filename): string
+    public function findImage(string $filename, string $skin = null): string
     {
-        $skin = addEndingSlash($this->skin);
+        $skinFolder = addEndingSlash($skin ?? $this->skin);
         $language = addEndingSlash($this->language);
         $images = 'images/';
 
         # Ordner skins
-        $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skin;
+        $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skinFolder;
         $folder_images = $folder_skins.$images;
         $folder_language = $folder_skins.addEndingSlash($language).$images;
 
