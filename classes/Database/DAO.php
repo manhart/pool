@@ -187,7 +187,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $this->table ??= $table ?? static::$tableName ?:
             throw new InvalidArgumentException('The static property tableName is not defined within DAO '.static::class.'!');
 
-        $this->quotedDatabase = $this->wrapSymbols($this->database);
+        $this->quotedDatabase = $this->wrapSymbols(static::$databaseName ?: $this->database);
         $this->quotedTable = $this->wrapSymbols($this->table);
         $this->commands = $this->createCommands();
         $this->nonWrapSymbols = array_merge($this->symbolQuote, $this->nonWrapSymbols);
@@ -992,7 +992,7 @@ SQL;
         /** @noinspection SqlResolve */
         $sql = <<<SQL
 SELECT $this->column_list
-FROM $this->quotedTable
+FROM $this
 WHERE
     $where
 SQL;
