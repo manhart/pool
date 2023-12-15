@@ -119,9 +119,9 @@ class Weblication
     }
 
     /**
-     * checks if module exists
+     * Checks if module exists
      *
-     * @param moduleName
+     * @param {string} moduleName
      * @return {boolean}
      */
     module_exists(moduleName)
@@ -174,8 +174,13 @@ class Weblication
             const className = clientData[moduleName].className;
             /** fully qualified class name of the php module - is required by Ajax Calls */
             const fullyQualifiedClassName = clientData[moduleName].fullyQualifiedClassName;
+            const parentModuleName = clientData[moduleName].parentModuleName;
+            let parent = null;
+            if(this.module_exists(parentModuleName)) {
+                parent = this.getModule(parentModuleName);
+            }
             try {
-                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName);
+                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName, parent);
             }
             catch(e) {
                 console.error(e.toString());

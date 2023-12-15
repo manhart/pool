@@ -23,6 +23,7 @@ class GUI_Module
     className = this.constructor.name;
     /** @var {string} fullyQualifiedClassName of the php module - is required by Ajax Calls */
     fullyQualifiedClassName = this.constructor.name;
+    #parent = null;
 
     /**
      * @param {string} name unique name of the module
@@ -387,14 +388,38 @@ class GUI_Module
     }
 
     /**
+     * Sets the parent module
+     * @param {GUI_Module|null} parent
+     * @return {GUI_Module}
+     */
+    setParent(parent)
+    {
+        if(parent instanceof GUI_Module) {
+            this.#parent = parent;
+        }
+        return this;
+    }
+
+    /**
+     * Returns the parent module
+     * @return {null|GUI_Module}
+     */
+    getParent()
+    {
+        return this.#parent;
+    }
+
+
+    /**
      * creates a new unique GUI_Module. Makes the module globally known with $ in front of the name
      *
      * @param {string} GUIClassName
      * @param {string} name
      * @param {string} fullyQualifiedClassName - currently only used for Ajax calls
+     * @param {GUI_Module|null} parent
      * @returns {GUI_Module}
      */
-    static createGUIModule(GUIClassName, name, fullyQualifiedClassName = '') {
+    static createGUIModule(GUIClassName, name, fullyQualifiedClassName = '', parent = null) {
         if (Weblication.getInstance().module_exists(name)) {
             return Weblication.getInstance().getModule(name);
         }
@@ -404,12 +429,15 @@ class GUI_Module
             myClass = GUIClassName;
         } else {
             if (!Weblication.classMapping[GUIClassName]) {
-                throw new Error('Class ' + GUIClassName + ' is not registered. Please make sure to register your Module.');
+                throw new Error(`Class ${GUIClassName} is not registered. Please make sure to register your Module.`);
             }
             myClass = Weblication.classMapping[GUIClassName];
         }
 
-        return (new myClass(name)).setFullyQualifiedClassName(fullyQualifiedClassName);
+        const module = new myClass(name);
+        module.setFullyQualifiedClassName(fullyQualifiedClassName);
+        module.setParent(parent);
+        return module;
     }
 }
 console.debug('GUI_Module.js loaded');
