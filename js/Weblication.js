@@ -175,12 +175,8 @@ class Weblication
             /** fully qualified class name of the php module - is required by Ajax Calls */
             const fullyQualifiedClassName = clientData[moduleName].fullyQualifiedClassName;
             const parentModuleName = clientData[moduleName].parentModuleName;
-            let parent = null;
-            if(this.module_exists(parentModuleName)) {
-                parent = this.getModule(parentModuleName);
-            }
             try {
-                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName, parent);
+                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName);
             }
             catch(e) {
                 console.error(e.toString());
@@ -196,6 +192,9 @@ class Weblication
             const initOptions = clientData[moduleName].initOptions ?? [];
             ready(() => {
                 this.#initializeModule.apply($Module);
+                if(this.module_exists(parentModuleName)) {
+                    $Module.setParent(this.getModule(parentModuleName));
+                }
                 $Module.init(initOptions);
             });
         }
