@@ -75,6 +75,7 @@ class Weblication
             throw new PoolError('Module with Name ' + moduleName + ' already exists. Registration not possible!');
         }
         this.#modules[moduleName] = Module;
+        window[`$${moduleName}`] = Module;
         // console.debug('Weblication has Module "' + moduleName + '" registered');
         return this;
     }
@@ -87,7 +88,9 @@ class Weblication
      */
     unregisterModule(Module)
     {
-        delete this.#modules[Module.getName()];
+        const moduleName = Module.getName();
+        delete this.#modules[moduleName];
+        delete window[`$${moduleName}`];
         return this;
     }
 
@@ -114,7 +117,6 @@ class Weblication
     destroyModule(moduleName)
     {
         this.getModule(moduleName).destroy();
-        window['$' + moduleName] = undefined;
         return this;
     }
 
@@ -166,7 +168,7 @@ class Weblication
             const initOptions = clientData[moduleName].initOptions ?? {};
 
             try {
-                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName, parentModuleName, initOptions);
+                GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName, parentModuleName, initOptions);
             }
             catch(e) {
                 console.error(e.toString());
