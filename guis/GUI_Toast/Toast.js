@@ -1,9 +1,17 @@
 /*
- * POOL
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * toast.js created at 18.11.20, 19:13
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @author Alexander Manhart <alexander@manhart-it.de>
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 /* Styles */
@@ -12,25 +20,27 @@ const
     TOAST_ERROR = 'error',
     TOAST_INFO = 'info',
     TOAST_SUCCESS = 'success',
-    TOAST_WARNING = 'warning'
-;
+    TOAST_WARNING = 'warning';
 
+/**
+ * @class Toast
+ */
 class Toast
 {
-    /* > ES7
+/**
+  ab ES7
     static const STYLE_DEFAULT = 'toast';
     static const STYLE_ERROR = 'error';
     static const STYLE_INFO = 'info';
     static const STYLE_SUCCESS = 'success';
     static const STYLE_WARNING = 'warning';
-    */
+*/
     autohide = true;
     delay = Toast.DEFAULT_DELAY;
     onHideCallback = null;
     position = 'bottom-right';
     Toast = null;
     pauseOnHover = true;
-
 
     constructor(name = 'Toast')
     {
@@ -346,7 +356,8 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      * @param type @see Toast.TOAST_* constants
      * @param title
      * @param message
-     * @param delay
+     * @param {string} delay optional
+     * @param {function|null} onHide
      */
     static show = (type, title, message, delay = Toast.DEFAULT_DELAY, onHide = null) =>
     {
@@ -361,7 +372,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      *
      * @param title
      * @param message
-     * @param delay [optional]
+     * @param {string} delay optional
      */
     static showError(title, message, delay = Toast.DEFAULT_DELAY)
     {
@@ -375,7 +386,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      *
      * @param title
      * @param message
-     * @param delay [optional]
+     * @param {string} delay optional
      */
     static showInfo(title, message, delay = Toast.DEFAULT_DELAY)
     {
@@ -388,7 +399,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      *
      * @param title
      * @param message
-     * @param delay [optional]
+     * @param {string} delay optional
      */
     static showSuccess(title, message, delay = Toast.DEFAULT_DELAY)
     {
@@ -401,7 +412,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      *
      * @param title
      * @param message
-     * @param delay [optional]
+     * @param {string} delay optional
      */
     static showWarning(title, message, delay = Toast.DEFAULT_DELAY)
     {
@@ -414,7 +425,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
 /**
  * Example e.g. for testing:
  *
- * */
+ */
 // ready(function () {
     // Toast.showSuccess('Speichern', 'Die Daten wurden erfolgreich gespeichert', 3000);
     // Toast.showInfo('Info', 'Sie haben eine neue Benachrichtigung', 2000);
