@@ -812,20 +812,22 @@ getByID = document.getElementById.bind(document);
 /**
  * Calls function (fn) after DOM content is loaded
  *
- * @param function fn
+ * @param {function} fn
  * @see http://youmightnotneedjquery.com/#ready
  */
 function ready(fn) {
     if (document.readyState === 'complete' ||
         (document.readyState !== 'loading' && !document.documentElement.doScroll)) {
         fn();
-    } else if (document.addEventListener) {
+    }
+    else if (document.addEventListener) {
         // IE9+
         document.addEventListener('DOMContentLoaded', fn);
-    } else {
+    }
+    else {
         // older IE versions
         document.attachEvent('onreadystatechange', function () {
-            if (document.readyState != 'loading') {
+            if (document.readyState !== 'loading') {
                 // remove the listener, to make sure it isn't fired in future
                 document.detachEvent("onreadystatechange", arguments.callee);
                 fn();

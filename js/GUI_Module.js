@@ -24,6 +24,8 @@ class GUI_Module
     /** @var {string} fullyQualifiedClassName of the php module - is required by Ajax Calls */
     fullyQualifiedClassName = this.constructor.name;
     #parent = null;
+    /** property contains the html element of the module */
+    #rootElement = null;
 
     /**
      * @param {string} name unique name of the module
@@ -52,6 +54,19 @@ class GUI_Module
     destroy()
     {
         Weblication.getInstance().unregisterModule(this);
+    }
+
+    /**
+     * Marks the root element as a pool module
+     */
+    markAsPoolModule()
+    {
+        if(!this.getRootElement()) {
+            return;
+        }
+        this.#rootElement.poolModule = this;
+        this.#rootElement.classList.add('pool-module');
+        this.#rootElement.setAttribute('data-pool-class-name', this.constructor.name);
     }
 
     /**
@@ -328,10 +343,20 @@ class GUI_Module
     }
 
     /**
+     * Returns the element property
+     * @return {HTMLElement|null}
+     */
+    getRootElement()
+    {
+        this.#rootElement ??= this.element();
+        return this.#rootElement;
+    }
+
+    /**
      * Returns selected element within the root / module element. if no selector is given, it should return self (=the top root / module element)
      * @see document.querySelector
      * @param {string} selector
-     * @returns {HTMLElement}
+     * @returns {HTMLElement|null}
      */
     element(selector = '')
     {
@@ -416,12 +441,14 @@ class GUI_Module
      * @param {string} GUIClassName
      * @param {string} name
      * @param {string} fullyQualifiedClassName - currently only used for Ajax calls
-     * @param {GUI_Module|null} parent
+     * @param {string|null} parentModuleName
+     * @param {object} initOptions
      * @returns {GUI_Module}
      */
-    static createGUIModule(GUIClassName, name, fullyQualifiedClassName = '', parent = null) {
-        if (Weblication.getInstance().module_exists(name)) {
-            return Weblication.getInstance().getModule(name);
+    static createGUIModule(GUIClassName, name, fullyQualifiedClassName = '', parentModuleName = null, initOptions = {}) {
+        const app = Weblication.getInstance();
+        if (app.module_exists(name)) {
+            return app.getModule(name);
         }
 
         let myClass;
@@ -434,9 +461,16 @@ class GUI_Module
             myClass = Weblication.classMapping[GUIClassName];
         }
 
+        /** @type {GUI_Module} module */
         const module = new myClass(name);
         module.setFullyQualifiedClassName(fullyQualifiedClassName);
-        module.setParent(parent);
+        ready(() => {
+            module.markAsPoolModule();
+            if(app.module_exists(parentModuleName)) {
+                module.setParent(app.getModule(parentModuleName));
+            }
+            module.init(initOptions);
+        });
         return module;
     }
 }
