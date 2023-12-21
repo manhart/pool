@@ -139,18 +139,6 @@ class Weblication
     }
 
     /**
-     * Marks the HTML element as controlled by a pool module.
-     *
-     * @return {void}
-     */
-    #initializeModule()
-    {
-        if(this instanceof GUI_Module) {
-            this.element()?.classList.add('pool-module');
-        }
-    }
-
-    /**
      * Create all JavaScript modules with the options passed by the server
      */
     run()
@@ -175,8 +163,10 @@ class Weblication
             /** fully qualified class name of the php module - is required by Ajax Calls */
             const fullyQualifiedClassName = clientData[moduleName].fullyQualifiedClassName;
             const parentModuleName = clientData[moduleName].parentModuleName;
+            const initOptions = clientData[moduleName].initOptions ?? {};
+
             try {
-                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName);
+                window['$' + moduleName] = GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName, parentModuleName, initOptions);
             }
             catch(e) {
                 console.error(e.toString());
@@ -185,18 +175,7 @@ class Weblication
 
             if(!this.module_exists(moduleName)) {
                 console.error('Created module ' + moduleName + ' does not exist in Weblication');
-                continue;
             }
-
-            const $Module = this.getModule(moduleName);
-            const initOptions = clientData[moduleName].initOptions ?? [];
-            ready(() => {
-                this.#initializeModule.apply($Module);
-                if(this.module_exists(parentModuleName)) {
-                    $Module.setParent(this.getModule(parentModuleName));
-                }
-                $Module.init(initOptions);
-            });
         }
     }
 }
