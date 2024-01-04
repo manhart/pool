@@ -434,7 +434,7 @@ class GUI_Module extends Module
         $guiClassFolder = $this->getGUIClassFolder();
 
         foreach ($this->templates as $handle => $file) {
-            $template = $this->Weblication->findTemplate($file, $guiClassFolder);
+            $template = $this->Weblication->findTemplate($file, $guiClassFolder, $this->isPOOL());
             $this->Template->setFilePath($handle, $template);
         }
 
@@ -449,12 +449,12 @@ class GUI_Module extends Module
         }
 
         foreach ($this->cssFiles as $cssFile) {
-            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $guiClassFolder);
+            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $guiClassFolder, $this->isPOOL());
             $Frame->getHeadData()->addStyleSheet($cssFile);
         }
 
         foreach ($this->jsFiles as $jsFile) {
-            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $guiClassFolder);
+            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $guiClassFolder, $this->isPOOL());
             $Frame->getHeadData()->addJavaScript($jsFile);
         }
 
