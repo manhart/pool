@@ -146,34 +146,14 @@ function checkNumberSequence(nr) {
     return true;
 }
 
-function findPosX(obj)
+function findPosX(elem)
 {
-    var curleft = 0;
-    if (obj.offsetParent) {
-        while (obj.offsetParent) {
-            curleft += obj.offsetLeft;
-            curleft -= obj.scrollLeft;
-            obj = obj.offsetParent;
-        }
-    } else if (obj.x) {
-        curleft += obj.x;
-    }
-    return curleft;
+    return elem.getBoundingClientRect().left + window.scrollX;
 }
 
-function findPosY(obj)
+function findPosY(elem)
 {
-    var curtop = 0;
-    if (obj.offsetParent) {
-        while (obj.offsetParent) {
-            curtop += obj.offsetTop;
-            curtop -= obj.scrollTop;
-            obj = obj.offsetParent;
-        }
-    } else if (obj.y) {
-        curtop += obj.y;
-    }
-    return curtop;
+    return elem.getBoundingClientRect().top + window.scrollY;
 }
 
 function focusCtrl(elem) {
