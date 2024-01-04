@@ -1,0 +1,79 @@
+.prompt-dialog {
+    display: none;
+    position: fixed;
+    z-index: 2001;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+    margin: 0;
+    cursor: default;
+}
+
+.prompt-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.prompt-close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #fff;
+    background-color: #000;
+    border-radius: 50%;
+    margin-left: auto;
+    cursor: pointer;
+}
+.prompt-close-button:hover {
+    background-color: #f00;
+}
+
+.prompt-content > .button-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 100%;
+}
+.prompt-content > .button-wrapper > button {
+    flex: 1;
+    margin-top: 5px;
+    margin-right: 5px;
+}
+
+.prompt-content > .button-wrapper > button:last-child {
+    margin-right: 0;
+}
+
+@media (max-width: 768px) {
+    /** On mobile devices, the prompt dialog appears with the text flow */
+    .prompt-dialog {
+        position: static;
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        z-index: auto;
+    }
+
+    .prompt-content {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 5px
+    }
+
+    .prompt-content > .button-wrapper > button {
+        margin-top: 0;
+        margin-right: 0;
+    }
+
+    .prompt-label, .prompt-close-button, .cancel {
+        display: none;
+    }
+}
