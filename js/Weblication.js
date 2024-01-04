@@ -30,15 +30,41 @@ class Weblication
     static classMapping = {};
 
     /**
+     * Instance of Weblication (Singleton)
+     * @type {Weblication|null}
+     * @private
+     */
+    static _instance = null;
+
+    /**
+     * Track Mouse Position
+     */
+    static mousePosition = {x: 0, y: 0};
+
+    /**
      * Singleton
      */
     constructor()
     {
         Weblication._instance = this;
+
+        document.addEventListener('mousemove', function(evt) {
+            Weblication.mousePosition.x = evt.clientX;
+            Weblication.mousePosition.y = evt.clientY;
+        });
     }
 
     /**
-     * return instance of Weblication (Singleton)
+     * Returns the mouse position
+     * @return {{x: number, y: number}}
+     */
+    static getMousePosition()
+    {
+        return Weblication.mousePosition;
+    }
+
+    /**
+     * Return instance of Weblication (Singleton)
      *
      * @returns {Weblication}
      */
