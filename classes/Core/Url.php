@@ -415,13 +415,23 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * get the query params
+     * Get the query params
      *
      * @return array
      */
     public function getQuery(): array
     {
         return $this->query;
+    }
+
+    /**
+     * Return the query as string
+     *
+     * @return string
+     */
+    public function getQueryAsString(): string
+    {
+        return \http_build_query($this->query);
     }
 
     /**
