@@ -13,6 +13,7 @@
  * For more information about this project:
  * @see https://github.com/manhart/pool
  */
+
 function Url()
 {
     /**
@@ -80,16 +81,16 @@ Url.prototype.getParam = function(key) {
  * @param string|array key String oder Array
  * @param mixed val Wert
  */
-Url.prototype.setParam = function(key, val) {
-	if(typeof key == 'object') {
+Url.prototype.setParam = function(key, val = null) {
+    if(typeof key == 'object') {
         let param;
-		for(param in key) {
-			this.params[param] = key[param];
-		}
-	}
-	else {
-		this.params[key] = val;
-	}
+        for(param in key) {
+            this.params[param] = key[param];
+        }
+    }
+    else {
+       this.params[key] = val;
+    }
 }
 Url.prototype.addParam = function(key, val) {
    this.setParam(key, val);
