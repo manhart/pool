@@ -45,12 +45,12 @@ class GUI_Prompt extends GUI_Module
     protected function prepare(): void
     {
         $this->Template->setVars([
-            'class'       => $this->Input->getVar('class'),
-            'buttonClass' => $this->Input->getVar('buttonClass'),
-            'inputClass'  => $this->Input->getVar('inputClass'),
             'label'       => $this->Input->getVar('label'),
             'confirm'     => $this->Input->getVar('confirm'),
             'cancel'      => $this->Input->getVar('cancel'),
+            'class'       => $this->Input->getVar('class'),
+            'buttonClass' => $this->Input->getVar('buttonClass'),
+            'inputClass'  => $this->Input->getVar('inputClass'),
             'name'        => $this->getName()
         ]);
     }
