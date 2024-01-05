@@ -4,8 +4,15 @@
  *
  * (c) Alexander Manhart <alexander@manhart-it.de>
  *
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 use pool\classes\Core\Input\Input;
@@ -39,7 +46,7 @@ class GUI_Schema extends GUI_Module
      */
     private function loadSchemes(array $schemes = []): void
     {
-        if (0 == $numSchemes = count($schemes)) {//no schema -> abort
+        if (0 === count($schemes)) {//no schema -> abort
             $this->schema404();
             return;
         }
@@ -56,11 +63,11 @@ class GUI_Schema extends GUI_Module
         /** @var $vhostMode 0-> category only, 1-> vhost/category/, 2-> category/vhost/, other-> vhost as alternative for category */
         $vhostMode = (int)$this->getInternalParam('vhostMode', -1);
         if ($category) {
-            if ($vhostMode == 1) //preceding vHost
+            if ($vhostMode === 1) //preceding vHost
                 $this->appendVHost($directory);
             //category given and to be included
             $directory .= addEndingSlash($category);
-            if ($vhostMode == 2)//trailing vHost
+            if ($vhostMode === 2)//trailing vHost
                 $this->appendVHost($directory);
         } elseif ($vhostMode)//no category and vHost to be included
             $this->appendVHost($directory);
@@ -70,19 +77,19 @@ class GUI_Schema extends GUI_Module
         $this->templates = [];
         $this->Template->setDirectory($directory);
         //try to load according schema files into template-engine...
-        for ($i = 0; $i < $numSchemes; $i++) {
-            $schemaExists = file_exists($directory . $schemes[$i] . '.html');
+        foreach($schemes as $i => $iValue) {
+            $schemaExists = file_exists($directory .$iValue. '.html');
             if (!$schemaExists && $alternate) {//schema missing
                 $schemes[$i] = $alternate;
                 $schemaExists = file_exists($directory . $alternate . '.html');//test alternative
             }
             if ($schemaExists) {//add schema to our templates
                 $uniqId = 'file_' . $i;
-                $this->Template->setFile($uniqId, $schemes[$i] . '.html');
+                $this->Template->setFile($uniqId, $iValue. '.html');
                 $this->templates[$uniqId] = null;//manually set the template
                 unset($uniqId);
             } else {//schema not found -> abort
-                $this->schema404($schemes[$i]);
+                $this->schema404($iValue);
                 return;
             }
         }
@@ -109,8 +116,8 @@ class GUI_Schema extends GUI_Module
     }
 
     /**
-     * Liest die _GET Variable "schema" ein und laedt die angegebenen Schemata.
-     * Wurde kein Schema angegeben, wird versucht von der Weblication ein Default Schema reinzuladen.
+     * Reads the query parameter (_GET variable) "schema" and loads the specified schemas.
+     * If no schema was specified, the weblication attempts to load a default schema.
      */
     public function loadFiles(): void
     {
