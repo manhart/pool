@@ -710,13 +710,14 @@ class GUI_Module extends Module
     {
             Log::info($error, ['className' => $this->getClassName(), 'method' => $this->ajaxMethod, 'errorType' => $errorType, 'status' => $statusCode],
                 'ajaxCallLog');
-        header('Content-type: application/json', true, $statusCode);
-        if (!$this->plainJSON) {
+        header('Content-type: application/json');
+        if (!$this->plainJSON || $statusCode != 200) {//report failed functions in standard format
             $clientData = [//standard client data-format
                 'data' => $clientData,
                 'success' => !$error,
                 'error' => ($error ? ['message' => $error, 'type' => $errorType] : null)
             ];
+            http_response_code($statusCode);
         }
         //encode data
         $json = json_encode($clientData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
