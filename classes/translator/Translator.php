@@ -360,6 +360,7 @@ class Translator
             $backupLangList = $this->swapLangList($language);
             $language = "";
             $success = $this->queryTranslations($keyArray, $noAlter, $language, $exception);
+            if ($success) $keyArray = array_map(fn($translation) => $translation->getMessage(), $keyArray);
             $this->swapLangList($backupLangList);
             return $success;
         } catch (Exception $e) {
