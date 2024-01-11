@@ -69,6 +69,7 @@ class MSSQL extends Driver
             'UID' => $username,
             'PWD' => $password,
             'CharacterSet' => $this->charset = $options['charset'] ?? $this->charset,
+            'TrustServerCertificate' => $options['TrustServerCertificate'] ?? false,
         ];
         if(($resource = sqlsrv_connect($hostname, $connection_info)) === false) {
             throw new DatabaseConnectionException(print_r(sqlsrv_errors(), true));
@@ -89,7 +90,11 @@ class MSSQL extends Driver
 
     public function errors(?Connection $connection = null): array
     {
-        return sqlsrv_errors() ?? [];
+        return \array_map(static fn($error) => [
+            'errno'    => $error['code'],
+            'error'    => $error['message'],
+            'sqlstate' => $error['SQLSTATE']
+        ], sqlsrv_errors() ?? []);
     }
 
     /**
