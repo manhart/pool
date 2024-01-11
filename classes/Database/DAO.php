@@ -1085,9 +1085,8 @@ SQL;
     }
 
     public function fetchData($pk, ...$fields){
-        $fields = (array)$fields;
         $record = $this->setColumns(...$fields)->get($pk)->getRecord();
-        return count($fields) == 1 ? $record[$fields[0]] : $record;
+        return count($fields) == 1 ? $record[$fields[0]] : array_values($record);
     }
 
     public static function fetchDataStatic($pk, ...$fields){
