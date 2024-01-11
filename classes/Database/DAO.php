@@ -1083,4 +1083,14 @@ SQL;
     {
         return static::$tableName;
     }
+
+    public function fetchData($pk, ...$fields){
+        $fields = (array)$fields;
+        $record = $this->setColumns(...$fields)->get($pk)->getRecord();
+        return count($fields) == 1 ? $record[$fields[0]] : $record;
+    }
+
+    public static function fetchDataStatic($pk, ...$fields){
+        return static::create()->fetchData($pk, ...$fields);
+    }
 }
