@@ -295,6 +295,11 @@ class Weblication extends Component
     private static bool $cacheFileSystemAccess = true;
 
     /**
+     * @var string working path
+     */
+    private static string $workingDirectory;
+
+    /**
      * is not allowed to call from outside to prevent from creating multiple instances,
      * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
      */
@@ -302,6 +307,7 @@ class Weblication extends Component
     {
         parent::__construct(null);
         self::$isAjax = \isAjax();
+        self::$workingDirectory = \getcwd();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
         $this->memory = Memory::getInstance();
@@ -603,7 +609,7 @@ class Weblication extends Component
         # Ordner Skins
         $folder_skins = addEndingSlash(PWD_TILL_SKINS).$this->getCommonSkinFolder();
         if($absolute) {
-            $folder_skins = addEndingSlash(\getcwd()).$folder_skins;
+            $folder_skins = addEndingSlash(self::$workingDirectory).$folder_skins;
         }
         $folder_language = $folder_skins.addEndingSlash($this->language);
         if($additionalDir !== '') {
@@ -638,7 +644,7 @@ class Weblication extends Component
     public function skin_exists(string $skin = ''): bool
     {
         $skin = addEndingSlash(($skin ?: $this->skin));
-        $pathSkin = addEndingSlash(\getcwd()).addEndingSlash(PWD_TILL_SKINS).$skin;
+        $pathSkin = addEndingSlash(self::$workingDirectory).addEndingSlash(PWD_TILL_SKINS).$skin;
         return file_exists($pathSkin);
     }
 
@@ -658,7 +664,7 @@ class Weblication extends Component
         # Ordner Skins
         $folder_skins = addEndingSlash(PWD_TILL_SKINS).$skin;
         if($absolute) {
-            $folder_skins = addEndingSlash(\getcwd()).$folder_skins;
+            $folder_skins = addEndingSlash(self::$workingDirectory).$folder_skins;
         }
         $folder_language = $folder_skins.$language;
         if($additionalDir !== '') {
@@ -693,7 +699,7 @@ class Weblication extends Component
     {
         // detect skins
         if(!($this->skins)) {
-            $skinPath = \getcwd().'/'.PWD_TILL_SKINS;
+            $skinPath = self::$workingDirectory.'/'.PWD_TILL_SKINS;
             $skinDirs = \readDirs($skinPath);
             $skins = [];
             foreach($skinDirs as $iValue) {
@@ -1150,12 +1156,12 @@ class Weblication extends Component
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
         $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
         $this->setVersion($settings['application.version'] ?? $this->getVersion());
-        if($this->getCachedAppItem("version") !== $this->getVersion()) {
+        if($this->getCachedAppItem('workingDirectory') !== self::$workingDirectory || $this->getCachedAppItem("version") !== $this->getVersion()) {
             // clear fs cache
             $this->clearCacheFileAccess();
             $this->cacheAppItem('version', $this->getVersion());
+            $this->cacheAppItem('workingDirectory', self::$workingDirectory);
         }
-
 
         $this->isInitialized = true;
     }
