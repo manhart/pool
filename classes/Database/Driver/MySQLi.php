@@ -120,7 +120,7 @@ class MySQLi extends Driver
     /**
      * Gets the number of affected rows in a previous SQL operation
      *
-     * @param \pool\classes\Database\Connection $connection
+     * @param Connection $connection
      * @param \mysqli_result $result
      * @return int|false
      */
@@ -189,7 +189,7 @@ SQL;
     /**
      * Executes a query and returns the query result
      *
-     * @param \pool\classes\Database\Connection $connection
+     * @param Connection $connection
      * @param string $query SQL query
      * @param ...$params
      * @return mixed query result
