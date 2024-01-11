@@ -146,6 +146,8 @@ class DataInterface extends PoolObject
 
     private array $authentications = [];
 
+    private array $connectOptions = [];
+
 //    private static \Memcached $memcached;
 
     /**
@@ -200,6 +202,7 @@ class DataInterface extends PoolObject
             throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "host"');
 
         $dataBases = (array)($connectionOptions['database'] ?? []);
+        unset($connectionOptions['database']);// remove from options
 
         $this->default_database = is_string($key = \array_key_first($dataBases)) ? $key :
             $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
@@ -213,6 +216,8 @@ class DataInterface extends PoolObject
         }
 
         $this->auth = $connectionOptions['auth'] ?? 'mysql_auth';// fallback verwendet zentrale, globale Authentifizierung
+        unset($connectionOptions['auth']);// remove from options
+        $this->connectOptions = $connectionOptions;
 
         $this->findHostForConnection();
         foreach($dataBases as $alias => $dataBase) {
@@ -451,7 +456,7 @@ class DataInterface extends PoolObject
     /**
      * Returns an existing DB connection for a specific database or creates a new connection
      *
-     * @throws DatabaseConnectionException|\pool\classes\Exception\InvalidArgumentException
+     * @throws DatabaseConnectionException|InvalidArgumentException
      */
     private function getDBConnection(string $database, ConnectionMode $mode): Connection
     {
@@ -477,7 +482,7 @@ class DataInterface extends PoolObject
 
         //open connection
         try {
-            $Connection = $this->driver->connect($this, $host, $this->port, $db_user, $db_pass, $database, charset: $this->charset);
+            $Connection = $this->driver->connect($this, $host, $this->port, $db_user, $db_pass, $database, ...$this->connectOptions);
         }
         catch(Exception) {
             $Connection = null;
