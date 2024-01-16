@@ -15,7 +15,7 @@ class GUI_Checkbox extends GUI_InputElement
         $this -> Defaults -> addVar('type', 'checkbox');
 
         $this -> Defaults -> addVar('array', 0);
-        $this -> Defaults -> addVar('label', '');
+        $this -> Defaults -> addVar('label');
 
         parent::init(Input::GET | Input::POST);
     }

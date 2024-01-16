@@ -82,7 +82,7 @@ class Subcode extends Module
      **/
     function import($Input)
     {
-        $this->Input->mergeVars($Input, false);
+        $this->Input->mergeVars($Input);
     }
 
     /**

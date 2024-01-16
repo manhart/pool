@@ -73,7 +73,7 @@ function ftp_upload_recursive($con_id, $source_dir, $target_dir, $pattern='*')
         }
         else {
             $local_file_basename = addEndingSlash($target_dir).basename($local_file);
-            ftp_put($con_id, $local_file_basename, $local_file, FTP_BINARY);
+            ftp_put($con_id, $local_file_basename, $local_file);
         }
     }
     return true;
@@ -87,7 +87,7 @@ function ftp_upload_recursive($con_id, $source_dir, $target_dir, $pattern='*')
  */
 function ftp_remove_recursive($con_id, $dir)
 {
-    $rawlist = ftp_rawlist($con_id, $dir, false);
+    $rawlist = ftp_rawlist($con_id, $dir);
     if(is_array($rawlist) and count($rawlist)>0)
         foreach ($rawlist as $fileinfo) {
             $fileinfo = preg_split('/[\s]+/', $fileinfo, 9);

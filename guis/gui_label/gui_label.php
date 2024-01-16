@@ -39,7 +39,7 @@ class GUI_Label extends GUI_Module
         $this -> Defaults -> addVar('id', $this -> getName());
         $this -> Defaults -> addVar('name', $this -> getName());
 
-        $this -> Defaults -> addVar('caption', '');
+        $this -> Defaults -> addVar('caption');
 
         // $this -> Defaults -> addVar('formname', '');
 

@@ -403,7 +403,7 @@ class GUI_HeadData extends GUI_Module
                 $this->Template->setVar('MEDIA', ' media="' . $this->styleSheetsMedia[$z] . '"');
             }
             else {
-                $this->Template->setVar('MEDIA', '');
+                $this->Template->setVar('MEDIA');
             }
             $z++;
         }

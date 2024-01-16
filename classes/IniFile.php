@@ -223,10 +223,10 @@ class IniFile extends PoolObject
             else {
                 if ($success) {
 
-                    copy($this->filename, dirname($this->filename)."/".uniqid("")."_".basename($tmpfile));
+                    copy($this->filename, dirname($this->filename)."/".uniqid()."_".basename($tmpfile));
                 }
                 else {
-                    copy($this->filename, dirname($this->filename)."/".uniqid("")."_writeerror_".basename($tmpfile));
+                    copy($this->filename, dirname($this->filename)."/".uniqid()."_writeerror_".basename($tmpfile));
                 }
             }
         }

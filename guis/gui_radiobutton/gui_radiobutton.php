@@ -14,7 +14,7 @@ class GUI_Radiobutton extends GUI_InputElement
     {
         $this -> Defaults -> addVar('type', 'radio');
 
-        $this -> Defaults -> addVar('label', '');
+        $this -> Defaults -> addVar('label');
 
         parent::init(Input::GET | Input::POST);
     }

@@ -34,16 +34,16 @@ class GUI_DBLookupSelect extends GUI_Select
     {
         $this->Defaults->addVar('tabledefine', []);
         $this->Defaults->addVar('keyValue', false); 	// separated by ;
-        $this->Defaults->addVar('keyField', ''); 	// separated by ;
+        $this->Defaults->addVar('keyField'); 	// separated by ;
         $this->Defaults->addVar('keyOperator', 'equal');
         $this->Defaults->getVar('filter', array());
         $this->Defaults->addVar('autoload_fields', 1);
-        $this->Defaults->addVar('pk', ''); 		// separated by ;
-        $this->Defaults->addVar('columns', ''); // separated by ;
+        $this->Defaults->addVar('pk'); 		// separated by ;
+        $this->Defaults->addVar('columns'); // separated by ;
         $this->Defaults->addVar('listfieldSeparator', ' ');
-        $this->Defaults->addVar('listfield', '');
-        $this->Defaults->addVar('datafield', '');
-        $this->Defaults->addVar('sortfield', '');
+        $this->Defaults->addVar('listfield');
+        $this->Defaults->addVar('datafield');
+        $this->Defaults->addVar('sortfield');
         $this->Defaults->addVar('shorten', 0);
         $this->Defaults->addVar('utf8', 0);
 

@@ -34,11 +34,11 @@ class GUI_DBLookupLabel extends GUI_Label
      **/
     function init(?int $superglobals = Input::EMPTY)
     {
-        $this->Defaults->addVar('tabledefine', '');
+        $this->Defaults->addVar('tabledefine');
         $this->Defaults->addVar('autoload_fields', 1);
-        $this->Defaults->addVar('datafield', '');
-        $this->Defaults->addVar('keyfield', '');
-        $this->Defaults->addVar('keyvalue', '');
+        $this->Defaults->addVar('datafield');
+        $this->Defaults->addVar('keyfield');
+        $this->Defaults->addVar('keyvalue');
 
         parent:: init($superglobals);
     }

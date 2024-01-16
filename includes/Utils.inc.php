@@ -21,6 +21,8 @@
  *
  */
 
+use JetBrains\PhpStorm\NoReturn;
+
 
 /**
  * Gibt den aktuellen UNIX-Timestamp/Zeitstempel in Mikrosekunden zurueck
@@ -1516,7 +1518,7 @@ function checkRegExOutcome(string $regEX, string $content): bool
         }
         if (!empty($detailsFile))
             $errormessage .= ' Details have been saved to: ' . $detailsFile;
-        error_log($errormessage, 0);
+        error_log($errormessage);
         return false;
     } else
         return true;
@@ -1588,7 +1590,7 @@ function pt2mm(float $pt): float
  * @param string $file Datei (mit absolutem Pfad)
  * @param string $mimetype Mimetype z.b. application/octet-stream
  */
-function forceFileDownload(string $file, string $mimetype = ''):void
+#[NoReturn] function forceFileDownload(string $file, string $mimetype = ''):void
 {
     if (empty($mimetype)) $mimetype = mime_content_type($file);
     if (empty($mimetype)) $mimetype = 'application/octet-stream';
@@ -2319,8 +2321,8 @@ function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $E
 {
     $DateTime1 = clone $StartDateTime;
     $DateTime2 = clone $EndDateTime;
-    $DateTime1->setTime(0, 0, 0);
-    $DateTime2->setTime(0, 0, 0);
+    $DateTime1->setTime(0, 0);
+    $DateTime2->setTime(0, 0);
     // intval($DateTime1->diff($DateTime2)->format('%r%a'))
     $days = ($DateTime1->diff($DateTime2)->days ?: 0);
     if($unsigned) {
