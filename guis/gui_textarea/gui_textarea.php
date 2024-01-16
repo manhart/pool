@@ -196,17 +196,4 @@ class GUI_Textarea extends GUI_Universal
         }
         $Template->setVar('VALUE', $value);
     }
-
-    /**
-     * GUI_Textarea::finalize()
-     *
-     * Verarbeitet Template (Platzhalter, Bloecke, etc.) und generiert HTML Output.
-     *
-     * @return string HTML Output (Content)
-     **/
-    public function finalize(): string
-    {
-        $this->Template->parse('stdout');
-        return $this->Template->getContent('stdout');
-    }
 }

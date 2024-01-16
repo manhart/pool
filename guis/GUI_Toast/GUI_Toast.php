@@ -50,13 +50,4 @@ class GUI_Toast extends GUI_Module
     {
         $this->Template->setVar('moduleName', $this->getName());
     }
-
-    /**
-     * @return string html of toast
-     */
-    protected function finalize(): string
-    {
-        $this->Template->parse('stdout');
-        return $this->Template->getContent('stdout');
-    }
 }

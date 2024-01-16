@@ -256,12 +256,6 @@ class GUI_Select extends GUI_Universal
             )
         );
     }
-
-    function finalize(): string
-    {
-        $this->Template->parse('stdout');
-        return $this->Template->getContent('stdout');
-    }
 }
 
 /**

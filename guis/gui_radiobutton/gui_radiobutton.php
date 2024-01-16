@@ -37,12 +37,6 @@ class GUI_Radiobutton extends GUI_InputElement
             $Template -> leaveBlock();
         }
 
-        parent :: prepare();
-    }
-
-    function finalize(): string
-    {
-        $this -> Template -> parse('stdout');
-        return $this -> Template -> getContent('stdout');
+        parent::prepare();
     }
 }

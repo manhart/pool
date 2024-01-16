@@ -1617,15 +1617,4 @@ class GUI_Table extends GUI_Module
         }
         return $limit;
     }
-
-    /**
-     * render content
-     *
-     * @return string
-     */
-    protected function finalize(): string
-    {
-        $this->Template->parse('stdout');
-        return $this->Template->getContent('stdout');
-    }
 }

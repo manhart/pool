@@ -51,10 +51,4 @@ class GUI_Checkbox extends GUI_InputElement
 
         parent :: prepare();
     }
-
-    function finalize(): string
-    {
-        $this -> Template -> parse('stdout');
-        return $this -> Template -> getContent('stdout');
-    }
 }

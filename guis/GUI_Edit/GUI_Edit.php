@@ -132,33 +132,4 @@ class GUI_Edit extends GUI_InputElement
         $tmp = $this->inspectorProperties + $this->getDefaultInspectorProperties();
         return $tmp;
     }
-
-    //    public function setOptions(array $options)
-    //    {
-    //        foreach($options as $key => $value) {
-    //            if($value === 'true' or $value === 'false') {
-    //                $value = string2bool($value);
-    //            }
-    //            if(isset($this->getInspectorProperties()[$key])) {
-    //                if($this->getInspectorProperties()[$key]['value'] != $value) {
-    //                    $this->configuration[$key] = $value;
-    //                }
-    //            }
-    //            else {
-    //                $this->poolOptions[$key] = $value;
-    //            }
-    //        }
-    //        $this->setVar($this->configuration);
-    //    }
-
-    /**
-     * Verarbeitet Template (Platzhalter, Bloecke, etc.) und generiert HTML Output.
-     *
-     * @return string HTML Output (Content)
-     **/
-    function finalize(): string
-    {
-        $this->Template->parse('stdout');
-        return $this->Template->getContent('stdout');
-    }
 }
