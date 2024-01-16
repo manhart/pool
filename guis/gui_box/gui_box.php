@@ -74,7 +74,7 @@ class GUI_Box extends GUI_Module
      *
      * @param string $title HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html")
      **/
-    public function enableBox(string $title='tpl_box.html', string $template = '')
+    public function enableBox(string $title='tpl_box.html', string $template = ''): static
     {
         $file = $this->Weblication->findTemplate($title, $this->getClassName());
         if ($file) {
@@ -84,14 +84,16 @@ class GUI_Box extends GUI_Module
         else {
             $this->enabledBox = false;
         }
+        return $this;
     }
 
     /**
      * Deaktiviert die Box.
      **/
-    function disableBox()
+    function disableBox(): static
     {
         $this->enabledBox = false;
+        return $this;
     }
 
     /**

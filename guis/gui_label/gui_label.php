@@ -110,7 +110,6 @@ class GUI_Label extends GUI_Module
 
     function finalize(): string
     {
-//        $this->Template->parse('stdout');
-        return $this->Input->getVar('caption'); // $this -> Template -> getContent('stdout');
+        return $this->Input->getVar('caption');
     }
 }
