@@ -811,7 +811,11 @@ class GUI_Module extends Module
     protected function finalize(): string
     {
         $content = '';
-        foreach ($this->templates as $handle => $tplFile) {
+        $templates = $this->templates;
+        if (!array_key_exists('stdout', $templates) && in_array('stdout', $this->Template->getFiles(false))){
+            $templates['stdout'] = null;//patch for existing projects using loadFiles()
+        }
+        foreach ($templates as $handle => $tplFile) {
             $content .= $this->Template->parse($handle)->getContent($handle);
         }
         return $content;

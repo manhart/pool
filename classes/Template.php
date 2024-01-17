@@ -1097,11 +1097,12 @@ class Template extends PoolObject
      *
      * @return array<int, TempFile> Liste aus TempFile Objekten
      */
-    public function getFiles(): array
+    public function getFiles(bool $recursive = true): array
     {
         $files = [];
 
         $keys = array_keys($this->FileList);
+        if (!$recursive) return $keys;
         foreach($keys as $handle) {
             $TempFile = $this->FileList[$handle];
             if($TempFile instanceof TempSimple) {
