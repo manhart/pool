@@ -727,30 +727,34 @@ class TempFile extends TempCoreHandle
      */
     private function loadFile()
     {
-        $content = '';
         $dir = $this->getDirectory();
         $filename = $this->getFilename();
         $filePath = buildFilePath($dir, $filename);
-        if (!file_exists($filePath)) {
+        $weblication = Weblication::getInstance();
+        $fileExists = file_exists($filePath);
+
+        if (!$fileExists) {
             //trying parent directory to compensate for translated templates including templates until Template engine gets fixed
-            $filePath = buildFilePath($dir, '..', $filename);//
-            if (Template::isCacheTranslations() && file_exists($filePath))
+            $filePath = buildFilePath($dir, '..', $filename);
+            $fileExists = file_exists($filePath);
+            if ($fileExists && Template::isCacheTranslations())
                 //Create Translated file and put it in the language folder
-                $filePath = Template::attemptFileTranslation($filePath, Weblication::getInstance()->getLanguage());
+                $filePath = Template::attemptFileTranslation($filePath, $weblication->getLanguage());
         }
-        $fp = fopen($filePath, 'rb');
-        if(!$fp) {
-            $this->raiseError(__FILE__, __LINE__, sprintf('Cannot load template %s (@LoadFile)',//TODO Exeption
-                $filePath));
+
+        if($fileExists && $content = $weblication->getCachedItem($filePath, Weblication::CACHE_FILE)) {
+            $this->setContent($content);
             return;
         }
-        $size = filesize($filePath);
-        if($size > 0) {
-            $content = fread($fp, $size);
-        }
-        fclose($fp);
 
+        // fopen is faster than file_get_contents
+        if(!$fileExists || false === (($fh = @fopen($filePath, 'rb')) && $content = fread($fh, filesize($filePath)))) {
+            throw new \pool\classes\Exception\RuntimeException("Template file $filePath not found.");
+        }
+        fclose($fh);
+        /** @noinspection PhpUndefinedVariableInspection */
         $this->setContent($content);
+        $weblication->cacheItem($filePath, $content, Weblication::CACHE_FILE);
     }
 
     /**
