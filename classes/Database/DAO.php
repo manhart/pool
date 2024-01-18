@@ -40,7 +40,6 @@ use function is_bool;
 use function is_float;
 use function is_int;
 use function is_null;
-use function str_contains_any;
 use function strtolower;
 
 /**
@@ -183,6 +182,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     private array $nonWrapSymbols = ['*', '.', '(', 'as', '\''];
 
     /**
+     * @var array|int[]|string[] It is used to store the flipped non-wrap symbols for performance reasons.
+     */
+    private array $preCalculatedNonWrapSymbols;
+
+    /**
      * @var array $formatter An array used for storing formatter functions for columns.
      */
     private array $formatter = [];
@@ -201,7 +205,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $this->quotedSchema = $this->wrapSymbols(static::$schemaName ?? '');
         $this->quotedTable = $this->wrapSymbols($this->table);
         $this->commands = $this->createCommands();
-        $this->nonWrapSymbols = array_merge($this->symbolQuote, $this->nonWrapSymbols);
+        $this->preCalculatedNonWrapSymbols = \array_flip(array_merge($this->symbolQuote, $this->nonWrapSymbols));
     }
 
     /**
@@ -691,7 +695,7 @@ SQL;
         $this->defaultColumns ??= ($this->columns ?: false);
         $this->columns = $columns;
         // Escape each column
-        $escapedColumns = array_map([$this, 'wrapColumn'], $this->columns);
+        $escapedColumns = array_map([$this, 'encloseColumnName'], $this->columns);
         // Concatenate the columns into a single string
         $this->column_list = implode(', ', $escapedColumns);
         return $this;
@@ -1051,24 +1055,16 @@ SQL;
         return $this->execute($sql);
     }
 
-
     /**
      * Quote column name
      */
-    public function wrapColumn(string $column): string
+    public function encloseColumnName(string $column): string
     {
-        if($this->shouldWrapColumn($column)) {
-            $column = $this->wrapSymbols($column);
+        // is it necessary to wrap the column?
+        if(strtr($column, $this->preCalculatedNonWrapSymbols) !== $column) {
+            return $column;
         }
-        return $column;
-    }
-
-    /**
-     * Checks if column name should be wrapped
-     */
-    protected function shouldWrapColumn(string $column): bool
-    {
-        return !str_contains_any($column, $this->nonWrapSymbols);
+        return $this->wrapSymbols($column);
     }
 
     /**
@@ -1095,12 +1091,20 @@ SQL;
         return static::$tableName;
     }
 
-    public function fetchData($pk, ...$fields){
+    /**
+     * Shorthand for fetching one or multiple values of a record
+     */
+    public function fetchData($pk, ...$fields)
+    {
         $record = $this->setColumns(...$fields)->get($pk)->getRecord();
-        return count($fields) == 1 ? $record[$fields[0]] : array_values($record);
+        return count($fields) === 1 ? $record[$fields[0]] : array_values($record);
     }
 
-    public static function fetchDataStatic($pk, ...$fields){
+    /**
+     * Shorthand for fetching one or multiple values of a record
+     */
+    public static function fetchDataStatic($pk, ...$fields)
+    {
         return static::create()->fetchData($pk, ...$fields);
     }
 }

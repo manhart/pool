@@ -1225,7 +1225,7 @@ class GUI_Table extends GUI_Module
             $dbColumn = $column['dbColumn'];
             if($dbColumn == '') continue;
 
-            $dbColumn = $DAO ? $DAO->wrapColumn($dbColumn): $dbColumn;
+            $dbColumn = $DAO ? $DAO->encloseColumnName($dbColumn): $dbColumn;
             $this->dbColumns['all'][] = '('.$dbColumn.')`'.$column['field'].'`';
             $this->dbColumns['aliasNames'][] = $column['field'];
 
