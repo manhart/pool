@@ -2419,10 +2419,15 @@ function checkRunningProcess(string $pidDir, string $jobName): void
  */
 function str_contains_any(string $haystack, array $needles, bool $case_sensitive = true): bool
 {
+    if (!$case_sensitive) {
+        $haystack = strtolower($haystack);
+    }
+
     foreach ($needles as $needle) {
-        if (str_contains($haystack, $needle) || (!$case_sensitive && str_contains(strtolower($haystack), strtolower($needle)))) {
+        if (str_contains($haystack, $case_sensitive ? $needle : strtolower($needle))) {
             return true;
         }
     }
+
     return false;
 }
