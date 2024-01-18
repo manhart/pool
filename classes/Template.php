@@ -497,12 +497,10 @@ class TempCoreHandle extends TempHandle
     {
         $varStart = $this->varStart;
         $varEnd = $this->varEnd;
-
         $content = $this->content;
 
         $search = [];
         $replace = [];
-
         foreach($this->VarList as $key => $val) {
             $search[] = "$varStart$key$varEnd";
             $replace[] = $val;
@@ -511,10 +509,11 @@ class TempCoreHandle extends TempHandle
         $sizeOfVarList = count($this->VarList);
         $iterations = 0;
         $count = 1;
-        while($count and $iterations < $sizeOfVarList) {
+        while($count && $iterations < $sizeOfVarList) {
             $content = str_replace($search, $replace, $content, $count);
             $iterations++;
         }
+
         $replace_pairs = [];
         if ($translator = Template::getTranslator())
             $translator->translateWithRegEx(
@@ -530,7 +529,6 @@ class TempCoreHandle extends TempHandle
                 $parsedContent = $TempBlock->getParsedContent();
             }
             $replace_pairs["[$Handle]"] = $parsedContent;
-            unset($TempBlock);
         }
 
         foreach($this->fileList as $Handle => $TempFile) {
@@ -538,19 +536,15 @@ class TempCoreHandle extends TempHandle
             $TempFile->parse();
             $parsedContent = $TempFile->getParsedContent();
             if($clearParsedContent) $TempFile->clearParsedContent();
-            unset($TempFile);
             $replace_pairs["[$Handle]"] = $parsedContent;
         }
 
         $content = strtr($content, $replace_pairs);
-        unset($replace_pairs);
-
 
         if(!$returnContent) {
             $this->ParsedContent = $content;
             return '';
         }
-
         return $content;
     }
 
