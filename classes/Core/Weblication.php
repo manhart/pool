@@ -40,6 +40,8 @@ use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
 use Template;
 use function addEndingSlash;
+use function buildDirPath;
+use function buildFilePath;
 use function defined;
 use function file_exists;
 use function is_dir;
@@ -76,9 +78,10 @@ class Weblication extends Component
     protected string $launchModule = GUI_CustomFrame::class;
 
     /**
-     * Enthaelt das erste geladene GUI_Module (wird in Weblication::run() eingeleitet)
+     * Contains the first loaded GUI_Module
      *
      * @var GUI_Module $Main
+     * @see Weblication::run()
      */
     private GUI_Module $Main;
 
@@ -285,14 +288,20 @@ class Weblication extends Component
     private int $cacheTTL = 86400;
 
     /**
-     * Enable or disable caching
+     * Types of caching
      */
-    private static bool $cache = true;
+    public const CACHE_FILE_ACCESS = 'fileAccess';
+    public const CACHE_FILE = 'file';
+    public const CACHE_ITEM = 'item';
 
     /**
-     * Cache file system accesses
+     * Enable or disable caching of different types
      */
-    private static bool $cacheFileSystemAccess = true;
+    private static array $cacheItem = [
+        self::CACHE_ITEM => true,
+        self::CACHE_FILE => true,
+        self::CACHE_FILE_ACCESS => true
+    ];
 
     /**
      * @var string working path
@@ -317,10 +326,10 @@ class Weblication extends Component
             \define('IS_CLI', \PHP_SAPI === 'cli');
         }
         if(!IS_CLI) {
-            $poolRelativePath = $this->getCachedAppItem('poolRelativePath') ?:
+            $poolRelativePath = $this->getCachedItem('poolRelativePath') ?:
                 \makeRelativePathsFrom(\dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
             $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
-            $this->cacheAppItem('poolRelativePath', $poolRelativePath);
+            $this->cacheItem('poolRelativePath', $poolRelativePath);
         }
     }
 
@@ -546,11 +555,11 @@ class Weblication extends Component
     }
 
     /**
-     * @return GUI_HeadData|null
+     * @return GUI_HeadData
      */
-    public function getHead(): ?GUI_HeadData
+    public function getHead(): GUI_HeadData
     {
-        return $this->getFrame()?->getHeadData();
+        return $this->getFrame()?->getHeadData() ?? new GUI_HeadData($this);
     }
 
     /**
@@ -831,12 +840,12 @@ class Weblication extends Component
         $elementSubFolder = 'templates';
         $translate = (bool)Template::getTranslator();
         $memKey = "findTemplate.$this->skin.$language.$classFolder.$filename.$baseLib";
-        if(($template = $this->getCachedFileAccessResult($memKey)) !== false) {
+        if(($template = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) {
             return $template;
         }
         $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
         if($template) {
-            $this->cacheFileAccessResult($memKey, $template);
+            $this->cacheItem($memKey, $template, static::CACHE_FILE_ACCESS);
             return $template;
         }
 
@@ -865,7 +874,7 @@ class Weblication extends Component
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
         $memKey = "findStyleSheet.$this->skin.$language.$classFolder.$elementSubFolder.$filename.$baseLib";
-        if(($stylesheet = $this->getCachedFileAccessResult($memKey)) !== false) {
+        if(($stylesheet = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) {
             return $stylesheet;
         }
         $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
@@ -873,25 +882,26 @@ class Weblication extends Component
             if($baseLib) {
                 $stylesheet = strtr($stylesheet, [$this->getPoolServerSideRelativePath() => $this->getPoolClientSideRelativePath()]);
             }
-            $this->cacheFileAccessResult($memKey, $stylesheet);
+            $this->cacheItem($memKey, $stylesheet, static::CACHE_FILE_ACCESS);
             return $stylesheet;
         }
 
         //TODO Remove or define use of skins for included Projekts and merge with findBestElement
         //Common-common-skin
         if(!$baseLib && defined('DIR_COMMON_ROOT_REL')) {
-            $stylesheet = \buildFilePath(
+            $stylesheet = buildFilePath(
                 DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
             if(file_exists($stylesheet)) {
-                $this->cacheFileAccessResult($memKey, $stylesheet);
+                $this->cacheItem($memKey, $stylesheet, static::CACHE_FILE_ACCESS);
                 return $stylesheet;
             }
         }
 
         if($raiseError)
             $this->raiseError(__FILE__, __LINE__, \sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
-        else
-            $this->cacheFileAccessResult($memKey, '');
+        else {
+            $this->cacheItem($memKey, '', static::CACHE_FILE_ACCESS);
+        }
         return '';
     }
 
@@ -911,28 +921,28 @@ class Weblication extends Component
         $places = [];
         //Getting list of Places to search
         if($this->hasCommonSkinFolder($elementSubFolder)) //Project? -> Special common-skin
-            $places[] = \buildDirPath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
+            $places[] = buildDirPath(PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
         if($this->hasSkinFolder($elementSubFolder)) //Project? -> Skin
-            $places[] = \buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
-        $places[] = \buildDirPath($elementSubFolder);
+            $places[] = buildDirPath(PWD_TILL_SKINS, $this->skin, $elementSubFolder);
+        $places[] = buildDirPath($elementSubFolder);
         if($classFolder) {//Projects -> GUI
             //Path from Project root to the specific GUI folder
-            $folder_guis = \buildDirPath(PWD_TILL_GUIS, $classFolder);
+            $folder_guis = buildDirPath(PWD_TILL_GUIS, $classFolder);
             //current Project
             $places[] = $folder_guis;
             //common Project
             if(defined('DIR_COMMON_ROOT_REL'))
-                $places[] = \buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
+                $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
             //POOL Library Project
             if($baseLib)
-                $places[] = \buildDirPath($this->getPoolServerSideRelativePath(), $folder_guis);
+                $places[] = buildDirPath($this->getPoolServerSideRelativePath(), $folder_guis);
         }
         $finds = [];
         //Searching
         foreach($places as $folder_guis) {
-            $file = \buildFilePath($folder_guis, $filename);
+            $file = buildFilePath($folder_guis, $filename);
             if(file_exists($file)) {
-                $translatedFile = \buildFilePath($folder_guis, $language, $filename);
+                $translatedFile = buildFilePath($folder_guis, $language, $filename);
                 if(Template::isCacheTranslations() && file_exists($translatedFile)) {
                     // Language specific Ordner
                     $finds[] = $translatedFile;
@@ -969,7 +979,7 @@ class Weblication extends Component
         bool $clientSideRelativePath = true): string
     {
         $memKey = "findJavaScript.$classFolder.$filename.$baseLib.$clientSideRelativePath";
-        if(($javaScriptFile = $this->getCachedFileAccessResult($memKey)) !== false) {
+        if(($javaScriptFile = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) {
             return $javaScriptFile;
         }
         $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JS);
@@ -984,27 +994,28 @@ class Weblication extends Component
         $javaScriptFile = $serverSide_folder_javaScripts.$filename;
         if(file_exists($javaScriptFile)) {
             $javaScriptFile = $clientSideRelativePath ? "$clientSide_folder_javaScripts$filename" : $javaScriptFile;
-            $this->cacheFileAccessResult($memKey, $javaScriptFile);
+            $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
             return $javaScriptFile;//found
         }
         $javaScriptFile = $serverSide_folder_guis.$filename;
         if(file_exists($javaScriptFile)) {
             $javaScriptFile = $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;
-            $this->cacheFileAccessResult($memKey, $javaScriptFile);
+            $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
             return $javaScriptFile;
         }//found
         if(defined('DIR_COMMON_ROOT_REL')) {
-            $folder_common = \buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
+            $folder_common = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
             $javaScriptFile = $folder_common.$filename;
             if(file_exists($javaScriptFile)) {
-                $this->cacheFileAccessResult($memKey, $javaScriptFile);
+                $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
                 return $javaScriptFile;//found
             }
         }
         if($raiseError)
             $this->raiseError(__FILE__, __LINE__, \sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
-        else
-            $this->cacheFileAccessResult($memKey, '');
+        else {
+            $this->cacheItem($memKey, '', static::CACHE_FILE_ACCESS);
+        }
         return '';
     }
 
@@ -1156,11 +1167,11 @@ class Weblication extends Component
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
         $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
         $this->setVersion($settings['application.version'] ?? $this->getVersion());
-        if($this->getCachedAppItem('workingDirectory') !== self::$workingDirectory || $this->getCachedAppItem("version") !== $this->getVersion()) {
+        if($this->getCachedItem('workingDirectory') !== self::$workingDirectory || $this->getCachedItem("version") !== $this->getVersion()) {
             // clear fs cache
-            $this->clearCacheFileAccess();
-            $this->cacheAppItem('version', $this->getVersion());
-            $this->cacheAppItem('workingDirectory', self::$workingDirectory);
+            $this->clearCache(self::CACHE_FILE_ACCESS);
+            $this->cacheItem('version', $this->getVersion());
+            $this->cacheItem('workingDirectory', self::$workingDirectory);
         }
 
         $this->isInitialized = true;
@@ -1618,68 +1629,46 @@ class Weblication extends Component
     }
 
     /**
-     * Caching the found file or whether a file exists or not. This is used to speed up the search for files. The cache keys are generated and prefixed with "fs:".
+     * Cache an item
      */
-    public function cacheFileAccessResult(string $key, string $file): bool
+    public function cacheItem(string $key, mixed $item, string $topic = self::CACHE_ITEM): bool
     {
-        if(!self::$cacheFileSystemAccess)
+        if(!self::$cacheItem[$topic])
             return false;
-        $memKey = $this->generateCacheKey($key, 'fs');
-        return $this->memory->setValue($memKey, $file);
-    }
-
-    /**
-     * Returns the cached file or false if the file was not found. The cache keys are generated and prefixed with "fs:".
-     */
-    public function getCachedFileAccessResult(string $key): mixed
-    {
-        if(!self::$cacheFileSystemAccess)
-            return false;
-        $memKey = $this->generateCacheKey($key, 'fs');
-        return $this->memory->get($memKey);
-    }
-
-    /**
-     * Cache an item in the application
-     */
-    public function cacheAppItem(string $key, mixed $value): bool
-    {
-        if(!self::$cache)
-            return false;
-        $memKey = $this->generateCacheKey($key);
-        return $this->memory->setValue($memKey, $value);
+        $memKey = $this->generateCacheKey($key, $topic);
+        return $this->memory->setValue($memKey, $item);
     }
 
     /**
      * Returns the cached item or false if the item was not found.
      */
-    public function getCachedAppItem(string $key): mixed
+    public function getCachedItem(string $key, string $topic = self::CACHE_ITEM): mixed
     {
-        if(!self::$cache)
+        if(!self::$cacheItem[$topic])
             return false;
-        $memKey = $this->generateCacheKey($key);
+        $memKey = $this->generateCacheKey($key, $topic);
         return $this->memory->get($memKey);
     }
 
     /**
      * Generate a cache key
      */
-    private function generateCacheKey(string $key, string $topicAbbr = 'app'): string
+    private function generateCacheKey(string $key, string $topic): string
     {
-        return "$topicAbbr:{$this->getName()}.$key";
+        return "$topic:{$this->getName()}.$key";
     }
 
     /**
      * Clear the cache for file system access (prefix "fs:")
      */
-    private function clearCacheFileAccess(): void
+    private function clearCache(string $topic = self::CACHE_ITEM): void
     {
-        if(!self::$cache)
+        if(!self::$cacheItem[$topic])
             return;
         $allKeys = $this->memory->getAllKeys();
         $keys = [];
         foreach($allKeys as $key) {
-            if(str_starts_with($key, 'fs:')) {
+            if(str_starts_with($key, $topic)) {
                 $keys[] = $key;
             }
         }
@@ -1687,11 +1676,13 @@ class Weblication extends Component
     }
 
     /**
-     * En- disable Caching
+     * En- disables Caching
+     * @todo control individual caching topics
      */
     protected static function caching(bool $enable = true): void
     {
-        self::$cache = $enable;
-        self::$cacheFileSystemAccess = $enable;
+        static::$cacheItem[static::CACHE_ITEM] = $enable;
+        static::$cacheItem[static::CACHE_FILE] = $enable;
+        static::$cacheItem[static::CACHE_FILE_ACCESS] = $enable;
     }
 }
