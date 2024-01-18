@@ -114,6 +114,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected array $columns = [];
 
+    /**
+     * @var array|string[] Escaped columns of table
+     */
+    protected array $escapedColumns = [];
+
     private array|false|null $defaultColumns;
 
     /**
@@ -179,7 +184,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * @var array|string[] Contains the characters that do not need to be escaped
      */
-    private array $nonWrapSymbols = ['*', '.', '(', 'as', '\''];
+    private array $nonWrapSymbols = ['*', '.', '(', ' as ', '\''];
 
     /**
      * @var array|int[]|string[] It is used to store the flipped non-wrap symbols for performance reasons.
@@ -695,9 +700,9 @@ SQL;
         $this->defaultColumns ??= ($this->columns ?: false);
         $this->columns = $columns;
         // Escape each column
-        $escapedColumns = array_map([$this, 'encloseColumnName'], $this->columns);
+        $this->escapedColumns = array_map([$this, 'encloseColumnName'], $this->columns);
         // Concatenate the columns into a single string
-        $this->column_list = implode(', ', $escapedColumns);
+        $this->column_list = implode(', ', $this->escapedColumns);
         return $this;
     }
 
