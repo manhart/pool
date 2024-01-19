@@ -357,8 +357,7 @@ class GUI_HeadData extends GUI_Module
     {
         $Url = new Url(false);
 
-        $this->Template->setVars(
-            array(
+        $this->Template->setVars([
                 'EXPIRES' => $this->Expires,
                 'LANGUAGE' => $this->Weblication->getLanguage(),
                 'TITLE' => $this->title,
@@ -369,12 +368,13 @@ class GUI_HeadData extends GUI_Module
                 'CHARSET' => $this->charset,
                 'KEYWORDS' => '',
                 'AUTHOR' => '',
-                'CLIENT-DATA' => base64_encode(json_encode($this->clientData, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION)),
+                'CLIENT-DATA' => \base64_encode(\json_encode($this->clientData,
+                    JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION)),
                 'SCRIPT' => $Url->getUrl()
-            )
+            ]
         );
 
-        if($this->xuaCompatible != '') {
+        if($this->xuaCompatible !== '') {
             if($this->Template->newBlock('XUACOMPATIBLE')) {
                 $this->Template->setVar('XUACOMPATIBLE_VALUE', $this->xuaCompatible);
             }
@@ -427,6 +427,7 @@ class GUI_HeadData extends GUI_Module
                     $ScriptBlock->setVar('CODE', $code);
                 }
                 else if($this->Weblication->isXdebugEnabled()) {
+                    /** @noinspection ForgottenDebugOutputInspection */
                     xdebug_print_function_stack('SCRIPT_CODE is missing in tpl_head.html');
                 }
             }

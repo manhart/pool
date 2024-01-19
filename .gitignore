@@ -6,3 +6,4 @@
 composer.lock
 #Die templates in den maschinell übersetzten Ordneren
 /guis/*/*/*.html
+/guis/*/*.json
