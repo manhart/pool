@@ -516,7 +516,7 @@ function shorten(string $str = '', int $len = 150, $more = 1, bool $backtrack = 
  **/
 function removeEmptyLines(string $line): bool
 {
-    return trim($line) != '';
+    return trim($line) !== '';
 }
 
 /**
@@ -525,19 +525,14 @@ function removeEmptyLines(string $line): bool
  * @param $datetime
  * @param $format
  * @return string
- *
- * @throws Exception
  */
 function formatDateTime($datetime, $format): string
 {
     if (!is_numeric($datetime)) {
         $timestamp = strtotime($datetime);
-        if ($timestamp !== -1) {
-            $datetime = $timestamp;
-        }
+        if ($timestamp !== -1) $datetime = $timestamp;
     }
-    $Date = new DateTime('@' . $datetime);
-    return $Date->format($format);
+    return (new DateTime("@$datetime"))->format($format);
 }
 
 /**
@@ -545,15 +540,14 @@ function formatDateTime($datetime, $format): string
  * Arbeitet etwas anders als formatDateTime, da es deutsches Format (01.01.2004) in
  * englisches Format (2004-01-01) umwandelt.
  *
- * @param $datetime
- * @param $format
- * @return
+ * @param $strDate
+ * @param string $delimiter
+ * @return string
  * @throws Exception
  * @author Andreas Horvath
- * @see formatDateTime
  * @deprecated
  */
-function formatDEDateToEN($strDate, $delimiter = '.'): string
+function formatDEDateToEN($strDate, string $delimiter = '.'): string
 {
     $arrDate = explode($delimiter, $strDate);
     return (new DateTime(strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0])))->format('Y-m-d');

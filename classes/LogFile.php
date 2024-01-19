@@ -242,10 +242,12 @@ class LogFile extends PoolObject
      * Setzt das Format f�r den Zeitstempel
      *
      * @param string $format
+     * @return LogFile
      */
-    function setFormatDateTime(string $format='[d.m.Y H:i:s]')
+    public function setFormatDateTime(string $format='[d.m.Y H:i:s]'): static
     {
         $this->formatDateTime = $format;
+        return $this;
     }
 
     /**
@@ -256,7 +258,9 @@ class LogFile extends PoolObject
     protected function generateFormattedInitialLogString(): string
     {
         try {
-            $formattedDateTime = formatDateTime(time(), $this->formatDateTime);
+            $microTime = microtime(true);
+            $microseconds = sprintf('%06d', ($microTime - floor($microTime)) * 1000000);
+            $formattedDateTime = (new DateTime(date('Y-m-d H:i:s').".$microseconds"))->format($this->formatDateTime);
         }
         catch(Exception) {
             $formattedDateTime = (string)time();
