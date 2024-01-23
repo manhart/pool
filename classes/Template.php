@@ -751,9 +751,8 @@ class TempFile extends TempCoreHandle
         if(!$fileExists || false === ($fh = @fopen($filePath, 'rb'))) {
             throw new \pool\classes\Exception\RuntimeException("Template file $filePath not found.");
         }
-        $filesize = filesize($filePath);
         // fread must be greater than 0
-        $content = $filesize ? fread($fh, $filesize) : '';
+        $content = fread($fh, filesize($filePath)+ 1);
         fclose($fh);
         /** @noinspection PhpUndefinedVariableInspection */
         $this->setContent($content);
