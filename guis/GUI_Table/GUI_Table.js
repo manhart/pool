@@ -733,6 +733,16 @@ class GUI_Table extends GUI_Module
         this.getTable().bootstrapTable('uncheckAll');
         // }
     }
+
+    /**
+     * Load the data to the table. The old rows will be removed.
+     *
+     * @param data
+     */
+    load(data) {
+        this.getTable().bootstrapTable('load', data);
+    }
+
     /**
      * insert row and check row
      *
