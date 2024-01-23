@@ -748,9 +748,11 @@ class TempFile extends TempCoreHandle
         }
 
         // fopen is faster than file_get_contents
-        if(!$fileExists || false === (($fh = @fopen($filePath, 'rb')) && $content = fread($fh, filesize($filePath)))) {
+        if(!$fileExists || false === ($fh = @fopen($filePath, 'rb'))) {
             throw new \pool\classes\Exception\RuntimeException("Template file $filePath not found.");
         }
+        // fread must be greater than 0
+        $content = fread($fh, filesize($filePath)+ 1);
         fclose($fh);
         /** @noinspection PhpUndefinedVariableInspection */
         $this->setContent($content);
