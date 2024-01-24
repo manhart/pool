@@ -618,7 +618,7 @@ class DataInterface extends PoolObject
     public function getErrorAsText(): string
     {
         $result = $this->getError();
-        return "{$result["code"]}: {$result["message"]}";
+        return "{$result['errno']}: {$result['error']}";
     }
 
     /**

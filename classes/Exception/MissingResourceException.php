@@ -10,6 +10,8 @@
 
 namespace pool\classes\Exception;
 
-class ModulNotFoundException extends MissingResourceException implements PoolExceptionInterface
+use RuntimeException as PhpRuntimeException;
+
+class MissingResourceException extends PhpRuntimeException implements PoolExceptionInterface
 {
 }

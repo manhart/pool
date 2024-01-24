@@ -33,6 +33,7 @@ use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\Exception\SessionDisabledException;
+use pool\classes\Exception\TemplateNotFoundException;
 use pool\classes\Language;
 use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
@@ -854,8 +855,7 @@ class Weblication extends Component
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
         }
-        $this->raiseError(__FILE__, __LINE__, $msg);
-        return '';
+        throw new TemplateNotFoundException($msg);
     }
 
     /**

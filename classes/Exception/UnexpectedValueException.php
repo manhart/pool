@@ -10,6 +10,11 @@
 
 namespace pool\classes\Exception;
 
-class ModulNotFoundException extends MissingResourceException implements PoolExceptionInterface
+use UnexpectedValueException as PhpUnexpectedValueException;
+
+/**
+ * Thrown to indicate that the argument received is not valid.
+ */
+class UnexpectedValueException extends PhpUnexpectedValueException implements PoolExceptionInterface
 {
 }
