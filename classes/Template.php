@@ -55,8 +55,7 @@ const TEMP_SESSION_IDENT = '';
  * @package rte
  * @author Alexander Manhart <alexander.manhart@freenet.de>
  * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
- * @access private
- **/
+ */
 class TempHandle extends PoolObject
 {
     //@var string Typ des Handles
@@ -239,8 +238,8 @@ class TempCoreHandle extends TempHandle
      */
     public function __construct(string $type, string $directory, string $charset = 'UTF-8')
     {
-        $this->charset = $charset;
         parent::__construct($type);
+        $this->charset = $charset;
 
         $this->setDirectory($directory);
         $this->BlockList = [];
@@ -710,8 +709,7 @@ class TempFile extends TempCoreHandle
         parent::__construct('FILE', $directory, $charset);
 
         $this->setHandle($handle);
-        $this->filename = $filename;
-        $this->loadFile();
+        $this->loadFile($filename);
     }
 
     /**
@@ -725,10 +723,13 @@ class TempFile extends TempCoreHandle
     /**
      * loads the template file
      */
-    private function loadFile()
+    private function loadFile(string $filename)
     {
+        if(!$filename) {
+            throw new \pool\classes\Exception\UnexpectedValueException('No template file given.');
+        }
+        $this->filename = $filename;
         $dir = $this->getDirectory();
-        $filename = $this->getFilename();
         $filePath = buildFilePath($dir, $filename);
         $weblication = Weblication::getInstance();
         $fileExists = file_exists($filePath);
