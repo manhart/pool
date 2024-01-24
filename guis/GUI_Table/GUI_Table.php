@@ -1223,7 +1223,7 @@ class GUI_Table extends GUI_Module
             if(!isset($column['field'])) continue; // necessary
             if(!isset($column['dbColumn'])) continue;
             $dbColumn = $column['dbColumn'];
-            if($dbColumn == '') continue;
+            if($dbColumn === '') continue;
 
             $dbColumn = $DAO ? $DAO->encloseColumnName($dbColumn): $dbColumn;
             $this->dbColumns['all'][] = '('.$dbColumn.')`'.$column['field'].'`';
