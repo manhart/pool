@@ -219,7 +219,7 @@ class GUI_Module
                         QueryURL.append(key + '[' + innerKey + ']', String(innerValue));
                     }
                 }
-                else {
+                else if (value !== undefined) {
                     QueryURL.append(key, value.toString());
                 }
             }
