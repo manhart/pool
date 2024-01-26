@@ -902,7 +902,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
             $line = '';
             $values = array_values($row);
             foreach($values as $val) {
-                $val = self::maskTextCSVCompliant($val, $separator, $text_clinch, $formatNumericAsText);
+                $val = self::maskTextCSVCompliant((string)$val, $separator, $text_clinch, $formatNumericAsText);
                 $line .= ($line !== '') ? ($separator.$val) : ($val);
             }
             $csv .= $line.$line_break;
