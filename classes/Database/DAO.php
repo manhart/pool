@@ -356,8 +356,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $optionsStr = implode(' ', $options);
 
-        $where = $this->buildWhere($id, $key);
-        $filter = $this->buildFilter($filter);
+        $whereClause = $this->buildWhere($id, $key).$this->buildFilter($filter);
         $groupByClause = $this->buildGroupBy($groupBy);
         $havingClause = $this->buildHaving($having);
         $sortingClause = $this->buildSorting($sorting);
@@ -366,9 +365,9 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
 SELECT $optionsStr $this->column_list
-FROM $this->quotedTable
+FROM $this
 WHERE
-    $where $filter
+    $whereClause
 $groupByClause
 $havingClause
 $sortingClause
