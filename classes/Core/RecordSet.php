@@ -889,22 +889,23 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $text_clinch text clinch
      * @return string csv string
      */
-    public function getCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
+    public function getCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"', bool $formatNumericAsText = true): string
     {
+        if(!$this->count()) {
+            return '';
+        }
         $csv = '';
-        if($this->count()) {
-            if($with_headline) {
-                $csv .= \implode($separator, array_keys($this->records[0])).$line_break;
+        if($with_headline) {
+            $csv .= \implode($separator, array_keys($this->records[0])).$line_break;
+        }
+        foreach($this->records as $row) {
+            $line = '';
+            $values = array_values($row);
+            foreach($values as $val) {
+                $val = self::maskTextCSVCompliant($val, $separator, $text_clinch, $formatNumericAsText);
+                $line .= ($line !== '') ? ($separator.$val) : ($val);
             }
-            foreach($this->records as $row) {
-                $line = '';
-                $values = array_values($row);
-                foreach($values as $val) {
-                    $val = self::maskTextCSVCompliant($val, $separator, $text_clinch);
-                    $line .= ($line !== '') ? ($separator.$val) : ($val);
-                }
-                $csv .= $line.$line_break;
-            }
+            $csv .= $line.$line_break;
         }
         return $csv;
     }
@@ -915,10 +916,14 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $val Wert
      * @param string $separator Trenner
      * @param string $text_clinch Zeichen für Textklammer
+     * @param bool $formatNumericAsText
      * @return string
      */
-    public static function maskTextCSVCompliant(string $val, string $separator = ';', string $text_clinch = '"'): string
+    public static function maskTextCSVCompliant(string $val, string $separator = ';', string $text_clinch = '"', bool $formatNumericAsText = true): string
     {
+        if($formatNumericAsText && \is_numeric($val)) {
+            return "=\"$val\"";
+        }
         $hasTextClinch = false;
         if($text_clinch !== '') {
             $hasTextClinch = \strpos($val, $text_clinch);
@@ -946,36 +951,38 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Zeile als CSV ausgeben
      */
-    public function getRecordAsCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"'): string
+    public function getRecordAsCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"',
+        bool $formatNumericAsText = true): string
     {
+        if(!$this->count()) {
+            return '';
+        }
         $csv = '';
-        if($this->count()) {
-            if($this->returnFields) {
-                if($with_headline) $csv .= \implode($separator, array_values(($this->returnFields))).$line_break;
-                $row = '';
-                foreach($this->returnFields as $key) {
-                    if($row !== '') $row .= $separator;
-                    $val = self::maskTextCSVCompliant((string)$this->records[$this->index][$key], $separator, $text_clinch);
-                    $row .= $val;
-                }
-                $row .= $line_break;
-
-                $csv .= $row;
+        if($this->returnFields) {
+            if($with_headline) $csv .= \implode($separator, array_values(($this->returnFields))).$line_break;
+            $row = '';
+            foreach($this->returnFields as $key) {
+                if($row !== '') $row .= $separator;
+                $val = self::maskTextCSVCompliant((string)$this->records[$this->index][$key], $separator, $text_clinch, $formatNumericAsText);
+                $row .= $val;
             }
-            else {
-                if($with_headline) {
-                    $csv .= \implode($separator, array_keys($this->records[$this->index])).$line_break;
-                }
+            $row .= $line_break;
 
-                $values = array_values($this->getRecord());
-                $i = 0;
-                foreach($values as $val) {
-                    $val = self::maskTextCSVCompliant((string)$val, $separator, $text_clinch);
-                    $csv .= ($i === 0) ? $val : $separator.$val;
-                    $i++;
-                }
-                $csv .= $line_break;
+            $csv .= $row;
+        }
+        else {
+            if($with_headline) {
+                $csv .= \implode($separator, array_keys($this->records[$this->index])).$line_break;
             }
+
+            $values = array_values($this->getRecord());
+            $i = 0;
+            foreach($values as $val) {
+                $val = self::maskTextCSVCompliant((string)$val, $separator, $text_clinch, $formatNumericAsText);
+                $csv .= ($i === 0) ? $val : $separator.$val;
+                $i++;
+            }
+            $csv .= $line_break;
         }
         return $csv;
     }
