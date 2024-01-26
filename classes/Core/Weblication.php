@@ -1679,7 +1679,7 @@ class Weblication extends Component
      * En- disables Caching
      * @todo control individual caching topics
      */
-    protected static function caching(bool $enable = true): void
+    public static function caching(bool $enable = true): void
     {
         static::$cacheItem[static::CACHE_ITEM] = $enable;
         static::$cacheItem[static::CACHE_FILE] = $enable;
