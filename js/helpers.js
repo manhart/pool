@@ -327,22 +327,29 @@ function int2pix(px) {
     return px;
 }
 
-/* DropDown, Select */
-function addOption(selectElement, caption, value) {
-    var optn = document.createElement('OPTION');
-    optn.text = caption;
-    optn.value = value;
+/**
+ * Adds an option to a select element at a specific position.
+ *
+ * @param {HTMLSelectElement} selectElement - The select element to add the option to.
+ * @param {string} caption - The text to display for the option.
+ * @param {string} value - The value of the option.
+ * @param {boolean} [selected=false] - Whether the option should be selected.
+ * @param {number} [position=-1] - The position to insert the option at. Default is -1 (end position).
+ * @returns {HTMLOptionElement} - The created option element.
+ */
+function addOption(selectElement, caption, value, selected = false, position = -1) {
+    const optionElement = document.createElement('OPTION');
+    optionElement.text = caption;
+    optionElement.value = value;
+    optionElement.selected = selected;
 
-    if (arguments[3]) {
-        optn.selected = arguments[3];
+    if(position < 0 || position > selectElement.options.length) {
+        selectElement.add(optionElement);
     }
-
-    try {
-        selectElement.add(optn, null);
-    } catch (e) {
-        selectElement.add(optn);
+    else {
+        selectElement.insertBefore(optionElement, selectElement.options[position]);
     }
-    return optn;
+    return optionElement;
 }
 
 function clearSelect(selectElement) {
