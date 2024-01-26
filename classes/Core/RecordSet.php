@@ -889,7 +889,8 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $text_clinch text clinch
      * @return string csv string
      */
-    public function getCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"', bool $formatNumericAsText = true): string
+    public function getCSV(bool $with_headline = true, string $separator = ';', string $line_break = "\n", string $text_clinch = '"',
+        bool $formatNumericAsText = false, callable $formatter = null): string
     {
         if(!$this->count()) {
             return '';
@@ -900,8 +901,13 @@ class RecordSet extends PoolObject implements Iterator, Countable
         }
         foreach($this->records as $row) {
             $line = '';
-            $values = array_values($row);
-            foreach($values as $val) {
+            $keys = array_keys($row);
+            // $values = array_values($row);
+            foreach($keys as $key) {
+                $val = $row[$key];
+                if($formatter) {
+                    $val = $formatter($key, $val);
+                }
                 $val = self::maskTextCSVCompliant((string)$val, $separator, $text_clinch, $formatNumericAsText);
                 $line .= ($line !== '') ? ($separator.$val) : ($val);
             }
@@ -919,7 +925,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param bool $formatNumericAsText
      * @return string
      */
-    public static function maskTextCSVCompliant(string $val, string $separator = ';', string $text_clinch = '"', bool $formatNumericAsText = true): string
+    public static function maskTextCSVCompliant(string $val, string $separator = ';', string $text_clinch = '"', bool $formatNumericAsText = false): string
     {
         if($formatNumericAsText && \is_numeric($val)) {
             return "=\"$val\"";
