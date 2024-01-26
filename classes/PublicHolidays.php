@@ -306,16 +306,12 @@ final class PublicHolidays extends PoolObject
      *
      * @param DateTimeInterface $Date
      * @param string $state
-     * @param bool $legal
      * @return bool
-     * @throws \pool\classes\Exception\InvalidArgumentException
      */
-    static function check(DateTimeInterface $Date, string $state = '', bool $legal = true): bool
+    static function check(DateTimeInterface $Date, string $state = ''): bool
     {
         $year = (int)$Date->format('Y');
-
         $date = $Date->format(PHP_MARIADB_DATE_FORMAT);
-
         $PublicHolidays = new PublicHolidays();
         foreach($PublicHolidays->getLegalHolidays($year, $state) as $Holiday) {
             if($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
