@@ -404,16 +404,17 @@ class RecordSet extends PoolObject implements Iterator, Countable
     public function getValueAsDateTime(string $key, $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
         $value = $this->getValue($key, $default);
+        if(!$value || $value === DataInterface::ZERO_DATE || $value === DataInterface::ZERO_DATETIME)
+            return null;
         if($value instanceof DateTime)
             return $value;
-        if($value && $value !== DataInterface::ZERO_DATE && $value !== DataInterface::ZERO_DATETIME) {
+
+        try {
             if(\is_numeric($value) && !str_contains($value, '-'))
-                $value = "@$value";
-            try {
-                return new DateTime($value, $timezone);
-            }
-            catch(Exception) {
-            }
+                return (new DateTime(timezone: $timezone))->setTimestamp($value);
+            return new DateTime($value, $timezone);
+        }
+        catch(Exception) {
         }
         return null;
     }
