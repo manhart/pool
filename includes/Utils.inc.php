@@ -2308,10 +2308,10 @@ function calcNextWorkingDay(int $weekday, int $operand = 0): int
  *
  * @param DateTimeInterface $StartDateTime
  * @param DateTimeInterface $EndDateTime
- * @param bool $unsigned without sign
+ * @param bool $absolute without sign
  * @return int
  */
-function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $unsigned = true): int
+function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $absolute = true): int
 {
     $DateTime1 = clone $StartDateTime;
     $DateTime2 = clone $EndDateTime;
@@ -2319,10 +2319,7 @@ function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $E
     $DateTime2->setTime(0, 0);
     // intval($DateTime1->diff($DateTime2)->format('%r%a'))
     $days = ($DateTime1->diff($DateTime2)->days ?: 0);
-    if($unsigned) {
-        return $days;
-    }
-    if($DateTime1 > $DateTime2) $days *= -1;
+    if(!$absolute && $DateTime1 > $DateTime2) $days *= -1;
     return $days;
 }
 
