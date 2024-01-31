@@ -1097,10 +1097,14 @@ SQL;
 
     /**
      * Shorthand for fetching one or multiple values of a record
+     * @param array|int|string $pk a unique identifier use an indexed array in the form [$column => $pk] to specify the primary key column
+     * @param mixed ...$fields a list of columns to retrieve
+     * @return array|mixed the result, returns a list if multiple columns were queried
      */
-    public function fetchData($pk, ...$fields)
+    public function fetchData(array|int|string $pk, ...$fields): mixed
     {
-        $record = $this->setColumns(...$fields)->get($pk)->getRecord();
+        if (is_array($pk)) foreach (($pk) as $key => $pk) break;
+        $record = $this->setColumns(...$fields)->get($pk, $key ?? null)->getRecord();
         return count($fields) === 1 ? $record[$fields[0]] : array_values($record);
     }
 
