@@ -45,9 +45,11 @@ Trait CUD{
      * @param Closure|null $insertOverride
      * @return array
      */
-    protected function cudSave(DAO    $DAO, ?array $dataMask = null, string $successMessage = 'successfully %s.', array $verbs = ['inserted', 'updated'], string $rowName = null,
-                               array  $collisionFilter = [], string $collisionMessage = 'saving failed: non unique identifier',
-                               ?array &$data = null, ?Closure $savePreHook = null, ?Closure $savePostHook = null, ?Closure $rowGenerator = null, ?Closure $updateOverride = null, ?Closure $insertOverride = null): array
+    protected function cudSave(DAO $DAO, ?array $dataMask = null, string $successMessage = 'successfully %s.', array $verbs = ['inserted', 'updated'],
+        string $rowName = null,
+        array $collisionFilter = [], string|Closure $collisionMessage = 'saving failed: non unique identifier',
+        ?array &$data = null, ?Closure $savePreHook = null, ?Closure $savePostHook = null, ?Closure $rowGenerator = null, ?Closure $updateOverride = null,
+        ?Closure $insertOverride = null): array
     {
         if (!isset($dataMask) && !isset($data))
             throw new InvalidArgumentException('Attempted to perform save operation without any data');
@@ -56,12 +58,12 @@ Trait CUD{
         [&$result, &$persistId, &$row, &$success, &$message] = Weblication::makeResultArray(
             ...([$pk => (int)($this->getInput()->getVar($pk) ?? 0), $rowName => []]), success: false, message: '');
         $collisionFilter[] = [$pk, 'unequal', $persistId];
-        if (count($collisionFilter) > 1 && $DAO->getCount(filter: $collisionFilter)->getCountValue()) {
-            $message = $collisionMessage;
+        if (\count($collisionFilter) > 1 && $DAO->getCount(filter: $collisionFilter)->getCountValue()) {
+            $message = \is_string($collisionMessage) ? $collisionMessage : $collisionMessage->call($this, $DAO, $persistId, $pk);
             return $result;
         }
         if (isset($dataMask))
-            $data = array_intersect_key($this->getInput()->getData(), array_flip($dataMask));
+            $data = \array_intersect_key($this->getInput()->getData(), \array_flip($dataMask));
 
         //preprocess data
         try {
@@ -73,14 +75,14 @@ Trait CUD{
 
         //db transaction
         $dbColumns = $DAO->getDefaultColumns();
-        if (array_search('modifier', $dbColumns))
-            $data['modifier'] = $this->idUser();
+        if (\in_array('modifier', $dbColumns))
+            $data['modifier'] ??= $this->idUser();
         if ($isUpdate = (bool)$persistId) {// update
             $data[$pk] = $persistId;
             $Set = $updateOverride?->call($this, $DAO, $persistId, $pk) ?? $DAO->update($data);
         } else {// insert
-            if (array_search('creator', $dbColumns))
-                $data['creator'] = $this->idUser();
+            if (\in_array('creator', $dbColumns))
+                $data['creator'] ??= $this->idUser();
             unset($data[$pk]);
             $Set = $insertOverride?->call($this, $DAO, $pk) ?? $DAO->insert($data);
             $persistId = $Set->getLastInsertID();
@@ -106,7 +108,7 @@ Trait CUD{
             return $result;
         }
         $row = $rowSet->getRecord();
-        $message = sprintf($successMessage, $verbs[(int)$isUpdate]);
+        $message = \sprintf($successMessage, $verbs[(int)$isUpdate]);
         $success = true;
         return $result;
     }
@@ -123,16 +125,16 @@ Trait CUD{
         [&$result, &$success, &$message] = Weblication::makeResultArray(success: false, message: '');
 
         $dbColumns = $DAO->getDefaultColumns();
-        if (array_search($softDeleteMark, $dbColumns)) {
+        if (\in_array($softDeleteMark, $dbColumns)) {
             $pk = $DAO->getPrimaryKey()[0];
             $data = [
                 $pk => $id,
                 $softDeleteMark => $deleted,
             ];
-            if (array_search('modifier', $dbColumns))
+            if (\in_array('modifier', $dbColumns))
                 $data['modifier'] = $this->idUser();
             $DeleteSet = $DAO->update($data);
-        } elseif (!$deleted){
+        } elseif (!$deleted) {
             $message = "Can't restore record, soft delete is not supported by table $DAO";
             return $result;
         } else
@@ -143,5 +145,3 @@ Trait CUD{
         return $result;
     }
 }
-
-
