@@ -896,14 +896,10 @@ class RecordSet extends PoolObject implements Iterator, Countable
         if(!$this->count()) {
             return '';
         }
-        $csv = '';
-        if($with_headline) {
-            $csv .= \implode($separator, array_keys($this->records[0])).$line_break;
-        }
+        $csv = $with_headline ? \implode($separator, array_keys($this->records[0])).$line_break : '';
         foreach($this->records as $row) {
             $line = '';
             $keys = array_keys($row);
-            // $values = array_values($row);
             foreach($keys as $key) {
                 $val = $row[$key];
                 if($formatter) {
