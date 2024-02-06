@@ -196,6 +196,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     private array $formatter = [];
 
+    protected bool $throwsOnError = false;
+
     /**
      * Defines the default commands.
      */
@@ -240,11 +242,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Creates a Data Access Object
      */
-    public static function create(?string $tableName = null, ?string $databaseName = null): static
+    public final static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
     {
         // class stuff
         if(!$tableName) {
-            return new static($databaseName);
+            $DAO = new static($databaseName);
+            $DAO->throwsOnError = $throws;
+            return $DAO;
         }
 
         if(static::$tableName) {
@@ -252,6 +256,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         }
 
         $DAO = new static($databaseName, $tableName);
+        $DAO->throwsOnError = $throws;
         $DAO->fetchColumns();
         return $DAO;
     }
@@ -629,7 +634,7 @@ SQL;
      */
     protected function execute(string $sql, ?callable $customCallback = null): RecordSet
     {
-        return DataInterface::execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData);
+        return DataInterface::execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData, $this->throwsOnError);
     }
 
     /**

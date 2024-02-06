@@ -16,6 +16,7 @@ use DateTimeZone;
 use Exception;
 use Iterator;
 use pool\classes\Database\DataInterface;
+use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\InvalidJsonException;
 use UConverter;
@@ -844,39 +845,20 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Returns the error stack
-     *
-     * @return array
-     */
-    public function getErrorList(): array
-    {
-        return $this->errorStack;
-    }
-
-    /**
-     * Add error message to the error stack
+     * @deprecated use Exceptions instead of the error stack
      */
     public function addErrorMessage(string $message, int $code = 0): static
     {
-        $this->errorStack[] = ['message' => $message, 'code' => $code];
-        return $this;
+        throw new DAOException("$message ($code)");
     }
 
     /**
      * Add the error to the error stack as an array with message and code
+     * @deprecated use Exceptions instead of the error stack
      */
     public function addError(array $error): static
     {
         $this->errorStack[] = $error;
-        return $this;
-    }
-
-    /**
-     * Clear the error stack
-     */
-    public function clearErrorStack(): static
-    {
-        $this->errorStack = [];
         return $this;
     }
 
@@ -1126,7 +1108,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         /*$xml = getXmlHeader('utf8');*/
         $xml = '<?xml version=\'1.0\' encoding=\''.$encoding.'\'?>';
         if(\is_null($add)) {
-            $xml .= '<complete>';
+            $xml  .= '<complete>';
         }
         else {
             $xml .= '<complete add="'.\bool2string($add).'">';
