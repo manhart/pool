@@ -883,7 +883,7 @@ class DataInterface extends PoolObject
      *
      * @param string $string string
      * @return string escaped string
-     * @throws \Exception
+     * @throws DatabaseConnectionException|InvalidArgumentException
      */
     public function escape(string $string, $database = ''): string
     {

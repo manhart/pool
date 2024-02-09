@@ -846,6 +846,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * @deprecated use Exceptions instead of the error stack
+     * @throws DAOException
      */
     public function addErrorMessage(string $message, int $code = 0): static
     {

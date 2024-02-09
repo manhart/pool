@@ -401,22 +401,22 @@ SQL;
             $count = count($key);
             for($i = 0; $i < $count; $i++) {
                 $keyName = $key[$i];
-                $conditions[] = "$alias$keyName={$this->escapeWhereConditionValue($id[$i], false, false)}";
+                $conditions[] = "$alias$keyName={$this->escapeValue($id[$i], false, false)}";
                 if(!isset($id[$i + 1])) {
                     break;
                 }
             }
         }
         else {
-            $conditions[] = "$alias$key={$this->escapeWhereConditionValue($id, false, false)}";
+            $conditions[] = "$alias$key={$this->escapeValue($id, false, false)}";
         }
         return implode(' AND ', $conditions);
     }
 
     /**
-     * Add value to where condition
+     * Add value to query
      */
-    protected function escapeWhereConditionValue(mixed $value, false|int $noEscape, false|int $noQuotes): int|float|string
+    protected function escapeValue(mixed $value, false|int $noEscape = false, false|int $noQuotes = false): int|float|string
     {
         if(is_int($value) || is_float($value)) {
             return $value;
@@ -428,7 +428,7 @@ SQL;
     /**
      * @param mixed $value
      * @return string
-     * @throws \Exception
+     * @throws DatabaseConnectionException|InvalidArgumentException
      */
     public function escapeSQL(mixed $value): string
     {
@@ -464,60 +464,11 @@ SQL;
                 $queryParts[] = " $record "; //operator e.g. or, and
                 continue;
             }
-
             if(is_array($record[0])) {// nesting detected
                 $record = "({$this->buildFilter($record[0], $record[1], true)})";
             }
-            //"($subFilter)"
             else {//normal record
-                $field = $this->translateValues ? //get field 'name'
-                    $this->translateValues($record[0]) : $record[0];//inject replace command?
-                $rawInnerOperator = $record[1];
-                $innerOperator = $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator;//map operators for DBMS
-                $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
-                //parse quotation options (defaults to false)
-                $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
-                $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
-                $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
-                if(is_array($values)) {
-                    switch($rawInnerOperator) {//multi value operation
-                        case 'between':
-                            $value = /* min */
-                                $this->escapeWhereConditionValue($values[0], $noEscape, $noQuotes);
-                            $value .= ' and ';
-                            $value .= /* max */
-                                $this->escapeWhereConditionValue($values[1], $noEscape, $noQuotes);
-                            break;
-                        default://enlist all values e.g. in, not in
-                            //apply quotation rules
-                            $values = array_map(fn($value) => $this->escapeWhereConditionValue($value, $noEscape, $noQuotes), $values);
-                            $values = implode(', ', $values) ?: 'NULL';
-                            $value = "($values)";
-                            break;
-                    }
-                }
-                elseif($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
-                    $expression = $this->commands[$values->name];
-                    $value = $expression instanceof Closure ?
-                        $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
-                }
-                elseif($values instanceof DateTimeInterface) {//format date-objects
-                    $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
-                    $value = "'$dateTime'";
-                }
-                else {
-                    $value = match (gettype($values)) {//handle by type
-                        'NULL' => 'NULL',
-                        'boolean' => bool2string($values),
-                        'double', 'integer' => $values,//float and int
-                        default => match ($values instanceof SqlStatement) {
-                            true => $values->getStatement(),
-                            default => $this->escapeWhereConditionValue($values, $noEscape, $noQuotes),
-                        }
-                    };
-                }
-                //assemble record
-                $record = "$field $innerOperator $value";
+                $record = $this->assembleFilterRecord($record);
             }
             $queryParts[] = !$skipAutomaticOperator ? //automatic operator?
                 " $operator $record" : $record;//automation puts operator between the last record and this one
@@ -816,19 +767,17 @@ SQL;
             elseif($value instanceof Commands) {
                 // reserved keywords don't need to be masked
                 $expression = $this->commands[$value->name];
-                if($expression instanceof Closure) {
-                    $value = $expression($column);
-                }
-                else {
-                    $value = $expression;
-                }
+                $value = $expression instanceof Closure ? $expression($column) : $expression;
             }
             elseif($value instanceof DateTimeInterface) {
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
-            elseif(!is_int($value) && !is_float($value)) {
-                $value = $this->escapeSQL($value);
-                $value = "'$value'";
+            else {
+                $value = match (gettype($value)) {
+                    'NULL' => 'NULL',
+                    'boolean' => bool2string($values),
+                    default => $this->escapeValue($value)
+                };
             }
             $values[] = $value;
         }
@@ -1127,5 +1076,54 @@ SQL;
     final public static function now(string $format = 'Y-m-d H:i:s'): string
     {
         return \date($format);
+    }
+
+    /**
+     * @param array $record
+     * @return string
+     */
+    private function assembleFilterRecord(array $record): string
+    {
+        $field = $this->translateValues ? //get field 'name'
+            $this->translateValues($record[0]) : $record[0];//inject replace command?
+        $rawInnerOperator = $record[1];
+        $innerOperator = $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator;//map operators for DBMS
+        $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
+        //parse quotation options (defaults to false)
+        $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
+        $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
+        $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
+        if (is_array($values)) {//multi value operation
+            if ($rawInnerOperator == 'between') {
+                $value = /* min */
+                    $this->escapeValue($values[0], $noEscape, $noQuotes);
+                $value .= ' and ';
+                $value .= /* max */
+                    $this->escapeValue($values[1], $noEscape, $noQuotes);
+            } else {//enlist all values e.g. in, not in
+                //apply quotation rules
+                $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
+                $values = implode(', ', $values) ?: 'NULL';
+                $value = "($values)";
+            }
+        } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
+            $expression = $this->commands[$values->name];
+            $value = $expression instanceof Closure ?
+                $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
+        } elseif ($values instanceof DateTimeInterface) {//format date-objects
+            $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
+            $value = "'$dateTime'";
+        } else {
+            $value = match (gettype($values)) {//handle by type
+                'NULL' => 'NULL',
+                'boolean' => bool2string($values),
+                'double', 'integer' => $values,//float and int
+                default => match ($values instanceof SqlStatement) {
+                    true => $values->getStatement(),
+                    default => $this->escapeValue($values, $noEscape, $noQuotes),
+                }
+            };
+        }
+        return "$field $innerOperator $value";
     }
 }
