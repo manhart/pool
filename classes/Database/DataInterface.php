@@ -45,11 +45,11 @@ class DataInterface extends PoolObject
     /**
      * Date and time constants (@todo rethink maybe move to a separate database class?)
      */
-    public const string ZERO_DATE = '0000-00-00';
-    public const string ZERO_TIME = '00:00:00';
-    public const string ZERO_DATETIME = '0000-00-00 00:00:00';
-    public const string MAX_DATE = '9999-12-31';
-    public const string MAX_DATETIME = '9999-12-31 23:59:59';
+    public const ZERO_DATE = '0000-00-00';
+    public const ZERO_TIME = '00:00:00';
+    public const ZERO_DATETIME = '0000-00-00 00:00:00';
+    public const MAX_DATE = '9999-12-31';
+    public const MAX_DATETIME = '9999-12-31 23:59:59';
 
     /**
      * @var array Array of registered resources <br>[$alias => ['interface' => $this, 'name' => $dataBase]]
