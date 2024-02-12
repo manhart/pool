@@ -49,7 +49,7 @@ class DataInterface extends PoolObject
     public const string ZERO_TIME = '00:00:00';
     public const string ZERO_DATETIME = '0000-00-00 00:00:00';
     public const string MAX_DATE = '9999-12-31';
-    public const string MAX_DATETIME = '9999-12-31 23:59:59';
+    public const string MAX_DATETIME = '9999-12-31 00:00:00';
 
     /**
      * @var array Array of registered resources <br>[$alias => ['interface' => $this, 'name' => $dataBase]]
