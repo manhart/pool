@@ -402,7 +402,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Returns a value of a field of the current record as DateTime object
      */
-    public function getValueAsDateTime(string $key, $default = null, ?DateTimeZone $timezone = null): ?DateTime
+    public function getValueAsDateTime(string $key, ?\DateTime $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
         $value = $this->getValue($key, $default);
         if(!$value || $value === DataInterface::ZERO_DATE || $value === DataInterface::ZERO_DATETIME)
