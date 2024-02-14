@@ -242,7 +242,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Creates a Data Access Object
      */
-    public final static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
+    final public static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
     {
         // class stuff
         if(!$tableName) {
@@ -1063,7 +1063,7 @@ SQL;
      */
     public function fetchData(array|int|string $pk, ...$fields): mixed
     {
-        if (is_array($pk)) foreach (($pk) as $key => $pk) break;
+        if (is_array($pk)) /** @noinspection SuspiciousLoopInspection */ foreach (($pk) as $key => $pk) break;
         $record = $this->setColumns(...$fields)->get($pk, $key ?? null)->getRecord();
         return count($fields) === 1 ? $record[$fields[0]] : array_values($record);
     }
