@@ -769,13 +769,16 @@ SQL;
                 $expression = $this->commands[$value->name];
                 $value = $expression instanceof Closure ? $expression($column) : $expression;
             }
+            elseif($value instanceof SqlStatement) {
+                $value = $value->getStatement();
+            }
             elseif($value instanceof DateTimeInterface) {
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             else {
                 $value = match (gettype($value)) {
                     'NULL' => 'NULL',
-                    'boolean' => bool2string($values),
+                    'boolean' => bool2string($value),
                     default => $this->escapeValue($value)
                 };
             }
@@ -783,14 +786,14 @@ SQL;
         }
 
         if(!$columns) {
-            return (new RecordSet())->addErrorMessage('DAO::insert failed. No columns specified!');
+            throw new DAOException('DAO::insert failed. No columns specified!');
         }
         $columns = implode(',', $columns);
         $values = implode(',', $values);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-INSERT INTO $this->quotedTable
+INSERT INTO $this
     ($columns)
 VALUES
     ($values)
@@ -822,9 +825,9 @@ SQL;
             }
         }
 
-        $set = $this->buildAssignmentList($data);
+        $assignmentList = $this->buildAssignmentList($data);
 
-        if(!$set) {
+        if(!$assignmentList) {
             return new RecordSet();
         }
 
@@ -839,7 +842,7 @@ SQL;
         $sql = <<<SQL
 UPDATE $this->quotedTable
 SET
-    $set
+    $assignmentList
 WHERE
     $where
 SQL;
@@ -871,6 +874,9 @@ SQL;
             }
             elseif($value instanceof DateTimeInterface) {
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
+            }
+            elseif($value instanceof SqlStatement) {
+                $value = $value->getStatement();
             }
             elseif(!is_int($value) && !is_float($value)) {
                 $value = "'{$this->escapeSQL($value)}'";
@@ -1067,7 +1073,7 @@ SQL;
      */
     public static function fetchDataStatic($pk, ...$fields)
     {
-        return static::create()->fetchData($pk, ...$fields);
+        return static::create(throws: true)->fetchData($pk, ...$fields);
     }
 
     /**
