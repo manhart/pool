@@ -262,6 +262,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
+     * Creates a Data Access Object with the given columns
+     */
+    public static function createWithColumns(string ...$columns): static
+    {
+        $DAO = static::create(null, null, true);
+        $DAO->setColumns(...$columns);
+        return $DAO;
+    }
+
+    /**
      * Fetches the columns automatically from the DataInterface / Driver
      *
      * @throws InvalidArgumentException|DatabaseConnectionException|RuntimeException|
@@ -1100,7 +1110,7 @@ SQL;
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
         if (is_array($values)) {//multi value operation
-            if ($rawInnerOperator == 'between') {
+            if ($rawInnerOperator === 'between') {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
                 $value .= ' and ';
