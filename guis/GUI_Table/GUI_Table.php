@@ -433,6 +433,7 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
             'caption' => 'Use cookies',
+            'configurable' => true,
         ],
         'cookieIdTable' => [
             'attribute' => 'data-cookie-id-table',
@@ -440,6 +441,7 @@ class GUI_Table extends GUI_Module
             'value' => '',
             'element' => 'input',
             'inputType' => 'text',
+            'configurable' => true,
         ],
         'customSearch' => [
             'attribute' => 'data-custom-search',
@@ -843,6 +845,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
+        'showExtendedPagination' => [
+            'attribute' => 'data-show-extended-pagination',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
         'showFilterControlSwitch' => [
             'attribute' => 'data-show-filter-control-switch',
             'type' => 'boolean',
@@ -904,6 +914,14 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
+        'sidePagination' => [
+            'attribute' => 'data-side-pagination',
+            'type' => 'string',
+            'value' => 'client',
+            'element' => 'select',
+            'options' => ['client', 'server'],
             'configurable' => true,
         ],
         'singleSelect' => [
@@ -974,14 +992,6 @@ class GUI_Table extends GUI_Module
             'value' => 0,
             'element' => 'input',
             'inputType' => 'number'
-        ],
-        'sidePagination' => [
-            'attribute' => 'data-side-pagination',
-            'type' => 'string',
-            'value' => 'client',
-            'element' => 'select',
-            'options' => ['client', 'server'],
-            'configurable' => true,
         ],
         'theadClasses' => [
             'attribute' => 'data-thead-classes',
@@ -1547,24 +1557,24 @@ class GUI_Table extends GUI_Module
      * @param array $mandatoryFilter it involves strict and mandatory constraints.
      * @param array $searchFilter it involves additional search patterns
      * @return array
+     * @throws JsonException
      * @see MySQL_DAO::buildFilter()
      */
     public function buildFilter(MySQL_DAO $DAO, string $search, string $filter, array $mandatoryFilter = [], array $searchFilter = []): array
     {
+        $filterRules = [];
         if(isValidJSON($filter)) {
-            $filter = json_decode($filter, JSON_OBJECT_AS_ARRAY);
+            $filterRules = json_decode($filter, JSON_OBJECT_AS_ARRAY, 512, JSON_THROW_ON_ERROR);
         }
-        else
-            $filter = [];
 
         // auto filter
-        $filter = array_merge($DAO->makeFilter($this->getDBColumns('searchable'), $search, $filter), $searchFilter);
-        if($filter && $mandatoryFilter) {
-            array_unshift($filter, '(');
-            $filter[] = ')';
-            $filter[] = 'AND';
+        $filterRules = array_merge($DAO->makeFilter($this->getDBColumns('searchable'), $search, $filterRules), $searchFilter);
+        if($filterRules && $mandatoryFilter) {
+            array_unshift($filterRules, '(');
+            $filterRules[] = ')';
+            $filterRules[] = 'AND';
         }
-        return array_merge($filter, $mandatoryFilter);
+        return array_merge($filterRules, $mandatoryFilter);
     }
 
     /**
@@ -1606,15 +1616,10 @@ class GUI_Table extends GUI_Module
      */
     public function buildLimit(int $offset = 0, ?int $limit = null, ?int $total = null): array
     {
-        if(!is_null($limit)) {
-            if(!is_null($total) && $total <= $limit) {
-                $offset = 0;
-            }
-            $limit = [$offset, $limit];
+        if(is_null($limit)) {
+            return [];
         }
-        else {
-            $limit = [];
-        }
-        return $limit;
+        $offset = !is_null($total) && $total <= $limit ? 0 : $offset;
+        return [$offset, $limit];
     }
 }
