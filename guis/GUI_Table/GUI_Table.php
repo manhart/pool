@@ -88,7 +88,7 @@ class GUI_Table extends GUI_Module
             'clientside' => true,],
         'columns' => [
             'attribute' => '',
-            'type' => 'array',
+            'type' => 'json',
             'value' => [],
             'element' => 'tableEditor',
             'configurable' => true,
@@ -571,7 +571,7 @@ class GUI_Table extends GUI_Module
         ],
         'icons' => [
             'attribute' => 'data-icons',
-            'type' => 'array',
+            'type' => 'json',
             'value' => [
                 'paginationSwitchDown' => 'fa-caret-square-down',
                 'paginationSwitchUp' => 'fa-caret-square-up',
@@ -586,8 +586,9 @@ class GUI_Table extends GUI_Module
                 'plus' => 'fa-plus',
                 'minus' => 'fa-minus'
             ],
-            'element' => 'input',
-            'inputType' => 'text',
+            'element' => 'textarea', // todo json editor
+            //'inputType' => '',
+            'configurable' => true,
         ],
         'iconSize' => [
             'attribute' => 'data-icon-size',
@@ -1346,15 +1347,15 @@ class GUI_Table extends GUI_Module
             }
 
             $attrName = $property['attribute'] ?? null;
-            if($attrName == null) continue; // no html data-attribute
+            if($attrName === null) continue; // no html data-attribute
 
             if(is_bool($value)) {
                 $value = bool2string($value);
             }
 
             $type = $property['type'] ?? null;
-            if($type == 'array') {
-                $value = htmlspecialchars(json_encode($value, JSON_OBJECT_AS_ARRAY), ENT_COMPAT);
+            if($type === 'json') {
+                $value = htmlspecialchars(\json_encode($value, JSON_THROW_ON_ERROR), ENT_COMPAT, 'UTF-8');
             }
 //            echo $name.'='.$value.'<br>';
 
