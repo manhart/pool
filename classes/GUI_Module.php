@@ -687,7 +687,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * checks if module is configurable (uses trait Configurable.trait.php; other solution would be via Reflections)
+     * Checks if module is configurable (uses trait Configurable.trait.php; other solution would be via Reflections)
      *
      * @return bool
      */
