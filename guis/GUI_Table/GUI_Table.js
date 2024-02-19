@@ -861,10 +861,10 @@ class GUI_Table extends GUI_Module
     getData(useCurrentPage = false, includeHiddenRows = true, unfiltered = false, formatted = false)
     {
         let params = {
-            useCurrentPage: useCurrentPage,
-            includeHiddenRows: includeHiddenRows,
-            unfiltered: unfiltered,
-            formatted: formatted
+            useCurrentPage,
+            includeHiddenRows,
+            unfiltered,
+            formatted
         }
         return this.getTable().bootstrapTable('getData', params);
     }

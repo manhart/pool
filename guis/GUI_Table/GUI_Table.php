@@ -417,12 +417,21 @@ class GUI_Table extends GUI_Module
                     'type' => 'number',
                     'value' => null,
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input', // tableEditor
+                    'inputType' => 'text', // tableEditor
+                    'showColumn' => 4, // tableEditor
+                    'required' => false, // tableEditor mandatory field
                 ],
                 'widthUnit' => [
                     'attribute' => 'data-with-unit',
                     'type' => 'string',
                     'value' => 'px',
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input', // tableEditor
+                    'inputType' => 'text', // tableEditor
+                    'required' => false, // tableEditor mandatory field
                 ]
             ]
         ],
