@@ -142,6 +142,9 @@ class GUI_Table extends GUI_Module
                     'type' => 'boolean',
                     'value' => true,
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input',
+                    'inputType' => 'checkbox',
                 ],
                 'colspan' => [
                     'attribute' => 'data-colspan',
@@ -335,6 +338,9 @@ class GUI_Table extends GUI_Module
                     'type' => 'boolean',
                     'value' => true,
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input', // tableEditor
+                    'inputType' => 'checkbox', // tableEditor
                 ],
                 'searchHighlightFormatter' => [
                     'attribute' => 'data-search-highlight-formatter',
@@ -441,7 +447,7 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Use cookies',
+            'caption' => 'Cookies',
             'configurable' => true,
         ],
         'cookieIdTable' => [
@@ -831,14 +837,6 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'configurable' => true,
         ],
-        'smartDisplay' => [
-            'attribute' => 'data-smart-display',
-            'type' => 'boolean',
-            'value' => true,
-            'element' => 'input',
-            'inputType' => 'checkbox',
-            'configurable' => true,
-        ],
         'showColumns' => [
             'attribute' => 'data-show-columns',
             'type' => 'boolean',
@@ -871,6 +869,14 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
+        'showFullscreen' => [
+            'attribute' => 'data-show-fullscreen',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
         'showMultiSort' => [
             'attribute' => 'data-show-multi-sort',
             'type' => 'boolean',
@@ -883,22 +889,6 @@ class GUI_Table extends GUI_Module
             'attribute' => 'data-show-multi-sort-button',
             'type' => 'boolean',
             'value' => true,
-            'element' => 'input',
-            'inputType' => 'checkbox',
-            'configurable' => true,
-        ],
-        'showSearchClearButton' => [
-            'attribute' => 'data-show-search-clear-button',
-            'type' => 'boolean',
-            'value' => false,
-            'element' => 'input',
-            'inputType' => 'checkbox',
-            'configurable' => true,
-        ],
-        'showFullscreen' => [
-            'attribute' => 'data-show-fullscreen',
-            'type' => 'boolean',
-            'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
             'configurable' => true,
@@ -917,6 +907,14 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
+        ],
+        'showSearchClearButton' => [
+            'attribute' => 'data-show-search-clear-button',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
         ],
         'showToggle' => [
             'attribute' => 'data-show-toggle',
@@ -938,6 +936,14 @@ class GUI_Table extends GUI_Module
             'attribute' => 'data-single-select',
             'type' => 'boolean',
             'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
+        'smartDisplay' => [
+            'attribute' => 'data-smart-display',
+            'type' => 'boolean',
+            'value' => true,
             'element' => 'input',
             'inputType' => 'checkbox',
             'configurable' => true,
@@ -1363,7 +1369,7 @@ class GUI_Table extends GUI_Module
             }
 
             $type = $property['type'] ?? null;
-            if($type === 'json') {
+            if($type === 'json' || $type === 'array') {
                 $value = htmlspecialchars(\json_encode($value, JSON_THROW_ON_ERROR), ENT_COMPAT, 'UTF-8');
             }
 //            echo $name.'='.$value.'<br>';
