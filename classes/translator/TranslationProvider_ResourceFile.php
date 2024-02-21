@@ -69,7 +69,15 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     function query(string $key): int
     {
         $this->lastKey = $key;
-        $result = $this->translations[$key] ?? null;
+        $subTree =& $this->translations;
+        foreach (explode('.', $key) as $keyPart){
+            if (is_string($subTree)){
+                $this->error =  new Exception("Tried to access subtree of value: '$subTree' accessing: $keyPart @$key");
+                return self::Error;
+            } elseif (!is_array($subTree)) break;
+            else $subTree =& $subTree[$keyPart];
+        }
+        $result = $subTree ?? $this->translations[$key] ?? null;
         $this->lastResult = print_r($result, true);
         if (!array_key_exists($key, $this->translations))
             return self::TranslationNotExistent;
@@ -98,7 +106,8 @@ class TranslationProvider_ResourceFile implements TranslationProvider
         }
         try {
             //manipulate Translations
-            $this->translations[$key] = $value;
+            $slot =& getNestedArrayValueReference($this->translations, explode('.', $key));
+            $slot = $value;
             $code = var_export($this->translations, true);
             $newContent = "<?php return $code;";
             //write generated resource to disk
@@ -157,6 +166,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     {
         try {
             $this->translations = include($this->resourceFile);
+
         } catch (Exception $e) {
             throw new Exception("Failed to load Translation-Ressource for {$this->lang}", previous: $e);
         } catch (\TypeError) {

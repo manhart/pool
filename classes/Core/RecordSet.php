@@ -62,6 +62,9 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function __construct(array $records = [])
     {
+        if(!array_is_list($records)) {
+            throw new InvalidArgumentException('The record must not be associative. Maybe you forgot a layer of nesting [$record]');
+        }
         $this->records = $records;
         if($records) {
             $this->reset();
@@ -358,7 +361,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function getCountValue(): int
     {
-        return  $this->getValueAsInt('count');
+        return $this->getValueAsInt('count');
     }
 
     /**
@@ -1005,9 +1008,9 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Creates data format for the bootstrap table
      *
-     * @param int $total
-     * @param int|null $totalNotFiltered (optional) Use totalNotFilteredField parameter to set the field from the json response which will used for
-     *     showExtendedPagination
+     * @param int $total total or filtered total
+     * @param int|null $totalNotFiltered (optional) total - Use totalNotFilteredField parameter to set the field from the json response which will used for
+     *      showExtendedPagination
      * @return array
      */
     public function getRecordsAsBSTable(int $total, int $totalNotFiltered = null): array

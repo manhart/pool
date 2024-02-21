@@ -242,7 +242,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Creates a Data Access Object
      */
-    public final static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
+    final public static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
     {
         // class stuff
         if(!$tableName) {
@@ -258,6 +258,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $DAO = new static($databaseName, $tableName);
         $DAO->throwsOnError = $throws;
         $DAO->fetchColumns();
+        return $DAO;
+    }
+
+    /**
+     * Creates a Data Access Object with the given columns
+     */
+    public static function createWithColumns(string ...$columns): static
+    {
+        $DAO = static::create(null, null, true);
+        $DAO->setColumns(...$columns);
         return $DAO;
     }
 
@@ -769,13 +779,16 @@ SQL;
                 $expression = $this->commands[$value->name];
                 $value = $expression instanceof Closure ? $expression($column) : $expression;
             }
+            elseif($value instanceof SqlStatement) {
+                $value = $value->getStatement();
+            }
             elseif($value instanceof DateTimeInterface) {
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
             }
             else {
                 $value = match (gettype($value)) {
                     'NULL' => 'NULL',
-                    'boolean' => bool2string($values),
+                    'boolean' => bool2string($value),
                     default => $this->escapeValue($value)
                 };
             }
@@ -783,14 +796,14 @@ SQL;
         }
 
         if(!$columns) {
-            return (new RecordSet())->addErrorMessage('DAO::insert failed. No columns specified!');
+            throw new DAOException('DAO::insert failed. No columns specified!');
         }
         $columns = implode(',', $columns);
         $values = implode(',', $values);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-INSERT INTO $this->quotedTable
+INSERT INTO $this
     ($columns)
 VALUES
     ($values)
@@ -822,9 +835,9 @@ SQL;
             }
         }
 
-        $set = $this->buildAssignmentList($data);
+        $assignmentList = $this->buildAssignmentList($data);
 
-        if(!$set) {
+        if(!$assignmentList) {
             return new RecordSet();
         }
 
@@ -839,7 +852,7 @@ SQL;
         $sql = <<<SQL
 UPDATE $this->quotedTable
 SET
-    $set
+    $assignmentList
 WHERE
     $where
 SQL;
@@ -871,6 +884,9 @@ SQL;
             }
             elseif($value instanceof DateTimeInterface) {
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
+            }
+            elseif($value instanceof SqlStatement) {
+                $value = $value->getStatement();
             }
             elseif(!is_int($value) && !is_float($value)) {
                 $value = "'{$this->escapeSQL($value)}'";
@@ -1053,13 +1069,13 @@ SQL;
      * Shorthand for fetching one or multiple values of a record
      * @param array|int|string $pk a unique identifier use an indexed array in the form [$column => $pk] to specify the primary key column
      * @param mixed ...$fields a list of columns to retrieve
-     * @return array|mixed the result, returns a list if multiple columns were queried
+     * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively
      */
     public function fetchData(array|int|string $pk, ...$fields): mixed
     {
-        if (is_array($pk)) foreach (($pk) as $key => $pk) break;
+        if (is_array($pk)) /** @noinspection SuspiciousLoopInspection */ foreach (($pk) as $key => $pk) break;
         $record = $this->setColumns(...$fields)->get($pk, $key ?? null)->getRecord();
-        return count($fields) === 1 ? $record[$fields[0]] : array_values($record);
+        return count($fields) === 1 ? $record[$fields[0]] ?? null : array_values($record);
     }
 
     /**
@@ -1067,7 +1083,7 @@ SQL;
      */
     public static function fetchDataStatic($pk, ...$fields)
     {
-        return static::create()->fetchData($pk, ...$fields);
+        return static::create(throws: true)->fetchData($pk, ...$fields);
     }
 
     /**
@@ -1094,7 +1110,7 @@ SQL;
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
         if (is_array($values)) {//multi value operation
-            if ($rawInnerOperator == 'between') {
+            if ($rawInnerOperator === 'between') {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
                 $value .= ' and ';

@@ -88,7 +88,7 @@ class GUI_Table extends GUI_Module
             'clientside' => true,],
         'columns' => [
             'attribute' => '',
-            'type' => 'array',
+            'type' => 'json',
             'value' => [],
             'element' => 'tableEditor',
             'configurable' => true,
@@ -142,6 +142,9 @@ class GUI_Table extends GUI_Module
                     'type' => 'boolean',
                     'value' => true,
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input',
+                    'inputType' => 'checkbox',
                 ],
                 'colspan' => [
                     'attribute' => 'data-colspan',
@@ -335,6 +338,9 @@ class GUI_Table extends GUI_Module
                     'type' => 'boolean',
                     'value' => true,
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input', // tableEditor
+                    'inputType' => 'checkbox', // tableEditor
                 ],
                 'searchHighlightFormatter' => [
                     'attribute' => 'data-search-highlight-formatter',
@@ -417,12 +423,21 @@ class GUI_Table extends GUI_Module
                     'type' => 'number',
                     'value' => null,
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input', // tableEditor
+                    'inputType' => 'text', // tableEditor
+                    'showColumn' => 4, // tableEditor
+                    'required' => false, // tableEditor mandatory field
                 ],
                 'widthUnit' => [
                     'attribute' => 'data-with-unit',
                     'type' => 'string',
                     'value' => 'px',
                     'clientside' => true,
+                    'configurable' => true,
+                    'element' => 'input', // tableEditor
+                    'inputType' => 'text', // tableEditor
+                    'required' => false, // tableEditor mandatory field
                 ]
             ]
         ],
@@ -432,7 +447,8 @@ class GUI_Table extends GUI_Module
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
-            'caption' => 'Use cookies',
+            'caption' => 'Cookies',
+            'configurable' => true,
         ],
         'cookieIdTable' => [
             'attribute' => 'data-cookie-id-table',
@@ -440,6 +456,7 @@ class GUI_Table extends GUI_Module
             'value' => '',
             'element' => 'input',
             'inputType' => 'text',
+            'configurable' => true,
         ],
         'customSearch' => [
             'attribute' => 'data-custom-search',
@@ -569,7 +586,7 @@ class GUI_Table extends GUI_Module
         ],
         'icons' => [
             'attribute' => 'data-icons',
-            'type' => 'array',
+            'type' => 'json',
             'value' => [
                 'paginationSwitchDown' => 'fa-caret-square-down',
                 'paginationSwitchUp' => 'fa-caret-square-up',
@@ -584,8 +601,9 @@ class GUI_Table extends GUI_Module
                 'plus' => 'fa-plus',
                 'minus' => 'fa-minus'
             ],
-            'element' => 'input',
-            'inputType' => 'text',
+            'element' => 'textarea', // todo json editor
+            //'inputType' => '',
+            'configurable' => true,
         ],
         'iconSize' => [
             'attribute' => 'data-icon-size',
@@ -819,14 +837,6 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'configurable' => true,
         ],
-        'smartDisplay' => [
-            'attribute' => 'data-smart-display',
-            'type' => 'boolean',
-            'value' => true,
-            'element' => 'input',
-            'inputType' => 'checkbox',
-            'configurable' => true,
-        ],
         'showColumns' => [
             'attribute' => 'data-show-columns',
             'type' => 'boolean',
@@ -843,8 +853,24 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
+        'showExtendedPagination' => [
+            'attribute' => 'data-show-extended-pagination',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
         'showFilterControlSwitch' => [
             'attribute' => 'data-show-filter-control-switch',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
+        'showFullscreen' => [
+            'attribute' => 'data-show-fullscreen',
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
@@ -867,22 +893,6 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
-        'showSearchClearButton' => [
-            'attribute' => 'data-show-search-clear-button',
-            'type' => 'boolean',
-            'value' => false,
-            'element' => 'input',
-            'inputType' => 'checkbox',
-            'configurable' => true,
-        ],
-        'showFullscreen' => [
-            'attribute' => 'data-show-fullscreen',
-            'type' => 'boolean',
-            'value' => false,
-            'element' => 'input',
-            'inputType' => 'checkbox',
-            'configurable' => true,
-        ],
         'showRefresh' => [
             'attribute' => 'data-show-refresh',
             'type' => 'boolean',
@@ -898,6 +908,14 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'checkbox',
         ],
+        'showSearchClearButton' => [
+            'attribute' => 'data-show-search-clear-button',
+            'type' => 'boolean',
+            'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
         'showToggle' => [
             'attribute' => 'data-show-toggle',
             'type' => 'boolean',
@@ -906,10 +924,26 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
+        'sidePagination' => [
+            'attribute' => 'data-side-pagination',
+            'type' => 'string',
+            'value' => 'client',
+            'element' => 'select',
+            'options' => ['client', 'server'],
+            'configurable' => true,
+        ],
         'singleSelect' => [
             'attribute' => 'data-single-select',
             'type' => 'boolean',
             'value' => false,
+            'element' => 'input',
+            'inputType' => 'checkbox',
+            'configurable' => true,
+        ],
+        'smartDisplay' => [
+            'attribute' => 'data-smart-display',
+            'type' => 'boolean',
+            'value' => true,
             'element' => 'input',
             'inputType' => 'checkbox',
             'configurable' => true,
@@ -975,14 +1009,6 @@ class GUI_Table extends GUI_Module
             'element' => 'input',
             'inputType' => 'number'
         ],
-        'sidePagination' => [
-            'attribute' => 'data-side-pagination',
-            'type' => 'string',
-            'value' => 'client',
-            'element' => 'select',
-            'options' => ['client', 'server'],
-            'configurable' => true,
-        ],
         'theadClasses' => [
             'attribute' => 'data-thead-classes',
             'type' => 'string',
@@ -1037,7 +1063,6 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
-
     ];
 
 
@@ -1105,8 +1130,6 @@ class GUI_Table extends GUI_Module
         $Frame = $this->Weblication->getFrame();
         $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
         $Frame->getHeadData()->addJavaScript($jsFile);
-
-        // $this->js_createGUIModule($this->getClassName(), false);
     }
 
 //    public function getInspectorProperties(): array
@@ -1321,7 +1344,7 @@ class GUI_Table extends GUI_Module
         $this->Template->setVar([
             'moduleName' => $this->getName(),
             'className' => $this->getClassName(),
-            'poolOptions' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
+            'poolOptions' => json_encode($this->poolOptions, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
         ]);
         $this->setClientVar('poolOptions', $this->poolOptions);
 
@@ -1336,15 +1359,15 @@ class GUI_Table extends GUI_Module
             }
 
             $attrName = $property['attribute'] ?? null;
-            if($attrName == null) continue; // no html data-attribute
+            if($attrName === null) continue; // no html data-attribute
 
             if(is_bool($value)) {
                 $value = bool2string($value);
             }
 
             $type = $property['type'] ?? null;
-            if($type == 'array') {
-                $value = htmlspecialchars(json_encode($value, JSON_OBJECT_AS_ARRAY), ENT_COMPAT);
+            if($type === 'json' || $type === 'array') {
+                $value = htmlspecialchars(\json_encode($value, JSON_THROW_ON_ERROR), ENT_COMPAT, 'UTF-8');
             }
 //            echo $name.'='.$value.'<br>';
 
@@ -1366,9 +1389,11 @@ class GUI_Table extends GUI_Module
                 foreach ($column as $optName => $attrValue) {
                     $type = '';
                     $clientside = false;
+                    $defaultValue = null;
                     if (isset($columnProperties[$optName])) {
                         $type = $columnProperties[$optName]['type'];
                         $clientside = $columnProperties[$optName]['clientside'] ?? false;
+                        $defaultValue = $columnProperties[$optName]['value'];
                     }
 
                     if(!$clientside) {
@@ -1382,11 +1407,16 @@ class GUI_Table extends GUI_Module
                         }
                     }
 
-                    switch($type) {
-                        case 'string':
-                            $attrValue = strtr($attrValue, ['{modulename}' => $this->getName()]);
+                    $attrValue = match ($type) {
+                        'string' => $attrValue !== '' ? strtr($attrValue, ['{modulename}' => $this->getName()]) : (($defaultValue === null) ? null : $attrValue),
+                        'number' => $attrValue !== '' ? (int)$attrValue : null,
+                        default  => $attrValue !== '' ? $attrValue : null,
+                    };
+
+
+                    if($defaultValue !== $attrValue) {
+                        $clientColumns[$c][$optName] = $attrValue;
                     }
-                    $clientColumns[$c][$optName] = $attrValue;
 
 //                    switch ($type) {
 //                        case 'boolean':
@@ -1547,24 +1577,24 @@ class GUI_Table extends GUI_Module
      * @param array $mandatoryFilter it involves strict and mandatory constraints.
      * @param array $searchFilter it involves additional search patterns
      * @return array
+     * @throws JsonException
      * @see MySQL_DAO::buildFilter()
      */
     public function buildFilter(MySQL_DAO $DAO, string $search, string $filter, array $mandatoryFilter = [], array $searchFilter = []): array
     {
+        $filterRules = [];
         if(isValidJSON($filter)) {
-            $filter = json_decode($filter, JSON_OBJECT_AS_ARRAY);
+            $filterRules = json_decode($filter, JSON_OBJECT_AS_ARRAY, 512, JSON_THROW_ON_ERROR);
         }
-        else
-            $filter = [];
 
         // auto filter
-        $filter = array_merge($DAO->makeFilter($this->getDBColumns('searchable'), $search, $filter), $searchFilter);
-        if($filter && $mandatoryFilter) {
-            array_unshift($filter, '(');
-            $filter[] = ')';
-            $filter[] = 'AND';
+        $filterRules = array_merge($DAO->makeFilter($this->getDBColumns('searchable'), $search, $filterRules), $searchFilter);
+        if($filterRules && $mandatoryFilter) {
+            array_unshift($filterRules, '(');
+            $filterRules[] = ')';
+            $filterRules[] = 'AND';
         }
-        return array_merge($filter, $mandatoryFilter);
+        return array_merge($filterRules, $mandatoryFilter);
     }
 
     /**
@@ -1606,15 +1636,10 @@ class GUI_Table extends GUI_Module
      */
     public function buildLimit(int $offset = 0, ?int $limit = null, ?int $total = null): array
     {
-        if(!is_null($limit)) {
-            if(!is_null($total) && $total <= $limit) {
-                $offset = 0;
-            }
-            $limit = [$offset, $limit];
+        if(is_null($limit)) {
+            return [];
         }
-        else {
-            $limit = [];
-        }
-        return $limit;
+        $offset = !is_null($total) && $total <= $limit ? 0 : $offset;
+        return [$offset, $limit];
     }
 }
