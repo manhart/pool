@@ -62,6 +62,9 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function __construct(array $records = [])
     {
+        if(!array_is_list($records)) {
+            throw new InvalidArgumentException('The record must not be associative. Maybe you forgot a layer of nesting [$record]');
+        }
         $this->records = $records;
         if($records) {
             $this->reset();
