@@ -1063,7 +1063,6 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
-
     ];
 
 
@@ -1131,8 +1130,6 @@ class GUI_Table extends GUI_Module
         $Frame = $this->Weblication->getFrame();
         $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
         $Frame->getHeadData()->addJavaScript($jsFile);
-
-        // $this->js_createGUIModule($this->getClassName(), false);
     }
 
 //    public function getInspectorProperties(): array
@@ -1347,7 +1344,7 @@ class GUI_Table extends GUI_Module
         $this->Template->setVar([
             'moduleName' => $this->getName(),
             'className' => $this->getClassName(),
-            'poolOptions' => json_encode($this->poolOptions, JSON_PRETTY_PRINT)
+            'poolOptions' => json_encode($this->poolOptions, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
         ]);
         $this->setClientVar('poolOptions', $this->poolOptions);
 
@@ -1392,9 +1389,11 @@ class GUI_Table extends GUI_Module
                 foreach ($column as $optName => $attrValue) {
                     $type = '';
                     $clientside = false;
+                    $defaultValue = null;
                     if (isset($columnProperties[$optName])) {
                         $type = $columnProperties[$optName]['type'];
                         $clientside = $columnProperties[$optName]['clientside'] ?? false;
+                        $defaultValue = $columnProperties[$optName]['value'];
                     }
 
                     if(!$clientside) {
@@ -1408,11 +1407,16 @@ class GUI_Table extends GUI_Module
                         }
                     }
 
-                    switch($type) {
-                        case 'string':
-                            $attrValue = strtr($attrValue, ['{modulename}' => $this->getName()]);
+                    $attrValue = match ($type) {
+                        'string' => $attrValue !== '' ? strtr($attrValue, ['{modulename}' => $this->getName()]) : (($defaultValue === null) ? null : $attrValue),
+                        'number' => $attrValue !== '' ? (int)$attrValue : null,
+                        default  => $attrValue !== '' ? $attrValue : null,
+                    };
+
+
+                    if($defaultValue !== $attrValue) {
+                        $clientColumns[$c][$optName] = $attrValue;
                     }
-                    $clientColumns[$c][$optName] = $attrValue;
 
 //                    switch ($type) {
 //                        case 'boolean':
