@@ -259,13 +259,13 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             if (isString(title)) break;//work with the valid Title
             switch (type){//Decide wich fallback to use based on type of the Toast
                 case Toast.TOAST_ERROR:
-                    title = ['global.errormessage', 'Achtung'];
+                    title = ['global.errorMessage', 'Achtung'];
                     break;
                 case Toast.TOAST_WARNING:
-                    title = ['global.warningmessage', 'Warnung'];
+                    title = ['global.warningMessage', 'Warnung'];
                     break;
                 case Toast.TOAST_INFO:
-                    title = ['global.statusmessage', 'Info'];
+                    title = ['global.statusMessage', 'Info'];
                     break;
                 case Toast.TOAST_SUCCESS:
                     title = ['global.message', 'Erfolg'];
