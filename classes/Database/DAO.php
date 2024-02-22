@@ -1080,6 +1080,7 @@ SQL;
 
     /**
      * Shorthand for fetching one or multiple values of a record
+     * @see self::fetchData()
      */
     public static function fetchDataStatic($pk, ...$fields)
     {
