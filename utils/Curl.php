@@ -10,6 +10,14 @@
 
 namespace pool\utils;
 
+use pool\classes\Exception\RuntimeException;
+use function curl_close;
+use function curl_errno;
+use function curl_error;
+use function curl_exec;
+use function curl_init;
+use function curl_setopt;
+
 final class Curl
 {
     /**
@@ -25,16 +33,15 @@ final class Curl
             return false;
         }
 
-        $ch = \curl_init($url);
-        \curl_setopt($ch, \CURLOPT_NOBODY, true); // Check headers only, no body
-        \curl_setopt($ch, \CURLOPT_FAILONERROR, true); // Returns false at 4xx status
-        \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true); // No direct output
-        \curl_setopt($ch, \CURLOPT_TIMEOUT, $timeout);
+        $ch = curl_init($url);
+        curl_setopt($ch, \CURLOPT_NOBODY, true); // Check headers only, no body
+        curl_setopt($ch, \CURLOPT_FAILONERROR, true); // Returns false at 4xx status
+        curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true); // No direct output
+        curl_setopt($ch, \CURLOPT_TIMEOUT, $timeout);
 
-        \curl_exec($ch);
+        curl_exec($ch);
         $isValid = \curl_getinfo($ch, \CURLINFO_HTTP_CODE) === 200;
-
-        \curl_close($ch);
+        curl_close($ch);
 
         return $isValid;
     }
@@ -51,30 +58,47 @@ final class Curl
      */
     public static function downloadFile(string $url, string $destination, int $timeout = 50, bool $followLocation = true): bool
     {
-        $ch = \curl_init($url);
+        $ch = curl_init($url);
         $fp = \fopen($destination, 'wb+');
 
         if ($fp === false) {
-            throw new \RuntimeException("Cannot open file \"$destination\" for writing.");
+            throw new RuntimeException("Cannot open file \"$destination\" for writing.");
         }
 
-        \curl_setopt($ch, \CURLOPT_FILE, $fp);
-        \curl_setopt($ch, \CURLOPT_TIMEOUT, $timeout);
-        \curl_setopt($ch, \CURLOPT_FOLLOWLOCATION, $followLocation); // Bei Redirects folgen
+        curl_setopt($ch, \CURLOPT_FILE, $fp);
+        curl_setopt($ch, \CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($ch, \CURLOPT_FOLLOWLOCATION, $followLocation); // Bei Redirects folgen
 
-        $result = \curl_exec($ch);
-
-        if (\curl_errno($ch)) {
-            $error_msg = \curl_error($ch);
-        }
-
+        $result = curl_exec($ch);
+        $error_msg = curl_errno($ch) ? curl_error($ch). ' (Error code: '.curl_errno($ch).')' : null;
+        curl_close($ch);
         \fclose($fp);
-        \curl_close($ch);
 
-        if (isset($error_msg)) {
-            throw new \RuntimeException("Error while downloading file: $error_msg");
+        return !$error_msg ? $result : throw new RuntimeException("Error while downloading file: $error_msg");
+    }
+
+    /**
+     * Post Request
+     */
+    public static function post(string $url, array $data, array $options = []): string
+    {
+        $query = \http_build_query($data);
+        $curl = curl_init($url);
+
+        curl_setopt($curl, \CURLOPT_POST, true);
+        curl_setopt($curl, \CURLOPT_POSTFIELDS, $query);
+        curl_setopt($curl, \CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, \CURLOPT_HTTPHEADER, [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Content-Length: '.\strlen($query)]
+        );
+        foreach($options as $option => $value) {
+            curl_setopt($curl, $option, $value);
         }
+        $response = curl_exec($curl);
+        $error_msg = curl_errno($curl) ? curl_error($curl). ' (Error code: '.curl_errno($curl).')' : null;
+        curl_close($curl);
 
-        return $result;
+        return !$error_msg ? $response : throw new RuntimeException("Error while posting data: $error_msg");
     }
 }
