@@ -318,6 +318,27 @@ class DataInterface extends PoolObject
     }
 
     /**
+     * Unregisters a resource from the DataInterface
+     */
+    public static function unregisterResource(string $alias): void
+    {
+        unset(self::$register[$alias]);
+    }
+
+    /**
+     * Unregisters the DataInterface from all resources
+     */
+    public function unregister(): void
+    {
+        foreach(self::$register as $alias => $item) {
+            if($item['interface'] !== $this) {
+                continue;
+            }
+            unset(self::$register[$alias]);
+        }
+    }
+
+    /**
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
      * @throws InvalidArgumentException
