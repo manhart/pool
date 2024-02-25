@@ -220,7 +220,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $this->table ??= $table ?? static::$tableName ?:
             throw new InvalidArgumentException('The static property tableName is not defined within DAO '.static::class.'!');
 
-        $this->quotedDatabase = $this->wrapSymbols(static::$databaseName ?: $this->database);
+        $this->quotedDatabase = $this->wrapSymbols(static::$databaseName ?: DataInterface::getDatabaseForResource($this->database));
         $this->quotedSchema = $this->wrapSymbols(static::$schemaName ?? '');
         $this->quotedTable = $this->wrapSymbols($this->table);
         $this->commands = $this->createCommands();
@@ -760,13 +760,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected function buildSorting(array $sorting): string
     {
-        if (!$sorting) return '';
+        if (!$sorting) {
+            return '';
+        }
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
         $sql = [];
         foreach ($sorting as $column => $sort) {
             $column = $alias.$column;
-            if ($this->translateValues)
+            if ($this->translateValues) {
                 $column = $this->translateValues($column);
+            }
             $sql[] = "$column $sort";
         }
         return ' ORDER BY '.implode(', ', $sql);
