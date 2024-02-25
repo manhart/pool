@@ -802,6 +802,14 @@ class DataInterface extends PoolObject
     }
 
     /**
+     * Returns the host of the current connection
+     */
+    public function getHost(ConnectionMode $mode = ConnectionMode::READ): string
+    {
+        return $this->hosts[$mode->value];
+    }
+
+    /**
      * Closes all connections and clears them from the register
      */
     public function close(): bool
