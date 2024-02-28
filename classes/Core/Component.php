@@ -233,10 +233,17 @@ class Component extends PoolObject
     /**
      * Create simple default NumberFormatter
      *
-     * @return \NumberFormatter|null|false Returns the created NumberFormatter or null if creation fails
+     * @return \NumberFormatter|null Returns the created NumberFormatter or null if creation fails
      */
-    protected function createNumberFormatter(): \NumberFormatter|null|false
+    protected function createNumberFormatter(int $style = \NumberFormatter::PATTERN_DECIMAL, string $pattern = '#,##0.00', array $attributes = []): \NumberFormatter|null
     {
-        return \NumberFormatter::create($this->Weblication->getLocale(), \NumberFormatter::PATTERN_DECIMAL, '#,##0.00');
+        $numberFormatter = \NumberFormatter::create($this->Weblication->getLocale(), $style, $pattern);
+        if(!$numberFormatter) {
+            return null;
+        }
+        foreach($attributes as $attribute => $value) {
+            $numberFormatter->setAttribute($attribute, $value);
+        }
+        return $numberFormatter;
     }
 }
