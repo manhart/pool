@@ -235,7 +235,7 @@ class Component extends PoolObject
      *
      * @return \NumberFormatter|null Returns the created NumberFormatter or null if creation fails
      */
-    protected function createNumberFormatter(int $style = \NumberFormatter::PATTERN_DECIMAL, string $pattern = '#,##0.00', array $attributes = []): \NumberFormatter|null
+    protected function createNumberFormatter(int $style = \NumberFormatter::PATTERN_DECIMAL, ?string $pattern = '#,##0.00', array $attributes = []): \NumberFormatter|null
     {
         $numberFormatter = \NumberFormatter::create($this->Weblication->getLocale(), $style, $pattern);
         if(!$numberFormatter) {
