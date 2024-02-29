@@ -36,7 +36,7 @@ Trait CUD{
      * @param array $verbs
      * @param string|null $rowName
      * @param array $collisionFilter
-     * @param string $collisionMessage
+     * @param string|Closure $collisionMessage
      * @param array|null $data
      * @param Closure|null $savePreHook
      * @param Closure|null $savePostHook
@@ -79,15 +79,15 @@ Trait CUD{
             $data['modifier'] ??= $this->idUser();
         if ($isUpdate = (bool)$persistId) {// update
             $data[$pk] = $persistId;
-            $Set = $updateOverride?->call($this, $DAO, $persistId, $pk) ?? $DAO->update($data);
+            $recordSet = $updateOverride?->call($this, $DAO, $persistId, $pk) ?? $DAO->update($data);
         } else {// insert
             if (\in_array('creator', $dbColumns))
                 $data['creator'] ??= $this->idUser();
             unset($data[$pk]);
-            $Set = $insertOverride?->call($this, $DAO, $pk) ?? $DAO->insert($data);
-            $persistId = $Set->getLastInsertID();
+            $recordSet = $insertOverride?->call($this, $DAO, $pk) ?? $DAO->insert($data);
+            $persistId = $recordSet->getLastInsertID();
         }
-        if ($lastError = $Set->getLastError()) {
+        if ($lastError = $recordSet->getLastError()) {
             $message = $lastError['message'];
             return $result;
         }
