@@ -25,6 +25,7 @@ Key features are:
 - Optional Caching Mechanisms: Offers the flexibility of optionally enabled caching solutions, utilizing Memcached to boost performance as needed.
 - Simple logging
 - Simple error handling
+- Cross browser compatibility
 
 ## Security Vulnerabilities
 
