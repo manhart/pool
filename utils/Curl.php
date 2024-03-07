@@ -95,6 +95,7 @@ final class Curl
         $options[\CURLOPT_SSL_VERIFYPEER] ??= true;
         $options[\CURLOPT_SSL_VERIFYHOST] ??= 2;
         curl_setopt_array($curl, $options);
+
         $response = curl_exec($curl);
         $error_msg = curl_errno($curl) ? curl_error($curl). ' (Error code: '.curl_errno($curl).')' : null;
         curl_close($curl);
