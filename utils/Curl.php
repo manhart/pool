@@ -85,16 +85,16 @@ final class Curl
         $query = \http_build_query($data);
         $curl = curl_init($url);
 
-        curl_setopt($curl, \CURLOPT_POST, true);
-        curl_setopt($curl, \CURLOPT_POSTFIELDS, $query);
-        curl_setopt($curl, \CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, \CURLOPT_HTTPHEADER, [
+        $options[\CURLOPT_POST] = true;
+        $options[\CURLOPT_POSTFIELDS] = $query;
+        $options[\CURLOPT_RETURNTRANSFER] = true;
+        $options[\CURLOPT_HTTPHEADER] ??= [
             'Content-Type: application/x-www-form-urlencoded',
-            'Content-Length: '.\strlen($query)]
-        );
-        foreach($options as $option => $value) {
-            curl_setopt($curl, $option, $value);
-        }
+            'Content-Length: '.\strlen($query)
+        ];
+        $options[\CURLOPT_SSL_VERIFYPEER] ??= true;
+        $options[\CURLOPT_SSL_VERIFYHOST] ??= 2;
+        curl_setopt_array($curl, $options);
         $response = curl_exec($curl);
         $error_msg = curl_errno($curl) ? curl_error($curl). ' (Error code: '.curl_errno($curl).')' : null;
         curl_close($curl);
