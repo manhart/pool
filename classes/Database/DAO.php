@@ -1067,14 +1067,14 @@ SQL;
 
     /**
      * Shorthand for fetching one or multiple values of a record
-     * @param array|int|string $pk a unique identifier use an indexed array in the form [$column => $pk] to specify the primary key column
+     * @param array|int|string $pk a unique identifier use an array [$pk, $column] to specify the primary key column
      * @param mixed ...$fields a list of columns to retrieve
      * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively
+     * @see static::get()
      */
     public function fetchData(array|int|string $pk, ...$fields): mixed
     {
-        if (is_array($pk)) /** @noinspection SuspiciousLoopInspection */ foreach (($pk) as $key => $pk) break;
-        $record = $this->setColumns(...$fields)->get($pk, $key ?? null)->getRecord();
+        $record = $this->setColumns(...$fields)->get(...(array)$pk)->getRecord();
         return count($fields) === 1 ? $record[$fields[0]] ?? null : array_values($record);
     }
 
