@@ -305,7 +305,7 @@ class DataInterface extends PoolObject
             $query_resource = $interface::query($sql, $dbname);
         }
         catch(Exception $e) {
-            if($e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
+            if(!$useExceptions && $e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
                 throw $e;
             }
         }
