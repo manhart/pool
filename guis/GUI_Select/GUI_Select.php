@@ -35,28 +35,28 @@ class GUI_Select extends GUI_Universal
             [
                 'name' => $this->getName(),
 
-                'options' => [],    // oder String getrennt mit ;
-                'values' => [],    // oder String getrennt mit ;
-                'styles' => [], // oder String getrennt mit ;
-                'selected' => '',        // entspricht einem Wert von "values"
+                'options'         => [],    // oder String getrennt mit ;
+                'values'          => [],    // oder String getrennt mit ;
+                'styles'          => [], // oder String getrennt mit ;
+                'selected'        => '',        // entspricht einem Wert von "values"
                 'defaultselected' => '',
-                'defaultvalue' => '',        // similar to defaultselected
+                'defaultvalue'    => '',        // similar to defaultselected
 
-                'save' => '',
+                'save'        => '',
                 'use_session' => 0,
                 'session_var' => $this->getName(),
 
-                'datafld' => null,
-                'datasrc' => null,
+                'datafld'      => null,
+                'datasrc'      => null,
                 'dataformatas' => null,
-                'disabled' => null,
-                'multiple' => null,
-                'size' => null,
-                'tabindex' => null,
+                'disabled'     => null,
+                'multiple'     => null,
+                'size'         => null,
+                'tabindex'     => null,
 
-                'onfocus' => '',
+                'onfocus'  => '',
                 'onchange' => '',
-                'onblur' => ''
+                'onblur'   => '',
             ]
         );
 
@@ -122,15 +122,15 @@ class GUI_Select extends GUI_Universal
         $events = $this->events;
         if($onfocus = $this->Input->getVar('onfocus')) {
             $events .= ' ';
-            $events .= 'onfocus="' . $onfocus . '"';
+            $events .= 'onfocus="'.$onfocus.'"';
         }
         if($onchange = $this->Input->getVar('onchange')) {
             $events .= ' ';
-            $events .= 'onchange="' . $onchange . '"';
+            $events .= 'onchange="'.$onchange.'"';
         }
         if($onblur = $this->Input->getVar('onblur')) {
             $events .= ' ';
-            $events .= 'onblur="' . $onblur . '"';
+            $events .= 'onblur="'.$onblur.'"';
         }
 
         #### leere Attribute
@@ -147,27 +147,27 @@ class GUI_Select extends GUI_Universal
         $attributes = $this->attributes;
         if($datafld = $this->Input->getVar('datafld')) {
             $attributes .= ' ';
-            $attributes .= 'datafld="' . $datafld . '"';
+            $attributes .= 'datafld="'.$datafld.'"';
         }
         if($datasrc = $this->Input->getVar('datasrc')) {
             $attributes .= ' ';
-            $attributes .= 'datasrc="' . $datasrc . '"';
+            $attributes .= 'datasrc="'.$datasrc.'"';
         }
         if($dataformatas = $this->Input->getVar('dataformatas')) {
             $attributes .= ' ';
-            $attributes .= 'dataformatas="' . $dataformatas . '"';
+            $attributes .= 'dataformatas="'.$dataformatas.'"';
         }
         if($size = $this->Input->getVar('size')) {
             $attributes .= ' ';
-            $attributes .= 'size="' . $size . '"';
+            $attributes .= 'size="'.$size.'"';
         }
         if($tabindex = $this->Input->getVar('tabindex')) {
             $attributes .= ' ';
-            $attributes .= 'tabindex="' . $tabindex . '"';
+            $attributes .= 'tabindex="'.$tabindex.'"';
         }
         if($defaultvalue = $this->Input->getVar('defaultselected')) {
             $attributes .= ' ';
-            $attributes .= 'defaultvalue="' . $defaultvalue . '"';
+            $attributes .= 'defaultvalue="'.$defaultvalue.'"';
         }
 
         #### options
@@ -195,13 +195,13 @@ class GUI_Select extends GUI_Universal
             }
 
             $this->Template->setVar([
-                    'ID' => $name . '_' . $i,
-                    'VALUE' => $value,
-                    'CLASS' => $style,
-                    'CONTENT' => $content,
-                    'ATTRIBUTES' => '',
+                    'ID'              => $name.'_'.$i,
+                    'VALUE'           => $value,
+                    'CLASS'           => $style,
+                    'CONTENT'         => $content,
+                    'ATTRIBUTES'      => '',
                     'EMPTYATTRIBUTES' => $oemptyattributes,
-                    'EVENTS' => ''
+                    'EVENTS'          => '',
                 ]
             );
             $this->Template->parse('stdoutOption');
@@ -211,12 +211,12 @@ class GUI_Select extends GUI_Universal
 
         #### Set Template wildcards
         $this->Template->setVar([
-                'ID' => $id,
-                'NAME' => $name,
-                'ATTRIBUTES' => ltrim($attributes),
-                'EVENTS' => ltrim($events),
+                'ID'              => $id,
+                'NAME'            => $name,
+                'ATTRIBUTES'      => ltrim($attributes),
+                'EVENTS'          => ltrim($events),
                 'EMPTYATTRIBUTES' => $emptyattributes,
-                'CONTENT' => $option_content
+                'CONTENT'         => $option_content,
             ]
         );
     }
