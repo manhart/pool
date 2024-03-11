@@ -20,6 +20,7 @@ use pool\classes\Database\DAO;
 
 /**
  * Class GUI_DBLookupSelect
+ *
  * @package pool
  * @since 2004-02-12
  */
@@ -27,23 +28,22 @@ class GUI_DBLookupSelect extends GUI_Select
 {
     /**
      * Initialisiert Standardwerte:
-     *
-     * tabledefine 		= ''	Tabellendefinition (siehe database.inc.php)
-     * id				= 0		IDs (bei zusammengesetzten Primaerschluessel werden die IDs mit ; getrennt)
-     * key				= ''	Keys (bei zusammengesetzten Primaerschluessel werden die Keys mit ; getrennt)
-     * autoload_fields 	= 1		1 laedt automatisch alle Felder, 0 nicht
-     * pk				= ''	Primaerschluessel (mehrere Spaltennamen werden mit ; getrennt)
-     * columns			= ''	Auszulesende Spalten (Spaltennamen werden mit ; getrennt)
+     * tabledefine        = ''    Tabellendefinition (siehe database.inc.php)
+     * id                = 0        IDs (bei zusammengesetzten Primaerschluessel werden die IDs mit ; getrennt)
+     * key                = ''    Keys (bei zusammengesetzten Primaerschluessel werden die Keys mit ; getrennt)
+     * autoload_fields    = 1        1 laedt automatisch alle Felder, 0 nicht
+     * pk                = ''    Primaerschluessel (mehrere Spaltennamen werden mit ; getrennt)
+     * columns            = ''    Auszulesende Spalten (Spaltennamen werden mit ; getrennt)
      **/
-    public function init(?int $superglobals= Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY)
     {
         $this->Defaults->addVar('tabledefine', []);
-        $this->Defaults->addVar('keyValue', false); 	// separated by ;
-        $this->Defaults->addVar('keyField'); 	// separated by ;
+        $this->Defaults->addVar('keyValue', false);    // separated by ;
+        $this->Defaults->addVar('keyField');    // separated by ;
         $this->Defaults->addVar('keyOperator', 'equal');
         $this->Defaults->getVar('filter', []);
         $this->Defaults->addVar('autoload_fields', 1);
-        $this->Defaults->addVar('pk'); 		// separated by ;
+        $this->Defaults->addVar('pk');        // separated by ;
         $this->Defaults->addVar('columns'); // separated by ;
         $this->Defaults->addVar('listfieldSeparator', ' ');
         $this->Defaults->addVar('listfield');
@@ -58,7 +58,7 @@ class GUI_DBLookupSelect extends GUI_Select
     /**
      * @return void
      */
-    protected function prepare (): void
+    protected function prepare(): void
     {
         $utf8 = $this->Input->getVar('utf8');
 
@@ -91,7 +91,7 @@ class GUI_DBLookupSelect extends GUI_Select
         }
 
         $sorting = null;
-        if ($sortfield = $this->Input->getVar('sortfield')) {
+        if($sortfield = $this->Input->getVar('sortfield')) {
             $sorting = [$sortfield => 'ASC'];
         }
         $listfield = $this->Input->getVar('listfield');
@@ -114,7 +114,7 @@ class GUI_DBLookupSelect extends GUI_Select
         $raw = $dao->getMultiple(filter: $filter, sorting: $sorting)->getRaw();
         foreach($raw as $record) {
             $option = '';
-            foreach ($listfields as $field) {
+            foreach($listfields as $field) {
                 if($option != '') $option .= $listfieldSeparator;
                 $option .= $record[$field];
             }
