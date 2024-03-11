@@ -1,16 +1,18 @@
 <?php
-/**
- * -= PHP Object Oriented Library (POOL) =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * GUI_Select.class.php
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @version $Id: gui_select.class.php,v 1.13 2007/05/15 14:10:46 manhart Exp $
- * @version $revision 1.0$
- * @version
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
  *
- * @since 2004/07/07
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 use pool\classes\Core\Input\Input;
@@ -19,21 +21,13 @@ use pool\classes\Core\Input\Session;
 /**
  * GUI_Select
  *
- * Edit steuert ein Eingabefeld (<input type=text>).
- *
- * @package pool
- * @author manhart
- * @version $Id: gui_select.class.php,v 1.13 2007/05/15 14:10:46 manhart Exp $
- * @access public
- **/
+ * @package POOL
+ * @since 2004/07/07
+ */
 class GUI_Select extends GUI_Universal
 {
     /**
-     * Initialisiert Standardwerte:
-     *
-     * TODO Parameter
-     *
-     * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
+     * Defaults
      */
     public function init(?int $superglobals = Input::EMPTY)
     {
@@ -71,27 +65,25 @@ class GUI_Select extends GUI_Universal
 
     public function loadFiles()
     {
-        $file = $this->Weblication->findTemplate('tpl_option.html', 'gui_select', true);
+        $file = $this->Weblication->findTemplate('tpl_option.html', self::class, true);
         $this->Template->setFilePath('stdoutOption', $file);
 
-        $file = $this->Weblication->findTemplate('tpl_select.html', 'gui_select', true);
+        $file = $this->Weblication->findTemplate('tpl_select.html', self::class, true);
         $this->Template->setFilePath('stdout', $file);
 
         $this->Template->useFile('stdout');
     }
 
     /**
-     * GUI_Select::prepare()
-     *
-     * @return void
-     **/
-    function prepare(): void
+     * Prepare template
+     */
+    protected function prepare(): void
     {
         if($this->Input->getVar('defaultvalue')) {
             $this->Input->setVar('defaultselected', $this->Input->getVar('defaultvalue'));
         }
 
-        parent:: prepare();
+        parent::prepare();
 
         $id = $this->id;
         $name = $this->Input->getVar('name');
@@ -99,26 +91,20 @@ class GUI_Select extends GUI_Universal
         $session_var = $this->Input->getVar('session_var');
 
         // id mit name (sowie umgekehrt) abgleichen
-        if($name != $this->Defaults->getVar('name') and $id == $this->getName()) {
+        if($name != $this->Defaults->getVar('name') && $id == $this->getName()) {
             $id = $name;
         }
-        if($id != $this->Defaults->getVar('name') and $name == $this->getName()) {
+        if($id != $this->Defaults->getVar('name') && $name == $this->getName()) {
             $name = $id;
         }
-        if(str_ends_with($name, '[]')) {
-            $nameForValue = substr($name, 0, strlen($name) - 2);
-        }
-        else {
-            $nameForValue = $name;
-        }
 
-        $valueByName = ($this->Input->getVar($nameForValue) != $name) ? $this->Input->getVar($nameForValue) : '';
+        $nameForValue = str_ends_with($name, '[]') ? substr($name, 0, strlen($name) - 2) : $name;
+        $valueByName = $this->Input->getVar($nameForValue) != $name ? $this->Input->getVar($nameForValue) : '';
 
         // save value into session
-        $selected = '';
         $buf_save = $this->Input->getVar('save');
-        if($this->Session instanceof Session and $this->Input->getAsInt('use_session') == 1) {
-            if(!empty($buf_save) and $this->Input->getVar($buf_save) == 1) {
+        if($this->Session instanceof Session && $this->Input->getAsInt('use_session') == 1) {
+            if(!empty($buf_save) && $this->Input->getVar($buf_save) == 1) {
                 $this->Session->setVar($session_var, $this->Input->getVar('selected') == '' ? $valueByName : $this->Input->getVar('selected'));
             }
             // Wert (value) ermitteln (session, object name, value, defaultvalue)
@@ -130,7 +116,6 @@ class GUI_Select extends GUI_Universal
         if(empty($selected)) {
             $selected = $this->Input->getVar('defaultselected');
         }
-
 
 
         #### Events
@@ -150,10 +135,10 @@ class GUI_Select extends GUI_Universal
 
         #### leere Attribute
         $emptyattributes = '';
-        if($disabled = $this->Input->getVar('disabled')) {
+        if($this->Input->getVar('disabled')) {
             $emptyattributes .= 'disabled';
         }
-        if($multiple = $this->Input->getVar('multiple')) {
+        if($this->Input->getVar('multiple')) {
             $emptyattributes .= ' ';
             $emptyattributes .= 'multiple';
         }
@@ -192,21 +177,16 @@ class GUI_Select extends GUI_Universal
         if(!is_array($values)) $values = explode(';', $values);
         $styles = $this->Input->getVar('styles');
         if(!is_array($styles)) $styles = explode(';', $styles);
-        if(sizeof($options) == 0) $options = $values;
+        if(!$options) $options = $values;
         $option_content = '';
-        $sizeofOptions = SizeOf($options);
+        $sizeofOptions = count($options);
         $this->Template->useFile('stdoutOption');
         for($i = 0; $i < $sizeofOptions; $i++) {
             $value = $values[$i] ?? '';
             $content = $options[$i] ?? '';
             $style = $styles[$i] ?? '';
 
-            if(is_array($selected)) {
-                $select = (in_array($value, $selected) ? 1 : null);
-            }
-            else {
-                $select = ($selected == $value) ? 1 : null;
-            }
+            $select = is_array($selected) ? (in_array($value, $selected) ? 1 : null) : (($selected == $value) ? 1 : null);
 
             $oemptyattributes = '';
             if($select) {
@@ -214,8 +194,7 @@ class GUI_Select extends GUI_Universal
                 $oemptyattributes .= 'selected';
             }
 
-            $this->Template->setVar(
-                array(
+            $this->Template->setVar([
                     'ID' => $name . '_' . $i,
                     'VALUE' => $value,
                     'CLASS' => $style,
@@ -223,136 +202,22 @@ class GUI_Select extends GUI_Universal
                     'ATTRIBUTES' => '',
                     'EMPTYATTRIBUTES' => $oemptyattributes,
                     'EVENTS' => ''
-                )
+                ]
             );
             $this->Template->parse('stdoutOption');
             $option_content .= $this->Template->getContent('stdoutOption');
-
-            // 29.01.2007, AM, zu langsam (obiger Code effizienter)
-            /*				$GUI_Option = &new GUI_Option($this -> Owner);//GUI_Module::createGUI('GUI_Option', $this -> Owner);
-                        $GUI_Option -> autoLoadFiles();
-                        $GUI_Option -> Input -> setVar(
-                            array(
-                                'value'	=> $value,
-                                'selected' => $select,
-                                'style' => $style,
-                                'content' => $content
-                            )
-                        );
-                        $GUI_Option -> prepare();
-                        $option_content .= $GUI_Option -> finalize();*/
         }
         $this->Template->useFile('stdout');
 
         #### Set Template wildcards
-        $this->Template->setVar(
-            array(
+        $this->Template->setVar([
                 'ID' => $id,
                 'NAME' => $name,
                 'ATTRIBUTES' => ltrim($attributes),
                 'EVENTS' => ltrim($events),
                 'EMPTYATTRIBUTES' => $emptyattributes,
                 'CONTENT' => $option_content
-            )
-        );
-    }
-}
-
-/**
- * GUI_Option
- *
- *
- * @package pool
- * @author manhart
- * @version $Id: gui_select.class.php,v 1.13 2007/05/15 14:10:46 manhart Exp $
- * @access public
- **/
-class GUI_Option extends GUI_Universal
-{
-    /**
-     * Initialisiert Standardwerte:
-     *
-     * TODO Parameter
-     */
-    public function init(?int $superglobals = Input::EMPTY)
-    {
-        $this->Defaults->addVars([
-                'value' => '',    // oder String getrennt mit ;
-                'selected' => null,
-                'disabled' => null,
-                'label' => null,
-                'style' => null,
-                'content' => null
             ]
         );
-
-        parent::init(Input::GET | Input::POST);
-    }
-
-    function loadFiles()
-    {
-        $file = $this->Weblication->findTemplate('tpl_option.html', 'gui_select', true);
-        $this->Template->setFilePath('stdout', $file);
-    }
-
-    /**
-     * GUI_Option::prepare()
-     *
-     * @return void
-     **/
-    function prepare(): void
-    {
-        parent:: prepare();
-
-        $Template = &$this->Template;
-        $Session = &$this->Session;
-        $Input = &$this->Input;
-
-        $id = $this->id;
-        $value = $Input->getVar('value');
-        $selected = $Input->getVar('selected');
-
-        #### Events
-        $events = $this->events;
-
-        #### leere Attribute
-        $emptyattributes = '';
-        if($disabled = $Input->getVar('disabled')) {
-            $emptyattributes .= 'disabled';
-        }
-        if($selected) {
-            $emptyattributes .= ' ';
-            $emptyattributes .= 'selected';
-        }
-
-        #### Attribute
-        $attributes = $this->attributes;
-        if($label = $Input->getVar('label')) {
-            $attributes .= ' ';
-            $attributes .= 'label="' . $label . '"';
-        }
-
-        if($style = $Input->getVar('style')) {
-            $attributes .= ' ';
-            $attributes .= 'style="' . $style . '"';
-        }
-
-        #### Set Template wildcards
-        $Template->setVar(
-            array(
-                'ID' => $id,
-                'VALUE' => $value,
-                'ATTRIBUTES' => ltrim($attributes),
-                'EVENTS' => ltrim($events),
-                'EMPTYATTRIBUTES' => $emptyattributes,
-                'CONTENT' => $Input->getVar('content')
-            )
-        );
-    }
-
-    function finalize(): string
-    {
-        $this->Template->parse('stdout');
-        return $this->Template->getContent('stdout');
     }
 }
