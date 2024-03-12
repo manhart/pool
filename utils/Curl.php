@@ -79,8 +79,12 @@ final class Curl
 
     /**
      * Post Request
+     * @return array{
+     *     body: string,
+     *     statusCode: int
+     * }
      */
-    public static function post(string $url, array $data, array $options = []): string
+    public static function post(string $url, array $data, array $options = []): array
     {
         $query = \http_build_query($data);
         $curl = curl_init($url);
@@ -97,9 +101,10 @@ final class Curl
         curl_setopt_array($curl, $options);
 
         $response = curl_exec($curl);
+        $httpStatusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $error_msg = curl_errno($curl) ? curl_error($curl). ' (Error code: '.curl_errno($curl).')' : null;
         curl_close($curl);
 
-        return !$error_msg ? $response : throw new RuntimeException("Error while posting data: $error_msg");
+        return !$error_msg ? ['body' => $response, 'statusCode' => $httpStatusCode] : throw new RuntimeException("Error while posting data: $error_msg");
     }
 }
