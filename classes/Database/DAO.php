@@ -1096,6 +1096,39 @@ SQL;
     }
 
     /**
+     * Map operator to SQL
+     */
+    protected function mapOperator(Operator $operator): string
+    {
+        return match($operator) {
+            Operator::equal => '=',
+            Operator::notEqual => '!=',
+            Operator::greater => '>',
+            Operator::greaterEqual => '>=',
+            Operator::less => '<',
+            Operator::lessEqual => '<=',
+            Operator::like => 'like',
+            Operator::notLike => 'not like',
+            Operator::in => 'in',
+            Operator::notIn => 'not in',
+            Operator::is => 'is',
+            Operator::isNot => 'is not',
+            Operator::isNull => 'is null',
+            Operator::isNotNull => 'is not null',
+            Operator::between => 'between',
+            Operator::notBetween => 'not between',
+            Operator::exists => 'exists',
+            Operator::notExists => 'not exists',
+            Operator::all => 'all',
+            Operator::any => 'any',
+            Operator::or => 'or',
+            Operator::and => 'and',
+            Operator::xor => 'xor',
+            Operator::not => 'not',
+        };
+    }
+
+    /**
      * @param array $record
      * @return string
      */
@@ -1103,8 +1136,14 @@ SQL;
     {
         $field = $this->translateValues ? //get field 'name'
             $this->translateValues($record[0]) : $record[0];//inject replace command?
+        if(!($record[1] instanceof Operator) && !is_string($record[1])) // we assume that if an operator does not exist, an equal operator is meant
+            array_splice($record, 1, 0, [Operator::equal]);
         $rawInnerOperator = $record[1];
-        $innerOperator = $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator;//map operators for DBMS
+        $innerOperator = match(true) {
+            $rawInnerOperator instanceof Operator => $this->mapOperator($rawInnerOperator),
+            default => $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator,
+        };
+
         $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
         //parse quotation options (defaults to false)
         $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
@@ -1114,7 +1153,7 @@ SQL;
             if ($rawInnerOperator === 'between') {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
-                $value .= ' and ';
+                $value .= " {$this->mapOperator(Operator::and)} ";
                 $value .= /* max */
                     $this->escapeValue($values[1], $noEscape, $noQuotes);
             } else {//enlist all values e.g. in, not in
@@ -1132,7 +1171,10 @@ SQL;
             $value = "'$dateTime'";
         } else {
             $value = match (gettype($values)) {//handle by type
-                'NULL' => 'NULL',
+                'NULL' => match($rawInnerOperator) {
+                    Operator::is, Operator::isNot => 'true',
+                    default => 'NULL'
+                },
                 'boolean' => bool2string($values),
                 'double', 'integer' => $values,//float and int
                 default => match ($values instanceof SqlStatement) {
