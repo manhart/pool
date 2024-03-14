@@ -449,13 +449,13 @@ SQL;
      * Build complex conditions for where or on clauses
      *
      * @param array $filter_rules Filter rules in following format [[columnName, operator, value], ...]
-     * @param string $operator Logical operator for combining all conditions
+     * @param Operator $operator Logical operator for combining all conditions
      * @param boolean $skip_next_operator false skips first logical operator
      * @param string $initialOperator Initial logical operator, if first rule is not an array and not a logical operator
      * @return string conditions for where clause
      * @see MySQL_DAO::$operatorMap
      */
-    protected function buildFilter(array $filter_rules, string $operator = 'and', bool $skip_next_operator = false,
+    protected function buildFilter(array $filter_rules, Operator $operator = Operator::and, bool $skip_next_operator = false,
         string $initialOperator = ' and'): string
     {
         if(!$filter_rules) {//not filter anything (terminate floating operators)
@@ -468,6 +468,7 @@ SQL;
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
+        $mappedOperator = $this->mapOperator($operator);
         foreach($filter_rules as $record) {
             $skipAutomaticOperator = $skip_next_operator;
             if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
@@ -481,7 +482,7 @@ SQL;
                 $record = $this->assembleFilterRecord($record);
             }
             $queryParts[] = !$skipAutomaticOperator ? //automatic operator?
-                " $operator $record" : $record;//automation puts operator between the last record and this one
+                " $mappedOperator $record" : $record;//automation puts operator between the last record and this one
         }
         return implode('', $queryParts);
     }
@@ -546,7 +547,7 @@ SQL;
      */
     protected function buildHaving(array $filter_rules): string
     {
-        $query = $this->buildFilter($filter_rules, 'and', false, '');
+        $query = $this->buildFilter($filter_rules, Operator::and, false, '');
         if($query) {
             $query = " HAVING $query";
         }
@@ -723,7 +724,7 @@ SQL;
      */
     public function deleteMultiple(array $filter_rules = []): RecordSet
     {
-        $where = $this->buildFilter($filter_rules, 'and', true);
+        $where = $this->buildFilter($filter_rules, Operator::and, true);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
@@ -929,7 +930,7 @@ SQL;
             return new RecordSet();
         }
 
-        $where = $this->buildFilter($filter_rules, 'and', true);
+        $where = $this->buildFilter($filter_rules, Operator::and, true);
         if($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
