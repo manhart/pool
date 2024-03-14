@@ -1,0 +1,33 @@
+[Unit]
+Description=AutoSSH service for forwarding a local socket to a remote mariadb instance
+After=network-online.target
+After=nss-lookup.target
+
+[Service]
+#Define storage location of the private ssh key here. Make sure to set proper access rights and consider using encryption
+#for details see https://systemd.io/CREDENTIALS/
+LoadCredential=ssh_id:/home/vagrant/id_devbox_remoteDB
+LoadCredential=known_hosts:/home/vagrant/.ssh/known_hosts
+
+Environment='LOCAL_SOCKET_PATH=\
+#Define where the socket your client will use shall live
+/tmp/maria.sock'
+Environment='REMOTE_DB_USER=\
+#Define what username to use for accessing the remote ssh and DB server
+devbox'
+Environment='REMOTE_DB_HOST=\
+#Define the host to connect to
+remote.DB'
+#Dont give up if the first attempts fail
+Environment="AUTOSSH_GATETIME=0"
+ExecStart=/usr/bin/autossh -M 0 -i ${CREDENTIALS_DIRECTORY}/ssh_id -N -o "ServerAliveInterval 45" -o "ServerAliveCountMax 2" \
+-o "ExitOnForwardFailure true" -o "StreamLocalBindUnlink true" -o "StreamLocalBindMask 007" \
+-o "UserKnownHostsFile ${CREDENTIALS_DIRECTORY}/known_hosts" -o "HostKeyAlgorithms rsa-sha2-512" \
+-L ${LOCAL_SOCKET_PATH}:/var/run/mysqld/mysqld.sock -l $REMOTE_DB_USER $REMOTE_DB_HOST
+Type=exec
+User=maria
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target
+#RequiredBy=php8.3-fpm.service
