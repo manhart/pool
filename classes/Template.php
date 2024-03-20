@@ -743,7 +743,8 @@ class TempFile extends TempCoreHandle
                 $filePath = Template::attemptFileTranslation($filePath, $weblication->getLanguage());
         }
 
-        if($fileExists && $content = $weblication->getCachedItem($filePath, Weblication::CACHE_FILE)) {
+        if($fileExists && ($fileTime = filemtime($filePath)) &&
+                $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE)) {
             $this->setContent($content);
             return;
         }
@@ -757,7 +758,7 @@ class TempFile extends TempCoreHandle
         fclose($fh);
         /** @noinspection PhpUndefinedVariableInspection */
         $this->setContent($content);
-        $weblication->cacheItem($filePath, $content, Weblication::CACHE_FILE);
+        $weblication->cacheItem("$fileTime:$filePath", $content, Weblication::CACHE_FILE);
     }
 
     /**
