@@ -4,8 +4,15 @@
  *
  * (c) Alexander Manhart <alexander@manhart-it.de>
  *
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 namespace pool\classes\Core;
@@ -107,9 +114,16 @@ class Module extends Component
         $this->init();
     }
 
-    protected function getInput(): Input
+    /**
+     * get internal param
+     *
+     * @param string $param parameter name
+     * @param mixed|null $default default value null if omitted
+     * @return mixed
+     */
+    public function getInternalParam(string $param, mixed $default = null): mixed
     {
-        return $this->Input;
+        return $this->internalParams[$param] ?? $default;
     }
 
     /**
@@ -136,6 +150,14 @@ class Module extends Component
     }
 
     /**
+     * Provides the Input Container for the Defaults
+     */
+    public function getDefaults(): Input
+    {
+        return $this->Defaults;
+    }
+
+    /**
      * puts the values of an array into the input container
      *
      * @param array $assoc
@@ -147,10 +169,7 @@ class Module extends Component
     }
 
     /**
-     * Liest eine Variable aus dem Container Input
-     *
-     * @param string $key
-     * @return mixed
+     * Reads a variable from the Input container
      */
     public function getVar(string $key): mixed
     {
@@ -158,19 +177,7 @@ class Module extends Component
     }
 
     /**
-     * provides the Input Container for the Defaults
-     *
-     * @return Input
-     */
-    public function getDefaults(): Input
-    {
-        return $this->Defaults;
-    }
-
-    /**
-     * exports internal params as base64
-     *
-     * @return string params
+     * Exports internal params as base64
      */
     public function exportInternalParams(array $otherParams = []): string
     {
@@ -178,25 +185,11 @@ class Module extends Component
     }
 
     /**
-     * get all internal params
-     *
-     * @return array
+     * Get all internal params
      */
     public function getInternalParams(): array
     {
         return $this->internalParams;
-    }
-
-    /**
-     * get internal param
-     *
-     * @param string $param parameter name
-     * @param mixed|null $default default value null if omitted
-     * @return mixed
-     */
-    public function getInternalParam(string $param, mixed $default = null): mixed
-    {
-        return $this->internalParams[$param] ?? $default;
     }
 
     /**
@@ -358,6 +351,11 @@ class Module extends Component
     public function enabled(): bool
     {
         return $this->enabled;
+    }
+
+    protected function getInput(): Input
+    {
+        return $this->Input;
     }
 
     /**
