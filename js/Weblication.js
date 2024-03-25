@@ -123,13 +123,26 @@ class Weblication
     /**
      * Returns module
      *
-     * @param moduleName
+     * @param {string} moduleName
      * @returns {GUI_Module}
      */
     getModule(moduleName)
     {
         if(!this.module_exists(moduleName)) {
             throw new PoolError('Module with Name ' + moduleName + ' was not found!');
+        }
+        return this.#modules[moduleName];
+    }
+
+    /**
+     * Returns module if exists
+     * @param {string} moduleName
+     * @return {GUI_Module|null}
+     */
+    getModuleIfExists(moduleName)
+    {
+        if(!this.module_exists(moduleName)) {
+            return null;
         }
         return this.#modules[moduleName];
     }
