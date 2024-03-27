@@ -46,6 +46,13 @@ interface DatabaseAccessObjectInterface
 
     /**
      * Returns all data records of the assembled SQL statement as a RecordSet
+     *
+     * @see \MySQL_DAO::buildWhere
+     * @see MySQL_DAO::buildFilter
+     * @see MySQL_DAO::buildGroupBy
+     * @see MySQL_DAO::buildHaving
+     * @see MySQL_DAO::buildSorting
+     * @see MySQL_DAO::buildLimit
      */
     public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter = [], array $sorting = [],
         array $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet;
