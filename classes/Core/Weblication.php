@@ -339,10 +339,14 @@ class Weblication extends Component
 
     /**
      * gets the instance via lazy initialization (created on first usage)
+     * @throws RuntimeException When the running app is not compatible with the requested Weblication type
      */
     public static function getInstance(): static
     {
-        return static::$Instance ??= new static;
+        self::$Instance ??= new static;
+        if (!(self::$Instance instanceof static))
+            throw new RuntimeException("Incompatible app types can't use " . static::class . ' already initialized a ' . self::$Instance::class);
+        return self::$Instance;
     }
 
     /**
