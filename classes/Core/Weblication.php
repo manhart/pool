@@ -1198,11 +1198,12 @@ class Weblication extends Component
      * @param string $sessionClassName default is session class
      * @return Session
      * @throws SessionDisabledException
+     * @throws RuntimeException
      */
     public function startPHPSession(string $session_name = 'WebAppSID', bool $useTransSID = false, bool $useCookies = true,
         bool $useOnlyCookies = false, bool $autoClose = true, string $sessionClassName = Session::class): Session
     {
-        switch(\session_status()) {
+        switch($sessionStatus = \session_status()) {
             case \PHP_SESSION_DISABLED:
                 throw new SessionDisabledException();
 
@@ -1222,6 +1223,9 @@ class Weblication extends Component
             case \PHP_SESSION_ACTIVE:
                 // session is already started
                 break;
+
+            default:
+                throw new RuntimeException("Got undocumented session status $sessionStatus");
         }
 
         // Check if session class is valid
