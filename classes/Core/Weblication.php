@@ -32,6 +32,7 @@ use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
+use pool\classes\Exception\RuntimeException;
 use pool\classes\Exception\SessionDisabledException;
 use pool\classes\Exception\TemplateNotFoundException;
 use pool\classes\Language;
@@ -99,7 +100,7 @@ class Weblication extends Component
     public ?Session $Session = null;
 
     /**
-     * @var Weblication|null
+     * @var static|null
      */
     private static ?Weblication $Instance = null;
 
@@ -370,9 +371,9 @@ class Weblication extends Component
      * Changes the folder for the design templates (Html templates) and images.
      *
      * @param string $skin folder for frontend design (css, templates and images).
-     * @return Weblication
+     * @return static
      */
-    public function setSkin(string $skin): Weblication
+    public function setSkin(string $skin): static
     {
         $this->skin = $skin;
         return $this;
@@ -401,7 +402,7 @@ class Weblication extends Component
 
     /**
      * @param Translator $translator
-     * @return $this
+     * @return static
      */
     public function setTranslator(Translator $translator): static
     {
@@ -431,9 +432,9 @@ class Weblication extends Component
      * Set charset for the Web Application
      *
      * @param string $charset
-     * @return Weblication
+     * @return static
      */
-    public function setCharset(string $charset): Weblication
+    public function setCharset(string $charset): static
     {
         \header('content-type: text/html; charset='.$charset);
         $this->charset = $charset;
@@ -444,9 +445,9 @@ class Weblication extends Component
      * all kinds of formats.There are predefined ones: datetime, date and time
      *
      * @param array $formats
-     * @return $this
+     * @return static
      */
-    public function setDefaultFormats(array $formats): Weblication
+    public function setDefaultFormats(array $formats): static
     {
         $this->formats = \array_merge($this->formats, $formats);
         return $this;
@@ -467,9 +468,9 @@ class Weblication extends Component
      * Set an application id
      *
      * @param int $progId
-     * @return Weblication
+     * @return static
      */
-    public function setProgId(int $progId): Weblication
+    public function setProgId(int $progId): static
     {
         $this->progId = $progId;
         return $this;
@@ -499,9 +500,9 @@ class Weblication extends Component
      * set default schema/layout, if none is loaded by request
      *
      * @param string $default
-     * @return Weblication
+     * @return static
      */
-    public function setDefaultSchema(string $default = 'index'): Weblication
+    public function setDefaultSchema(string $default = 'index'): static
     {
         $this->schema = $default;
         return $this;
@@ -519,9 +520,9 @@ class Weblication extends Component
 
     /**
      * @param string $version application version
-     * @return Weblication
+     * @return static
      */
-    public function setVersion(string $version): Weblication
+    public function setVersion(string $version): static
     {
         $this->version = $version;
         return $this;
@@ -539,7 +540,7 @@ class Weblication extends Component
      * Setzt das Haupt-GUI.
      *
      * @param GUI_Module $GUI_Module
-     * @return Weblication
+     * @return static
      */
     public function setMain(GUI_Module $GUI_Module): static
     {
@@ -593,9 +594,9 @@ class Weblication extends Component
      * Sets a common skin folder
      *
      * @param string $skinName
-     * @return Weblication
+     * @return static
      */
-    public function setCommonSkinFolder(string $skinName): Weblication
+    public function setCommonSkinFolder(string $skinName): static
     {
         $this->commonSkinFolder = $skinName;
         return $this;
@@ -1024,9 +1025,9 @@ class Weblication extends Component
     /**
      * @param string $clientSidePath
      * @param string $serverSidePath
-     * @return Weblication
+     * @return static
      */
-    public function setPoolRelativePath(string $clientSidePath, string $serverSidePath): Weblication
+    public function setPoolRelativePath(string $clientSidePath, string $serverSidePath): static
     {
         $this->poolClientSideRelativePath = $clientSidePath;
         $this->poolServerSideRelativePath = $serverSidePath;
@@ -1150,7 +1151,7 @@ class Weblication extends Component
      *   application.translator Instance of Translator
      *   application.translatorResource Instance of TranslationProviderFactory
      *   application.translatorResourceDir Directory where translation files are stored
-     * @return Weblication
+     * @return static
      * @throws Exception
      */
     public function setup(array $settings = []): static
@@ -1196,12 +1197,12 @@ class Weblication extends Component
      * @param bool $useOnlyCookies Verwende nur Cookies (Default: 0)
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
      * @param string $sessionClassName default is session class
-     * @return Session
+     * @return static
      * @throws SessionDisabledException
      * @throws RuntimeException
      */
     public function startPHPSession(string $session_name = 'WebAppSID', bool $useTransSID = false, bool $useCookies = true,
-        bool $useOnlyCookies = false, bool $autoClose = true, string $sessionClassName = Session::class): Session
+        bool $useOnlyCookies = false, bool $autoClose = true, string $sessionClassName = Session::class): static
     {
         switch($sessionStatus = \session_status()) {
             case \PHP_SESSION_DISABLED:
@@ -1233,16 +1234,16 @@ class Weblication extends Component
             throw new InvalidArgumentException('Session class must be instance of ' . Session::class);
         }
         $this->Session ??= new $sessionClassName($autoClose);
-        return $this->Session;
+        return $this;
     }
 
     /**
      * Set page title
      *
      * @param string $title
-     * @return Weblication
+     * @return static
      */
-    public function setTitle(string $title): Weblication
+    public function setTitle(string $title): static
     {
         $this->title = $title;
         return $this;
@@ -1282,7 +1283,7 @@ class Weblication extends Component
      * set locale (the POOL is independent of the system locale, e.g. php's setlocale).
      *
      * @param string $locale
-     * @return Weblication
+     * @return static
      */
     public function setLocale(string $locale): static
     {
@@ -1337,7 +1338,7 @@ class Weblication extends Component
      * Sets the language for the Page. It's used for html templates and images
      *
      * @param string $lang Country Code
-     * @return Weblication
+     * @return static
      */
     public function setLanguage(string $lang): static
     {
@@ -1373,7 +1374,7 @@ class Weblication extends Component
 
     /**
      * @param string $launchModule
-     * @return $this
+     * @return static
      */
     public function setLaunchModule(string $launchModule): static
     {
@@ -1394,11 +1395,11 @@ class Weblication extends Component
     /**
      * Render application
      *
-     * @return void
+     * @return static
      * @throws ModulNotFoundException
      * @throws Exception
      */
-    public function render(): void
+    public function render(): static
     {
         if($this->run($this->getLaunchModule())) {
             $this->prepareContent();
@@ -1409,13 +1410,14 @@ class Weblication extends Component
         if($measurePageSpeed && defined('POOL_START')) {
             $this->measurePageSpeed();
         }
+        return $this;
     }
 
     /**
      * Creates the first GUI_Module in the chain (the page title is filled with the project name).
      *
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
-     * @return Weblication
+     * @return static
      * @throws ModulNotFoundException|Exception
      */
     public function run(string $className = GUI_CustomFrame::class): static
@@ -1602,10 +1604,10 @@ class Weblication extends Component
      * Setup AppTranslator and TemplateTranslator
      *
      * @param array $settings
-     * @return void
+     * @return static
      * @throws Exception
      */
-    public function setupTranslator(array $settings): void
+    public function setupTranslator(array $settings): static
     {
         // setup AppTranslator
         $defaultLocale = $settings['application.locale'] ?? $this->defaultLocale;
@@ -1641,6 +1643,7 @@ class Weblication extends Component
             $TemplateTranslator->swapLangList($AppLanguages, true);
             Template::setTranslator($TemplateTranslator);
         }
+        return $this;
     }
 
     /**
