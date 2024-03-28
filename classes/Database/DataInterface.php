@@ -166,7 +166,7 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * Factory method to create a data interface
+     * Factory method to create a data interface and automatically register it
      *
      * @throws \Exception
      */

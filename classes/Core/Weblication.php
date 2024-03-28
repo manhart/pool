@@ -145,6 +145,8 @@ class Weblication extends Component
      * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
      *
      * @var array<string, DataInterface>
+     * @deprecated
+     * @see DataInterface::$register
      */
     private array $interfaces = [];
 
@@ -584,7 +586,7 @@ class Weblication extends Component
      */
     public function hasFrame(): bool
     {
-        return (isset($this->Main) && $this->Main instanceof GUI_CustomFrame);
+        return isset($this->Main) && $this->Main instanceof GUI_CustomFrame;
     }
 
     /**
@@ -1092,16 +1094,18 @@ class Weblication extends Component
     }
 
     /**
-     * DataInterface in die Anwendung einfuegen. Somit ist es ueberall bekannt und kann
-     * fuer die DAO Geschichte verwendet werden.
+     * Inserts a DataInterface into the application allowing it to be used by the DAOs.
      *
-     * @param DataInterface $DataInterface Einzufuegendes DataInterface
-     * @return DataInterface Eingefuegtes DataInterface
+     * @param DataInterface $dataInterface
+     * @return DataInterface
+     * @deprecated the weblication no longer maintains a list of data interfaces
+     * @see DataInterface::createDataInterface()
+     * @see DataInterface::registerResource()
      */
-    public function addDataInterface(DataInterface $DataInterface): DataInterface
+    public function addDataInterface(DataInterface $dataInterface): DataInterface
     {
-        $this->interfaces[$DataInterface::class] = $DataInterface;
-        return $DataInterface;
+        $this->interfaces[$dataInterface::class] = $dataInterface;
+        return $dataInterface;
     }
 
     /**
@@ -1109,6 +1113,9 @@ class Weblication extends Component
      *
      * @param string $interface_name
      * @return DataInterface|null Interface Objekt
+     * @deprecated the weblication no longer maintains a list of data interfaces
+     * @see DataInterface::execute() allows running queries directly
+     * @see DataInterface::getInterfaceForResource()
      */
     public function getInterface(string $interface_name): ?DataInterface
     {
@@ -1120,6 +1127,8 @@ class Weblication extends Component
      *
      * @return array Interface Objekte
      * @see DAO::createDAO()
+     * @deprecated the weblication no longer maintains a list of data interfaces
+     * @see DataInterface raw access to register is not implemented due to lack of demand
      */
     public function getInterfaces(): array
     {
@@ -1575,6 +1584,8 @@ class Weblication extends Component
      * Closes all connections via DataInterfaces. It's not necessary to close connections every time (except for persistent connections),
      * PHP will check for open connections when the script is finished anyway.
      * From a performance perspective, closing connections is pure overhead.
+     * @deprecated the weblication no longer maintains a list of data interfaces
+     * @see DataInterface manual closing has not been implementeded due to lack of demand
      */
     public function close(): void
     {
