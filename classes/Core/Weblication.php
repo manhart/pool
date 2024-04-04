@@ -252,6 +252,7 @@ class Weblication extends Component
         'php.sec' => 's',
         'php.date.time' => 'd.m.Y H:i',
         'php.date.time.sec' => 'd.m.Y H:i:s',
+        'php.date.time.us6' => 'd.m.Y H:i:s.u',
         'strftime.time' => '%H:%M', // needed in js
         'strftime.date' => '%d.%m.%Y', // needed in js
         'strftime.date.time' => '%d.%m.%Y %H:%M', // needed in js
