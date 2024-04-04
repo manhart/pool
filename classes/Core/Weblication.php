@@ -327,10 +327,7 @@ class Weblication extends Component
         $this->memory = Memory::getInstance();
         $this->memory->setDefaultExpiration($this->cacheTTL);
         // determine the relative client und server path from the application to the pool
-        if(!defined('IS_CLI')) {// check if we are in command line interface
-            \define('IS_CLI', \PHP_SAPI === 'cli');
-        }
-        if(!IS_CLI) {
+        if(!\pool\IS_CLI) {
             $poolRelativePath = $this->getCachedItem('poolRelativePath') ?:
                 \makeRelativePathsFrom(\dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
             $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
@@ -1543,7 +1540,7 @@ class Weblication extends Component
 
             $timeSpent = \microtime(true) - POOL_START;
             $htmlStartTags = $htmlCloseTags = '';
-            if(IS_CLI) {
+            if(\pool\IS_CLI) {
                 $what = 'Script';
             }
             else {

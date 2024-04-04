@@ -12,6 +12,8 @@ namespace pool {
 
     use pool\classes\Autoloader;
 
+    const IS_CLI = PHP_SAPI === 'cli';// check if we are in command line mode
+    const LINE_BREAK = IS_CLI ? PHP_EOL : '<br>';
     const NAMESPACE_SEPARATOR = '\\';
 
     if(!\defined('DIR_POOL_ROOT')) {

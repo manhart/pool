@@ -42,11 +42,6 @@
 
 define('POOL_START', microtime(true));
 
-// check if we are in command line mode
-if(!defined('IS_CLI')) {
-    define('IS_CLI', PHP_SAPI === 'cli');
-}
-
 //Config using Server environment
 $baseNamespacePath ??= $_SERVER['_BaseNamespacePath'] ?? $_SERVER['DOCUMENT_ROOT'] ??
     die('Missing Config Parameter _BaseNamespacePath in Server Environment');

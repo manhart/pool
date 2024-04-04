@@ -78,9 +78,6 @@ class Log
      */
     public static function setup(array $facilities, string $configurationName = Log::COMMON): void
     {
-        if(!defined('IS_CLI')) define('IS_CLI', PHP_SAPI === 'cli');
-        if(!defined('LINE_BREAK')) define('LINE_BREAK', (IS_CLI) ? chr(10) : '<br>');
-
         $level = self::$facilities[$configurationName][self::OUTPUT_SCREEN]['level'] ?? 0;
         if(isset($facilities[self::OUTPUT_SCREEN])) {
             $facility = $facilities[self::OUTPUT_SCREEN];
@@ -366,11 +363,10 @@ class Log
         $withDate = self::screenWithDate($configurationName);
         $withLineBreak = self::screenWithLineBreak($configurationName);
 
-        if(IS_CLI) {
-
+        if(\pool\IS_CLI) {
             if($isHTML) {
                 // no html
-                $message = str_replace(['&nbsp;', '<br>', '<hr>'], [' ', LINE_BREAK, str_repeat('-', 25)], $message);
+                $message = str_replace(['&nbsp;', '<br>', '<hr>'], [' ', \pool\LINE_BREAK, str_repeat('-', 25)], $message);
                 $message = strip_tags($message);
             }
 
@@ -382,7 +378,7 @@ class Log
             }
 
             $message = ($withDate ? date('Y-m-d H:i:s') . ' | ' : '') . $message;
-            $message .= $withLineBreak ? LINE_BREAK : '';
+            $message .= $withLineBreak ? \pool\LINE_BREAK : '';
 
             if(self::LEVEL_ERROR & $level or self::LEVEL_FATAL & $level) {
                 $stderr = fopen('php://stderr', 'w');
@@ -396,16 +392,15 @@ class Log
             }
         }
         else {
-
             if($isHTML) {
                 $foundHeadline = preg_match_all('/<\/(h[1-6]+|p)>$/m', $message);
                 if(!$foundHeadline) {
-                    $message .= ($withLineBreak ? LINE_BREAK : '');
+                    $message .= ($withLineBreak ? \pool\LINE_BREAK : '');
                 }
                 // todo insert displayLevelScreen? or not
             }
             else {
-                $message .= ($withLineBreak ? LINE_BREAK : '');
+                $message .= ($withLineBreak ? \pool\LINE_BREAK : '');
             }
             $message = ($withDate ? date('Y-m-d H:i:s') . ' | ' : '') . $message;
 
