@@ -974,7 +974,7 @@ SQL;
      *
      * @see \MySQL_DAO::buildWhere
      */
-    public function get($id, null|string|array $key = null): RecordSet
+    public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
     {
         $id = $id ?? 0;
         $where = $this->buildWhere($id, $key);
