@@ -365,12 +365,21 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * shorthand for getValueAsInt('last_insert_id')
+     * Shorthand for getValueAsInt('last_insert_id')
      * @return int
      */
     public function getLastInsertID(): int
     {
         return $this->getValueAsInt('last_insert_id');
+    }
+
+    /**
+     * Shorthand for getValueAsInt('affected_rows')
+     * @return int
+     */
+    public function getAffectedRows(): int
+    {
+        return $this->getValueAsInt('affected_rows');
     }
 
     /**
