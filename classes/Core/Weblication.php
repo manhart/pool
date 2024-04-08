@@ -329,7 +329,7 @@ class Weblication extends Component
         // determine the relative client und server path from the application to the pool
         if(!\pool\IS_CLI) {
             $poolRelativePath = $this->getCachedItem('poolRelativePath') ?:
-                \makeRelativePathsFrom(\dirname($_SERVER['SCRIPT_FILENAME']), DIR_POOL_ROOT);
+                \makeRelativePathsFrom(null, DIR_POOL_ROOT);
             $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
             $this->cacheItem('poolRelativePath', $poolRelativePath);
         }

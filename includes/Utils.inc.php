@@ -1309,57 +1309,27 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
 /**
  * Calculates the relative paths from the source path to the target path, both serverside and clientside. It is faster than makeRelativePathFrom.
  *
- * @param string|null $here The absolute source path.
+ * @param string|null $here the starting path if null will use the directory of $_SERVER['SCRIPT_FILENAME']
  * @param string $toThis The absolute target path.
+ * @param string|null $base The document root to use (optional, defaults to $_SERVER['DOCUMENT_ROOT']).
  * @param string $separator The directory separator to use (optional, defaults to DIRECTORY_SEPARATOR).
- *
- * @return array|false An array containing the serverside and clientside relative paths.
+ * @return array An array containing the serverside and clientside relative paths.
  */
-function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = DIRECTORY_SEPARATOR): array|false
+function makeRelativePathsFrom(?string $here, string $toThis, string $base = null, string $separator = DIRECTORY_SEPARATOR): array
 {
-    $scriptDir = dirname($_SERVER['SCRIPT_FILENAME']);
-    $base ??= $scriptDir;
-    $here ??= $scriptDir;
+    $base ??= $_SERVER['DOCUMENT_ROOT'];
+    $here ??= dirname($_SERVER['SCRIPT_FILENAME']);
 
-    // Removing trailing slashes.
-    $here = rtrim($here, $separator);
-    $toThis = rtrim($toThis, $separator);
-
-    //base relative paths and normalize
-    if (!isAbsolutePath($here)) {
-        $here = addEndingSlash($base) . $here;
-        $here = normalizePath($here, separator: $separator);
-    }
-    elseif ($normalize)
-        $here = normalizePath($here, separator: $separator);
-    if (!isAbsolutePath($toThis)) {
-        $toThis = addEndingSlash($base) . $toThis;
-        $toThis = normalizePath($toThis, separator: $separator);
-    }
-    elseif ($normalize){
-        $toThis = normalizePath($toThis, separator: $separator);
-    }
-    if(!($here && $toThis))//normalization returned an invalid result
-        return false;//fail
-
+    // Resolve symbolic links and remove trailing slashes
+    $base = realpath(rtrim($base, $separator));
+    $here = realpath(rtrim($here, $separator));
+    $toThis = realpath(rtrim($toThis, $separator));
 
     $paths = [];
     $paths['clientside'] = [
         'here' => $here,
         'toThis' => $toThis,
     ];
-
-    // resolve symbolic links only for serverside path
-    $ssHere = realpath($here);
-    $ssToThis = realpath($toThis);
-
-    // if serverside resolved paths are not equal, then stack the paths, because they are different
-    if($ssHere !== $here && $ssToThis !== $toThis) {
-        $paths['serverside'] = [
-            'here' => $ssHere,
-            'toThis' => $ssToThis,
-        ];
-    }
 
     // loop through the stacked paths and calculate the common path components
     foreach($paths as $side => $from_to) {
@@ -1377,7 +1347,7 @@ function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = 
     }
 
     // Calculate the clientside relative path.
-    $clientsideRelativePathComponents = count(explode($separator, $_SERVER['DOCUMENT_ROOT']));
+    $clientsideRelativePathComponents = count(explode($separator, $base));
     $commonPathComponents = min($clientsideRelativePathComponents, $paths['clientside']['commonPathComponents']);
     $amount = $clientsideRelativePathComponents - $paths['clientside']['commonPathComponents'];
     $levels = $amount > 0 ? str_repeat('..' . $separator, $amount) : '/';
@@ -1389,7 +1359,6 @@ function makeRelativePathsFrom(?string $here, string $toThis, bool $normalize = 
     }
     $serversideRelativePath = str_repeat("..$separator", count($paths['serverside']['hereParts']) - $paths['serverside']['commonPathComponents']) .
         implode($separator, array_slice($paths['serverside']['toThisParts'], $paths['serverside']['commonPathComponents']));
-
 
     // Return the relative paths.
     return [
