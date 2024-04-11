@@ -328,8 +328,8 @@ class Weblication extends Component
         $this->memory->setDefaultExpiration($this->cacheTTL);
         // determine the relative client und server path from the application to the pool
         if(!\pool\IS_CLI) {
-            $poolRelativePath = $this->getCachedItem('poolRelativePath') ?:
-                \makeRelativePathsFrom(null, DIR_POOL_ROOT);
+            $poolRelativePath = $this->getCachedItem('poolRelativePath') ?: \makeRelativePathsFrom(null, DIR_POOL_ROOT);
+            $poolRelativePath['clientside'] = defined('DIR_RELATIVE_DOCUMENT_ROOT') ? DIR_RELATIVE_DOCUMENT_ROOT.'/'.basename(DIR_POOL_ROOT) : $poolRelativePath['clientside'];
             $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
             $this->cacheItem('poolRelativePath', $poolRelativePath);
         }
