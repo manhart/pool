@@ -1321,9 +1321,12 @@ function makeRelativePathsFrom(?string $here, string $toThis, string $base = nul
     $here ??= dirname($_SERVER['SCRIPT_FILENAME']);
 
     // Resolve symbolic links and remove trailing slashes
-    $base = realpath(rtrim($base, $separator));
-    $here = realpath(rtrim($here, $separator));
-    $toThis = realpath(rtrim($toThis, $separator));
+    $base = rtrim($base, $separator);
+    $base = realpath($base) ?: $base;
+    $here = rtrim($here, $separator);
+    $here = realpath($here) ?: $here;
+    $toThis = rtrim($toThis, $separator);
+    $toThis = realpath($toThis) ?: $toThis;
 
     $paths = [];
     $paths['clientside'] = [
