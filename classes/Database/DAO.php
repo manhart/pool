@@ -1175,6 +1175,7 @@ SQL;
             $value = match (gettype($values)) {//handle by type
                 'NULL' => match($rawInnerOperator) {
                     Operator::is, Operator::isNot => 'true',
+                    Operator::isNull, Operator::isNotNull => '',
                     default => 'NULL'
                 },
                 'boolean' => bool2string($values),
