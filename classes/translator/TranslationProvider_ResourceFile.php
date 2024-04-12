@@ -104,7 +104,12 @@ class TranslationProvider_ResourceFile implements TranslationProvider
                 $this->error = new Exception("Invalid Key '$key' trying to insert empty translation");
             return self::Error;
         }
+        if(is_writable($this->resourceFile) === false) {
+            $this->error = new Exception("Resource file is not writable: {$this->resourceFile}");
+            return self::NotImplemented;
+        }
         try {
+            $this->loadTranslations();
             //manipulate Translations
             $slot =& getNestedArrayValueReference($this->translations, explode('.', $key));
             $slot = $value;
