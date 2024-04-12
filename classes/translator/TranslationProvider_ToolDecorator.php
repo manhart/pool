@@ -71,7 +71,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
             $dirPath = buildDirPath(sys_get_temp_dir(), 'postbox');
             if (!is_dir($dirPath))
                 mkdir($dirPath);
-            return $dirPath .$id;
+            return $dirPath.$id;
         }
         else
             throw new Exception('Invalid sessionID');
@@ -95,6 +95,14 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
         $message = "<a href='#$identifier' id='$identifier' class='$keyWord' lang='$lang'>{$translation->getMessage()}</a>";
         return new Translation($translation->getProvider(),
             $message, $translation->getKey());
+    }
+
+    static public function decorate(string $message): string
+    {
+        if(str_starts_with($message, '<a '))
+            return $message;
+        $keyWord = self::KEYWORD;
+        return "<a class='$keyWord'>$message</a>";
     }
 
     /**

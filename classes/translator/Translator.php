@@ -396,9 +396,6 @@ class Translator
         $this->queryTranslations($keyArray, $noAlter, $language);
         $translation = $keyArray[$key]??null;
         \assert($translation === null || $translation instanceof Translation);
-        //message processing
-        if (@TranslationProvider_ToolDecorator::isActive())
-            @TranslationProvider_ToolDecorator::writeQueryToPostbox($this->getTranslationResources(), $key, default:$defaultMessage, args:$args, noAlter:$noAlter);
         $message = $translation?->getMessage();
         $success = $message !== null;
         $message ??= $defaultMessage;
@@ -413,6 +410,11 @@ class Translator
                 $message = $formatter->getErrorMessage();
             } else
                 $message = $formattedTranslation;
+        }
+        //message processing
+        if (@TranslationProvider_ToolDecorator::isActive()) {
+            $message = @TranslationProvider_ToolDecorator::decorate($message);
+            @TranslationProvider_ToolDecorator::writeQueryToPostbox($this->getTranslationResources(), $key, default: $defaultMessage, args: $args, noAlter: $noAlter);
         }
         return $message;//static::postprocessTranslation($message, $success, $noAlter, $key, $message, $args, $defaultMessage);
     }
