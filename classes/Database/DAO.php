@@ -472,6 +472,7 @@ SQL;
         foreach($filter_rules as $record) {
             $skipAutomaticOperator = $skip_next_operator;
             if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
+                if($record instanceof Operator) $record = $this->mapOperator($record);
                 $queryParts[] = " $record "; //operator e.g. or, and
                 continue;
             }
