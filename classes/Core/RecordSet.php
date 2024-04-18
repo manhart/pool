@@ -827,6 +827,19 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
+     * Iterates over the records and calls the callback function for each record
+     */
+    public function each(callable $callback): static
+    {
+        foreach($this->records as $record) {
+            if($callback(...$record) === false) {
+                break;
+            }
+        }
+        return $this;
+    }
+
+    /**
      * Vergleicht ein Resultset, ob es identisch ist. Ist das Resultset nicht identisch, bleibt der Satzzeiger auf diesem stehen.
      *
      * @param RecordSet $ResultSet
