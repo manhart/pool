@@ -761,54 +761,60 @@ SQL;
      */
     public function insert(array $data): RecordSet
     {
-        $columns = [];
-        $values = [];
-        foreach($data as $column => $value) {
-            // make column
-            $columns[] = $this->wrapSymbols($column);
-            // make value
-            if(is_null($value)) {
-                $value = 'NULL';
+        if(!$data) {
+            throw new DAOException('DAO::insert failed. No data specified!');
+        }
+        if(!array_is_list($data)) {
+            $data = [$data];
+        }
+        $columns = array_map([$this, 'wrapSymbols'], array_keys($data[0]));
+
+        $valuesList = [];
+        foreach($data as $record) {
+            $values = [];
+            foreach($record as $column => $value) {
+                // make value
+                if(is_null($value)) {
+                    $value = 'NULL';
+                }
+                elseif(is_bool($value)) {
+                    $value = bool2string($value);
+                }
+                elseif(is_array($value)) {
+                    $value = is_null($value[0]) ? 'NULL' : $value[0];
+                }
+                elseif($value instanceof Commands) {
+                    // reserved keywords don't need to be masked
+                    $expression = $this->commands[$value->name];
+                    $value = $expression instanceof Closure ? $expression($column) : $expression;
+                }
+                elseif($value instanceof SqlStatement) {
+                    $value = $value->getStatement();
+                }
+                elseif($value instanceof DateTimeInterface) {
+                    $value = "'{$value->format('Y-m-d H:i:s')}'";
+                }
+                else {
+                    $value = match (gettype($value)) {
+                        'NULL' => 'NULL',
+                        'boolean' => bool2string($value),
+                        default => $this->escapeValue($value)
+                    };
+                }
+                $values[] = $value;
             }
-            elseif(is_bool($value)) {
-                $value = bool2string($value);
-            }
-            elseif(is_array($value)) {
-                $value = is_null($value[0]) ? 'NULL' : $value[0];
-            }
-            elseif($value instanceof Commands) {
-                // reserved keywords don't need to be masked
-                $expression = $this->commands[$value->name];
-                $value = $expression instanceof Closure ? $expression($column) : $expression;
-            }
-            elseif($value instanceof SqlStatement) {
-                $value = $value->getStatement();
-            }
-            elseif($value instanceof DateTimeInterface) {
-                $value = "'{$value->format('Y-m-d H:i:s')}'";
-            }
-            else {
-                $value = match (gettype($value)) {
-                    'NULL' => 'NULL',
-                    'boolean' => bool2string($value),
-                    default => $this->escapeValue($value)
-                };
-            }
-            $values[] = $value;
+            $valuesList[] = '('.implode(',', $values).')';
         }
 
-        if(!$columns) {
-            throw new DAOException('DAO::insert failed. No columns specified!');
-        }
         $columns = implode(',', $columns);
-        $values = implode(',', $values);
+        $valuesList = implode(',', $valuesList);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
 INSERT INTO $this
     ($columns)
 VALUES
-    ($values)
+    $valuesList
 SQL;
         return $this->execute($sql);
     }
