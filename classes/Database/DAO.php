@@ -13,6 +13,7 @@ namespace pool\classes\Database;
 use Closure;
 use CustomMySQL_DAO;
 use DateTimeInterface;
+use JetBrains\PhpStorm\Pure;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
@@ -58,6 +59,12 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * don't escape the value in the (sql) query
      */
     public const DAO_NO_ESCAPE = 2;
+
+    public const STRING = 1;
+    public const INT = 2;
+    public const FLOAT = 3;
+
+
 
     /**
      * @var string|null Name of the table / file / view (must be declared in derived class)
@@ -1072,6 +1079,17 @@ SQL;
         return static::$tableName;
     }
 
+    #[Pure]
+    private function castValue(mixed $value, mixed $targetType):mixed
+    {
+        return match ($targetType) {
+            self::STRING => (string) $value,
+            self::INT => (int) $value,
+            self::FLOAT => (float) $value,
+            default => $value,
+        };
+    }
+
     /**
      * Shorthand for fetching one or multiple values of a record
      * @param array|int|string $pk a unique identifier use an array [$pk, $column] to specify the primary key column or search field
@@ -1082,8 +1100,13 @@ SQL;
     public function fetchData(array|int|string $pk, ...$fields): mixed
     {
         $fields = $fields ?: $this->getPrimaryKey();
+        if (!array_is_list($fields)) {//cast instructions exist
+            $casts = array_values($fields);
+            $fields = array_filter($fields, is_string(...)) + array_filter(array_keys($fields), is_string(...));//screen out instructions and listify fields
+        }
         $record = $this->setColumns(...$fields)->get(...(array)$pk)->getRecord();
-        return count($fields) === 1 ? $record[$fields[0]] ?? null : array_values($record);
+        $record = isset($casts) && $record ? array_map($this->castValue(...), $record, $casts) : array_values($record);//unwrap values
+        return count($fields) === 1 ? $record[0] ?? null : $record;
     }
 
     /**
