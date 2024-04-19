@@ -825,9 +825,8 @@ SQL;
     public function update(array $data): RecordSet
     {
         // Check if all primary keys are set in the data array
-        $missingKeys = array_diff($this->pk, array_keys($data));
-        if(!empty($missingKeys)) {
-            return (new RecordSet())->addErrorMessage('Update is wrong. Missing primary keys: '.implode(', ', $missingKeys));
+        if($missingKeys = array_diff($this->pk, array_keys($data))) {
+            throw new DAOException('DAO::update failed. Missing primary keys: '.implode(', ', $missingKeys));
         }
 
         $pk = [];
