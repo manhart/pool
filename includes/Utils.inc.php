@@ -633,7 +633,7 @@ function getClientBrowser(): array
 
     return array(
         'name' => $browser,
-        'version' => $version
+        'version' => $version,
     );
 }
 
@@ -652,7 +652,7 @@ function getClientIP(): string
             'HTTP_X_CLUSTER_CLIENT_IP',
             'HTTP_FORWARDED_FOR',
             'HTTP_FORWARDED',
-            'REMOTE_ADDR'
+            'REMOTE_ADDR',
     ) as $key) {
         if (array_key_exists($key, $_SERVER) === true) {
             foreach (explode(',', $_SERVER[$key]) as $ip) {
@@ -735,6 +735,11 @@ function emptyString(): string
     return '';
 }
 
+function identity(mixed $var): mixed
+{
+    return $var;
+}
+
 /**
  * Simple Filename Sanitizer
  *
@@ -767,13 +772,13 @@ function sanitizeFilename(string $filename, bool $lowerCase = true): string
             // "file___name.zip" becomes "file-name.zip"
             '/_+/',
             // "file---name.zip" becomes "file-name.zip"
-            '/-+/'
+            '/-+/',
         ), '-', $filename);
     $filename = preg_replace(array(
         // "file--.--.-.--name.zip" becomes "file.name.zip"
         '/-*\.-*/',
         // "file...name..zip" becomes "file.name.zip"
-        '/\.{2,}/'
+        '/\.{2,}/',
     ), '.', $filename);
     return trim($filename, '.-');
 }
@@ -994,7 +999,7 @@ function magicInfo($file, $line, $function, $class, $specific = array()): array
         'file' => $file,
         'line' => $line,
         'function' => $function,
-        'class' => $class
+        'class' => $class,
     ), $specific);
 }
 
@@ -1114,7 +1119,7 @@ function HTTPStatus(int $num)
         501 => "HTTP/1.1 501 Not Implemented",
         502 => "HTTP/1.1 502 Bad Gateway",
         503 => "HTTP/1.1 503 Service Unavailable",
-        504 => "HTTP/1.1 504 Gateway Time-out"
+        504 => "HTTP/1.1 504 Gateway Time-out",
     );
 
     header($http[$num]);
@@ -1781,7 +1786,7 @@ function pool_hash_code(string $code, string $pepper = '', array $options = []):
 
     $options += [
         'salt' => substr(strtr(base64_encode(mcrypt_create_iv($binaryLength, MCRYPT_DEV_URANDOM)), '+', '.'), 0, $length),
-        'cost' => 10
+        'cost' => 10,
     ];
 
     if (version_compare(PHP_VERSION, '5.3.7') >= 0) {
@@ -1923,7 +1928,7 @@ function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []
     $options += [
         'uppercase' => 1,
         'numbers' => 50,
-        'delimiter' => '-'
+        'delimiter' => '-',
     ];
 
     $code = '';
@@ -2399,4 +2404,44 @@ function str_contains_any(string $haystack, array $needles, bool $case_sensitive
 function curry(Closure $closure, ...$args): Closure
 {
     return fn(...$more) => $closure(...$args, ...$more);
+}
+
+function containThrowable(Closure $closure, Closure $fallbackHandler = null): Closure {
+    return function (... $args) use ($closure, $fallbackHandler) {
+        try {
+            return $closure(...$args);
+        } catch (Throwable $error) {
+            return $fallbackHandler instanceof Closure ? $fallbackHandler($error) : $fallbackHandler;
+        }
+    };
+}
+
+function containException(Closure $closure, $fallbackHandler = null): Closure {
+    return function (... $args) use ($closure, $fallbackHandler) {
+        try {
+            return $closure(...$args);
+        } catch (Exception $error) {
+            return $fallbackHandler instanceof Closure ? $fallbackHandler($error) : $fallbackHandler;
+        }
+    };
+}
+
+class Pointer
+{
+    public mixed $val;
+
+    public function __construct($val)
+    {
+        $this->setVal($val);
+    }
+
+    public function deref(): mixed
+    {
+        return $this->val;
+    }
+
+    public function setVal(mixed $val):void
+    {
+        $this->val = $val;
+    }
 }
