@@ -2391,3 +2391,12 @@ function str_contains_any(string $haystack, array $needles, bool $case_sensitive
 
     return false;
 }
+
+/**
+ * Currying is the process of transforming a function that takes multiple arguments into a sequence of functions.
+ * You can use it as replacement for partial binding.
+ */
+function curry(Closure $closure, ...$args): Closure
+{
+    return fn(...$more) => $closure(...$args, ...$more);
+}
