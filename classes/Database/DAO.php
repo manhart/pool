@@ -757,7 +757,7 @@ SQL;
     }
 
     /**
-     * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
+     * Insert new records based on the data passed as an array, with the key corresponding to the column name.
      */
     public function insert(array $data): RecordSet
     {
