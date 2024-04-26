@@ -561,10 +561,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * returns json encoded data of a method call of this object (intended use: ajax)
-     *
-     * @param string $requestedMethod
-     * @return string
+     * Returns json encoded data of a method call of this object (intended use: ajax)
      */
     private function invokeAjaxMethod(string $requestedMethod): string
     {

@@ -345,8 +345,6 @@ class Module extends Component
 
     /**
      * Returns the enabled state of the module
-     *
-     * @return bool
      */
     public function enabled(): bool
     {

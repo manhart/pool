@@ -123,9 +123,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Make Url from string
-     *
-     * @param string $url
-     * @return Url
      */
     public static function fromString(string $url): Url
     {
@@ -147,8 +144,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Make Url from current url
-     *
-     * @return Url
      */
     public static function fromCurrent(): Url
     {
@@ -157,9 +152,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Make Url from Input object with its data
-     *
-     * @param Input $Input
-     * @return Url
      */
     public static function fromInput(Input $Input): Url
     {
@@ -170,9 +162,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Set the URI-scheme
-     *
-     * @param string $scheme
-     * @return $this
      */
     public function withScheme(string $scheme): static
     {
@@ -201,14 +190,11 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Set the host
-     *
-     * @param string $host
-     * @return $this
      */
     public function withHost(string $host): static
     {
         if($host && !\filter_var($host, \FILTER_VALIDATE_DOMAIN, \FILTER_FLAG_HOSTNAME)) {
-            throw new InvalidArgumentException('Invalid host: ' . $host);
+            throw new InvalidArgumentException("Invalid host: $host");
         }
 
         if($this->host !== $host && $host) {
@@ -221,8 +207,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Retrieve the host component of the URI
-     *
-     * @return string
      */
     public function getHost(): string
     {
@@ -230,10 +214,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * return the part of domain
-     *
-     * @param int $level
-     * @return $this
+     * Return the part of domain
      */
     public function getDomain(int $level = 2): string
     {
@@ -244,9 +225,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Set the port
-     *
-     * @param int $port
-     * @return $this
      */
     public function withPort(int $port): static
     {
@@ -256,8 +234,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Retrieve the port component of the URI
-     *
-     * @return int
      */
     public function getPort(): int
     {
@@ -266,10 +242,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Set the user and password
-     *
-     * @param string $user
-     * @param string $password
-     * @return $this
      */
     public function withUserInfo(string $user, #[SensitiveParameter] string $password = ''): static
     {
@@ -280,8 +252,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Retrieve the user component of the URI
-     *
-     * @return string
      */
     public function getUser(): string
     {
@@ -290,8 +260,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Retrieve the password component of the URI
-     *
-     * @return string
      */
     public function getPassword(): string
     {
@@ -300,28 +268,26 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Set the path
-     *
-     * @param string $path
-     * @return $this
      */
     public function withPath(string $path): static
     {
         if($this->host && !str_starts_with($path, '/')) {
-            $path = '/' . $path;
+            $path = "/$path";
         }
         $this->path = $path;
         return $this;
     }
 
+    /**
+     * Retrieve the path component of the URI
+     */
     public function getPath(): string
     {
         return $this->path;
     }
 
     /**
-     * return segments of path as array separated by /
-     *
-     * @return array
+     * Return segments of path as array separated by /
      */
     public function getSegments(): array
     {
@@ -329,10 +295,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * set the query params
-     *
-     * @param array|string $query
-     * @return $this
+     * Set the query params
      */
     public function withQuery(array|string $query): static
     {
@@ -346,7 +309,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * clear the query params
+     * Clear the query params
      */
     public function clearQuery(): static
     {
@@ -355,10 +318,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * set query value
-     * @param string $key
-     * @param string $value
-     * @return $this
+     * Set query value
      */
     public function setQueryValue(string $key, string $value): static
     {
@@ -367,11 +327,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * set a query param / value and overwrite existing
-     *
-     * @param string $key
-     * @param string|null $value
-     * @return $this
+     * Set a query param / value and overwrite existing
      */
     public function setParam(string $key, ?string $value): static
     {
@@ -383,7 +339,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * set query params / values and overwrite existing
+     * Set query params / values and overwrite existing
      */
     public function setParams(array $params): static
     {
@@ -392,11 +348,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * get a query param
-     *
-     * @param string $key
-     * @param string|null $default
-     * @return string|null
+     * Get a query param
      */
     public function getParam(string $key, ?string $default = null): ?string
     {
@@ -404,9 +356,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * delete a query param
-     * @param string $key
-     * @return $this
+     * Delete a query param
      */
     public function delParam(string $key): static
     {
@@ -416,8 +366,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Get the query params
-     *
-     * @return array
      */
     public function getQuery(): array
     {
@@ -426,8 +374,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Return the query as string
-     *
-     * @return string
      */
     public function getQueryAsString(): string
     {
@@ -435,9 +381,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * set an anchor / fragment
-     * @param string $fragment
-     * @return $this
+     * Set an anchor / fragment
      */
     public function withFragment(string $fragment): static
     {
@@ -446,8 +390,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * get the anchor / fragment
-     * @return string
+     * Get the anchor / fragment
      */
     public function getFragment(): string
     {
@@ -455,27 +398,18 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * set only the path of the url dropping any queries
-     * @param string $scriptPath
-     * @return Url
+     * Set only the path of the url dropping any queries
      */
     public function setScriptPath(string $scriptPath): static
     {
         $scriptPath = \preg_replace('/\?.*/', '', $scriptPath);
         $script = \pathinfo($this->path, \PATHINFO_BASENAME);
-        if(!empty($script) && str_contains($script, '.')) {
-            $this->path = \addEndingSlash($scriptPath) . $script;
-        }
-        else
-            $this->path = $scriptPath;
+        $this->path = !empty($script) && str_contains($script, '.') ? \addEndingSlash($scriptPath).$script : $scriptPath;
         return $this;
     }
 
     /**
-     * set or change the script / filename of the url
-     *
-     * @param string $scriptName
-     * @return Url
+     * Set or change the script / filename of the url
      */
     public function setScriptName(string $scriptName): static
     {
@@ -485,17 +419,12 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * return the port if it's not the default port of the scheme
-     * @return string
+     * Return the port if it's not the default port of the scheme
      */
     private function _getPortInfo(): string
     {
         // don't add the port if it's the default port of the scheme
-        if(!empty($this->port) &&
-            !($this->port === (self::PORTS[$this->scheme] ?? 0))) {
-            return ':' . $this->port;
-        }
-        return '';
+        return !empty($this->port) && !($this->port === (self::PORTS[$this->scheme] ?? 0)) ? ":$this->port" : '';
     }
 
     /**
@@ -511,7 +440,6 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     public function getAuthority(): string
     {
         $authority = $this->host;
-
         if($userInfo = $this->getUserInfo()) {
             $authority = "$userInfo@$authority";
         }
@@ -534,10 +462,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     }
 
     /**
-     * return the url as string
-     *
-     * @param bool|null $absolute
-     * @return string
+     * Return the url as string
      */
     public function getUrl(?bool $absolute = null): string
     {
@@ -589,25 +514,8 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     #[NoReturn] public function redirect(bool $replace = true, int $http_response_code = 302): never
     {
-        \header('Location: ' . $this->getUrl(), $replace, $http_response_code);
+        \header("Location: {$this->getUrl()}", $replace, $http_response_code);
         exit;
-    }
-
-    /**
-     * @deprecated use redirect() instead
-     * @return never
-     */
-    public function restartUrl(): never
-    {
-        $this->redirect();
-    }
-    /**
-     * @deprecated use getUrl() instead
-     * @return string
-     */
-    public function getAbsoluteUrl(): string
-    {
-        return $this->getUrl(true);
     }
 
     /**
@@ -707,5 +615,4 @@ echo '<br>';
 //$Url->withScheme('https')->withHost('www.example.com');
 echo $Url->getUrl(true);
 echo '<br>';
-
 */
