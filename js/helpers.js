@@ -1490,3 +1490,21 @@ const b64DecodeUnicode = (str) =>
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
 }
+
+/**
+ * Parse float by using locale
+ * @link https://stackoverflow.com/questions/59678901/using-parsefloat-in-different-locales
+ */
+const parseFloatByLocale = (str, locale = null) =>
+{
+    if(typeof str !== 'string') throw new TypeError('The first argument must be a string.');
+
+    let thousandsSep, decimalSep;
+    try {
+        [, thousandsSep, , decimalSep] = Intl.NumberFormat(locale ?? navigator.language).formatToParts(1234.5).map(p => p.value);
+    }
+    catch (e) {
+        throw new RangeError('The locale provided is not valid.');
+    }
+    return parseFloat(Array.from(str, c => c === thousandsSep ? '' : c === decimalSep ? '.' : c).join(''));
+}
