@@ -336,7 +336,7 @@ class Weblication extends Component
     }
 
     /**
-     * gets the instance via lazy initialization (created on first usage)
+     * Gets the instance via lazy initialization (created on first usage)
      * @throws RuntimeException When the running app is not compatible with the requested Weblication type
      */
     public static function getInstance(): static
