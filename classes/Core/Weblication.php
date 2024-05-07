@@ -1470,6 +1470,7 @@ class Weblication extends Component
     /**
      * Creates an array with given default values / structure for ajax results
      *
+     * @deprecated
      * @param ...$result
      * @return mixed
      */
