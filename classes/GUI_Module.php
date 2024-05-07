@@ -15,6 +15,7 @@
  * @see https://github.com/manhart/pool
  */
 
+use JetBrains\PhpStorm\Pure;
 use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Input\Input;
@@ -689,11 +690,28 @@ class GUI_Module extends Module
     /**
      * Please override this method to register ajax calls
      *
-     * @return void
      * @see GUI_Module::registerAjaxMethod()
      */
     protected function registerAjaxCalls(): void
     {
+    }
+
+    #[Pure]
+    /** sets the success and message of a result and returns the result */
+    protected function succeed(array $result = [], string $message = ''):array
+    {
+        $result['success'] = true;
+        $result['message'] = $message;
+        return $result;
+    }
+
+    #[Pure]
+    /** sets the success and message of a result and returns the result */
+    protected function fail(array $result = [], string $message = ''):array
+    {
+        $result['success'] = false;
+        $result['message'] = $message;
+        return $result;
     }
 
     /**
