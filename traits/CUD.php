@@ -22,6 +22,7 @@ namespace pool\traits;
 use Closure;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
+use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 
 Trait CUD{
@@ -74,21 +75,26 @@ Trait CUD{
         }
 
         //db transaction
-        $dbColumns = $DAO->getDefaultColumns();
-        if (\in_array('modifier', $dbColumns))
-            $data['modifier'] ??= $this->idUser();
-        if ($isUpdate = (bool)$persistId) {// update
-            $data[$pk] = $persistId;
-            $recordSet = $updateOverride?->call($this, $DAO, $persistId, $pk) ?? $DAO->update($data);
-        } else {// insert
-            if (\in_array('creator', $dbColumns))
-                $data['creator'] ??= $this->idUser();
-            unset($data[$pk]);
-            $recordSet = $insertOverride?->call($this, $DAO, $pk) ?? $DAO->insert($data);
-            $persistId = $recordSet->getLastInsertID();
-        }
-        if ($lastError = $recordSet->getLastError()) {
-            $message = $lastError['message'];
+        try {
+            $dbColumns = $DAO->getDefaultColumns();
+            if (\in_array('modifier', $dbColumns))
+                $data['modifier'] ??= $this->idUser();
+            if ($isUpdate = (bool)$persistId) {// update
+                $data[$pk] = $persistId;
+                $recordSet = $updateOverride?->call($this, $DAO, $persistId, $pk) ?? $DAO->update($data);
+            } else {// insert
+                if (\in_array('creator', $dbColumns))
+                    $data['creator'] ??= $this->idUser();
+                unset($data[$pk]);
+                $recordSet = $insertOverride?->call($this, $DAO, $pk) ?? $DAO->insert($data);
+                $persistId = $recordSet->getLastInsertID();
+            }
+            if ($lastError = $recordSet->getLastError()) {
+                $message = $lastError['message'];
+                return $result;
+            }
+        } catch (DAOException $e) {
+            $message = $e->getMessage();
             return $result;
         }
 
