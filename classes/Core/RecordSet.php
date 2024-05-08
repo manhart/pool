@@ -15,6 +15,7 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use Iterator;
+use JetBrains\PhpStorm\Pure;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
@@ -57,6 +58,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     protected array $returnFields = [];
 
+    #[Pure]
     /**
      * Constructor
      */
@@ -80,6 +82,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this->index;
     }
 
+    #[Pure]
     /**
      * Returns the number of records in the pool\classes\Core\ResultSet
      */
@@ -200,6 +203,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return \array_splice($this->records, $offset, $length, $replacement);
     }
 
+    #[Pure]
     /**
      * Returns all columns of the current record
      */
@@ -211,6 +215,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return [];
     }
 
+    #[Pure]
     /**
      * Is the pointer at the first record?
      */
@@ -255,6 +260,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this->getRecord();
     }
 
+    #[Pure]
     /**
      * Is the pointer at the last record?
      */
@@ -263,14 +269,16 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this->index === ($this->count() - 1);
     }
 
+    #[Pure]
     /**
      * Returns the current record (dataset) or an empty array if the position (index) is out of range
      */
     public function current(): array
     {
-        return $this->getRecord($this->index);
+        return $this->getRecord();
     }
 
+    #[Pure]
     /**
      * Returns the current position / index (Iterator).
      */
@@ -295,6 +303,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         $this->reset();
     }
 
+    #[Pure]
     public function valid(): bool
     {
         return $this->index !== -1 && isset($this->records[$this->index]);
@@ -314,6 +323,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return true;
     }
 
+    #[Pure]
     /**
      * Returns a value of a field of the current record as a string
      */
@@ -322,6 +332,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return (string)$this->getValue($key, $default);
     }
 
+    #[Pure]
     /**
      * Returns a value of a field of the current record
      */
@@ -345,6 +356,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
     }
 
+    #[Pure]
     /**
      * Returns a value of a field of the current record as an integer. It is also possible to return null as default value.
      */
@@ -355,6 +367,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return (int)$value;
     }
 
+    #[Pure]
     /**
      * Shorthand of getValueAsInt('count')
      * @return int
@@ -364,6 +377,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this->getValueAsInt('count');
     }
 
+    #[Pure]
     /**
      * Shorthand for getValueAsInt('last_insert_id')
      * @return int
@@ -373,6 +387,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this->getValueAsInt('last_insert_id');
     }
 
+    #[Pure]
     /**
      * Shorthand for getValueAsInt('affected_rows')
      * @return int
@@ -382,6 +397,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this->getValueAsInt('affected_rows');
     }
 
+    #[Pure]
     /**
      * Returns a value of a field of the current record as a float
      */
@@ -392,6 +408,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return (float)$value;
     }
 
+    #[Pure]
     /**
      * Returns a value of a field of the current record as a boolean
      */
@@ -411,6 +428,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $DateTime->format($format);
     }
 
+    #[Pure]
     /**
      * Returns a value of a field of the current record as DateTime object
      */
@@ -459,6 +477,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $value;
     }
 
+    #[Pure]
     /**
      * Returns a value of a field of the current record as an array
      */
@@ -632,6 +651,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return false;
     }
 
+    #[Pure]
     /**
      * Returns the complete result set as an indexed array in raw format.
      *
@@ -652,6 +672,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this;
     }
 
+    #[Pure]
     /**
      * Returns all values of a field name
      *
@@ -680,6 +701,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $result;
     }
 
+    #[Pure]
     /**
      * Returns an array of the values of multiple columns from a record set
      */
@@ -711,6 +733,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $result;
     }
 
+    #[Pure]
     /**
      * returns a single field stacked in an array
      */
@@ -857,8 +880,10 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return true;
     }
 
+    #[Pure]
     /**
      * Get the last error in the error stack. If there is no error, an empty array is returned.
+     * @deprecated use Exceptions instead of the error stack
      */
     public function getLastError(): array
     {
@@ -869,6 +894,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $error;
     }
 
+    #[Pure]
     /**
      * @deprecated use Exceptions instead of the error stack
      * @throws DAOException
@@ -888,6 +914,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $this;
     }
 
+    #[Pure]
     /**
      * Returns the result set in CSV format
      *
@@ -921,6 +948,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return $csv;
     }
 
+    #[Pure]
     /**
      * Maskiere Text CSV Konform
      *
@@ -959,6 +987,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         $this->returnFields = $fields;
     }
 
+    #[Pure]
     /**
      * Zeile als CSV ausgeben
      */
@@ -986,7 +1015,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
                 $csv .= \implode($separator, array_keys($this->records[$this->index])).$line_break;
             }
 
-            $values = array_values($this->getRecord());
+            $values = array_values($this->current());
             $i = 0;
             foreach($values as $val) {
                 $val = self::maskTextCSVCompliant((string)$val, $separator, $text_clinch, $formatNumericAsText);
@@ -1008,6 +1037,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return \json_encode($this->records, \JSON_THROW_ON_ERROR | $flags, $depth);
     }
 
+    #[Pure]
     /**
      * Zeile als Ini Werte ausgeben
      *
@@ -1017,14 +1047,9 @@ class RecordSet extends PoolObject implements Iterator, Countable
      */
     public function getRecordAsIni(string $key_value_separator = '=', string $separator = "\n"/*, $text_clinch=''*/): string
     {
-        $string = '';
-        if($this->records) {
-            foreach($this->records[$this->index] as $key => $val) {
-                if($string !== '') $string .= $separator;
-                $string .= $key.$key_value_separator.$val;
-            }
-        }
-        return $string;
+        $record = $this->current();
+        array_walk($record, fn($val , $key) => "$key$key_value_separator$val");
+        return implode($separator, $record);
     }
 
     /**
@@ -1038,11 +1063,11 @@ class RecordSet extends PoolObject implements Iterator, Countable
     public function getRecordsAsBSTable(int $total, int $totalNotFiltered = null): array
     {
         // @todo move into GUI_Table and get Keys from Configuration e.g. https://bootstrap-table.com/docs/api/table-options/#datafield
-        $return = [];
-        $return['total'] = $total;
-        $return['totalNotFiltered'] = $totalNotFiltered ?? $total;
-        $return['rows'] = $this->records;
-        return $return;
+        return [
+            'total' => $total,
+            'totalNotFiltered' => $totalNotFiltered ?? $total,
+            'rows' => $this->records,
+        ];
     }
 
     /**

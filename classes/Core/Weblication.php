@@ -23,6 +23,7 @@ use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
+use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
 use pool\classes\Core\Input\Cookie;
@@ -1488,6 +1489,7 @@ class Weblication extends Component
         return $result;
     }
 
+    #[Pure]
     /**
      * Creates an array with references to the variadic default values for ajax results
      *

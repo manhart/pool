@@ -246,6 +246,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         ];
     }
 
+    #[Pure]
     /**
      * Creates a Data Access Object
      */
@@ -989,8 +990,7 @@ SQL;
      */
     public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
     {
-        $id = $id ?? 0;
-        $where = $this->buildWhere($id, $key);
+        $where = $this->buildWhere($id ?? 0, $key);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
