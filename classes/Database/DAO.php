@@ -1092,7 +1092,7 @@ SQL;
 
     /**
      * Shorthand for fetching one or multiple values of a record
-     * @param array|int|string $pk a unique identifier use an array [$pk, $column] to specify the primary key column or search field
+     * @param array|int|string $pk a unique identifier use an array [$pk, $column] to specify the primary key column or search field. $pk and $column each can also be a list as is usual with DAO::get()
      * @param mixed ...$fields a list of columns to retrieve if omitted will return the associated primary key (useful for reverse lookup)
      * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively
      * @see static::get()
@@ -1190,7 +1190,8 @@ SQL;
             } else {//enlist all values e.g. in, not in
                 //apply quotation rules
                 $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
-                $values = implode(', ', $values) ?: 'NULL';
+                $value = implode(', ', $values);//for some reason '0' is false
+                $values = $value === '' ? 'NULL' : $value;//https://www.php.net/manual/en/language.types.boolean.php#112190
                 $value = "($values)";
             }
         } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
