@@ -1259,15 +1259,9 @@ class Template extends PoolObject
      */
     public function assignRecordset(string $blockHandle, array $recordset = []): static
     {
-        $count = count($recordset);
-        if(!$count) {
-            return $this;
-        }
-
+        if(!$recordset) return $this;
         foreach($recordset as $record) {
-            if($this->newBlock($blockHandle)) {
-                $this->setVar($record);
-            }
+            $this->newBlock($blockHandle)?->setVars($record);
         }
         $this->leaveBlock();
         return $this;
