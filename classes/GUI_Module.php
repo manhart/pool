@@ -187,28 +187,27 @@ class GUI_Module extends Module
             $class_exists = class_exists($GUIClassName, false);
         }
 
-        if($class_exists) {
-            $Params = new Input(Input::EMPTY);
-            $Params->setParams($params);
-
-            /* @var $GUI GUI_Module */
-            $GUI = new $GUIClassName($Owner, $Params->getData());
-            //TODO check authorisation
-            //$GUI->disable();
-            if($ParentGUI instanceof Module) {
-                $GUI->setParent($ParentGUI);
-            }
-            if($autoLoadFiles && $GUI->autoLoadFiles) {
-                $GUI->loadFiles();
-                if($search) {
-                    $GUI->searchGUIsInPreloadedContent();
-                }
-            }
-            return $GUI;
+        if(!$class_exists) {
+            //Class not found
+            throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
         }
+        $Params = new Input(Input::EMPTY);
+        $Params->setParams($params);
 
-        //Class not found
-        throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
+        /* @var $GUI GUI_Module */
+        $GUI = new $GUIClassName($Owner, $Params->getData());
+        //TODO check authorisation
+        //$GUI->disable();
+        if ($ParentGUI instanceof Module) {
+            $GUI->setParent($ParentGUI);
+        }
+        if ($autoLoadFiles && $GUI->autoLoadFiles) {
+            $GUI->loadFiles();
+            if ($search) {
+                $GUI->searchGUIsInPreloadedContent();
+            }
+        }
+        return $GUI;
     }
 
     /**
