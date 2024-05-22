@@ -1081,7 +1081,7 @@ SQL;
     }
 
     #[Pure]
-    private function castValue(mixed $value, mixed $targetType):mixed
+    public static function castValue(mixed $value, mixed $targetType):mixed
     {
         return match ($targetType) {
             self::STRING => (string) $value,
