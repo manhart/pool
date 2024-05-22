@@ -471,13 +471,14 @@ SQL;
         }
 
         $queryParts = [];
-        $firstRule = $filter_rules[0];
+        $firstRule = $filter_rules[0] ?? null;
         if(!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non joining operator
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
         $mappedOperator = $this->mapOperator($operator);
         foreach($filter_rules as $record) {
+            if (!$record) continue;
             $skipAutomaticOperator = $skip_next_operator;
             if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
                 if($record instanceof Operator) $record = $this->mapOperator($record);
