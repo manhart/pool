@@ -314,7 +314,7 @@ class GUI_Module extends Module
             $Frame->getHeadData()->addStyleSheet($cssFile);
         }
 
-        foreach($this->jsFiles as $jsFile) {
+        foreach($this->getJsFiles() as $jsFile) {
             $jsFile = $this->getWeblication()->findJavaScript($jsFile, $guiClassFolder, $this->isPOOL());
             $Frame->getHeadData()->addJavaScript($jsFile);
         }
@@ -693,6 +693,12 @@ class GUI_Module extends Module
      */
     protected function registerAjaxCalls(): void
     {
+    }
+
+    /** @return string[] */
+    protected function getJsFiles(): array
+    {
+        return $this->jsFiles;
     }
 
     #[Pure]
