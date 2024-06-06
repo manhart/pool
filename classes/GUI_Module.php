@@ -139,6 +139,8 @@ class GUI_Module extends Module
      */
     private string $ajaxMethod;
 
+    private static array $guiCache = [];
+
     /**
      * Checks if we are in an ajax call and creates a template object
      *
@@ -178,24 +180,12 @@ class GUI_Module extends Module
     public static function createGUIModule(string $GUIClassName, ?Component $Owner = null, ?Module $ParentGUI = null, string $params = '',
         bool $autoLoadFiles = true, bool $search = true): GUI_Module
     {
-        $class_exists = class_exists($GUIClassName, false);
-
-        if(!$class_exists) {
-            self::autoloadGUIModule($GUIClassName, $ParentGUI);
-
-            // retest
-            $class_exists = class_exists($GUIClassName, false);
-        }
-
-        if(!$class_exists) {
-            //Class not found
-            throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
-        }
+        $GUIFQClassName = self::$guiCache[$GUIClassName] ??= self::findGUIModule($GUIClassName, $ParentGUI);
         $Params = new Input(Input::EMPTY);
         $Params->setParams($params);
 
         /* @var $GUI GUI_Module */
-        $GUI = new $GUIClassName($Owner, $Params->getData());
+        $GUI = new $GUIFQClassName($Owner, $Params->getData());
         //TODO check authorisation
         //$GUI->disable();
         if ($ParentGUI instanceof Module) {
@@ -219,24 +209,16 @@ class GUI_Module extends Module
      */
     public static function autoloadGUIModule(string $GUIClassName, ?Module $ParentGUI = null): string|false
     {
+        $GUIRootDirs = [];
         if(Autoloader::hasNamespace($GUIClassName)) {
-            $GUIRootDirs = [
-                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT,
-            ];
-
+            $baseNameSpacePath = defined('BASE_NAMESPACE_PATH') ? BASE_NAMESPACE_PATH : DIR_DOCUMENT_ROOT;
+            $GUIRootDirs[] = $baseNameSpacePath;
             $GUIClassName = str_replace(NAMESPACE_SEPARATOR, '/', $GUIClassName);
         }
         else {
-            $GUIRootDirs = [
-                getcwd().'/'.PWD_TILL_GUIS,
-            ];
-            if(defined('DIR_POOL_ROOT')) {
-                $GUIRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_GUIS;
-            }
-            if(defined('DIR_COMMON_ROOT')) {
-                $GUIRootDirs[] = DIR_COMMON_ROOT.'/'.PWD_TILL_GUIS;
-            }
-
+            $GUIRootDirs[] = getcwd().'/'.PWD_TILL_GUIS;
+            if(defined('DIR_POOL_ROOT')) $GUIRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_GUIS;
+            if(defined('DIR_COMMON_ROOT')) $GUIRootDirs[] = DIR_COMMON_ROOT.'/'.PWD_TILL_GUIS;
             // directory + classname
             $GUIClassName = "$GUIClassName/$GUIClassName";
         }
@@ -419,6 +401,25 @@ class GUI_Module extends Module
     protected function setMarker(string $marker): void
     {
         $this->marker = $marker;
+    }
+
+    /**
+     * Attempts to find the GUI class in the file system.
+     */
+    private static function findGUIModule(string $GUIClassName, ?Module $ParentGUI): string
+    {
+        if(class_exists($GUIClassName, false)) return $GUIClassName;
+        // attempt autoload
+        if(!$fileName = self::autoloadGUIModule($GUIClassName, $ParentGUI))
+            throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
+
+        if(class_exists($GUIClassName, false)) return $GUIClassName;
+        // construct namespace according to PSR-4 standards
+        $docRoot = addEndingSlash(realpath(DIR_DOCUMENT_ROOT));
+        $baseNameSpace = defined('BASE_NAMESPACE_PATH') ? BASE_NAMESPACE_PATH : '';
+        $nameSpaceClassName = str_replace([$docRoot, '/'], [$baseNameSpace, NAMESPACE_SEPARATOR], remove_extension($fileName));
+        if(class_exists($nameSpaceClassName, false)) return $nameSpaceClassName;
+        throw new ModulNotFoundException("Your namespace for '$GUIClassName' doesn't match PSR-4 standards. Expected '$nameSpaceClassName'");
     }
 
     /**
