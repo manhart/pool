@@ -169,6 +169,7 @@ class GUI_Module
             query = null,
             method = 'GET',
             module = this.getFullyQualifiedClassName(),
+            moduleName = this.name,
             body,
             ...extraOpts
         } = options;
@@ -235,7 +236,8 @@ class GUI_Module
 
         let Endpoint = new URL(pathname + queryString, origin);
         Endpoint.searchParams.get('schema') || Endpoint.searchParams.set('schema', (new URLSearchParams(search).get('schema') || ''));
-        Endpoint.searchParams.set('module', module);
+        Endpoint.searchParams.set('module', module); // for the server-side module to know which module is calling
+        Endpoint.searchParams.set('moduleName', moduleName); // for the server-side module to know the name of the module
         Endpoint.searchParams.set('method', ajaxMethod);
 
         // console.debug('fetch', Endpoint.toString(), reqOptions);
