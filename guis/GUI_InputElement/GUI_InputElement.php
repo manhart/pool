@@ -1,16 +1,18 @@
 <?php
-/**
- * -= PHP Object Oriented Library (POOL) =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * GUI_InputElement.class.php
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @version $Id: GUI_InputElement.class.php,v 1.8 2007/07/12 12:55:51 aziz Exp $
- * @version $revision 1.0$
- * @version
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
  *
- * @since 2004/07/07
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 use pool\classes\Core\Input\Input;
@@ -22,8 +24,7 @@ use pool\classes\Core\Input\Session;
  * Grundelemente von Input (<input type=text>).
  *
  * @package pool
- * @author manhart
- * @version $Id: GUI_InputElement.class.php,v 1.8 2007/07/12 12:55:51 aziz Exp $
+ * @since 2004/07/07
  */
 class GUI_InputElement extends GUI_Universal
 {
@@ -34,7 +35,7 @@ class GUI_InputElement extends GUI_Universal
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
      */
-    public function init(?int $superglobals = Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVars([
                 'name' => $this->getName(),

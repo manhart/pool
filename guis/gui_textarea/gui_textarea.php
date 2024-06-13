@@ -32,7 +32,7 @@ class GUI_Textarea extends GUI_Universal
      *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
      */
-    function init(?int $superglobals = Input::EMPTY)
+    function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVars([
                 'name' => $this->getName(),

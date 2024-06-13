@@ -10,7 +10,7 @@ use pool\classes\Core\Input\Input;
  */
 class GUI_Checkbox extends GUI_InputElement
 {
-    function init(?int $superglobals= Input::EMPTY)
+    function init(?int $superglobals= Input::EMPTY): void
     {
         $this -> Defaults -> addVar('type', 'checkbox');
 

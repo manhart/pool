@@ -34,7 +34,7 @@ class GUI_Label extends GUI_Module
      *
      * @access public
      **/
-    function init(?int $superglobals= Input::EMPTY)
+    function init(?int $superglobals= Input::EMPTY): void
     {
         $this -> Defaults -> addVar('id', $this -> getName());
         $this -> Defaults -> addVar('name', $this -> getName());

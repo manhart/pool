@@ -29,7 +29,7 @@ class GUI_Select extends GUI_Universal
     /**
      * Defaults
      */
-    public function init(?int $superglobals = Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVars(
             [

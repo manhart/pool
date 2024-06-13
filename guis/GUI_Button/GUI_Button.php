@@ -20,7 +20,7 @@ class GUI_Button extends GUI_Universal
     /**
      * @param int|null $superglobals Superglobals I_GET, I_POST, I_REQUEST....
      */
-    public function init(?int $superglobals = Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVars([
                 'name' => $this->getName(),

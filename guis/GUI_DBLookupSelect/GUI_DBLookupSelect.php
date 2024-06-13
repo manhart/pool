@@ -35,7 +35,7 @@ class GUI_DBLookupSelect extends GUI_Select
      * pk                = ''    Primaerschluessel (mehrere Spaltennamen werden mit ; getrennt)
      * columns            = ''    Auszulesende Spalten (Spaltennamen werden mit ; getrennt)
      **/
-    public function init(?int $superglobals = Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVar('tabledefine', []);
         $this->Defaults->addVar('keyValue', false);    // separated by ;

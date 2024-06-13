@@ -132,7 +132,7 @@ class Module extends Component
      * @param int|null $superglobals Konstanten aus der Input.class.php
      * @see Input::init()
      */
-    public function init(?int $superglobals = null)
+    public function init(?int $superglobals = null): void
     {
         // fill variable container input with external variables
         $this->Input = new Input($superglobals ?? $this->superglobals, $this->inputFilter);
