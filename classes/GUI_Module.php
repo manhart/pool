@@ -277,7 +277,7 @@ class GUI_Module extends Module
         $guiClassFolder = $this->getGUIClassFolder();
 
         foreach($this->getTemplates() as $handle => $file) {
-            $template = $this->Weblication->findTemplate($file, $guiClassFolder, $this->isPOOL());
+            $template = $this->getWeblication()->findTemplate($file, $guiClassFolder, $this->isPOOL());
             $this->Template->setFilePath($handle, $template);
         }
 
@@ -291,7 +291,7 @@ class GUI_Module extends Module
             return $this;
         }
 
-        foreach($this->cssFiles as $cssFile) {
+        foreach($this->getCssFiles() as $cssFile) {
             $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $guiClassFolder, $this->isPOOL());
             $Frame->getHeadData()->addStyleSheet($cssFile);
         }
@@ -702,6 +702,11 @@ class GUI_Module extends Module
         return $this->jsFiles;
     }
 
+    protected function getCssFiles(): array
+    {
+        return $this->cssFiles;
+    }
+
     #[Pure]
     /** sets the success and message of a result and returns the result */
     protected function succeed(array $result = [], string $message = ''):array
@@ -865,4 +870,5 @@ class GUI_Module extends Module
         $this->plainJSON = $activate;
         return $this;
     }
+
 }
