@@ -35,7 +35,7 @@ Trait CUD{
      * @param array|null $dataMask
      * @param string $successMessage
      * @param array $verbs
-     * @param string|null $rowName
+     * @param string|null $rowName the name used to identify the read-back section of the generated result
      * @param array $collisionFilter
      * @param string|Closure $collisionMessage
      * @param array|null $data
