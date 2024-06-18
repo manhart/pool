@@ -1922,7 +1922,7 @@ function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []
 {
     $ascii = array(
         0 => array(48, 57), // 0-9
-        1 => array(97, 122) // a-z
+        1 => array(97, 122), // a-z
     );
 
     $options += [
@@ -2426,9 +2426,13 @@ function containException(Closure $closure, $fallbackHandler = null): Closure {
     };
 }
 
-class Pointer
+class Pointer implements JsonSerializable
 {
     public mixed $val;
+
+    public static function Pointer (mixed $val = null):Pointer {
+        return new Pointer($val);
+    }
 
     public function __construct($val)
     {
@@ -2440,9 +2444,14 @@ class Pointer
         return $this->val;
     }
 
-    public function setVal(mixed $val):void
+    public function setVal(mixed $val): void
     {
         $this->val = $val;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->deref();
     }
 }
 
