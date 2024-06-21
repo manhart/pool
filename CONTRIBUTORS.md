@@ -10,7 +10,9 @@ We would like to acknowledge the contributions of the following people to the [P
 
 - **Philipp Lehfeld**
 - **Leon Becher**
-- **Christian Schmidseder** 
+- **Christian Schmidseder**
+- **Sebastian Brieschenk**
+- **Jan Tillert**
 
 ---
 
