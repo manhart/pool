@@ -2445,3 +2445,11 @@ class Pointer
         $this->val = $val;
     }
 }
+
+/**
+ * Check if an object has a specific trait
+ */
+function hasTrait(object $object, string $trait, bool $recursive = true): bool
+{
+    return in_array($trait, $recursive ? class_uses_recursive($object) : class_uses($object));
+}
