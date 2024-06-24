@@ -43,7 +43,7 @@ class MySQLi extends Driver
     private string $charset = 'utf8';
 
     /**
-     * @param \pool\classes\Database\DataInterface $dataInterface
+     * @param DataInterface $dataInterface
      * @param string $hostname
      * @param int $port
      * @param string $username
