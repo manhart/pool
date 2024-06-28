@@ -468,9 +468,10 @@ class GUI_Module extends Module
      */
     public function prepareContent(): void
     {
+        if (!$this->enabled()) return;
         $this->prepare();
         $this->prepareChildren();
-
+        if (!$this->enabled()) return;
         if(($Head = $this->Weblication->getHead()) && $this->js_createGUIModule($this->getClassName())) {
             $Head->setClientData($this, $this->getClientVars());
         }
