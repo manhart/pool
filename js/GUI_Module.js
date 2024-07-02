@@ -120,6 +120,55 @@ class GUI_Module
     }
 
     /**
+     * populates named Elements with the data of an iterator
+     * @see FormData.entries()
+     * @param {Iterable} data key is used as name value may be an array in which case the function will attempt to find elements named `name[]` analog to the way php parses a form. <br>
+     * Currently only supports one layer of nesting
+     * @param {Element} node the Element in which to search, typically a specific form or fieldset
+     * @param overwriteDefault additionally write the value to the defaultValue
+     * @param {function(number, number)} indexMapper is given the current iteration counter (0 based) and the length of the provided data array. The function is expected to return an appropriate index
+     */
+    loadFormData(data, node, overwriteDefault = false, indexMapper = x => x) {
+        for (const [name, dataItem] of data) {
+            const htmlName = isArray(dataItem) ? name + '[]' : name;
+            const dataFields = node.querySelectorAll(`[name='${htmlName}']`);
+            let i = 0;
+            for (const dataField of dataFields) {
+                const newValue = isArray(dataItem) ? dataItem[indexMapper(i, dataItem.length)] : dataItem;
+                this.loadFormValue(newValue, dataField, overwriteDefault);
+            }
+        }
+    }
+
+    /**
+     * Loads a value into the HTML input/select
+     * @param value new value to assign
+     * @param {Element<input>} input the input element
+     * @param overwriteDefault additionally write the value to the defaultValue
+     */
+    loadFormValue(value, input, overwriteDefault = false)
+    {
+        const isCheckbox = input.type === 'checkbox';
+        const isRadio = input.type === 'radio';
+        let changed;
+        if (isCheckbox) {
+            changed = input.checked !== value || (overwriteDefault && input.defaultChecked !== value);
+            input.checked = value;
+            if (overwriteDefault) input.defaultChecked = input.checked;
+        } else if (isRadio) {
+            const wasChecked = input.checked;
+            const checked = input.checked = input.value === value;
+            if (overwriteDefault) input.defaultChecked = checked;
+            if (checked > wasChecked) input.dispatchEvent(new Event('change', {bubbles: true}));//as per HTML spec only on rise
+        } else {
+            changed = input.value !== value || (overwriteDefault && input.defaultValue !== value);
+            input.value = value;
+            if (overwriteDefault) input.defaultValue = input.value;//in case you missed the memo, JS is strange so only .value will normalize assigned data
+        }
+        if (changed) input.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+
+    /**
      * parses the response as JSON
      * @param {Response} response
      * @returns {Promise<*>}
