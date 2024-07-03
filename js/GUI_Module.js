@@ -132,11 +132,10 @@ class GUI_Module
         for (const [name, dataItem] of data) {
             const htmlName = isArray(dataItem) ? name + '[]' : name;
             const dataFields = node.querySelectorAll(`[name='${htmlName}']`);
-            let i = 0;
-            for (const dataField of dataFields) {
-                const newValue = isArray(dataItem) ? dataItem[indexMapper(i, dataItem.length)] : dataItem;
+            dataFields.forEach((dataField, index) => {
+                const newValue = isArray(dataItem) ? dataItem[indexMapper(index, dataItem.length)] : dataItem;
                 this.loadFormValue(newValue, dataField, overwriteDefault);
-            }
+            });
         }
     }
 
