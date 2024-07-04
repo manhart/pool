@@ -584,7 +584,7 @@ class GUI_Module extends Module
                 return $this->respondToAjaxCall(null,
                     "Method $requestedMethod is not registered for GUI {$this->getClassName()}", __METHOD__, 'access-denied', 403);
             return $this->respondToAjaxCall(null,
-                "The method '$requestedMethod' in the class {$this->getClassName()} is not a callable", __METHOD__, 'not-callable', 501);
+                "The method '$requestedMethod' in the class {$this->getClassName()} is not a callable", __METHOD__, 'not-callable', 405);
         }
 
         // @todo validate parameters?
