@@ -100,30 +100,6 @@ class GUI_Module extends Module
      */
     private string $finalContent = '';
 
-    //    private array $inspectorProperties = [
-    //        'moduleName' => [ // pool
-    //            'pool' => true,
-    //            'caption' => 'ModuleName',
-    //            'type' => 'string',
-    //            'value' => '',
-    //            'element' => 'input',
-    //            'inputType' => 'text'
-    //        ]
-    //    ];
-    //
-    //    protected array $configuration = [];
-
-    /**
-     * @var Template $TemplateBox Template Engine renders a frame around this GUI (only if it is activated via enableBox)
-     */
-    private Template $TemplateBox;
-
-    /**
-     * This is how you put a HML template around this GUI. E.g. to create a frame around this template
-     *
-     * @var bool $enabledBox
-     */
-    private bool $enabledBox = false;
 
     /**
      * Is this module the Target of an Ajax-Call
@@ -472,9 +448,9 @@ class GUI_Module extends Module
         $this->prepare();
         $this->prepareChildren();
         if (!$this->enabled()) return;
-        if(($Head = $this->Weblication->getHead()) && $this->js_createGUIModule($this->getClassName())) {
-            $Head->setClientData($this, $this->getClientVars());
-        }
+        $includedClientCode = $this->js_createGUIModule($this->getClassName());
+        if(!$includedClientCode) return;
+        $this->Weblication->getHead()->setClientData($this, $this->getClientVars());
     }
 
     /**
@@ -489,20 +465,10 @@ class GUI_Module extends Module
      */
     protected function js_createGUIModule(string $className = '', bool $includeJS = true, bool $includeCSS = true): bool
     {
-        if(!$this->js_createGUIModule) {
-            return false;
-        }
-
-        if($this->getWeblication()?->hasFrame()) {
-            $Frame = $this->getWeblication()?->getFrame();
-        }
-        elseif($this instanceof GUI_CustomFrame) {
-            $Frame = $this;
-        }
-        else {
-            return false;
-        }
-
+        if(!$this->js_createGUIModule) return false;
+        $Frame = $this->getWeblication()?->getFrame();
+        $Frame ??= $this;
+        if(!$Frame instanceof GUI_CustomFrame) return false;
         $className = $className ?: $this->getClassName();
         $guiClassFolder = $this->getGUIClassFolder();
         //associated Stylesheet
@@ -522,12 +488,9 @@ class GUI_Module extends Module
     private function finalizeChildren(): void
     {
         foreach($this->childModules as $GUI) {
-            if(!$GUI->enabled()) {
-                continue;
-            }
-            if($GUI instanceof self) {
-                $GUI->finalContent = $GUI->finalizeContent();
-            }
+            if(!$GUI->enabled()) continue;
+            if(!$GUI instanceof self) continue;
+            $GUI->finalContent = $GUI->finalizeContent();
         }
     }
 
@@ -539,27 +502,15 @@ class GUI_Module extends Module
      */
     public function finalizeContent(): string
     {
-        if($this->enabled()) {
+        if(!$this->enabled()) return '';
+        if ($this->isAjax) {
+            //GUI is target of the Ajax-Call
+            $content = $this->invokeAjaxMethod($this->ajaxMethod);
+        } else {
             $this->finalizeChildren();
-            if($this->isAjax) {//GUI is target of the Ajax-Call
-                //Start the Ajax Method -> returns JSON
-                $content = $this->invokeAjaxMethod($this->ajaxMethod);
-            }
-            else {
-                //Parse Templates or get the finished Content from a specific implementation
-                $content = $this->finalize();
-                //Wrap a GUI_Box around the content
-                if($this->enabledBox) {
-                    $this->TemplateBox->setVar('CONTENT', $content);
-                    $this->TemplateBox->parse('stdout');
-                    $content = $this->TemplateBox->getContent('stdout');
-                    $this->TemplateBox->clear();
-                }
-            }
-            return $this->pasteChildren($content);
+            $content = $this->finalize();
         }
-
-        return '';
+        return $this->pasteChildren($content);
     }
 
     /**
@@ -710,7 +661,7 @@ class GUI_Module extends Module
 
     #[Pure]
     /** sets the success and message of a result and returns the result */
-    protected function succeed(array $result = [], string $message = ''):array
+    protected static function succeed(array $result = [], string $message = ''):array
     {
         $result['success'] = true;
         $result['message'] = $message;
@@ -719,7 +670,7 @@ class GUI_Module extends Module
 
     #[Pure]
     /** sets the success and message of a result and returns the result */
-    protected function fail(array $result = [], string $message = ''):array
+    protected static function fail(array $result = [], string $message = ''):array
     {
         $result['success'] = false;
         $result['message'] = $message;
@@ -727,7 +678,8 @@ class GUI_Module extends Module
     }
 
     /**
-     * Returns the contents of the module
+     * Returns the contents of the module<br>
+     * Parse Templates or get the finished Content from a specific implementation
      */
     protected function finalize(): string
     {
@@ -764,32 +716,6 @@ class GUI_Module extends Module
     private function getMarker(): string
     {
         return $this->marker;
-    }
-
-    /**
-     * Aktiviert eine Box. Erwartet als Parameter eine HTML-Vorlage mit der Box.
-     * In der Vorlage muss der Platzhalter {CONTENT} stehen. Bei Bedarf kann noch {TITLE} gesetzt werden.
-     *
-     * @param string $title Titel
-     * @param string $template HTML Vorlage (nur Dateiname ohne Pfad; Standard "tpl_box.html"); sucht immer im Projektverzeichnis nach der Vorlage.
-     */
-    public function enableBox(string $title = '', string $template = 'tpl_box.html'): static
-    {
-        $file = $this->Weblication->findTemplate($template, $this->getClassName());
-        $this->enabledBox = (bool)$file;
-        if($file) {
-            $this->TemplateBox = (new Template())->setFilePath('stdout', $file)->setVar('TITLE', $title);
-        }
-        return $this;
-    }
-
-    /**
-     * Deaktiviert die Box.
-     */
-    public function disableBox(): static
-    {
-        $this->enabledBox = false;
-        return $this;
     }
 
     /**
