@@ -22,6 +22,7 @@
  */
 
 use JetBrains\PhpStorm\NoReturn;
+use JetBrains\PhpStorm\Pure;
 
 
 /**
@@ -2453,6 +2454,12 @@ class Pointer implements JsonSerializable
     {
         return $this->deref();
     }
+}
+
+#[Pure]
+function array_promoteColumnToKey(array $array, string|int $column) {
+    $columnValues = array_column($array, $column);
+    return array_combine($columnValues, $array);
 }
 
 /**
