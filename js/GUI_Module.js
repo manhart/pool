@@ -130,10 +130,16 @@ class GUI_Module
      */
     loadFormData(data, node, overwriteDefault = false, indexMapper = x => x) {
         for (const [name, dataItem] of data) {
-            const htmlName = isArray(dataItem) ? name + '[]' : name;
+            const htmlName = (isArray(dataItem) || isObject(dataItem)) ? name + '[]' : name;
             const dataFields = node.querySelectorAll(`[name='${htmlName}']`);
             dataFields.forEach((dataField, index) => {
-                const newValue = isArray(dataItem) ? dataItem[indexMapper(index, dataItem.length)] : dataItem;
+                let newValue;
+                if (isArray(dataItem)) newValue = dataItem[indexMapper(index, dataItem.length)];
+                else if (isObject(dataItem)) {
+                    if (dataItem.hasOwnProperty(index)) newValue = dataItem[index];
+                    else return;
+                }
+                else newValue = dataItem;
                 this.loadFormValue(newValue, dataField, overwriteDefault);
             });
         }
