@@ -602,7 +602,7 @@ class GUI_Module extends Module
             $potentialErrorType = 'undefined (Spurious output by invoked method)';
         }
         return $this->respondToAjaxCall($result, $errorText,
-            "$callingClassName:$requestedMethod", $potentialErrorType, $statusCode ?? 200);
+            "$callingClassName:$requestedMethod", $potentialErrorType, $statusCode ?? 200, $ajaxMethod['flags'] ?? 0);
     }
 
     /**
@@ -615,7 +615,7 @@ class GUI_Module extends Module
      * @param int $statusCode
      * @return string
      */
-    protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200): string
+    protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0): string
     {
         Log::info($error, ['className' => $this->getClassName(), 'method' => $this->ajaxMethod, 'errorType' => $errorType, 'status' => $statusCode],
             'ajaxCallLog');
@@ -629,7 +629,7 @@ class GUI_Module extends Module
             http_response_code($statusCode);
         }
         //encode data
-        $json = json_encode($clientData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
+        $json = json_encode($clientData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION | $flags);
         if(json_last_error() === JSON_ERROR_NONE) {
             return $json;
         }
