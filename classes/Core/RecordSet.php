@@ -143,10 +143,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Filters elements of the dataset using a callback function
-     *
-     * @param callable $callback
-     * @param int $mode
-     * @return void
      */
     public function filter(callable $callback, int $mode = 0): void
     {

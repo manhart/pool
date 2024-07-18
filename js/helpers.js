@@ -210,7 +210,7 @@ function isNumber(a) {
 }
 
 function isObject(a) {
-    return (a && typeof a == 'object') || isFunction(a);
+    return a instanceof Object;
 }
 
 function isString(a) {
