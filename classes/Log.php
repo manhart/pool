@@ -406,6 +406,9 @@ class Log
     public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = ucfirst(self::$TEXT_LEVEL[$level]).' '.$text;
+        if(!empty($extra)) {
+            $message .= ' '.json_encode($extra);
+        }
         self::$facilities[$configurationName][self::OUTPUT_FILE]['LogFile']->addLine($message);
     }
 
