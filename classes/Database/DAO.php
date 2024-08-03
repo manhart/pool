@@ -59,12 +59,12 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * don't escape the value in the (sql) query
      */
     public const DAO_NO_ESCAPE = 2;
-
+    /**
+     * Data types
+     */
     public const STRING = 1;
     public const INT = 2;
     public const FLOAT = 3;
-
-
 
     /**
      * @var string|null Name of the table / file / view (must be declared in derived class)
@@ -126,8 +126,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected array $escapedColumns = [];
 
-    private array|false|null $defaultColumns;
-
     /**
      * @var array<string, string|Closure> overwrite this array in the constructor to create the commands needed for the database.
      * @see Commands
@@ -188,6 +186,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
     protected string $quotedTableAlias = '';
 
+    protected bool $throwsOnError = false;
+
+    private array|false|null $defaultColumns;
+
     /**
      * @var array|string[] Contains the characters that do not need to be escaped
      */
@@ -202,8 +204,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * @var array $formatter An array used for storing formatter functions for columns.
      */
     private array $formatter = [];
-
-    protected bool $throwsOnError = false;
 
     /**
      * Defines the default commands.
@@ -247,6 +247,17 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
+     * Creates a Data Access Object with the given columns
+     */
+    public static function createWithColumns(string ...$columns): static
+    {
+        $DAO = static::create(null, null, true);
+        $DAO->setColumns(...$columns);
+        return $DAO;
+    }
+
+    #[Pure]
+    /**
      * Creates a Data Access Object
      */
     final public static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
@@ -269,16 +280,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
-     * Creates a Data Access Object with the given columns
-     */
-    public static function createWithColumns(string ...$columns): static
-    {
-        $DAO = static::create(null, null, true);
-        $DAO->setColumns(...$columns);
-        return $DAO;
-    }
-
-    /**
      * Fetches the columns automatically from the DataInterface / Driver
      *
      * @throws InvalidArgumentException|DatabaseConnectionException|RuntimeException|
@@ -291,7 +292,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $this;
     }
 
-    private function fetchColumnsList():array{
+    private function fetchColumnsList(): array
+    {
         [$this->field_list, $columns, $this->pk] = $this->getDataInterface()->getTableColumnsInfo($this->database, $this->table);
         return $columns;
     }
@@ -364,6 +366,101 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
+     * @return string
+     */
+    public static function getDatabaseName(): string
+    {
+        return static::$databaseName;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getTableName(): string
+    {
+        return static::$tableName;
+    }
+
+    #[Pure]
+    public static function castValue(mixed $value, mixed $targetType): mixed
+    {
+        return match ($targetType) {
+            self::STRING => (string)$value,
+            self::INT => (int)$value,
+            self::FLOAT => (float)$value,
+            default => $value,
+        };
+    }
+
+    /**
+     * Shorthand for fetching one or multiple values of a record
+     *
+     * @see self::fetchData()
+     */
+    public static function fetchDataStatic($pk, ...$fields)
+    {
+        return static::create(throws: true)->fetchData($pk, ...$fields);
+    }
+
+    /**
+     * Shorthand for fetching one or multiple values of a record
+     *
+     * @param array|int|string $pk a unique identifier use an array [$pk, $column] to specify the primary key column or search field. $pk and $column each can also be a list as is
+     *     usual with DAO::get()
+     * @param mixed ...$fields a list of columns to retrieve if omitted will return the associated primary key (useful for reverse lookup)
+     * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively
+     * @see static::get()
+     */
+    public function fetchData(array|int|string $pk, ...$fields): mixed
+    {
+        $fields = $fields ?: $this->getPrimaryKey();
+        if(!array_is_list($fields)) {//cast instructions exist
+            $casts = array_values($fields);
+            $fields = array_filter($fields, is_string(...)) + array_filter(array_keys($fields), is_string(...));//screen out instructions and listify fields
+        }
+        $record = $this->setColumns(...$fields)->get(...(array)$pk)->getRecord();
+        $record = isset($casts) && $record ? array_map($this->castValue(...), $record, $casts) : array_values($record);//unwrap values
+        return count($fields) === 1 ? $record[0] ?? null : $record;
+    }
+
+    /**
+     * Returns primary key
+     *
+     * @return array primary key
+     */
+    public function getPrimaryKey(): array
+    {
+        return $this->pk;
+    }
+
+    /**
+     * Returns a single record e.g. by primary key
+     *
+     * @see \MySQL_DAO::buildWhere
+     */
+    public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
+    {
+        $where = $this->buildWhere($id ?? 0, $key);
+
+        /** @noinspection SqlResolve */
+        $sql = <<<SQL
+SELECT $this->column_list
+FROM $this
+WHERE
+    $where
+SQL;
+        return $this->execute($sql);
+    }
+
+    /**
+     * Shorthand for current date()
+     */
+    final public static function now(string $format = 'Y-m-d H:i:s'): string
+    {
+        return \date($format);
+    }
+
+    /**
      * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
      * @see \MySQL_DAO::buildWhere
@@ -374,7 +471,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * @see MySQL_DAO::buildLimit
      */
     public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter = [], array $sorting = [],
-                                array                 $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
+        array $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
     {
         $optionsStr = implode(' ', $options);
 
@@ -470,13 +567,14 @@ SQL;
         }
 
         $queryParts = [];
-        $firstRule = $filter_rules[0];
+        $firstRule = $filter_rules[0] ?? null;
         if(!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non joining operator
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
         $mappedOperator = $this->mapOperator($operator);
         foreach($filter_rules as $record) {
+            if(!$record) continue;
             $skipAutomaticOperator = $skip_next_operator;
             if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
                 if($record instanceof Operator) $record = $this->mapOperator($record);
@@ -493,6 +591,103 @@ SQL;
                 " $mappedOperator $record" : $record;//automation puts operator between the last record and this one
         }
         return implode('', $queryParts);
+    }
+
+    /**
+     * Map operator to SQL
+     */
+    protected function mapOperator(Operator $operator): string
+    {
+        return match ($operator) {
+            Operator::equal => '=',
+            Operator::notEqual => '!=',
+            Operator::greater => '>',
+            Operator::greaterEqual => '>=',
+            Operator::less => '<',
+            Operator::lessEqual => '<=',
+            Operator::like => 'like',
+            Operator::notLike => 'not like',
+            Operator::in => 'in',
+            Operator::notIn => 'not in',
+            Operator::is => 'is',
+            Operator::isNot => 'is not',
+            Operator::isNull => 'is null',
+            Operator::isNotNull => 'is not null',
+            Operator::between => 'between',
+            Operator::notBetween => 'not between',
+            Operator::exists => 'exists',
+            Operator::notExists => 'not exists',
+            Operator::all => 'all',
+            Operator::any => 'any',
+            Operator::or => 'or',
+            Operator::and => 'and',
+            Operator::xor => 'xor',
+            Operator::not => 'not',
+        };
+    }
+
+    /**
+     * @param array $record
+     * @return string
+     */
+    private function assembleFilterRecord(array $record): string
+    {
+        $field = $this->translateValues ? //get field 'name'
+            $this->translateValues($record[0]) : $record[0];//inject replace command?
+        if(!($record[1] instanceof Operator) && !is_string($record[1])) // we assume that if an operator does not exist, an equal operator is meant
+            array_splice($record, 1, 0, [Operator::equal]);
+        $rawInnerOperator = $record[1];
+        $innerOperator = match (true) {
+            $rawInnerOperator instanceof Operator => $this->mapOperator($rawInnerOperator),
+            default => $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator,
+        };
+
+        $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
+        //parse quotation options (defaults to false)
+        $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
+        $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
+        $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
+        if(is_array($values)) {//multi value operation
+            if($rawInnerOperator === 'between') {
+                $value = /* min */
+                    $this->escapeValue($values[0], $noEscape, $noQuotes);
+                $value .= " {$this->mapOperator(Operator::and)} ";
+                $value .= /* max */
+                    $this->escapeValue($values[1], $noEscape, $noQuotes);
+            }
+            else {//enlist all values e.g. in, not in
+                //apply quotation rules
+                $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
+                $value = implode(', ', $values);//for some reason '0' is false
+                $values = $value === '' ? 'NULL' : $value;//https://www.php.net/manual/en/language.types.boolean.php#112190
+                $value = "($values)";
+            }
+        }
+        elseif($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
+            $expression = $this->commands[$values->name];
+            $value = $expression instanceof Closure ?
+                $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
+        }
+        elseif($values instanceof DateTimeInterface) {//format date-objects
+            $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
+            $value = "'$dateTime'";
+        }
+        else {
+            $value = match (gettype($values)) {//handle by type
+                'NULL' => match ($rawInnerOperator) {
+                    Operator::is, Operator::isNot => 'true',
+                    Operator::isNull, Operator::isNotNull => '',
+                    default => 'NULL'
+                },
+                'boolean' => bool2string($values),
+                'double', 'integer' => $values,//float and int
+                default => match ($values instanceof SqlStatement) {
+                    true => $values->getStatement(),
+                    default => $this->escapeValue($values, $noEscape, $noQuotes),
+                }
+            };
+        }
+        return "$field $innerOperator $value";
     }
 
     /**
@@ -579,7 +774,7 @@ SQL;
                 $column = $this->translateValues($column);
             $sql[] = "$column $sort";
         }
-        return ' ORDER BY ' . implode(', ', $sql);
+        return ' ORDER BY '.implode(', ', $sql);
     }
 
     /**
@@ -625,16 +820,6 @@ SQL;
     }
 
     /**
-     * Returns primary key
-     *
-     * @return array primary key
-     */
-    public function getPrimaryKey(): array
-    {
-        return $this->pk;
-    }
-
-    /**
      * Setzt die Spalten, die abgefragt werden.
      *
      * @param string $columns columns as string with separator
@@ -653,6 +838,17 @@ SQL;
     {
         $this->setColumns(...$columns);
         return $this;
+    }
+
+    /**
+     * @return array|string[] The value getColumns would return if this DAO had just been created
+     * @see self::getColumns()
+     */
+    public function getDefaultColumns(): array
+    {
+        if($this->defaultColumns === false)
+            return $this->defaultColumns = $this->fetchColumnsList();
+        return $this->defaultColumns ??= $this->getColumns();
     }
 
     /**
@@ -681,21 +877,7 @@ SQL;
     }
 
     /**
-     * @return array|string[] The value getColumns would return if this DAO had just been created
-     * @see self::getColumns()
-     */
-    public function getDefaultColumns():array{
-        if ($this->defaultColumns === false)
-            return $this->defaultColumns = $this->fetchColumnsList();
-        return $this->defaultColumns ??=
-            $this->getColumns();
-    }
-
-    /**
      * Returns the metadata of the table
-     *
-     * @param string $which
-     * @return array
      */
     public function getMetaData(string $which = ''): array
     {
@@ -983,26 +1165,6 @@ SQL;
     }
 
     /**
-     * Returns a single record e.g. by primary key
-     *
-     * @see \MySQL_DAO::buildWhere
-     */
-    public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
-    {
-        $id = $id ?? 0;
-        $where = $this->buildWhere($id, $key);
-
-        /** @noinspection SqlResolve */
-        $sql = <<<SQL
-SELECT $this->column_list
-FROM $this
-WHERE
-    $where
-SQL;
-        return $this->execute($sql);
-    }
-
-    /**
      * Returns the number of records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
      * @see RecordSet
@@ -1061,160 +1223,5 @@ SQL;
     public function __toString(): string
     {
         return $this->quotedSchema ? "$this->quotedDatabase.$this->quotedSchema.$this->quotedTable" : "$this->quotedDatabase.$this->quotedTable";
-    }
-
-    /**
-     * @return string
-     */
-    public static function getDatabaseName(): string
-    {
-        return static::$databaseName;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getTableName(): string
-    {
-        return static::$tableName;
-    }
-
-    #[Pure]
-    private function castValue(mixed $value, mixed $targetType):mixed
-    {
-        return match ($targetType) {
-            self::STRING => (string) $value,
-            self::INT => (int) $value,
-            self::FLOAT => (float) $value,
-            default => $value,
-        };
-    }
-
-    /**
-     * Shorthand for fetching one or multiple values of a record
-     * @param array|int|string $pk a unique identifier use an array [$pk, $column] to specify the primary key column or search field
-     * @param mixed ...$fields a list of columns to retrieve if omitted will return the associated primary key (useful for reverse lookup)
-     * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively
-     * @see static::get()
-     */
-    public function fetchData(array|int|string $pk, ...$fields): mixed
-    {
-        $fields = $fields ?: $this->getPrimaryKey();
-        if (!array_is_list($fields)) {//cast instructions exist
-            $casts = array_values($fields);
-            $fields = array_filter($fields, is_string(...)) + array_filter(array_keys($fields), is_string(...));//screen out instructions and listify fields
-        }
-        $record = $this->setColumns(...$fields)->get(...(array)$pk)->getRecord();
-        $record = isset($casts) && $record ? array_map($this->castValue(...), $record, $casts) : array_values($record);//unwrap values
-        return count($fields) === 1 ? $record[0] ?? null : $record;
-    }
-
-    /**
-     * Shorthand for fetching one or multiple values of a record
-     * @see self::fetchData()
-     */
-    public static function fetchDataStatic($pk, ...$fields)
-    {
-        return static::create(throws: true)->fetchData($pk, ...$fields);
-    }
-
-    /**
-     * Shorthand for current date()
-     */
-    final public static function now(string $format = 'Y-m-d H:i:s'): string
-    {
-        return \date($format);
-    }
-
-    /**
-     * Map operator to SQL
-     */
-    protected function mapOperator(Operator $operator): string
-    {
-        return match($operator) {
-            Operator::equal => '=',
-            Operator::notEqual => '!=',
-            Operator::greater => '>',
-            Operator::greaterEqual => '>=',
-            Operator::less => '<',
-            Operator::lessEqual => '<=',
-            Operator::like => 'like',
-            Operator::notLike => 'not like',
-            Operator::in => 'in',
-            Operator::notIn => 'not in',
-            Operator::is => 'is',
-            Operator::isNot => 'is not',
-            Operator::isNull => 'is null',
-            Operator::isNotNull => 'is not null',
-            Operator::between => 'between',
-            Operator::notBetween => 'not between',
-            Operator::exists => 'exists',
-            Operator::notExists => 'not exists',
-            Operator::all => 'all',
-            Operator::any => 'any',
-            Operator::or => 'or',
-            Operator::and => 'and',
-            Operator::xor => 'xor',
-            Operator::not => 'not',
-        };
-    }
-
-    /**
-     * @param array $record
-     * @return string
-     */
-    private function assembleFilterRecord(array $record): string
-    {
-        $field = $this->translateValues ? //get field 'name'
-            $this->translateValues($record[0]) : $record[0];//inject replace command?
-        if(!($record[1] instanceof Operator) && !is_string($record[1])) // we assume that if an operator does not exist, an equal operator is meant
-            array_splice($record, 1, 0, [Operator::equal]);
-        $rawInnerOperator = $record[1];
-        $innerOperator = match(true) {
-            $rawInnerOperator instanceof Operator => $this->mapOperator($rawInnerOperator),
-            default => $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator,
-        };
-
-        $values =& $record[2];//reference assignment doesn't emit warning upon undefined keys
-        //parse quotation options (defaults to false)
-        $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
-        $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
-        $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
-        if (is_array($values)) {//multi value operation
-            if ($rawInnerOperator === 'between') {
-                $value = /* min */
-                    $this->escapeValue($values[0], $noEscape, $noQuotes);
-                $value .= " {$this->mapOperator(Operator::and)} ";
-                $value .= /* max */
-                    $this->escapeValue($values[1], $noEscape, $noQuotes);
-            } else {//enlist all values e.g. in, not in
-                //apply quotation rules
-                $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
-                $values = implode(', ', $values) ?: 'NULL';
-                $value = "($values)";
-            }
-        } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
-            $expression = $this->commands[$values->name];
-            $value = $expression instanceof Closure ?
-                $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
-        } elseif ($values instanceof DateTimeInterface) {//format date-objects
-            $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
-            $value = "'$dateTime'";
-        } else {
-            $value = match (gettype($values)) {//handle by type
-                'NULL' => match($rawInnerOperator) {
-                    Operator::is, Operator::isNot => 'true',
-                    Operator::isNull, Operator::isNotNull => '',
-                    default => 'NULL'
-                },
-                'boolean' => bool2string($values),
-                'double', 'integer' => $values,//float and int
-                default => match ($values instanceof SqlStatement) {
-                    true => $values->getStatement(),
-                    default => $this->escapeValue($values, $noEscape, $noQuotes),
-                }
-            };
-        }
-        return "$field $innerOperator $value";
     }
 }

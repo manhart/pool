@@ -323,12 +323,7 @@ class Log
     }
 
     /**
-     * write message
-     *
-     * @param string $text
-     * @param int $level
-     * @param array $extra
-     * @param string $configurationName
+     * Write message
      */
     public static function message(string $text, int $level = self::LEVEL_INFO, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -410,7 +405,10 @@ class Log
 
     public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
-        $message = $text;
+        $message = ucfirst(self::$TEXT_LEVEL[$level]).' '.$text;
+        if(!empty($extra)) {
+            $message .= ' '.json_encode($extra);
+        }
         self::$facilities[$configurationName][self::OUTPUT_FILE]['LogFile']->addLine($message);
     }
 

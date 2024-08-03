@@ -22,6 +22,7 @@
  */
 
 use JetBrains\PhpStorm\NoReturn;
+use JetBrains\PhpStorm\Pure;
 
 
 /**
@@ -1922,7 +1923,7 @@ function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []
 {
     $ascii = array(
         0 => array(48, 57), // 0-9
-        1 => array(97, 122) // a-z
+        1 => array(97, 122), // a-z
     );
 
     $options += [
@@ -2242,7 +2243,7 @@ function pdfunite(array $pdfFiles, string $pdfOut): bool
 function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
 {
     $d = DateTime::createFromFormat($format, $date);
-    return $d && $d->format($format) == $date;
+    return $d && $d->format($format) === $date;
 }
 
 /**
@@ -2426,9 +2427,13 @@ function containException(Closure $closure, $fallbackHandler = null): Closure {
     };
 }
 
-class Pointer
+class Pointer implements JsonSerializable
 {
     public mixed $val;
+
+    public static function Pointer (mixed $val = null):Pointer {
+        return new Pointer($val);
+    }
 
     public function __construct($val)
     {
@@ -2440,8 +2445,27 @@ class Pointer
         return $this->val;
     }
 
-    public function setVal(mixed $val):void
+    public function setVal(mixed $val): void
     {
         $this->val = $val;
     }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->deref();
+    }
+}
+
+#[Pure]
+function array_promoteColumnToKey(array $array, string|int $column) {
+    $columnValues = array_column($array, $column);
+    return array_combine($columnValues, $array);
+}
+
+/**
+ * Check if an object has a specific trait
+ */
+function hasTrait(object $object, string $trait, bool $recursive = true): bool
+{
+    return in_array($trait, $recursive ? class_uses_recursive($object) : class_uses($object));
 }

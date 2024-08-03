@@ -21,49 +21,43 @@ use pool\classes\Core\Input\Session;
 /**
  * GUI_Select
  *
- * @package POOL
+ * @package pool\guis\GUI_Select
  * @since 2004/07/07
  */
-class GUI_Select extends GUI_Universal
+class GUI_Select extends GUI_HTMLElement
 {
     /**
      * Defaults
      */
-    public function init(?int $superglobals = Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY): void
     {
-        $this->Defaults->addVars(
-            [
-                'name' => $this->getName(),
+        $this->Defaults->addVars([
+            'name' => $this->getName(),
 
-                'options'         => [],    // oder String getrennt mit ;
-                'values'          => [],    // oder String getrennt mit ;
-                'styles'          => [], // oder String getrennt mit ;
-                'selected'        => '',        // entspricht einem Wert von "values"
-                'defaultselected' => '',
-                'defaultvalue'    => '',        // similar to defaultselected
+            'options' => [],    // oder String getrennt mit ;
+            'values' => [],    // oder String getrennt mit ;
+            'styles' => [], // oder String getrennt mit ;
+            'selected' => '',        // entspricht einem Wert von "values"
+            'defaultselected' => '',
+            'defaultvalue' => '',        // similar to defaultselected
 
-                'save'        => '',
-                'use_session' => 0,
-                'session_var' => $this->getName(),
+            'save' => '',
+            'use_session' => 0,
+            'session_var' => $this->getName(),
 
-                'datafld'      => null,
-                'datasrc'      => null,
-                'dataformatas' => null,
-                'disabled'     => null,
-                'multiple'     => null,
-                'size'         => null,
-                'tabindex'     => null,
-
-                'onfocus'  => '',
-                'onchange' => '',
-                'onblur'   => '',
-            ]
-        );
+            'datafld' => null,
+            'datasrc' => null,
+            'dataformatas' => null,
+            'disabled' => null,
+            'multiple' => null,
+            'size' => null,
+            'tabindex' => null,
+        ]);
 
         parent::init(Input::GET | Input::POST);
     }
 
-    public function loadFiles()
+    public function loadFiles(): void
     {
         $file = $this->Weblication->findTemplate('tpl_option.html', self::class, true);
         $this->Template->setFilePath('stdoutOption', $file);
@@ -115,22 +109,6 @@ class GUI_Select extends GUI_Universal
         }
         if(empty($selected)) {
             $selected = $this->Input->getVar('defaultselected');
-        }
-
-
-        #### Events
-        $events = $this->events;
-        if($onfocus = $this->Input->getVar('onfocus')) {
-            $events .= ' ';
-            $events .= 'onfocus="'.$onfocus.'"';
-        }
-        if($onchange = $this->Input->getVar('onchange')) {
-            $events .= ' ';
-            $events .= 'onchange="'.$onchange.'"';
-        }
-        if($onblur = $this->Input->getVar('onblur')) {
-            $events .= ' ';
-            $events .= 'onblur="'.$onblur.'"';
         }
 
         #### leere Attribute
@@ -195,13 +173,12 @@ class GUI_Select extends GUI_Universal
             }
 
             $this->Template->setVar([
-                    'ID'              => $name.'_'.$i,
-                    'VALUE'           => $value,
-                    'CLASS'           => $style,
-                    'CONTENT'         => $content,
-                    'ATTRIBUTES'      => '',
+                    'ID' => $name.'_'.$i,
+                    'VALUE' => $value,
+                    'CLASS' => $style,
+                    'CONTENT' => $content,
+                    'ATTRIBUTES' => '',
                     'EMPTYATTRIBUTES' => $oemptyattributes,
-                    'EVENTS'          => '',
                 ]
             );
             $this->Template->parse('stdoutOption');
@@ -211,12 +188,11 @@ class GUI_Select extends GUI_Universal
 
         #### Set Template wildcards
         $this->Template->setVar([
-                'ID'              => $id,
-                'NAME'            => $name,
-                'ATTRIBUTES'      => ltrim($attributes),
-                'EVENTS'          => ltrim($events),
+                'ID' => $id,
+                'NAME' => $name,
+                'ATTRIBUTES' => ltrim($attributes),
                 'EMPTYATTRIBUTES' => $emptyattributes,
-                'CONTENT'         => $option_content,
+                'CONTENT' => $option_content,
             ]
         );
     }

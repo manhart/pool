@@ -10,6 +10,7 @@
 
 namespace pool\utils;
 
+use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use function curl_close;
 use function curl_errno;
@@ -79,22 +80,28 @@ final class Curl
 
     /**
      * Post Request
+     *
      * @return array{
      *     body: string,
      *     statusCode: int
      * }
+     * @throws \JsonException, \InvalidArgumentException, \RuntimeException
      */
-    public static function post(string $url, array $data, array $options = []): array
+    public static function post(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded'): array
     {
-        $query = \http_build_query($data);
+        $postData = match($contentType) {
+            'application/x-www-form-urlencoded' => \http_build_query($data),
+            'application/json' => \json_encode($data, JSON_THROW_ON_ERROR),
+            default => throw new InvalidArgumentException("Unsupported content type: $contentType")
+        };
         $curl = curl_init($url);
 
         $options[\CURLOPT_POST] = true;
-        $options[\CURLOPT_POSTFIELDS] = $query;
+        $options[\CURLOPT_POSTFIELDS] = $postData;
         $options[\CURLOPT_RETURNTRANSFER] = true;
         $options[\CURLOPT_HTTPHEADER] ??= [
-            'Content-Type: application/x-www-form-urlencoded',
-            'Content-Length: '.\strlen($query)
+            "Content-Type: $contentType",
+            'Content-Length: '.\strlen($postData)
         ];
         $options[\CURLOPT_SSL_VERIFYPEER] ??= true;
         $options[\CURLOPT_SSL_VERIFYHOST] ??= 2;

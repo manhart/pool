@@ -1,16 +1,18 @@
 <?php
-/**
- * -= PHP Object Oriented Library (POOL) =-
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * GUI_InputElement.class.php
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * @version $Id: GUI_InputElement.class.php,v 1.8 2007/07/12 12:55:51 aziz Exp $
- * @version $revision 1.0$
- * @version
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
  *
- * @since 2004/07/07
- * @author Alexander Manhart <alexander@manhart-it.de>
- * @link https://alexander-manhart.de
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 use pool\classes\Core\Input\Input;
@@ -18,23 +20,19 @@ use pool\classes\Core\Input\Session;
 
 /**
  * GUI_InputElement
- *
  * Grundelemente von Input (<input type=text>).
  *
- * @package pool
- * @author manhart
- * @version $Id: GUI_InputElement.class.php,v 1.8 2007/07/12 12:55:51 aziz Exp $
+ * @package pool\guis\GUI_InputElement
+ * @since 2004/07/07
  */
-class GUI_InputElement extends GUI_Universal
+class GUI_InputElement extends GUI_HTMLElement
 {
     /**
      * Initialisiert Standardwerte:
-     *
      * TODO Parameter
-     *
      * Ueberschreiben moeglich durch Variablen von INPUT_GET und INPUT_POST.
      */
-    public function init(?int $superglobals = Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVars([
                 'name' => $this->getName(),
@@ -63,39 +61,16 @@ class GUI_InputElement extends GUI_Universal
                 'tabindex' => null,
                 'usemap' => null,
                 'placeholder' => null,
-
-                'onfocus' => '',
-                'onchange' => '',
-                'onblur' => '',
-                'onselect' => ''
             ]
         );
 
         parent::init($superglobals);
     }
 
-    public function prepareName(): void
-    {
-        $id = $this->id;
-        $name = $this->Input->getVar('name');
-
-        // id mit name (sowie umgekehrt) abgleichen
-        if($name != $this->Defaults->getVar('name') and $id == $this->getName()) {
-            $id = $name;
-        }
-        if($id != $this->Defaults->getVar('name') and $name == $this->getName()) {
-            $name = $id;
-        }
-        $this->Input->setVars(array(
-                'name' => $name,
-                'id' => $id)
-        );
-    }
-
     /**
      * @return void
      */
-    function prepare(): void
+    protected function prepare(): void
     {
         parent::prepare();
 
@@ -106,29 +81,6 @@ class GUI_InputElement extends GUI_Universal
 
         $name = $this->Input->getVar('name');
         $id = $this->Input->getVar('id');
-
-        #### Events
-        $events = $this->events;
-        $onfocus = $this->Input->getVar('onfocus');
-        if($onfocus) {
-            $events .= ' ';
-            $events .= 'onfocus="' . $onfocus . '"';
-        }
-        $onchange = $this->Input->getVar('onchange');
-        if($onchange) {
-            $events .= ' ';
-            $events .= 'onchange="' . $onchange . '"';
-        }
-        $onblur = $this->Input->getVar('onblur');
-        if($onblur) {
-            $events .= ' ';
-            $events .= 'onblur="' . $onblur . '"';
-        }
-        $onselect = $this->Input->getVar('onselect');
-        if($onselect) {
-            $events .= ' ';
-            $events .= 'onselect="' . $onselect . '"';
-        }
 
         #### leere Attribute
         $emptyattributes = '';
@@ -157,85 +109,80 @@ class GUI_InputElement extends GUI_Universal
         $accept = $this->Input->getVar('accept');
         if($accept) {
             $attributes .= ' ';
-            $attributes .= 'accept="' . $accept . '"';
+            $attributes .= 'accept="'.$accept.'"';
         }
         $accesskey = $this->Input->getVar('accesskey');
         if($accesskey) {
             $attributes .= ' ';
-            $attributes .= 'accesskey="' . $accesskey . '"';
+            $attributes .= 'accesskey="'.$accesskey.'"';
         }
         $align = $this->Input->getVar('align');
         if($align) {
             $attributes .= ' ';
-            $attributes .= 'align="' . $align . '"';
+            $attributes .= 'align="'.$align.'"';
         }
         $alt = $this->Input->getVar('alt');
         if($alt) {
             $attributes .= ' ';
-            $attributes .= 'alt="' . $alt . '"';
+            $attributes .= 'alt="'.$alt.'"';
         }
         $datafld = $this->Input->getVar('datafld');
         if($datafld) {
             $attributes .= ' ';
-            $attributes .= 'datafld="' . $datafld . '"';
+            $attributes .= 'datafld="'.$datafld.'"';
         }
         $datasrc = $this->Input->getVar('datasrc');
         if($datasrc) {
             $attributes .= ' ';
-            $attributes .= 'datasrc="' . $datasrc . '"';
+            $attributes .= 'datasrc="'.$datasrc.'"';
         }
         $dataformatas = $this->Input->getVar('dataformatas');
         if($dataformatas) {
             $attributes .= ' ';
-            $attributes .= 'dataformatas="' . $dataformatas . '"';
+            $attributes .= 'dataformatas="'.$dataformatas.'"';
         }
         $maxlength = $this->Input->getVar('maxlength');
         if($maxlength) {
             $attributes .= ' ';
-            $attributes .= 'maxlength="' . $maxlength . '"';
+            $attributes .= 'maxlength="'.$maxlength.'"';
         }
         $size = $this->Input->getVar('size');
         if($size) {
             $attributes .= ' ';
-            $attributes .= 'size="' . $size . '"';
+            $attributes .= 'size="'.$size.'"';
         }
         $tabindex = $this->Input->getVar('tabindex');
         if($tabindex) {
             $attributes .= ' ';
-            $attributes .= 'tabindex="' . $tabindex . '"';
+            $attributes .= 'tabindex="'.$tabindex.'"';
         }
         $type = $this->Input->getVar('type');
         if($type) {
             $attributes .= ' ';
-            $attributes .= 'type="' . $type . '"';
+            $attributes .= 'type="'.$type.'"';
         }
         $defaultValue = $this->Input->getVar('defaultvalue');
         if($defaultValue) {
             $attributes .= ' ';
-            $attributes .= 'defaultvalue="' . $defaultValue . '"';
+            $attributes .= 'defaultvalue="'.$defaultValue.'"';
         }
-
         $placeholder = $this->Input->getVar('placeholder');
         if($placeholder) {
             $attributes .= ' ';
-            $attributes .= 'placeholder="' . $placeholder . '"';
+            $attributes .= 'placeholder="'.$placeholder.'"';
         }
 
         #### Set Template wildcards
-        $this->Template->setVar(
-            array(
+        $this->Template->setVars(
+            [
                 'ID' => $id,
                 'NAME' => $name,
                 'ATTRIBUTES' => ltrim($attributes),
-                'EVENTS' => ltrim($events),
-                'EMPTYATTRIBUTES' => ltrim($emptyattributes)
-            )
+                'EMPTYATTRIBUTES' => ltrim($emptyattributes),
+            ]
         );
 
         $valueByName = ($this->Input->getVar($name) != $name) ? $this->Input->getVar($name) : '';
-
-        // save value into session
-        $value = '';
 
         $buf_save = $this->Input->getVar('save');
         if($this->Session instanceof Session and $this->Input->getAsInt('use_session') == 1) {
@@ -248,7 +195,7 @@ class GUI_InputElement extends GUI_Universal
         }
         else {
             $value = $this->Input->getVar('value') != '' ? $this->Input->getVar('value') : $valueByName;
-            if($value == '{' . $name . '}') {
+            if($value == '{'.$name.'}') {
                 $value = '';
             }
         }
@@ -257,5 +204,23 @@ class GUI_InputElement extends GUI_Universal
         }
 
         $this->Template->setVar('VALUE', $value, Template::CONVERT_HTMLSPECIALCHARS);
+    }
+
+    protected function prepareName(): void
+    {
+        $id = $this->id;
+        $name = $this->Input->getVar('name');
+
+        // id mit name (sowie umgekehrt) abgleichen
+        if($name != $this->Defaults->getVar('name') and $id == $this->getName()) {
+            $id = $name;
+        }
+        if($id != $this->Defaults->getVar('name') and $name == $this->getName()) {
+            $name = $id;
+        }
+        $this->Input->setVars([
+            'name' => $name,
+            'id' => $id]
+        );
     }
 }

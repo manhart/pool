@@ -23,6 +23,7 @@ use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
 use GUI_Module;
+use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
 use pool\classes\Core\Input\Cookie;
@@ -891,17 +892,6 @@ class Weblication extends Component
             return $stylesheet;
         }
 
-        //TODO Remove or define use of skins for included Projekts and merge with findBestElement
-        //Common-common-skin
-        if(!$baseLib && defined('DIR_COMMON_ROOT_REL')) {
-            $stylesheet = buildFilePath(
-                DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder, $filename);
-            if(file_exists($stylesheet)) {
-                $this->cacheItem($memKey, $stylesheet, static::CACHE_FILE_ACCESS);
-                return $stylesheet;
-            }
-        }
-
         if($raiseError)
             $this->raiseError(__FILE__, __LINE__, \sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
         else {
@@ -932,22 +922,25 @@ class Weblication extends Component
         $places[] = buildDirPath($elementSubFolder);
         if($classFolder) {//Projects -> GUI
             //Path from Project root to the specific GUI folder
-            $folder_guis = buildDirPath(PWD_TILL_GUIS, $classFolder);
+            $guiDirectory = buildDirPath(PWD_TILL_GUIS, $classFolder);
             //current Project
-            $places[] = $folder_guis;
+            $places[] = $guiDirectory;
             //common Project
             if(defined('DIR_COMMON_ROOT_REL'))
-                $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $folder_guis);
+                $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $guiDirectory);
             //POOL Library Project
             if($baseLib)
-                $places[] = buildDirPath($this->getPoolServerSideRelativePath(), $folder_guis);
+                $places[] = buildDirPath($this->getPoolServerSideRelativePath(), $guiDirectory);
         }
+        //Common-common-skin
+        if(!$baseLib && defined('DIR_COMMON_ROOT_REL'))
+            $places[] = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
         $finds = [];
         //Searching
-        foreach($places as $folder_guis) {
-            $file = buildFilePath($folder_guis, $filename);
+        foreach($places as $place) {
+            $file = buildFilePath($place, $filename);
             if(file_exists($file)) {
-                $translatedFile = buildFilePath($folder_guis, $language, $filename);
+                $translatedFile = buildFilePath($place, $language, $filename);
                 if(Template::isCacheTranslations() && file_exists($translatedFile)) {
                     // Language specific Ordner
                     $finds[] = $translatedFile;
@@ -983,39 +976,28 @@ class Weblication extends Component
     public function findJavaScript(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true,
         bool $clientSideRelativePath = true): string
     {
+        //memcache
         $memKey = "findJavaScript.$classFolder.$filename.$baseLib.$clientSideRelativePath";
-        if(($javaScriptFile = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) {
-            return $javaScriptFile;
-        }
-        $serverSide_folder_javaScripts = $clientSide_folder_javaScripts = addEndingSlash(PWD_TILL_JS);
-        $serverSide_folder_guis = $clientSide_folder_guis = addEndingSlash(PWD_TILL_GUIS).addEndingSlash($classFolder);
+        if(($javaScriptFile = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) return $javaScriptFile;
+        //cache-miss
+        $relativeProjectPaths = [];
         //Ordner BaseLib -> look in POOL instead
-        if($baseLib) {
-            $serverSide_folder_javaScripts = addEndingSlash($this->getPoolServerSideRelativePath($serverSide_folder_javaScripts));
-            $serverSide_folder_guis = addEndingSlash($this->getPoolServerSideRelativePath($serverSide_folder_guis));
-            $clientSide_folder_javaScripts = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_javaScripts));
-            $clientSide_folder_guis = addEndingSlash($this->getPoolClientSideRelativePath($clientSide_folder_guis));
-        }
-        $javaScriptFile = $serverSide_folder_javaScripts.$filename;
-        if(file_exists($javaScriptFile)) {
-            $javaScriptFile = $clientSideRelativePath ? "$clientSide_folder_javaScripts$filename" : $javaScriptFile;
-            $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
-            return $javaScriptFile;//found
-        }
-        $javaScriptFile = $serverSide_folder_guis.$filename;
-        if(file_exists($javaScriptFile)) {
-            $javaScriptFile = $clientSideRelativePath ? "$clientSide_folder_guis$filename" : $javaScriptFile;
-            $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
-            return $javaScriptFile;
-        }//found
+        $relativeProjectPaths[] = $baseLib ? [$this->poolServerSideRelativePath, $this->poolClientSideRelativePath] : ['', ''];
         if(defined('DIR_COMMON_ROOT_REL')) {
-            $folder_common = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_GUIS, $classFolder);
-            $javaScriptFile = $folder_common.$filename;
-            if(file_exists($javaScriptFile)) {
+            $relativeProjectPaths[] = [DIR_COMMON_ROOT_REL, DIR_COMMON_ROOT_REL];
+        }
+        $subDirs = [PWD_TILL_JS, buildDirPath(PWD_TILL_GUIS, $classFolder)];
+        foreach ($relativeProjectPaths as [$project, $projectClientSide]) {
+            foreach ($subDirs as $subDir) {
+                $javaScriptFile = buildFilePath($project, $subDir, $filename);
+                $javaScriptFileClientSide = buildFilePath($projectClientSide, $subDir, $filename);
+                if (!file_exists($javaScriptFile)) continue;
+                $javaScriptFile = $clientSideRelativePath ? $javaScriptFileClientSide : $javaScriptFile;
                 $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
-                return $javaScriptFile;//found
+                return $javaScriptFile;
             }
         }
+        //premium error handling @todo replace
         if($raiseError)
             $this->raiseError(__FILE__, __LINE__, \sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
         else {
@@ -1470,6 +1452,7 @@ class Weblication extends Component
     /**
      * Creates an array with given default values / structure for ajax results
      *
+     * @deprecated
      * @param ...$result
      * @return mixed
      */
@@ -1487,6 +1470,7 @@ class Weblication extends Component
         return $result;
     }
 
+    #[Pure]
     /**
      * Creates an array with references to the variadic default values for ajax results
      *

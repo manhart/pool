@@ -21,7 +21,7 @@ use pool\classes\Database\DAO;
 /**
  * Class GUI_DBLookupSelect
  *
- * @package pool
+ * @package pool\guis\GUI_DBLookupSelect
  * @since 2004-02-12
  */
 class GUI_DBLookupSelect extends GUI_Select
@@ -35,7 +35,7 @@ class GUI_DBLookupSelect extends GUI_Select
      * pk                = ''    Primaerschluessel (mehrere Spaltennamen werden mit ; getrennt)
      * columns            = ''    Auszulesende Spalten (Spaltennamen werden mit ; getrennt)
      **/
-    public function init(?int $superglobals = Input::EMPTY)
+    public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVar('tabledefine', []);
         $this->Defaults->addVar('keyValue', false);    // separated by ;
@@ -60,8 +60,6 @@ class GUI_DBLookupSelect extends GUI_Select
      */
     protected function prepare(): void
     {
-        $utf8 = $this->Input->getVar('utf8');
-
         $tableDefine = $this->Input->getVar('tabledefine');
         /** @var array{1: DAO, 0: string} $tableDefine */
         $dao = $tableDefine[1]::create(databaseName: $tableDefine[0]);
@@ -123,8 +121,8 @@ class GUI_DBLookupSelect extends GUI_Select
                 $option = shorten($option, $shorten, 1, false);
             }
             $value = $record[$datafield];
-            $options[] = ($utf8) ? UConverter::transcode($option, 'UTF8', 'ISO-8859-1') : $option;
-            $values[] = ($utf8) ? UConverter::transcode($value, 'UTF8', 'ISO-8859-1') : $value;
+            $options[] = $option;
+            $values[] = $value;
         }
         $defaultOptions = $this->Input->getVar('options');
         if(!is_array($defaultOptions)) $defaultOptions = explode(';', $defaultOptions);

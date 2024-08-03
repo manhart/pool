@@ -261,8 +261,11 @@ namespace pool\classes\Core\Input
             // decode POST requests with JSON-Data
             if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
                 $json = \file_get_contents('php://input');
+                if(str_starts_with($json, '[')) { // JSON Array not supported
+                    return;
+                }
                 try {
-                    $_POST = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+                    $_POST = \json_decode($json, true, flags: \JSON_THROW_ON_ERROR);
                     $_REQUEST += $_POST;
                 }
                 catch(\JsonException) {
@@ -272,8 +275,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Get superglobals
-         *
-         * @return int
          */
         public function getSuperglobals(): int
         {
