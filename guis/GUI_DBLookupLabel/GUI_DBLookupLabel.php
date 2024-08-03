@@ -17,6 +17,7 @@
 
 use pool\classes\Core\Input\Input;
 use pool\classes\Database\DAO;
+use pool\guis\GUI_Label\GUI_Label;
 
 /**
  * Class GUI_DBLookupLabel
