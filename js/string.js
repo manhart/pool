@@ -15,10 +15,7 @@
  */
 
 /**
- * interpolate template-literals
- *
- * @param params
- * @returns {*}
+ * Interpolate template-literals
  */
 String.prototype.interpolate = function(params)
 {
@@ -28,11 +25,9 @@ String.prototype.interpolate = function(params)
 }
 
 /**
- * replace default placeholders e.g. {placeholder}
+ * Replace default placeholders e.g. {placeholder}
  *
  * @see https://stackoverflow.com/questions/7975005/format-a-javascript-string-using-placeholders-and-an-object-of-substitutions
- * @param array params
- * @returns {*}
  */
 String.prototype.replaceholder = function(params)
 {
@@ -43,8 +38,6 @@ String.prototype.replaceholder = function(params)
 if(!String.prototype.parseFunction) {
     /**
      * parse function
-     *
-     * @returns {Function}
      */
     String.prototype.parseFunction = function(scope = window) {
         if(this.indexOf('function') !== -1) {

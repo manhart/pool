@@ -5,11 +5,10 @@
  *
  * $Log$
  *
- *
+ * @deprecated
  * @version $Id: ajax.js,v 1.4 2004/09/23 14:08:02 manhart Exp $
  * @version $Revision 1.0$
  * @version
- *
  * @since 2009-07-15
  * @author Alexander Manhart <alexander.manhart@wochenblatt.de>
  * @link http://www.softidea.de
