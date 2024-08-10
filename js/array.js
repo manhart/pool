@@ -1,3 +1,21 @@
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
+ */
+
+
+
 /**
  * -= array.js =-
  *
@@ -19,11 +37,7 @@
  */
 
 /**
- * uniquely combines two arrays
- *
- * @param a
- * @param b
- * @returns {*[]}
+ * Uniquely combines two arrays
  */
 function array_union(a, b)
 {
@@ -31,11 +45,7 @@ function array_union(a, b)
 }
 
 /**
- * removes the differences between 2 arrays
- *
- * @param a
- * @param b
- * @returns {*}
+ * Removes the differences between 2 arrays
  */
 function array_difference(a, b)
 {

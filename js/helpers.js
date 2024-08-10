@@ -27,7 +27,7 @@ function pray(value, newline = '\n') {
         if (ObjName.length) {
             var Result = "Attributes of the object \"" + ObjName + "\" :\n\n";
         }
-        var Attribute;
+        let Attribute;
         for (Attribute in Object) {
             Result = Result + ObjName + "." + String(Attribute) + NewLine;
         }
@@ -38,10 +38,7 @@ function pray(value, newline = '\n') {
 }
 
 /**
- * cancels event
- *
- * @param evt
- * @returns {boolean}
+ * Cancels the event if it is cancelable, without stopping further propagation of the event.
  */
 function cancelEvent(evt) {
     if (!evt instanceof Event) {
@@ -51,23 +48,12 @@ function cancelEvent(evt) {
     evt.stopPropagation();
 }
 
-function reloadOpener() {
-    if (window.opener) {
-        window.opener.document.location.reload();
-    }
-}
-
+/**
+ * Prepares a URL by ensuring it ends with either '&' or '?'
+ */
 function prepareUrl(url) {
-    let end = url.substr(url.length - 1, 1);
-    if (end == '&') return url;
-    if (end == '?') return url;
-
-    if (url.search(/\?/) != -1) {
-        url = url + '&';
-    } else {
-        url = url + '?';
-    }
-    return url;
+    const end = url.endsWith('&') || url.endsWith('?');
+    return end ? url : url.includes('?') ? `${url}&` : `${url}?`;
 }
 
 // wahr, wenn das Zeichen eine Zahl ist
@@ -128,20 +114,6 @@ function notIn(str1, str2) {
     return true;
 }
 
-// wahr, wenn eine Ziffernfolge vorliegt
-function checkNumberSequence(nr) {
-    var i = 0;
-    var j = nr.length;
-
-    if (j < 1)
-        return false;
-
-    for (; i < j; i++)
-        if ((nr.charAt(i) < '0') || (nr.charAt(i) > '9'))
-            return false;
-
-    return true;
-}
 
 function findPosX(elem)
 {
@@ -229,15 +201,6 @@ function isFloat(n) {
     return n != "" && !isNaN(n) && Math.round(n) != n;
 }
 
-function popupFullscreen(url) {
-    var myWin = window.open(url, '_blank', 'scrollbars=auto,fullscreen=1,resizeable=1,channelmode=1');
-    myWin.focus();
-}
-
-function popupBlank(url) {
-    var myWin = window.open(url, '_blank');
-    myWin.focus();
-}
 
 function number_format(number, decimals, dec_point, thousands_sep) {
     var exponent = "";
@@ -276,17 +239,21 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 }
 
 /**
- * Extrahiert den Namen einer Datei aus einer vollständigen Pfadangabe
+ * Extracts the name of a file from a full path.
+ *
+ * @param {string} path - The full path of the file.
  */
 function basename(path) {
-    return path.replace(/.*(\/|\\)/, '');
+    const lastSlashIndex = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+    return path.substring(lastSlashIndex + 1);
 }
 
 /**
- * Ermittelt die Dateiendung
+ * Determines the file extension.
  */
 function file_extension(fileName) {
-    return (-1 !== fileName.indexOf('.')) ? fileName.replace(/.*[.]/, '') : '';
+    const lastDotIndex = fileName.lastIndexOf('.');
+    return lastDotIndex !== -1 ? fileName.substring(lastDotIndex + 1) : '';
 }
 
 function isImageLoaded(img) {
@@ -311,15 +278,15 @@ function isImageLoaded(img) {
 }
 
 function pix2int(px) {
-    if (String(px).substr(-2) == 'px') {
-        px = px.substring(0, px.length - 2);
+    if (px.endsWith('px')) {
+        px = px.slice(0, -2);
     }
     return parseInt(px, 10);
 }
 
 function int2pix(px) {
-    if (String(px).substr(-2) != 'px') {
-        px = px + 'px';
+    if (!px.endsWith('px')) {
+        px += 'px';
     }
     return px;
 }
@@ -353,21 +320,6 @@ function clearSelect(selectElement) {
     for (let i = selectElement.options.length - 1; i >= 0; i--) {
         selectElement.options[i] = null;
     }
-}
-
-/**
- * Entfernt Leerraum vom Anfang eines Strings
- */
-function ltrim(str) {
-    return str.replace(new RegExp('^\\s+', ''), '');
-}
-
-/**
- * Entfernt Leerraum vom Ende eines Strings
- */
-function rtrim(str) {
-    return str.replace(new RegExp('\\s+$', ''), '');
-    // oder so return str.replace(/\s+$/, '');
 }
 
 /**
@@ -496,13 +448,10 @@ function str_de_natsort(a, b, order) {
 }
 
 /**
- * Wandelt das erste Zeichen von str in einen Gro�buchstaben um
+ * Converts the first character of a string to uppercase.
  */
 function ucfirst(str) {
-    if (str.length > 0) {
-        str = str.charAt(0).toUpperCase() + str.substr(1);
-    }
-    return str;
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 /**
@@ -575,29 +524,6 @@ Function.prototype.inheritsFrom = function (parentClassOrObject) {
 }
 
 /**
- * Formatiere Minuten um als Stunde-Minuten Text
- *
- * @param int Minuten
- * @return string
- */
-function formatStdMin(value) {
-    var value = parseInt(value);
-    return Math.floor(value / 60) + ' Std. ' + (value % 60) + ' Min.';
-}
-
-/**
- * Formatiere Minuten in 24 Stunden Format
- *
- * @param int Minuten
- * @returns string
- */
-function format24h(min) {
-    var value = parseInt(min);
-    return Math.floor(value / 60) + ':' + (value % 60);
-}
-
-
-/**
  * Converts string literal true and 1 to boolean true. Everything else becomes false
  */
 function string2bool(val) {
@@ -650,61 +576,31 @@ function downloadFile(file) {
 }
 
 /**
- * Wandelt base64 in Blob um
+ * Converts base64 to blob
  *
- * @param data base64 kodierte Daten
- * @param contentType z.B. 'application/pdf';
+ * @param data base64 encoded data
+ * @param contentType e.g. 'application/pdf';
  */
 function base64ToBlob(data, contentType) {
-    if (!window.atob) {
-        // benoetigt base64.js
-        var byteChars = Base64.decode(data);
-    } else {
-        var byteChars = window.atob(data);
-    }
-
-    byteNumbers = new Array(byteChars.length);
-
-    for (var i = 0; i < byteChars.length; i++) {
-        byteNumbers[i] = byteChars.charCodeAt(i);
-    }
-
-    // < IE 10 benoetigt typedarray.js
-    var byteArray = new Uint8Array(byteNumbers);
+    const byteChars = window.atob(data);
+    const byteNumbers = Array.from(byteChars, char => char.charCodeAt(0));
+    const byteArray = new Uint8Array(byteNumbers);
 
     try {
-        // < IE 10 benoetigt Blob.js
-        var blob = new Blob([byteArray], {type: contentType});
+        return new Blob([byteArray], {type: contentType});
     }
     catch (e) {
-        // TypeError old chrome and FF
-        window.BlobBuilder = window.BlobBuilder ||
-            window.WebKitBlobBuilder ||
-            window.MozBlobBuilder ||
-            window.MSBlobBuilder;
-        if (e.name == 'TypeError' && window.BlobBuilder) {
-            var bb = new BlobBuilder();
-            bb.append(byteArray);
-            var blob = bb.getBlob(contentType);
+        if (e.name === 'TypeError') {
+            // Handle old browser support if necessary
+            const BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
+            if(BlobBuilder) {
+                const bb = new BlobBuilder();
+                bb.append(byteArray);
+                return bb.getBlob(contentType);
+            }
         }
-        else if (e.name == "InvalidStateError") {
-            // InvalidStateError (tested on FF13 WinXP)
-            var blob = new Blob([byteArray], {type: contentType});
-        }
-        else {
-            // We're screwed, blob constructor unsupported entirely
-        }
+        throw e;
     }
-
-    return blob;
-}
-
-/**
- * Extrahiere Domain einer URL
- */
-function getDomainFromUrl(url) {
-    var arr = url.split("/");
-    return arr[0] + "//" + arr[2];
 }
 
 /**
@@ -1282,16 +1178,16 @@ function loadJSON(url, opts = {}) {
 }
 
 /**
- * check if string is a json
- *
- * @param str
- * @return {boolean}
+ * Check if string is a json
  */
 function isJsonString(str)
 {
+    if (typeof str !== 'string') {
+        return false;
+    }
     try {
-        let json = JSON.parse(str);
-        return (typeof json === 'object');
+        const json = JSON.parse(str);
+        return typeof json === 'object' && json !== null;
     }
     catch (e) {
         return false;
@@ -1299,7 +1195,7 @@ function isJsonString(str)
 }
 
 /**
- * remove an item (e.g. object) from array
+ * Remove an item (e.g. object) from array
  *
  * @param items
  * @param rejectedItem
