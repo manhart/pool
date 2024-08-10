@@ -3,6 +3,7 @@
  *
  * jQuery Helpers
  *
+ * @deprecated
  * @version $Id: jquery.helpers.js 36241 2018-07-05 11:25:18Z manhart $
  * @version $Revision 1.0$
  * @version

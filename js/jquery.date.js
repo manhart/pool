@@ -6,7 +6,7 @@
  *
  * $Log: date.js,v $
  *
- *
+ * @deprecated
  * @version $Id: jquery.date.js 32281 2016-04-07 12:09:03Z manhart $
  * @version $Revision 1.0$
  * @version

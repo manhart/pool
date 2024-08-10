@@ -21,6 +21,7 @@ use pool\classes\Core\Component;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
 use pool\classes\Core\Weblication;
+use pool\classes\Database\DataInterface;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\utils\Str;
@@ -514,6 +515,30 @@ class GUI_Module extends Module
     }
 
     /**
+     * Processes transactions
+     *
+     * This method is used to start/begin, commit, or rollback a TRANSACTION for the given database interfaces.
+     *
+     * @param array $dbInterfaces
+     * @param string $action
+     * @return void
+     * @throws Exception
+     */
+    private function processTransactions(array $dbInterfaces, string $action): void
+    {
+        foreach ($dbInterfaces as $dbInterface) {
+            // Validate the interface is registered
+            DataInterface::getInterfaceForResource($dbInterface);
+            // Perform the specified action
+            match ($action) {
+                'start' => DataInterface::beginTransaction($dbInterface),
+                'commit' => DataInterface::commit($dbInterface),
+                'rollback' => DataInterface::rollback($dbInterface),
+            };
+        }
+    }
+
+    /**
      * Returns json encoded data of a method call of this object (intended use: ajax)
      */
     private function invokeAjaxMethod(string $requestedMethod): string
@@ -529,6 +554,7 @@ class GUI_Module extends Module
         $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
         $Closure = $ajaxMethod['method'] ?? null;
         $this->plainJSON = $ajaxMethod['noFormat'] ?? false;
+        $dbInterfaces = $ajaxMethod['dbInterfaces'] ?? [];
 
         if(!$Closure instanceof Closure) {
             if(is_callable([$this, $requestedMethod]))// 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
@@ -574,14 +600,17 @@ class GUI_Module extends Module
                 }
             }
             try {
+                $this->processTransactions($dbInterfaces, 'start');
                 //TODO check Authorisation
                 //if (!$accessGranted)
                 //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
 
                 // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
                 $result = $Closure(...$args);
+                $this->processTransactions($dbInterfaces, 'commit');
             }
             catch(Throwable $e) {
+                $this->processTransactions($dbInterfaces, 'rollback');
                 $this->plainJSON = false;
                 $statusCode = 418;
             }
@@ -771,15 +800,23 @@ class GUI_Module extends Module
      * @param string $alias name of the method
      * @param Closure $method class for anonymous function
      * @param bool $noFormat
+     * @param array $dbInterfaces list of database interfaces, for which transactions should be started, committed, or rolled back
      * @param mixed ...$meta
      * @return GUI_Module
      * @see GUI_Module::registerAjaxCalls()
      */
-    protected function registerAjaxMethod(string $alias, Closure $method, bool $noFormat = false, ...$meta): self
+    protected function registerAjaxMethod(
+        string $alias,
+        Closure $method,
+        bool $noFormat = false,
+        array $dbInterfaces = [],
+        ...$meta
+    ): self
     {
         $meta['alias'] = $alias;
         $meta['method'] = $method;
         $meta['noFormat'] = $noFormat;
+        $meta['dbInterfaces'] = $dbInterfaces;
         $this->ajaxMethods[$alias] = $meta;
         return $this;
     }

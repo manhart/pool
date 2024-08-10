@@ -3,6 +3,7 @@
  *
  * Simpler AJAX Wrapper for the POOL
  *
+ * @deprecated
  * @since 2009-07-15
  * @author Alexander Manhart <alexander.manhart@gmx.de>
  */
