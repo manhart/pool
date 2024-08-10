@@ -22,6 +22,7 @@ namespace pool\traits;
 use Closure;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
+use pool\classes\Database\Operator;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 
@@ -57,8 +58,8 @@ Trait CUD{
         $rowName ??= 'row';
         $pk = $DAO->getPrimaryKey()[0];
         [&$result, &$persistId, &$row, &$success, &$message] = Weblication::makeResultArray(
-            ...([$pk => (int)($this->getInput()->getVar($pk) ?? 0), $rowName => []]), success: false, message: '');
-        $collisionFilter[] = [$pk, 'unequal', $persistId];
+            ...([$pk => (int)($this->getInput()->getVar($pk) ?? $data[$pk] ?? 0), $rowName => []]), success: false, message: '');
+        $collisionFilter[] = [$pk, Operator::notEqual, $persistId];
         if (\count($collisionFilter) > 1 && $DAO->getCount(filter: $collisionFilter)->getCountValue()) {
             $message = \is_string($collisionMessage) ? $collisionMessage : $collisionMessage->call($this, $DAO, $persistId, $pk);
             return $result;
@@ -131,21 +132,23 @@ Trait CUD{
         [&$result, &$success, &$message] = Weblication::makeResultArray(success: false, message: '');
 
         $dbColumns = $DAO->getDefaultColumns();
-        if (\in_array($softDeleteMark, $dbColumns)) {
+        if(\in_array($softDeleteMark, $dbColumns)) {
             $pk = $DAO->getPrimaryKey()[0];
             $data = [
                 $pk => $id,
                 $softDeleteMark => $deleted,
             ];
-            if (\in_array('modifier', $dbColumns))
+            if(\in_array('modifier', $dbColumns))
                 $data['modifier'] = $this->idUser();
-            $DeleteSet = $DAO->update($data);
-        } elseif (!$deleted) {
+            $set = $DAO->update($data);
+        }
+        elseif(!$deleted) {
             $message = "Can't restore record, soft delete is not supported by table $DAO";
             return $result;
-        } else
-            $DeleteSet = $DAO->delete($id);
-        $lastError = $DeleteSet->getLastError();
+        }
+        else
+            $set = $DAO->delete($id);
+        $lastError = $set->getLastError();
         $message = $lastError['message'] ?? '';
         $success = !$lastError;
         return $result;

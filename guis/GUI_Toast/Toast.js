@@ -39,7 +39,6 @@ class Toast
     delay = Toast.DEFAULT_DELAY;
     onHideCallback = null;
     position = 'bottom-right';
-    Toast = null;
     pauseOnHover = true;
 
     constructor(name = 'Toast')
@@ -283,7 +282,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
         let id = Toast.create(type, Toast.name, title, (subtitle) ? subtitle : this.gettext('justNow'),
             message, (this.pauseOnHover ? false : this.autohide), this.delay, this.position);
         //get newly created Object from the DOM
-        this.Toast = $('#'+id);
+        const jQueryToast = $('#'+id);
         //Update handler...
         if(!subtitle) {//Only necessary when the time isn't overridden by a subtitle
             //Create update intervall of 1s
@@ -291,7 +290,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
                 //produce a message...
                 let secondsBehind, minutesBehind = null;
 
-                let created = parseInt(this.Toast.data('created'), 10);
+                let created = parseInt(jQueryToast.data('created'), 10);
                 secondsBehind = Math.round((Date.now() - created) / 1000);
 
                 if(secondsBehind > 59) {
@@ -306,10 +305,10 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
                 document.querySelector('#'+id+' .toast-header .text-muted').innerHTML = subtitle;
             }, 1000);
             //add a handler to stop the intervall when the Toast is hidden
-            this.Toast.on('hidden.bs.toast', () => clearInterval(dateUpdateIntervall));
+            jQueryToast.on('hidden.bs.toast', () => clearInterval(dateUpdateIntervall));
         }
         //add a handler that removes the Toast from the DOM when it is hidden
-        this.Toast.on('hidden.bs.toast', () => {
+        jQueryToast.on('hidden.bs.toast', () => {
             $('#'+id).remove();
             if (typeof this.onHideCallback === 'function') {
                 // execute callback
@@ -317,7 +316,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             }
         });
         //start displaying
-        this.Toast.toast('show');
+        jQueryToast.toast('show');
         //check whether handlers for auto-hiding are required
         if(this.autohide === false) {
             return this;//No handlers to attach
@@ -326,25 +325,25 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
         this.paused = false;
         setTimeout(() => {
             if(this.paused === false) {
-                if(this.Toast.length > 0) {
-                    this.Toast.toast('hide');
+                if(jQueryToast.length > 0) {
+                    jQueryToast.toast('hide');
                 }
             }
         }, this.delay)
         //add more Handlers
         // pause on hover
-        this.Toast.on('mouseover', () => {
+        jQueryToast.on('mouseover', () => {
             this.paused = true;
         });
         //resume on mouseleave
-        this.Toast.on('mouseleave', () => {
+        jQueryToast.on('mouseleave', () => {
             const current = Math.floor(Date.now() / 1000),
-                future = parseInt(this.Toast.data('hideAfter'));
+                future = parseInt(jQueryToast.data('hideAfter'));
 
             this.paused = false;
 
             if (current >= future) {
-                this.Toast.toast('hide');
+                jQueryToast.toast('hide');
             }
         });
         return this;
@@ -376,9 +375,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      */
     static showError(title, message, delay = Toast.DEFAULT_DELAY)
     {
-        let $Toast = new Toast()
-        $Toast.setDelay(delay);
-        $Toast.show(Toast.TOAST_ERROR, title, message);
+        Toast.show(Toast.TOAST_ERROR, title, message, delay)
     }
 
     /**
@@ -390,8 +387,10 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      */
     static showInfo(title, message, delay = Toast.DEFAULT_DELAY)
     {
-        let $Toast = (new Toast()).setDelay(delay);
-        $Toast.show(Toast.TOAST_INFO, title, message);
+        /** @var {Toast} $toast  **/
+        const $toast = new Toast();
+        $toast.setDelay(delay);
+        $toast.show(Toast.TOAST_INFO, title, message);
     }
 
     /**
@@ -419,6 +418,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
         let $Toast = (new Toast()).setDelay(delay);
         $Toast.show(Toast.TOAST_WARNING, title, message);
     }
+
 }
 // Weblication.registerClass(Toast);
 

@@ -4,14 +4,22 @@
  *
  * (c) Alexander Manhart <alexander@manhart-it.de>
  *
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
 use pool\classes\Core\Input\Input;
 
 /**
  * Class GUI_Edit
+ *
  * @package pool\guis\GUI_Edit
  * @since 2004/07/07
  */
@@ -32,7 +40,7 @@ class GUI_Edit extends GUI_InputElement
             'inputType' => 'text',
             'caption' => 'Platzhalter',
             'configurable' => true,
-        ]
+        ],
     ];
 
     //
@@ -40,9 +48,7 @@ class GUI_Edit extends GUI_InputElement
 
     /**
      * Initialisiert Standardwerte:
-     *
      * Ueberschreiben moeglich ueber GET und POST.
-     *
      * Parameter:
      * - type Typ ist fest "text" (bitte diesen Parameter unberuehrt belassen!)
      * - size Bestimmt die Anzeigebreite des Elements (Standard: 20)
@@ -79,7 +85,7 @@ class GUI_Edit extends GUI_InputElement
     /**
      * Laedt Template "tpl_edit.html". Ist im projekteigenen Skinordner ueberschreibbar!
      */
-    function loadFiles()
+    public function loadFiles()
     {
         $file = $this->Weblication->findTemplate('tpl_edit.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $file);
@@ -120,7 +126,7 @@ class GUI_Edit extends GUI_InputElement
     //        return $config;
     //    }
 
-    public function prepare(): void
+    protected function prepare(): void
     {
         //        echo 'placeholder: '.$this->getVar('placeholder');
         //        $this->setVar($this->options);
@@ -129,7 +135,6 @@ class GUI_Edit extends GUI_InputElement
 
     public function getInspectorProperties(): array
     {
-        $tmp = $this->inspectorProperties + $this->getDefaultInspectorProperties();
-        return $tmp;
+        return $this->inspectorProperties + $this->getDefaultInspectorProperties();
     }
 }

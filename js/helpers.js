@@ -72,10 +72,7 @@ function prepareUrl(url) {
 
 // wahr, wenn das Zeichen eine Zahl ist
 function isDigit(ch) {
-    if ((ch >= '0') && (ch <= '9'))
-        return true;
-    else
-        return false;
+    return (ch >= '0') && (ch <= '9');
 }
 
 // wahr, wenn der String eine Zahl ist
@@ -213,7 +210,7 @@ function isNumber(a) {
 }
 
 function isObject(a) {
-    return (a && typeof a == 'object') || isFunction(a);
+    return a instanceof Object;
 }
 
 function isString(a) {
@@ -879,7 +876,8 @@ function explode(separators, inputstring, includeEmpties) {
 
 /**
  * fill controls (input fields) with content
- *
+ * @deprecated
+ * @see GUI_Module.loadFormData
  * @param {string|object|array} containerSelector
  * @param {array|object} rowSet record which should be filled into controls
  * @param {boolean} autoSearchControlsWithinContainer should be set to true, if only a container is passed
