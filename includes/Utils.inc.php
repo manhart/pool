@@ -2457,7 +2457,7 @@ class Pointer implements JsonSerializable
 }
 
 #[Pure]
-function array_promoteColumnToKey(array $array, string|int $column) {
+function array_promoteColumnToKey(array $array, string|int $column): array {
     $columnValues = array_column($array, $column);
     return array_combine($columnValues, $array);
 }
