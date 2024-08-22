@@ -140,7 +140,7 @@ class GUI_Module
                     else return;
                 }
                 else newValue = dataItem;
-                this.loadFormValue(newValue, dataField, overwriteDefault);
+                queueMicrotask(this.loadFormValue.bind(this, newValue, dataField, overwriteDefault));
             });
         }
     }
