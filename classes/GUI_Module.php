@@ -138,6 +138,7 @@ class GUI_Module extends Module
             if($moduleName) $this->setName($moduleName);
         }
         $this->Template = new Template();
+        $this->Template->addGlobalHook($this->searchGUIsInParsedBlockContent(...));// adds hook for parsed block content
     }
 
     /**
@@ -321,6 +322,14 @@ class GUI_Module extends Module
             $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
             $TemplateFile->setContent($newContent, false);
         }
+    }
+
+    /**
+     * Searches for GUIs in the parsed block content
+     */
+    protected function searchGUIsInParsedBlockContent(TempBlock $block, string $content): string
+    {
+        return $this->searchGUIs($content);
     }
 
     /**
