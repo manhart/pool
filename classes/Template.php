@@ -188,7 +188,7 @@ class TempCoreHandle extends TempHandle
      * @param string $type Handle-Typ set of (BLOCK, FILE)
      * @param string $directory Directory to the template
      */
-    public function __construct(string $handle, string $type, protected string $directory, protected string $charset)
+    public function __construct(string $handle, string $type, protected string $directory, protected string $charset, protected readonly array $hooks = [])
     {
         parent::__construct($handle, $type);
     }
@@ -204,9 +204,9 @@ class TempCoreHandle extends TempHandle
      * @return TempBlock TempBlock
      * @see TempBlock
      */
-    public function createBlock(string $handle, string $dir, string $content, string $charset): TempBlock
+    public function createBlock(string $handle, string $dir, string $content, string $charset, array $hooks): TempBlock
     {
-        $obj = new TempBlock($handle, $dir, $content, $charset);
+        $obj = new TempBlock($handle, $dir, $content, $charset, $hooks);
         $this->blockList[$handle] = $obj;
         return $obj;
     }
@@ -369,7 +369,7 @@ class TempCoreHandle extends TempHandle
             $tagContent = ($match[3]);
 
             $value = match($kind) {
-                TEMP_BLOCK_IDENT => $this->createBlock($handle, $this->getDirectory(), $tagContent, $this->charset)->getPlaceholder(),
+                TEMP_BLOCK_IDENT => $this->createBlock($handle, $this->getDirectory(), $tagContent, $this->charset, $this->hooks)->getPlaceholder(),
                 TEMP_INCLUDE_IDENT => $this->createFile($handle, $this->getDirectory(), $tagContent, $this->charset)->getPlaceholder(),
                 TEMP_INCLUDESCRIPT_IDENT => $this->createScript($handle, $this->getDirectory(), $tagContent, $this->charset)->getPlaceholder(),
                 TEMP_SESSION_IDENT => $_SESSION[$tagContent] ?? '',
@@ -497,9 +497,9 @@ class TempBlock extends TempCoreHandle
      * @param string $directory Verzeichnis zum Template
      * @param string $content Inhalt des Blocks
      */
-    function __construct(string $handle, string $directory, string $content, string $charset)
+    function __construct(string $handle, string $directory, string $content, string $charset, array $hooks = [])
     {
-        parent::__construct($handle, 'BLOCK', $directory, $charset);
+        parent::__construct($handle, 'BLOCK', $directory, $charset, $hooks);
         $this->setContent($content);
     }
 
@@ -531,10 +531,13 @@ class TempBlock extends TempCoreHandle
     public function parse(bool $returnContent = false, bool $clearParsedContent = true): string
     {
         $content = parent::parse($this->allowParse, $clearParsedContent);
+        // run hooks
+        foreach($this->hooks[$this->type] as $hook) {
+            $content = $hook($this, $content);
+        }
         if($returnContent) {
             return $content;
         }
-
         $this->parsedContent .= $content;
         return '';
     }
@@ -565,15 +568,12 @@ class TempFile extends TempCoreHandle
     private string $filename;
 
     /**
-     * Ruft die Funktion zum Laden der Datei auf.
+     * Calls the function to load the file.
      *
-     * @param string $handle Name des Handles
-     * @param string $directory Verzeichnis zur Datei
-     * @param string $filename Dateiname
      */
-    public function __construct(string $handle, string $directory, string $filename, string $charset)
+    public function __construct(string $handle, string $directory, string $filename, string $charset, array $hooks = [])
     {
-        parent::__construct($handle, 'FILE', $directory, $charset);
+        parent::__construct($handle, 'FILE', $directory, $charset, $hooks);
         $this->loadFile($filename);
     }
 
@@ -752,6 +752,8 @@ class Template extends PoolObject
      */
     private string $charset = 'UTF-8';
 
+    private array $globalHooks = ['BLOCK' => []];
+
     /**
      * @param string $dir Verzeichnis zu den Templates (Standardwert ./)
      */
@@ -879,7 +881,7 @@ class Template extends PoolObject
      */
     private function addFile(string $handle, string $file): static
     {
-        $TempFile = new TempFile($handle, $this->getDirectory(), $file, $this->charset);
+        $TempFile = new TempFile($handle, $this->getDirectory(), $file, $this->charset, $this->globalHooks);
         $this->FileList[$handle] = $TempFile;
 
         // added 02.05.2006 Alex M.
@@ -953,6 +955,19 @@ class Template extends PoolObject
     public function countFileList(): int
     {
         return count($this->FileList);
+    }
+
+    /**
+     * Add a global hook between parsing and returning the content (currently only for blocks)
+     */
+    public function addGlobalHook(callable $hook): void
+    {
+        $this->globalHooks['BLOCK'][] = $hook;
+    }
+
+    public function getGlobalHooks(): array
+    {
+        return $this->globalHooks;
     }
 
     /**
