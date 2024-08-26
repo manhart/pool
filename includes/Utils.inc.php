@@ -1470,30 +1470,31 @@ function readDirs(string $path): false|array
     return glob(addEndingSlash($path).'*', GLOB_ONLYDIR);
 }
 
-/**Checks the Error code of the PCRE (RegEx engine) and logs any Errors
+/**
+ * Checks the Error code of the PCRE (RegEx engine) and logs any Errors
  * @param string $regEX the executed expression for logging
  * @param string $content the content that was processed
  * @return bool Outcome is ok
  */
 function checkRegExOutcome(string $regEX, string $content): bool
 {
-    if (($lastErrorCode = preg_last_error()) !== PREG_NO_ERROR) {
-        $errormessage = preg_last_error_message($lastErrorCode);
-        $errormessage = "RegularExpression $regEX failed with error code $lastErrorCode :$errormessage";
-        $detailsFile = '';
-        try {
-            $detailsFile = \Log::makeDetailsFile(
-                "$errormessage\nParsed string:\n$content"
-            );
-        }
-        catch (Exception $e) {
-        }
-        if (!empty($detailsFile))
-            $errormessage .= ' Details have been saved to: ' . $detailsFile;
-        error_log($errormessage);
-        return false;
-    } else
+    if (($lastErrorCode = preg_last_error()) === PREG_NO_ERROR) {
         return true;
+    }
+    $errormessage = preg_last_error_message($lastErrorCode);
+    $errormessage = "RegularExpression $regEX failed with error code $lastErrorCode :$errormessage";
+    $detailsFile = '';
+    try {
+        $detailsFile = \Log::makeDetailsFile(
+            "$errormessage\nParsed string:\n$content"
+        );
+    }
+    catch(Exception) {
+    }
+    if(!empty($detailsFile))
+        $errormessage .= ' Details have been saved to: '.$detailsFile;
+    error_log($errormessage);
+    return false;
 }
 
 /**
