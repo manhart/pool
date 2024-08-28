@@ -1135,6 +1135,8 @@ function HTTPStatus(int $num)
  */
 function move_file(string $source, string $dest): bool
 {
+    if (!file_exists($source)) return false;
+    if (!is_dir($dest)) return false; // OR -> mkdirs(dirname($dest));
     $res_copy = copy($source, $dest);
     if ($res_copy) $res_unlink = unlink($source);
 
