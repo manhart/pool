@@ -648,7 +648,7 @@ SQL;
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
         if(is_array($values)) {//multi value operation
-            if($rawInnerOperator === 'between') {
+            if($innerOperator === 'between') {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
                 $value .= " {$this->mapOperator(Operator::and)} ";
