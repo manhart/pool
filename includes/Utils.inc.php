@@ -2232,8 +2232,8 @@ function htmlAttributes(array $attributes): string
 function pdfunite(array $pdfFiles, string $pdfOut): bool
 {
     array_map(escapeshellarg(...), $pdfFiles);
-    $cmd = 'pdfunite '.implode(' ', $pdfFiles).' "'.escapeshellarg($pdfOut).'"';
-    passthru($cmd);
+    $cmd = 'pdfunite '.implode(' ', $pdfFiles).' \''.escapeshellcmd($pdfOut).'\'';
+    exec($cmd);
     return file_exists($pdfOut);
 }
 
