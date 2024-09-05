@@ -389,7 +389,7 @@ class Translator
      * @param bool $success a translation was found
      * @return string
      */
-    public function getTranslation(string $key, ?string $defaultMessage = null, ?array $args = null, bool $noAlter = false, bool &$success = false): string
+    public function getTranslation(string $key, ?string $defaultMessage = null, ?array $args = null, bool $noAlter = true, bool &$success = false): string
     {
         $language = "";
         $keyArray = [$key => null];
