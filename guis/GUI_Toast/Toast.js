@@ -398,7 +398,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      *
      * @param title
      * @param message
-     * @param {string} delay optional
+     * @param {int} delay optional
      */
     static showSuccess(title, message, delay = Toast.DEFAULT_DELAY)
     {
