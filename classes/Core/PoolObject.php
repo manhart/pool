@@ -112,7 +112,10 @@ class PoolObject extends stdClass
     {
         if(!isset($this->isPOOL)) {
             $poolRealpath = \realpath(DIR_POOL_ROOT);
-            $this->isPOOL = \substr_compare($this->getClassFile(), $poolRealpath, 0, \strlen($poolRealpath)) === 0;
+            $classFile = $this->getClassFile();
+            $lenPoolRealpath = \strlen($classFile);
+            $this->isPOOL = \substr_compare($classFile, $poolRealpath, 0, $lenPoolRealpath) === 0
+                && $classFile[$lenPoolRealpath] === DIRECTORY_SEPARATOR;
         }
         return $this->isPOOL;
     }
