@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -14,8 +15,40 @@ use Exception;
 use MessageFormatter;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
+use RuntimeException;
+
+use function array_flip;
+use function array_is_list;
+use function array_key_exists;
+use function array_search;
+use function arsort;
+use function assert;
+use function basename;
+use function buildDirPath;
+use function buildFilePath;
 use function checkRegExOutcome;
+use function count;
+use function dirname;
 use function explode;
+use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
+use function function_exists;
+use function in_array;
+use function is_dir;
+use function is_string;
+use function isNotEmptyString;
+use function locale_get_primary_language;
+use function mkdirs;
+use function preg_match_all;
+use function str_replace;
+use function strpos;
+use function substr;
+use function symlink;
+use function trim;
+use function unlink;
+
+use const PREG_SET_ORDER;
 
 class Translator
 {
@@ -38,18 +71,21 @@ class Translator
     private bool $formatMessages = true;
 
     /**Format: <code>array<string, TranslationProviderFactory></code>
+     *
      * @var array<string, TranslationProviderFactory> holds the TranslationProviderFactory's to use for loading a language
      */
     private array $translationResources = [];
 
     /**
      * Format: <code>array<string,TranslationProvider></code>
+     *
      * @var array<string, TranslationProvider> holds the currently available languages and their associated translation-providers
      */
     private array $loadedLanguages = [];
 
     /**
      * Format: <code>array<string, TranslationProvider></code>
+     *
      * @var array<string, TranslationProvider> Stores a list of languages for use in translations.<br>
      * Intended to hold a subset of $loadedLanguages which will be used to look up translation-keys
      */
@@ -72,7 +108,8 @@ class Translator
     /**
      * @return array<String, TranslationProvider>
      */
-    public function removeLoadedTranslations():array{
+    public function removeLoadedTranslations(): array
+    {
         $loaded = $this->loadedLanguages;
         $this->loadedLanguages = [];
         return $loaded;
@@ -104,18 +141,16 @@ class Translator
         return $this->translationResources;
     }
 
-
     /**
      * @param TranslationProviderFactory $translationResource
      * @return Translator
      */
     public function addTranslationResource(TranslationProviderFactory $translationResource): self
     {
-        if (!\in_array($translationResource, $this->translationResources, true))
+        if (!in_array($translationResource, $this->translationResources, true))
             $this->translationResources[] = $translationResource;
         return $this;
     }
-
 
     /**
      * @param TranslationProviderFactory $translationResource
@@ -124,7 +159,7 @@ class Translator
     public function removeTranslationResource(TranslationProviderFactory $translationResource): bool
     {
         $resources = $this->translationResources;
-        if (($key = \array_search($translationResource, $resources)) !== false) {
+        if (($key = array_search($translationResource, $resources)) !== false) {
             unset($resources[$key]);
             return true;
         } else
@@ -142,7 +177,7 @@ class Translator
 
     public function getPrimaryLocale(): string
     {
-        foreach ($this->activeLanguages as  $provider) {
+        foreach ($this->activeLanguages as $provider) {
             return $provider->getLocale();
         }
         return '';
@@ -182,14 +217,14 @@ class Translator
         return false;
     }
 
-
     /** Changes the list of active languages for this Translator
-     * @see Translator::$activeLanguages
+     *
      * @param array|string|null $language A language list with language names or a Language-Array previously returned by this method<br>
      * or the name of the Language to use
      * @param bool $softFail Ignore languages that can't be found instead of throwing an Exception
      * @return array|null The previously active Language-Array for later restore
      * @throws Exception missing TranslationProvider
+     * @see Translator::$activeLanguages
      */
     public function swapLangList(array|string|null $language, bool $softFail = false): ?array
     {
@@ -198,14 +233,14 @@ class Translator
         //insure we have an array
         $newActiveLanguages = (array)$language;
         //insure the languages are the array keys
-        if (\array_is_list($newActiveLanguages)) $newActiveLanguages = \array_flip($newActiveLanguages);
+        if (array_is_list($newActiveLanguages)) $newActiveLanguages = array_flip($newActiveLanguages);
 
         foreach ($newActiveLanguages as $lang => &$provider) {
             if (!$provider instanceof TranslationProvider) {//for this language no ProviderArray was passed
                 $loaded = $this->fetchLanguage($lang, false, $provider);
                 if (!$loaded) {//fetch failed
                     if (!$softFail)
-                        throw new \RuntimeException("Language $lang could not be loaded");
+                        throw new RuntimeException("Language $lang could not be loaded");
                     unset($newActiveLanguages[$lang]);
                 }
             }
@@ -233,34 +268,35 @@ class Translator
     public function translateFile(string $sourceFile, string $lang): string
     {
         //get variables
-        $translatedDir = \buildDirPath(\dirname($sourceFile), $lang);
-        if (!\is_dir($translatedDir) && !\mkdirs($translatedDir, 0775)) {
-            throw new \RuntimeException("Could not create directory $translatedDir for translation");
+        $translatedDir = buildDirPath(dirname($sourceFile), $lang);
+        if (!is_dir($translatedDir) && !mkdirs($translatedDir, 0775)) {
+            throw new RuntimeException("Could not create directory $translatedDir for translation");
         }
-        $filename = \basename($sourceFile);
-        $translatedFile = $translatedDir . $filename;
-        $manualPreTranslatedFile = \buildFilePath($translatedDir, 'man', $filename);
+        $filename = basename($sourceFile);
+        $translatedFile = $translatedDir.$filename;
+        $manualPreTranslatedFile = buildFilePath($translatedDir, 'man', $filename);
         //manual Translation exists
-        if (\file_exists($manualPreTranslatedFile))
+        if (file_exists($manualPreTranslatedFile))
             //override source
             $sourceFile = $manualPreTranslatedFile;
-        $sourceContent = \file_get_contents($sourceFile);
+        $sourceContent = file_get_contents($sourceFile);
         //parse static tags
         $defaultFormatDirective = $this->suppressFormatting();
         $countChanges = 0;
         $translatedContent = $this->parse($sourceContent, $lang, $countChanges);
         $this->suppressFormatting($defaultFormatDirective);
         //save translation
-        @\unlink($translatedFile);
+        @unlink($translatedFile);
         if ($countChanges)
             //save translation
-            \file_put_contents($translatedFile, $translatedContent);
+            file_put_contents($translatedFile, $translatedContent);
         else //hardlink unchanged file
-            \symlink("../$filename", $translatedFile);
+            symlink("../$filename", $translatedFile);
         return $translatedFile;
     }
 
     /** Parses TRANSL Tokens in a string and replaces them with their translation, non-translatable tokens will be ignored
+     *
      * @param string $templateContent the string to check for tokens
      * @param string|array|null $language One-of langauge list that overrides the current setting for this translation
      * @param int $countChanges The number of unique tags that have been translated. 0 means that no replacements were made
@@ -272,13 +308,13 @@ class Translator
         //Backup settings and apply the language defined by the caller
         $defaultLangList = $this->swapLangList($language);
         //A buffered replace
-        $changes = array();
+        $changes = [];
         //collect replacements
         $this->translateWithRegEx($templateContent, self::COMMENT_TAG_REGEX, $changes);
         $this->translateWithRegEx($templateContent, self::CURLY_TAG_REGEX, $changes);
         //Do replacement
         $translatedContent = strtr($templateContent, $changes);
-        $countChanges = \count($changes);
+        $countChanges = count($changes);
         unset($changes);
         //Restore active languages
         $this->swapLangList($defaultLangList);
@@ -287,6 +323,7 @@ class Translator
 
     /** Performs the parsing of the content using a specific RegularExpression for finding and analyzing the translation tags<br>
      * Uses translate without language parameter so set activeLangauges accordingly
+     *
      * @param string $content the string to check for tokens
      * @param string $regEX A pattern that matches the tag to replace and captures Keyword, handle/key and the default value / tag content
      * @param array $changes An array to store the translations in (tag => translation) for use with strtr(). New tags will be inserted present tags won't be fetched again
@@ -295,7 +332,7 @@ class Translator
     public function translateWithRegEx(string $content, string $regEX, array &$changes): bool
     {
         //More specific copy of code from \TempCoreHandle::findPattern
-        \preg_match_all($regEX, $content, $matches, \PREG_SET_ORDER);
+        preg_match_all($regEX, $content, $matches, PREG_SET_ORDER);
         $outcome = checkRegExOutcome($regEX, $content);
         foreach ($matches as $match) {
             //the entire Comment Block
@@ -316,19 +353,20 @@ class Translator
     }
 
     /** Translates a TRANSL Tag
+     *
      * @param string $handle The tag handle with the Key
      * @param string|null $tagContent The content with the default translation
      * @return string The translated value
      */
     public function translateTag(string $handle, ?string $tagContent): string
     {
-        $keyLength = \strpos($handle, '(');
+        $keyLength = strpos($handle, '(');
         if (!$keyLength) {
             $key = $handle;
             $args = null;
         } else {
-            $key = \substr($handle, 0, $keyLength);
-            $args = \substr($handle, $keyLength, -1);
+            $key = substr($handle, 0, $keyLength);
+            $args = substr($handle, $keyLength, -1);
             $Params = new Input(Input::EMPTY);
             $Params->setParams($args);
             $args = $Params->getData();
@@ -348,6 +386,7 @@ class Translator
     }
 
     /**gets Translations from one of the active languages, delivering all of them or nothing at all unless a default was specified for the Keys which were not found
+     *
      * @param array $keyArray the query to fill [translationKey => default Translation]
      * @param bool $noAlter Disables flagging of missing Translations useful if the key queried is potentially invalid
      * @param string|array $language The list of languages to look in, will be set to the language the Translations were taken from
@@ -370,6 +409,7 @@ class Translator
     }
 
     /**Compatibility wrapper for getTranslation
+     *
      * @param string $key
      * @param mixed|null ...$args
      * @return string
@@ -394,8 +434,8 @@ class Translator
         $language = "";
         $keyArray = [$key => null];
         $this->queryTranslations($keyArray, $noAlter, $language);
-        $translation = $keyArray[$key]??null;
-        \assert($translation === null || $translation instanceof Translation);
+        $translation = $keyArray[$key] ?? null;
+        assert($translation === null || $translation instanceof Translation);
         $message = $translation?->getMessage();
         $success = $message !== null;
         $message ??= $defaultMessage;
@@ -434,13 +474,13 @@ class Translator
         if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             foreach (explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']) as $el) {
                 $temp = explode(';q=', $el);
-                $l = \trim($temp[0]);
-                $l = \str_replace('-', '_', $l);
+                $l = trim($temp[0]);
+                $l = str_replace('-', '_', $l);
                 $q = (float)($temp[1] ?? 1);
                 $header[$l] = $q;
             }
         }
-        \arsort($header);
+        arsort($header);
 
         $languages = [];
         foreach ($header as $locale => $irrelevant) {
@@ -450,13 +490,13 @@ class Translator
                 $lang = /*array_key_first($fetched) ??*/
                     static::getPrimaryLanguage($locale);
                 //add to the list of languages if not defined yet
-                if (!\array_key_exists($lang, $languages)) {
+                if (!array_key_exists($lang, $languages)) {
                     $languages[$lang] = $locale;
                 }
             }
         }
         //make keys specific and the primary languages the values
-        return \array_flip($languages);
+        return array_flip($languages);
     }
 
     /**
@@ -467,14 +507,15 @@ class Translator
      */
     public static function getPrimaryLanguage(string $locale): string
     {
-        if (\function_exists('locale_get_primary_language'))
-            $language = \locale_get_primary_language($locale);
+        if (function_exists('locale_get_primary_language'))
+            $language = locale_get_primary_language($locale);
         else
             [$language,] = explode('_', $locale);
         return $language;
     }
 
     /**gets Translations from one of the active languages, delivering all of them or nothing at all unless a default was specified for the Keys which were not found
+     *
      * @param array $keyArray the query to fill [translationKey => default Translation]
      * @param bool $noAlter Disables flagging of missing Translations useful if the key queried is potentially invalid
      * @param string $language reference which will be set to the language the result is taken from
@@ -489,7 +530,7 @@ class Translator
                 continue;//F skip
             foreach ($keyArray as $key => &$translation) {//Key K
                 $key = (string)$key;
-                \assert($provider instanceof TranslationProvider);
+                assert($provider instanceof TranslationProvider);
                 switch ($queryResult = $provider->query($key)) {//Switch S
                     /** @noinspection PhpMissingBreakStatementInspection Stuff that finishes this Lookup */
                     case $provider::TranslationInadequate:
@@ -512,7 +553,7 @@ class Translator
                 }//END S
                 //Key was not resolved -> add Translation to Provider
                 $notMissing = $queryResult !== $provider::TranslationNotExistent;
-                if (!(\is_string($translation) && \isNotEmptyString($translation))) {//no valid default
+                if (!(is_string($translation) && isNotEmptyString($translation))) {//no valid default
                     $noAlter || $notMissing || $provider->alterTranslation($provider::TranslationKnownMissing, null, $key);
                     //Try next Language
                     continue 2;//F

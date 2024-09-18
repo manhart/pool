@@ -15,6 +15,4 @@ use LogicException as PhpLogicException;
 /**
  * Thrown to indicate that the argument received is not valid.
  */
-class LogicException extends PhpLogicException implements PoolExceptionInterface
-{
-}
+class LogicException extends PhpLogicException implements PoolExceptionInterface {}

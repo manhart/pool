@@ -1,13 +1,11 @@
 <?php
 /**
  * POOL (PHP Log Oriented Library): die Datei Log.class.php enthält die Klasse Log zum Loggen von Ablaeufen in Dateien.
- *
  * Letzte aenderung am: $Date: 2006/02/21 10:47:29 $
  *
  * @version $Id: Log.class.php,v 1.6 2006/02/21 10:47:29 manhart Exp $
  * @version $Revision 1.0$
  * @version
- *
  * @since 2005-06-16
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
@@ -18,14 +16,12 @@ use pool\classes\Core\PoolObject;
 
 /**
  * Die Grundklasse, der Uhrahn aller Objekte.
- *
  * Die Klasse Log verf�gt �ber folgende Verhalten:
  * - stellt eine Art Debug-Modus bereit.
  * - Objektinstanzen erzeugen, verwalten und aufl�sen.
  * - auf objektspezifische Informationen �ber den Klassentyp und die Instanz zugreifen.
  * - enth�lt Fehler�berpr�fung und kann Fehler ausl�sen.
  * - stellt ein Verfahren bereit mit dem ein Inhalt eines Objekts einem anderen zugewiesen werden kann.
- *
  * Log wird nie direkt instantiiert. Obwohl keine Programmiersprachenelemente zum Verhindern der Instantiierung verwendet werden, ist Log eine abstrakte Klasse.
  *
  * @author Alexander Manhart <alexander@manhart-it.de>
@@ -43,6 +39,7 @@ class LogFile extends PoolObject
 
     /**
      * Datei-Resource
+     *
      * @var resource $fp
      */
     private mixed $fp;
@@ -53,7 +50,7 @@ class LogFile extends PoolObject
      * @access private
      * @var boolean
      */
-    var $logRotate=false;
+    var $logRotate = false;
 
     /**
      * Maximale Dateigr��e des Logfiles (standard 2 MB)
@@ -61,7 +58,7 @@ class LogFile extends PoolObject
      * @access private
      * @var string
      */
-    var $maxFileSize=2097152;
+    var $maxFileSize = 2097152;
 
     /**
      * Rotiert die Datei beginnend mit einem neuen Tag
@@ -91,7 +88,7 @@ class LogFile extends PoolObject
      *
      * @var array
      */
-    var $cache = array();
+    var $cache = [];
 
     /**
      * Cache aktiviert
@@ -101,6 +98,7 @@ class LogFile extends PoolObject
     protected $enableCache = false;
 
     private int $sid = 0;
+
     private bool $withSID = true;
 
     /**
@@ -118,8 +116,7 @@ class LogFile extends PoolObject
         $this->file = $file;
         try {
             $this->sid = random_int(0, 9999);
-        }
-        catch(Exception $e) {
+        } catch (Exception $e) {
             $this->sid = 0;
         }
     }
@@ -135,7 +132,6 @@ class LogFile extends PoolObject
 
     /**
      * Deaktiviert Log-Session
-     *
      */
     function disableSID()
     {
@@ -149,14 +145,13 @@ class LogFile extends PoolObject
      */
     private function open(): bool
     {
-        if(file_exists($this->file)) {
+        if (file_exists($this->file)) {
             $filesize = filesize($this->file);
-            if($this->logRotate) {
-                if($this->rotateByDate) {
+            if ($this->logRotate) {
+                if ($this->rotateByDate) {
                     $newDate = (floor(filemtime($this->file) / 86400) !== floor(time() / 86400));
-                    if($newDate) $this->rotate($this->file);
-                }
-                else if($filesize > $this->maxFileSize) {
+                    if ($newDate) $this->rotate($this->file);
+                } elseif ($filesize > $this->maxFileSize) {
                     $this->rotate($this->file);
                 }
                 // $mode = 'w';
@@ -174,26 +169,25 @@ class LogFile extends PoolObject
     function rotate($file)
     {
         $reOpen = false;
-        if($this->opened()) {
+        if ($this->opened()) {
             $reOpen = true;
             $this->close();
         }
 
         $nr = 1;
-        while(file_exists($file.'.'.$nr . '.gz.tar')) {
+        while (file_exists($file.'.'.$nr.'.gz.tar')) {
             $nr++;
         }
         $Tar = new Tar();
         if (version_compare(phpversion(), '4.3.0', '>=')) {
             $Tar->addData(basename($file), file_get_contents($file));
-        }
-        else {
+        } else {
             $Tar->addFile($file);
         }
         $Tar->toTar($file.'.'.$nr.'.gz.tar', true);
         @unlink($file);
 
-        if($reOpen) {
+        if ($reOpen) {
             $this->fp = fopen($this->file, 'ab');
         }
     }
@@ -213,7 +207,7 @@ class LogFile extends PoolObject
      *
      * @param int $fileSize
      */
-    function setMaxFileSize($fileSize=2097152)
+    function setMaxFileSize($fileSize = 2097152)
     {
         $this->maxFileSize = $fileSize;
     }
@@ -244,7 +238,7 @@ class LogFile extends PoolObject
      * @param string $format
      * @return LogFile
      */
-    public function setFormatDateTime(string $format='[d.m.Y H:i:s]'): static
+    public function setFormatDateTime(string $format = '[d.m.Y H:i:s]'): static
     {
         $this->formatDateTime = $format;
         return $this;
@@ -261,12 +255,11 @@ class LogFile extends PoolObject
             $microTime = microtime(true);
             $microseconds = sprintf('%06d', ($microTime - floor($microTime)) * 1000000);
             $formattedDateTime = (new DateTime(date('Y-m-d H:i:s').".$microseconds"))->format($this->formatDateTime);
-        }
-        catch(Exception) {
+        } catch (Exception) {
             $formattedDateTime = (string)time();
         }
-        return $formattedDateTime. (($this->withSID) ? $this->separator . '{' .
-            sprintf('%04d', $this -> sid) . '}' : '').$this->separator.'%s';
+        return $formattedDateTime.(($this->withSID) ? $this->separator.'{'.
+                sprintf('%04d', $this->sid).'}' : '').$this->separator.'%s';
     }
 
     /**
@@ -276,11 +269,11 @@ class LogFile extends PoolObject
      */
     public function addLine(string $text): false|int
     {
-        if(!$this->opened()) {
+        if (!$this->opened()) {
             $this->open();
         }
         $text = sprintf($this->generateFormattedInitialLogString(), $text);
-        if($this->enableCache) {
+        if ($this->enableCache) {
             $this->cache[] = $text;
         }
         $text .= $this->lineFeed;
@@ -294,7 +287,7 @@ class LogFile extends PoolObject
     public function close(): void
     {
         $this->cache = [];
-        if($this->opened()) {
+        if ($this->opened()) {
             fclose($this->fp);
         }
         $this->fp = null;

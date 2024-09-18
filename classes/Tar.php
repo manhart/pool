@@ -105,7 +105,7 @@ class Tar extends PoolObject
         $this->numDirectories = 0;
 
         // If the tar file doesn't exist...
-        if(!file_exists($filename))
+        if (!file_exists($filename))
             return false;
 
         $this->filename = $filename;
@@ -123,7 +123,7 @@ class Tar extends PoolObject
     function __readTar($filename = '')
     {
         // Set the filename to load
-        if(!$filename)
+        if (!$filename)
             $filename = $this->filename;
 
         // Read in the TAR file
@@ -131,8 +131,8 @@ class Tar extends PoolObject
         $this->tar_file = fread($fp, filesize($filename));
         fclose($fp);
 
-        if($this->tar_file[0] == chr(31) && $this->tar_file[1] == chr(139) && $this->tar_file[2] == chr(8)) {
-            if(!function_exists("gzinflate"))
+        if ($this->tar_file[0] == chr(31) && $this->tar_file[1] == chr(139) && $this->tar_file[2] == chr(8)) {
+            if (!function_exists("gzinflate"))
                 return false;
 
             $this->isGzipped = true;
@@ -155,9 +155,9 @@ class Tar extends PoolObject
         // Read Files from archive
         $tar_length = strlen($this->tar_file);
         $main_offset = 0;
-        while($main_offset < $tar_length) {
+        while ($main_offset < $tar_length) {
             // If we read a block of 512 nulls, we are at the end of the archive
-            if(substr($this->tar_file, $main_offset, 512) == str_repeat(chr(0), 512))
+            if (substr($this->tar_file, $main_offset, 512) == str_repeat(chr(0), 512))
                 break;
 
             // Parse file name
@@ -188,7 +188,7 @@ class Tar extends PoolObject
             $file_gname = $this->__parseNullPaddedString(substr($this->tar_file, $main_offset + 297, 32));
 
             // Make sure our file is valid
-            if($this->__computeUnsignedChecksum(substr($this->tar_file, $main_offset, 512)) != $file_chksum)
+            if ($this->__computeUnsignedChecksum(substr($this->tar_file, $main_offset, 512)) != $file_chksum)
                 return false;
 
             // Parse File Contents
@@ -205,7 +205,7 @@ class Tar extends PoolObject
                 $activeFile["endheader"]	= substr($this->tar_file,$main_offset + 500,12);
             */
 
-            if($file_size > 0) {
+            if ($file_size > 0) {
                 // Increment number of files
                 $this->numFiles++;
 
@@ -223,8 +223,7 @@ class Tar extends PoolObject
                 $activeFile["group_name"] = $file_gname;
                 $activeFile["checksum"] = $file_chksum;
                 $activeFile["file"] = $file_contents;
-            }
-            else {
+            } else {
                 // Increment number of directories
                 $this->numDirectories++;
 
@@ -266,7 +265,7 @@ class Tar extends PoolObject
     function appendTar($filename)
     {
         // If the tar file doesn't exist...
-        if(!file_exists($filename))
+        if (!file_exists($filename))
             return false;
 
         $this->__readTar($filename);
@@ -278,9 +277,9 @@ class Tar extends PoolObject
 
     function getFile($filename)
     {
-        if($this->numFiles > 0) {
-            foreach($this->files as $key => $information) {
-                if($information["name"] == $filename)
+        if ($this->numFiles > 0) {
+            foreach ($this->files as $key => $information) {
+                if ($information["name"] == $filename)
                     return $information;
             }
         }
@@ -292,9 +291,9 @@ class Tar extends PoolObject
 
     function getDirectory($dirname)
     {
-        if($this->numDirectories > 0) {
-            foreach($this->directories as $key => $information) {
-                if($information["name"] == $dirname)
+        if ($this->numDirectories > 0) {
+            foreach ($this->directories as $key => $information) {
+                if ($information["name"] == $dirname)
                     return $information;
             }
         }
@@ -306,9 +305,9 @@ class Tar extends PoolObject
 
     function containsDirectory($dirname)
     {
-        if($this->numDirectories > 0) {
-            foreach($this->directories as $key => $information) {
-                if($information["name"] == $dirname)
+        if ($this->numDirectories > 0) {
+            foreach ($this->directories as $key => $information) {
+                if ($information["name"] == $dirname)
                     return true;
             }
         }
@@ -320,13 +319,13 @@ class Tar extends PoolObject
 
     function addDirectory($dirname)
     {
-        if(!file_exists($dirname))
+        if (!file_exists($dirname))
             return false;
 
         // Get directory information
         $file_information = stat($dirname);
 
-        if(!isset($checksum)) $checksum = "";
+        if (!isset($checksum)) $checksum = "";
 
         // Add directory to processed data
         $this->numDirectories++;
@@ -346,11 +345,11 @@ class Tar extends PoolObject
     function addFile($filename)
     {
         // Make sure the file we are adding exists!
-        if(!file_exists($filename))
+        if (!file_exists($filename))
             return false;
 
         // Make sure there are no other files in the archive that have this same filename
-        if($this->containsFile($filename))
+        if ($this->containsFile($filename))
             return false;
 
         // Get file information
@@ -361,7 +360,7 @@ class Tar extends PoolObject
         $file_contents = @fread($fp, filesize($filename));
         fclose($fp);
 
-        if(!isset($checksum)) $checksum = "";
+        if (!isset($checksum)) $checksum = "";
 
         // Add file to processed data
         $this->numFiles++;
@@ -384,9 +383,9 @@ class Tar extends PoolObject
 
     function containsFile($filename)
     {
-        if($this->numFiles > 0) {
-            foreach($this->files as $key => $information) {
-                if($information["name"] == $filename)
+        if ($this->numFiles > 0) {
+            foreach ($this->files as $key => $information) {
+                if ($information["name"] == $filename)
                     return true;
             }
         }
@@ -399,9 +398,9 @@ class Tar extends PoolObject
     function addData($filename, $data, $time = 0)
     {
         // Make sure there are no other files in the archive that have this same filename
-        if($this->containsFile($filename))
+        if ($this->containsFile($filename))
             return false;
-        if(!$time) $time = date("U");
+        if (!$time) $time = date("U");
         // Get file information
         //$file_information = stat($filename);
 
@@ -417,7 +416,7 @@ class Tar extends PoolObject
         $activeFile["group_id"] = "";
         $activeFile["size"] = strlen($data);
         $activeFile["time"] = $time;
-        if(!isset($checksum)) $checksum = 0;
+        if (!isset($checksum)) $checksum = 0;
         $activeFile["checksum"] = $checksum;
         $activeFile["user_name"] = "";
         $activeFile["group_name"] = "";
@@ -430,9 +429,9 @@ class Tar extends PoolObject
 
     function removeFile($filename)
     {
-        if($this->numFiles > 0) {
-            foreach($this->files as $key => $information) {
-                if($information["name"] == $filename) {
+        if ($this->numFiles > 0) {
+            foreach ($this->files as $key => $information) {
+                if ($information["name"] == $filename) {
                     $this->numFiles--;
                     unset($this->files[$key]);
                     return true;
@@ -447,9 +446,9 @@ class Tar extends PoolObject
 
     function removeDirectory($dirname)
     {
-        if($this->numDirectories > 0) {
-            foreach($this->directories as $key => $information) {
-                if($information["name"] == $dirname) {
+        if ($this->numDirectories > 0) {
+            foreach ($this->directories as $key => $information) {
+                if ($information["name"] == $dirname) {
                     $this->numDirectories--;
                     unset($this->directories[$key]);
                     return true;
@@ -464,7 +463,7 @@ class Tar extends PoolObject
 
     function saveTar()
     {
-        if(!$this->filename)
+        if (!$this->filename)
             return false;
 
         // Write tar to current file using specified gzip compression
@@ -477,21 +476,20 @@ class Tar extends PoolObject
 
     function toTar($filename, $useGzip)
     {
-        if(!$filename)
+        if (!$filename)
             return false;
 
         // Encode processed files into TAR file format
         $this->__generateTar();
 
         // GZ Compress the data if we need to
-        if($useGzip) {
+        if ($useGzip) {
             // Make sure we have gzip support
-            if(!function_exists('gzencode'))
+            if (!function_exists('gzencode'))
                 return false;
 
             $file = gzencode($this->tar_file);
-        }
-        else {
+        } else {
             $file = $this->tar_file;
         }
 
@@ -511,8 +509,8 @@ class Tar extends PoolObject
         unset($this->tar_file);
         $this->tar_file = '';
         // Generate Records for each directory, if we have directories
-        if($this->numDirectories > 0) {
-            foreach($this->directories as $key => $information) {
+        if ($this->numDirectories > 0) {
+            foreach ($this->directories as $key => $information) {
                 unset($header);
                 $header = '';
                 // Generate tar header for this directory
@@ -537,7 +535,7 @@ class Tar extends PoolObject
 
                 // Compute header checksum
                 $checksum = str_pad(decoct($this->__computeUnsignedChecksum($header)), 6, "0", STR_PAD_LEFT);
-                for($i = 0; $i < 6; $i++) {
+                for ($i = 0; $i < 6; $i++) {
                     $header[(148 + $i)] = substr($checksum, $i, 1);
                 }
                 $header[154] = chr(0);
@@ -549,8 +547,8 @@ class Tar extends PoolObject
         }
 
         // Generate Records for each file, if we have files (We should...)
-        if($this->numFiles > 0) {
-            foreach($this->files as $key => $information) {
+        if ($this->numFiles > 0) {
+            foreach ($this->files as $key => $information) {
                 unset($header);
                 $header = '';
 
@@ -576,7 +574,7 @@ class Tar extends PoolObject
 
                 // Compute header checksum
                 $checksum = str_pad(decoct($this->__computeUnsignedChecksum($header)), 6, "0", STR_PAD_LEFT);
-                for($i = 0; $i < 6; $i++) {
+                for ($i = 0; $i < 6; $i++) {
                     $header[(148 + $i)] = substr($checksum, $i, 1);
                 }
                 $header[154] = chr(0);
@@ -602,10 +600,12 @@ class Tar extends PoolObject
     function __computeUnsignedChecksum($bytestring)
     {
         $unsigned_chksum = 0;
-        for($i = 0; $i < 512; $i++)
+        for ($i = 0; $i < 512; $i++) {
             $unsigned_chksum += ord($bytestring[$i]);
-        for($i = 0; $i < 8; $i++)
+        }
+        for ($i = 0; $i < 8; $i++) {
             $unsigned_chksum -= ord($bytestring[148 + $i]);
+        }
         $unsigned_chksum += ord(" ") * 8;
 
         return $unsigned_chksum;

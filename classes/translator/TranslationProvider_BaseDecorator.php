@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -18,7 +19,6 @@ use Exception;
  */
 abstract class TranslationProvider_BaseDecorator implements TranslationProvider
 {
-
     protected TranslationProvider $provider;
 
     public function __construct(TranslationProvider $provider)
@@ -36,12 +36,10 @@ abstract class TranslationProvider_BaseDecorator implements TranslationProvider
         return $this->provider->getLocale();
     }
 
-
     function getResult(): ?Translation
     {
         return $this->provider->getResult();
     }
-
 
     function increaseMissCounter(?string $key): int
     {
@@ -73,10 +71,8 @@ abstract class TranslationProvider_BaseDecorator implements TranslationProvider
         return $this->provider->getAllTranslations();
     }
 
-
     function getFactory(): TranslationProviderFactory
     {
         return $this->provider->getFactory();
     }
-
 }

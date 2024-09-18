@@ -54,8 +54,16 @@ interface DatabaseAccessObjectInterface
      * @see MySQL_DAO::buildSorting
      * @see MySQL_DAO::buildLimit
      */
-    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter = [], array $sorting = [],
-        array $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet;
+    public function getMultiple(
+        null|int|string|array $id = null,
+        null|string|array $key = null,
+        array $filter = [],
+        array $sorting = [],
+        array $limit = [],
+        array $groupBy = [],
+        array $having = [],
+        array $options = [],
+    ): RecordSet;
 
     /**
      * Fetching row is a hook that goes through all the retrieved rows. Can be used to modify the row (column content) before it is returned.

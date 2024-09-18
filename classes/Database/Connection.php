@@ -50,7 +50,7 @@ class Connection extends PoolObject
      */
     public function close(): void
     {
-        if(!$this->closed) {
+        if (!$this->closed) {
             $this->driver->close($this);
             $this->closed = true;
         }

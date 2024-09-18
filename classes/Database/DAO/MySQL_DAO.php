@@ -14,6 +14,7 @@ use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
+
 use function array_map;
 use function array_merge;
 use function array_pop;
@@ -71,7 +72,7 @@ class MySQL_DAO extends DAO
     private function rebuildColumnList(): void
     {
         // Columns are predefined as property "columns".
-        if(!$this->columns) {
+        if (!$this->columns) {
             return;
         }
 
@@ -92,7 +93,7 @@ class MySQL_DAO extends DAO
     /**
      * Returns the data values which will be translated
      *
-     * @return array|\string[][]
+     * @return array|string[][]
      */
     public function getTranslatedValues(): array
     {
@@ -144,16 +145,16 @@ class MySQL_DAO extends DAO
      */
     public function getColumnDataType(string $column): string
     {
-        if(!$this->field_list) {
+        if (!$this->field_list) {
             $this->fetchColumns();
         }
 
         // Loop through each field to find the matching column
-        foreach($this->field_list as $field) {
-            if($field['COLUMN_NAME'] === $column) {
+        foreach ($this->field_list as $field) {
+            if ($field['COLUMN_NAME'] === $column) {
                 $buf = explode(' ', $field['COLUMN_TYPE']);
                 $type = $buf[0];
-                if(($pos = strpos($type, '(')) !== false) {
+                if (($pos = strpos($type, '(')) !== false) {
                     $type = substr($type, 0, $pos);
                 }
                 return $type;
@@ -167,11 +168,11 @@ class MySQL_DAO extends DAO
      */
     public function getColumnInfo(string $column): array
     {
-        if(!$this->field_list) {
+        if (!$this->field_list) {
             $this->fetchColumns();
         }
-        foreach($this->field_list as $field) {
-            if($field['COLUMN_NAME'] === $column) {
+        foreach ($this->field_list as $field) {
+            if ($field['COLUMN_NAME'] === $column) {
                 return $field;
             }
         }
@@ -184,11 +185,11 @@ class MySQL_DAO extends DAO
     public function getColumnEnumValues(string $column): array
     {
         $fieldInfo = $this->getDataInterface()->getColumnMetadata($this->getDatabase(), static::getTableName(), $column);
-        if(!isset($fieldInfo['Type'])) {
+        if (!isset($fieldInfo['Type'])) {
             return [];
         }
         $type = substr($fieldInfo['Type'], 0, 4);
-        if($type !== 'enum') {
+        if ($type !== 'enum') {
             return [];
         }
         $buf = substr($fieldInfo['Type'], 5, -1);
@@ -200,7 +201,7 @@ class MySQL_DAO extends DAO
      */
     public function getColumnsWithTableAlias(): array
     {
-        return array_map(function($val) {
+        return array_map(function ($val) {
             return "$this->tableAlias.$val";
         }, $this->getColumns());
     }
@@ -219,14 +220,14 @@ class MySQL_DAO extends DAO
     protected function translate(array $row): array
     {
         $Weblication = Weblication::getInstance();
-        if(!$Weblication->hasTranslator()) {//no translator
+        if (!$Weblication->hasTranslator()) {//no translator
             return $row;
         }//unchanged
         $Translator = $Weblication->getTranslator();
         // another idea to handle columns which should be translated
         // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
-        foreach($this->translate as $key) {
-            if(isset($row[$key]) && is_string($row[$key])) {
+        foreach ($this->translate as $key) {
+            if (isset($row[$key]) && is_string($row[$key])) {
                 $row[$key] = $Translator->getTranslation($row[$key], $row[$key], noAlter: true);
             }
         }
@@ -238,12 +239,12 @@ class MySQL_DAO extends DAO
      */
     public function makeFilter(array $columns = [], string $searchString = '', array $definedSearchKeywords = []): array
     {
-        if(!$searchString && !$definedSearchKeywords) {
+        if (!$searchString && !$definedSearchKeywords) {
             return [];
         }
         $filter = [];
         $defined_filter = [];
-        foreach($columns as $column) {
+        foreach ($columns as $column) {
             $originalExpr = $column['expr'] ?? $column; // column or expression
             $filterExpr = match ($column['type'] ?? '') {
                 'date', 'date.time' => //temporal type
@@ -252,16 +253,16 @@ class MySQL_DAO extends DAO
                 default => $originalExpr//unchanged
             };
             $columnName = $column['alias'] ?? $column;
-            if(isset($definedSearchKeywords[$columnName])) {//found additional metadata
+            if (isset($definedSearchKeywords[$columnName])) {//found additional metadata
                 $operator = 'like';
                 /** @var string $filterByValue */
                 $filterByValue = $definedSearchKeywords[$columnName];//get keyword for column name?
-                switch(($column['filterControl'] ?? false ?: 'input')) {//type of input?
+                switch (($column['filterControl'] ?? false ?: 'input')) {//type of input?
                     case 'select':
                         $operator = 'equal';
                         break;
                     case 'datepicker':
-                        if($filterByValue) {//non-empty
+                        if ($filterByValue) {//non-empty
                             $filterByValue = $this->reformatFilterDate($filterByValue);
                         }
                         $filterByValue .= '%';//empty -> '%'
@@ -273,8 +274,7 @@ class MySQL_DAO extends DAO
                 }
                 $filterByColumn = $column['filterByDbColumn'] ?? false ?: $filterExpr;
                 $defined_filter[] = [$filterByColumn, $operator, $filterByValue];
-            }
-            elseif($searchString) {//column not filtered -> look for searchString
+            } elseif ($searchString) {//column not filtered -> look for searchString
                 array_push($filter, [$filterExpr, 'like', "%$searchString%"], 'or');
             }//add condition, one column must match the searchString
         }
@@ -289,16 +289,23 @@ class MySQL_DAO extends DAO
      */
     private function reformatFilterDate(string $dateValue): string
     {
-        if(($date = date_parse($dateValue)) &&
+        if (($date = date_parse($dateValue)) &&
             $date['error_count'] === 0 && $date['warning_count'] === 0 &&
             $date['year'] && $date['month'] && $date['day']) {// is date?
             $format = "%d-%02d-%02d";//y-MM-DD
-            if($date['hour'] || $date['minute']) {
+            if ($date['hour'] || $date['minute']) {
                 $format .= " %02d:%02d";// hh:mm
                 $format .= $date['second'] ? ":%02d" : '';//:ss
             }
-            $dateValue = sprintf($format, $date['year'], $date['month'],
-                $date['day'], $date['hour'], $date['minute'], $date['second']);
+            $dateValue = sprintf(
+                $format,
+                $date['year'],
+                $date['month'],
+                $date['day'],
+                $date['hour'],
+                $date['minute'],
+                $date['second'],
+            );
         }
         /** Malformed date TODO */
         return $dateValue;

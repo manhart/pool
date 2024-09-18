@@ -59,8 +59,8 @@ class Stopwatch extends PoolObject
     function start(string $name): self
     {
         $Diff = 0.0;
-        if(isset($this->times[$name])) {
-            if($this->times[$name][2] == STOPWATCH_STARTED) {
+        if (isset($this->times[$name])) {
+            if ($this->times[$name][2] == STOPWATCH_STARTED) {
                 return $this;
             }
             $Diff = $this->times[$name][1];
@@ -80,7 +80,7 @@ class Stopwatch extends PoolObject
      **/
     function stop($name): self
     {
-        if($this->times[$name][2] == STOPWATCH_STARTED) {
+        if ($this->times[$name][2] == STOPWATCH_STARTED) {
             $Now = getMicrotime();
             $Diff = (float)($Now - $this->times[$name][0]);
 
@@ -115,7 +115,7 @@ class Stopwatch extends PoolObject
     public function getDiff(string $name): float
     {
         $diff = 0.0;
-        if($this->times[$name][2] === STOPWATCH_STOPPED) {
+        if ($this->times[$name][2] === STOPWATCH_STOPPED) {
             $diff = $this->times[$name][1];
             $diff = round($diff, $this->precision);
         }

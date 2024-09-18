@@ -20,7 +20,7 @@ class PublicHoliday
     /**
      * @var DateTimeInterface Date
      */
-    private \DateTimeInterface $Date;
+    private DateTimeInterface $Date;
 
     /**
      * @var string name of holiday
@@ -31,7 +31,7 @@ class PublicHoliday
      * @param int $key
      * @param DateTimeInterface $Date
      */
-    public function __construct(int $key, \DateTimeInterface $Date)
+    public function __construct(int $key, DateTimeInterface $Date)
     {
         $this->key = $key;
         $this->Date = $Date;
@@ -42,7 +42,7 @@ class PublicHoliday
      *
      * @return DateTimeInterface
      */
-    public function getDate(): \DateTimeInterface
+    public function getDate(): DateTimeInterface
     {
         return clone $this->Date;
     }
@@ -54,7 +54,7 @@ class PublicHoliday
      */
     public function getName(): string
     {
-        if(!$this->name) {
+        if (!$this->name) {
             $this->name = PublicHolidays::getHolidayName($this->key);
         }
         return $this->name;

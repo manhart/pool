@@ -12,6 +12,4 @@ namespace pool\classes\Exception;
 
 use LogicException as PhpLogicException;
 
-class MethodNotImplementedException extends PhpLogicException implements PoolExceptionInterface
-{
-}
+class MethodNotImplementedException extends PhpLogicException implements PoolExceptionInterface {}

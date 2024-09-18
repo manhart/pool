@@ -14,15 +14,26 @@ use pool\classes\Database\Connection;
 use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
+
+use function array_map;
+use function is_resource;
 use function print_r;
+use function sqlsrv_begin_transaction;
+use function sqlsrv_client_info;
 use function sqlsrv_close;
+use function sqlsrv_commit;
 use function sqlsrv_connect;
 use function sqlsrv_errors;
 use function sqlsrv_fetch_array;
 use function sqlsrv_free_stmt;
+use function sqlsrv_has_rows;
 use function sqlsrv_num_rows;
 use function sqlsrv_query;
+use function sqlsrv_rollback;
 use function sqlsrv_rows_affected;
+use function sqlsrv_server_info;
+
+use const SQLSRV_FETCH_ASSOC;
 
 class MSSQL extends Driver
 {
@@ -61,9 +72,15 @@ class MSSQL extends Driver
      * @param mixed ...$options
      * @return resource
      */
-    public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options): Connection
-    {
+    public function connect(
+        DataInterface $dataInterface,
+        string $hostname,
+        int $port = 0,
+        string $username = '',
+        string $password = '',
+        string $database = '',
+        ...$options
+    ): Connection {
         $connection_info = [
             'Database' => $database,
             'UID' => $username,
@@ -71,7 +88,7 @@ class MSSQL extends Driver
             'CharacterSet' => $this->charset = $options['charset'] ?? $this->charset,
             'TrustServerCertificate' => $options['TrustServerCertificate'] ?? false,
         ];
-        if(($resource = sqlsrv_connect($hostname, $connection_info)) === false) {
+        if (($resource = sqlsrv_connect($hostname, $connection_info)) === false) {
             throw new DatabaseConnectionException(print_r(sqlsrv_errors(), true));
         }
         return new Connection($resource, $this);
@@ -90,10 +107,11 @@ class MSSQL extends Driver
 
     public function errors(?Connection $connection = null): array
     {
-        return \array_map(static fn($error) => [
-            'errno'    => $error['code'],
-            'error'    => $error['message'],
-            'sqlstate' => $error['SQLSTATE']
+        return array_map(static fn($error)
+            => [
+            'errno' => $error['code'],
+            'error' => $error['message'],
+            'sqlstate' => $error['SQLSTATE'],
         ], sqlsrv_errors() ?? []);
     }
 
@@ -103,7 +121,7 @@ class MSSQL extends Driver
     public function getLastId(Connection $connection): int|string
     {
         $stmt = $this->query($connection, 'SELECT SCOPE_IDENTITY() AS last_id');
-        if(!$stmt) {
+        if (!$stmt) {
             return 0;
         }
         $last_id = $this->fetch($stmt)['last_id'] ?: 0;
@@ -129,7 +147,7 @@ class MSSQL extends Driver
      */
     public function fetch(mixed $result): array|null|false
     {
-        return sqlsrv_fetch_array($result, \SQLSRV_FETCH_ASSOC);
+        return sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC);
     }
 
     /**
@@ -157,7 +175,7 @@ class MSSQL extends Driver
      */
     public function hasRows(mixed $result): bool
     {
-        return \sqlsrv_has_rows($result);
+        return sqlsrv_has_rows($result);
     }
 
     /**
@@ -187,27 +205,27 @@ class MSSQL extends Driver
     {
         /** @noinspection SqlResolve */
         $query = <<<SQL
-SELECT
-    c.name AS COLUMN_NAME,
-    t.Name AS DATA_TYPE,
-    c.max_length AS COLUMN_LENGTH,
-    CASE
-        WHEN ic.column_id IS NOT NULL THEN 'PRI'
-        ELSE ''
-    END AS COLUMN_KEY
-FROM
-    sys.columns c
-INNER JOIN
-    sys.types t ON c.user_type_id = t.user_type_id
-LEFT JOIN
-    sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-WHERE
-    c.object_id = OBJECT_ID('$database.dbo.$table')
-SQL;
+            SELECT
+                c.name AS COLUMN_NAME,
+                t.Name AS DATA_TYPE,
+                c.max_length AS COLUMN_LENGTH,
+                CASE
+                    WHEN ic.column_id IS NOT NULL THEN 'PRI'
+                    ELSE ''
+                END AS COLUMN_KEY
+            FROM
+                sys.columns c
+            INNER JOIN
+                sys.types t ON c.user_type_id = t.user_type_id
+            LEFT JOIN
+                sys.index_columns ic ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+            WHERE
+                c.object_id = OBJECT_ID('$database.dbo.$table')
+            SQL;
         $result = $this->query($connection, $query);
         $fieldList = $fields = $pk = [];
 
-        while($row = $this->fetch($result)) {
+        while ($row = $this->fetch($result)) {
             $phpType = match ($row['DATA_TYPE']) {
                 'int', 'tinyint', 'bigint', 'smallint' => 'int',
                 'decimal', 'float', 'real' => 'float',
@@ -216,7 +234,7 @@ SQL;
             $row['phpType'] = $phpType;
             $fieldList[] = $row;
             $fields[] = $row['COLUMN_NAME'];
-            if($row['COLUMN_KEY'] === 'PRI') {
+            if ($row['COLUMN_KEY'] === 'PRI') {
                 $pk[] = $row['COLUMN_NAME'];
             }
         }
@@ -242,7 +260,7 @@ SQL;
      */
     public function beginTransaction(Connection $connection): bool
     {
-        return \sqlsrv_begin_transaction($connection->getConnection());
+        return sqlsrv_begin_transaction($connection->getConnection());
     }
 
     /**
@@ -250,7 +268,7 @@ SQL;
      */
     public function commit(Connection $connection): bool
     {
-        return \sqlsrv_commit($connection->getConnection());
+        return sqlsrv_commit($connection->getConnection());
     }
 
     /**
@@ -258,7 +276,7 @@ SQL;
      */
     public function rollback(Connection $connection): bool
     {
-        return \sqlsrv_rollback($connection->getConnection());
+        return sqlsrv_rollback($connection->getConnection());
     }
 
     /**
@@ -266,7 +284,7 @@ SQL;
      */
     public function createSavePoint(Connection $connection, string $savepoint): bool
     {
-        return \is_resource($connection->query("SAVE TRANSACTION $savepoint"));
+        return is_resource($connection->query("SAVE TRANSACTION $savepoint"));
     }
 
     /**
@@ -274,7 +292,7 @@ SQL;
      */
     public function releaseSavePoint(Connection $connection, string $savepoint): bool
     {
-        return \is_resource($connection->rollbackToSavePoint($connection, $savepoint));
+        return is_resource($connection->rollbackToSavePoint($connection, $savepoint));
     }
 
     /**
@@ -282,7 +300,7 @@ SQL;
      */
     public function rollbackToSavePoint(Connection $connection, string $savepoint): bool
     {
-        return \is_resource($connection->query("ROLLBACK TRANSACTION $savepoint"));
+        return is_resource($connection->query("ROLLBACK TRANSACTION $savepoint"));
     }
 
     /**
@@ -290,7 +308,7 @@ SQL;
      */
     public function setTransactionIsolationLevel(Connection $connection, string $level): bool
     {
-        return \is_resource($connection->query("SET TRANSACTION ISOLATION LEVEL $level"));
+        return is_resource($connection->query("SET TRANSACTION ISOLATION LEVEL $level"));
     }
 
     /**
@@ -300,7 +318,8 @@ SQL;
     {
         // needs GRANT VIEW SERVER STATE TO YourUsername;
         /** @noinspection SqlResolve * */
-        $result = $connection->query('SELECT CASE transaction_isolation_level
+        $result = $connection->query(
+            'SELECT CASE transaction_isolation_level
             WHEN 0 THEN \'Unspecified\'
             WHEN 1 THEN \'ReadUncommitted\'
             WHEN 2 THEN \'ReadCommitted\'
@@ -309,7 +328,8 @@ SQL;
             WHEN 5 THEN \'Snapshot\'
         END AS TRANSACTION_ISOLATION_LEVEL
         FROM sys.dm_exec_sessions
-        WHERE session_id = @@SPID');
+        WHERE session_id = @@SPID',
+        );
         $row = $this->fetch($result);
         $this->free($result);
         return $row['TRANSACTION_ISOLATION_LEVEL'];
@@ -342,7 +362,7 @@ SQL;
      */
     public function getServerInfo(Connection $connection): array
     {
-        return \sqlsrv_server_info($connection->getConnection());
+        return sqlsrv_server_info($connection->getConnection());
     }
 
     /**
@@ -350,6 +370,6 @@ SQL;
      */
     public function getClientInfo(Connection $connection): array
     {
-        return \sqlsrv_client_info($connection->getConnection());
+        return sqlsrv_client_info($connection->getConnection());
     }
 }

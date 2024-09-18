@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Set the mbstring internal encoding to a binary safe encoding when func_overload
  * is enabled.
@@ -21,7 +22,7 @@
  */
 function mbstring_binary_safe_encoding($reset = false)
 {
-    static $encodings = array();
+    static $encodings = [];
     static $overloaded = null;
 
     if (is_null($overloaded)) {
@@ -100,9 +101,9 @@ function seems_utf8($str)
  * @param boolean $removeQuotes Sollen Quotes (") vom Ergebnis entfernt werden
  * @return array Aufgeteilte Felder
  **/
-function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
+function splitcsv($line, $delim = ',', $removeQuotes = true, $quote = '"')
 {
-    $fields = array();
+    $fields = [];
     $fldCount = 0;
     $inQuotes = false;
     for ($i = 0; $i < strlen($line); $i++) {
@@ -110,23 +111,19 @@ function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
         $tmp = substr($line, $i, strlen($delim));
         if ($tmp === $delim && !$inQuotes) {
             $fldCount++;
-            $i += strlen($delim)-1;
-        }
-        else if ($fields[$fldCount] == '' && $line[$i] == $quote && !$inQuotes) {
+            $i += strlen($delim) - 1;
+        } elseif ($fields[$fldCount] == '' && $line[$i] == $quote && !$inQuotes) {
             if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
             $inQuotes = true;
-        }
-        else if ($line[$i] == $quote) {
-            if ($line[$i+1] == $quote) {
+        } elseif ($line[$i] == $quote) {
+            if ($line[$i + 1] == $quote) {
                 $i++;
                 $fields[$fldCount] .= $line[$i];
-            }
-            else {
+            } else {
                 if (!$removeQuotes) $fields[$fldCount] .= $line[$i];
                 $inQuotes = false;
             }
-        }
-        else {
+        } else {
             $fields[$fldCount] .= $line[$i];
         }
     }
@@ -142,9 +139,9 @@ function splitcsv($line, $delim=',', $removeQuotes=true, $quote='"')
  * @param string $enclosure Umklammerung [optional]
  * @return array mehrdimensional (Zeilen, Felder)
  */
-function splitcsvByContent(&$data, $delim=';', $enclosure='"')
+function splitcsvByContent(&$data, $delim = ';', $enclosure = '"')
 {
-    $ret_array = array();
+    $ret_array = [];
     $enclosed = false;
     $fldcount = 0;
     $linecount = 0;
@@ -156,16 +153,14 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
                 if ($enclosed && $data[$i + 1] == $enclosure) {
                     $fldval .= $chr;
                     ++$i; //skip next char
-                }
-                else $enclosed = !$enclosed;
+                } else $enclosed = !$enclosed;
                 break;
 
             case $delim:
                 if (!$enclosed) {
                     $ret_array[$linecount][$fldcount++] = $fldval;
                     $fldval = '';
-                }
-                else $fldval .= $chr;
+                } else $fldval .= $chr;
                 break;
 
             case "\r":
@@ -178,8 +173,7 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
                     $ret_array[$linecount++][$fldcount] = $fldval;
                     $fldcount = 0;
                     $fldval = '';
-                }
-                else $fldval .= $chr;
+                } else $fldval .= $chr;
                 break;
 
             default:
@@ -196,7 +190,6 @@ function splitcsvByContent(&$data, $delim=';', $enclosure='"')
  * Determine whether the given value is a binary string by checking to see if it has detectable character encoding.
  *
  * @param string $value
- *
  * @return bool
  */
 function isBinary($value): bool

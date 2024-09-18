@@ -10,6 +10,11 @@
 
 namespace pool\utils;
 
+use function mktime;
+use function str_pad;
+
+use const STR_PAD_LEFT;
+
 final class Date
 {
     /**
@@ -23,14 +28,14 @@ final class Date
      */
     public static function getCustomWeekNumber(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
-        $date = \mktime(0, 0, 0, $mon, $day, $year);
+        $date = mktime(0, 0, 0, $mon, $day, $year);
         $kw = \date('W', $date); // KW nach ISO 8601:1988
         $weekday = \date('N', $date);
         if ($weekday >= $breakpoint) {
-            $kw = \date('W', \mktime(0, 0, 0, $mon, $day + 7, $year));
+            $kw = \date('W', mktime(0, 0, 0, $mon, $day + 7, $year));
         }
 
-        return \str_pad($kw, 2, '0', \STR_PAD_LEFT);
+        return str_pad($kw, 2, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -44,14 +49,14 @@ final class Date
      */
     public static function getCustomMonth(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
-        $date = \mktime(0, 0, 0, $mon, $day, $year);
+        $date = mktime(0, 0, 0, $mon, $day, $year);
         $monat = \date('m', $date);
         $weekday = \date('N', $date);
         if ($weekday >= $breakpoint) {
-            $monat = \date('m', \mktime(0, 0, 0, $mon, $day + 7, $year));
+            $monat = \date('m', mktime(0, 0, 0, $mon, $day + 7, $year));
         }
 
-        return \str_pad($monat, 2, '0', \STR_PAD_LEFT);
+        return str_pad($monat, 2, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -65,11 +70,11 @@ final class Date
      */
     public static function getCustomYear(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
-        $date = \mktime(0, 0, 0, $mon, $day, $year);
+        $date = mktime(0, 0, 0, $mon, $day, $year);
         $jahr = \date('Y', $date);
         $weekday = \date('N', $date);
         if ($weekday >= $breakpoint) {
-            $jahr = \date('Y', \mktime(0, 0, 0, $mon, $day + 7, $year));
+            $jahr = \date('Y', mktime(0, 0, 0, $mon, $day + 7, $year));
         }
 
         return $jahr;

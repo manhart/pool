@@ -15,6 +15,4 @@ use JsonException as PhpJsonException;
 /**
  * Thrown to indicate that the argument received is not valid.
  */
-class InvalidJsonException extends PhpJsonException implements PoolExceptionInterface
-{
-}
+class InvalidJsonException extends PhpJsonException implements PoolExceptionInterface {}

@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -10,8 +11,14 @@
 
 namespace pool\classes\Core;
 
+use Generator;
+use NumberFormatter;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
+
+use function array_diff;
+use function count;
+use function strcasecmp;
 
 /**
  * Core class for POOL components. Provides unique names for all components.
@@ -71,13 +78,13 @@ class Component extends PoolObject
     public function __construct(?Component $Owner)
     {
         $this->Owner = $Owner;
-        if($Owner) {
+        if ($Owner) {
             $Owner->insertComponent($this);
 
             // for direct access to weblication!
-            if($Owner instanceof Weblication) {
+            if ($Owner instanceof Weblication) {
                 $this->Weblication = $Owner;
-                if($this->Weblication->Session instanceof Input) {
+                if ($this->Weblication->Session instanceof Input) {
                     $this->Session = $this->Weblication->Session;
                 }
             }
@@ -106,7 +113,7 @@ class Component extends PoolObject
     {
         $className = $this->getClassName();
 
-        if($this->Owner) {
+        if ($this->Owner) {
             $counter = ($this->Owner->uniqueNameCounter[$className] ?? 0) + 1;
             $this->Owner->uniqueNameCounter[$className] = $counter;
             $className = "$className$counter";
@@ -135,7 +142,7 @@ class Component extends PoolObject
      */
     public function setName(string $new_name): static
     {
-        if($this->name !== $new_name && $this->validateName($new_name)) {
+        if ($this->name !== $new_name && $this->validateName($new_name)) {
             $this->name = $new_name;
         }
         return $this;
@@ -160,8 +167,8 @@ class Component extends PoolObject
      */
     public function findComponent(string $name): ?Component
     {
-        foreach($this->components as $Component) {
-            if(\strcasecmp($Component->getName(), $name) === 0) {
+        foreach ($this->components as $Component) {
+            if (strcasecmp($Component->getName(), $name) === 0) {
                 return $Component;
             }
         }
@@ -172,12 +179,12 @@ class Component extends PoolObject
      * Returns the components with the given class
      *
      * @param string $class Search for a Component with class
-     * @return \Generator
+     * @return Generator
      */
-    public function findComponents(string $class): \Generator
+    public function findComponents(string $class): Generator
     {
-        foreach($this->components as $Component) {
-            if($Component instanceof $class) {
+        foreach ($this->components as $Component) {
+            if ($Component instanceof $class) {
                 yield $Component;
             }
         }
@@ -202,7 +209,7 @@ class Component extends PoolObject
      */
     public function getWeblication(): ?Weblication
     {
-        if($this->Owner instanceof Weblication) {
+        if ($this->Owner instanceof Weblication) {
             return $this->Owner;
         }
 
@@ -216,7 +223,7 @@ class Component extends PoolObject
      */
     public function getComponentCount(): int
     {
-        return \count($this->components);
+        return count($this->components);
     }
 
     /**
@@ -226,22 +233,22 @@ class Component extends PoolObject
      */
     public function removeComponent(Component $Component): static
     {
-        $this->components = \array_diff($this->components, [$Component]);
+        $this->components = array_diff($this->components, [$Component]);
         return $this;
     }
 
     /**
      * Create simple default NumberFormatter
      *
-     * @return \NumberFormatter|null Returns the created NumberFormatter or null if creation fails
+     * @return NumberFormatter|null Returns the created NumberFormatter or null if creation fails
      */
-    protected function createNumberFormatter(int $style = \NumberFormatter::PATTERN_DECIMAL, ?string $pattern = '#,##0.00', array $attributes = []): \NumberFormatter|null
+    protected function createNumberFormatter(int $style = NumberFormatter::PATTERN_DECIMAL, ?string $pattern = '#,##0.00', array $attributes = []): NumberFormatter|null
     {
-        $numberFormatter = \NumberFormatter::create($this->Weblication->getLocale(), $style, $pattern);
-        if(!$numberFormatter) {
+        $numberFormatter = NumberFormatter::create($this->Weblication->getLocale(), $style, $pattern);
+        if (!$numberFormatter) {
             return null;
         }
-        foreach($attributes as $attribute => $value) {
+        foreach ($attributes as $attribute => $value) {
             $numberFormatter->setAttribute($attribute, $value);
         }
         return $numberFormatter;

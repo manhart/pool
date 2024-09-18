@@ -10,6 +10,11 @@
 
 namespace pool\utils;
 
+use function strlen;
+use function strpos;
+use function strrpos;
+use function substr;
+
 final class Str
 {
     /**
@@ -21,8 +26,8 @@ final class Str
      */
     public static function removePrefix(string $value, string $prefix = '/'): string
     {
-        if(str_starts_with($prefix, $value)) {
-            $value = \substr($value, \strlen($prefix));
+        if (str_starts_with($prefix, $value)) {
+            $value = substr($value, strlen($prefix));
         }
         return $value;
     }
@@ -36,8 +41,8 @@ final class Str
      */
     public static function removeSuffix(string $value, string $suffix = '/'): string
     {
-        if(str_ends_with($suffix, $value)) {
-            $value = \substr($value, 0, -\strlen($suffix));
+        if (str_ends_with($suffix, $value)) {
+            $value = substr($value, 0, -strlen($suffix));
         }
         return $value;
     }
@@ -53,11 +58,11 @@ final class Str
     public static function sliceAfter(string $string, string $marker = '/', bool $returnEmptyIfNotFound = true): string
     {
         // @todo replace in PHP 8.3 through strstr($string, $separator, true)
-        $pos = \strpos($string, $marker);
+        $pos = strpos($string, $marker);
 
         // Falls ein Slash gefunden wurde und nicht am Anfang steht, schneide den String dahinter aus
-        if($pos !== false) {
-            return \substr($string, $pos + \strlen($marker));
+        if ($pos !== false) {
+            return substr($string, $pos + strlen($marker));
         }
 
         return $returnEmptyIfNotFound ? '' : $string;
@@ -73,11 +78,11 @@ final class Str
      */
     public static function sliceBefore(string $string, string $marker = '/', bool $returnEmptyIfNotFound = true): string
     {
-        $pos = \strrpos($string, $marker);
+        $pos = strrpos($string, $marker);
 
         // Falls ein Slash gefunden wurde und nicht am Anfang steht, schneide den String dahinter aus
-        if($pos !== false) {
-            return \substr($string, 0, $pos);
+        if ($pos !== false) {
+            return substr($string, 0, $pos);
         }
 
         return $returnEmptyIfNotFound ? '' : $string;

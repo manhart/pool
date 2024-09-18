@@ -14,6 +14,7 @@ use Closure;
 use CustomMySQL_DAO;
 use DateTimeInterface;
 use JetBrains\PhpStorm\Pure;
+use mysqli_sql_exception;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
@@ -22,8 +23,11 @@ use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
+use Stringable;
+
 use function addEndingSlash;
 use function array_diff;
+use function array_flip;
 use function array_keys;
 use function array_map;
 use function array_merge;
@@ -32,6 +36,7 @@ use function bool2string;
 use function chr;
 use function class_exists;
 use function count;
+use function date;
 use function explode;
 use function file_exists;
 use function gettype;
@@ -49,7 +54,7 @@ use function strtolower;
  * @package pool\classes\Database
  * @since 2003/07/10
  */
-abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, \Stringable
+abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, Stringable
 {
     /**
      * don't quote the value in the (sql) query
@@ -219,7 +224,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $this->quotedSchema = $this->wrapSymbols(static::$schemaName ?? '');
         $this->quotedTable = $this->wrapSymbols($this->table);
         $this->commands = $this->createCommands();
-        $this->preCalculatedNonWrapSymbols = \array_flip(array_merge($this->symbolQuote, $this->nonWrapSymbols));
+        $this->preCalculatedNonWrapSymbols = array_flip(array_merge($this->symbolQuote, $this->nonWrapSymbols));
     }
 
     /**
@@ -263,13 +268,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     final public static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
     {
         // class stuff
-        if(!$tableName) {
+        if (!$tableName) {
             $DAO = new static($databaseName);
             $DAO->throwsOnError = $throws;
             return $DAO;
         }
 
-        if(static::$tableName) {
+        if (static::$tableName) {
             throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
         }
 
@@ -329,16 +334,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public static function createDAO(?string $tableName = null, ?string $databaseAlias = null): static
     {
         // @todo remove workaround once relying projects are fixed
-        if($tableName && !$databaseAlias && str_contains($tableName, '_')) {
+        if ($tableName && !$databaseAlias && str_contains($tableName, '_')) {
             [$databaseAlias, $tableName] = explode('_', $tableName, 2);
         }
 
         // class stuff
-        if(!$tableName) {
+        if (!$tableName) {
             return new static();
         }
 
-        if(static::$tableName) {
+        if (static::$tableName) {
             throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
         }
 
@@ -352,11 +357,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
         $include = "$dir/$tableName.php";
         $file_exists = file_exists($include);
-        if(!$class_exists && $file_exists) {
+        if (!$class_exists && $file_exists) {
             require_once $include;
             $class_exists = true;
         }
-        if($class_exists) {
+        if ($class_exists) {
             return new $tableName($databaseAlias, $tableName);
         }
 
@@ -414,7 +419,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public function fetchData(array|int|string $pk, ...$fields): mixed
     {
         $fields = $fields ?: $this->getPrimaryKey();
-        if(!array_is_list($fields)) {//cast instructions exist
+        if (!array_is_list($fields)) {//cast instructions exist
             $casts = array_values($fields);
             $fields = array_filter($fields, is_string(...)) + array_filter(array_keys($fields), is_string(...));//screen out instructions and listify fields
         }
@@ -444,11 +449,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-SELECT $this->column_list
-FROM $this
-WHERE
-    $where
-SQL;
+            SELECT $this->column_list
+            FROM $this
+            WHERE
+                $where
+            SQL;
         return $this->execute($sql);
     }
 
@@ -457,7 +462,7 @@ SQL;
      */
     final public static function now(string $format = 'Y-m-d H:i:s'): string
     {
-        return \date($format);
+        return date($format);
     }
 
     /**
@@ -470,9 +475,16 @@ SQL;
      * @see MySQL_DAO::buildSorting
      * @see MySQL_DAO::buildLimit
      */
-    public function getMultiple(null|int|string|array $id = null, null|string|array $key = null, array $filter = [], array $sorting = [],
-        array $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
-    {
+    public function getMultiple(
+        null|int|string|array $id = null,
+        null|string|array $key = null,
+        array $filter = [],
+        array $sorting = [],
+        array $limit = [],
+        array $groupBy = [],
+        array $having = [],
+        array $options = [],
+    ): RecordSet {
         $optionsStr = implode(' ', $options);
 
         $whereClause = $this->buildWhere($id, $key).$this->buildFilter($filter);
@@ -483,15 +495,15 @@ SQL;
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-SELECT $optionsStr $this->column_list
-FROM $this
-WHERE
-    $whereClause
-$groupByClause
-$havingClause
-$sortingClause
-$limitClause
-SQL;
+            SELECT $optionsStr $this->column_list
+            FROM $this
+            WHERE
+                $whereClause
+            $groupByClause
+            $havingClause
+            $sortingClause
+            $limitClause
+            SQL;
         return $this->execute($sql);
     }
 
@@ -501,27 +513,26 @@ SQL;
     protected function buildWhere(null|int|string|array $id, null|string|array $key): string
     {
         $conditions = [];
-        if(is_null($id)) {
+        if (is_null($id)) {
             return $this->dummyWhere;
         }
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
-        if(is_null($key)) {
+        if (is_null($key)) {
             $key = $this->pk;
         }
-        if(is_array($key)) {
-            if(!is_array($id)) {
+        if (is_array($key)) {
+            if (!is_array($id)) {
                 $id = [$id];
             }
             $count = count($key);
-            for($i = 0; $i < $count; $i++) {
+            for ($i = 0; $i < $count; $i++) {
                 $keyName = $key[$i];
                 $conditions[] = "$alias$keyName={$this->escapeValue($id[$i], false, false)}";
-                if(!isset($id[$i + 1])) {
+                if (!isset($id[$i + 1])) {
                     break;
                 }
             }
-        }
-        else {
+        } else {
             $conditions[] = "$alias$key={$this->escapeValue($id, false, false)}";
         }
         return implode(' AND ', $conditions);
@@ -532,7 +543,7 @@ SQL;
      */
     protected function escapeValue(mixed $value, false|int $noEscape = false, false|int $noQuotes = false): int|float|string
     {
-        if(is_int($value) || is_float($value)) {
+        if (is_int($value) || is_float($value)) {
             return $value;
         }// If the value is not a string that can be directly used in SQL escape and quote it.
         $value = $noEscape ? $value : $this->escapeSQL($value);
@@ -559,32 +570,34 @@ SQL;
      * @return string conditions for where clause
      * @see MySQL_DAO::$operatorMap
      */
-    protected function buildFilter(array $filter_rules, Operator $operator = Operator::and, bool $skip_next_operator = false,
-        string $initialOperator = ' and'): string
-    {
-        if(!$filter_rules) {//not filter anything (terminate floating operators)
+    protected function buildFilter(
+        array $filter_rules,
+        Operator $operator = Operator::and,
+        bool $skip_next_operator = false,
+        string $initialOperator = ' and',
+    ): string {
+        if (!$filter_rules) {//not filter anything (terminate floating operators)
             return $skip_next_operator ? $this->dummyWhere : '';
         }
 
         $queryParts = [];
         $firstRule = $filter_rules[0] ?? null;
-        if(!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non joining operator
+        if (!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non joining operator
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
         $mappedOperator = $this->mapOperator($operator);
-        foreach($filter_rules as $record) {
-            if(!$record) continue;
+        foreach ($filter_rules as $record) {
+            if (!$record) continue;
             $skipAutomaticOperator = $skip_next_operator;
-            if($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
-                if($record instanceof Operator) $record = $this->mapOperator($record);
+            if ($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
+                if ($record instanceof Operator) $record = $this->mapOperator($record);
                 $queryParts[] = " $record "; //operator e.g. or, and
                 continue;
             }
-            if(is_array($record[0])) {// nesting detected
+            if (is_array($record[0])) {// nesting detected
                 $record = "({$this->buildFilter($record[0], $record[1], true)})";
-            }
-            else {//normal record
+            } else {//normal record
                 $record = $this->assembleFilterRecord($record);
             }
             $queryParts[] = !$skipAutomaticOperator ? //automatic operator?
@@ -634,7 +647,7 @@ SQL;
     {
         $field = $this->translateValues ? //get field 'name'
             $this->translateValues($record[0]) : $record[0];//inject replace command?
-        if(!($record[1] instanceof Operator) && !is_string($record[1])) // we assume that if an operator does not exist, an equal operator is meant
+        if (!($record[1] instanceof Operator) && !is_string($record[1])) // we assume that if an operator does not exist, an equal operator is meant
             array_splice($record, 1, 0, [Operator::equal]);
         $rawInnerOperator = $record[1];
         $innerOperator = match (true) {
@@ -647,32 +660,28 @@ SQL;
         $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
-        if(is_array($values)) {//multi value operation
-            if($innerOperator === 'between') {
+        if (is_array($values)) {//multi value operation
+            if ($innerOperator === 'between') {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
                 $value .= " {$this->mapOperator(Operator::and)} ";
                 $value .= /* max */
                     $this->escapeValue($values[1], $noEscape, $noQuotes);
-            }
-            else {//enlist all values e.g. in, not in
+            } else {//enlist all values e.g. in, not in
                 //apply quotation rules
                 $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
                 $value = implode(', ', $values);//for some reason '0' is false
                 $values = $value === '' ? 'NULL' : $value;//https://www.php.net/manual/en/language.types.boolean.php#112190
                 $value = "($values)";
             }
-        }
-        elseif($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
+        } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
             $expression = $this->commands[$values->name];
             $value = $expression instanceof Closure ?
                 $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
-        }
-        elseif($values instanceof DateTimeInterface) {//format date-objects
+        } elseif ($values instanceof DateTimeInterface) {//format date-objects
             $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
             $value = "'$dateTime'";
-        }
-        else {
+        } else {
             $value = match (gettype($values)) {//handle by type
                 'NULL' => match ($rawInnerOperator) {
                     Operator::is, Operator::isNot => 'true',
@@ -696,12 +705,12 @@ SQL;
     protected function translateValues(string $column): string
     {
         $tokens = &$this->translateValues[$column];
-        if(!$tokens || !Weblication::getInstance()->hasTranslator()) {
+        if (!$tokens || !Weblication::getInstance()->hasTranslator()) {
             return $column;
         }
         $Translator = Weblication::getInstance()->getTranslator();
         $tmp = "CASE $column";
-        foreach($tokens as $token) {
+        foreach ($tokens as $token) {
             $tmp .= " WHEN '$token' THEN '{$Translator->getTranslation($token, $token)}'";
         }
         return "$tmp ELSE $column END";
@@ -716,25 +725,23 @@ SQL;
      */
     protected function buildGroupBy(array $groupBy): string
     {
-        if(!$groupBy) {
+        if (!$groupBy) {
             return '';
         }
 
         $sql = '';
         $alias = '';
-        if($this->tableAlias) {
+        if ($this->tableAlias) {
             $alias = $this->tableAlias.'.';
         }
 
-        foreach($groupBy as $column => $sort) {
-            if($sql === '') {
+        foreach ($groupBy as $column => $sort) {
+            if ($sql === '') {
                 $sql = ' GROUP BY ';
-            }
-            elseif($column === 'WITH ROLLUP') {
+            } elseif ($column === 'WITH ROLLUP') {
                 $sql .= " $column";
                 break;
-            }
-            else {
+            } else {
                 $sql .= ', ';
             }
             $sql .= "$alias$column $sort";
@@ -751,7 +758,7 @@ SQL;
     protected function buildHaving(array $filter_rules): string
     {
         $query = $this->buildFilter($filter_rules, Operator::and, false, '');
-        if($query) {
+        if ($query) {
             $query = " HAVING $query";
         }
         return $query;
@@ -765,12 +772,12 @@ SQL;
      */
     protected function buildSorting(array $sorting): string
     {
-        if(!$sorting) return '';
+        if (!$sorting) return '';
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
         $sql = [];
-        foreach($sorting as $column => $sort) {
+        foreach ($sorting as $column => $sort) {
             $column = $alias.$column;
-            if($this->translateValues)
+            if ($this->translateValues)
                 $column = $this->translateValues($column);
             $sql[] = "$column $sort";
         }
@@ -794,7 +801,7 @@ SQL;
      * @param string $sql sql statement to execute
      * @param callable|null $customCallback
      * @return RecordSet
-     * @throws \mysqli_sql_exception
+     * @throws mysqli_sql_exception
      * @throws InvalidArgumentException
      */
     protected function execute(string $sql, ?callable $customCallback = null): RecordSet
@@ -846,7 +853,7 @@ SQL;
      */
     public function getDefaultColumns(): array
     {
-        if($this->defaultColumns === false)
+        if ($this->defaultColumns === false)
             return $this->defaultColumns = $this->fetchColumnsList();
         return $this->defaultColumns ??= $this->getColumns();
     }
@@ -856,7 +863,7 @@ SQL;
      */
     public function getColumns(): array
     {
-        if(!$this->columns) {
+        if (!$this->columns) {
             $this->fetchColumns();
         }
         return $this->columns;
@@ -892,8 +899,8 @@ SQL;
     public function fetchingRow(array $row): array
     {
         // Formatter for the columns
-        foreach($this->formatter as $column => $formatter) {
-            if(isset($row[$column])) {
+        foreach ($this->formatter as $column => $formatter) {
+            if (isset($row[$column])) {
                 $row[$column] = $formatter($row[$column], $row);
             }
         }
@@ -918,11 +925,11 @@ SQL;
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-DELETE
-FROM $this->quotedTable
-WHERE
-    $where
-SQL;
+            DELETE
+            FROM $this->quotedTable
+            WHERE
+                $where
+            SQL;
         return $this->execute($sql);
     }
 
@@ -932,16 +939,16 @@ SQL;
     public function delete(int|string|array $id): RecordSet
     {
         $where = $this->buildWhere($id, $this->pk);
-        if($where === $this->dummyWhere) {
+        if ($where === $this->dummyWhere) {
             throw new DAOException("Delete maybe wrong! Do you really want to delete all records in the table: $this->table");
         }
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-DELETE
-FROM $this->quotedTable
-WHERE
-    $where
-SQL;
+            DELETE
+            FROM $this->quotedTable
+            WHERE
+                $where
+            SQL;
         return $this->execute($sql);
     }
 
@@ -950,40 +957,34 @@ SQL;
      */
     public function insert(array $data): RecordSet
     {
-        if(!$data) {
+        if (!$data) {
             throw new DAOException('DAO::insert failed. No data specified!');
         }
-        if(!array_is_list($data)) {
+        if (!array_is_list($data)) {
             $data = [$data];
         }
         $columns = array_map([$this, 'wrapSymbols'], array_keys($data[0]));
 
         $valuesList = [];
-        foreach($data as $record) {
+        foreach ($data as $record) {
             $values = [];
-            foreach($record as $column => $value) {
+            foreach ($record as $column => $value) {
                 // make value
-                if(is_null($value)) {
+                if (is_null($value)) {
                     $value = 'NULL';
-                }
-                elseif(is_bool($value)) {
+                } elseif (is_bool($value)) {
                     $value = bool2string($value);
-                }
-                elseif(is_array($value)) {
+                } elseif (is_array($value)) {
                     $value = is_null($value[0]) ? 'NULL' : $value[0];
-                }
-                elseif($value instanceof Commands) {
+                } elseif ($value instanceof Commands) {
                     // reserved keywords don't need to be masked
                     $expression = $this->commands[$value->name];
                     $value = $expression instanceof Closure ? $expression($column) : $expression;
-                }
-                elseif($value instanceof SqlStatement) {
+                } elseif ($value instanceof SqlStatement) {
                     $value = $value->getStatement();
-                }
-                elseif($value instanceof DateTimeInterface) {
+                } elseif ($value instanceof DateTimeInterface) {
                     $value = "'{$value->format('Y-m-d H:i:s')}'";
-                }
-                else {
+                } else {
                     $value = match (gettype($value)) {
                         'NULL' => 'NULL',
                         'boolean' => bool2string($value),
@@ -1000,11 +1001,11 @@ SQL;
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-INSERT INTO $this
-    ($columns)
-VALUES
-    $valuesList
-SQL;
+            INSERT INTO $this
+                ($columns)
+            VALUES
+                $valuesList
+            SQL;
         return $this->execute($sql);
     }
 
@@ -1014,18 +1015,17 @@ SQL;
     public function update(array $data): RecordSet
     {
         // Check if all primary keys are set in the data array
-        if($missingKeys = array_diff($this->pk, array_keys($data))) {
+        if ($missingKeys = array_diff($this->pk, array_keys($data))) {
             throw new DAOException('DAO::update failed. Missing primary keys: '.implode(', ', $missingKeys));
         }
 
         $pk = [];
-        foreach($this->pk as $key) {
+        foreach ($this->pk as $key) {
             $pkValue = $data[$key];
-            if(is_array($pkValue)) {
+            if (is_array($pkValue)) {
                 $pk[] = $pkValue[0];
                 $data[$key] = $pkValue[1];
-            }
-            else {
+            } else {
                 $pk[] = $pkValue;
                 unset($data[$key]);
             }
@@ -1033,12 +1033,12 @@ SQL;
 
         $assignmentList = $this->buildAssignmentList($data);
 
-        if(!$assignmentList) {
+        if (!$assignmentList) {
             return new RecordSet();
         }
 
         $where = $this->buildWhere($pk, $this->pk);
-        if($where === $this->dummyWhere) {
+        if ($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
@@ -1046,12 +1046,12 @@ SQL;
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-UPDATE $this->quotedTable
-SET
-    $assignmentList
-WHERE
-    $where
-SQL;
+            UPDATE $this->quotedTable
+            SET
+                $assignmentList
+            WHERE
+                $where
+            SQL;
         return $this->execute($sql);
     }
 
@@ -1061,30 +1061,24 @@ SQL;
     protected function buildAssignmentList(array $data): string
     {
         $assignments = [];
-        foreach($data as $field => $value) {
-            if(is_null($value)) {
+        foreach ($data as $field => $value) {
+            if (is_null($value)) {
                 $value = 'NULL';
-            }
-            elseif(is_bool($value)) {
+            } elseif (is_bool($value)) {
                 $value = bool2string($value);
-            }
-            elseif($value instanceof Commands) {
+            } elseif ($value instanceof Commands) {
                 // reserved keywords don't need to be masked
                 $expression = $this->commands[$value->name];
-                if($expression instanceof Closure) {
+                if ($expression instanceof Closure) {
                     $value = $expression($field);
-                }
-                else {
+                } else {
                     $value = $expression;
                 }
-            }
-            elseif($value instanceof DateTimeInterface) {
+            } elseif ($value instanceof DateTimeInterface) {
                 $value = "'{$value->format('Y-m-d H:i:s')}'";
-            }
-            elseif($value instanceof SqlStatement) {
+            } elseif ($value instanceof SqlStatement) {
                 $value = $value->getStatement();
-            }
-            elseif(!is_int($value) && !is_float($value)) {
+            } elseif (!is_int($value) && !is_float($value)) {
                 $value = "'{$this->escapeSQL($value)}'";
             }
             $assignments[] = "`$field`=$value";
@@ -1099,11 +1093,11 @@ SQL;
      */
     public function getSQLInserts(RecordSet $ResultSet): string
     {
-        if(!$ResultSet->count()) {
+        if (!$ResultSet->count()) {
             return '';
         }
         $sql = '';
-        foreach($ResultSet as $row) {
+        foreach ($ResultSet as $row) {
             $sql .= "INSERT INTO $this->quotedTable (";
             $sql .= implode(',', array_keys($row));
             $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.chr(10);
@@ -1121,12 +1115,12 @@ SQL;
     public function updateMultiple(array $data, array $filter_rules): RecordSet
     {
         $set = $this->buildAssignmentList($data);
-        if(!$set) {
+        if (!$set) {
             return new RecordSet();
         }
 
         $where = $this->buildFilter($filter_rules, Operator::and, true);
-        if($where === $this->dummyWhere) {
+        if ($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             $this->raiseError(__FILE__, __LINE__, $error_msg);
             die($error_msg);
@@ -1134,12 +1128,12 @@ SQL;
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-UPDATE $this->quotedTable
-SET
-    $set
-WHERE
-    $where
-SQL;
+            UPDATE $this->quotedTable
+            SET
+                $set
+            WHERE
+                $where
+            SQL;
         return $this->execute($sql);
     }
 
@@ -1175,11 +1169,11 @@ SQL;
         $whereClause = $this->buildWhere($id, $key).' '.$this->buildFilter($filter);
         $count = $this->wrapSymbols('count');
         $sql = <<<SQL
-SELECT COUNT(*) AS $count
-FROM $this->quotedTable$this->quotedTableAlias
-WHERE
-    $whereClause
-SQL;
+            SELECT COUNT(*) AS $count
+            FROM $this->quotedTable$this->quotedTableAlias
+            WHERE
+                $whereClause
+            SQL;
         return $this->execute($sql);
     }
 
@@ -1189,8 +1183,8 @@ SQL;
     public function truncate(): RecordSet
     {
         $sql = <<<SQL
-TRUNCATE TABLE $this->quotedTable
-SQL;
+            TRUNCATE TABLE $this->quotedTable
+            SQL;
         return $this->execute($sql);
     }
 
@@ -1200,8 +1194,8 @@ SQL;
     public function resetAutoIncrement(): RecordSet
     {
         $sql = <<<SQL
-ALTER TABLE $this->quotedTable AUTO_INCREMENT = 1
-SQL;
+            ALTER TABLE $this->quotedTable AUTO_INCREMENT = 1
+            SQL;
         return $this->execute($sql);
     }
 
@@ -1211,7 +1205,7 @@ SQL;
     public function encloseColumnName(string $column): string
     {
         // is it necessary to wrap the column?
-        if(strtr($column, $this->preCalculatedNonWrapSymbols) !== $column) {
+        if (strtr($column, $this->preCalculatedNonWrapSymbols) !== $column) {
             return $column;
         }
         return $this->wrapSymbols($column);

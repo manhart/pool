@@ -1,16 +1,13 @@
 <?php
 /**
  * -= PHP Object Oriented Library (POOL) =-
- *
  * $HeadURL$
- *
  * Erweiterung zur Utils.inc.php: Sockets
  *
  * @version $Id$
  * @version $Revision$
  * @version $Author$
  * @version $Date$
- *
  * @since 2007-09-19
  * @author Alexander Manhart <alexander@manhart.bayern>
  * @link https://alexander-manhart.de
@@ -18,16 +15,13 @@
 
 /**
  * Externer POST von Daten an einen Webserver (ueber fsockopen).
- *
  * Bsp.:
  * $data = "pid=14&poll_vote_number=2";
- *
  * $x = PostToHost(
  *               "www.linux.com",
  *               "/polls/index.phtml",
  *               "http://www.linux.com/polls/index.phtml?pid=14",
  *               $data
- *
  *
  * @param string $host Hostname
  * @param integer $port Port
@@ -37,21 +31,20 @@
  * @param integer $timeout 30 Sekunden
  * @return string|boolean
  **/
-function PostToHost($host, $port=80, $path, $referer, $data_to_send, $timeout=30)
+function PostToHost($host, $port = 80, $path, $referer, $data_to_send, $timeout = 30)
 {
     $res = '';
 
     $fp = fsockopen($host, $port, $errno, $errstr, $timeout);
-    if(!$fp) {
+    if (!$fp) {
         echo $errno.'-'.$errstr;
         return false;
-    }
-    else {
+    } else {
         $out = "POST $path HTTP/1.1\r\n";
         $out .= "Host: $host\r\n";
         if ($referer != '') $out .= "Referer: $referer\r\n";
         $out .= "Content-type: application/x-www-form-urlencoded\r\n";
-        $out .= "Content-length: " . strlen($data_to_send) . "\r\n";
+        $out .= "Content-length: ".strlen($data_to_send)."\r\n";
         $out .= "Connection: close\r\n\r\n";
         fwrite($fp, $out);
         fwrite($fp, $data_to_send);
@@ -77,16 +70,15 @@ function PostToHost($host, $port=80, $path, $referer, $data_to_send, $timeout=30
  * @param int $timeout
  * @return bool|string
  */
-function getFromHost($host, $port=80, $path, &$errno, &$errstr, $extra='', $timeout=45)
+function getFromHost($host, $port = 80, $path, &$errno, &$errstr, $extra = '', $timeout = 45)
 {
     $res = '';
 
     $fp = fsockopen($host, $port, $errno, $errstr, $timeout);
-    if(!$fp) {
+    if (!$fp) {
         // echo $errno.'-'.$errstr;
         return false;
-    }
-    else {
+    } else {
         $out = "GET $path HTTP/1.1\r\n";
         $out .= "Host: $host:$port\r\n";
         $out .= $extra;
@@ -148,11 +140,11 @@ function getFromHost($host, $port=80, $path, &$errno, &$errstr, $extra='', $time
  * @param string $err
  * @return false|array|int
  */
-function linkCheck($url, $timeout=30, $onlyStatusCode=false, $err='')
+function linkCheck($url, $timeout = 30, $onlyStatusCode = false, $err = '')
 {
     $url = trim($url);
 
-    if (strpos($url, '://') === false) $url = 'http://' . $url;
+    if (strpos($url, '://') === false) $url = 'http://'.$url;
 
     $url = parse_url($url);
 
@@ -162,19 +154,20 @@ function linkCheck($url, $timeout=30, $onlyStatusCode=false, $err='')
     $errno = 0;
     $errstr = '';
     $fp = @fsockopen($url['host'], $url['port'], $errno, $errstr, $timeout);
-    if(!$fp) {
-        $err = $errstr . ' (' . $errno . ')<br>' . "\n";
+    if (!$fp) {
+        $err = $errstr.' ('.$errno.')<br>'."\n";
         return false;
-    }
-    else {
+    } else {
         $head = '';
         //socket_set_timeout($fp, $timeout, 0);
 
         /* HEAD is the same as GET but returns only HTTP headers and no document body.  */
-        $httpRequest = "HEAD ". $url['path'] ." HTTP/1.1\r\nHost: " . $url['host'] . "\r\nConnection: close\r\n\r\n";
+        $httpRequest = "HEAD ".$url['path']." HTTP/1.1\r\nHost: ".$url['host']."\r\nConnection: close\r\n\r\n";
         // echo 'request: ' . $httpRequest . '<br>';
         fputs($fp, $httpRequest);
-        while(!feof($fp)) $head .= fgets($fp, 1024);
+        while (!feof($fp)) {
+            $head .= fgets($fp, 1024);
+        }
         fclose($fp);
 
         preg_match("=^(HTTP/\d+\.\d+) (\d{3}) ([^\r\n]*)=", $head, $matches);
@@ -227,23 +220,25 @@ function linkCheck($url, $timeout=30, $onlyStatusCode=false, $err='')
 
     if ($onlyStatusCode) return $http['Status-Code'];
 
-    $rclass = array(
-        'Informational',	/* 1xx */
-        'Success',			/* 2xx */
-        'Redirection', 		/* 3xx */
-        'Client Error',		/* 4xx */
-        'Server Error'		/* 5xx */
-    );
+    $rclass = [
+        'Informational',    /* 1xx */
+        'Success',            /* 2xx */
+        'Redirection',        /* 3xx */
+        'Client Error',        /* 4xx */
+        'Server Error',        /* 5xx */
+    ];
     $http['Response-Class'] = $rclass[$http['Status-Code'][0] - 1];
 
     preg_match_all("=^(.+): ([^\r\n]*)=m", $head, $matches, PREG_SET_ORDER);
-    foreach($matches as $line) $http[$line[1]] = $line[2];
+    foreach ($matches as $line) {
+        $http[$line[1]] = $line[2];
+    }
 
     if ($http['Status-Code'][0] == 3) {
-        if(!isset($http['Location'])) $http['Location'] = $http['location'];
-        if($http['Status-Code'] == 302) {
+        if (!isset($http['Location'])) $http['Location'] = $http['location'];
+        if ($http['Status-Code'] == 302) {
             //echo $http['Status-Code'];
-            $http['Location'] = $url['host'] . '/' . $http['Location'];
+            $http['Location'] = $url['host'].'/'.$http['Location'];
         }
         $http['Location-Status-Code'] = linkCheck($http['Location'], $timeout, true, $err);
     }

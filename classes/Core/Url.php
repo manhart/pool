@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace pool\classes\Core;
 
@@ -17,16 +17,43 @@ use JsonSerializable;
 use pool\classes\Core\Input\Input;
 use pool\classes\Exception\InvalidArgumentException;
 use SensitiveParameter;
+use Stringable;
+
+use function addEndingSlash;
+use function array_slice;
+use function explode;
+use function filter_var;
+use function header;
+use function http_build_query;
+use function implode;
+use function in_array;
+use function ip2long;
+use function is_null;
+use function is_string;
+use function parse_str;
+use function parse_url;
+use function pathinfo;
+use function preg_replace;
+use function rawurldecode;
+use function rawurlencode;
+use function strtolower;
+use function trim;
+
+use const FILTER_FLAG_HOSTNAME;
+use const FILTER_VALIDATE_DOMAIN;
+use const PATHINFO_BASENAME;
+use const PATHINFO_DIRNAME;
 
 /**
  * Core class Url
+ *
  * @inheritDoc https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
  * @link https://raw.githubusercontent.com/php-fig/http-message/master/src/UriInterface.php
  * @link http://tools.ietf.org/html/rfc3986 (the URI specification)
  * @package pool\classes\Core
  * @since 2003-08-04
  */
-class Url extends PoolObject implements \Stringable, JsonSerializable
+class Url extends PoolObject implements Stringable, JsonSerializable
 {
     /**
      * @var array the valid schemes
@@ -39,9 +66,8 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
         'sftp',
         'ssh',
         'tel',
-        'mailto'
+        'mailto',
     ];
-
     /**
      * @var array the default ports for the schemes
      */
@@ -53,7 +79,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
         'sftp' => 22,
         'ssh' => 22,
         'tel' => 0,
-        'mailto' => 0
+        'mailto' => 0,
     ];
 
     /**
@@ -109,14 +135,14 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     /**
      * @param bool|int $withQuery if true, the query params will be initialized with the current query params
      */
-    public function __construct(bool | int $withQuery = true)
+    public function __construct(bool|int $withQuery = true)
     {
         // initialize with current url
         $this->scheme = $_SERVER['REQUEST_SCHEME'] ?? 'https';
         $this->host = $_SERVER['SERVER_NAME'];
         $this->port = (int)($_SERVER['SERVER_PORT'] ?? 0);
         $this->path = $_SERVER['SCRIPT_NAME'] ?? '';
-        if($withQuery) {
+        if ($withQuery) {
             $this->withQuery($_GET);
         }
     }
@@ -126,19 +152,19 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public static function fromString(string $url): Url
     {
-        $parts = @\parse_url($url);
+        $parts = @parse_url($url);
         if ($parts === false) {
             throw new InvalidArgumentException("Malformed or unsupported URI '$url'");
         }
 
         $Url = new static(false);
-        $Url->withScheme(\strtolower($parts['scheme'] ?? $_SERVER['REQUEST_SCHEME'] ?? ''));
-        $Url->withHost(\rawurldecode($parts['host'] ?? ''));
+        $Url->withScheme(strtolower($parts['scheme'] ?? $_SERVER['REQUEST_SCHEME'] ?? ''));
+        $Url->withHost(rawurldecode($parts['host'] ?? ''));
         $Url->withPort($parts['port'] ?? 0);
-        $Url->withUserInfo(\rawurldecode($parts['user'] ?? ''), \rawurldecode($parts['pass'] ?? ''));
+        $Url->withUserInfo(rawurldecode($parts['user'] ?? ''), rawurldecode($parts['pass'] ?? ''));
         $Url->withPath($parts['path'] ?? '');
         $Url->withQuery($parts['query'] ?? '');
-        $Url->withFragment(\rawurldecode($parts['fragment'] ?? ''));
+        $Url->withFragment(rawurldecode($parts['fragment'] ?? ''));
         return $Url;
     }
 
@@ -165,13 +191,13 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function withScheme(string $scheme): static
     {
-        if(!\in_array($scheme, static::VALID_SCHEMES)) {
-            throw new InvalidArgumentException('Invalid scheme: ' . $scheme);
+        if (!in_array($scheme, static::VALID_SCHEMES)) {
+            throw new InvalidArgumentException('Invalid scheme: '.$scheme);
         }
-        if($this->scheme !== $scheme && $scheme) {
+        if ($this->scheme !== $scheme && $scheme) {
             $this->absolute = true;
             // set withoutHost to true if scheme is "mailto" or "tel". This is needed for the getUrl() or __toString() method.
-            $this->withoutHost = \in_array($scheme, ['mailto', 'tel']);
+            $this->withoutHost = in_array($scheme, ['mailto', 'tel']);
         }
         $this->scheme = $scheme;
         return $this;
@@ -193,11 +219,11 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function withHost(string $host): static
     {
-        if($host && !\filter_var($host, \FILTER_VALIDATE_DOMAIN, \FILTER_FLAG_HOSTNAME)) {
+        if ($host && !filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             throw new InvalidArgumentException("Invalid host: $host");
         }
 
-        if($this->host !== $host && $host) {
+        if ($this->host !== $host && $host) {
             $this->absolute = true;
         }
 
@@ -218,9 +244,9 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function getDomain(int $level = 2): string
     {
-        $parts = \ip2long($this->host) ? [$this->host] : \explode('.', $this->host);
-        $parts = $level >= 0 ? \array_slice($parts, -$level) : \array_slice($parts, 0, $level);
-        return \implode('.', $parts);
+        $parts = ip2long($this->host) ? [$this->host] : explode('.', $this->host);
+        $parts = $level >= 0 ? array_slice($parts, -$level) : array_slice($parts, 0, $level);
+        return implode('.', $parts);
     }
 
     /**
@@ -271,7 +297,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function withPath(string $path): static
     {
-        if($this->host && !str_starts_with($path, '/')) {
+        if ($this->host && !str_starts_with($path, '/')) {
             $path = "/$path";
         }
         $this->path = $path;
@@ -291,7 +317,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function getSegments(): array
     {
-        return \explode('/', \trim($this->path, '/'));
+        return explode('/', trim($this->path, '/'));
     }
 
     /**
@@ -299,10 +325,10 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function withQuery(array|string $query): static
     {
-        if(\is_string($query)) {
+        if (is_string($query)) {
             $query_string = $query;
             $query = [];
-            \parse_str($query_string, $query);
+            parse_str($query_string, $query);
         }
         $this->query = $query;
         return $this;
@@ -331,7 +357,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function setParam(string $key, ?string $value): static
     {
-        if(\is_null($value)) {
+        if (is_null($value)) {
             return $this->delParam($key);
         }
         $this->query[$key] = $value;
@@ -377,7 +403,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function getQueryAsString(): string
     {
-        return \http_build_query($this->query);
+        return http_build_query($this->query);
     }
 
     /**
@@ -402,9 +428,9 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function setScriptPath(string $scriptPath): static
     {
-        $scriptPath = \preg_replace('/\?.*/', '', $scriptPath);
-        $script = \pathinfo($this->path, \PATHINFO_BASENAME);
-        $this->path = !empty($script) && str_contains($script, '.') ? \addEndingSlash($scriptPath).$script : $scriptPath;
+        $scriptPath = preg_replace('/\?.*/', '', $scriptPath);
+        $script = pathinfo($this->path, PATHINFO_BASENAME);
+        $this->path = !empty($script) && str_contains($script, '.') ? addEndingSlash($scriptPath).$script : $scriptPath;
         return $this;
     }
 
@@ -413,8 +439,8 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function setScriptName(string $scriptName): static
     {
-        $path = \pathinfo($this->path, \PATHINFO_DIRNAME);
-        $this->path = \addEndingSlash($path) . $scriptName;
+        $path = pathinfo($this->path, PATHINFO_DIRNAME);
+        $this->path = addEndingSlash($path).$scriptName;
         return $this;
     }
 
@@ -429,9 +455,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
     /**
      * Retrieve the authority component of the URI
-     *
      * If no authority information is present, this method MUST return an empty string.
-     *
      * The authority syntax of the URI is: [user-info@]host[:port]
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.2
@@ -440,7 +464,7 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     public function getAuthority(): string
     {
         $authority = $this->host;
-        if($userInfo = $this->getUserInfo()) {
+        if ($userInfo = $this->getUserInfo()) {
             $authority = "$userInfo@$authority";
         }
         $authority .= $this->_getPortInfo();
@@ -454,9 +478,9 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      */
     public function getUserInfo(): string
     {
-        $userInfo = \rawurlencode($this->user);
-        if($this->password) {
-            $userInfo .= ':' . \rawurlencode($this->password);
+        $userInfo = rawurlencode($this->user);
+        if ($this->password) {
+            $userInfo .= ':'.rawurlencode($this->password);
         }
         return $userInfo;
     }
@@ -468,11 +492,11 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     {
         $url = '';
         $absolute ??= $this->absolute;
-        if($absolute) {
+        if ($absolute) {
             // "mailto" and "tel" have no authority. For an absolute URL, the scheme and host must be set.
-            if($this->withoutHost || ($this->scheme && $this->host)) {
-                $url = $this->scheme ? $this->scheme . ':' : '';
-                if(!$this->withoutHost && $authority = $this->getAuthority()) {
+            if ($this->withoutHost || ($this->scheme && $this->host)) {
+                $url = $this->scheme ? $this->scheme.':' : '';
+                if (!$this->withoutHost && $authority = $this->getAuthority()) {
                     $url .= "//$authority";
                 }
             }
@@ -480,16 +504,17 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
 
         $url .= $this->path;
         if ($this->query) {
-            $url .= '?' . \http_build_query($this->query);
+            $url .= '?'.http_build_query($this->query);
         }
         if ($this->fragment) {
-            $url .= '#' . $this->fragment;
+            $url .= '#'.$this->fragment;
         }
         return $url;
     }
 
     /**
      * transform the url to a string
+     *
      * @return string
      */
     public function __toString(): string
@@ -500,7 +525,8 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
     /**
      * @return never
      */
-    #[NoReturn] public function reload(): never
+    #[NoReturn]
+    public function reload(): never
     {
         $this->redirect();
     }
@@ -512,9 +538,10 @@ class Url extends PoolObject implements \Stringable, JsonSerializable
      * @param int $http_response_code
      * @return never
      */
-    #[NoReturn] public function redirect(bool $replace = true, int $http_response_code = 302): never
+    #[NoReturn]
+    public function redirect(bool $replace = true, int $http_response_code = 302): never
     {
-        \header("Location: {$this->getUrl()}", $replace, $http_response_code);
+        header("Location: {$this->getUrl()}", $replace, $http_response_code);
         exit;
     }
 

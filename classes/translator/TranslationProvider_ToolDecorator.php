@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -19,16 +20,21 @@ use Template;
 class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorator
 {
     const KEYWORD = "trnsl";
+
     static array|false|null $postbox = null;
+
     static string $sessionID = '';
+
     static string $requestTime = '';
+
     private string $lastKey;
+
     private string $identity;
 
     public function __construct(TranslationProvider $provider)
     {
         parent::__construct($provider);
-        $this->identity = substr($provider->getFactory()->identity(),0,8);
+        $this->identity = substr($provider->getFactory()->identity(), 0, 8);
         //$this->identity = $provider->getFactory()->identity();
     }
 
@@ -45,11 +51,11 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     static function startSession(): bool
     {
         //decide
-        if (!($id = $_REQUEST[self::KEYWORD]??false)) {
+        if (!($id = $_REQUEST[self::KEYWORD] ?? false)) {
             self::$postbox = false;
             return false;
         } else {
-            self::$requestTime = strval((int)(microtime(true)*1000));
+            self::$requestTime = strval((int)(microtime(true) * 1000));
             self::$sessionID = $id;
             self::readPostbox();
             register_shutdown_function(self::writePostbox(...));
@@ -72,8 +78,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
             if (!is_dir($dirPath))
                 mkdir($dirPath);
             return $dirPath.$id;
-        }
-        else
+        } else
             throw new Exception('Invalid sessionID');
     }
 
@@ -93,13 +98,15 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
         $keyWord = self::KEYWORD;
         $identifier = "$keyWord.$this->identity.$this->lastKey";
         $message = "<a href='#$identifier' id='$identifier' class='$keyWord' lang='$lang'>{$translation->getMessage()}</a>";
-        return new Translation($translation->getProvider(),
-            $message, $translation->getKey());
+        return new Translation(
+            $translation->getProvider(),
+            $message, $translation->getKey(),
+        );
     }
 
     static public function decorate(string $message): string
     {
-        if(str_starts_with($message, '<a '))
+        if (str_starts_with($message, '<a '))
             return $message;
         $keyWord = self::KEYWORD;
         return "<a class='$keyWord'>$message</a>";
@@ -129,6 +136,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     }
 
     /**Creates an entry for the key-request in the postbox
+     *
      * @param TranslationProvider $provider
      * @param string $key
      * @return void
@@ -139,10 +147,10 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
         self::$postbox[$resourceIdentity] ??= [];
         self::$postbox[$resourceIdentity][self::$requestTime] ??= [];
         self::$postbox[$resourceIdentity][self::$requestTime][$key] ??= [];
-
     }
 
     /**Called by Translator after querying a Translation and adds more Data about each translation request
+     *
      * @param TranslationProviderFactory[] $resources
      * @param string $key
      * @param ...$details

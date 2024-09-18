@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
+
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -22,15 +24,19 @@ abstract class ConfigurationLoader
 
     public function __construct(?GUI_Module $ConfigurableModule = null)
     {
-        if($ConfigurableModule) $this->ConfigurableModule = $ConfigurableModule;
+        if ($ConfigurableModule) $this->ConfigurableModule = $ConfigurableModule;
     }
 
     protected array $necessaryOptions = [];
 
     abstract public function setup(array $options);
+
     abstract public function loadConfiguration(): array;
+
     abstract public function saveConfiguration(array $config): bool;
+
     abstract public function configuration_exists(): bool;
+
     abstract static public function getDescription(): string;
 
     public function attemptAutoloadConfiguration(): void

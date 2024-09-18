@@ -15,6 +15,4 @@ use UnexpectedValueException as PhpUnexpectedValueException;
 /**
  * Thrown to indicate that the argument received is not valid.
  */
-class UnexpectedValueException extends PhpUnexpectedValueException implements PoolExceptionInterface
-{
-}
+class UnexpectedValueException extends PhpUnexpectedValueException implements PoolExceptionInterface {}

@@ -10,6 +10,12 @@
 
 namespace pool\classes\Database;
 
+use Exception;
+use pool\classes\Database\Exception\DatabaseConnectionException;
+use RuntimeException;
+
+use function extension_loaded;
+
 abstract class Driver
 {
     /**
@@ -35,12 +41,12 @@ abstract class Driver
     /**
      * Driver constructor (protected to prevent instantiation) - checks if the provider is loaded
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function __construct()
     {
-        if(static::$provider && !\extension_loaded(static::$provider)) {
-            throw new \RuntimeException('Provider '.static::$provider.' not loaded');
+        if (static::$provider && !extension_loaded(static::$provider)) {
+            throw new RuntimeException('Provider '.static::$provider.' not loaded');
         }
     }
 
@@ -81,10 +87,17 @@ abstract class Driver
     /**
      * Connects to the database
      *
-     * @throws \pool\classes\Database\Exception\DatabaseConnectionException
+     * @throws DatabaseConnectionException
      */
-    abstract public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options): Connection;
+    abstract public function connect(
+        DataInterface $dataInterface,
+        string $hostname,
+        int $port = 0,
+        string $username = '',
+        string $password = '',
+        string $database = '',
+        ...$options
+    ): Connection;
 
     /**
      * Executes a query and returns the query result

@@ -10,6 +10,12 @@
 
 namespace pool\utils;
 
+use function ftok;
+use function register_shutdown_function;
+use function sem_acquire;
+use function sem_get;
+use function sem_release;
+
 final class Cron
 {
     /**
@@ -20,9 +26,9 @@ final class Cron
      */
     public static function acquireSemaphoreLock(string $file, string $projectId): bool
     {
-        $semaphore = \sem_get(\ftok($file, $projectId));
-        if(\sem_acquire($semaphore, true)) {
-            \register_shutdown_function(static fn() => \sem_release($semaphore));
+        $semaphore = sem_get(ftok($file, $projectId));
+        if (sem_acquire($semaphore, true)) {
+            register_shutdown_function(static fn() => sem_release($semaphore));
             return true;
         }
         return false;

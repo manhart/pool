@@ -15,11 +15,13 @@
  * @see https://github.com/manhart/pool
  */
 
-namespace pool\includes\Resources\dir{
+namespace pool\includes\Resources\dir
+{
 
     use GUI_HeadData;
     use pool\includes\Resources\JavaScriptResource;
     use pool\includes\Resources\StylesheetResource;
+
     use function readFiles;
     use function remove_extension;
 
@@ -34,21 +36,23 @@ namespace pool\includes\Resources\dir{
         {
             $className = static::class;
             //try to load default if no subresource is specified
-            $resource ??= (defined(static::class . '::_') ? static::_ : null);
+            $resource ??= (defined(static::class.'::_') ? static::_ : null);
             $nameFilter = $resource[0] ?? '';
             $extension = $resource[1] ?? '';
 
-            if(is_subclass_of($className, JavaScriptResource::class)) {
+            if (is_subclass_of($className, JavaScriptResource::class)) {
                 $items = $className::getFiles($min, $version, $nameFilter, $extension);
-                foreach ($items as $item)
+                foreach ($items as $item) {
                     $Head->addJavaScript($item);
+                }
                 return count($items);
             }
 
             if (is_subclass_of($className, StylesheetResource::class)) {
                 $items = $className::getFiles($min, $version, $nameFilter, $extension);
-                foreach ($items as $item)
+                foreach ($items as $item) {
                     $Head->addStyleSheet($item);
+                }
                 return count($items);
             }
 
@@ -58,10 +62,11 @@ namespace pool\includes\Resources\dir{
 
         /**Builds a path based on the called subclasses attributes<br>
          * and returns one variant of each file matching the filters defined in the aforementioned attributes
+         *
          * @param bool $min Prefer minified(.min.X) variant <br> !$min => Prefer plain variant
          * @param string $version Optional override for the default A:VERSION
          * @param string $nameFilter in Regex filter applied before extension
-         * @param string $extension  in Regex filter applied after . up to end of filename
+         * @param string $extension in Regex filter applied after . up to end of filename
          * @return array the resulting file list prefixed with the assembled path
          */
         public static function getFiles(bool $min, string $version = '', string $nameFilter = '', string $extension = ''): array
@@ -78,6 +83,7 @@ namespace pool\includes\Resources\dir{
         abstract protected static function getRootPath();
 
         /**Builds a path based on the called subclasses attributes and the const DIR_RELATIVE_3RDPARTY_ROOT
+         *
          * @param string $version Optional override for the default A:VERSION
          * @return string the assembled path with an ending slash
          */
@@ -99,6 +105,7 @@ namespace pool\includes\Resources\dir{
         /**Pick minified/non-minified variants of files from a list of filenames<br>
          * It's not recommended to mix different filetypes with the same name
          * (e.g. hello.css hello.min.js will likely mess up if both extensions are being matched)
+         *
          * @param array $files list of filenames to choose from
          * @param bool $min Prefer minified(.min.X) variant <br> !$min => Prefer plain variant
          * @param string $fileExtension file extension to match (Regex compatible)
@@ -108,7 +115,7 @@ namespace pool\includes\Resources\dir{
         final public static function chooseVariant(array $files, bool $min, string $fileExtension, string $path = ''): array
         {
             sort($files);
-            $returnFiles = array();
+            $returnFiles = [];
             $minRegex = "\.min\.{$fileExtension}$/";
             $iMax = count($files);
             for ($i = 0; $i < $iMax; $i += $step) {
@@ -116,7 +123,7 @@ namespace pool\includes\Resources\dir{
                 $nextFile = $files[$i + 1] ?? '';
                 if (!$nextFile) {//leftover single
                     //take shortcut and exit
-                    $returnFiles[] = $path . $curFile;
+                    $returnFiles[] = $path.$curFile;
                     return $returnFiles;
                 }
                 $hasPlainVersion = !$hasMinifiedVersion = $currIsMin = (bool)preg_match("/{$minRegex}", $curFile);
@@ -129,15 +136,15 @@ namespace pool\includes\Resources\dir{
                 }
                 if ($hasMinifiedVersion xor $hasPlainVersion) {
                     //no alternative
-                    $returnFiles[] = $path . $curFile;
+                    $returnFiles[] = $path.$curFile;
                     $step = 1;//next set
                 } else {
                     //chose one alternative
                     if ($currIsMin === $min)
                         //current file matches request
-                        $returnFiles[] = $path . $curFile;
+                        $returnFiles[] = $path.$curFile;
                     else//use alternative
-                        $returnFiles[] = $path . $nextFile;
+                        $returnFiles[] = $path.$nextFile;
                     $step = 2;//next set
                 }
             }
@@ -145,11 +152,15 @@ namespace pool\includes\Resources\dir{
         }
     }
 }
-namespace pool\includes\Resources {
+
+namespace pool\includes\Resources
+{
+
     interface JavaScriptResource
     {
         public const DEFAULT_FILE_EXT = 'js';
     }
+
     interface StylesheetResource
     {
         public const DEFAULT_FILE_EXT = '(css|scss)'; //todo scss less?

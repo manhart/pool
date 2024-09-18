@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
+
 /*
  * pool
  *
@@ -13,10 +15,13 @@ class JSONConfigurationLoader extends ConfigurationLoader
      * @var int Storage Engine Type
      */
     public static int $storageEngine = self::STORAGE_ENGINE_FILESYSTEM;
+
     protected string $fileExtension = 'json';
+
     protected string $mimeType = 'application/json';
 
     private string $filePath;
+
     private string $fileName;
 
     /**
@@ -26,24 +31,24 @@ class JSONConfigurationLoader extends ConfigurationLoader
      */
     public function setup(array $options)
     {
-        if(isset($options['filePath'])) {
+        if (isset($options['filePath'])) {
             $this->filePath = addEndingSlash($options['filePath']);
         }
-        if(isset($options['fileName'])) {
+        if (isset($options['fileName'])) {
             $this->fileName = $options['fileName'];
         }
     }
 
     public function loadConfiguration(): array
     {
-        if(!$this->configuration_exists()) {
+        if (!$this->configuration_exists()) {
             return []; // todo exception?
         }
         $file = $this->getFile();
         $json = file_get_contents($file);
 
         $config = json_decode($json, true);
-        if(json_last_error() != JSON_ERROR_NONE) {
+        if (json_last_error() != JSON_ERROR_NONE) {
             return []; // todo exception?
         }
         return $config;
@@ -51,7 +56,7 @@ class JSONConfigurationLoader extends ConfigurationLoader
 
     public function saveConfiguration(array $config): bool
     {
-//        $options = $this->options + ['columns' => $this->columns];
+        //        $options = $this->options + ['columns' => $this->columns];
         $file = $this->getFile();
         $json = json_encode($config);
         $result = file_put_contents($file, $json);

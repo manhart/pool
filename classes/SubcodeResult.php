@@ -1,14 +1,12 @@
 <?php
 /**
  * -= Rapid Module Library (RML) =-
- *
  * SubcodeResult.class.php
- *
  * @date $Date: 2007/02/16 07:46:03 $
+ *
  * @version $Id: SubcodeResult.class.php,v 1.5 2007/02/16 07:46:03 manhart Exp $
  * @version $Revision 1.0$
  * @version
- *
  * @since 2003-07-10
  * @author Alexander Manhart <alexander@manhart.bayern>
  * @link https://alexander-manhart.de
@@ -16,8 +14,7 @@
 
 use pool\classes\Core\PoolObject;
 
-if(!defined('CLASS_SUBCODERESULT'))
-{
+if (!defined('CLASS_SUBCODERESULT')) {
     define('CLASS_SUBCODERESULT', '1');
 
     /**
@@ -36,7 +33,7 @@ if(!defined('CLASS_SUBCODERESULT'))
          * @access private
          * @var array
          */
-        var $resultlist = array();
+        var $resultlist = [];
 
         /**
          * Fehlerliste
@@ -44,7 +41,7 @@ if(!defined('CLASS_SUBCODERESULT'))
          * @access private
          * @var array
          */
-        var $errorlist = array();
+        var $errorlist = [];
 
         /**
          * Abfrage des Status, ob alles ohne Fehler verlaufen ist.
@@ -64,13 +61,12 @@ if(!defined('CLASS_SUBCODERESULT'))
          * @param string $value Fehlermeldung oder Anderes
          * @param string $key Schluessel (nicht notwendig)
          **/
-        function addError($value, $key=NULL)
+        function addError($value, $key = null)
         {
-            if ($key !== NULL) {
-                $this -> errorlist[$key] = $value;
-            }
-            else {
-                array_push($this -> errorlist, $value);
+            if ($key !== null) {
+                $this->errorlist[$key] = $value;
+            } else {
+                array_push($this->errorlist, $value);
             }
         }
 
@@ -81,13 +77,12 @@ if(!defined('CLASS_SUBCODERESULT'))
          * @param string $value Wert
          * @param string $key Schluessel
          **/
-        function addResult($value, $key=NULL)
+        function addResult($value, $key = null)
         {
-            if ($key !== NULL) {
-                $this -> resultlist[$key] = $value;
-            }
-            else {
-                array_push($this -> resultlist, $value);
+            if ($key !== null) {
+                $this->resultlist[$key] = $value;
+            } else {
+                array_push($this->resultlist, $value);
             }
         }
 
@@ -99,7 +94,7 @@ if(!defined('CLASS_SUBCODERESULT'))
          **/
         function addResultList($resultlist)
         {
-            $this -> resultlist = $this -> resultlist + $resultlist;
+            $this->resultlist = $this->resultlist + $resultlist;
         }
 
         /**
@@ -110,7 +105,7 @@ if(!defined('CLASS_SUBCODERESULT'))
          **/
         function getErrorList()
         {
-            return $this -> errorlist;
+            return $this->errorlist;
         }
 
         /**
@@ -120,21 +115,20 @@ if(!defined('CLASS_SUBCODERESULT'))
          */
         function setErrorList($errorlist)
         {
-            $this -> errorlist = $errorlist;
+            $this->errorlist = $errorlist;
         }
 
         /**
          * Fehlerliste l�schen
-         *
          */
         function clearErrorList()
         {
-            $this -> errorlist=array();
+            $this->errorlist = [];
         }
 
         function clearResultlist()
         {
-            $this->resultlist = array();
+            $this->resultlist = [];
         }
 
         /**
@@ -145,7 +139,7 @@ if(!defined('CLASS_SUBCODERESULT'))
          **/
         function getResultList()
         {
-            return $this -> resultlist;
+            return $this->resultlist;
         }
 
         /**
@@ -154,9 +148,9 @@ if(!defined('CLASS_SUBCODERESULT'))
          * @param string $key Fehlernummer oder Fehlercode
          * @return string Fehler
          **/
-        function getError($key=0)
+        function getError($key = 0)
         {
-            return $this -> errorlist[$key];
+            return $this->errorlist[$key];
         }
 
         /**
@@ -165,14 +159,14 @@ if(!defined('CLASS_SUBCODERESULT'))
          * @param string $key Schlussel oder Identcode
          * @return string Ergebnis
          **/
-        function getResult($key=NULL)
+        function getResult($key = null)
         {
             if (is_null($key)) {
-                $keys = array_keys($this -> resultlist);
+                $keys = array_keys($this->resultlist);
                 $anz_keys = count($keys);
-                $key = ($keys[$anz_keys-1]);
+                $key = ($keys[$anz_keys - 1]);
             }
-            return $this -> resultlist[$key];
+            return $this->resultlist[$key];
         }
     }
 }

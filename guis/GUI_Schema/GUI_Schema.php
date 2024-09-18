@@ -17,6 +17,7 @@
 
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
+
 use const pool\PWD_TILL_SCHEMES;
 
 /**
@@ -35,12 +36,14 @@ class GUI_Schema extends GUI_Module
      * alternate - if schema was not found, redirect to this schema
      * vhostMode - 0-> category only, 1-> vhost/category/, 2-> category/vhost/, other-> vhost as alternative for category
      * errorFallbackDefaultSchema - if alternate schema was not found, redirect to the default schema
+     *
      * @var int $superglobals takes parameter schema from request
      */
     protected int $superglobals = Input::REQUEST;
 
     /**
      * load schemes
+     *
      * @param array $schemes
      * @return void
      */
@@ -77,15 +80,15 @@ class GUI_Schema extends GUI_Module
         $this->templates = [];
         $this->Template->setDirectory($directory);
         //try to load according schema files into template-engine...
-        foreach($schemes as $i => $iValue) {
-            $schemaExists = file_exists($directory .$iValue. '.html');
+        foreach ($schemes as $i => $iValue) {
+            $schemaExists = file_exists($directory.$iValue.'.html');
             if (!$schemaExists && $alternate) {//schema missing
                 $schemes[$i] = $alternate;
-                $schemaExists = file_exists($directory . $alternate . '.html');//test alternative
+                $schemaExists = file_exists($directory.$alternate.'.html');//test alternative
             }
             if ($schemaExists) {//add schema to our templates
-                $uniqId = 'file_' . $i;
-                $this->Template->setFile($uniqId, $iValue. '.html');
+                $uniqId = 'file_'.$i;
+                $this->Template->setFile($uniqId, $iValue.'.html');
                 $this->templates[$uniqId] = null;//manually set the template
                 unset($uniqId);
             } else {//schema not found -> abort
@@ -110,7 +113,7 @@ class GUI_Schema extends GUI_Module
         http_response_code(404);
         $file = $this->Weblication->findTemplate('schema404.html', $this->getClassName(), true);
         $this->Template->setFilePath('error404', $file);
-        $this->Template->setVar('SCHEMA', empty($schema) ? '(empty)' : $schema . '.html');
+        $this->Template->setVar('SCHEMA', empty($schema) ? '(empty)' : $schema.'.html');
         $this->Template->setVar('WEBMASTER', $_SERVER['SERVER_ADMIN']);
         $this->templates['error404'] = null;//manually set the template
     }
@@ -129,12 +132,13 @@ class GUI_Schema extends GUI_Module
 
     /**
      * Checks whether the given directory includes a subdirectory which name matches the current vHost and appends it
+     *
      * @param string $directory the directory to be appended
      * @return void
      */
     private function appendVHost(string &$directory): void
     {
-        $vhost =  $_SERVER['SERVER_NAME'];
+        $vhost = $_SERVER['SERVER_NAME'];
         if (is_dir($proposed = buildDirPath($directory, $vhost)))
             $directory = $proposed;
     }

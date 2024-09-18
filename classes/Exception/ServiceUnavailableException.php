@@ -15,6 +15,4 @@ use RuntimeException as PhpRuntimeException;
 /**
  * Thrown to indicate that a service is unavailable.
  */
-class ServiceUnavailableException extends PhpRuntimeException implements PoolExceptionInterface
-{
-}
+class ServiceUnavailableException extends PhpRuntimeException implements PoolExceptionInterface {}

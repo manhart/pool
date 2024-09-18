@@ -10,10 +10,21 @@
 
 namespace pool\classes\Database\Driver;
 
+use mysqli_result;
+use mysqli_sql_exception;
 use pool\classes\Database\Connection;
 use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
+
+use function mysqli_connect_errno;
+use function mysqli_connect_error;
+use function mysqli_init;
+use function parse_url;
+
+use const MYSQLI_STORE_RESULT;
+use const MYSQLI_USE_RESULT;
+use const PHP_URL_SCHEME;
 
 class MySQLi extends Driver
 {
@@ -52,17 +63,29 @@ class MySQLi extends Driver
      * @param mixed ...$options
      * @return Connection
      */
-    public function connect(DataInterface $dataInterface, string $hostname, int $port = 0, string $username = '', string $password = '',
-        string $database = '', ...$options): Connection
-    {
-        $this->mysqli = \mysqli_init();
-        $scheme = \parse_url($hostname, \PHP_URL_SCHEME);
-        $connectionParameters = \parse_url(($scheme ? '' : '//') . $hostname);
+    public function connect(
+        DataInterface $dataInterface,
+        string $hostname,
+        int $port = 0,
+        string $username = '',
+        string $password = '',
+        string $database = '',
+        ...$options
+    ): Connection {
+        $this->mysqli = mysqli_init();
+        $scheme = parse_url($hostname, PHP_URL_SCHEME);
+        $connectionParameters = parse_url(($scheme ? '' : '//').$hostname);
         try {
-            $this->mysqli->real_connect($connectionParameters["host"]??null, $connectionParameters["user"] ?? $username,
-                $connectionParameters['pass'] ?? $password, $database, $connectionParameters["port"] ?? $port, $connectionParameters["path"] ?? null);
+            $this->mysqli->real_connect(
+                $connectionParameters["host"] ?? null,
+                $connectionParameters["user"] ?? $username,
+                $connectionParameters['pass'] ?? $password,
+                $database,
+                $connectionParameters["port"] ?? $port,
+                $connectionParameters["path"] ?? null,
+            );
             $this->setCharset($options['charset'] ?? $this->charset);
-        } catch (\mysqli_sql_exception $e) {
+        } catch (mysqli_sql_exception $e) {
             throw new DatabaseConnectionException($e->getMessage(), $e->getCode(), $e);
         }
         return new Connection($this->mysqli, $this);
@@ -91,16 +114,16 @@ class MySQLi extends Driver
     public function errors(?Connection $connection = null): array
     {
         $errors = $connection?->getConnection()->error_list ?: [];
-        \mysqli_connect_errno() && $errors[] = [
-            'errno' => \mysqli_connect_errno(),
-            'error' => \mysqli_connect_error(),
+        mysqli_connect_errno() && $errors[] = [
+            'errno' => mysqli_connect_errno(),
+            'error' => mysqli_connect_error(),
             'sqlstate' => '',
         ];
         return $errors;
     }
 
     /**
-     * @param \mysqli_result $result
+     * @param mysqli_result $result
      * @return int
      */
     public function numRows(mixed $result): int
@@ -109,7 +132,7 @@ class MySQLi extends Driver
     }
 
     /**
-     * @param \mysqli_result $result
+     * @param mysqli_result $result
      * @return bool
      */
     public function hasRows(mixed $result): bool
@@ -121,7 +144,7 @@ class MySQLi extends Driver
      * Gets the number of affected rows in a previous SQL operation
      *
      * @param Connection $connection
-     * @param \mysqli_result $result
+     * @param mysqli_result $result
      * @return int|false
      */
     public function affectedRows(Connection $connection, mixed $result): int|false
@@ -151,30 +174,30 @@ class MySQLi extends Driver
     public function getTableColumnsInfo(Connection $connection, string $database, string $table): array
     {
         $query = <<<SQL
-SELECT
-    COLUMN_NAME,
-    DATA_TYPE,
-    COLUMN_TYPE,
-    COLUMN_KEY
-FROM information_schema.COLUMNS
-WHERE TABLE_SCHEMA = '$database'
-  AND TABLE_NAME = '$table'
-SQL;
-        $result = $this->query($connection, $query, result_mode: \MYSQLI_USE_RESULT);
+            SELECT
+                COLUMN_NAME,
+                DATA_TYPE,
+                COLUMN_TYPE,
+                COLUMN_KEY
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = '$database'
+              AND TABLE_NAME = '$table'
+            SQL;
+        $result = $this->query($connection, $query, result_mode: MYSQLI_USE_RESULT);
         $fieldList = $fields = $pk = [];
-        while($row = $this->fetch($result)) {
+        while ($row = $this->fetch($result)) {
             $phpType = match ($row['DATA_TYPE']) {
                 'int', 'tinyint', 'bigint', 'smallint', 'mediumint' => 'int',
                 'decimal', 'double', 'float', 'number' => 'float',
                 default => 'string',
             };
-            if(str_starts_with($row['COLUMN_TYPE'], 'tinyint(1)')) {
+            if (str_starts_with($row['COLUMN_TYPE'], 'tinyint(1)')) {
                 $phpType = 'bool';
             }
             $row['phpType'] = $phpType;
             $fieldList[] = $row;
             $fields[] = $row['COLUMN_NAME'];
-            if($row['COLUMN_KEY'] === 'PRI') {
+            if ($row['COLUMN_KEY'] === 'PRI') {
                 $pk[] = $row['COLUMN_NAME'];
             }
         }
@@ -196,13 +219,13 @@ SQL;
      */
     public function query(Connection $connection, string $query, ...$params): mixed
     {
-        return @$connection->getConnection()->query($query, $params['result_mode'] ?? \MYSQLI_STORE_RESULT);
+        return @$connection->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
     }
 
     /**
      * Fetch the next row of a result set as an associative array
      *
-     * @param \mysqli_result $result
+     * @param mysqli_result $result
      */
     public function fetch(mixed $result): array|null|false
     {
@@ -212,7 +235,7 @@ SQL;
     /**
      * Frees the memory associated with a result
      *
-     * @param \mysqli_result $result
+     * @param mysqli_result $result
      */
     public function free(mixed $result): void
     {
@@ -299,7 +322,8 @@ SQL;
      */
     public function inTransaction(Connection $connection): bool
     {
-        $result = $connection->getConnection()
+        $result = $connection
+            ->getConnection()
             ->query('SELECT count(1) as inTransaction FROM information_schema.innodb_trx WHERE trx_mysql_thread_id = CONNECTION_ID()');
         $row = $this->fetch($result);
         $this->free($result);

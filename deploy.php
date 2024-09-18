@@ -1,4 +1,5 @@
 <?php
+
 namespace Deployer;
 
 require 'recipe/common.php';
@@ -47,12 +48,12 @@ task('deploy', [
     'deploy:update_code',
     'deploy:shared',
     'deploy:writable',
-//    'deploy:vendors',
+    //    'deploy:vendors',
     'deploy:clear_paths',
     'deploy:symlink',
     'deploy:unlock',
     'cleanup',
-    'success'
+    'success',
 ]);
 
 // [Optional] If deploy fails automatically unlock.

@@ -13,6 +13,8 @@ namespace pool\classes\Database\DAO;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\DAO;
 
+use function array_fill_keys;
+
 class MSSQL_DAO extends DAO
 {
     protected array $symbolQuote = ['[', ']'];
@@ -38,12 +40,19 @@ class MSSQL_DAO extends DAO
     /**
      * MSSQL requires a ORDER BY-clause if there is a LIMIT-clause. By default, if nothing is given we sort by the primary key.
      */
-    public function getMultiple(array|int|string|null $id = null, array|string|null $key = null, array $filter = [], array $sorting = [],
-                                array                 $limit = [], array $groupBy = [], array $having = [], array $options = []): RecordSet
-    {
-        if($limit && !$sorting) {
+    public function getMultiple(
+        array|int|string|null $id = null,
+        array|string|null $key = null,
+        array $filter = [],
+        array $sorting = [],
+        array $limit = [],
+        array $groupBy = [],
+        array $having = [],
+        array $options = [],
+    ): RecordSet {
+        if ($limit && !$sorting) {
             // sort by primary key ascending
-            $sorting = \array_fill_keys($this->getPrimaryKey(), 'ASC');
+            $sorting = array_fill_keys($this->getPrimaryKey(), 'ASC');
         }
         return parent::getMultiple($id, $key, $filter, $sorting, $limit, $groupBy, $having, $options);
     }
@@ -56,7 +65,7 @@ class MSSQL_DAO extends DAO
      */
     protected function buildLimit(array $limit): string
     {
-        if(!$limit) return '';
+        if (!$limit) return '';
         $offset = $limit[0] ?? 0;
         $rowCount = $limit[1] ?? 0;
 

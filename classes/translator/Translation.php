@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -13,7 +14,9 @@ namespace pool\classes\translator;
 class Translation
 {
     private TranslationProvider $provider;
+
     private string $message;
+
     private string $key;
 
     /**
@@ -44,9 +47,8 @@ class Translation
         return $this->message;
     }
 
-    public function getKey():string
+    public function getKey(): string
     {
         return $this->key;
     }
-
 }

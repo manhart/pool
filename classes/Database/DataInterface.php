@@ -21,7 +21,9 @@ use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Utils\Singleton;
 use Stopwatch;
+
 use function array_key_exists;
+use function array_key_first;
 use function array_rand;
 use function array_values;
 use function assert;
@@ -81,9 +83,37 @@ class DataInterface extends PoolObject
      */
     private array $modes = [ConnectionMode::READ->value => 0, ConnectionMode::WRITE->value => 1];
 
-    private array $commands = ['SELECT', 'SHOW', 'INSERT', 'UPDATE', 'DELETE', 'EXPLAIN', 'ALTER', 'CREATE', 'DROP', 'RENAME',
-        'CALL', 'REPLACE', 'TRUNCATE', 'LOAD', 'HANDLER', 'DESCRIBE', 'START', 'COMMIT', 'ROLLBACK',
-        'LOCK', 'SET', 'STOP', 'RESET', 'CHANGE', 'PREPARE', 'EXECUTE', 'DEALLOCATE', 'DECLARE', 'OPTIMIZE'];
+    private array $commands = [
+        'SELECT',
+        'SHOW',
+        'INSERT',
+        'UPDATE',
+        'DELETE',
+        'EXPLAIN',
+        'ALTER',
+        'CREATE',
+        'DROP',
+        'RENAME',
+        'CALL',
+        'REPLACE',
+        'TRUNCATE',
+        'LOAD',
+        'HANDLER',
+        'DESCRIBE',
+        'START',
+        'COMMIT',
+        'ROLLBACK',
+        'LOCK',
+        'SET',
+        'STOP',
+        'RESET',
+        'CHANGE',
+        'PREPARE',
+        'EXECUTE',
+        'DEALLOCATE',
+        'DECLARE',
+        'OPTIMIZE',
+    ];
 
     /**
      * @var Connection|null Last used connection link in query()
@@ -148,7 +178,7 @@ class DataInterface extends PoolObject
 
     private array $connectOptions = [];
 
-//    private static \Memcached $memcached;
+    //    private static \Memcached $memcached;
 
     /**
      * @param Driver $driver
@@ -157,18 +187,18 @@ class DataInterface extends PoolObject
     {
         $this->driver = $driver;
         $this->port = $driver->getDefaultPort();
-/*        self::$memcached = new \Memcached('pool');
-        self::$memcached->setOption(\Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
-        if (!count(self::$memcached->getServerList())) {
-            self::$memcached->addServer('localhost', 11211);
-        }
-*/
+        /*        self::$memcached = new \Memcached('pool');
+                self::$memcached->setOption(\Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+                if (!count(self::$memcached->getServerList())) {
+                    self::$memcached->addServer('localhost', 11211);
+                }
+        */
     }
 
     /**
      * Factory method to create a data interface and automatically register it
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public static function createDataInterface(array $connectionOptions, ?Driver $driver = null): DataInterface
     {
@@ -204,14 +234,14 @@ class DataInterface extends PoolObject
         $dataBases = (array)($connectionOptions['database'] ?? []);
         unset($connectionOptions['database']);// remove from options
 
-        $this->default_database = is_string($key = \array_key_first($dataBases)) ? $key :
+        $this->default_database = is_string($key = array_key_first($dataBases)) ? $key :
             $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
 
-        if(array_key_exists('port', $connectionOptions)) {
+        if (array_key_exists('port', $connectionOptions)) {
             $this->port = $connectionOptions['port'];
         }
 
-        if(array_key_exists('charset', $connectionOptions)) {
+        if (array_key_exists('charset', $connectionOptions)) {
             $this->charset = $connectionOptions['charset'];
         }
 
@@ -220,8 +250,8 @@ class DataInterface extends PoolObject
         $this->connectOptions = $connectionOptions;
 
         $this->findHostForConnection();
-        foreach($dataBases as $alias => $dataBase) {
-            if(!is_string($alias)) {
+        foreach ($dataBases as $alias => $dataBase) {
+            if (!is_string($alias)) {
                 $alias = $dataBase;
             }
             self::registerResource([$alias => ['interface' => $this, 'name' => $dataBase]]);
@@ -236,28 +266,26 @@ class DataInterface extends PoolObject
     {
         $available_hosts =& $this->available_hosts;
         $alternativeHosts = 0;
-        if(is_array($available_hosts)) /** Multiple Clusters: move one random host to the hosts list*/ {
-            foreach($this->modes as $clusterMode => $clusterModeSpecificIndexUsedInAvailableHosts) {
+        if (is_array($available_hosts)) /** Multiple Clusters: move one random host to the hosts list*/ {
+            foreach ($this->modes as $clusterMode => $clusterModeSpecificIndexUsedInAvailableHosts) {
                 /** @var array|null $hostList reference to hosts available in this mode */
                 $hostList =& $available_hosts[$clusterMode];
-                if((!$connectionMode || $connectionMode === $clusterMode) && $hostList) {//targeting that specific mode or no specific one
+                if ((!$connectionMode || $connectionMode === $clusterMode) && $hostList) {//targeting that specific mode or no specific one
                     $key = array_rand($hostList);//changed from random int-key
                     $host = $hostList[$key];
                     unset($hostList[$key]);//remove option
-                    if($clusterMode === ConnectionMode::READ)//is this just an error in the original code?
+                    if ($clusterMode === ConnectionMode::READ)//is this just an error in the original code?
                         $hostList = array_values($hostList);//reindex; should be unnecessary with array_rand
                     $alternativeHosts += count($hostList);
-                }
-                else//requested connectionMode isn't matching clusterMode or the cluster mode has no remaining hosts
+                } else//requested connectionMode isn't matching clusterMode or the cluster mode has no remaining hosts
                     // no clue what's going on here I presume this fetches a default
                     $host = $available_hosts[$clusterModeSpecificIndexUsedInAvailableHosts] ?? false;
 
-                if($host) {
+                if ($host) {
                     $this->hosts[$clusterMode] = $host;
                 }
             }
-        }
-        else {
+        } else {
             /** One database server for reading and writing */
             $this->hosts = [
                 ConnectionMode::READ->value => $available_hosts,
@@ -273,8 +301,8 @@ class DataInterface extends PoolObject
      */
     public static function registerResource(array $resourceDefinition): void
     {
-        foreach($resourceDefinition as $alias => $item) {
-            if(array_key_exists($alias, self::$register)) {
+        foreach ($resourceDefinition as $alias => $item) {
+            if (array_key_exists($alias, self::$register)) {
                 throw new InvalidArgumentException("A database with the alias '$alias' has already been registered before");
             }
             self::$register[$alias] = $item;
@@ -285,17 +313,21 @@ class DataInterface extends PoolObject
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
      * @throws InvalidArgumentException
-     * @throws \mysqli_sql_exception
+     * @throws mysqli_sql_exception
      * @throws DAOException
      */
-    public static function execute(string $sql, string $dbname, ?callable $callbackOnFetchRow = null, array $metaData = [],
-        $useExceptions = false): RecordSet
-    {
-//        $cacheKey = md5($sql);
-//        if(($rowSet = self::$memcached->get($cacheKey)) !== false) {
-//            assert(is_array($rowSet));
-//            return new RecordSet($rowSet);
-//        }
+    public static function execute(
+        string $sql,
+        string $dbname,
+        ?callable $callbackOnFetchRow = null,
+        array $metaData = [],
+        $useExceptions = false,
+    ): RecordSet {
+        //        $cacheKey = md5($sql);
+        //        if(($rowSet = self::$memcached->get($cacheKey)) !== false) {
+        //            assert(is_array($rowSet));
+        //            return new RecordSet($rowSet);
+        //        }
         $interface = static::getInterfaceForResource($dbname);
         /** @var ?Stopwatch $Stopwatch Logging Stopwatch */
         $doLogging = defined($x = 'LOG_ENABLED') && constant($x);
@@ -303,24 +335,22 @@ class DataInterface extends PoolObject
             Singleton::get('Stopwatch')?->start('SQL-QUERY') : null;// start time measurement
         try {//run
             $query_resource = $interface::query($sql, $dbname);
-        }
-        catch(Exception $e) {
-            if(!$useExceptions && $e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
+        } catch (Exception $e) {
+            if (!$useExceptions && $e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
                 throw $e;
             }
         }
-        if($query_resource ??= false) {//success
-            switch($interface->getLastQueryCommand()) {
+        if ($query_resource ??= false) {//success
+            switch ($interface->getLastQueryCommand()) {
                 case 'SELECT':
                 case 'SHOW':
                 case 'DESCRIBE':
                 case 'EXPLAIN': //? or substr($cmd, 0, 1) == '('
                     //? ( z.B. UNION
-                    if($interface->hasRows($query_resource)) {
+                    if ($interface->hasRows($query_resource)) {
                         $RecordSet = new RecordSet($interface->fetchRowSet($query_resource, $callbackOnFetchRow, $metaData));
                         // self::$memcached->set($cacheKey, $rowSet);
-                    }
-                    else {
+                    } else {
                         $RecordSet = new RecordSet();
                     }
                     $interface->free($query_resource);
@@ -352,13 +382,12 @@ class DataInterface extends PoolObject
                 default:
                     throw new InvalidArgumentException("Unknown command: '{$interface->getLastQueryCommand()}' in $sql");
             }
-        }
-        else {//statement failed
+        } else {//statement failed
             $error_msg = $e ?? null?->getMessage() ?? "{$interface->getErrorAsText()} SQL Statement failed: $sql";
             // SQL Statement Error Logging:
-            if($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) === 1)
+            if ($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) === 1)
                 Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
-            if($useExceptions) {
+            if ($useExceptions) {
                 throw new DAOException($error_msg, previous: $e ?? null);
             }
             $interface->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
@@ -368,13 +397,16 @@ class DataInterface extends PoolObject
         }
 
         // SQL Statement Performance Logging:
-        if($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
+        if ($Stopwatch && ($metaData['ResultSetSQLLogging'] ?? true)) {
             $timeSpent = $Stopwatch->stop('SQL-QUERY')->getDiff('SQL-QUERY');
             $onlySlowQueries = defined($x = 'ACTIVATE_RESULTSET_SQL_ONLY_SLOW_QUERIES') && constant($x);
             $slowQueriesThreshold = defined($x = 'ACTIVATE_RESULTSET_SQL_SLOW_QUERIES_THRESHOLD') ? constant($x) : 0.01;
-            if(!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
-                Log::message("SQL ON DB $dbname: '$sql' in $timeSpent sec.", $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
-                    configurationName: Log::SQL_LOG_NAME);
+            if (!$onlySlowQueries || $timeSpent > $slowQueriesThreshold)
+                Log::message(
+                    "SQL ON DB $dbname: '$sql' in $timeSpent sec.",
+                    $timeSpent > $slowQueriesThreshold ? Log::LEVEL_WARN : Log::LEVEL_INFO,
+                    configurationName: Log::SQL_LOG_NAME,
+                );
         }
         return $RecordSet;
     }
@@ -408,21 +440,20 @@ class DataInterface extends PoolObject
         $Interface->last_Query = $sql = ltrim($query);
         // reset query result
         $Interface->query_resource = false;
-        if(!$sql) {//nothing to do
+        if (!$sql) {//nothing to do
             return false;
         }
         //identify command
         $command = $Interface::identifyCommand($sql);
-        if(IS_TESTSERVER && !in_array($command, $Interface->commands, true))
+        if (IS_TESTSERVER && !in_array($command, $Interface->commands, true))
             echo "Unknown command: '$command'<br>".
                 "in $sql<hr>".
                 "Please contact the POOL's maintainer to analyze the DataInterface in the query() function.";
         $isSELECT = $command === 'SELECT';//mode selection
         $mode = !$isSELECT || $Interface->force_backend_read ? ConnectionMode::WRITE : ConnectionMode::READ;
-        if($isSELECT) {
+        if ($isSELECT) {
             $Interface->totalReads++;
-        }
-        else {
+        } else {
             $Interface->totalWrites++;
         }
         $Interface->totalQueries++;
@@ -430,8 +461,8 @@ class DataInterface extends PoolObject
         $Connection = $Interface->getDBConnection($database, $mode);//connect
         $Interface->query_resource = $Connection->query($sql);//run
         $Interface->lastConnection = $Connection;
-        if($Interface->query_resource) $Interface->last_command = $command;
-        if(defined($x = 'LOG_ENABLED') && constant($x) &&
+        if ($Interface->query_resource) $Interface->last_command = $command;
+        if (defined($x = 'LOG_ENABLED') && constant($x) &&
             defined($x = 'ACTIVATE_INTERFACE_SQL_LOG') && constant($x) === 2 &&
             ($Log = Singleton::get('LogFile'))->isLogging())
             //Logging enabled
@@ -460,9 +491,9 @@ class DataInterface extends PoolObject
      */
     private function getDBConnection(string $database, ConnectionMode $mode): Connection
     {
-        if(!($database || ($database = $this->default_database))) //No DB specified and no default given
+        if (!($database || ($database = $this->default_database))) //No DB specified and no default given
             throw new InvalidArgumentException('No database selected!');
-        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
+        if ($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as WRITE
         return $this->connections[$mode->value][$database] ?? //fetch from cache
             $this->openNewDBConnection($mode, $database);
@@ -483,24 +514,25 @@ class DataInterface extends PoolObject
         //open connection
         try {
             $Connection = $this->driver->connect($this, $host, $this->port, $db_user, $db_pass, $database, ...$this->connectOptions);
-        }
-        catch(Exception) {
+        } catch (Exception) {
             $Connection = null;
         }
 
-        if($Connection) {//set default and store connection
+        if ($Connection) {//set default and store connection
             return $this->connections[$mode->value][$databaseAlias] = $Connection;
         }
 
-        if($this->hasAnotherHost($mode)) {//connection errored out but alternative hosts exist -> recurse
+        if ($this->hasAnotherHost($mode)) {//connection errored out but alternative hosts exist -> recurse
             $this->findHostForConnection($mode);
             return $this->openNewDBConnection($mode, $databaseAlias);
         }
 
         $errors = $this->driver->errors()[0] ?? ['errno' => 0, 'error' => 'Unknown'];
-        throw new DatabaseConnectionException("Database connection to host '$host' with mode $mode->name failed!"
+        throw new DatabaseConnectionException(
+            "Database connection to host '$host' with mode $mode->name failed!"
             ." Used default database '$database' alias '$databaseAlias' (ErrNo "
-            .$errors['errno'].': '.$errors['error'].')!');
+            .$errors['errno'].': '.$errors['error'].')!',
+        );
     }
 
     /**
@@ -531,7 +563,7 @@ class DataInterface extends PoolObject
 
         $hostname = $this->hosts[$mode->value];//normalize mode for lookup
         return $auth[$hostname] ?? [];//now testing hostname that is returned instead of reading-host
-            //throw new DatabaseConnectionException("Access Denied: No authentication data available for host $hostname with $mode->value mode.");
+        //throw new DatabaseConnectionException("Access Denied: No authentication data available for host $hostname with $mode->value mode.");
     }
 
     /**
@@ -567,12 +599,13 @@ class DataInterface extends PoolObject
         $query_resource ??= $this->query_resource;
 
         $rowSet = [];
-        while(($row = $this->driver->fetch($query_resource))) {
-            if($metaData)// convert to php types
-                foreach($row as $col => $val)
-                    if(isset($metaData['columns'][$col]) && $val !== null)
+        while (($row = $this->driver->fetch($query_resource))) {
+            if ($metaData)// convert to php types
+                foreach ($row as $col => $val) {
+                    if (isset($metaData['columns'][$col]) && $val !== null)
                         settype($row[$col], $metaData['columns'][$col]['phpType']);
-            if($callbackOnFetchRow)
+                }
+            if ($callbackOnFetchRow)
                 $row = $callbackOnFetchRow($row);
             $rowSet[] = $row;
         }
@@ -739,12 +772,12 @@ class DataInterface extends PoolObject
     /**
      * Opens a connection to a database
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function open(string $database = ''): bool
     {
         $this->getDBConnection($database, ConnectionMode::READ);
-        if($this->hosts[ConnectionMode::READ->value] !== $this->hosts[ConnectionMode::WRITE->value]) {
+        if ($this->hosts[ConnectionMode::READ->value] !== $this->hosts[ConnectionMode::WRITE->value]) {
             $this->getDBConnection($database, ConnectionMode::WRITE);
         }
         return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
@@ -755,7 +788,7 @@ class DataInterface extends PoolObject
      */
     public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
     {
-        if($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]) {
+        if ($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]) {
             $mode = ConnectionMode::READ;
         } // same as host
         $database = $database ?: $this->default_database;
@@ -770,15 +803,18 @@ class DataInterface extends PoolObject
         $readConnections = &$this->connections[ConnectionMode::READ->value];
         $writeConnections = &$this->connections[ConnectionMode::WRITE->value];
 
-        if(is_array($readConnections)) {
-            foreach($readConnections as $conid)
-                if($conid instanceof Connection)
+        if (is_array($readConnections)) {
+            foreach ($readConnections as $conid) {
+                if ($conid instanceof Connection)
                     $conid->close();
+            }
             $readConnections = [];
         }
-        if(is_array($writeConnections)) {
-            foreach($writeConnections as $conid) if($conid instanceof Connection)
-                $conid->close();
+        if (is_array($writeConnections)) {
+            foreach ($writeConnections as $conid) {
+                if ($conid instanceof Connection)
+                    $conid->close();
+            }
             $writeConnections = [];
         }
         return true;
@@ -795,13 +831,13 @@ class DataInterface extends PoolObject
      * Attention: Statements using the FOUND_ROWS() function are not safe for replication.
      *
      * @return int Number of found rows
-     * @throws \Exception
+     * @throws Exception
      */
     public function foundRows(string $database): int
     {
         $sql = 'SELECT FOUND_ROWS() as foundRows';
         $query_resource = $this::query($sql, $database);
-        if(!$query_resource) return 0;
+        if (!$query_resource) return 0;
         $row = $this->fetchRow($query_resource);//fetch first row (only row
         $this->free($query_resource);
         return (int)$row['foundRows'];//default to 0
@@ -826,7 +862,7 @@ class DataInterface extends PoolObject
      */
     public function getTableColumnsInfo(string $database, string $table): array
     {
-        if(!$database || !$table) {
+        if (!$database || !$table) {
             throw new InvalidArgumentException('Database and table names must be non-empty strings.');
         }
         return $this->getDBConnection($database, ConnectionMode::READ)->getTableColumnsInfo($database, $table);
@@ -835,20 +871,20 @@ class DataInterface extends PoolObject
     /**
      * Get information about a column
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function getColumnMetadata(string $databaseAlias, string $table, string $field): array
     {
-        if(!$databaseAlias || !$table || !$field) {
+        if (!$databaseAlias || !$table || !$field) {
             throw new InvalidArgumentException('Database, table and field names must be non-empty strings.');
         }
 
         $query_resource = self::query("SHOW COLUMNS FROM `$table` like '$field'", $databaseAlias);
-        if(!$query_resource) {
+        if (!$query_resource) {
             throw new RuntimeException("Could not get column metadata for $databaseAlias.$table.$field");
         }
         $row = [];
-        if($this->numRows($query_resource)) $row = $this->fetchRow($query_resource);
+        if ($this->numRows($query_resource)) $row = $this->fetchRow($query_resource);
         $this->free($query_resource);
         return $row;
     }

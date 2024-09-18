@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace pool\classes\Utils;
 
@@ -36,12 +36,12 @@ final class Singleton
      */
     public static function get(string $class): ?object
     {
-        if(Singleton::$instances[$class] ?? false) {
+        if (Singleton::$instances[$class] ?? false) {
             return Singleton::$instances[$class];
         }
 
         $args = [];
-        if(func_num_args() > 1) {
+        if (func_num_args() > 1) {
             $args = func_get_args();
             array_shift($args);
         }

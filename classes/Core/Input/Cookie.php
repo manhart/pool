@@ -75,9 +75,15 @@ class Cookie extends Input
      *     return true. This does not indicate whether the user accepted the cookie.
      * @see http://php.net/manual/en/function.setcookie.php
      */
-    public function setPersistentCookie(string $cookieName, string $value, int $expire, string $path = '/', string $domain = '', bool $secure = false,
-        bool $httponly = false): bool
-    {
+    public function setPersistentCookie(
+        string $cookieName,
+        string $value,
+        int $expire,
+        string $path = '/',
+        string $domain = '',
+        bool $secure = false,
+        bool $httponly = false,
+    ): bool {
         $this->setVar($cookieName, $value);
         return setcookie($cookieName, $value, time() + $expire, $path, $domain, $secure, $httponly);
     }
@@ -100,7 +106,7 @@ class Cookie extends Input
      */
     public function delCookie(string $cookieName, string $path = '/', string $domain = '', bool $secure = false): bool
     {
-        if(array_key_exists($cookieName, $this->vars)) {
+        if (array_key_exists($cookieName, $this->vars)) {
             $this->delVar($cookieName);
         }
         return setcookie($cookieName, '', time() - 3600, $path, $domain, $secure);

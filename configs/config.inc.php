@@ -18,14 +18,11 @@
 
 /**
  * You have to set these variables in our App before including this config.inc.php e.g.
- *
  *  $relativeRoot = '/';
  *  $SQL_Host = 'localhost';
  *  $stage = 'develop'; // or 'staging' or 'production'
  *  $defaultSessionDuration = 1800; // 30 min
- *
  * The configuration file provides the following essential constants:
- *
  *  DIR_CONFIGS_ROOT (string) = (absoluter pfad) zeigt auf das Verzeichnis, in dem sich die Konfigurationsdateien befinden
  *  DIR_DOCUMENT_ROOT (string) = (absoluter pfad) zeigt auf DOCUMENT_ROOT des Apache Webservers
  *  DIR_RELATIVE_DOCUMENT_ROOT (string) = (relativer Pfad) zeigt auf DOCUMENT_ROOT des Apache Webservers
@@ -67,7 +64,7 @@ const IS_TESTSERVER = (IS_DEVELOP || IS_STAGING);
 const DIR_CONFIGS_ROOT = __DIR__;
 
 // Pool
-const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT . '/pool';
+const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT.'/pool';
 
 // Data access objects
 const DIR_DAOS_ROOT = DIR_DOCUMENT_ROOT.'/commons/daos';

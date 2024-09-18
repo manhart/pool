@@ -42,10 +42,9 @@ class Session extends Input
      */
     public function start(): void
     {
-        if(!$this->session_started) {
+        if (!$this->session_started) {
             $this->session_started = session_start();
-        }
-        elseif($this->autoClose) {
+        } elseif ($this->autoClose) {
             @session_start(); // reopen session
             $this->reInit();
         }
@@ -93,7 +92,7 @@ class Session extends Input
     public function setVars(array $assoc, bool $suppressException = false): static
     {
         $this->start();
-        foreach($assoc as $key => $value) {
+        foreach ($assoc as $key => $value) {
             parent::setVar($key, $value, $suppressException);
         }
         $this->write_close();
@@ -127,7 +126,7 @@ class Session extends Input
     public function addVars(array $vars): static
     {
         $this->start();
-        foreach($vars as $key => $value) {
+        foreach ($vars as $key => $value) {
             parent::addVar($key, $value);
         }
 
@@ -224,7 +223,7 @@ class Session extends Input
      */
     public function write_close(): static
     {
-        if($this->autoClose) {
+        if ($this->autoClose) {
             session_write_close();
         }
         return $this;
@@ -237,7 +236,7 @@ class Session extends Input
     {
         parent::clear();
         $this->start();
-        if(session_status() == PHP_SESSION_ACTIVE) {
+        if (session_status() == PHP_SESSION_ACTIVE) {
             session_destroy();
         }
         return $this;

@@ -56,19 +56,20 @@ function ipv4_in_range($ip, $range)
 {
     if (strpos($range, '/') !== false) {
         // $range is in IP/NETMASK format
-        list($range, $netmask) = explode('/', $range, 2);
+        [$range, $netmask] = explode('/', $range, 2);
         if (strpos($netmask, '.') !== false) {
             // $netmask is a 255.255.0.0 format
             $netmask = str_replace('*', '0', $netmask);
             $netmask_dec = ip2long($netmask);
             return ((ip2long($ip) & $netmask_dec) == (ip2long($range) & $netmask_dec));
-        }
-        else {
+        } else {
             // $netmask is a CIDR size block
             // fix the range argument
             $x = explode('.', $range);
-            while (count($x) < 4) $x[] = '0';
-            list($a, $b, $c, $d) = $x;
+            while (count($x) < 4) {
+                $x[] = '0';
+            }
+            [$a, $b, $c, $d] = $x;
             $range = sprintf("%u.%u.%u.%u", empty($a) ? '0' : $a, empty($b) ? '0' : $b, empty($c) ? '0' : $c, empty($d) ? '0' : $d);
             $range_dec = ip2long($range);
             $ip_dec = ip2long($ip);
@@ -82,8 +83,7 @@ function ipv4_in_range($ip, $range)
 
             return (($ip_dec & $netmask_dec) == ($range_dec & $netmask_dec));
         }
-    }
-    else {
+    } else {
         // range might be 255.255.*.* or 1.2.3.0-1.2.3.255
         if (strpos($range, '*') !== false) { // a.b.*.* format
             // Just convert to A-B format by setting * to 0 for A and 255 for B
@@ -93,7 +93,7 @@ function ipv4_in_range($ip, $range)
         }
 
         if (strpos($range, '-') !== false) { // A-B format
-            list($lower, $upper) = explode('-', $range, 2);
+            [$lower, $upper] = explode('-', $range, 2);
             $lower_dec = (float)sprintf("%u", ip2long($lower));
             $upper_dec = (float)sprintf("%u", ip2long($upper));
             $ip_dec = (float)sprintf("%u", ip2long($ip));
@@ -106,7 +106,7 @@ function ipv4_in_range($ip, $range)
 function ip2long6($ip)
 {
     if (substr_count($ip, '::')) {
-        $ip = str_replace('::', str_repeat(':0000', 8 - substr_count($ip, ':')) . ':', $ip);
+        $ip = str_replace('::', str_repeat(':0000', 8 - substr_count($ip, ':')).':', $ip);
     }
 
     $ip = explode(':', $ip);
@@ -147,8 +147,7 @@ function get_ipv6_full($ip)
             $main_ip_pieces[$i] = "0000";
         }
         $main_ip_pieces[7] = $last_piece;
-    }
-    else {
+    } else {
         // Build the full form of the IPV6 address
         for ($i = $size; $i < 8; $i++) {
             $main_ip_pieces[$i] = "0000";
@@ -199,8 +198,7 @@ function ipv6_in_range($ip, $range_ip)
             $last[$i] = "ffff";
         }
         $main_ip_pieces[7] = $last_piece;
-    }
-    else {
+    } else {
         // Build the full form of the IPV6 address
         for ($i = $size; $i < 8; $i++) {
             $first[$i] = "0000";

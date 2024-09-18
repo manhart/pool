@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -41,8 +42,8 @@ trait Configurable
             'pool' => true,
             'value' => [],
             'type' => 'array',
-            'configurable' => false
-        ]
+            'configurable' => false,
+        ],
     ];
 
     /**
@@ -107,12 +108,12 @@ trait Configurable
      */
     public function getConfigurationLoader(): ConfigurationLoader
     {
-        if(!isset($this->configurationLoader)) {
+        if (!isset($this->configurationLoader)) {
             $this->configurationLoader = new JSONConfigurationLoader($this);
 
             $this->configurationLoader->setup([
                 'filePath' => $this->getConfigurationValue('moduleDirectory'),
-                'fileName' => $this->getName().'.json'
+                'fileName' => $this->getName().'.json',
             ]);
         }
         return $this->configurationLoader;
@@ -143,8 +144,8 @@ trait Configurable
         $this->defaultInspectorProperties['moduleDirectory']['value'] = $this->getClassDirectory();
 
         $inspectorProperties = $this->getInspectorProperties();
-        foreach($inspectorProperties as $key => $property) {
-            if(!$property) continue;
+        foreach ($inspectorProperties as $key => $property) {
+            if (!$property) continue;
             $this->Defaults->setVar($key, $property['value']);
         }
         return $this->Defaults;
@@ -169,26 +170,26 @@ trait Configurable
     public function formatConfigurationValues(array $configuration, array $properties): array
     {
         $config = [];
-        foreach($configuration as $key => $value) {
-            if(!isset($properties[$key])) {
+        foreach ($configuration as $key => $value) {
+            if (!isset($properties[$key])) {
                 continue;
             }
             $property = $properties[$key];
             $type = $property['type'] ?? 'string';
             $defaultValue = $property['value'] ?? null;
 
-            $value = match($type) {
+            $value = match ($type) {
                 'boolean' => is_string($value) ? string2bool($value) : (bool)$value,
                 'integer' => $value !== '' ? (int)$value : $defaultValue,
                 default => $value
             };
 
-            if($defaultValue !== $value) {
+            if ($defaultValue !== $value) {
                 $config[$key] = $value;
             }
 
-            if(isset($property['properties']) && is_array($property['properties']) && is_array($configuration[$key])) {
-                foreach($configuration[$key] as $z => $sub_configuration) {
+            if (isset($property['properties']) && is_array($property['properties']) && is_array($configuration[$key])) {
+                foreach ($configuration[$key] as $z => $sub_configuration) {
                     $config[$key][$z] = $this->formatConfigurationValues($sub_configuration, $property['properties']);
                 }
             }
@@ -210,11 +211,11 @@ trait Configurable
     {
         $this->configuration = $this->formatConfigurationValues($configuration, $this->getInspectorProperties());
 
-        if(isset($this->configuration['moduleName'])) {
+        if (isset($this->configuration['moduleName'])) {
             $this->setName($this->configuration['moduleName']);
         }
 
-        if($inDesignMode) {
+        if ($inDesignMode) {
             $this->inDesignMode = true;
             $this->writeSessionProperties();
         }
@@ -233,18 +234,17 @@ trait Configurable
      */
     private function writeSessionProperties(): void
     {
-        if(!$this->configuration) return;
+        if (!$this->configuration) return;
 
         $sessionProperties = $this->getConfiguratorSessionProperties();
-        foreach($sessionProperties as $sessionPropertyName => $sessionPropertyNameOrArray) {
-            if(is_array($sessionPropertyNameOrArray)) { // we've to write an array into session
+        foreach ($sessionProperties as $sessionPropertyName => $sessionPropertyNameOrArray) {
+            if (is_array($sessionPropertyNameOrArray)) { // we've to write an array into session
                 $key = array_key_first($sessionPropertyNameOrArray);
-                if(!isset($this->configuration[$sessionPropertyName])) continue;
+                if (!isset($this->configuration[$sessionPropertyName])) continue;
                 $sessionPropertyNameOrArray[$key][$sessionPropertyName] = $this->configuration[$sessionPropertyName];
                 $this->Session->setVars($sessionPropertyNameOrArray);
-            }
-            else {
-                if(!isset($this->configuration[$sessionPropertyNameOrArray])) continue;
+            } else {
+                if (!isset($this->configuration[$sessionPropertyNameOrArray])) continue;
                 $this->Session->setVar($sessionPropertyNameOrArray, $this->configuration[$sessionPropertyNameOrArray]);
             }
         }
@@ -277,7 +277,7 @@ trait Configurable
 
     public function provision(): void
     {
-        if($this->autoloadConfiguration) {
+        if ($this->autoloadConfiguration) {
             $this->getConfigurationLoader()->attemptAutoloadConfiguration();
         }
     }

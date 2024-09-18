@@ -12,10 +12,39 @@ namespace pool\classes\Core\Input
 {
 
     use Countable;
+    use InvalidArgumentException;
+    use JsonException;
     use pool\classes\Core\Input\Filter\DataType;
     use pool\classes\Core\PoolObject;
+
+    use function array_diff;
+    use function array_diff_assoc;
+    use function array_flip;
+    use function array_intersect_key;
     use function array_key_exists;
+    use function array_merge;
+    use function base64_decode;
+    use function base64_encode;
+    use function chr;
+    use function count;
+    use function file_get_contents;
+    use function filter_var;
+    use function gettype;
+    use function http_build_query;
+    use function is_array;
+    use function is_object;
+    use function json_decode;
+    use function ord;
+    use function parse_str;
+    use function pray;
+    use function serialize;
+    use function session_name;
+    use function settype;
     use function strlen;
+    use function unserialize;
+
+    use const JSON_THROW_ON_ERROR;
+    use const PHP_QUERY_RFC3986;
 
     /**
      * Core class for incoming data on the server
@@ -125,48 +154,48 @@ namespace pool\classes\Core\Input
          */
         protected function init(int $superglobals = self::EMPTY): void
         {
-            if($superglobals === 0) {
+            if ($superglobals === 0) {
                 return;
             }
             $this->superglobals = $superglobals;
 
             // @see https://www.php.net/manual/en/reserved.variables.environment.php
-            if($superglobals & self::ENV) { // I_ENV
+            if ($superglobals & self::ENV) { // I_ENV
                 $this->addVars($_ENV);
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.server.php
-            if($superglobals & self::SERVER) { // I_SERVER
+            if ($superglobals & self::SERVER) { // I_SERVER
                 $this->addVars($_SERVER);
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.files.php
-            if($superglobals & self::FILES) {
+            if ($superglobals & self::FILES) {
                 $this->addVars($_FILES);
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.request.php
-            if($superglobals & self::REQUEST) {
+            if ($superglobals & self::REQUEST) {
                 $this->addVars($_REQUEST);
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.post.php
-            if($superglobals & self::POST) {
+            if ($superglobals & self::POST) {
                 $this->addVars($_POST);
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.get.php
-            if($superglobals & self::GET) {
+            if ($superglobals & self::GET) {
                 $this->addVars($_GET);
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.cookies.php
-            if($superglobals & self::COOKIE) {
+            if ($superglobals & self::COOKIE) {
                 $this->addVars($_COOKIE);
             }
 
             // @see https://www.php.net/manual/en/reserved.variables.session.php
-            if($superglobals !== self::ALL && $superglobals & self::SESSION) { // only $_SESSION assigned directly (not combinable)
+            if ($superglobals !== self::ALL && $superglobals & self::SESSION) { // only $_SESSION assigned directly (not combinable)
                 $this->vars = &$_SESSION; // PHP Session Handling (see php manual)
             }
         }
@@ -180,7 +209,7 @@ namespace pool\classes\Core\Input
          */
         public function addVars(array $vars): static
         {
-            foreach($vars as $key => $value) {
+            foreach ($vars as $key => $value) {
                 $this->addVar($key, $value);
             }
             return $this;
@@ -200,10 +229,10 @@ namespace pool\classes\Core\Input
          */
         public function addVar(string $key, mixed $value = '', int $filter = 0, array|int $filterOptions = 0): static
         {
-            if(!array_key_exists($key, $this->vars)) {
+            if (!array_key_exists($key, $this->vars)) {
                 $this->setVar($key, $value, true);
             }
-            if($filter) {
+            if ($filter) {
                 $this->filterRules[$key] = [$filter, $filterOptions];
             }
             return $this;
@@ -221,12 +250,11 @@ namespace pool\classes\Core\Input
         {
             try {
                 $filter = $this->filter[$key] ?? null;
-                if($filter) {
+                if ($filter) {
                     $value = $this->runFilter($filter, $value);
                 }
-            }
-            catch(\InvalidArgumentException $e) {
-                if(!array_key_exists($key, $this->vars) && array_key_exists(1, $filter)) {
+            } catch (InvalidArgumentException $e) {
+                if (!array_key_exists($key, $this->vars) && array_key_exists(1, $filter)) {
                     $this->vars[$key] = $filter[1]; // new value
                 }
                 return $suppressException ? $this : throw $e;
@@ -241,12 +269,12 @@ namespace pool\classes\Core\Input
          * @param array $filter
          * @param mixed $value
          * @return mixed
-         * @throws \InvalidArgumentException
+         * @throws InvalidArgumentException
          */
         private function runFilter(array $filter, mixed $value): mixed
         {
-            $pipeline = \is_array($filter[0]) ? $filter[0] : [$filter[0]];
-            foreach($pipeline as $dataType) {
+            $pipeline = is_array($filter[0]) ? $filter[0] : [$filter[0]];
+            foreach ($pipeline as $dataType) {
                 $filterFunction = DataType::getFilter($dataType);
                 $value = $filterFunction($value);
             }
@@ -259,16 +287,15 @@ namespace pool\classes\Core\Input
         public static function processJsonPostRequest(): void
         {
             // decode POST requests with JSON-Data
-            if(($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
-                $json = \file_get_contents('php://input');
-                if(str_starts_with($json, '[')) { // JSON Array not supported
+            if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
+                $json = file_get_contents('php://input');
+                if (str_starts_with($json, '[')) { // JSON Array not supported
                     return;
                 }
                 try {
-                    $_POST = \json_decode($json, true, flags: \JSON_THROW_ON_ERROR);
+                    $_POST = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
                     $_REQUEST += $_POST;
-                }
-                catch(\JsonException) {
+                } catch (JsonException) {
                 }
             }
         }
@@ -335,11 +362,11 @@ namespace pool\classes\Core\Input
          */
         public function allEmpty(): bool
         {
-            if($this->count() === 0) {
+            if ($this->count() === 0) {
                 return true;
             }
-            foreach($this->vars as $value) {
-                if(!empty($value)) {
+            foreach ($this->vars as $value) {
+                if (!empty($value)) {
                     return false;
                 }
             }
@@ -353,7 +380,7 @@ namespace pool\classes\Core\Input
          */
         public function count(): int
         {
-            return \count($this->vars);
+            return count($this->vars);
         }
 
         /**
@@ -414,7 +441,7 @@ namespace pool\classes\Core\Input
         public function &getRef(string $key, mixed $default = null): mixed
         {
             $ref = $default;
-            if(isset($this->vars[$key])) {
+            if (isset($this->vars[$key])) {
                 $ref = &$this->vars[$key];
             }
             return $ref;
@@ -429,7 +456,7 @@ namespace pool\classes\Core\Input
          */
         public function setVars(array $assoc, bool $suppressException = false): static
         {
-            foreach($assoc as $key => $value) {
+            foreach ($assoc as $key => $value) {
                 $this->setVar($key, $value, $suppressException);
             }
             return $this;
@@ -440,8 +467,8 @@ namespace pool\classes\Core\Input
          */
         public function applyDefaults(): static
         {
-            foreach($this->filter as $key => $filter) {
-                if(array_key_exists(1, $filter)) {
+            foreach ($this->filter as $key => $filter) {
+                if (array_key_exists(1, $filter)) {
                     $this->addVar($key, $filter[1]);
                 }
             }
@@ -466,7 +493,7 @@ namespace pool\classes\Core\Input
          */
         public function delVars(array $assoc): Input
         {
-            foreach($assoc as $key) {
+            foreach ($assoc as $key) {
                 unset($this->vars[$key]);
             }
             return $this;
@@ -482,7 +509,7 @@ namespace pool\classes\Core\Input
          */
         public function getType(string $key): string
         {
-            return $this->exists($key) ? \gettype($this->vars[$key]) : '';
+            return $this->exists($key) ? gettype($this->vars[$key]) : '';
         }
 
         /**
@@ -494,8 +521,8 @@ namespace pool\classes\Core\Input
          */
         public function setType(string $key, string $type): static
         {
-            if($this->exists($key)) {
-                \settype($this->vars[$key], $type);
+            if ($this->exists($key)) {
+                settype($this->vars[$key], $type);
             }
             return $this;
         }
@@ -508,7 +535,7 @@ namespace pool\classes\Core\Input
          */
         public function getXOREncrypted(string $name, string $secretKey): string
         {
-            return $this->xorEnDecryption(\base64_decode($this->getVar($name)), $secretKey);
+            return $this->xorEnDecryption(base64_decode($this->getVar($name)), $secretKey);
         }
 
         /**
@@ -521,7 +548,7 @@ namespace pool\classes\Core\Input
          */
         public function xorEnDecryption(string $value, string $secretKey): string
         {
-            if(empty($value) || empty($secretKey)) {
+            if (empty($value) || empty($secretKey)) {
                 return $value;
             }
 
@@ -529,9 +556,9 @@ namespace pool\classes\Core\Input
             $value_len = strlen($value);
 
             $new_value = '';
-            for($v = 0; $v < $value_len; $v++) {
+            for ($v = 0; $v < $value_len; $v++) {
                 $k = $v % $key_len;
-                $new_value .= \chr(\ord($value[$v]) ^ \ord($secretKey[$k]));
+                $new_value .= chr(ord($value[$v]) ^ ord($secretKey[$k]));
             }
             return $new_value;
         }
@@ -545,7 +572,7 @@ namespace pool\classes\Core\Input
          */
         public function setXOREncrypted(string $name, string $value, string $secretKey): static
         {
-            $this->setVar($name, \base64_encode($this->xorEnDecryption($value, $secretKey)));
+            $this->setVar($name, base64_encode($this->xorEnDecryption($value, $secretKey)));
             return $this;
         }
 
@@ -562,12 +589,12 @@ namespace pool\classes\Core\Input
         {
             $NewInput = new Input();
             $new_prefix = $removePrefix ? '' : $prefix;
-            foreach($requiredKeys as $key) {
+            foreach ($requiredKeys as $key) {
                 $prefixedKey = $prefix.$key;
                 // AM, 22.04.09, modified (isset nimmt kein NULL)
-                if(array_key_exists($prefixedKey, $this->vars)) {
+                if (array_key_exists($prefixedKey, $this->vars)) {
                     $value = $this->vars[$prefixedKey];
-                    if($filterFn && $filterFn($value, $prefixedKey)) {
+                    if ($filterFn && $filterFn($value, $prefixedKey)) {
                         continue;
                     }
                     $NewInput->setVar($new_prefix.$key, $value);
@@ -587,7 +614,7 @@ namespace pool\classes\Core\Input
          */
         public function filterByKeys(array $keys): void
         {
-            $this->vars = \array_intersect_key($this->vars, \array_flip($keys));
+            $this->vars = array_intersect_key($this->vars, array_flip($keys));
         }
 
         /**
@@ -619,7 +646,7 @@ namespace pool\classes\Core\Input
          */
         public function renameKeys(array $keyNames): Input
         {
-            foreach($keyNames as $oldKeyName => $newKeyName) {
+            foreach ($keyNames as $oldKeyName => $newKeyName) {
                 $this->rename($oldKeyName, $newKeyName);
             }
             return $this;
@@ -633,7 +660,7 @@ namespace pool\classes\Core\Input
          */
         public function rename(string $oldKeyName, string $newKeyName): Input
         {
-            if($this->exists($oldKeyName)) {
+            if ($this->exists($oldKeyName)) {
                 $this->setVar($newKeyName, $this->vars[$oldKeyName]);
                 $this->delVar($oldKeyName);
             }
@@ -659,7 +686,7 @@ namespace pool\classes\Core\Input
          */
         public function diff(array $array): array
         {
-            return \array_diff($this->vars, $array);
+            return array_diff($this->vars, $array);
         }
 
         /**
@@ -670,7 +697,7 @@ namespace pool\classes\Core\Input
          */
         public function diff_assoc(array $array): array
         {
-            return \array_diff_assoc($this->vars, $array);
+            return array_diff_assoc($this->vars, $array);
         }
 
         /**
@@ -682,7 +709,7 @@ namespace pool\classes\Core\Input
          */
         public function getByteStream(): string
         {
-            return \serialize($this->vars);
+            return serialize($this->vars);
         }
 
         /**
@@ -695,7 +722,7 @@ namespace pool\classes\Core\Input
          */
         public function setByteStream(string $data): static
         {
-            return $this->addVars(\unserialize($data, ['allowed_classes' => false]));
+            return $this->addVars(unserialize($data, ['allowed_classes' => false]));
         }
 
         /**
@@ -708,9 +735,9 @@ namespace pool\classes\Core\Input
          */
         public function dump(bool $print = true, string $key = ''): string
         {
-            $output = \pray($key ? $this->getVar($key) : $this->vars);
+            $output = pray($key ? $this->getVar($key) : $this->vars);
 
-            if($print) {
+            if ($print) {
                 print ($output);
             }
             return $output;
@@ -724,11 +751,11 @@ namespace pool\classes\Core\Input
          */
         public function setParams(string $params): static
         {
-            if(!$params) {
+            if (!$params) {
                 return $this;
             }
-            \parse_str($params, $parsedParams);
-            foreach($parsedParams as $key => $value) {
+            parse_str($params, $parsedParams);
+            foreach ($parsedParams as $key => $value) {
                 $this->setVar($key, $value);
             }
             return $this;
@@ -742,11 +769,10 @@ namespace pool\classes\Core\Input
          **/
         public function mergeVars(Input $Input, bool $flip = false): Input
         {
-            if($flip) {
-                $this->vars = \array_merge($Input->vars, $this->vars);
-            }
-            else {
-                $this->vars = \array_merge($this->vars, $Input->vars);
+            if ($flip) {
+                $this->vars = array_merge($Input->vars, $this->vars);
+            } else {
+                $this->vars = array_merge($this->vars, $Input->vars);
             }
             return $this;
         }
@@ -759,13 +785,13 @@ namespace pool\classes\Core\Input
          */
         public function mergeVarsIfNotSet(Input $Input): static
         {
-            if(!$Input->count()) {
+            if (!$Input->count()) {
                 return $this;
             }
             $this->filterRules = $Input->getFilterRules();
 
-            foreach($Input->vars as $key => $value) {
-                if(!isset($this->vars[$key])) {
+            foreach ($Input->vars as $key => $value) {
+                if (!isset($this->vars[$key])) {
                     $this->setVar($key, $value);
                 }
                 $this->filterVar($key);
@@ -791,11 +817,11 @@ namespace pool\classes\Core\Input
          */
         private function filterVar(string $key): void
         {
-            if(!isset($this->filterRules[$key])) {
+            if (!isset($this->filterRules[$key])) {
                 return;
             }
-            $filteredVar = \filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
-            if($filteredVar !== false)
+            $filteredVar = filter_var($this->vars[$key], $this->filterRules[$key][0], $this->filterRules[$key][1]);
+            if ($filteredVar !== false)
                 $this->vars[$key] = $filteredVar;
         }
 
@@ -812,17 +838,19 @@ namespace pool\classes\Core\Input
          *     3986, and spaces will be percent encoded (%20).
          * @return string Url-conform query string
          */
-        public function buildQuery(string $numeric_prefix = '', ?string $arg_separator = null,
-            int $encoding_type = \PHP_QUERY_RFC3986): string
-        {
+        public function buildQuery(
+            string $numeric_prefix = '',
+            ?string $arg_separator = null,
+            int $encoding_type = PHP_QUERY_RFC3986,
+        ): string {
             $query = '';
-            $session_name = \session_name();
-            foreach($this->vars as $key => $value) {
-                if($key === $session_name || \is_object($value)) {
+            $session_name = session_name();
+            foreach ($this->vars as $key => $value) {
+                if ($key === $session_name || is_object($value)) {
                     continue;
                 }
 
-                $query .= \http_build_query([$key => $value], $numeric_prefix, $arg_separator, $encoding_type);
+                $query .= http_build_query([$key => $value], $numeric_prefix, $arg_separator, $encoding_type);
             }
             return $query;
         }

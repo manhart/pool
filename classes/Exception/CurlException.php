@@ -15,6 +15,4 @@ use RuntimeException as PhpRuntimeException;
 /**
  * Thrown to indicate that cURL has thrown an error.
  */
-class CurlException extends PhpRuntimeException implements PoolExceptionInterface
-{
-}
+class CurlException extends PhpRuntimeException implements PoolExceptionInterface {}

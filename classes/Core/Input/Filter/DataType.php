@@ -11,6 +11,22 @@
 namespace pool\classes\Core\Input\Filter;
 
 use Closure;
+use InvalidArgumentException;
+
+use function chr;
+use function filter_var;
+use function htmlentities;
+use function is_array;
+use function is_numeric;
+use function is_string;
+use function isValidJSON;
+use function strcspn;
+use function strlen;
+
+use const ENT_QUOTES;
+use const ENT_SUBSTITUTE;
+use const FILTER_VALIDATE_EMAIL;
+use const FILTER_VALIDATE_URL;
 
 /**
  * Class DataType
@@ -36,7 +52,6 @@ enum DataType
     case ALPHANUMERIC_SPACE_PUNCTUATION; // only a-z, A-Z, 0-9, _, space, ., ,;:!?()-+/&
 
     /**
-     *
      * @param DataType $dataType
      * @return Closure
      */
@@ -44,42 +59,42 @@ enum DataType
     {
         $alphaNum = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
         $filter = match ($dataType) {
-            self::INT => static fn($value) => \is_numeric($value) && (!\is_string($value) || !str_contains($value, '.')) ? (int)$value :
-                throw new \InvalidArgumentException('Value is not an integer'),
-            self::FLOAT => static fn($value) => \is_numeric($value) ? (float)$value : throw new \InvalidArgumentException('Value is not numeric.'),
+            self::INT => static fn($value) => is_numeric($value) && (!is_string($value) || !str_contains($value, '.')) ? (int)$value :
+                throw new InvalidArgumentException('Value is not an integer'),
+            self::FLOAT => static fn($value) => is_numeric($value) ? (float)$value : throw new InvalidArgumentException('Value is not numeric.'),
             self::ANY => static fn($value) => $value,
-            self::TEXT => static function($value) {
-                if($value !== '' && \strcspn($value, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0B\x0C\x0E\x0F\x10\x11\x12\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F") !==
-                    \strlen($value)) {
-                    throw new \InvalidArgumentException('Value is not text.');
+            self::TEXT => static function ($value) {
+                if ($value !== '' && strcspn($value, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0B\x0C\x0E\x0F\x10\x11\x12\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F") !==
+                    strlen($value)) {
+                    throw new InvalidArgumentException('Value is not text.');
                 }
                 return (string)$value;
             },
             self::BOOL => static fn($value) => match ($value) {
                 true, 1, '1', 'true', 'on', 'yes' => true,
                 false, 0, '0', 'false', 'off', 'no' => false,
-                default => throw new \InvalidArgumentException('Value is not boolean.')
+                default => throw new InvalidArgumentException('Value is not boolean.')
             },
-            self::ARRAY => static fn($value) => \is_array($value) ? $value :
-                throw new \InvalidArgumentException('Value is not an array.'),
-            self::JSON => static fn($value) => \isValidJSON($value) ? $value :
-                throw new \InvalidArgumentException('Value is not valid JSON.'),
-            self::EMAIL => static fn($value) => \is_string(\filter_var($value, \FILTER_VALIDATE_EMAIL)) ? $value :
-                throw new \InvalidArgumentException('Value is not a valid email address.'),
-            self::URL => static fn($value) => \is_string(\filter_var($value, \FILTER_VALIDATE_URL)) ? $value :
-                throw new \InvalidArgumentException('Value is not a valid URL.'),
-            self::NO_HTML => static fn($value) => \htmlentities($value, \ENT_QUOTES | \ENT_SUBSTITUTE),
-            self::ALPHANUMERIC => static fn($value) => \strcspn($value, $alphaNum) === 0 ? $value :
-                throw new \InvalidArgumentException('Value is not alphanumeric.'),
-            self::ALPHANUMERIC_SPACE => static fn($value) => \strcspn($value, "$alphaNum ") === 0 ? $value :
-                throw new \InvalidArgumentException('Value is not alphanumeric with spaces.'),
-            self::ALPHANUMERIC_SPACE_PUNCTUATION => static fn($value) => \strcspn($value, "$alphaNum .,;:!?()-+/&") === 0 ? $value :
-                throw new \InvalidArgumentException('Value is not alphanumeric with spaces and punctuation.'),
+            self::ARRAY => static fn($value) => is_array($value) ? $value :
+                throw new InvalidArgumentException('Value is not an array.'),
+            self::JSON => static fn($value) => isValidJSON($value) ? $value :
+                throw new InvalidArgumentException('Value is not valid JSON.'),
+            self::EMAIL => static fn($value) => is_string(filter_var($value, FILTER_VALIDATE_EMAIL)) ? $value :
+                throw new InvalidArgumentException('Value is not a valid email address.'),
+            self::URL => static fn($value) => is_string(filter_var($value, FILTER_VALIDATE_URL)) ? $value :
+                throw new InvalidArgumentException('Value is not a valid URL.'),
+            self::NO_HTML => static fn($value) => htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE),
+            self::ALPHANUMERIC => static fn($value) => strcspn($value, $alphaNum) === 0 ? $value :
+                throw new InvalidArgumentException('Value is not alphanumeric.'),
+            self::ALPHANUMERIC_SPACE => static fn($value) => strcspn($value, "$alphaNum ") === 0 ? $value :
+                throw new InvalidArgumentException('Value is not alphanumeric with spaces.'),
+            self::ALPHANUMERIC_SPACE_PUNCTUATION => static fn($value) => strcspn($value, "$alphaNum .,;:!?()-+/&") === 0 ? $value :
+                throw new InvalidArgumentException('Value is not alphanumeric with spaces and punctuation.'),
         };
         return match ($dataType) {
             self::ANY => $filter,
-            default => static function($value) use ($filter) {
-                return $value === \chr(0) ? null : $filter($value);
+            default => static function ($value) use ($filter) {
+                return $value === chr(0) ? null : $filter($value);
             }
         };
     }

@@ -17,9 +17,12 @@
 
 namespace pool\traits;
 
+use InvalidArgumentException;
+
 trait Enum
 {
     abstract public static function cases(): array;
+
     public static function fromString(string $value): static
     {
         foreach (static::cases() as $enumItem) {
@@ -28,6 +31,6 @@ trait Enum
             }
         }
 
-        throw new \InvalidArgumentException("Invalid value for enum type " . self::class . ": $value");
+        throw new InvalidArgumentException("Invalid value for enum type ".self::class.": $value");
     }
 }

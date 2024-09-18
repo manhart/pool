@@ -17,10 +17,12 @@
 
 namespace pool\utils;
 
+use function preg_match;
+
 final class Geo
 {
     public static function isValidWGS84(string $value): bool
     {
-        return \preg_match('/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', $value) === 1;
+        return preg_match('/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', $value) === 1;
     }
 }

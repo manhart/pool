@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -19,7 +20,9 @@ use Exception;
 class TranslationProviderFactory_nop extends TranslationProviderFactory implements TranslationProvider
 {
     private string $lang;
+
     private string $locale;
+
     private string $lastKey;
 
     function getLang(): string
@@ -32,11 +35,10 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
         return $this->locale;
     }
 
-
     function getResult(): ?Translation
     {
         $key = $this->lastKey;
-        return new Translation($this, "0*$key",$key);
+        return new Translation($this, "0*$key", $key);
     }
 
     /**
@@ -63,13 +65,12 @@ class TranslationProviderFactory_nop extends TranslationProviderFactory implemen
         return null;
     }
 
-    function clearError(): void{}
+    function clearError(): void {}
 
     function getAllTranslations(): array
     {
         return [];
     }
-
 
     function getFactory(): TranslationProviderFactory
     {

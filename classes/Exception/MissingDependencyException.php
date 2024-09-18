@@ -15,6 +15,4 @@ use RuntimeException as PhpRuntimeException;
 /**
  * Thrown to indicate that the argument received is not valid.
  */
-class MissingDependencyException extends PhpRuntimeException implements PoolExceptionInterface
-{
-}
+class MissingDependencyException extends PhpRuntimeException implements PoolExceptionInterface {}

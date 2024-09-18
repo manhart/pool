@@ -12,6 +12,7 @@ use pool\classes\Core\Input\Input;
 
 /**
  * Class GUI_Toast
+ *
  * @package pool\guis\GUI_Toast
  * @since 2020-11-18, 19:12
  */
@@ -37,7 +38,7 @@ class GUI_Toast extends GUI_Module
         $tpl = $this->Weblication->findTemplate('tpl_toast_'.$fw.'.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $tpl);
 
-        if($this->Weblication->hasFrame()) {
+        if ($this->Weblication->hasFrame()) {
             $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('Toast.js', __CLASS__, true));
             $this->Weblication->getFrame()->getHeadData()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', __CLASS__, true));
         }

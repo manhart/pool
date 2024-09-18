@@ -4,19 +4,22 @@ use pool\classes\Core\PoolObject;
 
 /**
  *IniFile
+ *
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
  */
-
 class IniFile extends PoolObject
 {
-    var $filename="";
-    var $content="";
-    var $php_parser=false;			// use self-made parser or built-in php parser
-    var $filetime=0;
+    var $filename = "";
+
+    var $content = "";
+
+    var $php_parser = false;            // use self-made parser or built-in php parser
+
+    var $filetime = 0;
 
     // Constructor
-    function __construct($filename="")
+    function __construct($filename = "")
     {
         $this->setIniFile($filename);
         parent::__construct();
@@ -29,22 +32,25 @@ class IniFile extends PoolObject
     }
 
     // Leere Buffer
-    function clear() {
+    function clear()
+    {
         unset($this->content);
     }
 
     // Aktiviere php Parser
-    function enable_php_parser() {
-        $this->php_parser=true;
+    function enable_php_parser()
+    {
+        $this->php_parser = true;
     }
 
     // Deaktiviere php Parser
-    function disable_php_parser() {
-        $this->php_parser=false;
+    function disable_php_parser()
+    {
+        $this->php_parser = false;
     }
 
     // Setze Ini-Datei
-    function setIniFile($filename, $clear=false)
+    function setIniFile($filename, $clear = false)
     {
         if ($filename != "") {
             $this->filename = $filename;
@@ -59,11 +65,10 @@ class IniFile extends PoolObject
     function loadFile()
     {
         // Untersuche, ob die Datei existiert und lesbar ist
-        if(file_exists($this->filename) and is_file($this->filename) and is_readable($this->filename)) {
+        if (file_exists($this->filename) and is_file($this->filename) and is_readable($this->filename)) {
             if ($this->php_parser) {
                 $this->content = parse_ini_file($this->filename, true);
-            }
-            else {
+            } else {
                 $this->content = $this->parse_ini_file($this->filename);
             }
         }
@@ -78,37 +83,33 @@ class IniFile extends PoolObject
     // Untersuche, ob Section und Wert existieren
     function valueExists($section, $option)
     {
-        if($this->sectionExists($section)) {
+        if ($this->sectionExists($section)) {
             return isset($this->content[$section][$option]);
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     // Gibt den Wert einer Option in einer vorhandenen Section zur�ck
     // Oder einen Leerstring, falls nichts gefunden wurde.
-    function getValue($section, $option="")
+    function getValue($section, $option = "")
     {
-        if($this->sectionExists($section)) {
+        if ($this->sectionExists($section)) {
             $sectionValues = $this->content[$section];
 
             // Test, ob das Ergebnis ein Array ist.
-            if(is_array($sectionValues)) {
+            if (is_array($sectionValues)) {
                 // Untersuche, ob die Option definiert ist
-                if(isset($sectionValues[$option])) {
+                if (isset($sectionValues[$option])) {
                     return $sectionValues[$option];
-                }
-                else {
+                } else {
                     return "";
                 }
-            }
-            // Falls es kein Array ist, ist es eine Option ohne Section ;)
+            } // Falls es kein Array ist, ist es eine Option ohne Section ;)
             else {
                 return $sectionValues;
             }
-        }
-        else {
+        } else {
             return "";
         }
     }
@@ -116,26 +117,25 @@ class IniFile extends PoolObject
     // Gibt alle Optionen einer Section als Array zur�ck
     function getSection($section)
     {
-        if($this->sectionExists($section)) {
+        if ($this->sectionExists($section)) {
             // Hole die Werte dieser Section aus dem Content array
             $sectionValues = $this->content[$section];
 
-            if(is_array($sectionValues)) {
+            if (is_array($sectionValues)) {
                 return $sectionValues;
-            }
-            else {
-                $tmp = array();
+            } else {
+                $tmp = [];
                 $tmp[$section] = $sectionValues;
                 return $tmp;
             }
         }
-        return array();
+        return [];
     }
 
     // Erh�lt alle Namen der vorhanden Sections
     function getSectionNames()
     {
-        return isset($this->content) ? array_keys($this->content) : array();
+        return isset($this->content) ? array_keys($this->content) : [];
     }
 
     // Setzt oder �ndert einen Wert einer Option in einer gegebenen Section.
@@ -144,10 +144,9 @@ class IniFile extends PoolObject
     function setValue($section, $option, $value, $write = false)
     {
         // Section �bergeben?
-        if($section != "") {
+        if ($section != "") {
             $this->content[$section][$option] = $value;
-        }
-        else {
+        } else {
             $this->content[$option] = $value;
         }
         if ($write) {
@@ -160,7 +159,7 @@ class IniFile extends PoolObject
     // Hinweis: Kommentare und leere Zeilen innerhalb der Datei gehen dabei verloren
     function writeFile()
     {
-        $success=true;
+        $success = true;
 
         // �ffne eine neue unique Datei zum Schreiben +b Windows kompatibel (binary flag)
         $tmpfile = $this->filename."-stellvertreter";
@@ -168,30 +167,28 @@ class IniFile extends PoolObject
             touch($tmpfile);
         }
         $fp_new = fopen($tmpfile, "r+");
-        if(!$fp_new) {
-            $success=false;
-        }
-        else {
-            if (flock($fp_new, LOCK_EX+LOCK_NB)) {
+        if (!$fp_new) {
+            $success = false;
+        } else {
+            if (flock($fp_new, LOCK_EX + LOCK_NB)) {
                 // Haben wir etwas zum Schreiben im Buffer...
-                if(isset($this->content)) {
+                if (isset($this->content)) {
                     $data = "";
                     // Hole jede Section und deren Werte
-                    while(list($section, $values) = each($this->content)) {
-                        if(is_array($values)) {
+                    while (list($section, $values) = each($this->content)) {
+                        if (is_array($values)) {
                             // Schreibe Section
                             $data .= "[$section]\n";
 
                             // Hole Options mit Werten
-                            while(list($option, $value) = each($values)) {
+                            while (list($option, $value) = each($values)) {
                                 // Schreibe Options und deren Werte
                                 $data .= "$option=$value\n";
                             }
 
                             // Leerzeile
                             $data .= "\n";
-                        }
-                        // kein Array
+                        } // kein Array
                         else {
                             // Schreibe Option ohne Section
                             $data .= "$section=$values\n";
@@ -199,9 +196,8 @@ class IniFile extends PoolObject
                     }
                     $strlen = strlen($data);
                     if (!fwrite($fp_new, $data, $strlen)) {
-                        $success=false;
-                    }
-                    else {
+                        $success = false;
+                    } else {
                         ftruncate($fp_new, $strlen);
                     }
                     unset($data, $strlen);
@@ -210,7 +206,7 @@ class IniFile extends PoolObject
                 // Bei Erfolg neu geschriebenes Tmpfile atomisch in Original File umbenennen, (Zeitstempel beachten)
                 if ($success) {
                     // falls nicht ein anderer Prozess schneller war und bereits geschrieben hat...
-                    if ((file_exists($this->filename) and filemtime($this->filename) <= $this->filetime) or ($this->filetime==0)) {
+                    if ((file_exists($this->filename) and filemtime($this->filename) <= $this->filetime) or ($this->filetime == 0)) {
                         rename($tmpfile, $this->filename);
                     }
                 }
@@ -218,14 +214,11 @@ class IniFile extends PoolObject
             }
 
             if (!fclose($fp_new)) {
-                $success=false;
-            }
-            else {
+                $success = false;
+            } else {
                 if ($success) {
-
                     copy($this->filename, dirname($this->filename)."/".uniqid()."_".basename($tmpfile));
-                }
-                else {
+                } else {
                     copy($this->filename, dirname($this->filename)."/".uniqid()."_writeerror_".basename($tmpfile));
                 }
             }
@@ -238,46 +231,45 @@ class IniFile extends PoolObject
     // eigene Implementierung von parse_ini_file (ohne Abbruch des Scripts)
     function parse_ini_file($filename)
     {
-        $res = array();
+        $res = [];
         if (file_exists($filename) && is_readable($filename)) {
             $section = "";
 
             // Shared Lock auf die Quelldatei
             $this->filetime = filemtime($filename);
             $fd = @fopen($filename, "r");
-            while(!feof($fd)) {
+            while (!feof($fd)) {
                 $line = trim(@fgets($fd, 4096));
                 $len = strlen($line);
 
                 // �berspring Leerzeilen
-                if($len != 0) {
+                if ($len != 0) {
                     // �berspringe Kommentare
-                    if($line[0] != ';') {
+                    if ($line[0] != ';') {
                         // Section?
-                        if(($line[0] == '[') && ($line[$len-1] == ']')) {
-                        // Hole Section Name
-                            $section = substr($line, 1, $len-2);
+                        if (($line[0] == '[') && ($line[$len - 1] == ']')) {
+                            // Hole Section Name
+                            $section = substr($line, 1, $len - 2);
 
                             // Check if the section is already included in result array
-                            if(!isset($res[$section])) {
-                                $res[$section] = array();
+                            if (!isset($res[$section])) {
+                                $res[$section] = [];
                             }
                         }
                         // Untersuche nach Eintr�ge
                         $pos = strpos($line, '=');
                         // Eintrage gefunden
-                        if($pos != false) {
+                        if ($pos != false) {
                             // Hole den Namen des Eintrags
                             $name = substr($line, 0, $pos);
                             // Hole den Wert des Eintrats
-                            $value = substr($line,$pos+1,$len-$pos-1);
+                            $value = substr($line, $pos + 1, $len - $pos - 1);
                             // Speichere den Eintrag
 
                             // Innerhalb einer Section?
-                            if($section != "") {
+                            if ($section != "") {
                                 $res[$section][$name] = $value;
-                            }
-                            else {
+                            } else {
                                 $res[$name] = $value;
                             }
                         }
@@ -289,5 +281,4 @@ class IniFile extends PoolObject
         }
         return $res;
     }
-
 }

@@ -12,6 +12,4 @@ namespace pool\classes\Exception;
 
 use Throwable;
 
-interface PoolExceptionInterface extends Throwable
-{
-}
+interface PoolExceptionInterface extends Throwable {}

@@ -16,6 +16,7 @@ use pool\classes\Database\DAO\MySQL_DAO;
 
 /**
  * Class GUI_Table
+ *
  * @package pool\guis\GUI_Table
  * @since 2021-04-08
  */
@@ -81,11 +82,12 @@ class GUI_Table extends GUI_Module
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
-        'checkboxHeader'=>[
+        'checkboxHeader' => [
             'attribute' => 'data-checkbox-header',
             'type' => 'boolean',
             'value' => true,
-            'clientside' => true,],
+            'clientside' => true,
+        ],
         'columns' => [
             'attribute' => '',
             'type' => 'json',
@@ -159,7 +161,7 @@ class GUI_Table extends GUI_Module
                     'element' => 'input',
                     'inputType' => 'text',
                     'pool' => true,
-                    'clientside' => false
+                    'clientside' => false,
                 ],
                 'detailFormatter' => [
                     'attribute' => 'data-detail-formatter',
@@ -206,7 +208,7 @@ class GUI_Table extends GUI_Module
                     'element' => 'input',
                     'inputType' => 'text',
                     'pool' => true,
-                    'clientside' => false
+                    'clientside' => false,
                 ],
                 'filterControl' => [
                     'attribute' => 'data-filter-control',
@@ -294,7 +296,7 @@ class GUI_Table extends GUI_Module
                 ],
                 'poolType' => [
                     'attribute' => 'data-pool-type',
-                    'type' =>  'string',
+                    'type' => 'string',
                     'element' => 'select',
                     'value' => '',
                     'options' => ['', 'date', 'time', 'date.time', 'number'],
@@ -303,7 +305,7 @@ class GUI_Table extends GUI_Module
                 ],
                 'poolUseFormatted' => [
                     'attribute' => 'data-pool-use-formatted',
-                    'type' =>  'boolean',
+                    'type' => 'boolean',
                     'value' => false,
                     'element' => 'input',
                     'inputType' => 'checkbox',
@@ -438,8 +440,8 @@ class GUI_Table extends GUI_Module
                     'element' => 'input', // tableEditor
                     'inputType' => 'text', // tableEditor
                     'required' => false, // tableEditor mandatory field
-                ]
-            ]
+                ],
+            ],
         ],
         'cookie' => [
             'attribute' => 'data-cookie',
@@ -478,7 +480,7 @@ class GUI_Table extends GUI_Module
             'attribute' => 'data-detail-view',
             'type' => 'boolean',
             'value' => false,
-            'element'   => 'input',
+            'element' => 'input',
             'inputType' => 'checkbox',
             'configurable' => true,
         ],
@@ -492,7 +494,7 @@ class GUI_Table extends GUI_Module
         ],
         'detailViewByClick' => [
             'attribute' => 'data-detail-view-by-click',
-            'type'  => 'boolean',
+            'type' => 'boolean',
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
@@ -500,7 +502,7 @@ class GUI_Table extends GUI_Module
         ],
         'detailViewIcon' => [
             'attribute' => 'data-detail-view-icon',
-            'type'  => 'boolean',
+            'type' => 'boolean',
             'value' => false,
             'element' => 'input',
             'inputType' => 'checkbox',
@@ -511,7 +513,7 @@ class GUI_Table extends GUI_Module
             'type' => 'string',
             'value' => 'basic',
             'element' => 'select',
-            'options' => ['basic', 'all', 'selected']
+            'options' => ['basic', 'all', 'selected'],
         ],
         'exportTypes' => [
             'attribute' => 'data-export-types',
@@ -599,7 +601,7 @@ class GUI_Table extends GUI_Module
                 'detailClose' => 'fa-minus',
                 'sort' => 'fa-sort',
                 'plus' => 'fa-plus',
-                'minus' => 'fa-minus'
+                'minus' => 'fa-minus',
             ],
             'element' => 'textarea', // todo json editor
             //'inputType' => '',
@@ -672,7 +674,7 @@ class GUI_Table extends GUI_Module
             'type' => 'boolean',
             'value' => false,
             'element' => 'input',
-            'inputType' => 'checkbox'
+            'inputType' => 'checkbox',
         ],
         'poolClearControls' => [
             'attribute' => 'data-pool-clear-controls',
@@ -725,7 +727,7 @@ class GUI_Table extends GUI_Module
             'value' => null,
             'caption' => 'onCheck',
             'poolEvent' => true,
-            'element' => 'textarea'
+            'element' => 'textarea',
         ],
         'poolOnClickRow' => [
             'attribute' => 'data-pool-on-click-row',
@@ -733,7 +735,7 @@ class GUI_Table extends GUI_Module
             'value' => null,
             'caption' => 'onClickRow',
             'poolEvent' => true,
-            'element' => 'textarea'
+            'element' => 'textarea',
         ],
         'poolOnUncheck' => [
             'attribute' => 'data-pool-on-uncheck',
@@ -741,7 +743,7 @@ class GUI_Table extends GUI_Module
             'value' => null,
             'caption' => 'onUncheck',
             'poolEvent' => true,
-            'element' => 'textarea'
+            'element' => 'textarea',
         ],
         'poolOnUncheckAll' => [
             'attribute' => 'data-pool-on-uncheck-all',
@@ -749,7 +751,7 @@ class GUI_Table extends GUI_Module
             'value' => null,
             'caption' => 'onUncheckAll',
             'poolEvent' => true,
-            'element' => 'textarea'
+            'element' => 'textarea',
         ],
         'pagination' => [
             'attribute' => 'data-pagination',
@@ -1000,21 +1002,21 @@ class GUI_Table extends GUI_Module
             'type' => 'integer',
             'value' => 0,
             'element' => 'input',
-            'inputType' => 'number'
+            'inputType' => 'number',
         ],
         'stickyHeaderOffsetY' => [
             'attribute' => 'data-sticky-header-offset-y',
             'type' => 'integer',
             'value' => 0,
             'element' => 'input',
-            'inputType' => 'number'
+            'inputType' => 'number',
         ],
         'theadClasses' => [
             'attribute' => 'data-thead-classes',
             'type' => 'string',
             'value' => '',
             'element' => 'input',
-            'inputType' => 'text'
+            'inputType' => 'text',
         ],
         'toolbar' => [
             'attribute' => 'data-toolbar',
@@ -1026,16 +1028,16 @@ class GUI_Table extends GUI_Module
         ],
         'uniqueId' => [
             'attribute' => 'data-unique-id',
-            'type'  => 'string',
-            'element'   => 'input',
+            'type' => 'string',
+            'element' => 'input',
             'inputType' => 'text',
             'value' => null, // undefined
             'configurable' => true,
         ],
         'paginationParts' => [
             'attribute' => 'data-pagination-parts',
-            'type'  => 'array',
-            'element'   => 'input',
+            'type' => 'array',
+            'element' => 'input',
             'inputType' => 'text',
             'value' => ['pageInfo', 'pageSize', 'pageList'],
         ],
@@ -1053,7 +1055,7 @@ class GUI_Table extends GUI_Module
             'type' => 'integer',
             'value' => null,
             'element' => 'input',
-            'inputType' => 'number'
+            'inputType' => 'number',
         ],
         'visibleSearch' => [
             'attribute' => 'data-visible-search',
@@ -1065,8 +1067,8 @@ class GUI_Table extends GUI_Module
         ],
     ];
 
-
     protected array $options = [];
+
     protected array $columns = [];
 
     protected array $poolOptions = [];
@@ -1074,8 +1076,7 @@ class GUI_Table extends GUI_Module
     const RENDER_NONE = 0;
     const RENDER_IMMEDIATELY = 1;
     const RENDER_ONDOMLOADED = 2;
-
-//    private string $version = '1.19.1';
+    //    private string $version = '1.19.1';
 
     /**
      * @param int|null $superglobals
@@ -1094,7 +1095,7 @@ class GUI_Table extends GUI_Module
 
         parent::init($superglobals);
 
-//        $this->defaultOptions['moduleName']['value'] = $this->getName();
+        //        $this->defaultOptions['moduleName']['value'] = $this->getName();
 
         // default time formats
         $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.time');
@@ -1102,7 +1103,7 @@ class GUI_Table extends GUI_Module
         $this->poolOptions['date.time.strftime'] = $this->poolOptions['date.time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date.time');
         $this->poolOptions['number'] = $this->poolOptions['number'] ?? $this->Weblication->getDefaultFormat('number');
 
-        if($this->Input->getVar('columns') != null) {
+        if ($this->Input->getVar('columns') != null) {
             $columns = $this->Input->getVar('columns');
             switch (gettype($columns)) {
                 case 'string':
@@ -1123,7 +1124,7 @@ class GUI_Table extends GUI_Module
         $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $tpl);
 
-        if(!$this->Weblication->hasFrame()) {
+        if (!$this->Weblication->hasFrame()) {
             return false;
         }
 
@@ -1132,10 +1133,10 @@ class GUI_Table extends GUI_Module
         $Frame->getHeadData()->addJavaScript($jsFile);
     }
 
-//    public function getInspectorProperties(): array
-//    {
-//        return $this->inspectorProperties + parent::getInspectorProperties();
-//    }
+    //    public function getInspectorProperties(): array
+    //    {
+    //        return $this->inspectorProperties + parent::getInspectorProperties();
+    //    }
 
     /**
      * @return array
@@ -1170,42 +1171,41 @@ class GUI_Table extends GUI_Module
     {
         $defaultColumnOptions = $this->getColumnsProperties();
 
-        foreach($columns as $z => $column) {
+        foreach ($columns as $z => $column) {
             $field = $column['field'] ?? $z;
-            foreach($column as $key => $value)
-
-                if(isset($defaultColumnOptions[$key])) {
+            foreach ($column as $key => $value) {
+                if (isset($defaultColumnOptions[$key])) {
                     $type = $defaultColumnOptions[$key]['type'] ?? '';
-                    switch($type) {
+                    switch ($type) {
                         case 'boolean':
-                            if(is_string($value)) {
+                            if (is_string($value)) {
                                 $value = string2bool($value);
                             }
                             break;
                     }
 
-                    if($defaultColumnOptions[$key]['value'] != $value) {
-//                        $this->defaultColumnOptions[$key]['type']
+                    if ($defaultColumnOptions[$key]['value'] != $value) {
+                        //                        $this->defaultColumnOptions[$key]['type']
                         $this->columns[$z][$key] = $value;
                     }
-                }
-                else {
+                } else {
                     $this->poolOptions['poolColumnOptions'][$field][$key] = $value;
-//                    if($key == 'dataType') {
-//                        switch ($value) {
-//                            case 'datetime':
-//                            case 'date':
-//                            case 'time':
-//                                if(isset($column['formatter']) == false) {
-//                                    $this->columns[$z]['formatter'] = '(value, row, index, field) => { return {modulename}.strftime(value, row, index, field)}';
-//                                }
-//                                break;
-//                        }
-//                    }
+                    //                    if($key == 'dataType') {
+                    //                        switch ($value) {
+                    //                            case 'datetime':
+                    //                            case 'date':
+                    //                            case 'time':
+                    //                                if(isset($column['formatter']) == false) {
+                    //                                    $this->columns[$z]['formatter'] = '(value, row, index, field) => { return {modulename}.strftime(value, row, index, field)}';
+                    //                                }
+                    //                                break;
+                    //                        }
+                    //                    }
                 }
+            }
         }
 
-//        $this->columns = $columns;
+        //        $this->columns = $columns;
         return $this;
     }
 
@@ -1217,20 +1217,20 @@ class GUI_Table extends GUI_Module
         return $this->Input->getVar('columns', []);
     }
 
-//    public function getVersion()
-//    {
-//        return $this->version;
-//    }
+    //    public function getVersion()
+    //    {
+    //        return $this->version;
+    //    }
 
     /**
      * @param string $which possible keys: all, aliasNames, columnNames (assoc array), searchable (assoc array), (@todo filterable/filterSelect)
      * @param DAO|null $DAO if given, escape column names
      * @return array only columns for database and sql statement passing
      */
-    public function getDBColumns(string $which= 'all', ?DAO $DAO = null): array
+    public function getDBColumns(string $which = 'all', ?DAO $DAO = null): array
     {
         // todo if columns change / new configuration, reread with loop
-        if($this->dbColumns[$which]) {
+        if ($this->dbColumns[$which]) {
             return $this->dbColumns[$which];
         }
 
@@ -1242,19 +1242,19 @@ class GUI_Table extends GUI_Module
             'sortable' => [],
         ];
         $columns = $this->Input->getVar('columns');
-        foreach($columns as $column) {
-            if(!isset($column['field'])) continue; // necessary
-            if(!isset($column['dbColumn'])) continue;
+        foreach ($columns as $column) {
+            if (!isset($column['field'])) continue; // necessary
+            if (!isset($column['dbColumn'])) continue;
             $dbColumn = $column['dbColumn'];
-            if($dbColumn === '') continue;
+            if ($dbColumn === '') continue;
 
-            $dbColumn = $DAO ? $DAO->encloseColumnName($dbColumn): $dbColumn;
+            $dbColumn = $DAO ? $DAO->encloseColumnName($dbColumn) : $dbColumn;
             $this->dbColumns['all'][] = '('.$dbColumn.')`'.$column['field'].'`';
             $this->dbColumns['aliasNames'][] = $column['field'];
 
             $expr = $dbColumn;
             $isSubQuery = stripos($expr, 'select') === 0;
-            if($isSubQuery) {
+            if ($isSubQuery) {
                 $expr = '('.$expr.')';
             }
 
@@ -1265,26 +1265,26 @@ class GUI_Table extends GUI_Module
 
             // 29.04.22, AM, workaround: bootstrap-table uses input datetime since v1.20.0. js/html always sends an english date!
             // to prevent the auto date_format in DAO::makeFilter we overwrite the filterByDbColumn if it is not set
-//            if($filterControl == 'datepicker' and $filterByDbColumn == '') {
-//                if(version_compare($this->getVersion(), '1.20.0', '>=')) {
-//                    $column['filterByDbColumn'] = $expr;
-//                }
-//            }
+            //            if($filterControl == 'datepicker' and $filterByDbColumn == '') {
+            //                if(version_compare($this->getVersion(), '1.20.0', '>=')) {
+            //                    $column['filterByDbColumn'] = $expr;
+            //                }
+            //            }
 
             $assoc = [
                 'expr' => $expr, // select expression
                 'alias' => $column['field'], // alias name
                 'type' => $column['poolType'] ?? '', // data type
                 'filterControl' => $filterControl, // filterControl
-                'filterByDbColumn' => $filterByDbColumn // column
+                'filterByDbColumn' => $filterByDbColumn, // column
             ];
 
             $searchable = $column['searchable'] ?? $this->getColumnProperty('searchable')['value'];
-            if($searchable) {
+            if ($searchable) {
                 $this->dbColumns['searchable'][] = $assoc;
             }
             $sortable = $column['sortable'] ?? $this->getColumnProperty('sortable')['value'];
-            if($sortable) {
+            if ($sortable) {
                 $this->dbColumns['sortable'][$column['field']] = $expr;
             }
         }
@@ -1292,47 +1292,47 @@ class GUI_Table extends GUI_Module
         return $this->dbColumns[$which];
     }
 
-//    public function loadConfig(string $json): bool
-//    {
-//        $result = false;
-//        $data = json_decode($json, JSON_OBJECT_AS_ARRAY);
-//        if(json_last_error() != JSON_ERROR_NONE) {
-//            return false;
-//        }
-//        if(isset($data['options'])) {
-//            $this->options = $data['options'];
-//            $result = true;
-//        }
-//        if(isset($this->options['columns'])) {
-//            $this->columns = $this->options['columns'];
-//            $result = true;
-//        }
-//        if(isset($this->options['moduleName'])) {
-//            $this->setName($this->options['moduleName']);
-//        }
-//        return $result;
-//    }
+    //    public function loadConfig(string $json): bool
+    //    {
+    //        $result = false;
+    //        $data = json_decode($json, JSON_OBJECT_AS_ARRAY);
+    //        if(json_last_error() != JSON_ERROR_NONE) {
+    //            return false;
+    //        }
+    //        if(isset($data['options'])) {
+    //            $this->options = $data['options'];
+    //            $result = true;
+    //        }
+    //        if(isset($this->options['columns'])) {
+    //            $this->columns = $this->options['columns'];
+    //            $result = true;
+    //        }
+    //        if(isset($this->options['moduleName'])) {
+    //            $this->setName($this->options['moduleName']);
+    //        }
+    //        return $result;
+    //    }
 
 
     /**
      * Provisioning data before preparing module and there children.
      */
-//    public function provision()
-//    {
-//        parent::provision();
-//    }
-//        $data = $this->Input->getData();
-//        unset(
-//            $data['moduleName'],
-//            $data['ModuleName'],
-//            $data['modulename'],
-//            $data['framework'],
-//            $data['render']
-//        );
-//
-//        $this->setOptions($data);
+    //    public function provision()
+    //    {
+    //        parent::provision();
+    //    }
+    //        $data = $this->Input->getData();
+    //        unset(
+    //            $data['moduleName'],
+    //            $data['ModuleName'],
+    //            $data['modulename'],
+    //            $data['framework'],
+    //            $data['render']
+    //        );
+    //
+    //        $this->setOptions($data);
 
-//    }
+    //    }
 
     /**
      * prepare content
@@ -1344,42 +1344,42 @@ class GUI_Table extends GUI_Module
         $this->Template->setVar([
             'moduleName' => $this->getName(),
             'className' => $this->getClassName(),
-            'poolOptions' => json_encode($this->poolOptions, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
+            'poolOptions' => json_encode($this->poolOptions, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
         ]);
         $this->setClientVar('poolOptions', $this->poolOptions);
 
 
         $this->Template->newBlock('tableAttributes');
-        foreach($this->getInspectorProperties() as $name => $property) {
+        foreach ($this->getInspectorProperties() as $name => $property) {
             $value = $this->Input->getVar($name);
-            if($value === null) continue;
+            if ($value === null) continue;
 
-            if($value === $property['value']) {
+            if ($value === $property['value']) {
                 continue; // no modification
             }
 
             $attrName = $property['attribute'] ?? null;
-            if($attrName === null) continue; // no html data-attribute
+            if ($attrName === null) continue; // no html data-attribute
 
-            if(is_bool($value)) {
+            if (is_bool($value)) {
                 $value = bool2string($value);
             }
 
             $type = $property['type'] ?? null;
-            if($type === 'json' || $type === 'array') {
-                $value = htmlspecialchars(\json_encode($value, JSON_THROW_ON_ERROR), ENT_COMPAT, 'UTF-8');
+            if ($type === 'json' || $type === 'array') {
+                $value = htmlspecialchars(json_encode($value, JSON_THROW_ON_ERROR), ENT_COMPAT, 'UTF-8');
             }
-//            echo $name.'='.$value.'<br>';
+            //            echo $name.'='.$value.'<br>';
 
             $TableAttributeBlock = $this->Template->newBlock('tableAttribute');
             $TableAttributeBlock->setVar([
                     'data-name' => $attrName,
-                    'data-value' => $value
-                ]
+                    'data-value' => $value,
+                ],
             );
         }
 
-        if($columns = $this->getVar('columns')) {
+        if ($columns = $this->getVar('columns')) {
             $clientColumns = [];
             $columnProperties = $this->getColumnsProperties();
             // $this->Template->newBlock('js_row');
@@ -1396,13 +1396,13 @@ class GUI_Table extends GUI_Module
                         $defaultValue = $columnProperties[$optName]['value'];
                     }
 
-                    if(!$clientside) {
+                    if (!$clientside) {
                         continue;
                     }
 
                     // translate title
-                    if($optName == 'title') {
-                        if(str_contains($attrValue, '.')) {
+                    if ($optName == 'title') {
+                        if (str_contains($attrValue, '.')) {
                             $attrValue = $this->Weblication->getTranslator()->getTranslation($attrValue, $attrValue);
                         }
                     }
@@ -1410,98 +1410,98 @@ class GUI_Table extends GUI_Module
                     $attrValue = match ($type) {
                         'string' => $attrValue !== '' ? strtr($attrValue, ['{modulename}' => $this->getName()]) : (($defaultValue === null) ? null : $attrValue),
                         'number' => $attrValue !== '' ? (int)$attrValue : null,
-                        default  => $attrValue !== '' ? $attrValue : null,
+                        default => $attrValue !== '' ? $attrValue : null,
                     };
 
 
-                    if($defaultValue !== $attrValue) {
+                    if ($defaultValue !== $attrValue) {
                         $clientColumns[$c][$optName] = $attrValue;
                     }
 
-//                    switch ($type) {
-//                        case 'boolean':
-//                            $attrValue = bool2string($attrValue);
-//                            break;
-//
-//                        case 'function':
-//                        case 'json':
-//                            break;
-//
-//                        case 'auto':
-//                            if(is_array($attrValue)) {
-//                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
-//                                break;
-//                            }
-//
-//                        default:
-//                            $attrValue = '\'' . $attrValue . '\'';
-//                    }
+                    //                    switch ($type) {
+                    //                        case 'boolean':
+                    //                            $attrValue = bool2string($attrValue);
+                    //                            break;
+                    //
+                    //                        case 'function':
+                    //                        case 'json':
+                    //                            break;
+                    //
+                    //                        case 'auto':
+                    //                            if(is_array($attrValue)) {
+                    //                                $attrValue = json_encode($attrValue, JSON_OBJECT_AS_ARRAY);
+                    //                                break;
+                    //                            }
+                    //
+                    //                        default:
+                    //                            $attrValue = '\'' . $attrValue . '\'';
+                    //                    }
 
 
-//                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
-//                    $ColumnAttributeBlock?->setVar([
-//                        'key' => $optName,
-//                        'value' => $attrValue
-//                    ]);
+                    //                    $ColumnAttributeBlock = $this->Template->newBlock('js_columnOption');
+                    //                    $ColumnAttributeBlock?->setVar([
+                    //                        'key' => $optName,
+                    //                        'value' => $attrValue
+                    //                    ]);
                 }
                 $c++;
             }
             $this->setClientVar('columns', $clientColumns);
         }
 
-//        foreach($this->configuration as $optName => $attrValue) {
-////            $inpValue = $this->Input->getVar($attrName);
-////            $attrValue = $inpValue ?? $attrValue;
-//            $attrName = $this->getInspectorProperties()[$optName]['attribute'] ?? null;
-//            if($attrName == null) continue; // no data-attribute
-//            // $attrType = $this->getDefaultOptions()[$optName]['type'];
-//
-//            if(is_bool($attrValue)) {
-//                $attrValue = bool2string($attrValue);
-//            }
-//
-//            if($attrValue == '') {
-//                continue;
-//            }
-//
-//            $TableAttributeBlock = $this->Template->newBlock('tableAttribute');
-//            $TableAttributeBlock->setVar([
-//                    'data-name' => $attrName,
-//                    'data-value' => $attrValue
-//                ]
-//            );
-//        }
-//        unset($optName);
+        //        foreach($this->configuration as $optName => $attrValue) {
+        ////            $inpValue = $this->Input->getVar($attrName);
+        ////            $attrValue = $inpValue ?? $attrValue;
+        //            $attrName = $this->getInspectorProperties()[$optName]['attribute'] ?? null;
+        //            if($attrName == null) continue; // no data-attribute
+        //            // $attrType = $this->getDefaultOptions()[$optName]['type'];
+        //
+        //            if(is_bool($attrValue)) {
+        //                $attrValue = bool2string($attrValue);
+        //            }
+        //
+        //            if($attrValue == '') {
+        //                continue;
+        //            }
+        //
+        //            $TableAttributeBlock = $this->Template->newBlock('tableAttribute');
+        //            $TableAttributeBlock->setVar([
+        //                    'data-name' => $attrName,
+        //                    'data-value' => $attrValue
+        //                ]
+        //            );
+        //        }
+        //        unset($optName);
 
-//        $this->Template->newBlock('row');
-//        foreach($this->columns as $column) {
-//            $ColumnBlock = $this->Template->newBlock('column');
-//            $ColumnBlock->setVar('caption', $column['caption'] ?? '');
-//            unset($column['caption']);
-//            foreach($column as $attrName => $attrValue) {
-//                $ColumnAttributeBlock = $this->Template->newBlock('columnAttribute');
-//                $ColumnAttributeBlock->setVar([
-//                    'data-name' => $attrName,
-//                    'data-value' => $attrValue
-//                ]);
-//            }
-//        }
+        //        $this->Template->newBlock('row');
+        //        foreach($this->columns as $column) {
+        //            $ColumnBlock = $this->Template->newBlock('column');
+        //            $ColumnBlock->setVar('caption', $column['caption'] ?? '');
+        //            unset($column['caption']);
+        //            foreach($column as $attrName => $attrValue) {
+        //                $ColumnAttributeBlock = $this->Template->newBlock('columnAttribute');
+        //                $ColumnAttributeBlock->setVar([
+        //                    'data-name' => $attrName,
+        //                    'data-value' => $attrValue
+        //                ]);
+        //            }
+        //        }
 
         $this->Template->leaveBlock();
 
         // render table
-//        $render_immediately = $render_ondomloaded = '';
-//        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
-//            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
-//        }
-//        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
-//            $render_immediately = '.render()';
-//        }
+        //        $render_immediately = $render_ondomloaded = '';
+        //        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
+        //            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
+        //        }
+        //        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
+        //            $render_immediately = '.render()';
+        //        }
         $this->setClientVar('render', (int)$this->getVar('render'));
-//        $this->Template->setVar([
-//            'RENDER_IMMEDIATELY' => $render_immediately,
-//            'RENDER_ONDOMLOADED' => $render_ondomloaded
-//        ]);
+        //        $this->Template->setVar([
+        //            'RENDER_IMMEDIATELY' => $render_immediately,
+        //            'RENDER_ONDOMLOADED' => $render_ondomloaded
+        //        ]);
         parent::prepare();
     }
 
@@ -1513,36 +1513,33 @@ class GUI_Table extends GUI_Module
      */
     public function parseColumns(string $columns): array
     {
-        if(isValidJSON($columns)) {
+        if (isValidJSON($columns)) {
             $columns = json_decode($columns, true);
-        }
-        else {
+        } else {
             $columnsArray = explode(';', $columns);
 
             $columns = [];
-            foreach($columnsArray as $column) {
+            foreach ($columnsArray as $column) {
                 $columnAttr = explode('|', $column);
                 $column = [];
                 $i = 0;
-                foreach($columnAttr as $attr) {
+                foreach ($columnAttr as $attr) {
                     $attrValue = trim($attr);
-                    if(str_contains($attrValue, '=')) {
+                    if (str_contains($attrValue, '=')) {
                         $attr = explode('=', $attrValue);
                         $key = $attr[0];
                         $val = $attr[1];
-                        if($key == 'field') $field = $val;
+                        if ($key == 'field') $field = $val;
                         $column[$key] = $val;
-                    }
-                    elseif($i == 0) {
+                    } elseif ($i == 0) {
                         $field = trim($columnAttr[$i]) ?? '';
-                        if($field == '') continue;
+                        if ($field == '') continue;
                         $column['field'] = $field;
-                        if(count($columnAttr) == 1) { // no title given
+                        if (count($columnAttr) == 1) { // no title given
                             $title = $columnAttr[$i] ?? $field;
                             $column['title'] = $title;
                         }
-                    }
-                    elseif($i == 1 and isset($field)) {
+                    } elseif ($i == 1 and isset($field)) {
                         $title = $columnAttr[$i] ?? $field;
                         $column['title'] = $title;
                     }
@@ -1583,13 +1580,13 @@ class GUI_Table extends GUI_Module
     public function buildFilter(MySQL_DAO $DAO, string $search, string $filter, array $mandatoryFilter = [], array $searchFilter = []): array
     {
         $filterRules = [];
-        if(isValidJSON($filter)) {
+        if (isValidJSON($filter)) {
             $filterRules = json_decode($filter, JSON_OBJECT_AS_ARRAY, 512, JSON_THROW_ON_ERROR);
         }
 
         // auto filter
         $filterRules = array_merge($DAO->makeFilter($this->getDBColumns('searchable'), $search, $filterRules), $searchFilter);
-        if($filterRules && $mandatoryFilter) {
+        if ($filterRules && $mandatoryFilter) {
             array_unshift($filterRules, '(');
             $filterRules[] = ')';
             $filterRules[] = 'AND';
@@ -1611,12 +1608,11 @@ class GUI_Table extends GUI_Module
         $columns = $this->getDBColumns('sortable');
         // SORTING
         $sorting = [];
-        if($sort and $order) {
+        if ($sort and $order) {
             $sorting = [$columns[$sort] => $order];
-        }
-        // MULTIPLE SORTING
-        else if($multiSort) {
-            foreach($multiSort as $x => $item) {
+        } // MULTIPLE SORTING
+        elseif ($multiSort) {
+            foreach ($multiSort as $x => $item) {
                 $sort = $item['sortName'];
                 $order = $item['sortOrder'];
                 $sorting[$columns[$sort]] = $order;
@@ -1636,7 +1632,7 @@ class GUI_Table extends GUI_Module
      */
     public function buildLimit(int $offset = 0, ?int $limit = null, ?int $total = null): array
     {
-        if(is_null($limit)) {
+        if (is_null($limit)) {
             return [];
         }
         $offset = !is_null($total) && $total <= $limit ? 0 : $offset;

@@ -27,16 +27,16 @@ class GUI_Prompt extends GUI_Module
      *     Defined as an associated array [handle => tplFile].
      */
     protected array $templates = [
-        'stdout' => 'tpl_prompt.html'
+        'stdout' => 'tpl_prompt.html',
     ];
 
     protected array $inputFilter = [
-        'label'       => [DataType::ALPHANUMERIC, 'Ihre Eingabe'], // label for input
-        'confirm'     => [DataType::ALPHANUMERIC, 'OK'], //Label confirmation button
-        'cancel'      => [DataType::ALPHANUMERIC, 'Abbrechen'], // label cancel button
-        'class'       => [DataType::ALPHANUMERIC, ''],
+        'label' => [DataType::ALPHANUMERIC, 'Ihre Eingabe'], // label for input
+        'confirm' => [DataType::ALPHANUMERIC, 'OK'], //Label confirmation button
+        'cancel' => [DataType::ALPHANUMERIC, 'Abbrechen'], // label cancel button
+        'class' => [DataType::ALPHANUMERIC, ''],
         'buttonClass' => [DataType::ALPHANUMERIC, ''],
-        'inputClass'  => [DataType::ALPHANUMERIC, ''],
+        'inputClass' => [DataType::ALPHANUMERIC, ''],
     ];
 
     /**
@@ -45,13 +45,13 @@ class GUI_Prompt extends GUI_Module
     protected function prepare(): void
     {
         $this->Template->setVars([
-            'label'       => $this->Input->getVar('label'),
-            'confirm'     => $this->Input->getVar('confirm'),
-            'cancel'      => $this->Input->getVar('cancel'),
-            'class'       => $this->Input->getVar('class'),
+            'label' => $this->Input->getVar('label'),
+            'confirm' => $this->Input->getVar('confirm'),
+            'cancel' => $this->Input->getVar('cancel'),
+            'class' => $this->Input->getVar('class'),
             'buttonClass' => $this->Input->getVar('buttonClass'),
-            'inputClass'  => $this->Input->getVar('inputClass'),
-            'name'        => $this->getName()
+            'inputClass' => $this->Input->getVar('inputClass'),
+            'name' => $this->getName(),
         ]);
     }
 }

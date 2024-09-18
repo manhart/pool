@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
+
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -29,7 +31,7 @@ final class PublicHolidays extends PoolObject
     const OSTERMONTAG = 8;
     const TAGDERARBEIT = 9;
     const CHRISTIHIMMELFAHRT = 10;
-    const PFINGSTSONNTAG =11;
+    const PFINGSTSONNTAG = 11;
     const PFINGSTMONTAG = 12;
     const FRONLEICHNAM = 13;
     const AUGSBURGERFRIEDENSFEST = 14;
@@ -40,7 +42,6 @@ final class PublicHolidays extends PoolObject
     const BUSSUNDBETTAG = 19;
     const ERSTERWEIHNACHTSTAG = 20;
     const ZWEITERWEIHNACHTSTAG = 21;
-
     /**
      * Bundesländer
      *
@@ -84,7 +85,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_BAYERN => [
             self::NEUJAHRSTAG,
@@ -100,7 +101,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_BERLIN => [
             self::NEUJAHRSTAG,
@@ -114,7 +115,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_BRANDENBURG => [
             self::NEUJAHRSTAG,
@@ -127,7 +128,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_BREMEN => [
             self::NEUJAHRSTAG,
@@ -140,7 +141,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_HAMBURG => [
             self::NEUJAHRSTAG,
@@ -153,7 +154,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_HESSEN => [
             self::NEUJAHRSTAG,
@@ -166,7 +167,7 @@ final class PublicHolidays extends PoolObject
             self::FRONLEICHNAM,
             self::TAGDERDEUTSCHENEINHEIT,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_MECKLENBURGVORPOMMERN => [
             self::NEUJAHRSTAG,
@@ -179,7 +180,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_NIEDERSACHSEN => [
             self::NEUJAHRSTAG,
@@ -192,7 +193,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_NORDRHEINWESTFALEN => [
             self::NEUJAHRSTAG,
@@ -206,7 +207,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_RHEINLANDPFALZ => [
             self::NEUJAHRSTAG,
@@ -220,7 +221,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_SAARLAND => [
             self::NEUJAHRSTAG,
@@ -235,7 +236,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_SACHSEN => [
             self::NEUJAHRSTAG,
@@ -250,7 +251,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_SACHSENANHALT => [
             self::NEUJAHRSTAG,
@@ -264,7 +265,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_SCHLESWIGHOLSTEIN => [
             self::NEUJAHRSTAG,
@@ -277,7 +278,7 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_THUERINGEN => [
             self::NEUJAHRSTAG,
@@ -291,12 +292,13 @@ final class PublicHolidays extends PoolObject
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
             self::ERSTERWEIHNACHTSTAG,
-            self::ZWEITERWEIHNACHTSTAG
+            self::ZWEITERWEIHNACHTSTAG,
         ],
     ];
 
     /**
      * holds the public holidays
+     *
      * @var array
      */
     private array $publicHolidays = [];
@@ -313,8 +315,8 @@ final class PublicHolidays extends PoolObject
         $year = (int)$Date->format('Y');
         $date = $Date->format(PHP_MARIADB_DATE_FORMAT);
         $PublicHolidays = new PublicHolidays();
-        foreach($PublicHolidays->getLegalHolidays($year, $state) as $Holiday) {
-            if($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
+        foreach ($PublicHolidays->getLegalHolidays($year, $state) as $Holiday) {
+            if ($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
                 return true;
             }
         }
@@ -336,8 +338,8 @@ final class PublicHolidays extends PoolObject
         $date = $Date->format(PHP_MARIADB_DATE_FORMAT);
 
         $PublicHolidays = new PublicHolidays();
-        foreach($PublicHolidays->getLegalHolidays($year, $state) as $key => $Holiday) {
-            if($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
+        foreach ($PublicHolidays->getLegalHolidays($year, $state) as $key => $Holiday) {
+            if ($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
                 return new PublicHoliday($key, $Holiday);
             }
         }
@@ -352,7 +354,7 @@ final class PublicHolidays extends PoolObject
      */
     static function getHolidayName(int $key)
     {
-        switch($key) {
+        switch ($key) {
             case self::NEUJAHRSTAG:
                 return 'Neujahrstag';
 
@@ -418,18 +420,18 @@ final class PublicHolidays extends PoolObject
      */
     public function getLegalHolidaysByRange(DateTimeInterface $FromDate, DateTimeInterface $ToDate): array
     {
-        $holidaysByRange = array();
+        $holidaysByRange = [];
         $fromYear = (int)$FromDate->format('Y');
         $toYear = (int)$ToDate->format('Y');
 
-        for($i=$fromYear; $i <= $toYear; $i++) {
+        for ($i = $fromYear; $i <= $toYear; $i++) {
             try {
                 $this->factory($i);
+            } catch (Exception) {
             }
-            catch(Exception) {}
 
-            foreach($this->publicHolidays as $key => $Holiday) {
-                if($FromDate <= $Holiday and $Holiday <= $ToDate) {
+            foreach ($this->publicHolidays as $key => $Holiday) {
+                if ($FromDate <= $Holiday and $Holiday <= $ToDate) {
                     $holidaysByRange[$key] = $Holiday;
                 }
             }
@@ -449,19 +451,19 @@ final class PublicHolidays extends PoolObject
     {
         try {
             $this->factory($year);
+        } catch (Exception) {
         }
-        catch(Exception) {}
 
-        if($state == '') {
+        if ($state == '') {
             return $this->publicHolidays[$year]['legal'];
         }
 
-        if(!isset($this->publicHolidaysByState[$state])) {
+        if (!isset($this->publicHolidaysByState[$state])) {
             throw new \pool\classes\Exception\InvalidArgumentException("state $state unknown");
         }
 
         $holidays = [];
-        foreach($this->publicHolidaysByState[$state] as $key) {
+        foreach ($this->publicHolidaysByState[$state] as $key) {
             $holidays[$key] = $this->publicHolidays[$year]['legal'][$key];
         }
         return $holidays;
@@ -476,7 +478,7 @@ final class PublicHolidays extends PoolObject
      */
     private function factory(int $year): void
     {
-        if(isset($this->publicHolidays[$year])) {
+        if (isset($this->publicHolidays[$year])) {
             // already created
             return;
         }
@@ -494,7 +496,7 @@ final class PublicHolidays extends PoolObject
         $Date = $EasterSunday->modify('-48 days');
         $this->publicHolidays[$year]['other'][self::ROSENMONTAG] = $Date;
 
-        $Date = new DateTimeImmutable($year . '-03-08');
+        $Date = new DateTimeImmutable($year.'-03-08');
         $this->publicHolidays[$year]['legal'][self::FRAUENTAG] = $Date;
 
 
@@ -579,7 +581,6 @@ final class PublicHolidays extends PoolObject
 
     /**
      * @see https://de.wikipedia.org/wiki/Gau%C3%9Fsche_Osterformel
-     *
      * @param int $year
      * @return int
      */
@@ -609,6 +610,7 @@ final class PublicHolidays extends PoolObject
 
     /**
      * calculate easter sunday
+     *
      * @param int $year
      * @return DateTimeImmutable
      */

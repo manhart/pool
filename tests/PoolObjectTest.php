@@ -11,6 +11,7 @@
 namespace pool\tests;
 
 use PHPUnit\Framework\TestCase;
+use pool\classes\Core\PoolObject;
 
 
 class PoolObjectTest extends TestCase
@@ -18,7 +19,7 @@ class PoolObjectTest extends TestCase
     public function init()
     {
         require_once __DIR__.'/../configs/config.inc.php';
-        if(!class_exists(\pool\classes\Core\PoolObject::class)) {
+        if (!class_exists(PoolObject::class)) {
             include __DIR__.'/../classes/Core/PoolObject.php';
         }
     }
@@ -29,7 +30,7 @@ class PoolObjectTest extends TestCase
 
         //        require_once __DIR__.'/../pool.lib.php';
 
-        $PoolObject = new \pool\classes\Core\PoolObject();
+        $PoolObject = new PoolObject();
 
         $this->assertEquals('PoolObject', $PoolObject->getClassName());
     }

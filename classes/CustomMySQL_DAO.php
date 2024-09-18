@@ -10,6 +10,4 @@
 
 use pool\classes\Database\DAO\MySQL_DAO;
 
-class CustomMySQL_DAO extends MySQL_DAO
-{
-}
+class CustomMySQL_DAO extends MySQL_DAO {}

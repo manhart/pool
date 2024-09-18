@@ -207,7 +207,7 @@ final class Language
      */
     public static function getBestLocale(string $languageCode, string $defaultLocale = ''): string
     {
-        if(isset(self::$bestMatchingLocale[$languageCode])) {
+        if (isset(self::$bestMatchingLocale[$languageCode])) {
             return self::$bestMatchingLocale[$languageCode];
         }
         return $defaultLocale;

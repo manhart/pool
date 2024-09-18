@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -11,7 +12,16 @@
 namespace pool\classes;
 
 use GUI_Module;
+
+use function addEndingSlash;
+use function constant;
 use function defined;
+use function file_exists;
+use function getcwd;
+use function spl_autoload_register;
+use function spl_autoload_unregister;
+use function str_replace;
+
 use const pool\NAMESPACE_SEPARATOR;
 use const pool\PWD_TILL_CLASSES;
 
@@ -27,7 +37,7 @@ class Autoloader
      */
     public static function getLoader(): Autoloader
     {
-        if(isset(self::$PoolLoader)) {
+        if (isset(self::$PoolLoader)) {
             return self::$PoolLoader;
         }
         self::$PoolLoader = new self();
@@ -39,7 +49,7 @@ class Autoloader
      */
     public function register(): void
     {
-        \spl_autoload_register([$this, 'loadClass']);
+        spl_autoload_register([$this, 'loadClass']);
     }
 
     /**
@@ -51,7 +61,7 @@ class Autoloader
     public function loadClass(string $class): string|false
     {
         $isGUI = str_starts_with($class, 'GUI_') && $class !== 'GUI_Module';
-        if($isGUI) {
+        if ($isGUI) {
             return GUI_Module::autoloadGUIModule($class);
         }
 
@@ -74,31 +84,30 @@ class Autoloader
      */
     public static function autoloadClass(string $className): string|false
     {
-        if(static::hasNamespace($className)) {
+        if (static::hasNamespace($className)) {
             $classRootDirs = [
-                defined('BASE_NAMESPACE_PATH') ? \constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT
+                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : DIR_DOCUMENT_ROOT,
             ];
 
-            $className = \str_replace(NAMESPACE_SEPARATOR, '/', $className);
-        }
-        else {
+            $className = str_replace(NAMESPACE_SEPARATOR, '/', $className);
+        } else {
             $classRootDirs = [
-                \getcwd().'/'.PWD_TILL_CLASSES
+                getcwd().'/'.PWD_TILL_CLASSES,
             ];
-            if(defined('DIR_POOL_ROOT')) {
+            if (defined('DIR_POOL_ROOT')) {
                 $classRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_CLASSES;
             }
-            if(defined('DIR_COMMON_ROOT')) {
+            if (defined('DIR_COMMON_ROOT')) {
                 $classRootDirs[] = DIR_COMMON_ROOT.'/'.PWD_TILL_CLASSES;
             }
         }
 
-        foreach($classRootDirs as $classRootDir) {
-            $classRootDir = \addEndingSlash($classRootDir);
+        foreach ($classRootDirs as $classRootDir) {
+            $classRootDir = addEndingSlash($classRootDir);
 
             // PSR-4 style
             $file = "$classRootDir$className.php";
-            if(self::requireFile($file)) {
+            if (self::requireFile($file)) {
                 return $file;
             }
         }
@@ -110,7 +119,7 @@ class Autoloader
      */
     public static function requireFile(string $file): bool
     {
-        if(\file_exists($file)) {
+        if (file_exists($file)) {
             require_once $file;
             return true;
         }
@@ -122,6 +131,6 @@ class Autoloader
      */
     public function unregister(): void
     {
-        \spl_autoload_unregister([$this, 'loadClass']);
+        spl_autoload_unregister([$this, 'loadClass']);
     }
 }

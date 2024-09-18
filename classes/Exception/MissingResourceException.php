@@ -12,6 +12,4 @@ namespace pool\classes\Exception;
 
 use RuntimeException as PhpRuntimeException;
 
-class MissingResourceException extends PhpRuntimeException implements PoolExceptionInterface
-{
-}
+class MissingResourceException extends PhpRuntimeException implements PoolExceptionInterface {}

@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -11,6 +12,7 @@
 namespace pool\classes\translator;
 
 use Exception;
+use TypeError;
 
 class TranslationProvider_ResourceFile implements TranslationProvider
 {
@@ -25,7 +27,9 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     private ?Exception $error = null;
 
     private ?string $lastResult = null;
+
     private TranslationProviderFactory_ResourceFile $factory;
+
     private ?string $lastKey;
 
     /**
@@ -70,9 +74,9 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     {
         $this->lastKey = $key;
         $subTree =& $this->translations;
-        foreach (explode('.', $key) as $keyPart){
-            if (is_string($subTree)){
-                $this->error =  new Exception("Tried to access subtree of value: '$subTree' accessing: $keyPart @$key");
+        foreach (explode('.', $key) as $keyPart) {
+            if (is_string($subTree)) {
+                $this->error = new Exception("Tried to access subtree of value: '$subTree' accessing: $keyPart @$key");
                 return self::Error;
             } elseif (!is_array($subTree)) break;
             else $subTree =& $subTree[$keyPart];
@@ -104,7 +108,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
                 $this->error = new Exception("Invalid Key '$key' trying to insert empty translation");
             return self::Error;
         }
-        if(is_writable($this->resourceFile) === false) {
+        if (is_writable($this->resourceFile) === false) {
             $this->error = new Exception("Resource file is not writable: {$this->resourceFile}");
             return self::NotImplemented;
         }
@@ -141,6 +145,7 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     }
 
     /**recursively flattens out an array
+     *
      * @param array $nested
      * @param array $flat
      * @param array $keyStack
@@ -171,10 +176,9 @@ class TranslationProvider_ResourceFile implements TranslationProvider
     {
         try {
             $this->translations = include($this->resourceFile);
-
         } catch (Exception $e) {
             throw new Exception("Failed to load Translation-Ressource for {$this->lang}", previous: $e);
-        } catch (\TypeError) {
+        } catch (TypeError) {
             if (IS_DEVELOP)
                 $this->translations = [];//Initialize the resource. It's likely a new file
             else//Let Upstream know this resource is bad to not make it harder than necessary to trace the problem back

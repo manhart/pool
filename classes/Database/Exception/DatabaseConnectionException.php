@@ -12,6 +12,4 @@ namespace pool\classes\Database\Exception;
 
 use pool\classes\Exception\RuntimeException;
 
-class DatabaseConnectionException extends RuntimeException
-{
-}
+class DatabaseConnectionException extends RuntimeException {}

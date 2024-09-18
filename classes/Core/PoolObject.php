@@ -1,4 +1,5 @@
-<?php declare(strict_types = 1);
+<?php
+declare(strict_types = 1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -12,6 +13,16 @@ namespace pool\classes\Core;
 
 use ReflectionClass;
 use stdClass;
+
+use function dirname;
+use function error_reporting;
+use function get_parent_class;
+use function realpath;
+use function strlen;
+use function substr_compare;
+use function trigger_error;
+
+use const E_USER_NOTICE;
 
 /**
  * Core class for all POOL objects. Provides basic functionality for all POOL objects.
@@ -76,7 +87,7 @@ class PoolObject extends stdClass
      */
     public function getParentClass(): string
     {
-        return \get_parent_class($this);
+        return get_parent_class($this);
     }
 
     /**
@@ -84,7 +95,7 @@ class PoolObject extends stdClass
      */
     public function getClassDirectory(): string
     {
-        return $this->classDirectory ??= \dirname($this->getClassFile());
+        return $this->classDirectory ??= dirname($this->getClassFile());
     }
 
     /**
@@ -110,9 +121,9 @@ class PoolObject extends stdClass
      */
     protected function isPOOL(): bool
     {
-        if(!isset($this->isPOOL)) {
-            $poolRealpath = \realpath(DIR_POOL_ROOT);
-            $this->isPOOL = \substr_compare($this->getClassFile(), $poolRealpath, 0, \strlen($poolRealpath)) === 0;
+        if (!isset($this->isPOOL)) {
+            $poolRealpath = realpath(DIR_POOL_ROOT);
+            $this->isPOOL = substr_compare($this->getClassFile(), $poolRealpath, 0, strlen($poolRealpath)) === 0;
         }
         return $this->isPOOL;
     }
@@ -124,15 +135,15 @@ class PoolObject extends stdClass
      * @param int $line Use __LINE__, if you want to use the line where the error occurred.
      * @param string $msg The error message
      */
-    protected function raiseError(string $file, int $line, string $msg, $error_level = \E_USER_NOTICE): void
+    protected function raiseError(string $file, int $line, string $msg, $error_level = E_USER_NOTICE): void
     {
-        if(\error_reporting() === 0) {
+        if (error_reporting() === 0) {
             return;
         }
         $error = $msg;
         $error .= ' in class '.$this->getClassName().', file '.$file.', line '.$line;
 
-        \trigger_error($error, $error_level);
+        trigger_error($error, $error_level);
     }
 
     /**

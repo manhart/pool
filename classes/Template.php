@@ -1,9 +1,7 @@
 <?php
 /**
  * -= Rapid Template Engine (RTE) =-
- *
  * Template.class.php
- *
  * Rapid Template Engine (RTE) ist eine Template-Engine für PHP. Genauer gesagt erlaubt es die einfache Trennung von
  * Applikations-Logik und Design/Ausgabe. Dies ist vor allem wuenschenswert, wenn der Applikationsentwickler nicht die
  * selbe Person ist wie der Designer. Nehmen wir zum Beispiel eine Webseite die Zeitungsartikel ausgibt.
@@ -14,19 +12,16 @@
  * Belang, da die Inhalte immer noch genau gleich uebergeben werden. Genauso kann der Designer die Ausgabe der Daten beliebig
  * veraendern, ohne dass eine Aenderung der Applikation vorgenommen werden muss. Somit koennen der Programmierer die
  * Applikations-Logik und der Designer die Ausgabe frei anpassen, ohne sich dabei in die Quere zu kommen.
- *
  * Features:
  * Schnelligkeit
  * Dynamische Bloecke
  * Beliebige Template-Quellen
  * Ermoeglicht die direkte Einbettung von PHP-Code (Obwohl es weder benoetigt noch empfohlen wird, da die Engine einfach erweiterbar ist).
- *
- *
  * @date $Date: 2007/03/13 08:52:50 $
+ *
  * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
  * @version $Revision 1.0$
  * @version
- *
  * @since 2003-07-12
  * @author Alexander Manhart <alexander@manhart-it.de>
  * @link https://alexander-manhart.de
@@ -46,7 +41,6 @@ const TEMP_SESSION_IDENT = 'SESSION';
 
 /**
  * TempHandle
- *
  * TempHandle ist die abstrakte Basisklasse fuer alle eingebetteten Template Elemente (oder auch Platzhalter).
  * Die Klasse bewahrt den Name des Handles, Typ und Inhalt auf.
  *
@@ -151,7 +145,6 @@ class TempHandle extends PoolObject
 
 /**
  * TempCoreHandle
- *
  * TempCoreHandle ist der Kern aller Template Elemente. Er kuemmert sich um die Erstellung neuer Objekte und kann Inhalt parsen.
  * Im Container merkt er sich alle erstellten Objekte. Neue TempX Elemente werden von TempCoreHandle abgeleitet (siehe TempFile, TempBlock)!
  *
@@ -178,6 +171,7 @@ class TempCoreHandle extends TempHandle
     protected array $fileList = [];
 
     private string $varStart = TEMP_VAR_START;
+
     private string $varEnd = TEMP_VAR_END;
 
     /**
@@ -257,7 +251,7 @@ class TempCoreHandle extends TempHandle
      */
     private function convertToHTML(mixed $value, int $convert): string
     {
-        return match($convert) {
+        return match ($convert) {
             Template::CONVERT_HTMLSPECIALCHARS => htmlspecialchars((string)$value, ENT_QUOTES, $this->charset),
             Template::CONVERT_HTMLENTITIES => htmlentities((string)$value, ENT_QUOTES, $this->charset),
             default => (string)$value,
@@ -273,7 +267,7 @@ class TempCoreHandle extends TempHandle
      */
     public function setVar(string|array $name, mixed $value = '', int $convert = Template::CONVERT_NONE): static
     {
-        if(is_array($name)) {
+        if (is_array($name)) {
             // backward compatibility
             return $this->setVars($name, $convert);
         }
@@ -290,7 +284,7 @@ class TempCoreHandle extends TempHandle
      */
     public function setVars(array $vars, int $convert = Template::CONVERT_NONE): static
     {
-        foreach($vars as $key => $value) {
+        foreach ($vars as $key => $value) {
             $this->setVar($key, $value, $convert);
         }
         return $this;
@@ -303,7 +297,7 @@ class TempCoreHandle extends TempHandle
     {
         parent::setContent($content);
 
-        if($scanForPattern) {
+        if ($scanForPattern) {
             $this->findPattern($this->content);
         }
         return $this;
@@ -326,12 +320,12 @@ class TempCoreHandle extends TempHandle
      */
     public function getTempBlock(string $handle): ?TempBlock
     {
-        if(isset($this->blockList[$handle])) {
+        if (isset($this->blockList[$handle])) {
             return $this->blockList[$handle];
         }
 
-        foreach($this->blockList as $block) {
-            if($nestedBlock = $block->getTempBlock($handle)) {
+        foreach ($this->blockList as $block) {
+            if ($nestedBlock = $block->getTempBlock($handle)) {
                 return $nestedBlock;
             }
         }
@@ -343,7 +337,6 @@ class TempCoreHandle extends TempHandle
      * Objekt Elemente haben im Template das Muster <!-- FUNKTION HANDLENAME>INHALT<!-- END HANDLENAME --> .
      * Ein Block kann in diesem Fall auch ein Include eines weiteren Templates oder Scripts sein
      * (Dies gilt aber nur fuer die Blockdefinition innerhalb des Templates).
-     *
      * Findet er einen neuen Block, wird entsprechend ein neues Objekt mit dem Inhalt des gefundenen Blocks angelegt.
      *
      * @param string $templateContent Inhalt, welcher nach Template Elementen abgesucht werden soll
@@ -354,8 +347,8 @@ class TempCoreHandle extends TempHandle
         // Matches Blocks like <!-- XXX handle -->freeform-text<!-- END handle -->
         $pattern = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*?)<!-- END \2 -->/s';
         preg_match_all($pattern, $templateContent, $matches, PREG_SET_ORDER);
-//        $pattern = '/<!-- (?<type>[A-Z]{2,}) (?<handle>[^>]+) -->(?<content>.*?)<!-- END \k<handle> -->/s';
-//        $count = preg_match_all($pattern, $templateContent, $matches, PREG_SET_ORDER);
+        //        $pattern = '/<!-- (?<type>[A-Z]{2,}) (?<handle>[^>]+) -->(?<content>.*?)<!-- END \k<handle> -->/s';
+        //        $count = preg_match_all($pattern, $templateContent, $matches, PREG_SET_ORDER);
         checkRegExOutcome($pattern, $templateContent);
         $changes = [];
         foreach ($matches as $match) {
@@ -365,10 +358,10 @@ class TempCoreHandle extends TempHandle
             $kind = $match[1];
             //the handle part
             $handle = ($match[2]);
-           //the freeform-text part
+            //the freeform-text part
             $tagContent = ($match[3]);
 
-            $value = match($kind) {
+            $value = match ($kind) {
                 TEMP_BLOCK_IDENT => $this->createBlock($handle, $this->getDirectory(), $tagContent, $this->charset, $this->hooks)->getPlaceholder(),
                 TEMP_INCLUDE_IDENT => $this->createFile($handle, $this->getDirectory(), $tagContent, $this->charset)->getPlaceholder(),
                 TEMP_INCLUDESCRIPT_IDENT => $this->createScript($handle, $this->getDirectory(), $tagContent, $this->charset)->getPlaceholder(),
@@ -398,7 +391,7 @@ class TempCoreHandle extends TempHandle
 
         $search = [];
         $replace = [];
-        foreach($this->varList as $key => $val) {
+        foreach ($this->varList as $key => $val) {
             $search[] = "$this->varStart$key$this->varEnd";
             $replace[] = $val;
         }
@@ -406,31 +399,31 @@ class TempCoreHandle extends TempHandle
         $sizeOfVarList = count($this->varList);
         $iterations = 0;
         $count = 1;
-        while($count && $iterations < $sizeOfVarList) {
+        while ($count && $iterations < $sizeOfVarList) {
             $content = str_replace($search, $replace, $content, $count);
             $iterations++;
         }
 
         $replace_pairs = [];
         Template::getTranslator()?->translateWithRegEx($content, Translator::CURLY_TAG_REGEX, $replace_pairs);
-        foreach($this->blockList as $block) {
-            if($block->allowParse()) {
+        foreach ($this->blockList as $block) {
+            if ($block->allowParse()) {
                 $block->parse();
                 $block->setAllowParse(false);
             }
             $replace_pairs[$block->getPlaceholder()] = $block->getParsedContent();
-            if($clearParsedContent) $block->clearParsedContent();
+            if ($clearParsedContent) $block->clearParsedContent();
         }
 
-        foreach($this->fileList as $file) {
+        foreach ($this->fileList as $file) {
             $file->parse();
             $replace_pairs[$file->getPlaceholder()] = $file->getParsedContent();
-            if($clearParsedContent) $file->clearParsedContent();
+            if ($clearParsedContent) $file->clearParsedContent();
         }
 
         $content = strtr($content, $replace_pairs);
 
-        if(!$returnContent) {
+        if (!$returnContent) {
             $this->parsedContent = $content;
             return '';
         }
@@ -455,12 +448,12 @@ class TempCoreHandle extends TempHandle
      */
     public function findFile(string $handle): ?TempFile
     {
-        foreach($this->fileList as $fileHandle => $file) {
-            if($fileHandle === $handle && $file->getType() === 'FILE') {
+        foreach ($this->fileList as $fileHandle => $file) {
+            if ($fileHandle === $handle && $file->getType() === 'FILE') {
                 return $file;
             }
 
-            if($file = $file->findFile($handle)) {
+            if ($file = $file->findFile($handle)) {
                 return $file;
             }
         }
@@ -474,10 +467,8 @@ class TempCoreHandle extends TempHandle
 
 /**
  * TempBlock
- *
  * TempBlock ein Template Element konzipiert fuer dynamische Inhalte. Im Template definiert man einen Block wie folgt:
  * <!-- BEGIN BLOCK_MYNAME --> ...Inhalt... <!-- END BLOCK_MYNAME -->
- *
  * Ob der Block im Endresultat erscheint oder wie oft wiederholt wird, bestimmt der Programmierer.
  *
  * @package rte
@@ -532,10 +523,10 @@ class TempBlock extends TempCoreHandle
     {
         $content = parent::parse($this->allowParse, $clearParsedContent);
         // run hooks
-        foreach($this->hooks[$this->type] as $hook) {
+        foreach ($this->hooks[$this->type] as $hook) {
             $content = $hook($this, $content);
         }
-        if($returnContent) {
+        if ($returnContent) {
             return $content;
         }
         $this->parsedContent .= $content;
@@ -549,10 +540,8 @@ class TempBlock extends TempCoreHandle
 
 /**
  * TempFile
- *
  * TempFile ein Template Element konzipiert fuer weitere Template Dateien. Im Template definiert man eine neues Template wie folgt:
  * <!-- INCLUDE MYNAME --> Pfad + Dateiname des Html Templates <!-- END MYNAME -->
- *
  * Inkludierte Dateien werden genauso behandelt wie andere Html Templates. Man kann darin Variablen, Bloecke und weitere Html Templates definieren.
  *
  * @package rte
@@ -569,7 +558,6 @@ class TempFile extends TempCoreHandle
 
     /**
      * Calls the function to load the file.
-     *
      */
     public function __construct(string $handle, string $directory, string $filename, string $charset, array $hooks = [])
     {
@@ -590,7 +578,7 @@ class TempFile extends TempCoreHandle
      */
     private function loadFile(string $filename)
     {
-        if(!$filename) {
+        if (!$filename) {
             throw new \pool\classes\Exception\UnexpectedValueException('No template file given.');
         }
         $this->filename = $filename;
@@ -607,18 +595,18 @@ class TempFile extends TempCoreHandle
                 $filePath = Template::attemptFileTranslation($filePath, $weblication->getLanguage());
         }
 
-        if($fileExists && ($fileTime = filemtime($filePath)) &&
-                $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE)) {
+        if ($fileExists && ($fileTime = filemtime($filePath)) &&
+            $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE)) {
             $this->setContent($content);
             return;
         }
 
         // fopen is faster than file_get_contents
-        if(!$fileExists || false === ($fh = @fopen($filePath, 'rb'))) {
+        if (!$fileExists || false === ($fh = @fopen($filePath, 'rb'))) {
             throw new \pool\classes\Exception\RuntimeException("Template file $filePath not found.");
         }
         // fread must be greater than 0
-        $content = fread($fh, filesize($filePath)+ 1);
+        $content = fread($fh, filesize($filePath) + 1);
         fclose($fh);
         $this->setContent($content);
         /** @noinspection PhpUndefinedVariableInspection */
@@ -634,7 +622,7 @@ class TempFile extends TempCoreHandle
     public function getFiles(): array
     {
         $files = [];
-        foreach($this->fileList as $tempFile) {
+        foreach ($this->fileList as $tempFile) {
             $files[] = $tempFile;
             $files = array_merge($files, $tempFile->getFiles());
         }
@@ -661,10 +649,8 @@ class TempSimple extends TempCoreHandle
 
 /**
  * TempScript
- *
  * TempScript ein Template Element konzipiert fuer weitere Php Html Template Dateien. Im Template definiert man eine neues Script wie folgt:
  * <!-- INCLUDESCRIPT MYNAME --> Pfad + Dateiname des pHtml Templates <!-- END MYNAME -->
- *
  * Achtung: PHP Inhalt wird ausgefuehrt! Dadurch kann die Sicherheit gefaehrdet werden.
  *
  * @package rte
@@ -680,7 +666,7 @@ class TempScript extends TempFile
     public function parse(bool $returnContent = false, bool $clearParsedContent = true): string
     {
         $content = parent::parse($returnContent, $clearParsedContent);
-        if($returnContent) {
+        if ($returnContent) {
             return $content;
         }
 
@@ -700,7 +686,6 @@ class TempScript extends TempFile
 
 /**
  * Template
- *
  * Die Template Klasse! Sie liest die gewuenschten Templates ein, weist dynamische Bloecke und Variablen zu und stosst
  * letzendlich die Uebersetzung, den Parse Vorgang, an.
  *
@@ -712,6 +697,7 @@ class TempScript extends TempFile
 class Template extends PoolObject
 {
     private static bool $cacheTranslations = true;
+
     private static ?Translator $translator = null;
 
     //@var string Verzeichnis zu den Templates
@@ -809,7 +795,7 @@ class Template extends PoolObject
     {
         $dir === '' && $dir = './';
         $dir = addEndingSlash($dir);
-        if(!is_dir($dir)) {
+        if (!is_dir($dir)) {
             throw new \pool\classes\Exception\UnexpectedValueException("Directory \"$dir\" not found!");
         }
         $this->dir = $dir;
@@ -855,7 +841,7 @@ class Template extends PoolObject
         $TempSimple = new TempSimple($handle, $content, $this->charset);
         $this->FileList[$handle] = $TempSimple;
 
-        if($this->activeHandle === '') {
+        if ($this->activeHandle === '') {
             $this->useFile($handle);
         }
         return $this;
@@ -887,7 +873,7 @@ class Template extends PoolObject
         // added 02.05.2006 Alex M.
         $this->setParentheses($this->varStart, $this->varEnd);
 
-        if($this->activeHandle === '') {
+        if ($this->activeHandle === '') {
             $this->useFile($handle);
         }
         return $this;
@@ -900,16 +886,15 @@ class Template extends PoolObject
      */
     public function useFile(string $handle): static
     {
-        if(array_key_exists($handle, $this->FileList)) {
-            if($handle !== $this->activeHandle) {
+        if (array_key_exists($handle, $this->FileList)) {
+            if ($handle !== $this->activeHandle) {
                 $this->activeHandle = $handle;
                 $this->activeFile = $this->FileList[$handle];
                 unset($this->ActiveBlock);
             }
-        }
-        else {
-            foreach($this->FileList as $TempFile) {
-                if($obj = $TempFile->findFile($handle)) {
+        } else {
+            foreach ($this->FileList as $TempFile) {
+                if ($obj = $TempFile->findFile($handle)) {
                     $this->activeHandle = $handle;
                     $this->activeFile = $obj;
                     unset($this->ActiveBlock);
@@ -931,16 +916,16 @@ class Template extends PoolObject
 
         $keys = array_keys($this->FileList);
         if (!$recursive) return $keys;
-        foreach($keys as $handle) {
+        foreach ($keys as $handle) {
             $TempFile = $this->FileList[$handle];
-            if($TempFile instanceof TempSimple) {
+            if ($TempFile instanceof TempSimple) {
                 continue;
             }
             $files[] = $TempFile;
 
             // Suche innerhalb des TempFile's nach weiteren TemplateFiles
             $more_files = $TempFile->getFiles();
-            if(count($more_files)) {
+            if (count($more_files)) {
                 $files = array_merge($files, $more_files);
             }
             unset($more_files);
@@ -978,24 +963,22 @@ class Template extends PoolObject
      */
     public function newBlock(string $handle): ?TempBlock
     {
-        if($this->activeFile instanceof TempFile) {
-            if((!isset($this->ActiveBlock)) || ($this->ActiveBlock->getHandle() !== $handle)) {
+        if ($this->activeFile instanceof TempFile) {
+            if ((!isset($this->ActiveBlock)) || ($this->ActiveBlock->getHandle() !== $handle)) {
                 $this->ActiveBlock = $this->activeFile->getTempBlock($handle);
             }
 
-            if($this->ActiveBlock) {
+            if ($this->ActiveBlock) {
                 // added 2.5.06 Alex M.
                 $this->ActiveBlock->setParentheses($this->varStart, $this->varEnd);
 
-                if($this->ActiveBlock->allowParse()) {
+                if ($this->ActiveBlock->allowParse()) {
                     $this->ActiveBlock->parse();
-                }
-                else {
+                } else {
                     $this->ActiveBlock->setAllowParse(true);
                 }
                 return $this->ActiveBlock;
-            }
-            else
+            } else
                 unset($this->ActiveBlock);
         }
         return null;
@@ -1008,7 +991,7 @@ class Template extends PoolObject
     public function backToFile(string $fileHandle = ''): static
     {
         $this->leaveBlock();
-        if($fileHandle !== '') {
+        if ($fileHandle !== '') {
             $this->useFile($fileHandle);
         }
         return $this;
@@ -1034,9 +1017,9 @@ class Template extends PoolObject
      */
     public function useBlock(string $blockHandle): ?TempBlock
     {
-        if($this->activeFile) {
+        if ($this->activeFile) {
             $ActiveBlock = $this->activeFile->getTempBlock($blockHandle);
-            if($ActiveBlock) {
+            if ($ActiveBlock) {
                 $this->ActiveBlock = $ActiveBlock;
                 return $this->ActiveBlock;
             }
@@ -1052,13 +1035,11 @@ class Template extends PoolObject
      */
     public function setVar(string|array $name, mixed $value = '', int $convert = Template::CONVERT_NONE): static
     {
-        if(isset($this->ActiveBlock)) {
+        if (isset($this->ActiveBlock)) {
             $this->ActiveBlock->setVar($name, $value, $convert);
-        }
-        elseif(isset($this->activeFile)) {
+        } elseif (isset($this->activeFile)) {
             $this->activeFile->setVar($name, $value, $convert);
-        }
-        else {
+        } else {
             throw new \pool\classes\Exception\RuntimeException("Cannot assign Variable $name. There is no file or block associated.");
         }
         return $this;
@@ -1073,15 +1054,13 @@ class Template extends PoolObject
      */
     public function setVars(array $vars, int $encoding = Template::CONVERT_NONE): static
     {
-        if(isset($this->ActiveBlock)) {
+        if (isset($this->ActiveBlock)) {
             $ActiveBlock = $this->ActiveBlock;
             $ActiveBlock->setVars($vars, $encoding);
-        }
-        elseif(isset($this->activeFile)) {
+        } elseif (isset($this->activeFile)) {
             $ActiveFile = $this->activeFile;
             $ActiveFile->setVars($vars, $encoding);
-        }
-        else {
+        } else {
             throw new \pool\classes\Exception\RuntimeException("Cannot assign Variable $name. There is no file or block associated.");
         }
         return $this;
@@ -1097,7 +1076,7 @@ class Template extends PoolObject
      */
     public function assignRecordset(string $blockHandle, array $recordset = []): static
     {
-        foreach($recordset as $record) {
+        foreach ($recordset as $record) {
             $this->newBlock($blockHandle)?->setVars($record);
         }
         $this->leaveBlock();
@@ -1125,7 +1104,7 @@ class Template extends PoolObject
      */
     public function parse(string $handle = ''): self
     {
-        if($handle !== '') {
+        if ($handle !== '') {
             $this->useFile($handle);
         }
         $this->activeFile?->parse();
@@ -1140,14 +1119,14 @@ class Template extends PoolObject
      */
     public function getContent(string $handle = ''): string
     {
-        if($handle)
+        if ($handle)
             $this->useFile($handle);
-        if(!$this->activeFile)
+        if (!$this->activeFile)
             return '';
         $parsedContent = $this->activeFile->getParsedContent();
         if ($this->activeFile instanceof TempFile && constant("IS_DEVELOP")) {
             $name = $this->activeFile->getFilename();
-            if(str_ends_with($name, '.html')) {
+            if (str_ends_with($name, '.html')) {
                 $parsedContent = "<!-- begin $name -->$parsedContent<!-- end $name -->";
             }
         }
@@ -1161,11 +1140,11 @@ class Template extends PoolObject
      **/
     public function clear(string $handle = ''): void
     {
-        if($handle !== '') {
+        if ($handle !== '') {
             $this->useFile($handle);
         }
 
-        if($this->activeFile instanceof TempFile) {
+        if ($this->activeFile instanceof TempFile) {
             $this->activeFile->clearParsedContent();
         }
     }

@@ -10,7 +10,9 @@
 
 namespace pool\classes\Cache;
 
-class Memory extends \Memcached
+use Memcached;
+
+class Memory extends Memcached
 {
     private static ?Memory $instance = null;
 
@@ -25,12 +27,11 @@ class Memory extends \Memcached
 
     public static function getInstance(array $servers = []): self
     {
-        if(self::$instance === null) {
+        if (self::$instance === null) {
             self::$instance = new static();
-            if($servers) {
+            if ($servers) {
                 self::configureServers($servers);
-            }
-            elseif(!self::$serverConfigured) {
+            } elseif (!self::$serverConfigured) {
                 // Configure default servers if no servers have been committed
                 // and no servers have been configured yet
                 self::configureServers([['host' => 'localhost', 'port' => 11211]]);
@@ -41,7 +42,7 @@ class Memory extends \Memcached
 
     private static function configureServers(array $servers): void
     {
-        foreach($servers as $server) {
+        foreach ($servers as $server) {
             self::$instance->addServer($server['host'], $server['port']);
         }
         self::$serverConfigured = true;
@@ -74,6 +75,6 @@ class Memory extends \Memcached
 
     public function lastKeyExists(): bool
     {
-        return $this->getResultCode() !== \Memcached::RES_NOTFOUND;
+        return $this->getResultCode() !== Memcached::RES_NOTFOUND;
     }
 }
