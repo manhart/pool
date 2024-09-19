@@ -20,7 +20,6 @@ declare(strict_types = 1);
 namespace pool\classes\Core;
 
 use Exception;
-use GUI_HeadData;
 use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
@@ -41,6 +40,7 @@ use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
+use pool\guis\GUI_HeadData\GUI_HeadData;
 use Template;
 
 use function addEndingSlash;

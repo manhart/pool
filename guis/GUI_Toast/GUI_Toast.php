@@ -8,6 +8,9 @@
  * file that was distributed with this source code.
  */
 
+namespace pool\guis\GUI_Toast;
+
+use Exception;
 use pool\classes\Core\Input\Input;
 use pool\classes\GUI\GUI_Module;
 
@@ -36,12 +39,12 @@ class GUI_Toast extends GUI_Module
     {
         parent::loadFiles();
         $fw = $this->getVar('framework');
-        $tpl = $this->Weblication->findTemplate('tpl_toast_'.$fw.'.html', __CLASS__, true);
+        $tpl = $this->Weblication->findTemplate('tpl_toast_'.$fw.'.html', 'GUI_Toast', true);
         $this->Template->setFilePath('stdout', $tpl);
 
         if ($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('Toast.js', __CLASS__, true));
-            $this->Weblication->getFrame()->getHeadData()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', __CLASS__, true));
+            $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('Toast.js', 'GUI_Toast', true));
+            $this->Weblication->getFrame()->getHeadData()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', 'GUI_Toast', true));
         }
         return $this;
     }

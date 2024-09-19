@@ -15,6 +15,8 @@
  * @see https://github.com/manhart/pool
  */
 
+namespace pool\guis\GUI_Schema;
+
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
 use pool\classes\GUI\GUI_Module;

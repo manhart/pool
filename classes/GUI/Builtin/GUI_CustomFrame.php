@@ -17,11 +17,11 @@
 
 namespace pool\classes\GUI\Builtin;
 
-use GUI_HeadData;
 use pool\classes\Core\Component;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\GUI\GUI_Module;
 use pool\classes\translator\TranslationProvider_ToolDecorator;
+use pool\guis\GUI_HeadData\GUI_HeadData;
 
 /**
  * GUI_CustomFrame ist eine abstrakte Klasse. Der Haupteinsatzzweck dieser Klasse besteht darin,

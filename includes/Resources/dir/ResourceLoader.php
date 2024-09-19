@@ -18,7 +18,7 @@
 namespace pool\includes\Resources\dir
 {
 
-    use GUI_HeadData;
+    use pool\guis\GUI_HeadData\GUI_HeadData;
     use pool\includes\Resources\JavaScriptResource;
     use pool\includes\Resources\StylesheetResource;
 

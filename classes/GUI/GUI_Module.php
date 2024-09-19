@@ -19,7 +19,6 @@ namespace pool\classes\GUI;
 
 use Closure;
 use Exception;
-use GUI_Schema;
 use JetBrains\PhpStorm\Pure;
 use Log;
 use pool\classes\Autoloader;
@@ -31,6 +30,7 @@ use pool\classes\Database\DataInterface;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\GUI\Builtin\GUI_CustomFrame;
+use pool\guis\GUI_Schema\GUI_Schema;
 use pool\utils\Str;
 use ReflectionException;
 use ReflectionFunction;
@@ -304,9 +304,9 @@ class GUI_Module extends Module
     /**
      * Returns the parts of the path that is after the guis directory (supports stackable GUI's).
      */
-    public function getGUIClassFolder(): string
+    public function getGUIClassFolder(string $marker = PWD_TILL_GUIS.DIRECTORY_SEPARATOR): string
     {
-        return Str::sliceAfter($this->getClassDirectory(), PWD_TILL_GUIS.DIRECTORY_SEPARATOR);
+        return Str::sliceAfter($this->getClassDirectory(), $marker);
     }
 
     /**
@@ -416,6 +416,7 @@ class GUI_Module extends Module
         if (class_exists($GUIClassName, false)) return $GUIClassName;
         // construct namespace according to PSR-4 standards
         $docRoot = addEndingSlash(realpath(DIR_DOCUMENT_ROOT));
+        $fileName = realpath($fileName);
         $baseNameSpace = defined('BASE_NAMESPACE_PATH') ? BASE_NAMESPACE_PATH : '';
         $nameSpaceClassName = str_replace([$docRoot, '/'], [$baseNameSpace, NAMESPACE_SEPARATOR], remove_extension($fileName));
         if (class_exists($nameSpaceClassName, false)) return $nameSpaceClassName;

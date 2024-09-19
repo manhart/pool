@@ -9,6 +9,9 @@
  */
 
 
+namespace pool\guis\GUI_Table;
+
+use Configurable;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\DAO;
@@ -1120,7 +1123,7 @@ class GUI_Table extends GUI_Module
     public function loadFiles(): static
     {
         $fw = $this->getVar('framework');
-        $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', __CLASS__, true);
+        $tpl = $this->Weblication->findTemplate("tpl_table_$fw.html", 'GUI_Table', true);
         $this->Template->setFilePath('stdout', $tpl);
 
         if (!$this->Weblication->hasFrame()) {
@@ -1128,15 +1131,15 @@ class GUI_Table extends GUI_Module
         }
 
         $Frame = $this->Weblication->getFrame();
-        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
+        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', 'GUI_Table', true);
         $Frame->getHeadData()->addJavaScript($jsFile);
         return $this;
     }
 
-    //    public function getInspectorProperties(): array
-    //    {
-    //        return $this->inspectorProperties + parent::getInspectorProperties();
-    //    }
+    // public function getInspectorProperties(): array
+    // {
+    //     return $this->inspectorProperties + parent::getInspectorProperties();
+    // }
 
     /**
      * @return array
@@ -1373,9 +1376,9 @@ class GUI_Table extends GUI_Module
 
             $TableAttributeBlock = $this->Template->newBlock('tableAttribute');
             $TableAttributeBlock->setVar([
-                    'data-name' => $attrName,
-                    'data-value' => $value,
-                ],
+                'data-name' => $attrName,
+                'data-value' => $value,
+            ],
             );
         }
 

@@ -4,9 +4,18 @@
  *
  * (c) Alexander Manhart <alexander@manhart-it.de>
  *
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
+
+namespace pool\guis\GUI_HeadData;
 
 use pool\classes\Core\Component;
 use pool\classes\Core\Module;
@@ -138,7 +147,7 @@ class GUI_HeadData extends GUI_Module
      */
     public function loadFiles(): static
     {
-        $file = $this->Weblication->findTemplate('tpl_headData.html', __CLASS__, true);
+        $file = $this->Weblication->findTemplate('tpl_headData.html', 'GUI_HeadData', true);
         $this->Template->setFilePath('head', $file);
         return $this;
     }
@@ -366,24 +375,24 @@ class GUI_HeadData extends GUI_Module
         $Url = new Url(false);
 
         $this->Template->setVars([
-                'EXPIRES' => $this->Expires,
-                'LANGUAGE' => $this->Weblication->getLanguage(),
-                'TITLE' => $this->title,
-                'DESCRIPTION' => $this->description,
-                'ROBOTS' => $this->robots,
-                'BASE_HREF' => $this->baseHref,
-                'BASE_TARGET' => $this->baseTarget,
-                'CHARSET' => $this->charset,
-                'KEYWORDS' => '',
-                'AUTHOR' => '',
-                'CLIENT-DATA' => base64_encode(
-                    json_encode(
-                        $this->clientData,
-                        JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION,
-                    ),
+            'EXPIRES' => $this->Expires,
+            'LANGUAGE' => $this->Weblication->getLanguage(),
+            'TITLE' => $this->title,
+            'DESCRIPTION' => $this->description,
+            'ROBOTS' => $this->robots,
+            'BASE_HREF' => $this->baseHref,
+            'BASE_TARGET' => $this->baseTarget,
+            'CHARSET' => $this->charset,
+            'KEYWORDS' => '',
+            'AUTHOR' => '',
+            'CLIENT-DATA' => base64_encode(
+                json_encode(
+                    $this->clientData,
+                    JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION,
                 ),
-                'SCRIPT' => $Url->getUrl(),
-            ],
+            ),
+            'SCRIPT' => $Url->getUrl(),
+        ],
         );
 
         if ($this->xuaCompatible !== '') {
