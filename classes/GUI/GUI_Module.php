@@ -19,7 +19,6 @@ namespace pool\classes\GUI;
 
 use Closure;
 use Exception;
-use GUI_CustomFrame;
 use GUI_Schema;
 use JetBrains\PhpStorm\Pure;
 use Log;
@@ -31,6 +30,7 @@ use pool\classes\Core\Weblication;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
+use pool\classes\GUI\Builtin\GUI_CustomFrame;
 use pool\utils\Str;
 use ReflectionException;
 use ReflectionFunction;

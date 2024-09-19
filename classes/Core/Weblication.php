@@ -20,7 +20,6 @@ declare(strict_types = 1);
 namespace pool\classes\Core;
 
 use Exception;
-use GUI_CustomFrame;
 use GUI_HeadData;
 use JetBrains\PhpStorm\Pure;
 use Locale;
@@ -35,6 +34,7 @@ use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Exception\SessionDisabledException;
 use pool\classes\Exception\TemplateNotFoundException;
+use pool\classes\GUI\Builtin\GUI_CustomFrame;
 use pool\classes\GUI\GUI_Module;
 use pool\classes\Language;
 use pool\classes\translator\TranslationProviderFactory;
