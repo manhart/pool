@@ -22,7 +22,6 @@ namespace pool\classes\Core;
 use Exception;
 use GUI_CustomFrame;
 use GUI_HeadData;
-use GUI_Module;
 use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
@@ -36,6 +35,7 @@ use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Exception\SessionDisabledException;
 use pool\classes\Exception\TemplateNotFoundException;
+use pool\classes\GUI\GUI_Module;
 use pool\classes\Language;
 use pool\classes\translator\TranslationProviderFactory;
 use pool\classes\translator\TranslationProviderFactory_nop;
@@ -114,7 +114,7 @@ class Weblication extends Component
     /**
      * Contains the first loaded GUI_Module
      *
-     * @var GUI_Module $Main
+     * @var \pool\classes\GUI\GUI_Module $Main
      * @see Weblication::run()
      */
     private GUI_Module $Main;

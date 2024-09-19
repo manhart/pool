@@ -9,6 +9,7 @@
  */
 
 use pool\classes\Core\Input\Input;
+use pool\classes\GUI\GUI_Module;
 
 /**
  * Class GUI_Toast
@@ -31,7 +32,7 @@ class GUI_Toast extends GUI_Module
     /**
      * load files
      */
-    public function loadFiles()
+    public function loadFiles(): static
     {
         parent::loadFiles();
         $fw = $this->getVar('framework');
@@ -42,6 +43,7 @@ class GUI_Toast extends GUI_Module
             $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('Toast.js', __CLASS__, true));
             $this->Weblication->getFrame()->getHeadData()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', __CLASS__, true));
         }
+        return $this;
     }
 
     /**

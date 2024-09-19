@@ -17,8 +17,8 @@
 
 namespace pool\guis\GUI_Prompt;
 
-use GUI_Module;
 use pool\classes\Core\Input\Filter\DataType;
+use pool\classes\GUI\GUI_Module;
 
 class GUI_Prompt extends GUI_Module
 {

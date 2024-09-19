@@ -15,7 +15,14 @@
  * @see https://github.com/manhart/pool
  */
 
+namespace pool\classes\GUI;
+
+use Closure;
+use Exception;
+use GUI_CustomFrame;
+use GUI_Schema;
 use JetBrains\PhpStorm\Pure;
+use Log;
 use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Input\Input;
@@ -25,6 +32,11 @@ use pool\classes\Database\DataInterface;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\utils\Str;
+use ReflectionException;
+use ReflectionFunction;
+use TempBlock;
+use Template;
+use Throwable;
 
 use const pool\NAMESPACE_SEPARATOR;
 use const pool\PWD_TILL_GUIS;
@@ -250,7 +262,7 @@ class GUI_Module extends Module
      *
      * @return GUI_Module
      */
-    public function loadFiles()
+    public function loadFiles(): static
     {
         if (!$this->getWeblication()) {
             return $this;
@@ -661,6 +673,7 @@ class GUI_Module extends Module
      * @param string $callingMethod optional; use __METHOD__
      * @param string $errorType
      * @param int $statusCode
+     * @param int $flags JSON flags
      * @return string
      */
     protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0): string

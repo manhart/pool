@@ -11,7 +11,7 @@ declare(strict_types = 1);
 
 namespace pool\classes;
 
-use GUI_Module;
+use pool\classes\GUI\GUI_Module;
 
 use function addEndingSlash;
 use function constant;
@@ -60,7 +60,7 @@ class Autoloader
      */
     public function loadClass(string $class): string|false
     {
-        $isGUI = str_starts_with($class, 'GUI_') && $class !== 'GUI_Module';
+        $isGUI = str_starts_with($class, 'GUI_') && $class !== GUI_Module::theClass();
         if ($isGUI) {
             return GUI_Module::autoloadGUIModule($class);
         }

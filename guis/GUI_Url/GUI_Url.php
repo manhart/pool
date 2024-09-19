@@ -10,6 +10,7 @@
 
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Url;
+use pool\classes\GUI\GUI_Module;
 
 /**
  * Class GUI_Url

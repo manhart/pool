@@ -10,6 +10,8 @@ declare(strict_types = 1);
  * file that was distributed with this source code.
  */
 
+use pool\classes\GUI\GUI_Module;
+
 abstract class ConfigurationLoader
 {
     const STORAGE_ENGINE_FILESYSTEM = 1;

@@ -13,6 +13,7 @@ use pool\classes\Core\Input\Input;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DAO\MySQL_DAO;
+use pool\classes\GUI\GUI_Module;
 
 /**
  * Class GUI_Table
@@ -1115,22 +1116,21 @@ class GUI_Table extends GUI_Module
 
     /**
      * Load files
-     *
-     * @throws Exception
      */
-    public function loadFiles()
+    public function loadFiles(): static
     {
         $fw = $this->getVar('framework');
         $tpl = $this->Weblication->findTemplate('tpl_table_'.$fw.'.html', __CLASS__, true);
         $this->Template->setFilePath('stdout', $tpl);
 
         if (!$this->Weblication->hasFrame()) {
-            return false;
+            return $this;
         }
 
         $Frame = $this->Weblication->getFrame();
         $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', __CLASS__, true);
         $Frame->getHeadData()->addJavaScript($jsFile);
+        return $this;
     }
 
     //    public function getInspectorProperties(): array

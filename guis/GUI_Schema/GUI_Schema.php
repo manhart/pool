@@ -17,6 +17,7 @@
 
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
+use pool\classes\GUI\GUI_Module;
 
 use const pool\PWD_TILL_SCHEMES;
 
@@ -122,12 +123,13 @@ class GUI_Schema extends GUI_Module
      * Reads the query parameter (_GET variable) "schema" and loads the specified schemas.
      * If no schema was specified, the weblication attempts to load a default schema.
      */
-    public function loadFiles(): void
+    public function loadFiles(): static
     {
         if (!$schema = $this->Input->getVar('schema'))//'' also gets replaced with the default
             $schema = $this->Weblication->getDefaultSchema();
         $schemes = explode(',', $schema);
         $this->loadSchemes($schemes);
+        return $this;
     }
 
     /**

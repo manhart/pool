@@ -492,7 +492,7 @@ class GUI_Module
 
 
     /**
-     * creates a new unique GUI_Module. Makes the module globally known with $ in front of the name
+     * Creates a new unique GUI_Module. Makes the module globally known with $ in front of the name
      *
      * @param {string} GUIClassName
      * @param {string} name

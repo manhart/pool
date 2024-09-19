@@ -10,6 +10,7 @@
 
 use pool\classes\Core\Component;
 use pool\classes\Exception\ModulNotFoundException;
+use pool\classes\GUI\GUI_Module;
 use pool\classes\translator\TranslationProvider_ToolDecorator;
 
 /**
@@ -86,9 +87,9 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * load default Weblication.class.js and GUI_Module.class.js
+     * load default Weblication.class.js and GUI_Module.js
      */
-    public function loadFiles()
+    public function loadFiles(): static
     {
         parent::loadFiles();
         if (@TranslationProvider_ToolDecorator::isActive()) {
@@ -99,6 +100,7 @@ class GUI_CustomFrame extends GUI_Module
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Error.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.js', '', true));
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.js', '', true));
+        return $this;
     }
 
     /**

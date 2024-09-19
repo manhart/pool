@@ -11,6 +11,7 @@
 use pool\classes\Core\Component;
 use pool\classes\Core\Module;
 use pool\classes\Core\Url;
+use pool\classes\GUI\GUI_Module;
 
 /**
  * Class GUI_HeaderData
@@ -135,10 +136,11 @@ class GUI_HeadData extends GUI_Module
     /**
      * loads the template (Html Kopfdaten)
      */
-    public function loadFiles()
+    public function loadFiles(): static
     {
         $file = $this->Weblication->findTemplate('tpl_headData.html', __CLASS__, true);
         $this->Template->setFilePath('head', $file);
+        return $this;
     }
 
     /**
