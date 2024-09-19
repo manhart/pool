@@ -88,7 +88,7 @@ function ftp_remove_recursive($con_id, $dir)
             $fileinfo = preg_split('/[\s]+/', $fileinfo, 9);
             $file = $fileinfo[8];
 
-            if ($fileinfo[0]{0} == 'd') { // Verzeichnis
+            if ($fileinfo[0][0] == 'd') { // Verzeichnis
                 ftp_remove_recursive($con_id, addEndingSlash($dir).$file);
             } else {
                 ftp_delete($con_id, addEndingSlash($dir).$file);
