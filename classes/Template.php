@@ -1061,7 +1061,7 @@ class Template extends PoolObject
             $ActiveFile = $this->activeFile;
             $ActiveFile->setVars($vars, $encoding);
         } else {
-            throw new \pool\classes\Exception\RuntimeException("Cannot assign Variable $name. There is no file or block associated.");
+            throw new \pool\classes\Exception\RuntimeException("Cannot assign Variables. There is no file or block associated.");
         }
         return $this;
     }
