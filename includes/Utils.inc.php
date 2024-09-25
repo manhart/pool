@@ -2210,16 +2210,17 @@ function htmlAttributes(array $attributes): string
 /**
  * calls the system command pdfunite
  *
- * @param array $pdfFiles
+ * @param array $pdfSourceFiles
  * @param string $pdfOut
  * @return bool
  */
-function pdfunite(array $pdfFiles, string $pdfOut): bool
+function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
 {
-    array_map(escapeshellarg(...), $pdfFiles);
-    $cmd = 'pdfunite '.implode(' ', $pdfFiles).' '.escapeshellarg($pdfOut);
-    exec(escapeshellcmd($cmd));
-    return file_exists($pdfOut);
+    $pdfSourceFiles = implode(' ', array_map(escapeshellarg(...), $pdfSourceFiles));
+    $pdfDestFile = escapeshellarg($pdfOut);
+    $cmd = escapeshellcmd("pdfunite $pdfSourceFiles $pdfDestFile");
+    exec($cmd, result_code: $return_var);
+    return $return_var === 0 && file_exists($pdfOut);
 }
 
 /**
