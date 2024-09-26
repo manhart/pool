@@ -19,7 +19,7 @@
  * @param object $structure
  * @return string
  */
-function get_mime_type(&$structure)
+function get_mime_type(&$structure): string
 {
     $primary_mime_type = ['TEXT', 'MULTIPART', 'MESSAGE', 'APPLICATION', 'AUDIO', 'IMAGE', 'VIDEO', 'OTHER'];
     if ($structure->subtype) {

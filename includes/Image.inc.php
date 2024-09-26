@@ -3,34 +3,30 @@
 /**
  * Convert a fraction string to a decimal.
  *
- * @param string $str
- * @return int|float
+ * @param string $fraction
+ * @return float
  * @since 2.5.0
  */
-function exif_frac2dec($str)
+function exif_frac2dec(string $fraction): float
 {
-    @list($n, $d) = explode('/', $str);
-    if (!empty($d)) {
-        return $n / $d;
-    }
-
-    return $str;
+    [$numerator, $denominator] = explode('/', $fraction) + [1, 1];
+    return $denominator ? $numerator / $denominator : (float)$fraction;
 }
 
 
 /**
  * Convert the exif date format to a unix timestamp.
  *
- * @param string $str
+ * @param string $dateString
  * @return int
  * @since 2.5.0
  */
-function exif_date2ts($str)
+function exif_date2ts(string $dateString): int
 {
-    @list($date, $time) = explode(' ', trim($str));
-    @list($y, $m, $d) = explode(':', $date);
+    [$date, $time] = explode(' ', trim($dateString)) + ['', ''];
+    [$y, $m, $d] = explode(':', $date) + [0, 0, 0];
 
-    return strtotime("{$y}-{$m}-{$d} {$time}");
+    return strtotime("$y-$m-$d $time") ?: 0;
 }
 
 /**
@@ -46,8 +42,12 @@ function exif_date2ts($str)
  * @todo Try other exif libraries if available.
  * @since 2.5.0
  */
-function readImageMetadata($file)
+function readImageMetadata(string $file): array|false
 {
+    if (!file_exists($file)) {
+        return false;
+    }
+
     [, , $image_type] = @getimagesize($file);
 
     $meta = [
