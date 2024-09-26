@@ -1942,38 +1942,6 @@ function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []
     return $code;
 }
 
-/**
- * @param string $pdf Quelle (PDF)
- * @param string $jpg Ziel (JPEG)
- * @param array $output GS Ausgabe
- * @param int $resolution dpi
- * @param boolean $sudo bei NFS notwendig
- * @return bool Erfolgsstatus
- */
-function pdf2jpg(string $pdf, string $jpg, array &$output, int $resolution = 72, bool $sudo = false): bool
-{
-    # Setzen der Fontmap
-    //    GS_FONTMAP=/opt/AVE_Javaserver/EDV_ORG/gs/Fontmap
-
-    # Setzen des Fontdirectories
-    //    GS_LIB=/opt/AVE_Javaserver/EDV_ORG/gs/wobla_fonts:/opt/AVE_Javaserver/EDV_ORG/ghostscript-9.06/share/ghostscript/9.06/lib
-    //    export GS_LIB
-
-    //    $GS_BIN/gs -dSAFER -dNOPAUSE -dBATCH -dNOPROMPT -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -dAlignToPixels=0 -dGridFitTT=2 -sFONTMAP=$GS_FONTMAP -sDEVICE=jpeg -dNumRenderingThreads=4 -dBufferSpace=300000000 -sOutputFile=$OUTPUT.${RESOLUTION}dpi.jpg -r$RESOLUTION -dUseCropBox $INPUT
-
-
-    $cmd = ($sudo ? 'sudo ' : '').GHOSTSCRIPT_BIN.
-        ' -q  -dQUIET -dSAFER -dBATCH -dNOPAUSE -dNOPROMPT -dMaxBitmap=500000000 -dAlignToPixels=0 -dGridFitTT=2 "-sDEVICE=jpeg" -dTextAlphaBits=4 '.
-        '-dGraphicsAlphaBits=4 "-r'.$resolution.'x'.$resolution.'" -dUseCropBox "-sOutputFile='.$jpg.'" "-f'.$pdf.'"';
-    exec($cmd, $output, $return_var);
-    $result = ($return_var == 0 and file_exists($jpg));
-    if (!$result and count($output) == 0 and $sudo) {
-        $output[] = 'Sudo ist für Ghostscript auf dem Rechner '.$_SERVER['SERVER_NAME'].' nicht konfiguriert!';
-    }
-
-    return $result;
-}
-
 function getFieldData($array, $column): array
 {
     return array_filter($array, function ($key) use ($column) {
