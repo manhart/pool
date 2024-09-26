@@ -1,14 +1,25 @@
 <?php
 /*
- * g7system.local
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * German Public Holiday
+ * (c) Alexander Manhart <alexander@manhart-it.de>
  *
- * Feiertag.class.php created at 25.03.22, 10:19
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
  *
- * @author A.Manhart <A.Manhart@group-7.de>
- * @copyright Copyright (c) 2022, GROUP7 AG
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
+
+declare(strict_types = 1);
+
+namespace pool\utils;
+
+use DateTimeInterface;
 
 class PublicHoliday
 {

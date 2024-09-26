@@ -1,15 +1,28 @@
 <?php
-declare(strict_types = 1);
-
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
  * (c) Alexander Manhart <alexander@manhart-it.de>
  *
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
  */
 
+declare(strict_types = 1);
+
+namespace pool\utils;
+
+use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
+use Exception;
 use pool\classes\Core\PoolObject;
 
 final class PublicHolidays extends PoolObject
@@ -324,122 +337,6 @@ final class PublicHolidays extends PoolObject
     }
 
     /**
-     * returns the holiday as an PublicHoliday object
-     *
-     * @param DateTime $Date
-     * @param string $state
-     * @return PublicHoliday|null
-     * @throws Exception
-     */
-    static function which(DateTime $Date, string $state = ''): ?PublicHoliday
-    {
-        $year = (int)$Date->format('Y');
-
-        $date = $Date->format(PHP_MARIADB_DATE_FORMAT);
-
-        $PublicHolidays = new PublicHolidays();
-        foreach ($PublicHolidays->getLegalHolidays($year, $state) as $key => $Holiday) {
-            if ($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
-                return new PublicHoliday($key, $Holiday);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the German name of the holiday.
-     *
-     * @param int $key
-     * @return string|void
-     */
-    static function getHolidayName(int $key)
-    {
-        switch ($key) {
-            case self::NEUJAHRSTAG:
-                return 'Neujahrstag';
-
-            case self::HEILIGEDREIKOENIGE:
-                return 'Heilige Drei Könige';
-
-            case self::FRAUENTAG:
-                return 'Frauentag';
-
-            case self::KARFREITAG:
-                return 'Karfreitag';
-
-            case self::OSTERSONNTAG:
-                return 'Ostersonntag';
-
-            case self::OSTERMONTAG:
-                return 'Ostermontag';
-
-            case self::TAGDERARBEIT:
-                return 'Tag der Arbeit';
-
-            case self::CHRISTIHIMMELFAHRT:
-                return 'Christi Himmelfahrt';
-
-            case self::PFINGSTMONTAG:
-                return 'Pfingstmontag';
-
-            case self::PFINGSTSONNTAG:
-                return 'Pfingstsonntag';
-
-            case self::FRONLEICHNAM:
-                return 'Fronleichnam';
-
-            case self::MARIAEHIMMELFAHRT:
-                return 'Mariä Himmelfahrt';
-
-            case self::TAGDERDEUTSCHENEINHEIT:
-                return 'Tag der Deutschen Einheit';
-
-            case self::REFORMATIONSTAG:
-                return 'Reformationstag';
-
-            case self::ALLERHEILIGEN:
-                return 'Allerheiligen';
-
-            case self::BUSSUNDBETTAG:
-                return 'Buß- und Bettag';
-
-            case self::ERSTERWEIHNACHTSTAG:
-                return '1. Weihnachtstag';
-
-            case self::ZWEITERWEIHNACHTSTAG:
-                return '2. Weihnachtstag';
-        }
-    }
-
-    /**
-     * Calculates public holidays for a specified period of time
-     *
-     * @param DateTimeInterface $FromDate
-     * @param DateTimeInterface $ToDate
-     * @return array
-     */
-    public function getLegalHolidaysByRange(DateTimeInterface $FromDate, DateTimeInterface $ToDate): array
-    {
-        $holidaysByRange = [];
-        $fromYear = (int)$FromDate->format('Y');
-        $toYear = (int)$ToDate->format('Y');
-
-        for ($i = $fromYear; $i <= $toYear; $i++) {
-            try {
-                $this->factory($i);
-            } catch (Exception) {
-            }
-
-            foreach ($this->publicHolidays as $key => $Holiday) {
-                if ($FromDate <= $Holiday and $Holiday <= $ToDate) {
-                    $holidaysByRange[$key] = $Holiday;
-                }
-            }
-        }
-        return $holidaysByRange;
-    }
-
-    /**
      * returns legal german holidays
      *
      * @param int $year
@@ -556,27 +453,24 @@ final class PublicHolidays extends PoolObject
     }
 
     /**
-     * divide
+     * calculate easter sunday
      *
-     * @param int $a
-     * @param int $b
-     * @return int
+     * @param int $year
+     * @return DateTimeImmutable
      */
-    private static function div(int $a, int $b): int
+    public function calculateEasterSunday(int $year): DateTimeImmutable
     {
-        return intval($a / $b);
-    }
+        $os = self::gauss($year);
 
-    /**
-     * modulus
-     *
-     * @param int $a
-     * @param int $b
-     * @return int
-     */
-    private static function mod(int $a, int $b): int
-    {
-        return $a % $b;
+        $monat = 3;
+
+        // $os may be the 32. March = 1. April
+        if (31 < $os) {
+            $os = $os % 31;
+            $monat = 4;
+        }
+
+        return new DateTimeImmutable("$year-$monat-$os");
     }
 
     /**
@@ -609,23 +503,142 @@ final class PublicHolidays extends PoolObject
     }
 
     /**
-     * calculate easter sunday
+     * modulus
      *
-     * @param int $year
-     * @return DateTimeImmutable
+     * @param int $a
+     * @param int $b
+     * @return int
      */
-    public function calculateEasterSunday(int $year): DateTimeImmutable
+    private static function mod(int $a, int $b): int
     {
-        $os = self::gauss($year);
+        return $a % $b;
+    }
 
-        $monat = 3;
+    /**
+     * divide
+     *
+     * @param int $a
+     * @param int $b
+     * @return int
+     */
+    private static function div(int $a, int $b): int
+    {
+        return intval($a / $b);
+    }
 
-        // $os may be the 32. March = 1. April
-        if (31 < $os) {
-            $os = $os % 31;
-            $monat = 4;
+    /**
+     * returns the holiday as an PublicHoliday object
+     *
+     * @param DateTime $Date
+     * @param string $state
+     * @return PublicHoliday|null
+     * @throws Exception
+     */
+    static function which(DateTime $Date, string $state = ''): ?PublicHoliday
+    {
+        $year = (int)$Date->format('Y');
+
+        $date = $Date->format(PHP_MARIADB_DATE_FORMAT);
+
+        $PublicHolidays = new PublicHolidays();
+        foreach ($PublicHolidays->getLegalHolidays($year, $state) as $key => $Holiday) {
+            if ($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
+                return new PublicHoliday($key, $Holiday);
+            }
         }
+        return null;
+    }
 
-        return new DateTimeImmutable("$year-$monat-$os");
+    /**
+     * Returns the German name of the holiday.
+     *
+     * @param int $key
+     * @return string|void
+     */
+    static function getHolidayName(int $key)
+    {
+        switch ($key) {
+            case self::NEUJAHRSTAG:
+                return 'Neujahrstag';
+
+            case self::HEILIGEDREIKOENIGE:
+                return 'Heilige Drei Könige';
+
+            case self::FRAUENTAG:
+                return 'Frauentag';
+
+            case self::KARFREITAG:
+                return 'Karfreitag';
+
+            case self::OSTERSONNTAG:
+                return 'Ostersonntag';
+
+            case self::OSTERMONTAG:
+                return 'Ostermontag';
+
+            case self::TAGDERARBEIT:
+                return 'Tag der Arbeit';
+
+            case self::CHRISTIHIMMELFAHRT:
+                return 'Christi Himmelfahrt';
+
+            case self::PFINGSTMONTAG:
+                return 'Pfingstmontag';
+
+            case self::PFINGSTSONNTAG:
+                return 'Pfingstsonntag';
+
+            case self::FRONLEICHNAM:
+                return 'Fronleichnam';
+
+            case self::MARIAEHIMMELFAHRT:
+                return 'Mariä Himmelfahrt';
+
+            case self::TAGDERDEUTSCHENEINHEIT:
+                return 'Tag der Deutschen Einheit';
+
+            case self::REFORMATIONSTAG:
+                return 'Reformationstag';
+
+            case self::ALLERHEILIGEN:
+                return 'Allerheiligen';
+
+            case self::BUSSUNDBETTAG:
+                return 'Buß- und Bettag';
+
+            case self::ERSTERWEIHNACHTSTAG:
+                return '1. Weihnachtstag';
+
+            case self::ZWEITERWEIHNACHTSTAG:
+                return '2. Weihnachtstag';
+        }
+    }
+
+    /**
+     * Calculates public holidays for a specified period of time
+     *
+     * @param DateTimeInterface $FromDate
+     * @param DateTimeInterface $ToDate
+     * @return array
+     */
+    public function getLegalHolidaysByRange(DateTimeInterface $FromDate, DateTimeInterface $ToDate): array
+    {
+        $holidaysByRange = [];
+        $fromYear = (int)$FromDate->format('Y');
+        $toYear = (int)$ToDate->format('Y');
+
+        for ($i = $fromYear; $i <= $toYear; $i++) {
+            try {
+                $this->factory($i);
+            } catch (Exception) {
+            }
+
+            foreach ($this->publicHolidays as $key => $Holiday) {
+                if ($FromDate <= $Holiday and $Holiday <= $ToDate) {
+                    $holidaysByRange[$key] = $Holiday;
+                }
+            }
+        }
+        return $holidaysByRange;
     }
 }
