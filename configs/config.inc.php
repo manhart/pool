@@ -63,9 +63,6 @@ const IS_TESTSERVER = (IS_DEVELOP || IS_STAGING);
 // The directory where the "config.inc.php" is located is considered as the DIR_CONFIGS_ROOT.
 const DIR_CONFIGS_ROOT = __DIR__;
 
-// Pool
-const DIR_POOL_ROOT = DIR_DOCUMENT_ROOT.'/pool';
-
 // Data access objects
 const DIR_DAOS_ROOT = DIR_DOCUMENT_ROOT.'/commons/daos';
 
