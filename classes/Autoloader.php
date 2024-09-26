@@ -86,7 +86,7 @@ class Autoloader
     {
         if (static::hasNamespace($className)) {
             $classRootDirs = [
-                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : (DIR_DOCUMENT_ROOT ?: dirname(DIR_POOL_ROOT)),
+                defined('BASE_NAMESPACE_PATH') ? constant('BASE_NAMESPACE_PATH') : dirname(DIR_POOL_ROOT),
             ];
 
             $className = str_replace(NAMESPACE_SEPARATOR, '/', $className);
