@@ -9,29 +9,21 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use pool\classes\Core\PoolObject;
 use pool\classes\Core\Url;
 
 
 class UrlTest extends TestCase
 {
-    public function init()
+    public function setUp(): void
     {
-        $_SERVER['SERVER_NAME'] = 'g7system.local';
+        $_SERVER['SERVER_NAME'] = 'dev.local';
         $_SERVER['SERVER_PORT'] = '80';
-        require_once __DIR__.'/../configs/config.inc.php';
-        if (!class_exists(PoolObject::class)) {
-            include __DIR__.'/../classes/Core/PoolObject.php';
-        }
-        if (!class_exists(Url::class)) {
-            include __DIR__.'/../classes/Core/Url.php';
-        }
+        if (!defined('DIR_DOCUMENT_ROOT'))
+            require_once __DIR__.'/../configs/config.inc.php';
     }
 
     public function testUrl()
     {
-        $this->init();
-
         $url = Url::fromString('http://www.example.com:80/foo/bar?test=1#fragment');
         $this->assertEquals('http', $url->getScheme());
         $this->assertEquals('www.example.com', $url->getHost());
