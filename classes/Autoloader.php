@@ -91,14 +91,16 @@ class Autoloader
 
             $className = str_replace(NAMESPACE_SEPARATOR, '/', $className);
         } else {
-            $classRootDirs = [
-                getcwd().'/'.PWD_TILL_CLASSES,
-            ];
-            if (defined('DIR_POOL_ROOT')) {
-                $classRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_CLASSES;
+            $cwd = getcwd();
+            $classRootDirs = [$cwd.'/'.PWD_TILL_CLASSES];
+            if ($cwd !== DIR_APP_ROOT) {
+                $classRootDirs[] = DIR_APP_ROOT.'/'.PWD_TILL_CLASSES;
             }
             if (defined('DIR_COMMON_ROOT')) {
                 $classRootDirs[] = DIR_COMMON_ROOT.'/'.PWD_TILL_CLASSES;
+            }
+            if (defined('DIR_POOL_ROOT')) {
+                $classRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_CLASSES;
             }
         }
 

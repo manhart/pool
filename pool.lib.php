@@ -24,6 +24,10 @@ namespace pool
         define('DIR_POOL_ROOT', __DIR__);
     }
 
+    if (!defined('DIR_APP_ROOT')) { //necessary for applications without PSR-4
+        define('DIR_APP_ROOT', dirname($_SERVER['SCRIPT_FILENAME']));
+    }
+
     const PWD_TILL_INCLUDES = 'includes'; // todo remove after refactoring to PSR-4
     const PWD_TILL_CLASSES = 'classes'; // todo remove after refactoring to PSR-4
     const PWD_TILL_GUIS = 'guis'; // todo remove after refactoring to PSR-4
