@@ -302,11 +302,19 @@ class DataInterface extends PoolObject
     public static function registerResource(array $resourceDefinition): void
     {
         foreach ($resourceDefinition as $alias => $item) {
-            if (array_key_exists($alias, self::$register)) {
+            if (self::dataInterfaceExists($alias)) {
                 throw new InvalidArgumentException("A database with the alias '$alias' has already been registered before");
             }
             self::$register[$alias] = $item;
         }
+    }
+
+    /**
+     * Checks if a resource is registered
+     */
+    public static function dataInterfaceExists(string $alias): bool
+    {
+        return array_key_exists($alias, self::$register);
     }
 
     /**
