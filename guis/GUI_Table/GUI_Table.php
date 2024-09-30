@@ -238,6 +238,14 @@ class GUI_Table extends GUI_Module
                     'inputType' => 'text',
                     'clientside' => true,
                 ],
+                'filterDefault' => [
+                    'attribute' => 'data-filter-default',
+                    'type' => 'string',
+                    'value' => null,
+                    'element' => 'input',
+                    'inputType' => 'text',
+                    'clientside' => true,
+                ],
                 'filterDatepickerOptions' => [
                     'attribute' => 'data-filter-datepicker-options',
                     'type' => 'json', // should be object json todo json editor
