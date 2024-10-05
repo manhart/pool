@@ -122,8 +122,7 @@ class PoolObject extends stdClass
     protected function isPOOL(): bool
     {
         if (!isset($this->isPOOL)) {
-            $poolRealpath = realpath(DIR_POOL_ROOT);
-            $this->isPOOL = substr_compare($this->getClassFile(), $poolRealpath, 0, strlen($poolRealpath)) === 0;
+            $this->isPOOL = substr_compare($this->getClassFile(), DIR_POOL_ROOT, 0, strlen(DIR_POOL_ROOT)) === 0;
         }
         return $this->isPOOL;
     }
