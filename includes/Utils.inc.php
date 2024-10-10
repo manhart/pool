@@ -387,29 +387,39 @@ function getJSEMailLink(string $email, $caption = null): string
  * @param string $dir directory to delete
  * @param boolean $rmSelf removes the directory itself if true
  * @return boolean success
- **/
+ */
 function deleteDir(string $dir, bool $rmSelf = true): bool
 {
-    if (!$dir_handle = opendir($dir)) {
+    if (!is_dir($dir)) {
         return false;
     }
+
     $dir = addEndingSlash($dir);
-    while (false !== ($readdir = readdir($dir_handle))) {
+    $handle = opendir($dir);
+
+    if ($handle === false) {
+        return false;
+    }
+
+    while (false !== ($readdir = readdir($handle))) {
         if ($readdir !== '..' && $readdir !== '.') {
-            $readdir = trim($readdir);
-            if (is_file($dir.$readdir)) {
-                if (!unlink($dir.$readdir)) {
+            $resource = $dir.$readdir;
+            if (is_file($resource)) {
+                if (!unlink($resource)) {
+                    closedir($handle);
                     return false;
                 }
-            } elseif (is_dir($dir.$readdir)) {
+            } elseif (is_dir($resource)) {
                 // Calls itself to clear subdirectories
-                if (!deleteDir($dir.$readdir)) {
+                if (!deleteDir($resource)) {
+                    closedir($handle);
                     return false;
                 }
             }
         }
     }
-    closedir($dir_handle);
+    closedir($handle);
+
     if ($rmSelf) {
         if (!rmdir($dir)) {
             return false;
