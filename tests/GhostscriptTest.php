@@ -37,7 +37,7 @@ class GhostscriptTest extends TestCase
     public function testPdfToJpeg()
     {
         $result = Ghostscript::pdfToJpeg(self::$testPdf, self::$outputJpeg);
-        $this->assertTrue($result, 'PDF to JPEG conversion failed');
+        $this->assertEquals(1, $result, 'PDF to JPEG conversion failed');
         $this->assertFileExists(self::$outputJpeg, 'Output JPEG file does not exist');
         $this->assertEquals('image/jpeg', mime_content_type(self::$outputJpeg), 'Output file is not a valid JPEG');
     }
@@ -45,7 +45,8 @@ class GhostscriptTest extends TestCase
     public function testPdfToPng()
     {
         $result = Ghostscript::pdfToPng(self::$testPdf, self::$outputPng);
-        $this->assertTrue($result, 'PDF to PNG conversion failed');
+        // assert result if result is false
+        $this->assertEquals(1, $result, 'PDF to PNG conversion failed');
         $this->assertFileExists(self::$outputPng, 'Output PNG file does not exist');
         $this->assertEquals('image/png', mime_content_type(self::$outputPng), 'Output file is not a valid PNG');
     }
