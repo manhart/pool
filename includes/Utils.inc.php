@@ -1109,16 +1109,16 @@ function HTTPStatus(int $num)
 }
 
 /**
- * Verschiebt eine Datei
+ * Moves a file
  *
- * @param string $source Quelle
- * @param string $dest Ziel
+ * @param string $source Source file
+ * @param string $dest Target file
  * @return bool
  */
 function move_file(string $source, string $dest): bool
 {
     if (!file_exists($source)) return false;
-    if (!is_dir($dest)) return false; // OR -> mkdirs(dirname($dest));
+    if (!is_dir(dirname($dest))) return false; // OR -> mkdirs(dirname($dest));
     $res_copy = copy($source, $dest);
     if ($res_copy) $res_unlink = unlink($source);
 
