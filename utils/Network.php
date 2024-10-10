@@ -15,7 +15,7 @@ use function exec;
 use function fclose;
 use function floor;
 use function fsockopen;
-use function getMicrotime;
+use function getMicroTime;
 use function getprotobyname;
 use function is_resource;
 use function parse_url;
@@ -98,10 +98,10 @@ final class Network
 
         $result = false;
         /* record start time */
-        $start_time = getMicrotime();
+        $start_time = getMicroTime();
         socket_send($socket, $package, strlen($package), 0);
         if (@socket_read($socket, 255)) {
-            $end_time = getMicrotime();
+            $end_time = getMicroTime();
             $total_time = $end_time - $start_time;
             $result = $total_time;
         }

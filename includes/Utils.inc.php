@@ -28,7 +28,7 @@ use JetBrains\PhpStorm\Pure;
  *
  * @return float Zeitstempel in Mikrosekunden
  **/
-function getMicrotime($seed = 1): float
+function getMicroTime($seed = 1): float
 {
     [$usec, $sec] = explode(' ', microtime());
     return ((float)$usec + ((float)$sec * $seed));
