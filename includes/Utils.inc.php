@@ -138,18 +138,18 @@ function returnBytes($val): int
 
     $val = trim($val);
 
-    preg_match('#([0-9]+)[\s]*([a-z]+)#i', $val, $matches);
+    preg_match('#([0-9]+)\s*([a-z]+)#i', $val, $matches);
 
-    $last = '';
+    $unit = '';
     if (isset($matches[2])) {
-        $last = $matches[2];
+        $unit = strtolower($matches[2]);
     }
 
     if (isset($matches[1])) {
         $val = (int)$matches[1];
     }
 
-    switch (strtolower($last)) {
+    switch ($unit) {
         case 't':
         case 'tb':
         case 'tib':
@@ -336,7 +336,7 @@ function hex_encode(string $text): string
 {
     $encoded = '';
     if (strlen($text) > 0) {
-        $encoded = bin2hex((string)$text);
+        $encoded = bin2hex($text);
         $encoded = chunk_split($encoded, 2, '%');
         $encoded = '%'.substr($encoded, 0, strlen($encoded) - 1);
     }
@@ -353,7 +353,7 @@ function hex_encode(string $text): string
  **/
 function getJSEMailLink(string $email, $caption = null): string
 {
-    if (strpos($email, '@') === false) {
+    if (!str_contains($email, '@')) {
         return '';
     }
     $email = explode('@', $email);
@@ -361,21 +361,19 @@ function getJSEMailLink(string $email, $caption = null): string
     $en_at = hex_encode('@');
     $en_ext = hex_encode($email[1]);
     $js = '<script type="text/javascript">
-				<!--
-					var caption = "'.$en_caption.'";
-					var at = "'.$en_at.'";
-					var ext = "'.$en_ext.'";';
+					const caption = "'.$en_caption.'";
+					const at = "'.$en_at.'";
+					const ext = "'.$en_ext.'";';
 
     $js .= 'document.write(\'<a href="mailto:\' + caption + at + ext + \'">\');';
     if ($caption) {
-        $js .= '	document.write(\''.$caption.'\');';
+        $js .= "	document.write('$caption');";
     } else {
-        $js .= '	document.write(urlDecode("'.$en_caption.'") + urlDecode("'.$en_at.'") + urlDecode("'.$en_ext.'"));';
+        $js .= "	document.write(urlDecode(\"$en_caption\") + urlDecode(\"$en_at\") + urlDecode(\"$en_ext\"));";
     }
     $js .= '	document.write(\'</a>\');';
 
     $js .= '
-				//-->
 				</script>';
 
     return $js;
@@ -463,10 +461,10 @@ function remove_extension(string $file = ''): string
  * @param bool $backtrack True bedeutet, die Funktion schneidet nicht innerhalb eines Wortes durch, sondern liefert nur vollst�ndige W�rter
  * @return string gekuerzte Version
  **/
-function shorten(string $str = '', int $len = 150, $more = 1, bool $backtrack = true): string
+function shorten(string $str = '', int $len = 150, string|int $more = 1, bool $backtrack = true): string
 {
     if ($str == '') return $str;
-    if (is_array($str)) return $str;
+    if (is_array($str)) return '';
     $str = trim($str);
 
     // if it's les than the size given, then return it
@@ -476,7 +474,7 @@ function shorten(string $str = '', int $len = 150, $more = 1, bool $backtrack = 
     $encoding = @mb_detect_encoding($str);
     if ($encoding === false) {
         $str = substr($str, 0, $len);
-        $encoding = 'ISO-8859-1';
+        $encoding = ini_get('default_charset');
     } else {
         $str = mb_substr($str, 0, $len, $encoding);
     }
@@ -532,24 +530,6 @@ function formatDateTime($datetime, $format): string
 }
 
 /**
- * formatDEDateToEN()
- * Arbeitet etwas anders als formatDateTime, da es deutsches Format (01.01.2004) in
- * englisches Format (2004-01-01) umwandelt.
- *
- * @param $strDate
- * @param string $delimiter
- * @return string
- * @throws Exception
- * @author Andreas Horvath
- * @deprecated
- */
-function formatDEDateToEN($strDate, string $delimiter = '.'): string
-{
-    $arrDate = explode($delimiter, $strDate);
-    return (new DateTime(strtotime($arrDate[2]."-".$arrDate[1]."-".$arrDate[0])))->format('Y-m-d');
-}
-
-/**
  * replaces the html tag <br> by a new line
  *
  * @param string $subject text
@@ -558,18 +538,6 @@ function formatDEDateToEN($strDate, string $delimiter = '.'): string
 function br2nl(string $subject): string
 {
     return preg_replace('=<br(>|([\s/][^>]*)>)\r?\n?=i', chr(10), $subject);
-}
-
-/**
- * replaces all linebreaks to <br />
- *
- * @param string $string
- * @return string|string[]
- * @deprecated use php nl2br
- */
-function nl2br2(string $string): string
-{
-    return str_replace(["\r\n", "\r", "\n"], '<br>', $string);
 }
 
 /**
@@ -682,7 +650,7 @@ function getBrowserFingerprint(bool $withClientIP = true): string
  * @param string $includeFile Absoluter Dateipfad
  * @return string
  */
-function getContentFromInclude(string $includeFile): string
+function getContentFromPHPFile(string $includeFile): string
 {
     ob_start();
     include($includeFile);
@@ -944,7 +912,7 @@ function getSearchPattern4SQL($wert, $min = 2): string
  * @param string $key
  * @param mixed $value
  */
-function setGlobal(string $key, &$value)
+function setGlobal(string $key, mixed &$value): void
 {
     $GLOBALS[$key] = &$value;
 }
@@ -955,7 +923,7 @@ function setGlobal(string $key, &$value)
  * @param string $key
  * @return mixed
  */
-function &getGlobal(string $key)
+function &getGlobal(string $key): mixed
 {
     return $GLOBALS[$key];
 }
@@ -969,45 +937,6 @@ function &getGlobal(string $key)
 function global_exists(string $key): bool
 {
     return isset($GLOBALS[$key]);
-}
-
-/**
- * Magische PHP Konstanten in ein Array zusammenfuehren
- *
- * @param mixed $file __FILE__
- * @param mixed $line __LINE__
- * @param mixed $function __FUNCTION__ ab PHP 4.3
- * @param mixed $class __CLASS__ ab PHP 4.3
- * @param mixed $method erst ab PHP 5
- * @return array
- */
-function magicInfo($file, $line, $function, $class, $specific = []): array
-{
-    if (!is_array($specific)) {
-        if (!is_null($specific)) {
-            $specific = [$specific];
-        } else $specific = [];
-    }
-
-    return array_merge([
-        'file' => $file,
-        'line' => $line,
-        'function' => $function,
-        'class' => $class,
-    ], $specific);
-}
-
-if (!function_exists('mime_content_type')) {
-    /**
-     * Ermittelt den Mime Content Type fuer eine Datei
-     *
-     * @param string $f Datei
-     * @return string
-     */
-    function mime_content_type(string $f): string
-    {
-        return trim(exec('file -bi '.escapeshellarg($f)));
-    }
 }
 
 /**
@@ -1071,7 +1000,7 @@ function hyphenation(string $word): array
  *
  * @param int $num
  */
-function HTTPStatus(int $num)
+function setHttpResponseCode(int $num): void
 {
     static $http = [
         100 => "HTTP/1.1 100 Continue",
@@ -1176,7 +1105,7 @@ function &getNestedArrayValueReference(array &$arr, array $keys): mixed
         if ($arr != null && !is_array($arr)) {
             $subtree = implode('.', $keys);
             assert(isset($lastKey));
-            throw new Exception("Tried to access subtree of value: '{$arr}' accessing: $subtree @$lastKey");
+            throw new Exception("Tried to access subtree of value: '$arr' accessing: $subtree @$lastKey");
         }
         $lastKey = $key;
         //expand branch if necessary this will crate an array if necessary
@@ -1765,154 +1694,6 @@ function format24h($min): string
 }
 
 /**
- * @param string $code Passwort oder Coupon
- * @param string $pepper zusätzliche Verschlüsselung mit einem serverseitigen Schlüssel (= Pfeffer). Mit pepper ist der zurückgegebene Hash 108 Zeichen lang, ohne 60 Zeichen!
- * @param array $options individuelles Salt,
- * @return string Hash
- * @throws Exception, InvalidArgumentException
- * @deprecated
- */
-function pool_hash_code(string $code, string $pepper = '', array $options = []): string
-{
-    if (!defined('CRYPT_BLOWFISH')) {
-        throw new Exception('The CRYPT_BLOWFISH algorithm is required (PHP 5.3).');
-    }
-    if (!defined('MCRYPT_DEV_URANDOM')) {
-        throw new Exception('The MCRYPT_DEV_URANDOM source is required (PHP 5.3).');
-    }
-    if (empty($code)) {
-        throw new InvalidArgumentException('Cannot hash an empty code.');
-    }
-
-    $length = 22;
-    $binaryLength = ($length * 3 / 4 + 1);
-
-    $options += [
-        'salt' => substr(strtr(base64_encode(mcrypt_create_iv($binaryLength, MCRYPT_DEV_URANDOM)), '+', '.'), 0, $length),
-        'cost' => 10,
-    ];
-
-    if (version_compare(PHP_VERSION, '5.3.7') >= 0) {
-        $algorithm = '2y'; // BCrypt, mit korrigiertem Unicode Problem
-    } else {
-        $algorithm = '2a'; // BCrypt
-    }
-
-    $cryptParams = sprintf('$%s$%02d$%s', $algorithm, $options['cost'], $options['salt']);
-    $hash = crypt($code, $cryptParams);
-
-    if ($pepper) {
-        $encryptedHash = encryptTwofish($hash, $pepper);
-        $hash = base64_encode($encryptedHash);
-    }
-
-    return $hash;
-}
-
-/**
- * Prüft, ob das Password einem gegebenen Hashwert entspricht. Damit kann ein
- * vom Benutzer eingegebenes Passwort, mit dem in der Datenbank gespeicherten
- * Hashwert verglichen werden.
- *
- * @param string $code Zu prüfendes Passwort.
- * @param string $existingHash Gespeicherter Hashwert aus der Datenbank.
- * @param string $pepper Übergeben Sie denselben key, welcher zur Verschlüsselung des Hashwertes benutzt wurde, oder lassen Sie den Parameter weg wenn kein key angegeben wurde.
- * @return bool Gibt true zurück, wenn das Passwort mit dem Hashwert übereinstimmt, sonst false.
- * @throws Exception
- */
-function pool_verify_hash($code, $existingHash, $pepper = '')
-{
-    if (!defined('CRYPT_BLOWFISH')) {
-        throw new Exception('The CRYPT_BLOWFISH algorithm is required (PHP 5.3).');
-    }
-
-    if (empty($code)) {
-        return false;
-    }
-
-    // Hashwert mit dem serverseitigem Key entschlüsseln
-    if ($pepper != '') {
-        $encryptedHash = base64_decode($existingHash);
-        $existingHash = decryptTwofish($encryptedHash, $pepper);
-    }
-
-    // Die Parameter, die urspruenglich zum Erstellen von $existingHash verwendet wurden,
-    // werden automatisch aus den ersten 29 Zeichen von $existingHash extrahiert.
-    $newHash = crypt($code, $existingHash);
-
-    return $newHash === $existingHash;
-}
-
-/**
- * Verschlüsselt Daten mit dem TWOFISH Algorithmus. Der IV Vektor wird
- * Bestandteil des resultierenden binären Strings.
- *
- * @param string $data Zu verschlüsselnde Daten. \0 Zeichen am Schluss gehen verloren.
- * @param string $key Mit diesem Schlüssel werden die Daten verschlüsselt.
- * @return string Gibt die verschlüsselten Daten in Form eines binären Strings zurück.
- * @throws Exception
- */
-function encryptTwofish($data, $key)
-{
-    if (!defined('MCRYPT_DEV_URANDOM')) {
-        throw new Exception('The MCRYPT_DEV_URANDOM source is required (PHP 5.3).');
-    }
-    if (!defined('MCRYPT_TWOFISH')) {
-        throw new Exception('The MCRYPT_TWOFISH algorithm is required (PHP 5.3).');
-    }
-
-    // Der cbc mode ist dem ecb mode vorzuziehen
-    $td = mcrypt_module_open(MCRYPT_TWOFISH, '', MCRYPT_MODE_CBC, '');
-
-    // Twofish akzeptiert einen Schlüssel von 32 Bytes. Da in der Regel längere Strings
-    // mit nur lesbaren Zeichen übergeben werden, wird ein binärer String erzeugt.
-    $binaryKey = hash('sha256', $key, true);
-
-    // Erstelle Initialisierungsvektor mit 16 Bytes
-    $iv = mcrypt_create_iv(mcrypt_enc_get_iv_size($td), MCRYPT_DEV_URANDOM);
-
-    mcrypt_generic_init($td, $binaryKey, $iv);
-    $encryptedData = mcrypt_generic($td, $data);
-    mcrypt_generic_deinit($td);
-    mcrypt_module_close($td);
-
-    // Kombiniere iv und verschlüsselten Text
-    return $iv.$encryptedData;
-}
-
-/**
- * Entschlüsselt Daten, welche vorher mit @param string $encryptedData Binärer string mit verschlüsselten Daten.
- *
- * @param string $key Dieser Schlüssel wird verwendet um die Daten zu entschlüsseln.
- * @return string Gibt die originalen entschlüsselten Daten zurück.
- * @throws Exception
- * @see encryptTwofish verschlüsselt wurden.
- */
-function decryptTwofish($encryptedData, $key)
-{
-    if (!defined('MCRYPT_TWOFISH')) {
-        throw new Exception('The MCRYPT_TWOFISH algorithm is required (PHP 5.3).');
-    }
-
-    $td = mcrypt_module_open(MCRYPT_TWOFISH, '', MCRYPT_MODE_CBC, '');
-
-    // Extrahiere Initialisierungsvektor
-    $ivSize = mcrypt_enc_get_iv_size($td);
-    $iv = substr($encryptedData, 0, $ivSize);
-    $encryptedData = substr($encryptedData, $ivSize);
-
-    $binaryKey = hash('sha256', $key, true);
-
-    mcrypt_generic_init($td, $binaryKey, $iv);
-    $decryptedData = mdecrypt_generic($td, $encryptedData);
-    mcrypt_generic_deinit($td);
-    mcrypt_module_close($td);
-
-    // Originaldaten wurden ergänzt mit 0-Zeichen bis zur Blockgrösse
-    return rtrim($decryptedData, "\0");
-}
-
-/**
  * Generiere Code, Coupon, Serial...
  *
  * @param int $bytes Anzahl Zeichen
@@ -2197,13 +1978,11 @@ function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
     $pdfSourceFiles = implode(' ', array_map(escapeshellarg(...), $pdfSourceFiles));
     $pdfDestFile = escapeshellarg($pdfOut);
     $cmd = escapeshellcmd("pdfunite $pdfSourceFiles $pdfDestFile");
-    exec($cmd, result_code: $return_var);
-    return $return_var === 0 && file_exists($pdfOut);
+    exec($cmd, result_code: $resultCode);
+    return $resultCode === 0 && file_exists($pdfOut);
 }
 
 /**
- * validate date
- *
  * @param string $date
  * @param string $format
  * @return bool
@@ -2215,7 +1994,7 @@ function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
 }
 
 /**
- * calculates the next day of the week based on a day of the week and an operand (subtrahend or summand).
+ * Calculates the next day of the week based on a day of the week and an operand (subtrahend or summand).
  *
  * @param int $weekday
  * @param int $operand
