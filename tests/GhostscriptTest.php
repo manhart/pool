@@ -26,6 +26,8 @@ class GhostscriptTest extends TestCase
 
     private static string $extractedText = __DIR__.'/_output/generated_files/extracted_text.txt';
 
+    private static string $testScannedPdf = __DIR__.'/_data/test-pdf-scanned.pdf';
+
     public static function setUpBeforeClass(): void
     {
         @unlink(self::$outputPng);
@@ -37,7 +39,7 @@ class GhostscriptTest extends TestCase
     public function testPdfToJpeg()
     {
         $result = Ghostscript::pdfToJpeg(self::$testPdf, self::$outputJpeg);
-        $this->assertEquals(1, $result, 'PDF to JPEG conversion failed');
+        $this->assertCount(1, $result, 'PDF to JPEG conversion failed');
         $this->assertFileExists(self::$outputJpeg, 'Output JPEG file does not exist');
         $this->assertEquals('image/jpeg', mime_content_type(self::$outputJpeg), 'Output file is not a valid JPEG');
     }
@@ -46,7 +48,7 @@ class GhostscriptTest extends TestCase
     {
         $result = Ghostscript::pdfToPng(self::$testPdf, self::$outputPng);
         // assert result if result is false
-        $this->assertEquals(1, $result, 'PDF to PNG conversion failed');
+        $this->assertCount(1, $result, 'PDF to PNG conversion failed');
         $this->assertFileExists(self::$outputPng, 'Output PNG file does not exist');
         $this->assertEquals('image/png', mime_content_type(self::$outputPng), 'Output file is not a valid PNG');
     }
@@ -66,6 +68,19 @@ class GhostscriptTest extends TestCase
         $this->assertFileExists(self::$extractedText, 'Extracted text file does not exist');
         $this->assertGreaterThan(0, filesize(self::$extractedText), 'Extracted text file is empty');
     }
+
+    public function testSetGsBin()
+    {
+        $gsBin = '/usr/hans/bin/gs';
+        Ghostscript::setGsBin($gsBin);
+        $this->expectException(\pool\classes\Exception\RuntimeException::class);
+        Ghostscript::getGsBin();
+    }
+
+    //    public function testIsScannedPdf()
+    //    {
+    //        $this->assertTrue(Ghostscript::isScannedPdf(self::$testScannedPdf), 'PDF is not scanned');
+    //    }
 
     protected function tearDown(): void
     {

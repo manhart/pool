@@ -21,9 +21,11 @@ use pool\classes\Exception\FileOperationException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 
+use function deleteDir;
+
 final class Ghostscript
 {
-    const GHOSTSCRIPT_SUPRESS_OPTIONS = ['-dBATCH', '-dNOPAUSE', '-dNOPROMPT', '-dSAFER'];
+    const GHOSTSCRIPT_SUPPRESS_OPTIONS = ['-dBATCH', '-dNOPAUSE', '-dNOPROMPT', '-dSAFER'];
 
     /**
      * @var string $gsBin ghostscript path to the executable
@@ -41,6 +43,7 @@ final class Ghostscript
         '-dUseCropBox',
     ];
 
+    /** @noinspection PhpUnused */
     public static function pdfToPs(string $inputFile, string $outputFile, array $options = []): bool
     {
         $arguments = array_merge(
@@ -55,15 +58,16 @@ final class Ghostscript
         return self::execute($arguments);
     }
 
-    private static function execute(array $arguments, array &$output = [], int &$return = 0): bool
+    /** @noinspection PhpSameParameterValueInspection */
+    private static function execute(array $arguments, array &$output = [], int &$resultCode = 0): bool
     {
         // suppress user interaction and run run in safe mode
-        $arguments = array_merge(self::GHOSTSCRIPT_SUPRESS_OPTIONS, $arguments);
+        $arguments = array_merge(self::GHOSTSCRIPT_SUPPRESS_OPTIONS, $arguments);
         $escapedArguments = array_map(escapeshellarg(...), $arguments);
         $argumentsString = implode(' ', $escapedArguments);
         $command = escapeshellcmd(self::getGsBin().' '.$argumentsString);
-        exec($command, $output, $return);
-        return $return === 0;
+        exec($command, $output, $resultCode);
+        return $resultCode === 0;
     }
 
     public static function getGsBin(): string
@@ -71,7 +75,7 @@ final class Ghostscript
         if (!self::$gsInstalled) {
             self::$gsInstalled = is_executable(self::$gsBin);
             if (!self::$gsInstalled) {
-                throw new \RuntimeException('Ghostscript is not installed or not executable at '.self::$gsBin);
+                throw new RuntimeException('Ghostscript is not installed or not executable at '.self::$gsBin);
             }
         }
         return self::$gsBin;
@@ -104,11 +108,12 @@ final class Ghostscript
         string $pages = '',
         array $options = [],
         string $jpegPattern = '*.jpg',
-    ): false|int {
+    ): array
+    {
         // create unique temp directory for outputs
         $tempDir = self::getTempDir();
+        $tempOutputFile = $tempDir.'/'.basename($outputFile);
         $targetDir = dirname($outputFile);
-        $outputFile = $tempDir.'/'.basename($outputFile);
 
         $arguments = [
             '-sDEVICE=jpeg',
@@ -120,11 +125,11 @@ final class Ghostscript
         $arguments = self::getPageArguments($pages, $arguments);
         $arguments = array_merge($arguments, self::$defaultImageOptions, $options);
         // add output and input file at the end
-        array_push($arguments, '-o', $outputFile, $inputFile);
+        array_push($arguments, '-o', $tempOutputFile, $inputFile);
 
         $output = [];
         if (!self::execute($arguments, $output)) {
-            return false;
+            throw new RuntimeException('Ghostscript execution failed');
         }
 
         return self::handleOutputFiles($tempDir, $targetDir, $jpegPattern, self::checkImageFile(...), 'image/jpeg');
@@ -133,11 +138,14 @@ final class Ghostscript
     /**
      * @return string
      */
-    private static function getTempDir(): string
+    private static function getTempDir(string $suffix = ''): string
     {
-        $tempDir = sys_get_temp_dir().'/'.uniqid('pool_');
+        $tempDir = sys_get_temp_dir().'/'.uniqid("pool_$suffix");
         if (!is_dir($tempDir)) {
-            mkdir($tempDir, 0777, true);
+            mkdir($tempDir, 0700, true);
+        }
+        if (!is_writable($tempDir)) {
+            throw new FileOperationException("Could not create temp directory $tempDir");
         }
         return $tempDir;
     }
@@ -157,23 +165,35 @@ final class Ghostscript
         return $arguments;
     }
 
-    private static function handleOutputFiles(string $tempDir, string $targetDir, string $pattern, callable $checkMethod, string $expectedMimeType): int
+    private static function handleOutputFiles(string $tempDir, string $targetDir, string $pattern, callable $checkMethod, string $expectedMimeType): array
     {
-        $pageCount = 0;
-        foreach (glob("$tempDir/$pattern") as $file) {
-            if ($checkMethod($file, $expectedMimeType)) {
-                $pageCount++;
-                $filename = basename($file);
-                if (!move_file($file, "$targetDir/$filename")) {
-                    deleteDir($tempDir);
-                    throw new FileOperationException("Could not copy file $file to target directory $targetDir");
+        try {
+            $outputFiles = [];
+            $files = glob("$tempDir/$pattern");
+            if (!$files) {
+                throw new FileOperationException("Could not find files matching pattern $pattern in temp directory $tempDir");
+            }
+            if (!is_dir($targetDir) && !mkdir($targetDir, 0777, true)) {
+                throw new FileOperationException("Could not create target directory $targetDir");
+            }
+            \error_clear_last();
+            foreach ($files as $file) {
+                if ($checkMethod($file, $expectedMimeType)) {
+                    $filename = basename($file);
+                    $dest = "$targetDir/$filename";
+                    /** @noinspection PhpFullyQualifiedNameUsageInspection */
+                    if (!\moveFile($file, $dest)) {
+                        $error = \error_get_last() ?? 'Unknown error';
+                        throw new FileOperationException("Could not copy file $file to target directory $targetDir with error: $error[message]");
+                    }
+                    $outputFiles[] = $dest;
                 }
             }
+            return $outputFiles;
         }
-        if (!rmdir($tempDir)) {
-            throw new FileOperationException("Could not remove temp directory $tempDir");
+        finally {
+            deleteDir($tempDir);
         }
-        return $pageCount;
     }
 
     /**
@@ -187,11 +207,12 @@ final class Ghostscript
         string $pages = '',
         array $options = [],
         string $pngPattern = '*.png',
-    ): false|int {
+    ): array
+    {
         // create unique temp directory for outputs
         $tempDir = self::getTempDir();
+        $tempOutputFile = $tempDir.'/'.basename($outputFile);
         $targetDir = dirname($outputFile);
-        $outputFile = $tempDir.'/'.basename($outputFile);
 
         /* pngalpha = 32-bit RGBA color with transparency indicating pixel coverage. The background is transparent unless it has been explicitly filled.
            PDF 1.4 transparent files do not give a transparent background with this device. Text and graphics anti-aliasing are enabled by default. */
@@ -211,11 +232,11 @@ final class Ghostscript
         $arguments = self::getPageArguments($pages, $arguments);
         $arguments = array_merge($arguments, self::$defaultImageOptions, $options);
         // add output and input file at the end
-        array_push($arguments, '-o', $outputFile, $inputFile);
+        array_push($arguments, '-o', $tempOutputFile, $inputFile);
 
         $output = [];
         if (!self::execute($arguments, $output)) {
-            return false;
+            throw new RuntimeException('Ghostscript execution failed');
         }
 
         return self::handleOutputFiles($tempDir, $targetDir, $pngPattern, self::checkImageFile(...), 'image/png');
@@ -246,6 +267,14 @@ final class Ghostscript
         return empty($text);
     }
 
+    /**
+     * Extracts Text from a pdf or ps file
+     *
+     * @param string $inputFile The path to the input file from which text will be extracted.
+     * @param string $outputFile The path to the output file where the extracted text will be saved.
+     * @param array $options Additional options to customize the text extraction process.
+     * @return bool Returns true if the text extraction was successful, false otherwise.
+     */
     public static function extractText(string $inputFile, string $outputFile, array $options = []): bool
     {
         $arguments = array_merge(
@@ -258,6 +287,37 @@ final class Ghostscript
             $options,
         );
         return self::execute($arguments);
+    }
+
+    public static function getTextFromPdf(string $inputFile, array $options = []): string
+    {
+        $tmpDir = self::getTempDir('txt_output');
+        $tmpFile = tempnam($tmpDir, 'pool_txt_output');
+        if ($tmpFile === false) {
+            throw new RuntimeException("Could not create a temporary file in $tmpDir");
+        }
+        if (!chmod($tmpFile, 0600)) {
+            unlink($tmpFile);
+            throw new RuntimeException("Could not set permissions on temporary file in $tmpDir");
+        }
+
+        try {
+            if (!self::extractText($inputFile, $tmpFile, $options)) {
+                throw new RuntimeException("Text extraction failed for $inputFile");
+            }
+
+            if (!file_exists($tmpFile)) {
+                throw new RuntimeException("Extraction resulted in non-existent file $tmpFile for $inputFile");
+            }
+            $text = file_get_contents($tmpFile);
+            if ($text === false) {
+                throw new RuntimeException("Could not read text from temporary file $tmpFile");
+            }
+            return $text;
+        }
+        finally {
+            deleteDir($tmpDir);
+        }
     }
 
     /**
