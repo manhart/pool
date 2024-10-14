@@ -283,23 +283,21 @@ if (!function_exists('removeEndingSlash')) {
     }
 }
 
-if (!function_exists('removeBeginningSlash')) {
-    /**
-     * Entfernt einen evtl. vorhandenen Slash am Anfang des uebergebenen String
-     *
-     * @param string $value String (z.B. Verzeichnis)
-     * @return string String ohne Slash am Ende
-     */
-    function removeBeginningSlash(string $value): string
-    {
-        if ($value !== '') {
-            if ($value[0] === '/' || $value[0] === '\\') {
-                $value = substr($value, 1);
-            }
+/**
+ * Removes any slash at the beginning of the passed string
+ *
+ * @param string $value String (z.B. Verzeichnis)
+ * @return string String ohne Slash am Ende
+ */
+function removeBeginningSlash(string $value): string
+{
+    if ($value !== '') {
+        if ($value[0] === '/' || $value[0] === '\\') {
+            $value = substr($value, 1);
         }
-
-        return $value;
     }
+
+    return $value;
 }
 
 /**
@@ -399,29 +397,28 @@ function deleteDir(string $dir, bool $rmSelf = true): bool
         return false;
     }
 
-    while (false !== ($readdir = readdir($handle))) {
-        if ($readdir !== '..' && $readdir !== '.') {
-            $resource = $dir.$readdir;
-            if (is_file($resource)) {
-                if (!unlink($resource)) {
-                    closedir($handle);
-                    return false;
-                }
-            } elseif (is_dir($resource)) {
-                // Calls itself to clear subdirectories
-                if (!deleteDir($resource)) {
-                    closedir($handle);
-                    return false;
-                }
+    while (($readdir = readdir($handle)) !== false) {
+        if ($readdir === '..' || $readdir === '.') {
+            continue;
+        }
+        $resource = $dir.$readdir;
+        if (is_file($resource)) {
+            if (!unlink($resource)) {
+                closedir($handle);
+                return false;
+            }
+        } elseif (is_dir($resource)) {
+            // Calls itself to clear subdirectories
+            if (!deleteDir($resource)) {
+                closedir($handle);
+                return false;
             }
         }
     }
     closedir($handle);
 
-    if ($rmSelf) {
-        if (!rmdir($dir)) {
-            return false;
-        }
+    if ($rmSelf && !rmdir($dir)) {
+        return false;
     }
 
     return true;
@@ -1054,14 +1051,14 @@ function setHttpResponseCode(int $num): void
  * @param string $dest Target file
  * @return bool
  */
-function move_file(string $source, string $dest): bool
+function moveFile(string $source, string $dest): bool
 {
     if (!file_exists($source)) return false;
-    if (!is_dir(dirname($dest))) return false; // OR -> mkdirs(dirname($dest));
-    $res_copy = copy($source, $dest);
-    if ($res_copy) $res_unlink = unlink($source);
-
-    return ($res_copy and $res_unlink);
+    $destDir = dirname($dest);
+    if (!is_dir($destDir) && !mkdir($destDir, 0755, true)) return false;
+    if (!copy($source, $dest)) return false;
+    if (!unlink($source)) return false;
+    return true;
 }
 
 /**
