@@ -294,11 +294,11 @@ final class Ghostscript
         $tmpDir = self::getTempDir('txt_output');
         $tmpFile = tempnam($tmpDir, 'pool_txt_output');
         if ($tmpFile === false) {
-            throw new RuntimeException("Could not create a temporary file in $tmpDir");
+            throw new FileOperationException("Could not create a temporary file in $tmpDir");
         }
         if (!chmod($tmpFile, 0600)) {
             unlink($tmpFile);
-            throw new RuntimeException("Could not set permissions on temporary file in $tmpDir");
+            throw new FileOperationException("Could not set permissions on temporary file in $tmpDir");
         }
 
         try {
