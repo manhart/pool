@@ -24,7 +24,7 @@ use SodiumException;
 
 final class Crypt
 {
-    /** * @throws SodiumException */
+    /** @throws SodiumException */
     #[Pure]
     public static function decrypt(string $pass, string $key): string
     {
@@ -38,7 +38,8 @@ final class Crypt
         );
     }
 
-    /** @throws SodiumException
+    /**
+     * @throws SodiumException
      * @throws RandomException
      */
     #[Pure]
