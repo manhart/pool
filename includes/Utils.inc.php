@@ -427,20 +427,15 @@ function deleteDir(string $dir, bool $rmSelf = true): bool
 /**
  * Determines the extension of the file without the dot
  *
- * @param string $file filename
- * @return string file extension
- **@see pathinfo() buildin function since PHP 4.0.3
+ * @see pathinfo() builtin function since PHP 4.0.3
  */
 function file_extension(string $file = ""): string
 {
-    return substr($file, (strrpos($file, ".") ? strrpos($file, ".") + 1 : strlen($file)), strlen($file));
+    return substr($file, (strrpos($file, '.') ? strrpos($file, '.') + 1 : strlen($file)), strlen($file));
 }
 
 /**
- * removes the extension from the file name
- *
- * @param string $file filename
- * @return string filename without extension
+ * Removes the extension from the file name
  */
 function remove_extension(string $file = ''): string
 {
@@ -501,7 +496,6 @@ function shorten(string $str = '', int $len = 150, string|int $more = 1, bool $b
 /**
  * Entfernt leere Zeilen. Z.B. $lines = array_filter($lines, 'removeEmptyLines');
  *
- * @access public
  * @param string $line Wert
  * @return boolean
  **/
@@ -511,13 +505,9 @@ function removeEmptyLines(string $line): bool
 }
 
 /**
- * formatDateTime()
- *
- * @param $datetime
- * @param $format
- * @return string
+ * Formats a given datetime string or timestamp into a specified format.
  */
-function formatDateTime($datetime, $format): string
+function formatDateTime(int|string $datetime, string $format): string
 {
     if (!is_numeric($datetime)) {
         $timestamp = strtotime($datetime);
@@ -625,10 +615,7 @@ function getClientIP(): string
 }
 
 /**
- * creates a browser fingerprint
- *
- * @param bool $withClientIP
- * @return string
+ * Creates a browser fingerprint
  */
 function getBrowserFingerprint(bool $withClientIP = true): string
 {
@@ -744,10 +731,8 @@ function sanitizeFilename(string $filename, bool $lowerCase = true): string
 }
 
 /**
- * normalize Database Column ident (remove umlauts, special characters and whitespaces)
- *
- * @param string $ident
- * @return string
+ * Removes non-alphanumeric characters, dashes, and underscores from the
+ * provided identifier after converting umlauts.
  */
 function sanitizeIdent(string $ident): string
 {
@@ -767,9 +752,6 @@ function bool2int(bool $bool): int
 
 /**
  * Convert boolean expression to string ("true" or "false")
- *
- * @param bool $bool boolean value
- * @return string 'false' or 'true'
  */
 function bool2string(bool $bool): string
 {
@@ -777,10 +759,8 @@ function bool2string(bool $bool): string
 }
 
 /**
- * Umwandlung string Ausdruck ('true', 'false') in booleschen Ausdruck
- *
- * @param string|null $string $string Boolean als String
- * @return bool booleschen Ausdruck
+ * Converts a given string to a boolean value.
+ * Returns true if the string is '1' or 'true', otherwise returns false.
  */
 function string2bool(?string $string): bool
 {
@@ -788,14 +768,11 @@ function string2bool(?string $string): bool
 }
 
 /**
- * checks if the object is empty.
- *
- * @param $obj
- * @return bool
+ * Checks if the object is empty.
  */
 function isEmptyObject($obj): bool
 {
-    foreach ($obj as $prop) {
+    foreach ($obj as $ignored) {
         return false;
     }
 
@@ -804,74 +781,57 @@ function isEmptyObject($obj): bool
 
 /**
  * Liefert einen Wahrheitswert, wenn die Variable nicht leer ist z.B. $arr = array_filter($arr, 'isNotEmpty').
- *
- * @param mixed $var
- * @return bool
  */
-function isNotEmpty($var): bool
+function isNotEmpty(mixed $var): bool
 {
     return !empty($var);
 }
 
 /**
  * Liefert einen Wahrheitswert, wenn die Variable nicht NULL ist.
- *
- * @param mixed $var
- * @return bool
  */
-function isNotNull($var): bool
+function isNotNull(mixed $var): bool
 {
     return !is_null($var);
 }
 
 /**
  * Liefert einen Wahrheitswert, wenn die Variable kein leerer String ist.
- *
- * @param mixed $var
- * @return bool
  */
-function isNotEmptyString($var): bool
+function isNotEmptyString(mixed $var): bool
 {
     return !($var === '');
 }
 
 /**
- * returns true if value is empty
- *
- * @param $value
- * @return bool
+ * Returns true if value is empty
  */
-function isEmptyString($value): bool
+function isEmptyString(string $value): bool
 {
     return ($value === '');
 }
 
 /**
- * Druckt Dateien aus
- *
- * @param string $printer Druckername
- * @param array $files Dateien (z.B. PDF Dokumente)
+ * Sends a list of files to the specified printer.
  */
 function printFiles(string $printer, array $files): bool
 {
-    $files = array_map('escapeshellarg', $files);
-    $command = 'lp -d '.$printer.' '.implode(' ', $files);
+    $files = array_map(escapeshellarg(...), $files);
+    $command = 'lp -d '.escapeshellarg($printer).' '.implode(' ', $files);
     exec($command, $output, $return_value);
-
-    return ($return_value == 0);
+    return ($return_value === 0);
 }
 
 /**
  * ueberprueft, ob die Datei lokal existiert (das PHP file_exists erkennt neu angelegte Dateien auf der Shell/NFS Laufwerke nicht)
  *
- * @param string $file
- * @param string $remote z.B. rsh root@blub.de
- * @return boolean
+ * @param string $remote e.g. rsh root@blub.de
  */
 function shellFileExists(string $file, string $remote = ''): bool
 {
+    $file = escapeshellarg($file);
     $cmd = 'test -e '.$file.' && echo 1 || echo 0';
-    if ($remote != '') $cmd = $remote.' "'.$cmd.'"';
+    if ($remote != '') $cmd = "$remote \"$cmd\"";
     exec($cmd, $arrOutFileExists);
     if (!isset($arrOutFileExists[0]))
         return false;
@@ -879,35 +839,7 @@ function shellFileExists(string $file, string $remote = ''): bool
 }
 
 /**
- * Erstellt Suchmuster fuer SQL-Statement. Sehr hilfreich, wenn man Textfeldsuche benoetigt.
- * Z.B. Eingabe von A listet alle mit A beginnenden Treffer auf. Eingabe > Parameter "$min" listet
- * alle Treffer, die die Eingabe enthalten auf.
- *
- * @param string $wert
- * @param int $min
- * @return string
- */
-function getSearchPattern4SQL($wert, $min = 2): string
-{
-    $len_wert = strlen($wert);
-
-    if ($len_wert > 0) {
-        $pattern = $wert.'%';
-        if ($len_wert > $min) {
-            $pattern = '%'.$pattern;
-        }
-
-        return $pattern;
-    }
-
-    return '';
-}
-
-/**
- * Setzt eine globale Variable
- *
- * @param string $key
- * @param mixed $value
+ * Sets a global variable
  */
 function setGlobal(string $key, mixed &$value): void
 {
@@ -915,10 +847,7 @@ function setGlobal(string $key, mixed &$value): void
 }
 
 /**
- * Liefert Wert einer globalen Variable
- *
- * @param string $key
- * @return mixed
+ * Returns the value of a global variable
  */
 function &getGlobal(string $key): mixed
 {
@@ -926,10 +855,7 @@ function &getGlobal(string $key): mixed
 }
 
 /**
- * Abfrage ob die globale Variable existiert
- *
- * @param string $key
- * @return bool
+ * Query whether the global variable exists
  */
 function global_exists(string $key): bool
 {
@@ -937,10 +863,10 @@ function global_exists(string $key): bool
 }
 
 /**
- * Silbentrennung
+ * Identifies potential hyphenation positions in a given word.
  *
- * @param string $word Zu trennendes Wort
- * @return array Moegliche Trennpositionen
+ * @param string $word The word to evaluate for hyphenation.
+ * @return array An array containing integer positions where hyphenation is possible.
  */
 function hyphenation(string $word): array
 {
@@ -1046,10 +972,6 @@ function setHttpResponseCode(int $num): void
 
 /**
  * Moves a file
- *
- * @param string $source Source file
- * @param string $dest Target file
- * @return bool
  */
 function moveFile(string $source, string $dest): bool
 {
@@ -1387,8 +1309,7 @@ function readFilesRecursive(string $path, bool $absolute = true, string $filePat
 }
 
 /**
- * @param string $path
- * @return array|false
+ * Reads directories at the specified path.
  */
 function readDirs(string $path): false|array
 {
@@ -1513,13 +1434,9 @@ function forceFileDownload(string $file, string $mimetype = ''): void
 }
 
 /**
- * Laedt eine Datei aus dem Web auf den lokalen Rechner
- *
- * @param string $sourceFile Quelldatei aus dem Web/Intranet
- * @param string $destFile Lokale Zieldatei
- * @return int|false gibt die Anzahl geschriebener Bytes oder False zurueck
+ * Downloads a file from a specified source URL to a local destination.
  */
-function downloadFile(string $sourceFile, string $destFile)
+function downloadFile(string $sourceFile, string $destFile): false|int
 {
     return file_put_contents($destFile, fopen($sourceFile, 'r'), LOCK_EX);
 }
@@ -1534,10 +1451,8 @@ function isMounted(string $mountPoint): int
 {
     if (is_dir($mountPoint)) { # man kann nur in ein Verzeichnis rein-mounten
         $mountPoint = removeEndingSlash($mountPoint);
-        $cmd = 'mount | grep "'.$mountPoint.'" | wc -l | tr -d " "';
-        $isMounted = intval(shell_exec($cmd));
-
-        return $isMounted;
+        $cmd = "mount | grep \"$mountPoint\" | wc -l | tr -d \" \"";
+        return intval(shell_exec($cmd));
     }
 
     return 0;
@@ -1973,7 +1888,7 @@ function htmlAttributes(array $attributes): string
 }
 
 /**
- * calls the system command pdfunite
+ * Calls the system command pdfunite
  *
  * @param array $pdfSourceFiles
  * @param string $pdfOut
@@ -1985,7 +1900,7 @@ function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
     $pdfDestFile = escapeshellarg($pdfOut);
     $cmd = escapeshellcmd("pdfunite $pdfSourceFiles $pdfDestFile");
     exec($cmd, result_code: $resultCode);
-    return $resultCode === 0 && file_exists($pdfOut);
+    return ($resultCode === 0) && file_exists($pdfOut);
 }
 
 /**
