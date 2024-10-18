@@ -1598,21 +1598,30 @@ function utf8_to_rtf(string $utf8_text): string
 }
 
 /**
- * Fuehrt ein Kommando auf der Shell im Hintergrund aus und gibt die PID zurueck
+ * Executes a shell command in the background.
  *
- * @param string $cmd
- * @param integer $priority
- * @return string
+ * @param string $cmd The command to be executed.
+ * @param int $priority The priority of the command (0 for default priority).
+ * @return int The process ID (PID) of the background command.
  */
-function shell_exec_background(string $cmd, int $priority = 0): string
+function shell_exec_background(string $cmd, array $args = [], int $priority = 0, string $logFile = '/dev/null'): int
 {
-    if ($priority) {
-        $PID = shell_exec('nohup nice -n '.$priority.' '.$cmd.' >/dev/null 2>&1 & echo $!');
-    } else {
-        $PID = shell_exec('nohup '.$cmd.' >/dev/null 2>&1 & echo $!');
+    $cmd = escapeshellcmd($cmd);
+    $args = implode(' ', array_map(escapeshellarg(...), $args));
+
+    // Ensure priority is within valid range (-20 to 19)
+    if ($priority < -20 || $priority > 19) {
+        throw new \InvalidArgumentException('Priority must be between -20 and 19.');
+    }
+    $niceCmd = $priority ? "nice -n $priority" : '';
+    $finalCmd = "nohup $niceCmd $cmd $args > $logFile 2>&1 & echo \$!";
+
+    $PID = shell_exec($finalCmd);
+    if (!$PID || !is_numeric($PID)) {
+        throw new \pool\classes\Exception\RuntimeException("The shell command $cmd could not be executed in the background.");
     }
 
-    return trim($PID);
+    return (int)rtrim($PID);
 }
 
 /**
