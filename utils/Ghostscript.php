@@ -169,7 +169,8 @@ final class Ghostscript
     {
         try {
             $outputFiles = [];
-            $files = glob("$tempDir/$pattern");
+            $files = glob("$tempDir/$pattern", GLOB_NOSORT);
+            natsort($files);
             if (!$files) {
                 throw new FileOperationException("Could not find files matching pattern $pattern in temp directory $tempDir");
             }
