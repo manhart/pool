@@ -423,8 +423,6 @@ class Weblication extends Component
 
     /**
      * Get translator
-     *
-     * @return Translator
      */
     public function getTranslator(): Translator
     {
@@ -432,8 +430,7 @@ class Weblication extends Component
     }
 
     /**
-     * @param Translator $translator
-     * @return static
+     * Set the translator instance
      */
     public function setTranslator(Translator $translator): static
     {
@@ -442,7 +439,7 @@ class Weblication extends Component
     }
 
     /**
-     * @return bool
+     * Check if a translator is set
      */
     public function hasTranslator(): bool
     {
@@ -450,9 +447,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert den Zeichensatz der Webanwendung zurueck
-     *
-     * @return string
+     * Get the character set
      */
     public function getCharset(): string
     {
