@@ -163,13 +163,13 @@ function storageUnitToBytes(string $value): int
 }
 
 /**
- * Errechnet eine Terminserie (beruecksichtigt Sommer- & Winterzeit)
+ * Calculates a series of appointment dates based on a start and end time.
  *
- * @param int $from Startzeitpunkt
- * @param int|null $to Endzeitpunkt
- * @param int $intervall Intervall in Tage (Standard 7 fuer eine Woche)
- * @param int $step Schritte (schrittweise) bedeutet zu jedem $step 'ten Intervall. Z.B. bei 2 wird jeder 2. Termin uebersprungen (bzw. 2-Wochen-Intervall bei 7 Tagen erreicht)
- * @return array
+ * @param int $from The starting timestamp.
+ * @param int|null $to The ending timestamp, or null for a single appointment.
+ * @param int $intervall The interval in days between appointments (default is 7).
+ * @param int $step The step increment for generating appointments (default is 1).
+ * @return array An array of appointments, each containing a 'timestamp', 'date', and 'step'.
  */
 function getSeriesOfAppointments(int $from, ?int $to, int $intervall = 7, int $step = 1): array
 {
@@ -331,41 +331,6 @@ function hex_encode(string $text): string
     }
 
     return $encoded;
-}
-
-/**
- * Gibt einen klickbaren JavaScript HEX kodierten E-Mail Link zurueck.
- * Vor allem gegen Spam Bots interessant!
- *
- * @param string $email E-Mail Adresse
- * @return string JavaScript E-Mail Link
- **/
-function getJSEMailLink(string $email, $caption = null): string
-{
-    if (!str_contains($email, '@')) {
-        return '';
-    }
-    $email = explode('@', $email);
-    $en_caption = hex_encode($email[0]);
-    $en_at = hex_encode('@');
-    $en_ext = hex_encode($email[1]);
-    $js = '<script type="text/javascript">
-					const caption = "'.$en_caption.'";
-					const at = "'.$en_at.'";
-					const ext = "'.$en_ext.'";';
-
-    $js .= 'document.write(\'<a href="mailto:\' + caption + at + ext + \'">\');';
-    if ($caption) {
-        $js .= "	document.write('$caption');";
-    } else {
-        $js .= "	document.write(urlDecode(\"$en_caption\") + urlDecode(\"$en_at\") + urlDecode(\"$en_ext\"));";
-    }
-    $js .= '	document.write(\'</a>\');';
-
-    $js .= '
-				</script>';
-
-    return $js;
 }
 
 /**
@@ -536,10 +501,7 @@ function strip_body(string $file_content): string
 }
 
 /**
- * strips head from html page
- *
- * @param string $html
- * @return string
+ * Strips head from html page
  */
 function strip_head(string $html): string
 {
@@ -763,6 +725,7 @@ function string2bool(?string $string): bool
  */
 function isEmptyObject($obj): bool
 {
+    /** @noinspection PhpLoopNeverIteratesInspection */
     foreach ($obj as $ignored) {
         return false;
     }
@@ -1756,9 +1719,6 @@ function base64url_decode($token): bool|string
 
 /**
  * determines http status from response headers
- *
- * @param string $responseLine
- * @return int
  */
 function getHttpStatusCode(string $responseLine): int
 {
@@ -1770,10 +1730,7 @@ function getHttpStatusCode(string $responseLine): int
 }
 
 /**
- * get errormessage from
- *
- * @param int $lastErrorCode
- * @return string
+ * Get errormessage from
  */
 function preg_last_error_message(int $lastErrorCode): string
 {
@@ -1850,11 +1807,7 @@ function camelize(string $string, bool $capitalizeFirstCharacter = false, string
 }
 
 /**
- * convert camelCase style into dash style (or another separator)
- *
- * @param string $string
- * @param string $separator
- * @return string
+ * Convert camelCase style into dash style (or another separator)
  */
 function decamelize(string $string, string $separator = '-'): string
 {
@@ -1863,10 +1816,7 @@ function decamelize(string $string, string $separator = '-'): string
 }
 
 /**
- * array to html attributes
- *
- * @param array $attributes
- * @return string
+ * Array to html attributes
  */
 function htmlAttributes(array $attributes): string
 {
@@ -1894,23 +1844,18 @@ function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
     return ($resultCode === 0) && file_exists($pdfOut);
 }
 
+
 /**
- * @param string $date
- * @param string $format
- * @return bool
+ * Validates a given date string against a specified format.
  */
 function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
 {
-    $d = DateTime::createFromFormat($format, $date);
-    return $d && $d->format($format) === $date;
+    $dateTime = DateTime::createFromFormat($format, $date);
+    return $dateTime && $dateTime->format($format) === $date;
 }
 
 /**
  * Calculates the next day of the week based on a day of the week and an operand (subtrahend or summand).
- *
- * @param int $weekday
- * @param int $operand
- * @return int
  */
 function calcNextWeekday(int $weekday, int $operand = 0): int
 {
@@ -1919,11 +1864,7 @@ function calcNextWeekday(int $weekday, int $operand = 0): int
 }
 
 /**
- * calculates the next working day of the week based on a day of the week and an operand (subtrahend or summand).
- *
- * @param int $weekday
- * @param int $operand
- * @return int
+ * Normalizes a day of the week to ensure it falls within the range of 1 to 7.
  */
 function calcNextWorkingDay(int $weekday, int $operand = 0): int
 {
@@ -1941,11 +1882,6 @@ function calcNextWorkingDay(int $weekday, int $operand = 0): int
 
 /**
  * Calculates the difference in days of two dates (from DateTimeInterface)
- *
- * @param DateTimeInterface $StartDateTime
- * @param DateTimeInterface $EndDateTime
- * @param bool $absolute without sign
- * @return int
  */
 function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $EndDateTime, bool $absolute = true): int
 {
@@ -1957,9 +1893,7 @@ function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $E
 }
 
 /**
- * determines if the current content-type is text/html
- *
- * @return bool
+ * Determines if the current content-type is text/html
  */
 function isHtmlContentTypeHeaderSet(): bool
 {
@@ -1971,12 +1905,6 @@ function isHtmlContentTypeHeaderSet(): bool
             return true;
         }
     }
-    //    foreach ($headers as $header) {
-    //        if (str_starts_with($header, 'content-type: text/html')) {
-    //            return true;
-    //        }
-    //    }
-
     return false;
 }
 

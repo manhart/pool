@@ -1623,21 +1623,6 @@ class Weblication extends Component
     }
 
     /**
-     * Closes all connections via DataInterfaces. It's not necessary to close connections every time (except for persistent connections),
-     * PHP will check for open connections when the script is finished anyway.
-     * From a performance perspective, closing connections is pure overhead.
-     *
-     * @deprecated the weblication no longer maintains a list of data interfaces
-     * @see DataInterface manual closing has not been implementeded due to lack of demand
-     */
-    public function close(): void
-    {
-        foreach ($this->interfaces as $DataInterface) {
-            $DataInterface->close();
-        }
-    }
-
-    /**
      * Setup AppTranslator and TemplateTranslator
      *
      * @param array $settings
