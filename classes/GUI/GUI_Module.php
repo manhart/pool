@@ -688,7 +688,7 @@ class GUI_Module extends Module
             ['className' => $this->getClassName(), 'method' => $this->ajaxMethod, 'errorType' => $errorType, 'status' => $statusCode],
             'ajaxCallLog',
         );
-        header('Content-type: application/json');
+        header('Content-Type: application/json');
         if (!$this->plainJSON || $statusCode != 200) {//report failed functions in standard format
             $clientData = [//standard client data-format
                 'data' => $clientData,
