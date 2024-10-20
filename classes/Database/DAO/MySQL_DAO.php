@@ -102,6 +102,8 @@ class MySQL_DAO extends DAO
 
     /**
      * Set columns for translation into another language
+     *
+     * @deprecated
      */
     public function setTranslatedColumns(array $columns): static
     {
