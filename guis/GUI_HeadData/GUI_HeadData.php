@@ -433,7 +433,7 @@ class GUI_HeadData extends GUI_Module
             $this->Template->setVar('FILENAME', $js['file']);
             $attributes = '';
             if (isset($js['attributes'])) {
-                $attributes = htmlAttributes($js['attributes']);
+                $attributes = buildHtmlAttributes($js['attributes']);
             }
             $this->Template->setVar('attributes', $attributes);
         }

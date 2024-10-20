@@ -1818,7 +1818,7 @@ function decamelize(string $string, string $separator = '-'): string
 /**
  * Array to html attributes
  */
-function htmlAttributes(array $attributes): string
+function buildHtmlAttributes(array $attributes): string
 {
     $attributes = implode(' ', array_map(function ($k, $v) {
         if (is_array($v)) $v = implode(' ', $v);
