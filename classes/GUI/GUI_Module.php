@@ -419,8 +419,7 @@ class GUI_Module extends Module
 
         if (class_exists($GUIClassName, false)) return $GUIClassName;
         // construct namespace according to PSR-4 standards
-        $docRoot = addEndingSlash(realpath(DIR_DOCUMENT_ROOT));
-        $fileName = realpath($fileName);
+        $docRoot = addEndingSlash(DIR_DOCUMENT_ROOT);
         $baseNameSpace = defined('BASE_NAMESPACE_PATH') ? BASE_NAMESPACE_PATH : '';
         $nameSpaceClassName = str_replace([$docRoot, '/'], [$baseNameSpace, NAMESPACE_SEPARATOR], remove_extension($fileName));
         if (class_exists($nameSpaceClassName, false)) return $nameSpaceClassName;
