@@ -228,49 +228,36 @@ function isLeapYear(string $year = ''): bool
     }
 }
 
-if (!function_exists('addEndingSlash')) {
-    /**
-     * Adds a possibly missing ending slash to a string. Empty strings are not changed.
-     *
-     * @param string $value Wert (Ordner, Verzeichnis)
-     * @return string String with ending slash.
-     **/
-    function addEndingSlash(string $value): string
-    {
-        if ($value != '') {
-            if ($value[-1] != '/' && $value[-1] != '\\') {
-                $value .= '/';
-            }
+/**
+ * Adds a possibly missing ending slash to a string. Empty strings are not changed.
+ */
+function addEndingSlash(string $value): string
+{
+    if ($value != '') {
+        if ($value[-1] != '/' && $value[-1] != '\\') {
+            $value .= '/';
         }
-
-        return $value;
     }
+
+    return $value;
 }
 
-if (!function_exists('removeEndingSlash')) {
-    /**
-     * Entfernt endenden Slash im String
-     *
-     * @param string $value String (z.B. Verzeichnis)
-     * @return string String ohne Slash am Ende
-     */
-    function removeEndingSlash(string $value): string
-    {
-        if ($value !== '') {
-            if ($value[-1] === '/' || $value[-1] === '\\') {
-                $value = substr($value, 0, -1);
-            }
+/**
+ * Removes the ending slash or backslash from the input string if present.
+ */
+function removeEndingSlash(string $value): string
+{
+    if ($value !== '') {
+        if ($value[-1] === '/' || $value[-1] === '\\') {
+            $value = substr($value, 0, -1);
         }
-
-        return $value;
     }
+
+    return $value;
 }
 
 /**
  * Removes any slash at the beginning of the passed string
- *
- * @param string $value String (z.B. Verzeichnis)
- * @return string String ohne Slash am Ende
  */
 function removeBeginningSlash(string $value): string
 {
