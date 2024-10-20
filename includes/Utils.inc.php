@@ -11,20 +11,14 @@
 /**
  * Utils.inc.php
  *
- * @version $Id: Utils.inc.php,v 1.65 2007/07/17 13:49:10 manhart Exp $
- * @version $Revision 1.0$
- * @version
  * @since 07/28/2003
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
  */
 
 use JetBrains\PhpStorm\NoReturn;
 use JetBrains\PhpStorm\Pure;
 
-
 /**
- * Gibt den aktuellen UNIX-Timestamp/Zeitstempel in Mikrosekunden zurueck
+ * Returns the current Unix timestamp with microseconds.
  *
  * @return float Zeitstempel in Mikrosekunden
  **/
@@ -97,6 +91,7 @@ function pray(mixed $data, bool $functions = false): string
  */
 function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, string $blank = ' '): string
 {
+    if ($bytes < 0) return '-'; elseif ($bytes == 0) return '0 Bytes';
     $units = [['B', 'Bytes'], ['KB', 'KBytes'], ['MB', 'MBytes'], ['GB', 'GBytes'], ['TB', 'TBytes']];
     $level = min((int)log($bytes, 1024), count($units) - 1);
     $unit = $blank.$units[$level][(int)!$shortVersion];
@@ -127,48 +122,44 @@ function abbreviateNumber(int $number, int $decimals = 2, string $decimal_separa
     return number_format($number / pow(1000, $level), $decimals, $decimal_separator, $thousands_separator).$unit;
 }
 
-
 /**
- * @param $val
- * @return int
+ * Converts a storage unit string to the equivalent byte value.
+ *
+ * @param string $value The storage unit string (e.g., '10MB', '5GB') to convert.
+ * @return int The byte value equivalent of the provided storage unit string.
  */
-function returnBytes($val): int
+function storageUnitToBytes(string $value): int
 {
-    if (empty($val)) return 0;
+    if (empty($value)) return 0;
 
-    $val = trim($val);
+    $trimmedValue = trim($value);
 
-    preg_match('#([0-9]+)\s*([a-z]+)#i', $val, $matches);
-
-    $unit = '';
-    if (isset($matches[2])) {
-        $unit = strtolower($matches[2]);
+    if (!preg_match('#([0-9]+)\s*([a-z]+)#i', $trimmedValue, $matches)) {
+        return 0;
     }
 
-    if (isset($matches[1])) {
-        $val = (int)$matches[1];
-    }
+    $numericValue = (int)$matches[1];
+    $unit = isset($matches[2]) ? strtolower($matches[2]) : '';
 
     switch ($unit) {
         case 't':
         case 'tb':
         case 'tib':
-            $val *= 1024;
+        $numericValue *= 1024;
         case 'g':
         case 'gb':
         case 'gib':
-            $val *= 1024;
+        $numericValue *= 1024;
         case 'm':
         case 'mb':
         case 'mib':
-            $val *= 1024;
+        $numericValue *= 1024;
         case 'k':
         case 'kb':
         case 'kib':
-            $val *= 1024;
+        $numericValue *= 1024;
     }
-
-    return (int)$val;
+    return $numericValue;
 }
 
 /**
