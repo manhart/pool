@@ -55,7 +55,7 @@ use function defined;
 use function explode;
 use function extension_loaded;
 use function file_exists;
-use function getcwd;
+use function hasHtmlContentType;
 use function header;
 use function ini_get;
 use function ini_set;
@@ -63,7 +63,6 @@ use function is_dir;
 use function is_null;
 use function is_subclass_of;
 use function isAjax;
-use function isHtmlContentTypeHeaderSet;
 use function json_encode;
 use function makeRelativePathsFrom;
 use function microtime;
@@ -114,7 +113,7 @@ class Weblication extends Component
     /**
      * Contains the first loaded GUI_Module
      *
-     * @var \pool\classes\GUI\GUI_Module $Main
+     * @var GUI_Module $Main
      * @see Weblication::run()
      */
     private GUI_Module $Main;
@@ -468,7 +467,7 @@ class Weblication extends Component
      */
     public function setCharset(string $charset): static
     {
-        header('content-type: text/html; charset='.$charset);
+        header("Content-Type: text/html; charset=$charset");
         $this->charset = $charset;
         return $this;
     }
@@ -1569,7 +1568,7 @@ class Weblication extends Component
     {
         register_shutdown_function(static function () {
             // print only when html content type is set
-            if (!isHtmlContentTypeHeaderSet()) {
+            if (!hasHtmlContentType()) {
                 return;
             }
 
@@ -1579,7 +1578,7 @@ class Weblication extends Component
                 $what = 'Script';
             } else {
                 $what = 'Page';
-                $color = $timeSpent > 0.2 ? 'dange' : 'success';
+                $color = $timeSpent > 0.2 ? 'danger' : 'success';
                 $htmlStartTags = "<footer class=\"container-fluid text-center\"><p class=\"fw-bold text-$color\">";
                 $htmlCloseTags = '</p></footer>';
             }
@@ -1598,7 +1597,7 @@ class Weblication extends Component
     public function denyAJAX_Request($messageKey, $defaultMessage, $response_code, $errorType): void
     {
         if (self::isAjax()) {
-            header('Content-type: application/json', true, $response_code);
+            header('Content-Type: application/json', true, $response_code);
             $message = $this->getTranslator()->getTranslation($messageKey, $defaultMessage);
             $return = [
                 'success' => false,

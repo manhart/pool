@@ -1895,13 +1895,12 @@ function diffNumberOfDays(DateTimeInterface $StartDateTime, DateTimeInterface $E
 /**
  * Determines if the current content-type is text/html
  */
-function isHtmlContentTypeHeaderSet(): bool
+function hasHtmlContentType(): bool
 {
     $headers = headers_list();
-
     $i = count($headers);
     while ($i) {
-        if (str_starts_with($headers[--$i], 'content-type: text/html')) {
+        if (str_starts_with($headers[--$i], 'Content-Type: text/html')) {
             return true;
         }
     }
@@ -1923,9 +1922,7 @@ function umlauts(string $string, bool $reverse = false): string
         'ß' => 'ss',
     ];
 
-    if ($reverse) {
-        $umlauts = array_flip($umlauts);
-    }
+    $umlauts = $reverse ? array_flip($umlauts) : $umlauts;
     return strtr($string, $umlauts);
 }
 
