@@ -20,9 +20,10 @@ use JetBrains\PhpStorm\Pure;
 /**
  * Returns the current Unix timestamp with microseconds.
  *
- * @return float Zeitstempel in Mikrosekunden
- **/
-function getMicroTime($seed = 1): float
+ * @param int $seed A multiplier for the current Unix timestamp seconds part.
+ * @return float The current timestamp with microseconds, optionally multiplied by the seed.
+ */
+function getMicroTime(int $seed = 1): float
 {
     [$usec, $sec] = explode(' ', microtime());
     return ((float)$usec + ((float)$sec * $seed));
@@ -171,36 +172,31 @@ function storageUnitToBytes(string $value): int
  * @param int $step The step increment for generating appointments (default is 1).
  * @return array An array of appointments, each containing a 'timestamp', 'date', and 'step'.
  */
-function getSeriesOfAppointments(int $from, ?int $to, int $intervall = 7, int $step = 1): array
+function calculateAppointmentSeries(int $from, ?int $to, int $intervall = 7, int $step = 1): array
 {
     $dates = [];
 
-    if (empty($to)) {
+    if ($to === null) {
         return [0 => ['timestamp' => $from, 'date' => date('d.m.Y', $from), 'step' => $step]];
     }
 
-    if ($intervall > 0 and $step > 0 and $to >= $from) {
-        $secDay = 86400; // Sekunden eines Tages
+    if ($intervall > 0 && $step > 0 && $to >= $from) {
+        $secDay = 86400;
         $rhythmus = $intervall * $secDay;
-
         $diff = ($to + ($secDay - 1)) - $from;
         $numAppointments = ceil(($diff / $rhythmus) / $step);
-        if (@constant('DEBUG')) echo 'Anzahl generierter Termine: '.$numAppointments."\n";
         for ($i = 0; $i < $numAppointments; $i++) {
-            $new_date = [];
             $time = ($from + ($i * $step * $rhythmus));
             if (date('I', $from) < date('I', $time)) {
                 $time -= 3600;
             } elseif (date('I', $from) > date('I', $time)) {
                 $time += 3600;
             }
-            $new_date['timestamp'] = $time;
-            $new_date['date'] = date('d.m.Y', $time);
-            $new_date['step'] = $step;
+            $new_date = ['timestamp' => $time, 'date' => date('d.m.Y', $time), 'step' => $step];
+
             if ($time <= $to) {
                 $dates[] = $new_date;
             }
-            unset($new_date);
         }
     }
 
@@ -208,33 +204,29 @@ function getSeriesOfAppointments(int $from, ?int $to, int $intervall = 7, int $s
 }
 
 /**
- * Gibt true zurueck fuer ein Schaltjahr, andernfalls false
- *
- * @param string $year Jahr im Format CCYY
- * @return boolean true/false
+ * Determines if a given year is a leap year.
  */
 function isLeapYear(string $year = ''): bool
 {
-    if (empty($year)) {
-        $year = date('Y');
-    }
+    $year = empty($year) ? date('Y') : $year;
 
     if (preg_match('/\D/', $year)) {
         return false;
     }
 
-    if ($year < 1000) {
+    $year = (int)$year;
+    if ($year < 1000) { // before four digit year
         return false;
     }
 
-    if ($year < 1582) {
-        // vor Gregorio XIII - 1582
+    if ($year < 1582) { // Gregorian Calendar start year
+        // before Gregorio XIII - 1582
         return ($year % 4 == 0);
     } else {
-        // nach Gregorio XIII - 1582
+        // after Gregorio XIII - 1582
         return ((($year % 4 == 0) and ($year % 100 != 0)) or ($year % 400 == 0));
     }
-} // end func isLeapYear
+}
 
 if (!function_exists('addEndingSlash')) {
     /**
@@ -1333,7 +1325,6 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
         $sortarr = array_map('strtolower', $sortarr);
     }
     array_multisort($sortarr, $sortorder, $sorttype, $hauptArray);
-
     return $hauptArray;
 }
 
@@ -1857,27 +1848,31 @@ function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
 /**
  * Calculates the next day of the week based on a day of the week and an operand (subtrahend or summand).
  */
-function calcNextWeekday(int $weekday, int $operand = 0): int
+function calcNextWeekday(int $weekday, int $daysToAdd = 0): int
 {
-    $result = $weekday + $operand;
-    return $result <= 0 ? $result + 7 : ($result > 7 ? $result - 7 : $result);
+    $newDay = $weekday + $daysToAdd;
+    return normalizeWeekday($newDay);
 }
 
 /**
  * Normalizes a day of the week to ensure it falls within the range of 1 to 7.
  */
-function calcNextWorkingDay(int $weekday, int $operand = 0): int
+function normalizeWeekday(int $day): int
 {
-    $result = $weekday + $operand;
-    $result = $result <= 0 ? $result + 7 : ($result > 7 ? $result - 7 : $result);
-    if ($result >= 6) {
-        if ($operand < 0) {
-            $result = 5;
-        } else {
-            $result = 1;
-        }
+    return $day <= 0 ? $day + 7 : ($day > 7 ? $day - 7 : $day);
+}
+
+/**
+ * Calculates the next working day of the week based on a day of the week and an operand (subtrahend or summand).
+ */
+function calcNextWorkingDay(int $weekday, int $offset = 0): int
+{
+    $adjustedDay = $weekday + $offset;
+    $adjustedDay = $adjustedDay <= 0 ? $adjustedDay + 7 : ($adjustedDay > 7 ? $adjustedDay - 7 : $adjustedDay);
+    if ($adjustedDay >= 6) {
+        $adjustedDay = $offset < 0 ? 5 : 1;
     }
-    return $result;
+    return $adjustedDay;
 }
 
 /**
