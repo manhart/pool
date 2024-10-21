@@ -555,14 +555,14 @@ function downloadFile(file) {
     // alle modernen Browser (IE ab 9er)
     try {
         // funktioniert leider nicht im Safari unter Windows
-        let ClickEvent = new MouseEvent('click', {
+        const clickEvent = new MouseEvent('click', {
             view: window,
             bubbles: true,
             cancelable: false
         });
 
         link.target = '_blank';
-        link.dispatchEvent(ClickEvent);
+        link.dispatchEvent(clickEvent);
     }
     catch(e) {
         if (link.click) {
