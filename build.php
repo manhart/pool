@@ -50,8 +50,8 @@ $artifactPattern = ['*.js', '*.css'];
 $projects = [
     'g7system' => [
         'components' => ['g7system', 'commons'],
-        'includes' => ['3rdParty/_3rdPartyResources.php', 'commons/g7-bootstrap.php'],
-        'web-artifacts' => ['3rdParty'],
+        'includes' => ['3rdParty/_3rdPartyResources.php', 'commons/g7-bootstrap.php',],
+        'web-artifacts' => ['3rdParty',],
         'storeURL' => $artifactStore,
         'artifactPattern' => $artifactPattern,
     ],
@@ -87,34 +87,49 @@ function buildArtifacts($sourceDir, $projects): array {
             'image' => [],
         ];
 
-        foreach ($artifactPattern as $pattern) {
-            $files = glob("$sourceDir/{$projectConfig['web-artifacts'][0]}/$pattern");
-            foreach ($files as $file) {
-                $hash = hash_file('sha256', $file);
-                storeArtifact($file, $storeURL);
-                $relativePath = str_replace($sourceDir . '/', '', $file);
-                $type = match (pathinfo($file, PATHINFO_EXTENSION)) {
-                    'js' => 'javaScript',
-                    'css' => 'stylesheet',
-                    'png', 'jpg', 'jpeg', 'gif' => 'image',
-                    default => null
-                };
-                if ($type) {
-                    $nestedPath = explode('/', $relativePath);
-                    $current = &$artifactMap[$type];
-                    foreach ($nestedPath as $pathPart) {
-                        if (!isset($current[$pathPart])) {
-                            $current[$pathPart] = [];
-                        }
-                        $current = &$current[$pathPart];
-                    }
-                    $current['hash'] = $hash;
+        foreach ($projectConfig['components'] as $component) {
+            foreach ($artifactPattern as $pattern) {
+                $files = glob("$sourceDir/$component/$pattern");
+                foreach ($files as $file) {
+                    $hash = hash_file('sha256', $file);
+                    storeArtifact($file, $storeURL);
+                    recordArtifactPath($artifactMap, $sourceDir, $file, $hash);
                 }
             }
         }
+
+        foreach ($projectConfig['web-artifacts'] as $artifactSource) {
+            fetchWebArtifacts($artifactSource, function($artifactPath) use ($storeURL, &$artifactMap, $sourceDir) {
+                $hash = hash_file('sha256', $artifactPath);
+                storeArtifact($artifactPath, $storeURL);
+                recordArtifactPath($artifactMap, $sourceDir, $artifactPath, $hash);
+            });
+        }
+
         $artifactMaps[$projectName] = $artifactMap;
     }
     return $artifactMaps;
+}
+
+function recordArtifactPath(array &$artifactMap, string $sourceDir, string $file, string $hash): void {
+    $relativePath = str_replace($sourceDir . '/', '', $file);
+    $type = match (pathinfo($file, PATHINFO_EXTENSION)) {
+        'js' => 'javaScript',
+        'css' => 'stylesheet',
+        'png', 'jpg', 'jpeg', 'gif' => 'image',
+        default => null
+    };
+    if ($type) {
+        $nestedPath = explode('/', $relativePath);
+        $current = &$artifactMap[$type];
+        foreach ($nestedPath as $pathPart) {
+            if (!isset($current[$pathPart])) {
+                $current[$pathPart] = [];
+            }
+            $current = &$current[$pathPart];
+        }
+        $current['hash'] = $hash;
+    }
 }
 
 /** @throws Exception */
@@ -124,18 +139,38 @@ function storeArtifact(string $artifactPath, string $artifactStore): void {
     $parsedArtifactStore = parse_url($artifactStore);
     //TODO validate
     ['scheme' => $scheme, 'path' => $destPath, 'query' => $destQuery,] = $parsedArtifactStore;
-    $storeFunction = match ($parsedArtifactStore['scheme']) {
+    $storeFunction = match ($scheme) {
         'file' => fileArtifactStore(...),
-        default => throw new Exception("Protocol '{$parsedArtifactStore['scheme']}' is not supported for storing artifacts")
+        default => throw new Exception("Protocol '$scheme' is not supported for storing artifacts")
     };
     $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery);
 }
 
 function fileArtifactStore ($artifactPath, $hash, $extension, $path) {
-    $dir = sprintf('%s/%s/%s/', $path, substr($hash, 0, 2), substr($hash, 2 ));
+    $dir = sprintf('%s/%s/%s/', $path, substr($hash, 0, 2), substr($hash, 2));
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);
     }
     $hashedFileName = "$hash.$extension";
     copy($artifactPath, "$dir$hashedFileName");
+}
+
+function fetchWebArtifacts($source, callable $callback): void {
+    if (preg_match('/^(http|https|git):\/\//', $source)) {
+        // Handle remote sources (e.g., git, HTTP)
+        // This is a draft implementation and can be extended
+        // Example: Fetching from a git repository
+        $localPath = "/tmp/" . md5($source);
+        if (!is_dir($localPath)) {
+            // Clone or fetch artifacts here (e.g., using `git clone`)
+            exec("git clone $source $localPath");
+        }
+        $files = glob("$localPath/*");
+    } else {
+        // Handle local sources
+        $files = glob($source);
+    }
+    foreach ($files as $file) {
+        $callback($file);
+    }
 }
