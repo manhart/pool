@@ -46,18 +46,19 @@ if ($sourceDateEpoch === false) {
 $publish = "/public/";
 $appDir = '/virtualweb/';
 $artifactStore = 'file:///artifacts/';
-$artifactPattern = 'todo js and css';
+$artifactPattern = ['*.js', '*.css'];
 $projects = [
     'g7system' => [
         'components' => ['g7system', 'commons'],
         'includes' => ['3rdParty/_3rdPartyResources.php', 'commons/g7-bootstrap.php'],
         'web-artifacts' => ['3rdParty'],
+        'storeURL' => $artifactStore,
+        'artifactPattern' => $artifactPattern,
     ],
-
 ];
 
 //TODO announce steps and log timing
-$sourceArtifactMaps = buildArtifacts($sourceDir, $projects, $artifactPattern, $artifactStore);
+$sourceArtifactMaps = buildArtifacts($sourceDir, $projects);
 prepareCode($appDir, $projects, $sourceArtifactMaps);
 publish($publish, $projects);
 // End main execution before defining functions
@@ -74,13 +75,50 @@ function printHelp(array $argv): never {
     exit();
 }
 
-function buildArtifacts($sourceDir, $projects, $artifactPattern, $artifactStore): array {
-    //TODO grab all artifacts
+function buildArtifacts($sourceDir, $projects): array {
+    $artifactMaps = [];
+
+    foreach ($projects as $projectName => $projectConfig) {
+        $artifactPattern = $projectConfig['artifactPattern'];
+        $storeURL = $projectConfig['storeURL'];
+        $artifactMap = [
+            'stylesheet' => [],
+            'javaScript' => [],
+            'image' => [],
+        ];
+
+        foreach ($artifactPattern as $pattern) {
+            $files = glob("$sourceDir/{$projectConfig['web-artifacts'][0]}/$pattern");
+            foreach ($files as $file) {
+                $hash = hash_file('sha256', $file);
+                storeArtifact($file, $storeURL);
+                $relativePath = str_replace($sourceDir . '/', '', $file);
+                $type = match (pathinfo($file, PATHINFO_EXTENSION)) {
+                    'js' => 'javaScript',
+                    'css' => 'stylesheet',
+                    'png', 'jpg', 'jpeg', 'gif' => 'image',
+                    default => null
+                };
+                if ($type) {
+                    $nestedPath = explode('/', $relativePath);
+                    $current = &$artifactMap[$type];
+                    foreach ($nestedPath as $pathPart) {
+                        if (!isset($current[$pathPart])) {
+                            $current[$pathPart] = [];
+                        }
+                        $current = &$current[$pathPart];
+                    }
+                    $current['hash'] = $hash;
+                }
+            }
+        }
+        $artifactMaps[$projectName] = $artifactMap;
+    }
+    return $artifactMaps;
 }
 
 /** @throws Exception */
 function storeArtifact(string $artifactPath, string $artifactStore): void {
-
     $hash = hash_file('sha256', $artifactPath);
     $extension = pathinfo($artifactPath, PATHINFO_EXTENSION);
     $parsedArtifactStore = parse_url($artifactStore);
@@ -94,5 +132,10 @@ function storeArtifact(string $artifactPath, string $artifactStore): void {
 }
 
 function fileArtifactStore ($artifactPath, $hash, $extension, $path) {
-    //TODO store as path/XX/XXXXX.extension
+    $dir = sprintf('%s/%s/%s/', $path, substr($hash, 0, 2), substr($hash, 2 ));
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+    $hashedFileName = "$hash.$extension";
+    copy($artifactPath, "$dir$hashedFileName");
 }
