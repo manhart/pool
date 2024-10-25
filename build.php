@@ -21,10 +21,11 @@ set_time_limit(0);
 //the implicit flush is turned on, so output is immediately displayed
 ob_implicit_flush(1);
 
-$options = getopt('vh', ['vv::', 'recipe::', 'help']);
+$options = getopt('vh', ['vv::', 'recipe::', 'help', 'insecure-transports']);
 
 define('VERBOSE', array_key_exists('v', $options));
 define('DEBUG', array_key_exists('vv', $options));
+define('INSECURE_TRANSPORTS', array_key_exists('insecure-transports', $options));
 
 if (array_key_exists('h', $options) || array_key_exists('help', $options)) {
     printHelp($argv);
@@ -45,15 +46,13 @@ if ($sourceDateEpoch === false) {
 }
 $publish = "/public/";
 $appDir = '/virtualweb/';
-$artifactStore = 'file:///artifacts/';
-$artifactPattern = ['*.js', '*.css'];
 $projects = [
     'g7system' => [
         'components' => ['g7system', 'commons'],
         'includes' => ['3rdParty/_3rdPartyResources.php', 'commons/g7-bootstrap.php',],
         'web-artifacts' => ['3rdParty',],
-        'storeURL' => $artifactStore,
-        'artifactPattern' => $artifactPattern,
+        'storeURL' => 'file:///artifacts/',
+        'artifactPattern' => ['*.js', '*.css'],
     ],
 ];
 
@@ -65,13 +64,14 @@ publish($publish, $projects);
 exit();
 
 function printHelp(array $argv): never {
-    echo "Usage: $argv[0] [--help|-h] [--verbose|-v] [--vv[=level]] [--recipe=<name>]\n";
+    echo "Usage: $argv[0] [--help|-h] [--verbose|-v] [--vv[=level]] [--recipe=<name>] [--insecure-transports]\n";
     echo "\n";
     echo "Options:\n";
-    echo "  -h, --help          Show this help message and exit\n";
-    echo "  -v, --verbose       Enable verbose output\n";
-    echo "  --vv[=level]        Enable debug mode with an optional level (default: 1)\n";
-    echo "  --recipe=<name>     Specify a recipe\n";
+    echo "  -h, --help              Show this help message and exit\n";
+    echo "  -v, --verbose           Enable verbose output\n";
+    echo "  --vv[=level]            Enable debug mode with an optional level (default: 1)\n";
+    echo "  --recipe=<name>         Specify a recipe\n";
+    echo "  --insecure-transports   Allow fetching sources over insecure transports\n";
     exit();
 }
 
@@ -87,23 +87,22 @@ function buildArtifacts($sourceDir, $projects): array {
             'image' => [],
         ];
 
-        foreach ($projectConfig['components'] as $component) {
-            foreach ($artifactPattern as $pattern) {
-                $files = glob("$sourceDir/$component/$pattern");
-                foreach ($files as $file) {
-                    $hash = hash_file('sha256', $file);
-                    storeArtifact($file, $storeURL);
-                    recordArtifactPath($artifactMap, $sourceDir, $file, $hash);
+        $callback = function ($artifactPath) use ($storeURL, &$artifactMap, $sourceDir) {
+            $hash = hash_file('sha256', $artifactPath);
+            storeArtifact($artifactPath, $storeURL);
+            recordArtifactPath($artifactMap, $sourceDir, $artifactPath, $hash);
+        };
+        foreach (array_merge($projectConfig['components'], $projectConfig['web-artifacts']) as $source) {
+            // Prepend SOURCE_DIR if the source does not start with '/'
+            $fullPath = $source[0] === '/' ? $source : rtrim($sourceDir, '/') . '/' . ltrim($source, '/');
+            if (is_dir($fullPath)) {
+                foreach ($artifactPattern as $pattern) {
+                    $files = glob("$fullPath/$pattern");
+                    foreach ($files as $file) {
+                        $callback($file);
+                    }
                 }
             }
-        }
-
-        foreach ($projectConfig['web-artifacts'] as $artifactSource) {
-            fetchWebArtifacts($artifactSource, function($artifactPath) use ($storeURL, &$artifactMap, $sourceDir) {
-                $hash = hash_file('sha256', $artifactPath);
-                storeArtifact($artifactPath, $storeURL);
-                recordArtifactPath($artifactMap, $sourceDir, $artifactPath, $hash);
-            });
         }
 
         $artifactMaps[$projectName] = $artifactMap;
@@ -146,31 +145,11 @@ function storeArtifact(string $artifactPath, string $artifactStore): void {
     $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery);
 }
 
-function fileArtifactStore ($artifactPath, $hash, $extension, $path) {
+function fileArtifactStore($artifactPath, $hash, $extension, $path) {
     $dir = sprintf('%s/%s/%s/', $path, substr($hash, 0, 2), substr($hash, 2));
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);
     }
     $hashedFileName = "$hash.$extension";
     copy($artifactPath, "$dir$hashedFileName");
-}
-
-function fetchWebArtifacts($source, callable $callback): void {
-    if (preg_match('/^(http|https|git):\/\//', $source)) {
-        // Handle remote sources (e.g., git, HTTP)
-        // This is a draft implementation and can be extended
-        // Example: Fetching from a git repository
-        $localPath = "/tmp/" . md5($source);
-        if (!is_dir($localPath)) {
-            // Clone or fetch artifacts here (e.g., using `git clone`)
-            exec("git clone $source $localPath");
-        }
-        $files = glob("$localPath/*");
-    } else {
-        // Handle local sources
-        $files = glob($source);
-    }
-    foreach ($files as $file) {
-        $callback($file);
-    }
 }
