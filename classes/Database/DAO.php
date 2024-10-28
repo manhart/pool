@@ -248,6 +248,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             Commands::Increase->name => fn($field) => "$field+1",
             Commands::Decrease->name => fn($field) => "$field-1",
             Commands::Reset->name => fn($field) => "DEFAULT($field)",
+            Commands::Self->name => fn($field) => $field,
         ];
     }
 

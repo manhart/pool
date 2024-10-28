@@ -22,4 +22,5 @@ enum Commands
     case Increase;
     case Decrease;
     case Reset;
+    case Self; // self-assignment
 }
