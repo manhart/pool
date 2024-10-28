@@ -1654,11 +1654,8 @@ function nextFreeFilename(string $dir, string $filename, string $delimiter = '-'
 /**
  * Pendant to the .NET API HttpServerUtility.UrlTokenEncode.
  * Encodes a string into its base 64 digit equivalent string representation suitable for transmission in the URL.
- *
- * @param $data
- * @return string
  */
-function base64url_encode($data): string
+function base64url_encode(string $data): string
 {
     $data = base64_encode($data);
 
