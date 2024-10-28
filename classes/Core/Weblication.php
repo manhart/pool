@@ -967,9 +967,8 @@ class Weblication extends Component
             $places[] = $guiDirectory;
             //common Project
             if (defined('DIR_COMMON_ROOT_REL')) {
-                $commonGuiDirectory = buildDirPath(DIR_COMMON_ROOT_REL, $guiDirectory);
-                $places[] = buildDirPath($commonGuiDirectory, PWD_TILL_SKINS, $this->skin); // more specific with skin
-                $places[] = $commonGuiDirectory;
+                $places[] = $commonGuiDirectory = buildDirPath(DIR_COMMON_ROOT_REL, $guiDirectory);
+                $places[] = buildDirPath($commonGuiDirectory, PWD_TILL_SKINS, $this->skin);
             }
             //POOL Library Project
             if ($baseLib)
