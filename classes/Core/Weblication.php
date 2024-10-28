@@ -825,40 +825,42 @@ class Weblication extends Component
      */
     public function hasSkinFolder(?string $subFolder = null, ?string $language = null, ?string $translated = null): bool
     {
-        if (!isset($this->hasSkinFolder[$this->skin])) {
-            $this->hasSkinFolder[$this->skin] = [];
-            $this->hasSkinFolder[$this->skin]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin);
+        $skinFolder = PWD_TILL_SKINS;
+        $skinName = $this->skin;
+        if (!isset($this->hasSkinFolder[$skinName])) {
+            $this->hasSkinFolder[$skinName] = [];
+            $this->hasSkinFolder[$skinName]['__exists'] = is_dir("$skinFolder/$skinName");
         }
-        if ($subFolder !== null && $this->hasSkinFolder[$this->skin]['__exists']) {
-            if (!isset($this->hasSkinFolder[$this->skin][$subFolder])) {
-                $this->hasSkinFolder[$this->skin][$subFolder] = [];
-                $this->hasSkinFolder[$this->skin][$subFolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder);
+        if ($subFolder !== null && $this->hasSkinFolder[$skinName]['__exists']) {
+            if (!isset($this->hasSkinFolder[$skinName][$subFolder])) {
+                $this->hasSkinFolder[$skinName][$subFolder] = [];
+                $this->hasSkinFolder[$skinName][$subFolder]['__exists'] = is_dir("$skinFolder/$skinName/$subFolder");
             }
             if (is_null($language) && is_null($translated)) {
-                return $this->hasSkinFolder[$this->skin][$subFolder]['__exists'];
+                return $this->hasSkinFolder[$skinName][$subFolder]['__exists'];
             }
 
-            if ($this->hasSkinFolder[$this->skin][$subFolder]['__exists']) {
-                if (!isset($this->hasSkinFolder[$this->skin][$subFolder][$language])) {
-                    $this->hasSkinFolder[$this->skin][$subFolder][$language] = [];
-                    $this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language);
+            if ($this->hasSkinFolder[$skinName][$subFolder]['__exists']) {
+                if (!isset($this->hasSkinFolder[$skinName][$subFolder][$language])) {
+                    $this->hasSkinFolder[$skinName][$subFolder][$language] = [];
+                    $this->hasSkinFolder[$skinName][$subFolder][$language]['__exists'] = is_dir("$skinFolder/$skinName/$subFolder/$language");
                 }
                 if (is_null($translated)) {
-                    return $this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists'];
+                    return $this->hasSkinFolder[$skinName][$subFolder][$language]['__exists'];
                 }
 
-                if ($this->hasSkinFolder[$this->skin][$subFolder][$language]['__exists']) {
-                    if (!isset($this->hasSkinFolder[$this->skin][$subFolder][$language][$translated])) {
-                        $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated] = [];
-                        $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated]['__exists'] =
-                            is_dir(PWD_TILL_SKINS.'/'.$this->skin.'/'.$subFolder.'/'.$language.'/'.$translated);
+                if ($this->hasSkinFolder[$skinName][$subFolder][$language]['__exists']) {
+                    if (!isset($this->hasSkinFolder[$skinName][$subFolder][$language][$translated])) {
+                        $this->hasSkinFolder[$skinName][$subFolder][$language][$translated] = [];
+                        $this->hasSkinFolder[$skinName][$subFolder][$language][$translated]['__exists'] =
+                            is_dir("$skinFolder/$skinName/$subFolder/$language/$translated");
                     }
-                    return $this->hasSkinFolder[$this->skin][$subFolder][$language][$translated]['__exists'];
+                    return $this->hasSkinFolder[$skinName][$subFolder][$language][$translated]['__exists'];
                 }
             }
         }
 
-        return $this->hasSkinFolder[$this->skin]['__exists'];
+        return $this->hasSkinFolder[$skinName]['__exists'];
     }
 
     /**
@@ -964,8 +966,11 @@ class Weblication extends Component
             //current Project
             $places[] = $guiDirectory;
             //common Project
-            if (defined('DIR_COMMON_ROOT_REL'))
-                $places[] = buildDirPath(DIR_COMMON_ROOT_REL, $guiDirectory);
+            if (defined('DIR_COMMON_ROOT_REL')) {
+                $commonGuiDirectory = buildDirPath(DIR_COMMON_ROOT_REL, $guiDirectory);
+                $places[] = buildDirPath($commonGuiDirectory, PWD_TILL_SKINS, $this->skin); // more specific with skin
+                $places[] = $commonGuiDirectory;
+            }
             //POOL Library Project
             if ($baseLib)
                 $places[] = buildDirPath($this->getPoolServerSideRelativePath(), $guiDirectory);
