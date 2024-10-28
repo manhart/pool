@@ -1,31 +1,37 @@
 <?php
-/**
- * -= PHP Object Oriented Library (POOL) =-
- * $HeadURL$
- * Erweiterung zur Utils.inc.php: Prozess ID Management
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
  *
- * @version $Id$
- * @version $Revision$
- * @version $Author$
- * @version $Date$
- * @since 2007-09-19
- * @author Alexander Manhart <alexander@manhart.bayern>
- * @link https://alexander-manhart.de
- **/
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For a list of contributors, please see the CONTRIBUTORS.md file
+ * @see https://github.com/manhart/pool/blob/master/CONTRIBUTORS.md
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code, or visit the following link:
+ * @see https://github.com/manhart/pool/blob/master/LICENSE
+ *
+ * For more information about this project:
+ * @see https://github.com/manhart/pool
+ */
 
+/**
+ * @since 2007-09-19
+ */
 function open_pid_file($file)
 {
+    $nl = pool\LINE_BREAK;
     if (file_exists($file)) {
         $fp = fopen($file, 'r');
         $pid = fgets($fp, 1024);
         fclose($fp);
         if (posix_kill($pid, 0)) {
-            print 'Cronjob '.$_SERVER['PHP_SELF'].' already running with PID: '.$pid.chr(10);
+            print "Script {$_SERVER['PHP_SELF']} already running with PID: $pid$nl";
             exit;
         }
-        print 'Removing PID file for defunct server process '.$pid.chr(10);
+        print "Removing PID file for defunct server process $pid$nl";
         if (!unlink($file)) {
-            print 'Cannot unlink PID file '.$file.chr(10);
+            print "Cannot unlink PID file $file$nl";
             exit;
         }
     }
@@ -34,7 +40,7 @@ function open_pid_file($file)
         fclose($fp);
         return $fp;
     } else {
-        print 'Unable to open PID file '.$file.' for writing...'.chr(10);
+        print "Unable to open PID file $file for writing...$nl";
         exit;
     }
 }
