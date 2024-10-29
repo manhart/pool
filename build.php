@@ -38,12 +38,6 @@ if ($sourceDir === false) {
     exit(1);
 }
 
-// Check if SOURCE_DATE_EPOCH environment variable is set
-$sourceDateEpoch = getenv('SOURCE_DATE_EPOCH');
-if ($sourceDateEpoch === false) {
-    fwrite(STDERR, "Error: SOURCE_DATE_EPOCH environment variable is not set.\n");
-    exit(1);
-}
 $publish = "/public/";
 $appDir = '/virtualweb/';
 $projects = [
@@ -53,12 +47,13 @@ $projects = [
         'web-artifacts' => ['3rdParty',],
         'storeURL' => 'file:///artifacts/',
         'artifactPattern' => ['*.js', '*.css'],
+        'publish' => $publish,
+        'appDir' => $appDir,
     ],
 ];
 
 //TODO announce steps and log timing
-$sourceArtifactMaps = buildArtifacts($sourceDir, $projects);
-prepareCode($appDir, $projects, $sourceArtifactMaps);
+array_map(prepareProject(...), $projects);
 publish($publish, $projects);
 // End main execution before defining functions
 exit();
@@ -75,81 +70,78 @@ function printHelp(array $argv): never {
     exit();
 }
 
-function buildArtifacts($sourceDir, $projects): array {
-    $artifactMaps = [];
-
-    foreach ($projects as $projectName => $projectConfig) {
-        $artifactPattern = $projectConfig['artifactPattern'];
-        $storeURL = $projectConfig['storeURL'];
-        $artifactMap = [
-            'stylesheet' => [],
-            'javaScript' => [],
-            'image' => [],
-        ];
-
-        $callback = function ($artifactPath) use ($storeURL, &$artifactMap, $sourceDir) {
-            $hash = hash_file('sha256', $artifactPath);
-            storeArtifact($artifactPath, $storeURL);
-            recordArtifactPath($artifactMap, $sourceDir, $artifactPath, $hash);
-        };
-        foreach (array_merge($projectConfig['components'], $projectConfig['web-artifacts']) as $source) {
-            // Prepend SOURCE_DIR if the source does not start with '/'
-            $fullPath = $source[0] === '/' ? $source : rtrim($sourceDir, '/') . '/' . ltrim($source, '/');
-            if (is_dir($fullPath)) {
-                foreach ($artifactPattern as $pattern) {
-                    $files = glob("$fullPath/$pattern");
-                    foreach ($files as $file) {
-                        $callback($file);
-                    }
-                }
-            }
+/** @throws Exception
+ * Copies sources and artifacts to their destination and generates the artifact index
+ */
+function prepareProject(array $projectConfig): void {
+    $artifactMap = [];
+    ['artifactPattern' => $artifactPattern,'storeURL' => $storeURL,
+        'components' => $components, 'web-artifacts' => $webArtifacts,
+        'appDir' => $appDir, 'sourceDir' => $sourceDir] = $projectConfig;
+    foreach (array_merge($components, $webArtifacts) as $source) {
+        // Prepend SOURCE_DIR if the source does not start with '/'
+        $fullPath = $source[0] === '/' ? $source : rtrim($sourceDir, '/') . "/$source";
+        if (!is_dir($fullPath)) {
+            //TODO warn
+            continue;
         }
-
-        $artifactMaps[$projectName] = $artifactMap;
+        //TODO enumerate all files
+        foreach ($files as $file) {
+            $filePurpose = determineFilePurpose($file, $artifactPattern);
+            $fileData = match ($filePurpose) {
+                'artifact' => storeArtifact($file, $storeURL),
+                default => storeSource($file, $appDir),
+            };
+            $fileData['role'] = $filePurpose;
+            recordFilePath($artifactMap, $sourceDir, $file, $fileData);
+        }
     }
-    return $artifactMaps;
+    // TODO save $artifactMap; via export and copy it into the build
 }
 
-function recordArtifactPath(array &$artifactMap, string $sourceDir, string $file, string $hash): void {
+function determineFilePurpose(string $file, array $artifactPattern):string {
+    //TODO match on patterns
+}
+
+function storeSource(string $file, string $appDir):array {
+    //TODO copy file and get relevant metadata
+}
+
+function recordFilePath(array &$artifactMap, string $sourceDir, string $file, array $hash): void {
     $relativePath = str_replace($sourceDir . '/', '', $file);
-    $type = match (pathinfo($file, PATHINFO_EXTENSION)) {
-        'js' => 'javaScript',
-        'css' => 'stylesheet',
-        'png', 'jpg', 'jpeg', 'gif' => 'image',
-        default => null
-    };
-    if ($type) {
-        $nestedPath = explode('/', $relativePath);
-        $current = &$artifactMap[$type];
-        foreach ($nestedPath as $pathPart) {
-            if (!isset($current[$pathPart])) {
-                $current[$pathPart] = [];
-            }
-            $current = &$current[$pathPart];
-        }
-        $current['hash'] = $hash;
+    $extension = pathinfo($file, PATHINFO_EXTENSION);
+    $nestedPath = explode('/', $relativePath);
+    $current = &$artifactMap[$extension];
+    foreach ($nestedPath as $pathPart) {
+        $current =& $current[$pathPart];
     }
+    $current = $hash;
 }
 
 /** @throws Exception */
-function storeArtifact(string $artifactPath, string $artifactStore): void {
+function storeArtifact(string $artifactPath, string $artifactStore): array {
     $hash = hash_file('sha256', $artifactPath);
     $extension = pathinfo($artifactPath, PATHINFO_EXTENSION);
     $parsedArtifactStore = parse_url($artifactStore);
-    //TODO validate
+    //TODO validate URL
     ['scheme' => $scheme, 'path' => $destPath, 'query' => $destQuery,] = $parsedArtifactStore;
     $storeFunction = match ($scheme) {
         'file' => fileArtifactStore(...),
         default => throw new Exception("Protocol '$scheme' is not supported for storing artifacts")
     };
-    $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery);
+    return $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery);
 }
 
-function fileArtifactStore($artifactPath, $hash, $extension, $path) {
+function fileArtifactStore($artifactPath, $hash, $extension, $path): array {
     $dir = sprintf('%s/%s/%s/', $path, substr($hash, 0, 2), substr($hash, 2));
-    if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
-    }
+    if (!is_dir($dir)) mkdir($dir, 0755, true);
     $hashedFileName = "$hash.$extension";
-    copy($artifactPath, "$dir$hashedFileName");
+    $location = "$dir$hashedFileName";
+    copyFile($artifactPath, $location);
+    return compact(['hash', 'location']);
+}
+
+function copyFile($filePath, string $destination): bool {
+    //TODO if present use SOURCE_DATE_EPOCH
+    return copy($filePath, $destination);
 }
