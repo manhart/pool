@@ -37,7 +37,18 @@ if ($sourceDir === false) {
     fwrite(STDERR, "Error: SOURCE_DIR environment variable is not set.\n");
     exit(1);
 }
-
+$imagePatterns = [
+    '*.jpg',    // JPEG images
+    '*.jpeg',   // JPEG images (alternative extension)
+    '*.png',    // PNG images
+    '*.gif',    // GIF images
+    '*.bmp',    // BMP images
+    '*.webp',   // WebP images
+    '*.svg',    // SVG vector images
+    '*.tif',    // TIFF images
+    '*.tiff',   // TIFF images (alternative extension)
+    '*.ico',    // ICO images (for favicons)
+];
 $publish = "/public/";
 $appDir = '/virtualweb/';
 $projects = [
@@ -46,7 +57,7 @@ $projects = [
         'includes' => ['3rdParty/_3rdPartyResources.php', 'commons/g7-bootstrap.php',],
         'web-artifacts' => ['3rdParty',],
         'storeURL' => 'file:///artifacts/',
-        'artifactPattern' => ['*.js', '*.css'],
+        'artifactPattern' => ['*.js', '*.css'] + $imagePatterns,
         'publish' => $publish,
         'appDir' => $appDir,
     ],
@@ -70,7 +81,7 @@ $timers['Publish'] = microtime(true) - $publishStart;
 
 // Log detailed timing information
 foreach ($timers as $action => $time) {
-    if (VERBOSE) echo "$action time: " . number_format($time['prepare'], 4) . " seconds\n";
+    if (VERBOSE) echo "$action time: " . number_format($time, 4) . " seconds\n";
 }
 
 // End main execution before defining functions
@@ -97,9 +108,11 @@ function prepareProject(string $projectKey, array $projectConfig): void {
         'components' => $components, 'web-artifacts' => $webArtifacts,
         'appDir' => $appDir, 'sourceDir' => $sourceDir] = $projectConfig;
 
-    foreach (array_merge($components, $webArtifacts) as $source) {
-        // Prepend SOURCE_DIR if the source does not start with '/'
-        $fullPath = $source[0] === '/' ? $source : rtrim($sourceDir, '/') . "/$source";
+    foreach (array_merge($components, $webArtifacts) as $componentOrArtifact) {
+        $type = in_array($componentOrArtifact, $components) ? 'component' : 'web-artifact';
+
+        // Prepend SOURCE_DIR if the component or artifact does not start with '/'
+        $fullPath = $componentOrArtifact[0] === '/' ? $componentOrArtifact : "$sourceDir/$componentOrArtifact";
         if (!is_dir($fullPath)) {
             fwrite(STDERR, "Warning: Directory '$fullPath' for project '$projectKey' does not exist.\n");
             continue;
@@ -111,19 +124,23 @@ function prepareProject(string $projectKey, array $projectConfig): void {
             if (!$file->isFile()) continue;
             $filePath = $file->getPathname();
             $filePurpose = determineFilePurpose($filePath, $artifactPattern);
-            $fileData = match ($filePurpose) {
-                'artifact' => storeArtifact($filePath, $storeURL),
-                default => storeSource($filePath, $appDir),
+            $fileSource = $type;
+            $fileData = match ([$filePurpose, $fileSource]) {
+                ['artifact', 'web-artifact'], ['artifact', 'component'] => storeArtifact($filePath, $storeURL),
+                ['source', 'component'] => storeSource($filePath, $appDir, $sourceDir),
+                default => [],
             };
             $fileData['role'] = $filePurpose;
+            $fileData['source'] = $fileSource;
             recordFilePath($artifactMap, $sourceDir, $filePath, $fileData);
             if (DEBUG) echo "Debug: Processed file '$filePath' for project '$projectKey' as '$filePurpose'. Hash: {$fileData['hash']}\n";
         }
     }
 
-    // Save $artifactMap; via export and copy it into the build
-    $artifactMapPath = "$appDir/artifactMap.json";
-    file_put_contents($artifactMapPath, json_encode($artifactMap, JSON_PRETTY_PRINT));
+    // Save $artifactMap as a PHP script
+    $artifactMapPath = "$appDir/artifactMap.php";
+    $artifactMapExport = var_export($artifactMap, true);
+    file_put_contents($artifactMapPath, "<?php\nreturn $artifactMapExport;\n");
     if (VERBOSE) echo "Artifact map saved to $artifactMapPath for project '$projectKey'\n";
 }
 
@@ -136,8 +153,14 @@ function determineFilePurpose(string $file, array $artifactPattern): string {
     return 'source';
 }
 
-function storeSource(string $file, string $appDir): array {
-    $destination = $appDir . '/' . basename($file);
+function storeSource(string $file, string $appDir, string $sourceDir): array {
+    // Create the relative path by removing everything before the component directory
+    $relativePath = str_replace("$sourceDir/", '', $file);
+    $destination = "$appDir/$relativePath";
+    $destinationDir = dirname($destination);
+    if (!is_dir($destinationDir)) {
+        mkdir($destinationDir, 0755, true);
+    }
     copy($file, $destination);
     return [
         'hash' => hash_file('sha256', $file),
@@ -194,9 +217,11 @@ function publish(string $publish, array $projects): void {
         // Generate the public entrypoints
         $entryPoint = $publicDir . '/index.php';
         $includeFiles = implode("\n", array_map(fn($file) => "require_once '{$_SERVER['DOCUMENT_ROOT']}/$file';", $project['includes']));
+        $artifactMapInclude = "require_once '{$_SERVER['DOCUMENT_ROOT']}/artifactMap.php';\n";
         file_put_contents($entryPoint, <<<INDEX
 <?php
 // Entrypoint for project {$name}
+$artifactMapInclude
 $includeFiles
 INDEX
         );
