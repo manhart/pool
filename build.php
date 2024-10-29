@@ -53,10 +53,25 @@ $projects = [
 ];
 
 // Announce steps and log timing
+$timers = [];
 if (VERBOSE) echo "Starting project preparation...\n";
-array_map('prepareProject', $projects);
+$start = microtime(true);
+foreach ($projects as $key => $project) {
+    $projectStart = microtime(true);
+    prepareProject($key, $project);
+    $timers["Project '$key' preparation"] = microtime(true) - $projectStart;
+}
+$timers['Total prepare'] = microtime(true) - $start;
+
 if (VERBOSE) echo "Publishing projects...\n";
+$publishStart = microtime(true);
 publish($publish, $projects);
+$timers['Publish'] = microtime(true) - $publishStart;
+
+// Log detailed timing information
+foreach ($timers as $action => $time) {
+    if (VERBOSE) echo "$action time: " . number_format($time['prepare'], 4) . " seconds\n";
+}
 
 // End main execution before defining functions
 exit();
@@ -76,7 +91,7 @@ function printHelp(array $argv): never {
 /** @throws Exception
  * Copies sources and artifacts to their destination and generates the artifact index
  */
-function prepareProject(array $projectConfig): void {
+function prepareProject(string $projectKey, array $projectConfig): void {
     $artifactMap = [];
     ['artifactPattern' => $artifactPattern, 'storeURL' => $storeURL,
         'components' => $components, 'web-artifacts' => $webArtifacts,
@@ -86,7 +101,7 @@ function prepareProject(array $projectConfig): void {
         // Prepend SOURCE_DIR if the source does not start with '/'
         $fullPath = $source[0] === '/' ? $source : rtrim($sourceDir, '/') . "/$source";
         if (!is_dir($fullPath)) {
-            fwrite(STDERR, "Warning: Directory '$fullPath' does not exist.\n");
+            fwrite(STDERR, "Warning: Directory '$fullPath' for project '$projectKey' does not exist.\n");
             continue;
         }
 
@@ -102,15 +117,14 @@ function prepareProject(array $projectConfig): void {
             };
             $fileData['role'] = $filePurpose;
             recordFilePath($artifactMap, $sourceDir, $filePath, $fileData);
+            if (DEBUG) echo "Debug: Processed file '$filePath' for project '$projectKey' as '$filePurpose'. Hash: {$fileData['hash']}\n";
         }
     }
 
     // Save $artifactMap; via export and copy it into the build
     $artifactMapPath = "$appDir/artifactMap.json";
     file_put_contents($artifactMapPath, json_encode($artifactMap, JSON_PRETTY_PRINT));
-    if (VERBOSE) {
-        echo "Artifact map saved to $artifactMapPath\n";
-    }
+    if (VERBOSE) echo "Artifact map saved to $artifactMapPath for project '$projectKey'\n";
 }
 
 function determineFilePurpose(string $file, array $artifactPattern): string {
@@ -140,6 +154,7 @@ function recordFilePath(array &$artifactMap, string $sourceDir, string $file, ar
         $current =& $current[$pathPart];
     }
     $current = $hash;
+    if (DEBUG) echo "Debug: Recorded file path for '$relativePath' with hash {$hash['hash']}\n";
 }
 
 /** @throws Exception */
@@ -166,30 +181,36 @@ function fileArtifactStore($artifactPath, $hash, $extension, $path): array {
     $hashedFileName = "$hash.$extension";
     $location = "$dir$hashedFileName";
     copy($artifactPath, $location);
+    if (DEBUG) {
+        echo "Debug: Stored artifact '$artifactPath' at '$location'\n";
+    }
     return compact(['hash', 'location']);
 }
 
 function publish(string $publish, array $projects): void {
     foreach ($projects as $name => $project) {
-        $publicDir = rtrim($publish, '/') . "/$name";
+        $publicDir = rtrim($publish, "/") . "/$name";
         if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
         // Generate the public entrypoints
         $entryPoint = $publicDir . '/index.php';
+        $includeFiles = implode("\n", array_map(fn($file) => "require_once '{$_SERVER['DOCUMENT_ROOT']}/$file';", $project['includes']));
         file_put_contents($entryPoint, <<<INDEX
 <?php
 // Entrypoint for project {$name}
-//require_once '{$_SERVER['DOCUMENT_ROOT']}/commons/g7-bootstrap.php';
+$includeFiles
 INDEX
-);
+        );
         if (VERBOSE) echo "Entrypoint created at $entryPoint\n";
     }
 
+    if (!getenv(getenv('SOURCE_DATE_EPOCH'))) return;
     // Recursively set SOURCE DATE EPOCH on all app dirs and the publish dir
     $dirs = array_merge([$publish], array_column($projects, 'appDir'));
     foreach ($dirs as $dir) {
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
         foreach ($iterator as $file) {
             touch($file->getPathname(), getenv('SOURCE_DATE_EPOCH'));
+            if (DEBUG) echo "Debug: Set SOURCE_DATE_EPOCH for file '{$file->getPathname()}'\n";
         }
     }
     if (VERBOSE) echo "SOURCE DATE EPOCH set for all files in app and publish directories\n";
