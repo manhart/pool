@@ -52,9 +52,12 @@ $projects = [
     ],
 ];
 
-//TODO announce steps and log timing
-array_map(prepareProject(...), $projects);
+// Announce steps and log timing
+if (VERBOSE) echo "Starting project preparation...\n";
+array_map('prepareProject', $projects);
+if (VERBOSE) echo "Publishing projects...\n";
 publish($publish, $projects);
+
 // End main execution before defining functions
 exit();
 
@@ -75,36 +78,57 @@ function printHelp(array $argv): never {
  */
 function prepareProject(array $projectConfig): void {
     $artifactMap = [];
-    ['artifactPattern' => $artifactPattern,'storeURL' => $storeURL,
+    ['artifactPattern' => $artifactPattern, 'storeURL' => $storeURL,
         'components' => $components, 'web-artifacts' => $webArtifacts,
         'appDir' => $appDir, 'sourceDir' => $sourceDir] = $projectConfig;
+
     foreach (array_merge($components, $webArtifacts) as $source) {
         // Prepend SOURCE_DIR if the source does not start with '/'
         $fullPath = $source[0] === '/' ? $source : rtrim($sourceDir, '/') . "/$source";
         if (!is_dir($fullPath)) {
-            //TODO warn
+            fwrite(STDERR, "Warning: Directory '$fullPath' does not exist.\n");
             continue;
         }
-        //TODO enumerate all files
+
+        // Enumerate all files in the directory
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fullPath));
         foreach ($files as $file) {
-            $filePurpose = determineFilePurpose($file, $artifactPattern);
+            if (!$file->isFile()) continue;
+            $filePath = $file->getPathname();
+            $filePurpose = determineFilePurpose($filePath, $artifactPattern);
             $fileData = match ($filePurpose) {
-                'artifact' => storeArtifact($file, $storeURL),
-                default => storeSource($file, $appDir),
+                'artifact' => storeArtifact($filePath, $storeURL),
+                default => storeSource($filePath, $appDir),
             };
             $fileData['role'] = $filePurpose;
-            recordFilePath($artifactMap, $sourceDir, $file, $fileData);
+            recordFilePath($artifactMap, $sourceDir, $filePath, $fileData);
         }
     }
-    // TODO save $artifactMap; via export and copy it into the build
+
+    // Save $artifactMap; via export and copy it into the build
+    $artifactMapPath = "$appDir/artifactMap.json";
+    file_put_contents($artifactMapPath, json_encode($artifactMap, JSON_PRETTY_PRINT));
+    if (VERBOSE) {
+        echo "Artifact map saved to $artifactMapPath\n";
+    }
 }
 
-function determineFilePurpose(string $file, array $artifactPattern):string {
-    //TODO match on patterns
+function determineFilePurpose(string $file, array $artifactPattern): string {
+    foreach ($artifactPattern as $pattern) {
+        if (fnmatch($pattern, basename($file))) {
+            return 'artifact';
+        }
+    }
+    return 'source';
 }
 
-function storeSource(string $file, string $appDir):array {
-    //TODO copy file and get relevant metadata
+function storeSource(string $file, string $appDir): array {
+    $destination = $appDir . '/' . basename($file);
+    copy($file, $destination);
+    return [
+        'hash' => hash_file('sha256', $file),
+        'location' => $destination,
+    ];
 }
 
 function recordFilePath(array &$artifactMap, string $sourceDir, string $file, array $hash): void {
@@ -123,13 +147,17 @@ function storeArtifact(string $artifactPath, string $artifactStore): array {
     $hash = hash_file('sha256', $artifactPath);
     $extension = pathinfo($artifactPath, PATHINFO_EXTENSION);
     $parsedArtifactStore = parse_url($artifactStore);
-    //TODO validate URL
-    ['scheme' => $scheme, 'path' => $destPath, 'query' => $destQuery,] = $parsedArtifactStore;
+    // Validate URL
+    if ($parsedArtifactStore === false || !isset($parsedArtifactStore['scheme'], $parsedArtifactStore['path'])) {
+        throw new Exception("Invalid artifact store URL: $artifactStore");
+    }
+
+    ['scheme' => $scheme, 'path' => $destPath, 'query' => $destQuery] = $parsedArtifactStore;
     $storeFunction = match ($scheme) {
-        'file' => fileArtifactStore(...),
+        'file' => 'fileArtifactStore',
         default => throw new Exception("Protocol '$scheme' is not supported for storing artifacts")
     };
-    return $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery);
+    return $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery ?? null);
 }
 
 function fileArtifactStore($artifactPath, $hash, $extension, $path): array {
@@ -137,11 +165,32 @@ function fileArtifactStore($artifactPath, $hash, $extension, $path): array {
     if (!is_dir($dir)) mkdir($dir, 0755, true);
     $hashedFileName = "$hash.$extension";
     $location = "$dir$hashedFileName";
-    copyFile($artifactPath, $location);
+    copy($artifactPath, $location);
     return compact(['hash', 'location']);
 }
 
-function copyFile($filePath, string $destination): bool {
-    //TODO if present use SOURCE_DATE_EPOCH
-    return copy($filePath, $destination);
+function publish(string $publish, array $projects): void {
+    foreach ($projects as $name => $project) {
+        $publicDir = rtrim($publish, '/') . "/$name";
+        if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
+        // Generate the public entrypoints
+        $entryPoint = $publicDir . '/index.php';
+        file_put_contents($entryPoint, <<<INDEX
+<?php
+// Entrypoint for project {$name}
+//require_once '{$_SERVER['DOCUMENT_ROOT']}/commons/g7-bootstrap.php';
+INDEX
+);
+        if (VERBOSE) echo "Entrypoint created at $entryPoint\n";
+    }
+
+    // Recursively set SOURCE DATE EPOCH on all app dirs and the publish dir
+    $dirs = array_merge([$publish], array_column($projects, 'appDir'));
+    foreach ($dirs as $dir) {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+        foreach ($iterator as $file) {
+            touch($file->getPathname(), getenv('SOURCE_DATE_EPOCH'));
+        }
+    }
+    if (VERBOSE) echo "SOURCE DATE EPOCH set for all files in app and publish directories\n";
 }
