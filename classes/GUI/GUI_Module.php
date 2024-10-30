@@ -610,27 +610,8 @@ class GUI_Module extends Module
 
         $callingClassName = $this->getClassName();
         try {
-            $args = [];
-            if ($ReflectionMethod->getNumberOfParameters()) {
-                $parameters = $ReflectionMethod->getParameters();
-                foreach ($parameters as $Parameter) {
-                    $value = $this->Input->getVar($Parameter->getName()) ?? ($Parameter->isOptional() ? $Parameter->getDefaultValue()
-                        : throw new MissingArgumentException('Missing parameter '.$Parameter->getName()));
-                    if (is_string($value)) {
-                        if ($Parameter->hasType() && $Parameter->getType()->getName() !== 'mixed') {
-                            $value = match ($Parameter->getType()->getName()) {
-                                'float' => (float)$value,
-                                'int' => (int)$value,
-                                'bool' => filter_var($value, FILTER_VALIDATE_BOOL),
-                                default => $value,
-                            };
-                        } elseif ($value === 'true' || $value === 'false') {
-                            $value = $value === 'true';
-                        }
-                    }
-                    $args[] = $value;
-                }
-            }
+            $arguments = clone $this->Input;
+            $args = $this->prepareMethodArguments($ReflectionMethod, $arguments);
             try {
                 $this->processTransactions($dbInterfaces, 'start');
                 //TODO check Authorisation
@@ -638,6 +619,7 @@ class GUI_Module extends Module
                 //    return $this->respondToAjaxCall(null, $reason,__METHOD__, 'access-denied',405);
 
                 // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
+
                 $result = $Closure(...$args);
                 $this->processTransactions($dbInterfaces, 'commit');
             } catch (Throwable $e) {
@@ -867,5 +849,49 @@ class GUI_Module extends Module
     {
         $this->plainJSON = $activate;
         return $this;
+    }
+
+    /**
+     * Prepares and returns an array of method arguments based on the given reflection method and input arguments.
+     *
+     * @param ReflectionFunction $ReflectionMethod The reflection of the method whose arguments are being prepared.
+     * @param Input $arguments The input containing the argument values.
+     * @return array Prepared arguments.
+     * @throws MissingArgumentException|ReflectionException If a required argument is missing.
+     */
+    private function prepareMethodArguments(ReflectionFunction $ReflectionMethod, Input $arguments): array
+    {
+        $args = [];
+
+        $numberOfParameters = $ReflectionMethod->getNumberOfParameters();
+        if ($numberOfParameters) {
+            $parameters = $ReflectionMethod->getParameters();
+            $isVariadicParameter = $parameters[$numberOfParameters - 1]->isVariadic();
+            if ($isVariadicParameter) array_pop($parameters);
+            foreach ($parameters as $Parameter) {
+                $parameterName = $Parameter->getName();
+                $value = $arguments->getVar($parameterName) ?? ($Parameter->isOptional() ? $Parameter->getDefaultValue()
+                    : throw new MissingArgumentException("Missing parameter $parameterName"));
+                $arguments->delVar($parameterName);
+                if (is_string($value)) {
+                    if ($Parameter->hasType() && $Parameter->getType()->getName() !== 'mixed') {
+                        $value = match ($Parameter->getType()->getName()) {
+                            'float' => (float)$value,
+                            'int' => (int)$value,
+                            'bool' => filter_var($value, FILTER_VALIDATE_BOOL),
+                            default => $value,
+                        };
+                    } elseif ($value === 'true' || $value === 'false') {
+                        $value = $value === 'true';
+                    }
+                }
+                $args[] = $value;
+            }
+        }
+        if ($numberOfParameters && $isVariadicParameter) {
+            $arguments->delVars($this->Weblication::getCoreRequestParameters());
+            $args = [...$args, ...$arguments->getData()];
+        }
+        return $args;
     }
 }

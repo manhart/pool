@@ -92,6 +92,7 @@ class Weblication extends Component
 {
     public const REQUEST_PARAM_MODULE = 'module';
     public const REQUEST_PARAM_METHOD = 'method';
+    public const REQUEST_PARAM_SCHEMA = 'schema';
 
     /**
      * Is this request an ajax call
@@ -1117,7 +1118,7 @@ class Weblication extends Component
     public function redirect(string $schema, bool $withQuery = false, string $path = ''): never
     {
         $Url = new Url($withQuery);
-        $Url->setParam('schema', $schema);
+        $Url->setParam(self::REQUEST_PARAM_SCHEMA, $schema);
         if ($path) $Url->setScriptPath($path);
         $Url->redirect();
     }
@@ -1711,6 +1712,15 @@ class Weblication extends Component
             }
         }
         $this->memory->deleteMulti($keys);
+    }
+
+    public static function getCoreRequestParameters(): array
+    {
+        return [
+            Weblication::REQUEST_PARAM_SCHEMA,
+            Weblication::REQUEST_PARAM_MODULE,
+            Weblication::REQUEST_PARAM_METHOD,
+        ];
     }
 
     /**
