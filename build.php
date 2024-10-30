@@ -20,21 +20,27 @@
 set_time_limit(0);
 //the implicit flush is turned on, so output is immediately displayed
 ob_implicit_flush(1);
+//don't tolerate errors
+set_error_handler(function($severity, $message, $file, $line) {
+    echo "got error $message";
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
 
-$options = getopt('vh', ['vv::', 'recipe::', 'help', 'insecure-transports']);
+$options = getopt('vh', ['vv::', 'recipe::', 'help', 'insecure-transports', 'source-dir::']);
 
-define('VERBOSE', array_key_exists('v', $options));
 define('DEBUG', array_key_exists('vv', $options));
+define('VERBOSE',  DEBUG || array_key_exists('v', $options));
 define('INSECURE_TRANSPORTS', array_key_exists('insecure-transports', $options));
+define('SOURCE_DIR', $options['source-dir'] ?? '../');
 
 if (array_key_exists('h', $options) || array_key_exists('help', $options)) {
     printHelp($argv);
 }
 
-// Check if SOURCE_DIR environment variable is set
-$sourceDir = getenv('SOURCE_DIR');
-if ($sourceDir === false) {
-    fwrite(STDERR, "Error: SOURCE_DIR environment variable is not set.\n");
+// Check if SOURCE_DIR environment variable is set or fallback to default
+$sourceDir = rtrim(SOURCE_DIR ?: getenv('SOURCE_DIR') ?: '../', '/');
+if (!is_dir($sourceDir)) {
+    fwrite(STDERR, "Error: SOURCE_DIR '$sourceDir' is not a valid directory.\n");
     exit(1);
 }
 $imagePatterns = [
@@ -50,14 +56,14 @@ $imagePatterns = [
     '*.ico',    // ICO images (for favicons)
 ];
 $publish = "/public/";
-$appDir = '/virtualweb/';
+$appDir = '/virtualweb2/';
 $projects = [
     'g7system' => [
-        'components' => ['g7system', 'commons'],
+        'components' => ['g7system/skins', 'commons/skins', 'g7system/guis', 'commons/guis'],
         'includes' => ['3rdParty/_3rdPartyResources.php', 'commons/g7-bootstrap.php',],
-        'web-artifacts' => ['3rdParty',],
+        'web-artifacts' => ['g7system/js', 'g7system/serviceWorker.js', 'commons/js', '3rdParty'],
         'storeURL' => 'file:///artifacts/',
-        'artifactPattern' => ['*.js', '*.css'] + $imagePatterns,
+        'artifactPattern' => ['*.js', '*.css', '*.webmanifest', '*.json', '*.wav', '*.mp3'] + $imagePatterns,
         'publish' => $publish,
         'appDir' => $appDir,
     ],
@@ -69,7 +75,7 @@ if (VERBOSE) echo "Starting project preparation...\n";
 $start = microtime(true);
 foreach ($projects as $key => $project) {
     $projectStart = microtime(true);
-    prepareProject($key, $project);
+    prepareProject($key, $project, $sourceDir);
     $timers["Project '$key' preparation"] = microtime(true) - $projectStart;
 }
 $timers['Total prepare'] = microtime(true) - $start;
@@ -88,38 +94,42 @@ foreach ($timers as $action => $time) {
 exit();
 
 function printHelp(array $argv): never {
-    echo "Usage: $argv[0] [--help|-h] [--verbose|-v] [--vv[=level]] [--recipe=<name>] [--insecure-transports]\n";
-    echo "\n";
-    echo "Options:\n";
-    echo "  -h, --help              Show this help message and exit\n";
-    echo "  -v, --verbose           Enable verbose output\n";
-    echo "  --vv[=level]            Enable debug mode with an optional level (default: 1)\n";
-    echo "  --recipe=<name>         Specify a recipe\n";
-    echo "  --insecure-transports   Allow fetching sources over insecure transports\n";
+     echo <<<HELP
+Usage: $argv[0] [--help|-h] [--verbose|-v] [--vv[=level]] [--recipe=<name>] [--insecure-transports] [--source-dir=<path>]
+
+Options:
+  -h, --help              Show this help message and exit
+  -v, --verbose           Enable verbose output
+  --vv[=level]            Enable debug mode with an optional level (default: 1)
+  --recipe=<name>         Specify a recipe\n  --insecure-transports   Allow fetching sources over insecure transports
+  --source-dir=<path>     Specify the source directory (default: '../')
+HELP;
     exit();
 }
 
 /** @throws Exception
  * Copies sources and artifacts to their destination and generates the artifact index
  */
-function prepareProject(string $projectKey, array $projectConfig): void {
+function prepareProject(string $projectKey, array $projectConfig, string $sourceDir): void {
     $artifactMap = [];
     ['artifactPattern' => $artifactPattern, 'storeURL' => $storeURL,
         'components' => $components, 'web-artifacts' => $webArtifacts,
-        'appDir' => $appDir, 'sourceDir' => $sourceDir] = $projectConfig;
+        'appDir' => $appDir] = $projectConfig;
 
-    foreach (array_merge($components, $webArtifacts) as $componentOrArtifact) {
-        $type = in_array($componentOrArtifact, $components) ? 'component' : 'web-artifact';
-
+    foreach (array_merge($components, $webArtifacts) as $source) {
+        unset($files);//you know real languages have something called block scope
+        $type = in_array($source, $components) ? 'component' : 'web-artifact';
         // Prepend SOURCE_DIR if the component or artifact does not start with '/'
-        $fullPath = $componentOrArtifact[0] === '/' ? $componentOrArtifact : "$sourceDir/$componentOrArtifact";
-        if (!is_dir($fullPath)) {
+        $fullPath = str_starts_with($source, '/') ? $source : "$sourceDir/$source";
+        if (is_file($fullPath)) {
+            $files = new ArrayIterator([new SplFileInfo($fullPath)]);
+        } elseif (!is_dir($fullPath)) {
             fwrite(STDERR, "Warning: Directory '$fullPath' for project '$projectKey' does not exist.\n");
             continue;
         }
-
+        if (VERBOSE) echo "Processing $type $source in $fullPath\n";
         // Enumerate all files in the directory
-        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fullPath));
+        $files ??= new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fullPath));
         foreach ($files as $file) {
             if (!$file->isFile()) continue;
             $filePath = $file->getPathname();
@@ -128,12 +138,13 @@ function prepareProject(string $projectKey, array $projectConfig): void {
             $fileData = match ([$filePurpose, $fileSource]) {
                 ['artifact', 'web-artifact'], ['artifact', 'component'] => storeArtifact($filePath, $storeURL),
                 ['source', 'component'] => storeSource($filePath, $appDir, $sourceDir),
-                default => [],
+                    default => [],
             };
             $fileData['role'] = $filePurpose;
             $fileData['source'] = $fileSource;
             recordFilePath($artifactMap, $sourceDir, $filePath, $fileData);
-            if (DEBUG) echo "Debug: Processed file '$filePath' for project '$projectKey' as '$filePurpose'. Hash: {$fileData['hash']}\n";
+            $hash = $fileData['hash'] ?? '*ignored*';
+            if (DEBUG) echo "Debug: Processed '$fileSource' file for project '$projectKey' as '$filePurpose': $hash -> '$filePath'\n";
         }
     }
 
@@ -168,7 +179,7 @@ function storeSource(string $file, string $appDir, string $sourceDir): array {
     ];
 }
 
-function recordFilePath(array &$artifactMap, string $sourceDir, string $file, array $hash): void {
+function recordFilePath(array &$artifactMap, string $sourceDir, string $file, array $fileInfo): void {
     $relativePath = str_replace($sourceDir . '/', '', $file);
     $extension = pathinfo($file, PATHINFO_EXTENSION);
     $nestedPath = explode('/', $relativePath);
@@ -176,8 +187,7 @@ function recordFilePath(array &$artifactMap, string $sourceDir, string $file, ar
     foreach ($nestedPath as $pathPart) {
         $current =& $current[$pathPart];
     }
-    $current = $hash;
-    if (DEBUG) echo "Debug: Recorded file path for '$relativePath' with hash {$hash['hash']}\n";
+    $current = $fileInfo;
 }
 
 /** @throws Exception */
@@ -190,23 +200,22 @@ function storeArtifact(string $artifactPath, string $artifactStore): array {
         throw new Exception("Invalid artifact store URL: $artifactStore");
     }
 
-    ['scheme' => $scheme, 'path' => $destPath, 'query' => $destQuery] = $parsedArtifactStore;
+    ['scheme' => $scheme, 'path' => $destPath, 'query' => &$destQuery] = $parsedArtifactStore;
     $storeFunction = match ($scheme) {
-        'file' => 'fileArtifactStore',
+        'file' => fileArtifactStore(...),
         default => throw new Exception("Protocol '$scheme' is not supported for storing artifacts")
     };
-    return $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery ?? null);
+    $destPath = rtrim($destPath, '/');
+    return $storeFunction($artifactPath, $hash, $extension, $destPath, $destQuery);
 }
 
 function fileArtifactStore($artifactPath, $hash, $extension, $path): array {
-    $dir = sprintf('%s/%s/%s/', $path, substr($hash, 0, 2), substr($hash, 2));
+    $dir = sprintf('%s/%s/', $path, substr($hash, 0, 2));
     if (!is_dir($dir)) mkdir($dir, 0755, true);
     $hashedFileName = "$hash.$extension";
     $location = "$dir$hashedFileName";
     copy($artifactPath, $location);
-    if (DEBUG) {
-        echo "Debug: Stored artifact '$artifactPath' at '$location'\n";
-    }
+    if (DEBUG) echo "Debug: Stored artifact '$artifactPath' at '$location'\n";
     return compact(['hash', 'location']);
 }
 
