@@ -15,11 +15,11 @@
  * For more information about this project:
  * @see https://github.com/manhart/pool
  */
-
+declare(strict_types=1);
 //disable timeout
 set_time_limit(0);
 //the implicit flush is turned on, so output is immediately displayed
-ob_implicit_flush(1);
+ob_implicit_flush();
 //don't tolerate errors
 set_error_handler(function($severity, $message, $file, $line) {
     echo "got error $message";
@@ -55,8 +55,7 @@ $imagePatterns = [
     '*.tiff',   // TIFF images (alternative extension)
     '*.ico',    // ICO images (for favicons)
 ];
-$publish = "/public/";
-$appDir = '/virtualweb2/';
+$appDir = '/virtualweb';
 $projects = [
     'g7system' => [
         'components' => ['g7system/skins', 'commons/skins', 'g7system/guis', 'commons/guis'],
@@ -64,32 +63,20 @@ $projects = [
         'web-artifacts' => ['g7system/js', 'g7system/serviceWorker.js', 'commons/js', '3rdParty'],
         'storeURL' => 'file:///artifacts/',
         'artifactPattern' => ['*.js', '*.css', '*.webmanifest', '*.json', '*.wav', '*.mp3'] + $imagePatterns,
-        'publish' => $publish,
         'appDir' => $appDir,
     ],
 ];
 
-// Announce steps and log timing
+$cache = [];
 $timers = [];
 if (VERBOSE) echo "Starting project preparation...\n";
-$start = microtime(true);
 foreach ($projects as $key => $project) {
-    $projectStart = microtime(true);
-    prepareProject($key, $project, $sourceDir);
-    $timers["Project '$key' preparation"] = microtime(true) - $projectStart;
+    $componentTimes = [];
+    prepareProject($key, $project, $sourceDir, $cache, $componentTimes);
+    $timers[$key] = $componentTimes;
 }
-$timers['Total prepare'] = microtime(true) - $start;
-
-if (VERBOSE) echo "Publishing projects...\n";
-$publishStart = microtime(true);
-publish($publish, $projects);
-$timers['Publish'] = microtime(true) - $publishStart;
-
 // Log detailed timing information
-foreach ($timers as $action => $time) {
-    if (VERBOSE) echo "$action time: " . number_format($time, 4) . " seconds\n";
-}
-
+generateTimingTable($timers);
 // End main execution before defining functions
 exit();
 
@@ -110,14 +97,18 @@ HELP;
 /** @throws Exception
  * Copies sources and artifacts to their destination and generates the artifact index
  */
-function prepareProject(string $projectKey, array $projectConfig, string $sourceDir): void {
+function prepareProject(string $projectKey, array $projectConfig, string $sourceDir, array &$cache, array &$componentTimes): void {
     $artifactMap = [];
     ['artifactPattern' => $artifactPattern, 'storeURL' => $storeURL,
         'components' => $components, 'web-artifacts' => $webArtifacts,
         'appDir' => $appDir] = $projectConfig;
-
     foreach (array_merge($components, $webArtifacts) as $source) {
         unset($files);//you know real languages have something called block scope
+        $isCached = array_key_exists($source, $cache);
+        $componentTimes[$source] = false;
+        $artifactMap[$source] =& $cache[$source];
+        if ($isCached) continue;
+        $startTime = microtime(true);
         $type = in_array($source, $components) ? 'component' : 'web-artifact';
         // Prepend SOURCE_DIR if the component or artifact does not start with '/'
         $fullPath = str_starts_with($source, '/') ? $source : "$sourceDir/$source";
@@ -137,19 +128,20 @@ function prepareProject(string $projectKey, array $projectConfig, string $source
             $fileSource = $type;
             $fileData = match ([$filePurpose, $fileSource]) {
                 ['artifact', 'web-artifact'], ['artifact', 'component'] => storeArtifact($filePath, $storeURL),
-                ['source', 'component'] => storeSource($filePath, $appDir, $sourceDir),
-                    default => [],
+                ['source', 'component'] => ['hash' => hash_file('sha256', $filePath),],
+                default => [],
             };
             $fileData['role'] = $filePurpose;
             $fileData['source'] = $fileSource;
-            recordFilePath($artifactMap, $sourceDir, $filePath, $fileData);
+            recordFilePath($artifactMap[$source], $sourceDir, $filePath, $fileData);
             $hash = $fileData['hash'] ?? '*ignored*';
             if (DEBUG) echo "Debug: Processed '$fileSource' file for project '$projectKey' as '$filePurpose': $hash -> '$filePath'\n";
         }
+        $componentTimes[$source] = microtime(true) - $startTime;
     }
 
     // Save $artifactMap as a PHP script
-    $artifactMapPath = "$appDir/artifactMap.php";
+    $artifactMapPath = "$appDir/$projectKey/artifactMap.php";
     $artifactMapExport = var_export($artifactMap, true);
     file_put_contents($artifactMapPath, "<?php\nreturn $artifactMapExport;\n");
     if (VERBOSE) echo "Artifact map saved to $artifactMapPath for project '$projectKey'\n";
@@ -164,22 +156,7 @@ function determineFilePurpose(string $file, array $artifactPattern): string {
     return 'source';
 }
 
-function storeSource(string $file, string $appDir, string $sourceDir): array {
-    // Create the relative path by removing everything before the component directory
-    $relativePath = str_replace("$sourceDir/", '', $file);
-    $destination = "$appDir/$relativePath";
-    $destinationDir = dirname($destination);
-    if (!is_dir($destinationDir)) {
-        mkdir($destinationDir, 0755, true);
-    }
-    copy($file, $destination);
-    return [
-        'hash' => hash_file('sha256', $file),
-        'location' => $destination,
-    ];
-}
-
-function recordFilePath(array &$artifactMap, string $sourceDir, string $file, array $fileInfo): void {
+function recordFilePath(?array &$artifactMap, string $sourceDir, string $file, array $fileInfo): void {
     $relativePath = str_replace($sourceDir . '/', '', $file);
     $extension = pathinfo($file, PATHINFO_EXTENSION);
     $nestedPath = explode('/', $relativePath);
@@ -219,33 +196,71 @@ function fileArtifactStore($artifactPath, $hash, $extension, $path): array {
     return compact(['hash', 'location']);
 }
 
-function publish(string $publish, array $projects): void {
-    foreach ($projects as $name => $project) {
-        $publicDir = rtrim($publish, "/") . "/$name";
-        if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
-        // Generate the public entrypoints
-        $entryPoint = $publicDir . '/index.php';
-        $includeFiles = implode("\n", array_map(fn($file) => "require_once '{$_SERVER['DOCUMENT_ROOT']}/$file';", $project['includes']));
-        $artifactMapInclude = "require_once '{$_SERVER['DOCUMENT_ROOT']}/artifactMap.php';\n";
-        file_put_contents($entryPoint, <<<INDEX
-<?php
-// Entrypoint for project {$name}
-$artifactMapInclude
-$includeFiles
-INDEX
-        );
-        if (VERBOSE) echo "Entrypoint created at $entryPoint\n";
-    }
-
-    if (!getenv(getenv('SOURCE_DATE_EPOCH'))) return;
-    // Recursively set SOURCE DATE EPOCH on all app dirs and the publish dir
-    $dirs = array_merge([$publish], array_column($projects, 'appDir'));
-    foreach ($dirs as $dir) {
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
-        foreach ($iterator as $file) {
-            touch($file->getPathname(), getenv('SOURCE_DATE_EPOCH'));
-            if (DEBUG) echo "Debug: Set SOURCE_DATE_EPOCH for file '{$file->getPathname()}'\n";
+function generateTimingTable(array $statistics): void
+{
+    $componentTimes = [];
+    $cacheHitCount = [];
+    // Step 1: Collect actual time per component and count cache hits
+    foreach ($statistics as $project) {
+        foreach ($project as $component => $time) {
+            match (gettype($time)) {
+                'double' => $componentTimes[$component] = $time,
+                'boolean' => $cacheHitCount[$component]++,
+            };
         }
     }
-    if (VERBOSE) echo "SOURCE DATE EPOCH set for all files in app and publish directories\n";
+    $projectTimes = [];
+    $projectCacheSavings = [];
+    // Step 2: Calculate saved and actual times per project
+    foreach ($statistics as $projectKey => $project) {
+        $actualTime =& $projectTimes[$projectKey];
+        $savedTime =& $projectCacheSavings[$projectKey];
+        foreach ($project as $component => $time) {
+            $timeValue = $componentTimes[$component];
+            match (gettype($time)) {
+                'double' => $actualTime += $timeValue,
+                'boolean' => $savedTime += $timeValue,
+            };
+        }
+    }
+    // Step 3: Render the table
+    $projectTable = [];
+    foreach ($projectTimes as $project => $actualTime){
+        $savedTime = $projectCacheSavings[$project];
+        $projectTable[] = createTableColumn($actualTime, $savedTime, $project, $componentTimes, $statistics);
+    }
+    $projectTable[] = createTableColumn(array_sum($componentTimes), null, 'component times', $componentTimes, ['component times' => $componentTimes]);
+    $cacheSavings = array_map(fn($a, $b) => ($a ?? 0) * $b, $cacheHitCount, $componentTimes);
+    $projectTable[] = createTableColumn(null, array_sum($cacheSavings), 'cache hits', $componentTimes, ['cache hits' => $cacheHitCount]);
+    $components = array_keys($componentTimes);
+    $componentLegend = ['components' => array_combine($components, $components)];
+    $projectTable[] = createTableColumn('actual time', 'saved time', 'components', $componentTimes, $componentLegend, max(array_map(strlen(...), $components)));
+    $projectTable = array_map(fn(...$cols) => '|' . implode('|', $cols) . '|', ...$projectTable);
+    echo implode("\n", $projectTable);
+}
+
+function createTableColumn(mixed $actualTime, mixed $savedTime, int|string $project, array $componentTimes, array $statistics, ?int $digits = null): array {
+    $digits ??= 4 + ((int)max(1, log($actualTime ?? 0.0), log($savedTime ?? 0.0)));
+    $width = max($digits, strlen($project), strlen('cached'));
+    $column = [];
+    $column[] = formatValue($project, $width, $digits);
+    $column[] = str_repeat('-', $width + 2);
+    foreach ($componentTimes as $component => $time) {
+        $value =& $statistics[$project][$component];
+        $column[] = formatValue($value, $width, $digits);
+    }
+    $column[] = str_repeat('=', $width + 2);
+    $column[] = formatValue($savedTime, $width, $digits);
+    $column[] = formatValue($actualTime, $width, $digits);
+    $column[] = str_repeat('-', $width + 2);
+    return $column;
+}
+
+function formatValue(null|false|float|string $value, int $width, int $digits): string {
+    return match (gettype($value)) {
+        'NULL' => str_repeat(' ', $width + 2),
+        'string' => sprintf(" % {$width}s ", $value),
+        'boolean' => sprintf(" % {$width}s ", 'cached'),
+        'double' => sprintf(" % {$width}s ", sprintf(" %0$digits.3f ", $value)),
+    };
 }
