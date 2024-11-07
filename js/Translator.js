@@ -86,9 +86,10 @@ class Translator {
      * @param key
      * @param args
      * @returns {*}
+     * @throws {Error}
      */
     get(key, args) {
-        let translationArray = this.getTranslation(this.getLanguage());
+        const translationArray = this.getTranslation(this.getLanguage());
         let message = translationArray[key];
         if (Array.isArray(message)) {//really anything except a String is problematic e.g. undefined, null, array, int...
             //we could have an undefined key be looked up and added to the 'dictionary' (ajaxCall to translate.php) -> and then reload the dictionary async...
@@ -211,10 +212,9 @@ class Translator {
                 throw 'No directory was specified for the resources.';
             }
             if (typeof language == 'undefined') {
-
                 throw 'No language was specified.';
             }
-            let translationFile = this.directory + '/' + language + '.' + this.extension;
+            const translationFile = `${this.directory}/${language}.${this.extension}`;
             this.setTranslation(language, loadJSON(translationFile));
         }
         return this.translation[language];

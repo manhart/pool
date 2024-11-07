@@ -1154,27 +1154,27 @@ function triggerEvent(element, type) {
 /**
  * Load json file synchronously
  *
- * @param string url
- * @param object opts e.g. headers
  * @returns {null|any}
+ * @param {string} url - URL of the JSON file
+ * @param {object} opts - Additional options for the request (e.g. headers)
+ * @param {boolean} synchronously - Whether to load the file synchronously or asynchronously
+ * @throws {Error} if the request fails
  */
-function loadJSON(url, opts = {}) {
-    let xhr = new XMLHttpRequest();
+function loadJSON(url, opts = {}, synchronously = true) {
+    const xhr = new XMLHttpRequest();
     xhr.overrideMimeType('application/json');
-    xhr.open('GET', url, false);
-
-    if (opts.headers) {
-        for (let key in opts.headers) {
+    xhr.open('GET', url, !synchronously);
+    if(opts.headers) {
+        for(let key in opts.headers) {
             xhr.setRequestHeader(key, opts.headers[key]);
         }
     }
-
     xhr.send();
-    if (xhr.status == 200) {
+
+    if(xhr.status === 200) {
         return JSON.parse(xhr.responseText);
-    } else {
-        return null;
     }
+    throw new Error(`Error loading JSON file: ${url} HTTP Status: ${xhr.status} (${xhr.statusText})`);
 }
 
 /**
