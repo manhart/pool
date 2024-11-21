@@ -16,36 +16,27 @@ class Memory extends Memcached
 {
     private static ?Memory $instance = null;
 
-    private static bool $serverConfigured = false;
-
     private int $defaultExpiration = 0;
 
-    private function __construct()
+    private function __construct(string $servers)
     {
         parent::__construct();
+        if (ini_get("session.save_handler") === 'memcached') {
+            $servers = $servers ?: ini_get("session.save_path");
+        }
+        // Configure default servers if no servers have been configured
+        $servers = $servers ?: "localhost:11211";
+        $servers = explode(",", $servers);
+        $servers = array_map(curry(explode(...), ":"), $servers);
+        $this->addServers($servers);
+        if (!$this->getVersion()) {
+            throw new \MemcachedException($this->getResultMessage() . $this->getLastErrorMessage());
+        }
     }
 
-    public static function getInstance(array $servers = []): self
+    public static function getInstance(string $servers = ''): self
     {
-        if (self::$instance === null) {
-            self::$instance = new static();
-            if ($servers) {
-                self::configureServers($servers);
-            } elseif (!self::$serverConfigured) {
-                // Configure default servers if no servers have been committed
-                // and no servers have been configured yet
-                self::configureServers([['host' => 'localhost', 'port' => 11211]]);
-            }
-        }
-        return self::$instance;
-    }
-
-    private static function configureServers(array $servers): void
-    {
-        foreach ($servers as $server) {
-            self::$instance->addServer($server['host'], $server['port']);
-        }
-        self::$serverConfigured = true;
+        return self::$instance ??= new static($servers);
     }
 
     public static function hasInstance(): bool
