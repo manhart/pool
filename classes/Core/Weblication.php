@@ -357,15 +357,6 @@ class Weblication extends Component
         self::$workingDirectory = getcwd();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
-        $this->memory = Memory::getInstance();
-        $this->memory->setDefaultExpiration($this->cacheTTL);
-        // determine the relative client und server path from the application to the pool
-        if (!\pool\IS_CLI) {
-            $poolRelativePath = $this->getCachedItem('poolRelativePath') ?: makeRelativePathsFrom(null, DIR_POOL_ROOT); // try to find the pool
-            $poolRelativePath['clientside'] = defined('DIR_RELATIVE_DOCUMENT_ROOT') ? DIR_RELATIVE_DOCUMENT_ROOT.'/'.basename(DIR_POOL_ROOT) : $poolRelativePath['clientside'];
-            $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
-            $this->cacheItem('poolRelativePath', $poolRelativePath);
-        }
     }
 
     /**
@@ -1199,6 +1190,16 @@ class Weblication extends Component
     protected function initializeSettings(array $settings): void
     {
         if ($this->isInitialized) return;
+
+        $this->memory = Memory::getInstance();
+        $this->memory->setDefaultExpiration($this->cacheTTL);
+        // determine the relative client und server path from the application to the pool
+        if (!\pool\IS_CLI) {
+            $poolRelativePath = $this->getCachedItem('poolRelativePath') ?: makeRelativePathsFrom(null, DIR_POOL_ROOT); // try to find the pool
+            $poolRelativePath['clientside'] = defined('DIR_RELATIVE_DOCUMENT_ROOT') ? DIR_RELATIVE_DOCUMENT_ROOT.'/'.basename(DIR_POOL_ROOT) : $poolRelativePath['clientside'];
+            $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
+            $this->cacheItem('poolRelativePath', $poolRelativePath);
+        }
 
         // set well known setting
         $this->setName($settings['application.name'] ?? $this->getName());
