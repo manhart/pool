@@ -71,6 +71,25 @@ final class Curl
     }
 
     /**
+     * Check if a service is alive by sending a HEAD request to the given URL.
+     */
+    public static function isServiceAlive(string $url, int $timeout = 5): bool
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_NOBODY, true);// perform a head request
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);// don't output directly
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION , true);// follow redirects
+
+        curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        // 2xx, 3xx and 4xx are considered as alive
+        return ($httpCode >= 200 && $httpCode < 300) || ($httpCode >= 400 && $httpCode < 500);
+    }
+
+    /**
      * Downloads a file from a given URL and saves it to a specified destination.
      *
      * @param string $url The URL of the file to be downloaded.
@@ -108,13 +127,14 @@ final class Curl
      *     body: string,
      *     statusCode: int
      * }
-     * @throws JsonException, \InvalidArgumentException, \RuntimeException
+     * @throws InvalidArgumentException|\JsonException|RuntimeException
      */
     public static function post(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded'): array
     {
-        $postData = match ($contentType) {
-            'application/x-www-form-urlencoded' => http_build_query($data),
-            'application/json' => json_encode($data, JSON_THROW_ON_ERROR),
+        [$postData, $autoHttpHeader] = match ($contentType) {
+            'application/x-www-form-urlencoded' => [http_build_query($data), true],
+            'application/json' => [json_encode($data, JSON_THROW_ON_ERROR), true],
+            'multipart/form-data' => [$data, false],//automatically set by curl
             default => throw new InvalidArgumentException("Unsupported content type: $contentType")
         };
         $curl = curl_init($url);
@@ -122,12 +142,13 @@ final class Curl
         $options[CURLOPT_POST] = true;
         $options[CURLOPT_POSTFIELDS] = $postData;
         $options[CURLOPT_RETURNTRANSFER] = true;
-        $options[CURLOPT_HTTPHEADER] ??= [
+        $options[CURLOPT_HTTPHEADER] ??= $autoHttpHeader ? [
             "Content-Type: $contentType",
             'Content-Length: '.strlen($postData),
-        ];
+        ] : [];
         $options[CURLOPT_SSL_VERIFYPEER] ??= true;
         $options[CURLOPT_SSL_VERIFYHOST] ??= 2;
+        $options[CURLOPT_FAILONERROR] ??= true;
         curl_setopt_array($curl, $options);
 
         $response = curl_exec($curl);
