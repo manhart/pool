@@ -595,8 +595,7 @@ class TempFile extends TempCoreHandle
                 $filePath = Template::attemptFileTranslation($filePath, $weblication->getLanguage());
         }
 
-        if ($fileExists && ($fileTime = filemtime($filePath)) &&
-            $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE)) {
+        if ($fileExists && ($fileTime = filemtime($filePath)) && $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE)) {
             $this->setContent($content);
             return;
         }

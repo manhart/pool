@@ -1669,28 +1669,6 @@ class Weblication extends Component
     }
 
     /**
-     * Cache an item
-     */
-    public function cacheItem(string $key, mixed $item, string $topic = self::CACHE_ITEM): bool
-    {
-        if (!self::$cacheItem[$topic])
-            return false;
-        $memKey = $this->generateCacheKey($key, $topic);
-        return $this->memory->setValue($memKey, $item);
-    }
-
-    /**
-     * Returns the cached item or false if the item was not found.
-     */
-    public function getCachedItem(string $key, string $topic = self::CACHE_ITEM): mixed
-    {
-        if (!self::$cacheItem[$topic])
-            return false;
-        $memKey = $this->generateCacheKey($key, $topic);
-        return $this->memory->get($memKey);
-    }
-
-    /**
      * Generate a cache key
      */
     private function generateCacheKey(string $key, string $topic): string
@@ -1699,12 +1677,42 @@ class Weblication extends Component
     }
 
     /**
+     * Check if memory is available
+     */
+    private function isMemoryAvailable(): bool
+    {
+        return (bool)($this->memory ?? false);
+    }
+
+    /**
+     * Cache an item if memory is available
+     */
+    public function cacheItem(string $key, mixed $item, string $topic = self::CACHE_ITEM): bool
+    {
+        if(!$this->isMemoryAvailable()) return false;
+        if (!self::$cacheItem[$topic]) return false;
+        $memKey = $this->generateCacheKey($key, $topic);
+        return $this->memory->setValue($memKey, $item);
+    }
+
+    /**
+     * Returns the cached item or false if the item was not found or memory is not available
+     */
+    public function getCachedItem(string $key, string $topic = self::CACHE_ITEM): mixed
+    {
+        if(!$this->isMemoryAvailable()) return false;
+        if (!self::$cacheItem[$topic]) return false;
+        $memKey = $this->generateCacheKey($key, $topic);
+        return $this->memory->get($memKey);
+    }
+
+    /**
      * Clear the cache for file system access (prefix "fs:")
      */
     private function clearCache(string $topic = self::CACHE_ITEM): void
     {
-        if (!self::$cacheItem[$topic])
-            return;
+        if(!$this->isMemoryAvailable()) return;
+        if (!self::$cacheItem[$topic]) return;
         $allKeys = $this->memory->getAllKeys();
         $keys = [];
         foreach ($allKeys as $key) {
