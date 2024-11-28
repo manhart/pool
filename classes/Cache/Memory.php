@@ -21,13 +21,13 @@ class Memory extends Memcached
     private function __construct(string $servers)
     {
         parent::__construct();
-        if (ini_get("session.save_handler") === 'memcached') {
-            $servers = $servers ?: ini_get("session.save_path");
+        if (ini_get('session.save_handler') === 'memcached') {
+            $servers = $servers ?: ini_get('session.save_path');
         }
         // Configure default servers if no servers have been configured
-        $servers = $servers ?: "localhost:11211";
-        $servers = explode(",", $servers);
-        $servers = array_map(curry(explode(...), ":"), $servers);
+        $servers = $servers ?: 'localhost:11211';
+        $servers = explode(',', $servers);
+        $servers = array_map(curry(explode(...), ':'), $servers);
         $this->addServers($servers);
         if (!$this->getVersion()) {
             throw new \MemcachedException($this->getResultMessage() . $this->getLastErrorMessage());

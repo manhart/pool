@@ -323,7 +323,7 @@ class Weblication extends Component
     /**
      * @var int Cache time to live
      */
-    private int $cacheTTL = 86400;
+    private const CACHE_TTL = 86400;
 
     /**
      * Types of caching
@@ -1191,8 +1191,7 @@ class Weblication extends Component
     {
         if ($this->isInitialized) return;
 
-        $this->memory = Memory::getInstance();
-        $this->memory->setDefaultExpiration($this->cacheTTL);
+        $this->setupMemory($settings['memcached.servers'] ?? '', $settings['memcached.ttl'] ?? self::CACHE_TTL);
         // determine the relative client und server path from the application to the pool
         if (!\pool\IS_CLI) {
             $poolRelativePath = $this->getCachedItem('poolRelativePath') ?: makeRelativePathsFrom(null, DIR_POOL_ROOT); // try to find the pool
@@ -1682,6 +1681,17 @@ class Weblication extends Component
     private function isMemoryAvailable(): bool
     {
         return (bool)($this->memory ?? false);
+    }
+
+    /**
+     * @param string $servers memcached servers e.g. localhost:11211
+     * @param int $expiration cache TTL in seconds
+     * @return void
+     */
+    private function setupMemory(string $servers, int $expiration): void
+    {
+        $this->memory ??= Memory::getInstance($servers);
+        $this->memory->setDefaultExpiration($expiration);
     }
 
     /**
