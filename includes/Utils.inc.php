@@ -788,6 +788,14 @@ function &getGlobal(string $key): mixed
 }
 
 /**
+ * Trims the value if it is a string. Designed to be used with array_map.
+ */
+function safeTrim(mixed $value): mixed
+{
+    return is_string($value) ? trim($value) : $value;
+}
+
+/**
  * Query whether the global variable exists
  */
 function global_exists(string $key): bool
