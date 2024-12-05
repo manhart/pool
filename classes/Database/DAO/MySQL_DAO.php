@@ -261,7 +261,7 @@ class MySQL_DAO extends DAO
                 $filterByValue = $definedSearchKeywords[$columnName];//get keyword for column name?
                 switch (($column['filterControl'] ?? false ?: 'input')) {//type of input?
                     case 'select':
-                        $operator = 'equal';
+                        $operator = is_array($filterByValue) ? 'in' : 'equal';
                         break;
                     case 'datepicker':
                         if ($filterByValue) {//non-empty
