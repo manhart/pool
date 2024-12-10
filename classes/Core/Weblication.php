@@ -20,13 +20,13 @@ declare(strict_types = 1);
 namespace pool\classes\Core;
 
 use Exception;
+use Generator;
 use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
 use pool\classes\Core\Input\Cookie;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
-use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
@@ -42,7 +42,6 @@ use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
 use pool\guis\GUI_HeadData\GUI_HeadData;
 use Template;
-
 use function addEndingSlash;
 use function array_merge;
 use function assert;
@@ -68,13 +67,11 @@ use function makeRelativePathsFrom;
 use function microtime;
 use function readDirs;
 use function register_shutdown_function;
-use function reset;
 use function session_status;
 use function sprintf;
 use function strrpos;
 use function substr;
 use function trim;
-
 use const PHP_SESSION_ACTIVE;
 use const PHP_SESSION_DISABLED;
 use const PHP_SESSION_NONE;
@@ -196,11 +193,6 @@ class Weblication extends Component
      * @var int
      */
     private int $progId = 0;
-
-    /**
-     * @var string
-     */
-    private string $cssFolder = 'css';
 
     /**
      * @var Input central data container for runtime data exchange between classes/modules.
@@ -884,20 +876,30 @@ class Weblication extends Component
     public function findTemplate(string $filename, string $classFolder = '', bool $baseLib = false): string
     {
         $language = $this->language;
-        $elementSubFolder = 'templates';
         $translate = (bool)Template::getTranslator();
         $memKey = "findTemplate.$this->skin.$language.$classFolder.$filename.$baseLib";
         if (($template = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) {
             return $template;
         }
-        $template = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, false, $translate);
+        $searchDirs = $this->legacyElementSearchOrder('templates', $classFolder, $baseLib);
+        $template = $this->findBestElement($filename, $searchDirs)->current() ?? '';
+        assert(is_string($template));
+        if ($translate && Template::isCacheTranslations()) {
+            $templateDir = substr($template, 0, strlen($filename));
+            $translatedFile = buildFilePath($templateDir, $language, $filename);
+            if (!file_exists($translatedFile)) {//Create Translated file and cache it to disk
+                $template = Template::attemptFileTranslation($template, $language);
+            } else {
+                $template = $translatedFile;
+            }
+        }
         if ($template) {
             $this->cacheItem($memKey, $template, static::CACHE_FILE_ACCESS);
             return $template;
         }
 
         $msg = "Template $filename in ".__METHOD__." not found!";
-        if ($baseLib && !$this->getPoolServerSideRelativePath()) {
+        if ($baseLib && !$this->poolServerSideRelativePath) {
             // if nothing was found, we give a hint to uninformed useres that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
         }
@@ -913,52 +915,32 @@ class Weblication extends Component
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
-     **@see Weblication::findTemplate()
      */
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
     {
-        $elementSubFolder = $this->cssFolder;
-        $language = $this->language;
-        $memKey = "findStyleSheet.$this->skin.$language.$classFolder.$elementSubFolder.$filename.$baseLib";
+        $memKey = "findStyleSheet.$this->skin.$classFolder.$filename.$baseLib";
         if (($stylesheet = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) {
             return $stylesheet;
         }
-        $stylesheet = $this->findBestElement($elementSubFolder, $filename, $language, $classFolder, $baseLib, true);
+        $searchDirs = $this->legacyElementSearchOrder('css', $classFolder, $baseLib);
+        //grab first element for now @todo implement function to add web-Assets and deprecate this
+        $stylesheet = $this->findBestElement($filename, $searchDirs)->current() ?? '';
+        assert(is_string($stylesheet));
         if ($stylesheet) {
-            if ($baseLib) {
-                $stylesheet = strtr($stylesheet, [$this->getPoolServerSideRelativePath() => $this->getPoolClientSideRelativePath()]);
-            }
-            $this->cacheItem($memKey, $stylesheet, static::CACHE_FILE_ACCESS);
+            $stylesheet = $this->getWebAssetClientPath($baseLib, $stylesheet);
+        } elseif ($raiseError) {
+            $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
             return $stylesheet;
         }
-
-        if ($raiseError)
-            $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
-        else {
-            $this->cacheItem($memKey, '', static::CACHE_FILE_ACCESS);
-        }
-        return '';
+        $this->cacheItem($memKey, $stylesheet, static::CACHE_FILE_ACCESS);
+        return $stylesheet;
     }
 
-    /**
-     * @param string $elementSubFolder
-     * @param string $filename
-     * @param string $language
-     * @param string $classFolder
-     * @param bool $baseLib
-     * @param bool $all
-     * @param bool $translate
-     * @return string
-     */
-    public function findBestElement(
+    private function legacyElementSearchOrder(
         string $elementSubFolder,
-        string $filename,
-        string $language,
         string $classFolder,
-        bool $baseLib,
-        bool $all,
-        bool $translate = false,
-    ): string {
+        bool $baseLib
+    ): array {
         $places = [];
         //Getting list of Places to search
         if ($this->hasCommonSkinFolder($elementSubFolder)) //Project? -> Special common-skin
@@ -978,31 +960,20 @@ class Weblication extends Component
             }
             //POOL Library Project
             if ($baseLib)
-                $places[] = buildDirPath($this->getPoolServerSideRelativePath(), $guiDirectory);
+                $places[] = buildDirPath($this->poolServerSideRelativePath, $guiDirectory);
         }
         //Common-common-skin
         if (!$baseLib && defined('DIR_COMMON_ROOT_REL'))
             $places[] = buildDirPath(DIR_COMMON_ROOT_REL, PWD_TILL_SKINS, $this->commonSkinFolder, $elementSubFolder);
-        $finds = [];
-        //Searching
-        foreach ($places as $place) {
+        return $places;
+    }
+
+    private function findBestElement(string $filename, $searchDirs): Generator {
+        foreach ($searchDirs as $place) {
             $file = buildFilePath($place, $filename);
-            if (file_exists($file)) {
-                $translatedFile = buildFilePath($place, $language, $filename);
-                if (Template::isCacheTranslations() && file_exists($translatedFile)) {
-                    // Language specific Ordner
-                    $finds[] = $translatedFile;
-                } elseif ($translate && Template::isCacheTranslations()) {
-                    //Create Translated file and put it in the language folder
-                    $finds[] = Template::attemptFileTranslation($file, $language);
-                } else {// generic Ordner
-                    $finds[] = $file;
-                }//end decision which file to pick
-                if (!$all) break;//stop searching after first match
-            }
+            $file_exists = file_exists($file);
+            if ($file_exists) yield $file;
         }
-        //grab first element for now
-        return reset($finds) ?: "";
     }
 
     /**
@@ -1031,30 +1002,45 @@ class Weblication extends Component
         if (($javaScriptFile = $this->getCachedItem($memKey, static::CACHE_FILE_ACCESS)) !== false) return $javaScriptFile;
         //cache-miss
         $relativeProjectPaths = [];
-        //Ordner BaseLib -> look in POOL instead
-        $relativeProjectPaths[] = $baseLib ? [$this->poolServerSideRelativePath, $this->poolClientSideRelativePath] : ['', ''];
+        //Ordner BaseLib -> look in POOL instead of current project
+        $relativeProjectPaths[] = $baseLib ? $this->poolServerSideRelativePath : '';
         if (defined('DIR_COMMON_ROOT_REL')) {
-            $relativeProjectPaths[] = [DIR_COMMON_ROOT_REL, DIR_COMMON_ROOT_REL];
+            $relativeProjectPaths[] = DIR_COMMON_ROOT_REL;
         }
         $subDirs = [PWD_TILL_JS, buildDirPath(PWD_TILL_GUIS, $classFolder)];
-        foreach ($relativeProjectPaths as [$project, $projectClientSide]) {
+        $javaScriptDirs = [];
+        foreach ($relativeProjectPaths as $project) {
             foreach ($subDirs as $subDir) {
-                $javaScriptFile = buildFilePath($project, $subDir, $filename);
-                $javaScriptFileClientSide = buildFilePath($projectClientSide, $subDir, $filename);
-                if (!file_exists($javaScriptFile)) continue;
-                $javaScriptFile = $clientSideRelativePath ? $javaScriptFileClientSide : $javaScriptFile;
-                $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
-                return $javaScriptFile;
+                $javaScriptDirs[] = buildFilePath($project, $subDir);
             }
         }
-        //premium error handling @todo replace
-        if ($raiseError)
+        $javaScriptFile = $this->findBestElement($filename, $javaScriptDirs)->current() ?? '';
+        assert(is_string($javaScriptFile));
+        if ($javaScriptFile) {
+            if ($clientSideRelativePath) {
+                $javaScriptFile = $this->getWebAssetClientPath($baseLib, $javaScriptFile);
+            }
+        } elseif ($raiseError) {
+            //premium error handling @todo replace
             $this->raiseError(__FILE__, __LINE__, sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
-        else {
-            $this->cacheItem($memKey, '', static::CACHE_FILE_ACCESS);
+            return $javaScriptFile;
         }
-        return '';
+        $this->cacheItem($memKey, $javaScriptFile, static::CACHE_FILE_ACCESS);
+        return $javaScriptFile;
     }
+
+    /**
+     * @param bool $isBaseLib
+     * @param string $webAssetPath
+     * @return string
+     */
+    public function getWebAssetClientPath(bool $isBaseLib, string $webAssetPath): string {
+        if ($isBaseLib) {
+            $webAssetPath = strtr($webAssetPath, [$this->poolServerSideRelativePath => $this->poolClientSideRelativePath]);
+        }
+        return $webAssetPath;
+    }
+
 
     /**
      * @param string $clientSidePath
