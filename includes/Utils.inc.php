@@ -146,19 +146,19 @@ function storageUnitToBytes(string $value): int
         case 't':
         case 'tb':
         case 'tib':
-        $numericValue *= 1024;
+            $numericValue *= 1024;
         case 'g':
         case 'gb':
         case 'gib':
-        $numericValue *= 1024;
+            $numericValue *= 1024;
         case 'm':
         case 'mb':
         case 'mib':
-        $numericValue *= 1024;
+            $numericValue *= 1024;
         case 'k':
         case 'kb':
         case 'kib':
-        $numericValue *= 1024;
+            $numericValue *= 1024;
     }
     return $numericValue;
 }
@@ -1085,7 +1085,10 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     $hereCount = count($hereArr);
     //cut out the common part
     $tripped = 0;
-    $vectorArr = array_udiff_assoc($toThisArr, $hereArr, function ($a, $b) use (&$tripped) { return $tripped != 0 ? $tripped : $tripped = strcmp($a, $b); },
+    $vectorArr = array_udiff_assoc(
+        $toThisArr,
+        $hereArr,
+        function ($a, $b) use (&$tripped) { return $tripped != 0 ? $tripped : $tripped = strcmp($a, $b); },
     );
     //calculate the size of the common part not included in target
     $commonCount = count($toThisArr) - count($vectorArr);
@@ -1835,6 +1838,22 @@ function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
 {
     $dateTime = DateTime::createFromFormat($format, $date);
     return $dateTime && $dateTime->format($format) === $date;
+}
+
+/**
+ * Validates a given time string
+ */
+function validateTime(string $time): bool
+{
+    $timeParts = explode(':', $time);
+    $countTimeParts = count($timeParts);
+    if ($countTimeParts === 0 || $countTimeParts > 3) return false;
+
+    $formatParts = explode(':', 'H:i:s');
+    $format = implode(':', array_slice($formatParts, 0, $countTimeParts));
+
+    $dateTime = DateTime::createFromFormat($format, $time);
+    return $dateTime && $dateTime->format($format) === $time;
 }
 
 /**
