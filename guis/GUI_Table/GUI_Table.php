@@ -1053,6 +1053,20 @@ class GUI_Table extends GUI_Module
             'inputType' => 'text',
             'value' => ['pageInfo', 'pageSize', 'pageList'],
         ],
+        'pageSize' => [
+            'attribute' => 'data-page-size',
+            'type' => 'integer',
+            'element' => 'input',
+            'inputType' => 'number',
+            'value' => 10,
+        ],
+        'pageList' => [
+            'attribute' => 'data-page-list',
+            'type' => 'array',
+            'element' => 'input',
+            'inputType' => 'text',
+            'value' => [10, 25, 50, 100],
+        ],
         'url' => [
             'attribute' => 'data-url',
             'type' => 'string',
