@@ -2064,3 +2064,16 @@ function hasTrait(object $object, string $trait, bool $recursive = true): bool
 {
     return in_array($trait, $recursive ? class_uses_recursive($object) : class_uses($object));
 }
+
+/**
+ * Removes consecutive duplicate values from an array.
+ */
+function removeConsecutiveDuplicates(array $input): array
+{
+    return array_reduce($input, function ($carry, $item) {
+        if (empty($carry) || end($carry) !== $item) {
+            $carry[] = $item;
+        }
+        return $carry;
+    }, []);
+}
