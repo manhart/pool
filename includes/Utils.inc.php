@@ -91,7 +91,8 @@ function pray(mixed $data, bool $functions = false): string
  */
 function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, string $blank = ' '): string
 {
-    if ($bytes < 0) return '-'; elseif ($bytes == 0) return '0 Bytes';
+    if ($bytes < 0) return '-';
+    elseif ($bytes === 0) return '0 Bytes';
     $units = [['B', 'Bytes'], ['KB', 'KBytes'], ['MB', 'MBytes'], ['GB', 'GBytes'], ['TB', 'TBytes']];
     $level = min((int)log($bytes, 1024), count($units) - 1);
     $unit = $blank.$units[$level][(int)!$shortVersion];
@@ -1004,7 +1005,7 @@ function makeRelativePathsFrom(?string $here, string $toThis, ?string $base = nu
     $clientsideRelativePathComponents = count(explode($separator, $base));
     $commonPathComponents = min($clientsideRelativePathComponents, $paths['clientside']['commonPathComponents']);
     $amount = $clientsideRelativePathComponents - $paths['clientside']['commonPathComponents'];
-    $levels = $amount > 0 ? str_repeat('..'.$separator, $amount) : '/';
+    $levels = $amount > 0 ? str_repeat("..$separator", $amount) : '/';
     $clientsideRelativePath = $levels.implode($separator, array_slice($paths['clientside']['toThisParts'], $commonPathComponents));
 
     // Calculate the serverside relative path.
@@ -1024,6 +1025,7 @@ function makeRelativePathsFrom(?string $here, string $toThis, ?string $base = nu
 /**
  * Resolves symbolic links into real path.
  */
+#[Pure(true)]
 function getRealFile(string $path): string
 {
     return is_link($path) ? realpath($path) : $path;
@@ -1547,6 +1549,7 @@ function base64url_encode(string $data): string
 /**
  * Pendant to the .NET API HttpServerUtility.UrlTokenDecode.
  * Decodes a base64 URL token back into a string.
+ * @noinspection PotentialMalwareInspection
  */
 function base64url_decode($token): string|false
 {
