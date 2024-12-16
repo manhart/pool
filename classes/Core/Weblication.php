@@ -203,9 +203,9 @@ class Weblication extends Component
     private string $cssFolder = 'css';
 
     /**
-     * @var Input App Settings
+     * @var Input central data container for runtime data exchange between classes/modules.
      */
-    protected Input $Settings;
+    protected Input $context;
 
     /**
      * @var bool|null xdebug enabled
@@ -324,7 +324,6 @@ class Weblication extends Component
      * @var int Cache time to live
      */
     private const CACHE_TTL = 86400;
-
     /**
      * Types of caching
      */
@@ -355,6 +354,7 @@ class Weblication extends Component
         parent::__construct(null);
         self::$isAjax = isAjax();
         self::$workingDirectory = getcwd();
+        $this->context = new Input();
         //handles POST requests containing JSON data
         Input::processJsonPostRequest();
     }
@@ -411,6 +411,23 @@ class Weblication extends Component
     public function getSkin(): string
     {
         return $this->skin;
+    }
+
+    /**
+     * Gets a value from the context container
+     */
+    public function getContextValue(string $key, mixed $default = null): mixed
+    {
+        return $this->context->getVar($key, $default);
+    }
+
+    /**
+     * Sets a value in the context container
+     */
+    public function setContextValue(string $key, mixed $value): static
+    {
+        $this->context->setVar($key, $value);
+        return $this;
     }
 
     /**
@@ -672,9 +689,6 @@ class Weblication extends Component
 
     /**
      * Checks if skin exists
-     *
-     * @param string $skin
-     * @return bool
      */
     public function skin_exists(string $skin = ''): bool
     {
@@ -1078,8 +1092,6 @@ class Weblication extends Component
 
     /**
      * Transforms the PATH_INFO into an Input object.
-     *
-     * @return Input
      */
     protected function transformPathInfo(): Input
     {
@@ -1100,11 +1112,6 @@ class Weblication extends Component
 
     /**
      * Redirect to schema
-     *
-     * @param string $schema
-     * @param bool $withQuery
-     * @param string $path
-     * @return never
      */
     public function redirect(string $schema, bool $withQuery = false, string $path = ''): never
     {
@@ -1112,48 +1119,6 @@ class Weblication extends Component
         $Url->setParam(self::REQUEST_PARAM_SCHEMA, $schema);
         if ($path) $Url->setScriptPath($path);
         $Url->redirect();
-    }
-
-    /**
-     * Inserts a DataInterface into the application allowing it to be used by the DAOs.
-     *
-     * @param DataInterface $dataInterface
-     * @return DataInterface
-     * @deprecated the weblication no longer maintains a list of data interfaces
-     * @see DataInterface::createDataInterface()
-     * @see DataInterface::registerResource()
-     */
-    public function addDataInterface(DataInterface $dataInterface): DataInterface
-    {
-        $this->interfaces[$dataInterface::class] = $dataInterface;
-        return $dataInterface;
-    }
-
-    /**
-     * Returns a DataInterface
-     *
-     * @param string $interface_name
-     * @return DataInterface|null Interface Objekt
-     * @deprecated the weblication no longer maintains a list of data interfaces
-     * @see DataInterface::execute() allows running queries directly
-     * @see DataInterface::getInterfaceForResource()
-     */
-    public function getInterface(string $interface_name): ?DataInterface
-    {
-        return $this->interfaces[$interface_name] ?? null;
-    }
-
-    /**
-     * Returns all DataInterface objects
-     *
-     * @return array Interface Objekte
-     * @see DAO::createDAO()
-     * @deprecated the weblication no longer maintains a list of data interfaces
-     * @see DataInterface raw access to register is not implemented due to lack of demand
-     */
-    public function getInterfaces(): array
-    {
-        return $this->interfaces;
     }
 
     /**
@@ -1699,7 +1664,7 @@ class Weblication extends Component
      */
     public function cacheItem(string $key, mixed $item, string $topic = self::CACHE_ITEM): bool
     {
-        if(!$this->isMemoryAvailable()) return false;
+        if (!$this->isMemoryAvailable()) return false;
         if (!self::$cacheItem[$topic]) return false;
         $memKey = $this->generateCacheKey($key, $topic);
         return $this->memory->setValue($memKey, $item);
@@ -1710,7 +1675,7 @@ class Weblication extends Component
      */
     public function getCachedItem(string $key, string $topic = self::CACHE_ITEM): mixed
     {
-        if(!$this->isMemoryAvailable()) return false;
+        if (!$this->isMemoryAvailable()) return false;
         if (!self::$cacheItem[$topic]) return false;
         $memKey = $this->generateCacheKey($key, $topic);
         return $this->memory->get($memKey);
@@ -1721,7 +1686,7 @@ class Weblication extends Component
      */
     private function clearCache(string $topic = self::CACHE_ITEM): void
     {
-        if(!$this->isMemoryAvailable()) return;
+        if (!$this->isMemoryAvailable()) return;
         if (!self::$cacheItem[$topic]) return;
         $allKeys = $this->memory->getAllKeys();
         $keys = [];
