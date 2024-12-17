@@ -37,7 +37,6 @@ use ReflectionFunction;
 use TempBlock;
 use Template;
 use Throwable;
-
 use const pool\NAMESPACE_SEPARATOR;
 use const pool\PWD_TILL_GUIS;
 
@@ -287,19 +286,19 @@ class GUI_Module extends Module
             return $this;
         }
 
-        foreach ($this->getCssFiles() as $cssFile) {
-            $cssFile = $this->getWeblication()->findStyleSheet($cssFile, $guiClassFolder, $this->isPOOL());
-            $Frame->getHeadData()->addStyleSheet($cssFile);
-        }
-
-        foreach ($this->getJsFiles() as $jsFile) {
-            $jsFile = $this->getWeblication()->findJavaScript($jsFile, $guiClassFolder, $this->isPOOL());
-            $Frame->getHeadData()->addJavaScript($jsFile);
+        $headData = $Frame->getHeadData();
+        $files = ['css' => $this->getCssFiles(), 'js' => $this->getJsFiles()];
+        foreach ($files as $extension => $fileList) {
+            foreach ($fileList as $file) {
+                if (str_ends_with($file, ".$extension")) {
+                    $file = substr($file, 0, -strlen(".$extension"));
+                }
+                $headData->addClientWebAsset($extension, $file, $guiClassFolder, $this->isPOOL());
+            }
         }
 
         /**
          * Including of the JavaScript class and Stylesheet with the same class/file name is done in the prepareContent() method.
-         *
          * @see GUI_Module::prepareContent()
          */
         return $this;

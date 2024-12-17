@@ -153,4 +153,12 @@ class PoolObject extends stdClass
     {
         return $this->className ??= $this->getReflectionClass()->getShortName();
     }
+
+    /**
+     * Adds an explicit branch to a fluent interface
+     * @link https://wiki.php.net/rfc/nullsafe_operator How to use optional chaining
+     */
+    public function if(bool $continue): ?static {
+        return $continue ? $this : null;
+    }
 }
