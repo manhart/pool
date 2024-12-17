@@ -240,8 +240,8 @@ function generateTimingTable(array $statistics): void
 }
 
 function createTableColumn(mixed $actualTime, mixed $savedTime, int|string $project, array $componentTimes, array $statistics, ?int $digits = null): array {
-    $digits ??= 4 + ((int)max(1, log($actualTime ?? 0.0), log($savedTime ?? 0.0)));
-    $width = max($digits, strlen($project), strlen('cached'));
+    $digits ??= 5 + ((int)max(1, log($actualTime ?? 0.0, 10), log($savedTime ?? 0.0, 10)));
+    $width = max($digits + 1, strlen($project), strlen('cached'));
     $column = [];
     $column[] = formatValue($project, $width, $digits);
     $column[] = str_repeat('-', $width + 2);
@@ -261,6 +261,6 @@ function formatValue(null|false|float|string $value, int $width, int $digits): s
         'NULL' => str_repeat(' ', $width + 2),
         'string' => sprintf(" % {$width}s ", $value),
         'boolean' => sprintf(" % {$width}s ", 'cached'),
-        'double' => sprintf(" % {$width}s ", sprintf(" %0$digits.3f ", $value)),
+        'double' => sprintf(" % {$width}s ", sprintf("%0$digits.3fs", $value)),
     };
 }
