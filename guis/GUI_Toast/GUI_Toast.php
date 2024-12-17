@@ -10,7 +10,6 @@
 
 namespace pool\guis\GUI_Toast;
 
-use Exception;
 use pool\classes\Core\Input\Input;
 use pool\classes\GUI\GUI_Module;
 
@@ -22,36 +21,23 @@ use pool\classes\GUI\GUI_Module;
  */
 class GUI_Toast extends GUI_Module
 {
-    /**
-     * @param int|null $superglobals
-     * @throws Exception
-     */
-    public function init(?int $superglobals = Input::EMPTY): void
-    {
-        $this->Defaults->addVar('framework', 'bs4');
-        parent::init($superglobals);
-    }
+    protected int $superglobals = Input::EMPTY;
 
-    /**
-     * load files
-     */
     public function loadFiles(): static
     {
         parent::loadFiles();
-        $fw = $this->getVar('framework');
+        $fw = $this->getVar('framework') ?? 'bs4';
         $tpl = $this->Weblication->findTemplate('tpl_toast_'.$fw.'.html', 'GUI_Toast', true);
         $this->Template->setFilePath('stdout', $tpl);
 
-        if ($this->Weblication->hasFrame()) {
-            $this->Weblication->getFrame()->getHeadData()->addJavaScript($this->Weblication->findJavaScript('Toast.js', 'GUI_Toast', true));
-            $this->Weblication->getFrame()->getHeadData()->addStyleSheet($this->Weblication->findStyleSheet('toast_'.$fw.'.css', 'GUI_Toast', true));
-        }
+        $this->Weblication?->getFrame()?->getHeadData()
+            ?->addClientWebAsset('js', 'Toast', __CLASS__, true)
+            ?->addClientWebAsset('css', "toast_$fw", __CLASS__, true)
+        ;
+
         return $this;
     }
 
-    /**
-     * prepare content
-     */
     protected function prepare(): void
     {
         $this->Template->setVar('moduleName', $this->getName());

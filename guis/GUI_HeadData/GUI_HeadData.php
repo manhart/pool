@@ -20,7 +20,11 @@ namespace pool\guis\GUI_HeadData;
 use pool\classes\Core\Component;
 use pool\classes\Core\Module;
 use pool\classes\Core\Url;
+use pool\classes\Core\Weblication;
+use pool\classes\Exception\FileNotFoundException;
+use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\GUI\GUI_Module;
+use const pool\NAMESPACE_SEPARATOR;
 
 /**
  * Class GUI_HeaderData
@@ -257,6 +261,27 @@ class GUI_HeadData extends GUI_Module
     {
         $this->metaRefresh['seconds'] = $seconds;
         $this->metaRefresh['url'] = $url;
+    }
+
+    public function addClientWebAsset(string $extension, string $file, ?string $classFolder = null, bool $baseLib = false, bool $isOptional = false): ?static {
+        $weblication = Weblication::getInstance();
+        $classFolder ??= $file;
+        [$file] = array_reverse(explode(NAMESPACE_SEPARATOR, $file));
+        [$classFolder] = array_reverse(explode(NAMESPACE_SEPARATOR, $classFolder));
+        /* @noinspection PhpDeprecationInspection */
+        $filePath = match ($extension) {
+            'css' => $weblication->findStyleSheet("$file.$extension", $classFolder, $baseLib, false),
+            'js' => $weblication->findJavaScript("$file.$extension", $classFolder, $baseLib, false),
+            default => throw new InvalidArgumentException("Unhandled web-asset extension '$extension'"),
+        };
+        if (!$filePath && !$isOptional) throw new FileNotFoundException("Could not find the web-asset $file.$extension");
+        elseif (!$filePath) return $this;
+        match ($extension) {
+            'css' => $this->addStyleSheet($filePath),
+            'js' => $this->addJavaScript($filePath),
+            default => throw new InvalidArgumentException("Unhandled web-asset extension '$extension'"),
+        };
+        return $this;
     }
 
     /**

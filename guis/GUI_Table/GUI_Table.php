@@ -1147,14 +1147,8 @@ class GUI_Table extends GUI_Module
         $fw = $this->getVar('framework');
         $tpl = $this->Weblication->findTemplate("tpl_table_$fw.html", 'GUI_Table', true);
         $this->Template->setFilePath('stdout', $tpl);
-
-        if (!$this->Weblication->hasFrame()) {
-            return $this;
-        }
-
-        $Frame = $this->Weblication->getFrame();
-        $jsFile = $this->Weblication->findJavaScript('GUI_Table.js', 'GUI_Table', true);
-        $Frame->getHeadData()->addJavaScript($jsFile);
+        $this->Weblication->getFrame()?->getHeadData()?->addClientWebAsset('js', self::class, baseLib: true);
+        parent::loadFiles();
         return $this;
     }
 
