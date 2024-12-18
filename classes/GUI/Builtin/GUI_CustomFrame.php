@@ -40,6 +40,7 @@ class GUI_CustomFrame extends GUI_Module
 
     /**
      * @var array event container
+     * @deprecated
      */
     private array $events = [/*
         'onafterprint' => [], // Script to be run after the document is printed
@@ -62,21 +63,25 @@ class GUI_CustomFrame extends GUI_Module
 
     /**
      * @var array|callable|null
+     * @deprecated
      */
     private $addFileFct = null;
 
     /**
      * @var array
+     * @deprecated
      */
     private array $scriptAtTheEnd = [];
 
     /**
      * @var array
+     * @deprecated
      */
     private array $scriptFilesAtTheEnd = [];
 
     /**
      * @var array
+     * @deprecated
      */
     private array $scriptWhenReady = [];
 
@@ -102,14 +107,15 @@ class GUI_CustomFrame extends GUI_Module
     public function loadFiles(): static
     {
         parent::loadFiles();
-        if (@TranslationProvider_ToolDecorator::isActive()) {
-            $this->HeadData->addStyleSheet($this->Weblication->findStyleSheet('translatorToolInline.css', '', false));
-            $this->HeadData->addJavaScript($this->Weblication->findJavaScript('translatorToolInline.js', '', true));
-        }
-        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('helpers.js', '', true));
-        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Error.js', '', true));
-        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('Weblication.js', '', true));
-        $this->HeadData->addJavaScript($this->Weblication->findJavaScript('GUI_Module.js', '', true));
+        $this->HeadData
+            ?->addClientWebAsset('js', 'helpers', baseLib: true)
+            ?->addClientWebAsset('js', 'Error', baseLib: true)
+            ?->addClientWebAsset('js', 'Weblication', baseLib: true)
+            ?->addClientWebAsset('js', 'GUI_Module', baseLib: true)
+            ?->if(@TranslationProvider_ToolDecorator::isActive())
+            ?->addClientWebAsset('js', 'translatorToolInline', baseLib: true)
+            ?->addClientWebAsset('css', 'translatorToolInline')
+        ;
         return $this;
     }
 
@@ -130,6 +136,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param string $event an event like onload
      * @param string $function
      * @return GUI_CustomFrame
+     * @deprecated
      */
     public function addBodyEvent(string $event, string $function): static
     {
@@ -149,6 +156,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param string $jsFile
      * @param null $position (not yet implemented, should control position)
      * @return GUI_CustomFrame
+     * @deprecated
      */
     public function addScriptFileAtTheEnd(string $jsFile, $position = null): static
     {
@@ -164,6 +172,7 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @param string $function
      * @return GUI_CustomFrame
+     * @deprecated
      */
     public function addScriptAtTheEnd(string $function): static
     {
@@ -176,6 +185,7 @@ class GUI_CustomFrame extends GUI_Module
      *
      * @param string $function
      * @return GUI_CustomFrame
+     * @deprecated
      */
     public function addScriptWhenReady(string $function): static
     {
@@ -189,6 +199,7 @@ class GUI_CustomFrame extends GUI_Module
      * @param callable $addFileFct
      * @return GUI_CustomFrame
      * @see GUI_CustomFrame::addScriptFileAtTheEnd()
+     * @deprecated
      */
     public function onAddFile(callable $addFileFct): GUI_CustomFrame
     {
@@ -215,38 +226,23 @@ class GUI_CustomFrame extends GUI_Module
      */
     protected function finalize(): string
     {
-        $scriptAtTheEnd = count($this->scriptAtTheEnd) ? implode(';', $this->scriptAtTheEnd) : '';
-
-        $scriptFilesAtTheEnd = '';
-        if (count($this->scriptFilesAtTheEnd)) {
-            foreach ($this->scriptFilesAtTheEnd as $scriptFile) {
-                $scriptFilesAtTheEnd .= '<script src="'.$scriptFile.'"></script>'.chr(10);
-            }
-        }
-
-        $scriptWhenReady = count($this->scriptWhenReady) ? implode(';', $this->scriptWhenReady) : '';
-
-
         // no templates assigned
-        if (!$this->Template->countFileList()) {
-            return '';
-        }
+        if (!$this->Template->countFileList()) return '';
 
-        if ($scriptWhenReady || $scriptAtTheEnd) {
+        if ($this->scriptWhenReady || $this->scriptAtTheEnd) {
             $InlineScriptBlock = $this->Template->newBlock('INLINE-SCRIPT');
             $InlineScriptBlock?->setVars([
-                'ScriptWhenReady' => $scriptWhenReady,
-                'ScriptAtTheEnd' => $scriptAtTheEnd,
+                'ScriptWhenReady' => implode(';', $this->scriptWhenReady),
+                'ScriptAtTheEnd' => implode(';', $this->scriptAtTheEnd),
             ]);
             $this->Template->leaveBlock();
         }
+        $scriptFilesAtTheEnd = implode(array_map(fn($scriptFile) => "<script src='$scriptFile'></script>\n", $this->scriptFilesAtTheEnd));
         $this->Template->setVar('ScriptFilesAtTheEnd', $scriptFilesAtTheEnd);
 
-        $vars = array_map(function ($functions) {
-            // concatenating javascript functions
-            return implode(';', $functions);
-        }, $this->events);
-        $this->Template->setVars($vars);
+        //concatenating event function code
+        $eventHandlers = array_map(fn($onEvent) => implode(';', $onEvent), $this->events);
+        $this->Template->setVars($eventHandlers);
 
         return parent::finalize();
     }

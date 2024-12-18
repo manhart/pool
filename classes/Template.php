@@ -695,7 +695,8 @@ class TempScript extends TempFile
  **/
 class Template extends PoolObject
 {
-    private static bool $cacheTranslations = true;
+    //save pre-translated template files to disk
+    private static bool $cacheTranslations = false;
 
     private static ?Translator $translator = null;
 

@@ -111,15 +111,10 @@ class Weblication extends Component
     /**
      * Contains the first loaded GUI_Module
      *
-     * @var GUI_Module $Main
-     * @see Weblication::run()
+     * @var GUI_Module|null $Main
+     * @see Weblication::render()
      */
-    private GUI_Module $Main;
-
-    /**
-     * @var GUI_CustomFrame|null
-     */
-    private ?GUI_CustomFrame $Frame = null;
+    private ?GUI_Module $Main = null;
 
     /**
      * Session object
@@ -316,6 +311,7 @@ class Weblication extends Component
      * @var int Cache time to live
      */
     private const CACHE_TTL = 86400;
+
     /**
      * Types of caching
      */
@@ -465,6 +461,7 @@ class Weblication extends Component
     {
         header("Content-Type: text/html; charset=$charset");
         $this->charset = $charset;
+        $this->getFrame()?->getHeadData()?->setCharset($charset);
         return $this;
     }
 
@@ -572,6 +569,8 @@ class Weblication extends Component
     public function setMain(GUI_Module $GUI_Module): static
     {
         $this->Main = $GUI_Module;
+        if (!$this->charset) return $this;
+        $this->getFrame()?->getHeadData()?->setCharset($this->charset);
         return $this;
     }
 
@@ -600,11 +599,7 @@ class Weblication extends Component
      */
     public function getFrame(): ?GUI_CustomFrame
     {
-        if (!$this->Frame && $this->hasFrame()) {
-            assert($this->Main instanceof GUI_CustomFrame);
-            $this->Frame = $this->Main;
-        }
-        return $this->Frame;
+        return $this->Main instanceof GUI_CustomFrame ? $this->Main : null;
     }
 
     /**
@@ -684,8 +679,8 @@ class Weblication extends Component
      */
     public function skin_exists(string $skin = ''): bool
     {
-        $skin = addEndingSlash(($skin ?: $this->skin));
-        $pathSkin = addEndingSlash(self::$workingDirectory).addEndingSlash(PWD_TILL_SKINS).$skin;
+        $skin = $skin ?: $this->skin;
+        $pathSkin = buildDirPath(self::$workingDirectory,PWD_TILL_SKINS, $skin);
         return file_exists($pathSkin);
     }
 
@@ -915,6 +910,9 @@ class Weblication extends Component
      * @param string $classFolder Unterordner (guis/*) zur Klasse
      * @param boolean $baseLib Schau auch in die baseLib
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
+     * @deprecated reserved for internal use
+     * @see GUI_HeadData::addClientWebAsset()
+     * @see self::getFrame()
      */
     public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
     {
@@ -968,7 +966,7 @@ class Weblication extends Component
         return $places;
     }
 
-    private function findBestElement(string $filename, $searchDirs): Generator {
+    private function findBestElement(string $filename, array $searchDirs): Generator {
         foreach ($searchDirs as $place) {
             $file = buildFilePath($place, $filename);
             $file_exists = file_exists($file);
@@ -1029,14 +1027,10 @@ class Weblication extends Component
         return $javaScriptFile;
     }
 
-    /**
-     * @param bool $isBaseLib
-     * @param string $webAssetPath
-     * @return string
-     */
-    public function getWebAssetClientPath(bool $isBaseLib, string $webAssetPath): string {
+    public static function getWebAssetClientPath(bool $isBaseLib, string $webAssetPath): string {
+        $weblication = Weblication::getInstance();
         if ($isBaseLib) {
-            $webAssetPath = strtr($webAssetPath, [$this->poolServerSideRelativePath => $this->poolClientSideRelativePath]);
+            $webAssetPath = strtr($webAssetPath, [$weblication->poolServerSideRelativePath => $weblication->poolClientSideRelativePath]);
         }
         return $webAssetPath;
     }
@@ -1386,68 +1380,25 @@ class Weblication extends Component
      */
     public function render(): static
     {
-        if ($this->run($this->getLaunchModule())) {
-            $this->prepareContent();
-            echo $this->finalizeContent();
+        // An application name is required. For example, the application name is used for creating directories in the data folder.
+        if (!$this->getName()) throw new InvalidArgumentException('The application name must be defined.');
+        $launchModule = $this->getLaunchModule();
+        $mainGUI = GUI_Module::createGUIModule($launchModule, $this, search: false);
+        $this->setMain($mainGUI);
+        //Seitentitel (= Project)
+        $this->getFrame()?->getHeadData()?->setTitle($this->title);
+        $mainGUI->searchGUIsInPreloadedContent();
+        $mainGUI->provisionContent();
+        if (!$mainGUI->isAjax()) {
+            $mainGUI->prepareContent();
         }
+        echo $mainGUI->finalizeContent();
 
         $measurePageSpeed = IS_DEVELOP || ((int)($_REQUEST['measurePageSpeed'] ?? 0));
         if ($measurePageSpeed && defined('POOL_START')) {
             $this->measurePageSpeed();
         }
         return $this;
-    }
-
-    /**
-     * Creates the first GUI_Module in the chain (the page title is filled with the project name).
-     *
-     * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
-     * @return static
-     * @throws ModulNotFoundException|Exception
-     */
-    public function run(string $className = GUI_CustomFrame::class): static
-    {
-        // An application name is required. For example, the application name is used for creating directories in the data folder.
-        if ($this->getName() === '') {
-            throw new InvalidArgumentException('The application name must be defined.');
-        }
-
-        $mainGUI = GUI_Module::createGUIModule($className, $this, search: false);
-        //maybe an Ajax Call could run here and return its result
-        $this->setMain($mainGUI);
-
-        $mainGUI->searchGUIsInPreloadedContent();
-
-        if ($this->hasFrame()) {
-            //Seitentitel (= Project)
-            $Header = $this->getFrame()->getHeadData();
-
-            $Header->setTitle($this->title);
-            if ($this->charset) $Header->setCharset($this->charset);
-        }
-        return $this;
-    }
-
-    /**
-     * Main logic of the front controller. compile main content.
-     */
-    protected function prepareContent(): void
-    {
-        $this->Main->provisionContent();
-        if (!$this->Main->isAjax()) {
-            $this->Main->prepareContent();
-        }
-    }
-
-    /**
-     * Return finished HTML content
-     * Error handling wrapper around finalizeContent of the Main-GUI
-     *
-     * @return string website content
-     */
-    protected function finalizeContent(): string
-    {
-        return $this->Main->finalizeContent();
     }
 
     /**
@@ -1650,7 +1601,7 @@ class Weblication extends Component
      */
     public function cacheItem(string $key, mixed $item, string $topic = self::CACHE_ITEM): bool
     {
-        if (!$this->isMemoryAvailable()) return false;
+        if(!$this->isMemoryAvailable()) return false;
         if (!self::$cacheItem[$topic]) return false;
         $memKey = $this->generateCacheKey($key, $topic);
         return $this->memory->setValue($memKey, $item);
@@ -1661,7 +1612,7 @@ class Weblication extends Component
      */
     public function getCachedItem(string $key, string $topic = self::CACHE_ITEM): mixed
     {
-        if (!$this->isMemoryAvailable()) return false;
+        if(!$this->isMemoryAvailable()) return false;
         if (!self::$cacheItem[$topic]) return false;
         $memKey = $this->generateCacheKey($key, $topic);
         return $this->memory->get($memKey);
@@ -1672,7 +1623,7 @@ class Weblication extends Component
      */
     private function clearCache(string $topic = self::CACHE_ITEM): void
     {
-        if (!$this->isMemoryAvailable()) return;
+        if(!$this->isMemoryAvailable()) return;
         if (!self::$cacheItem[$topic]) return;
         $allKeys = $this->memory->getAllKeys();
         $keys = [];

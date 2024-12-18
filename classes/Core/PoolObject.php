@@ -13,7 +13,6 @@ namespace pool\classes\Core;
 
 use ReflectionClass;
 use stdClass;
-
 use function dirname;
 use function error_reporting;
 use function get_parent_class;
@@ -21,7 +20,6 @@ use function realpath;
 use function strlen;
 use function substr_compare;
 use function trigger_error;
-
 use const E_USER_NOTICE;
 
 /**
@@ -32,25 +30,6 @@ use const E_USER_NOTICE;
  */
 class PoolObject extends stdClass
 {
-    /**
-     * @var string Directory that contains the class
-     */
-    private string $classDirectory;
-
-    /**
-     * @var string the full name of the class of the object
-     */
-    private string $class;
-
-    /**
-     * @var string the short name of the class of the object
-     */
-    private string $className;
-
-    /**
-     * @var string the filename of the file in which the class has been defined
-     */
-    private string $classFilename;
 
     /**
      * @var bool|null determines whether the class is the POOL base library
@@ -58,22 +37,19 @@ class PoolObject extends stdClass
     private bool $isPOOL;
 
     /**
-     * The ReflectionClass object
-     */
-    private ReflectionClass $ReflectionClass;
-
-    /**
      * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
+     * @deprecated
      */
     public function getClass(): string
     {
-        return $this->class ??= self::theClass();
+        return self::theClass();
     }
 
     /**
      * Returns the fully qualified class name
      *
      * @return string fully qualified class name
+     * @deprecated
      */
     public static function theClass(): string
     {
@@ -84,6 +60,7 @@ class PoolObject extends stdClass
      * Retrieves the parent class name for the object
      *
      * @return string name of the parent class
+     * @deprecated
      */
     public function getParentClass(): string
     {
@@ -95,7 +72,7 @@ class PoolObject extends stdClass
      */
     public function getClassDirectory(): string
     {
-        return $this->classDirectory ??= dirname($this->getClassFile());
+        return dirname($this->getClassFile());
     }
 
     /**
@@ -103,7 +80,7 @@ class PoolObject extends stdClass
      */
     public function getClassFile(): string
     {
-        return $this->classFilename ??= $this->getReflectionClass()->getFileName();
+        return $this->getReflectionClass()->getFileName();
     }
 
     /**
@@ -111,7 +88,7 @@ class PoolObject extends stdClass
      */
     public function getReflectionClass(): ReflectionClass
     {
-        return $this->ReflectionClass ??= new ReflectionClass($this);
+        return new ReflectionClass($this);
     }
 
     /**
@@ -134,6 +111,7 @@ class PoolObject extends stdClass
      * @param string $file Use __FILE__ if you want to use the file where the error occurred.
      * @param int $line Use __LINE__, if you want to use the line where the error occurred.
      * @param string $msg The error message
+     * @deprecated
      */
     protected function raiseError(string $file, int $line, string $msg, $error_level = E_USER_NOTICE): void
     {
@@ -151,7 +129,7 @@ class PoolObject extends stdClass
      */
     public function getClassName(): string
     {
-        return $this->className ??= $this->getReflectionClass()->getShortName();
+        return $this->getReflectionClass()->getShortName();
     }
 
     /**

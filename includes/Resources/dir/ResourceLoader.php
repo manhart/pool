@@ -18,10 +18,10 @@
 namespace pool\includes\Resources\dir
 {
 
+    use pool\classes\Core\Weblication;
     use pool\guis\GUI_HeadData\GUI_HeadData;
     use pool\includes\Resources\JavaScriptResource;
     use pool\includes\Resources\StylesheetResource;
-
     use function readFiles;
     use function remove_extension;
 
@@ -77,7 +77,8 @@ namespace pool\includes\Resources\dir
             //load filename list from directory with absolute path
             $files = readFiles($path, false, $pattern);
             //pick files and ad relative Path
-            return self::chooseVariant($files, $min, static::FILE_EXT_FILTER, $path);
+            $files = self::chooseVariant($files, $min, static::FILE_EXT_FILTER, $path);
+            return array_map(curry(Weblication::getWebAssetClientPath(...), false), $files);
         }
 
         abstract protected static function getRootPath();
