@@ -210,12 +210,12 @@ class Weblication
                 GUI_Module.createGUIModule(className, moduleName, fullyQualifiedClassName, parentModuleName, initOptions);
             }
             catch(e) {
-                console.error(e.toString());
+                console.warn(e.toString());
             }
             // console.debug('GUI_Module.createGUIModule ' + moduleName + ' created');
 
             if(!this.module_exists(moduleName)) {
-                console.error('Created module ' + moduleName + ' does not exist in Weblication');
+                console.warn('Created module ' + moduleName + ' does not exist in Weblication');
             }
         }
     }
