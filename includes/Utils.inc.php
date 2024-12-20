@@ -1816,10 +1816,6 @@ function buildHtmlAttributes(array $attributes): string
 
 /**
  * Calls the system command pdfunite
- *
- * @param array $pdfSourceFiles
- * @param string $pdfOut
- * @return bool
  */
 function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
 {

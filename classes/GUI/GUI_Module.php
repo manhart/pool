@@ -196,10 +196,6 @@ class GUI_Module extends Module
 
     /**
      * Autoloader for GUIModules
-     *
-     * @param string $GUIClassName
-     * @param Module|null $ParentGUI
-     * @return string|false
      */
     public static function autoloadGUIModule(string $GUIClassName, ?Module $ParentGUI = null): string|false
     {
@@ -273,7 +269,9 @@ class GUI_Module extends Module
 
         $guiClassFolder = $this->getGUIClassFolder();
 
-        foreach ($this->getTemplates() as $handle => $file) {
+        $templates = $this->getTemplates();
+        foreach ($templates as $handle => $file) {
+            assert(is_string($handle), 'invalid handle in template list of '.static::class.' got templates '.var_export($templates, true));
             $template = $this->getWeblication()->findTemplate($file, $guiClassFolder, $this->isPOOL());
             $this->Template->setFilePath($handle, $template);
         }
