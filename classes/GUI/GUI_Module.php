@@ -207,10 +207,10 @@ class GUI_Module extends Module
             $GUIClassName = str_replace(NAMESPACE_SEPARATOR, '/', $GUIClassName);
         } else {
             $cwd = getcwd();
-            $GUIRootDirs[] = $cwd.'/'.PWD_TILL_GUIS;
             if ($cwd !== DIR_APP_ROOT) {
                 $GUIRootDirs[] = DIR_APP_ROOT.'/'.PWD_TILL_GUIS;
             }
+            $GUIRootDirs[] = $cwd.'/'.PWD_TILL_GUIS;
             if (defined('DIR_POOL_ROOT')) $GUIRootDirs[] = DIR_POOL_ROOT.'/'.PWD_TILL_GUIS;
             if (defined('DIR_COMMON_ROOT')) $GUIRootDirs[] = DIR_COMMON_ROOT.'/'.PWD_TILL_GUIS;
             // directory + classname
