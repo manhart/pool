@@ -25,7 +25,7 @@ namespace pool
     }
 
     if (!defined('DIR_APP_ROOT')) { //necessary for applications without PSR-4
-        define('DIR_APP_ROOT', dirname($_SERVER['SCRIPT_FILENAME']));
+        define('DIR_APP_ROOT', dirname($_SERVER['SCRIPT_FILENAME']));//includes symlinked directory
     }
 
     const PWD_TILL_INCLUDES = 'includes'; // todo remove after refactoring to PSR-4
@@ -34,7 +34,6 @@ namespace pool
     const PWD_TILL_SCHEMES = 'schemes';
     const PWD_TILL_SKINS = 'skins';
     const PWD_TILL_JS = 'js';
-    const PWD_TILL_SUBCODES = 'subcodes';
 
     require_once(__DIR__.'/'.PWD_TILL_CLASSES.'/Autoloader.php');
     Autoloader::getLoader()->register();
