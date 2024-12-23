@@ -306,17 +306,12 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
     /**
      * Return DataInterface
-     *
-     * @return DataInterface
      */
     public function getDataInterface(): DataInterface
     {
         return DataInterface::getInterfaceForResource($this->getDatabase());
     }
 
-    /**
-     * @return string
-     */
     public function getDatabase(): string
     {
         return $this->database;
@@ -371,17 +366,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $DAO;
     }
 
-    /**
-     * @return string
-     */
     public static function getDatabaseName(): string
     {
         return static::$databaseName;
     }
 
-    /**
-     * @return string
-     */
     public static function getTableName(): string
     {
         return static::$tableName;
@@ -552,8 +541,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
-     * @param mixed $value
-     * @return string
      * @throws DatabaseConnectionException|InvalidArgumentException
      */
     public function escapeSQL(mixed $value): string
@@ -800,8 +787,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * Executes sql statement and returns RecordSet
      *
      * @param string $sql sql statement to execute
-     * @param callable|null $customCallback
-     * @return RecordSet
      * @throws mysqli_sql_exception
      * @throws InvalidArgumentException
      */
@@ -810,9 +795,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return DataInterface::execute($sql, $this->database, $customCallback ?: [$this, 'fetchingRow'], $this->metaData, $this->throwsOnError);
     }
 
-    /**
-     * @return string
-     */
     public function getTable(): string
     {
         return $this->table;

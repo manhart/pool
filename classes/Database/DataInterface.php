@@ -441,9 +441,9 @@ class DataInterface extends PoolObject
      * @throws InvalidArgumentException|DatabaseConnectionException
      * @see DataInterface::getDBConnection
      */
-    public static function query(string $query, string $database): mixed
+    public static function query(string $query, string $databaseAlias): mixed
     {
-        $Interface = static::getInterfaceForResource($database);
+        $Interface = static::getInterfaceForResource($databaseAlias);
         //Store query in attribute
         $Interface->last_Query = $sql = ltrim($query);
         // reset query result
@@ -466,7 +466,7 @@ class DataInterface extends PoolObject
         }
         $Interface->totalQueries++;
 
-        $Connection = $Interface->getDBConnection($database, $mode);//connect
+        $Connection = $Interface->getDBConnection($databaseAlias, $mode);//connect
         $Interface->query_resource = $Connection->query($sql);//run
         $Interface->lastConnection = $Connection;
         if ($Interface->query_resource) $Interface->last_command = $command;
@@ -497,14 +497,14 @@ class DataInterface extends PoolObject
      *
      * @throws DatabaseConnectionException|InvalidArgumentException
      */
-    private function getDBConnection(string $database, ConnectionMode $mode): Connection
+    private function getDBConnection(string $databaseAlias, ConnectionMode $mode): Connection
     {
-        if (!($database || ($database = $this->default_database))) //No DB specified and no default given
+        if (!($databaseAlias || ($databaseAlias = $this->default_database))) //No DB specified and no default given
             throw new InvalidArgumentException('No database selected!');
         if ($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value])
             $mode = ConnectionMode::READ; // same as WRITE
-        return $this->connections[$mode->value][$database] ?? //fetch from cache
-            $this->openNewDBConnection($mode, $database);
+        return $this->connections[$mode->value][$databaseAlias] ?? //fetch from cache
+            $this->openNewDBConnection($mode, $databaseAlias);
     }
 
     /**
@@ -678,8 +678,6 @@ class DataInterface extends PoolObject
      * Use cautiously, as changing the isolation level can have implications for data consistency.
      *
      * @param IsolationLevel $level The isolation level to set (e.g., 'READ UNCOMMITTED', 'READ COMMITTED', etc.)
-     * @param string $databaseAlias
-     * @return bool
      * @throws Exception
      */
     public static function setTransactionIsolationLevel(IsolationLevel $level, string $databaseAlias): bool
@@ -782,25 +780,25 @@ class DataInterface extends PoolObject
      *
      * @throws Exception
      */
-    public function open(string $database = ''): bool
+    public function open(string $databaseAlias = ''): bool
     {
-        $this->getDBConnection($database, ConnectionMode::READ);
+        $this->getDBConnection($databaseAlias, ConnectionMode::READ);
         if ($this->hosts[ConnectionMode::READ->value] !== $this->hosts[ConnectionMode::WRITE->value]) {
-            $this->getDBConnection($database, ConnectionMode::WRITE);
+            $this->getDBConnection($databaseAlias, ConnectionMode::WRITE);
         }
-        return ($this->isConnected($database) and $this->isConnected($database, ConnectionMode::WRITE));
+        return ($this->isConnected($databaseAlias) and $this->isConnected($databaseAlias, ConnectionMode::WRITE));
     }
 
     /**
      * Checks if a database connection exists
      */
-    public function isConnected(string $database = '', ConnectionMode $mode = ConnectionMode::READ): bool
+    public function isConnected(string $databaseAlias = '', ConnectionMode $mode = ConnectionMode::READ): bool
     {
         if ($this->hosts[ConnectionMode::READ->value] === $this->hosts[ConnectionMode::WRITE->value]) {
             $mode = ConnectionMode::READ;
         } // same as host
-        $database = $database ?: $this->default_database;
-        return isset($this->connections[$mode->value][$database]);
+        $databaseAlias = $databaseAlias ?: $this->default_database;
+        return isset($this->connections[$mode->value][$databaseAlias]);
     }
 
     /**
@@ -841,10 +839,10 @@ class DataInterface extends PoolObject
      * @return int Number of found rows
      * @throws Exception
      */
-    public function foundRows(string $database): int
+    public function foundRows(string $databaseAlias): int
     {
         $sql = 'SELECT FOUND_ROWS() as foundRows';
-        $query_resource = $this::query($sql, $database);
+        $query_resource = $this::query($sql, $databaseAlias);
         if (!$query_resource) return 0;
         $row = $this->fetchRow($query_resource);//fetch first row (only row
         $this->free($query_resource);
@@ -863,17 +861,15 @@ class DataInterface extends PoolObject
     /**
      * Returns three lists (fieldList with metadata, fieldNames, primary key) of a table
      *
-     * @param string $database
-     * @param string $table
      * @return array<string, array<string, array<string, string>|string>> fieldList, fieldNames, primary key
      * @throws InvalidArgumentException|
      */
-    public function getTableColumnsInfo(string $database, string $table): array
+    public function getTableColumnsInfo(string $databaseAlias, string $table): array
     {
-        if (!$database || !$table) {
+        if (!$databaseAlias || !$table) {
             throw new InvalidArgumentException('Database and table names must be non-empty strings.');
         }
-        return $this->getDBConnection($database, ConnectionMode::READ)->getTableColumnsInfo($database, $table);
+        return $this->getDBConnection($databaseAlias, ConnectionMode::READ)->getTableColumnsInfo(static::getDatabaseForResource($databaseAlias), $table);
     }
 
     /**
@@ -925,13 +921,11 @@ class DataInterface extends PoolObject
     /**
      * Escapes special characters in a string for use in an SQL statement, taking into account the current charset of the connection
      *
-     * @param string $string string
-     * @return string escaped string
      * @throws DatabaseConnectionException|InvalidArgumentException
      */
-    public function escape(string $string, $database = ''): string
+    public function escape(string $string, $databaseAlias = ''): string
     {
-        $connection = $this->getDBConnection($database, ConnectionMode::READ);
+        $connection = $this->getDBConnection($databaseAlias, ConnectionMode::READ);
         return $this->driver->escape($connection, $string);
     }
 
