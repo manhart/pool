@@ -114,21 +114,14 @@ namespace pool\classes\Core\Input
          */
         private int $superglobals = self::EMPTY;
 
-        /**
-         * @var array
-         */
         private array $filterRules = [];
 
-        /**
-         * @var array
-         */
         private array $filter;
 
         /**
          * Initialization of the superglobals. Attention: SESSION is a reference to the internal container and cannot be combined with other superglobals!
          *
          * @param int $superglobals Select or combine predefined constants: EMPTY, GET, POST, REQUEST, SERVER, FILES, COOKIE, SESSION, ALL
-         * @param array $filter
          * @see https://www.php.net/manual/de/language.variables.superglobals.php
          */
         public function __construct(int $superglobals = self::EMPTY, array $filter = [])
@@ -203,8 +196,6 @@ namespace pool\classes\Core\Input
         /**
          * Merge array with vars but don't override existing vars
          *
-         * @param array $vars
-         * @return Input
          * @deprecated for filtering with Defaults in GUI_Module::init()
          */
         public function addVars(array $vars): static
@@ -223,7 +214,6 @@ namespace pool\classes\Core\Input
          * @param mixed $value value of the variable
          * @param int $filter filter type
          * @param mixed $filterOptions
-         * @return Input
          * @deprecated for filtering with Defaults in GUI_Module::init()
          * @see https://www.php.net/manual/de/filter.filters.php
          */
@@ -243,8 +233,6 @@ namespace pool\classes\Core\Input
          *
          * @param string $key variable name
          * @param mixed $value value
-         * @param bool $suppressException
-         * @return Input
          */
         public function setVar(string $key, mixed $value = '', bool $suppressException = false): static
         {
@@ -266,9 +254,6 @@ namespace pool\classes\Core\Input
         /**
          * Runs a filter on a value
          *
-         * @param array $filter
-         * @param mixed $value
-         * @return mixed
          * @throws InvalidArgumentException
          */
         private function runFilter(array $filter, mixed $value): mixed
@@ -281,9 +266,6 @@ namespace pool\classes\Core\Input
             return $value;
         }
 
-        /**
-         * @return void
-         */
         public static function processJsonPostRequest(): void
         {
             // decode POST requests with JSON-Data
@@ -357,8 +339,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Returns if all variables are empty
-         *
-         * @return boolean
          */
         public function allEmpty(): bool
         {
@@ -374,9 +354,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * returns number of variables
-         *
-         * @return int
+         * Returns number of variables
          */
         public function count(): int
         {
@@ -385,10 +363,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Returns the value of the given key as integer.
-         *
-         * @param string $key
-         * @param int $default
-         * @return int
          */
         public function getAsInt(string $key, int $default = 0): int
         {
@@ -409,10 +383,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Returns the value of the given key as string.
-         *
-         * @param string $key
-         * @param string $default
-         * @return string
          */
         public function getAsString(string $key, string $default = ''): string
         {
@@ -421,10 +391,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Returns the value of the given key as boolean.
-         *
-         * @param string $key
-         * @param bool $default
-         * @return bool
          */
         public function getAsBool(string $key, bool $default = false): bool
         {
@@ -449,10 +415,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Assign data as array
-         *
-         * @param array $assoc
-         * @param bool $suppressException
-         * @return Input
          */
         public function setVars(array $assoc, bool $suppressException = false): static
         {
@@ -462,9 +424,6 @@ namespace pool\classes\Core\Input
             return $this;
         }
 
-        /**
-         * @return Input
-         */
         public function applyDefaults(): static
         {
             foreach ($this->filter as $key => $filter) {
@@ -487,10 +446,6 @@ namespace pool\classes\Core\Input
             return $this;
         }
 
-        /**
-         * @param array $assoc
-         * @return $this
-         */
         public function delVars(array $assoc): Input
         {
             foreach ($assoc as $key) {
@@ -544,7 +499,6 @@ namespace pool\classes\Core\Input
          *
          * @param string $value value to encrypt
          * @param string $secretKey key for encryption
-         * @return string
          */
         public function xorEnDecryption(string $value, string $secretKey): string
         {
@@ -610,7 +564,6 @@ namespace pool\classes\Core\Input
          * will only contain entries whose keys are present in the provided $keys array.
          *
          * @param array $keys An array of keys to retain in the internal variable storage.
-         * @return void
          */
         public function filterByKeys(array $keys): void
         {
@@ -640,9 +593,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Renames multiple variables
-         *
-         * @param array $keyNames
-         * @return Input
          */
         public function renameKeys(array $keyNames): Input
         {
@@ -680,9 +630,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Computes the difference between the internal variables and the given array
-         *
-         * @param array $array
-         * @return array
          */
         public function diff(array $array): array
         {
@@ -691,9 +638,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Computes the difference between the internal variables and the given array with additional index check
-         *
-         * @param array $array
-         * @return array
          */
         public function diff_assoc(array $array): array
         {
@@ -715,8 +659,6 @@ namespace pool\classes\Core\Input
         /**
          * Importiert einen Byte-Stream im internen Container.
          *
-         * @param string $data
-         * @return Input
          * @see getByteStream()
          * @see http://php.net/manual/de/function.unserialize.php
          */
@@ -779,9 +721,6 @@ namespace pool\classes\Core\Input
 
         /**
          * Merges variables into their own container (Vars). But only if they are not yet set.
-         *
-         * @param Input $Input
-         * @return Input
          */
         public function mergeVarsIfNotSet(Input $Input): static
         {
@@ -801,8 +740,6 @@ namespace pool\classes\Core\Input
 
         /**
          * returns filter rules for filtering incoming variables
-         *
-         * @return array
          */
         public function getFilterRules(): array
         {
@@ -810,10 +747,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * filter a variable
-         *
-         * @param string $key
-         * @return void
+         * Filter a variable
          */
         private function filterVar(string $key): void
         {
