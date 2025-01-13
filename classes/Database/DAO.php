@@ -935,6 +935,15 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $this->execute($sql);
     }
 
+    public function optimize(): RecordSet
+    {
+        /** @noinspection SqlResolve */
+        $sql = <<<SQL
+            OPTIMIZE TABLE $this->quotedTable
+            SQL;
+        return $this->execute($sql);
+    }
+
     /**
      * Insert new records based on the data passed as an array, with the key corresponding to the column name.
      */
