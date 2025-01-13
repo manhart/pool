@@ -266,14 +266,10 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Returns the current record (dataset) or an empty array if the position (index) is out of range
-     *
-     * @see static::seek()
      */
-    public function getRecord(int $index = -1): array
+    public function getRecord(?int $index = null): array
     {
-        return $index >= 0 && $index !== $this->index ?
-            $this->seek($index)
-            : $this->records[$this->index] ?? [];
+        return $this->records[$index ?? $this->index] ?? [];
     }
 
     /**
