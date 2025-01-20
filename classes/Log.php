@@ -75,7 +75,7 @@ class Log
      * -showLevelNameAtTheBeginning - prints the caption of the level (debug, info, warn, error, fatal) at the beginning of the message
      *
      * @param string $configurationName name of the configuration. Default is "common". You can have more configurations for different purposes.
-     * @param array $facilities
+     * @param array $facilities array of facilities
      */
     public static function setup(array $facilities, string $configurationName = Log::COMMON): void
     {
@@ -195,11 +195,7 @@ class Log
     }
 
     /**
-     * returns the level of the corresponding output
-     *
-     * @param string $configurationName
-     * @param string $output
-     * @return int
+     * Returns the level of the corresponding output
      */
     private static function getLevel(string $configurationName, string $output): int
     {
@@ -207,10 +203,7 @@ class Log
     }
 
     /**
-     * returns the exit level
-     *
-     * @param string $configurationName
-     * @return int
+     * Returns the exit level
      */
     private static function getExitLevel(string $configurationName): int
     {
@@ -218,10 +211,7 @@ class Log
     }
 
     /**
-     * returns whether the output with timestamp is requested
-     *
-     * @param string $configurationName
-     * @return bool
+     * Returns whether the output with timestamp is requested
      */
     private static function screenWithDate(string $configurationName): bool
     {
@@ -229,22 +219,20 @@ class Log
     }
 
     /**
-     * returns whether the output with line breaks is requested
-     *
-     * @param string $configurationName
-     * @return bool
+     * Returns whether the output with line breaks is requested
      */
     private static function screenWithLineBreak(string $configurationName): bool
     {
         return self::$facilities[$configurationName][Log::OUTPUT_SCREEN]['withLineBreak'] ?? true;
     }
 
+    private static function screenWithExtra(string $configurationName): array|bool
+    {
+        return self::$facilities[$configurationName][Log::OUTPUT_SCREEN]['withExtra'] ?? false;
+    }
+
     /**
-     * returns whether the output with the name of the level is requested
-     *
-     * @param string $configurationName
-     * @param string $output
-     * @return bool
+     * Returns whether the output with the name of the level is requested
      */
     private static function showLevelNameAtTheBeginning(string $configurationName, string $output): bool
     {
@@ -252,12 +240,7 @@ class Log
     }
 
     /**
-     * writes debug message
-     *
-     * @param string $text
-     * @param array $extra
-     * @param string $configurationName
-     * @return void
+     * Writes debug message
      */
     public static function debug(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -265,12 +248,7 @@ class Log
     }
 
     /**
-     * writes info message
-     *
-     * @param string $text
-     * @param array $extra
-     * @param string $configurationName
-     * @return void
+     * Writes info message
      */
     public static function info(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -278,12 +256,7 @@ class Log
     }
 
     /**
-     * writes warning message
-     *
-     * @param string $text
-     * @param array $extra
-     * @param string $configurationName
-     * @return void
+     * Writes warning message
      */
     public static function warn(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -291,12 +264,7 @@ class Log
     }
 
     /**
-     * writes an error message
-     *
-     * @param string $text
-     * @param array $extra
-     * @param string $configurationName
-     * @return void
+     * Writes an error message
      */
     public static function error(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -304,12 +272,7 @@ class Log
     }
 
     /**
-     * writes a fatal error message
-     *
-     * @param string $text
-     * @param array $extra
-     * @param string $configurationName
-     * @return void
+     * Writes a fatal error message
      */
     public static function fatal(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -351,6 +314,7 @@ class Log
 
         $withDate = self::screenWithDate($configurationName);
         $withLineBreak = self::screenWithLineBreak($configurationName);
+        $withExtra = self::screenWithExtra($configurationName);
 
         if (\pool\IS_CLI) {
             if ($isHTML) {
@@ -366,18 +330,20 @@ class Log
                 }
             }
 
+            if ($withExtra && $extra) {
+                $placeholders = [];
+                array_walk($extra, static function ($value, $key) use (&$placeholders) {
+                    $placeholders["{{$key}}"] = $value;
+                });
+                $message = strtr($message, $placeholders);
+            }
             $message = ($withDate ? date('Y-m-d H:i:s').' | ' : '').$message;
             $message .= $withLineBreak ? \pool\LINE_BREAK : '';
 
-            if (self::LEVEL_ERROR & $level or self::LEVEL_FATAL & $level) {
-                $stderr = fopen('php://stderr', 'w');
-                fwrite($stderr, $message);
-                fclose($stderr);
-            } else {
-                $stdout = fopen('php://stdout', 'w');
-                fwrite($stdout, $message);
-                fclose($stdout);
-            }
+            $filename = (self::LEVEL_ERROR & $level or self::LEVEL_FATAL & $level) ? 'php://stderr' : 'php://stdout';
+            $std = fopen($filename, 'w');
+            fwrite($std, $message);
+            fclose($std);
         } else {
             if ($isHTML) {
                 $foundHeadline = preg_match_all('/<\/(h[1-6]+|p)>$/m', $message);
@@ -433,8 +399,6 @@ class Log
 
     /**
      * close resource / file handles
-     *
-     * @return void
      */
     public static function close(): void
     {
