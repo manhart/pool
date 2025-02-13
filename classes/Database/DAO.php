@@ -122,6 +122,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected array $pk = [];
 
     /**
+     * @var array|string[] Foreign keys of table
+     */
+    protected array $fk = [];
+
+    /**
      * @var array|string[] Columns of table
      */
     protected array $columns = [];
@@ -209,6 +214,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * @var array $formatter An array used for storing formatter functions for columns.
      */
     private array $formatter = [];
+
+    private array $joins = [];
 
     /**
      * Defines the default commands.
@@ -428,6 +435,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $this->pk;
     }
 
+    public function getForeignKeys(): array
+    {
+        return $this->fk;
+    }
+
     /**
      * Returns a single record e.g. by primary key
      *
@@ -435,12 +447,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
     {
+        $joins = $this->buildJoins();
         $where = $this->buildWhere($id ?? 0, $key);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
             SELECT $this->column_list
-            FROM $this
+            FROM $this $joins
             WHERE
                 $where
             SQL;
@@ -476,7 +489,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         array $options = [],
     ): RecordSet {
         $optionsStr = implode(' ', $options);
-
+        $joins = $this->buildJoins();
         $whereClause = $this->buildWhere($id, $key).$this->buildFilter($filter);
         $groupByClause = $this->buildGroupBy($groupBy);
         $havingClause = $this->buildHaving($having);
@@ -486,7 +499,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
             SELECT $optionsStr $this->column_list
-            FROM $this
+            FROM $this $joins
             WHERE
                 $whereClause
             $groupByClause
@@ -864,6 +877,35 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         // Concatenate the columns into a single string
         $this->column_list = implode(', ', $this->escapedColumns);
         return $this;
+    }
+
+    /**
+     * @param array<JOIN> $joins
+     */
+    public function setJoins(array $joins): static
+    {
+        foreach ($joins as $join) {
+            if ($join->getJoinWith() === '') {
+                $join->setJoinWith(static::class);
+            }
+            // check if joinWith is an alias(not a matching DAO-class) and try to find its class
+            if (!class_exists($join->getJoinWith())) {
+                foreach ($joins as $joinB) {
+                    if ($joinB->getAlias() === $join->getJoinWith()) {
+                        $join->setJoinWith($joinB->getJoinDAO());
+                        break;
+                    }
+                }
+            }
+        }
+        $this->joins = $joins;
+        return $this;
+    }
+
+    private function buildJoins(): string
+    {
+        if (empty($this->joins)) return '';
+        return "\n".implode("\n", array_map(fn($join) => (string)$join, $this->joins));
     }
 
     /**
