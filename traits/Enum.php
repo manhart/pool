@@ -33,4 +33,9 @@ trait Enum
 
         throw new InvalidArgumentException("Invalid value for enum type ".self::class.": $value");
     }
+
+    public static function toArray(): array
+    {
+        return array_column(static::cases(), 'value', 'name');
+    }
 }
