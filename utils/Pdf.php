@@ -20,6 +20,9 @@ namespace pool\utils;
 use pool\classes\Exception\FileOperationException;
 use pool\classes\Exception\RuntimeException;
 
+/**
+ * Depending on the method, popper-utils package is required.
+ */
 final class Pdf
 {
     static private bool $isPdf2txtAvailable;
@@ -28,7 +31,7 @@ final class Pdf
     {
         self::$isPdf2txtAvailable ??= (exec('pdftotext -v >/dev/null 2>&1', result_code: $resultCode) !== false && $resultCode === 0);
         if (!self::$isPdf2txtAvailable) {
-            throw new RuntimeException('pdftotext is not available');
+            throw new RuntimeException('pdftotext is not available on the system.');
         }
         if (!$txtFile) {
             $sysTempDir = sys_get_temp_dir();
@@ -82,5 +85,29 @@ final class Pdf
         }
         unlink($txtFile);
         return $text;
+    }
+
+    public static function isValid(string $filePath): bool
+    {
+        static $isPdfInfoAvailable = null;
+
+        if ($isPdfInfoAvailable === null) {
+            exec('command -v pdfinfo >/dev/null 2>&1', $output, $exitCode);
+            $isPdfInfoAvailable = ($exitCode === 0);
+        }
+
+        if (!$isPdfInfoAvailable) {
+            throw new RuntimeException('pdfinfo is not available on the system.');
+        }
+
+        if (!is_file($filePath) || !is_readable($filePath)) {
+            return false;
+        }
+
+        $escapedFilePath = escapeshellarg($filePath);
+        $command = "pdfinfo $escapedFilePath 2>&1";
+        exec($command, $output, $exitCode);
+
+        return ($exitCode === 0);
     }
 }
