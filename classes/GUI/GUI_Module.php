@@ -31,7 +31,7 @@ use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\GUI\Builtin\GUI_CustomFrame;
 use pool\guis\GUI_Schema\GUI_Schema;
-use pool\utils\Str;
+use pool\utils\StringHelper;
 use ReflectionException;
 use ReflectionFunction;
 use TempBlock;
@@ -304,7 +304,7 @@ class GUI_Module extends Module
      */
     public function getGUIClassFolder(string $marker = PWD_TILL_GUIS.DIRECTORY_SEPARATOR): string
     {
-        return Str::sliceAfter($this->getClassDirectory(), $marker);
+        return StringHelper::sliceAfter($this->getClassDirectory(), $marker);
     }
 
     /**

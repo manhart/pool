@@ -15,7 +15,7 @@ use function strpos;
 use function strrpos;
 use function substr;
 
-final class Str
+final class StringHelper
 {
     /**
      * Removes a prefix from a string.
