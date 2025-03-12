@@ -10,7 +10,6 @@
 
 namespace pool\classes\Database\DAO;
 
-use G7App;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Exception\DAOException;
@@ -231,23 +230,6 @@ class MySQL_DAO extends DAO
         // $translationKey = "columnNames.{$this->getTableName()}.{$row[$key]}";
         foreach ($this->translate as $key) {
             if (isset($row[$key]) && is_string($row[$key])) {
-                /*
-                 * check if customer translation exists
-                 * e.g. customerName.trackAndTrace.menu.item.1
-                 * else use default translation = trackAndTrace.menu.item.1
-                 */
-                $appCtx = G7App::getInstance();
-                $customer = $appCtx ? $appCtx->Session->getVar('customer')['customer'] : null;
-                if ($customer) {
-                    $found = false;
-                    if ($translation = $Translator->getTranslation($customer.'.'.$row[$key], noAlter: true, success: $found)) {
-                        if ($found) {
-                            $row[$key] = $translation;
-                            continue;
-                        }
-                    }
-                }
-
                 $row[$key] = $Translator->getTranslation($row[$key], $row[$key], noAlter: true);
             }
         }
