@@ -1762,9 +1762,6 @@ function isHTML(string $string): bool
 
 /**
  * Simple test if string is JSON
- *
- * @param string $string
- * @return bool
  */
 function isValidJSON(string $string): bool
 {
