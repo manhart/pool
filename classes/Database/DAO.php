@@ -227,7 +227,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $this->table ??= $table ?? static::$tableName ?:
             throw new InvalidArgumentException('The static property tableName is not defined within DAO '.static::class.'!');
 
-        $this->quotedDatabase = $this->wrapSymbols(static::$databaseName ?: $this->database);
+        $this->quotedDatabase = $this->wrapSymbols(static::$databaseName ?: DataInterface::getDatabaseForResource($this->database));
         $this->quotedSchema = $this->wrapSymbols(static::$schemaName ?? '');
         $this->quotedTable = $this->wrapSymbols($this->table);
         $this->commands = $this->createCommands();
@@ -242,9 +242,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $string ? "{$this->symbolQuote[0]}$string{$this->symbolQuote[1]}" : '';
     }
 
-    /**
-     * @return array
-     */
     private function createCommands(): array
     {
         return [
@@ -427,8 +424,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
     /**
      * Returns primary key
-     *
-     * @return array primary key
      */
     public function getPrimaryKey(): array
     {
@@ -530,13 +525,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             $count = count($key);
             for ($i = 0; $i < $count; $i++) {
                 $keyName = $key[$i];
-                $conditions[] = "$alias$keyName={$this->escapeValue($id[$i], false, false)}";
+                $conditions[] = "$alias$keyName={$this->escapeValue($id[$i])}";
                 if (!isset($id[$i + 1])) {
                     break;
                 }
             }
         } else {
-            $conditions[] = "$alias$key={$this->escapeValue($id, false, false)}";
+            $conditions[] = "$alias$key={$this->escapeValue($id)}";
         }
         return implode(' AND ', $conditions);
     }
@@ -640,10 +635,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         };
     }
 
-    /**
-     * @param array $record
-     * @return string
-     */
     private function assembleFilterRecord(array $record): string
     {
         $field = $this->translateValues ? //get field 'name'
@@ -773,13 +764,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected function buildSorting(array $sorting): string
     {
-        if (!$sorting) return '';
+        if (!$sorting) {
+            return '';
+        }
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
         $sql = [];
         foreach ($sorting as $column => $sort) {
             $column = $alias.$column;
-            if ($this->translateValues)
+            if ($this->translateValues) {
                 $column = $this->translateValues($column);
+            }
             $sql[] = "$column $sort";
         }
         return ' ORDER BY '.implode(', ', $sql);
@@ -1141,10 +1135,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
     /**
      * Update multiple records at once
-     *
-     * @param array $data
-     * @param array $filter_rules
-     * @return RecordSet
      */
     public function updateMultiple(array $data, array $filter_rules): RecordSet
     {
@@ -1175,6 +1165,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * Returns the number of affected rows with no limit
      * Warning: When used after a CALL statement, this function returns the number of rows selected by the last query in the procedure, not by the whole
      * procedure. Attention: Statements using the FOUND_ROWS() function are not safe for replication.
+     *
+     * @throws \Exception
      */
     public function foundRows(): int
     {

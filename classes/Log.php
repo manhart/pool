@@ -314,7 +314,6 @@ class Log
 
         $withDate = self::screenWithDate($configurationName);
         $withLineBreak = self::screenWithLineBreak($configurationName);
-        $withExtra = self::screenWithExtra($configurationName);
 
         if (\pool\IS_CLI) {
             if ($isHTML) {
@@ -330,13 +329,7 @@ class Log
                 }
             }
 
-            if ($withExtra && $extra) {
-                $placeholders = [];
-                array_walk($extra, static function ($value, $key) use (&$placeholders) {
-                    $placeholders["{{$key}}"] = $value;
-                });
-                $message = strtr($message, $placeholders);
-            }
+            $message = self::processPlaceholders($configurationName, $extra, $message);
             $message = ($withDate ? date('Y-m-d H:i:s').' | ' : '').$message;
             $message .= $withLineBreak ? \pool\LINE_BREAK : '';
 
@@ -372,6 +365,7 @@ class Log
     public static function writeMail(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = $text;
+        $message = self::processPlaceholders($configurationName, $extra, $message);
         $MailMsg = self::$facilities[$configurationName][self::OUTPUT_MAIL]['MailMsg'];
         $MailMsg->setBody($message);
         self::$facilities[$configurationName][self::OUTPUT_MAIL]['Mailer']->send($MailMsg);
@@ -429,5 +423,18 @@ class Log
         } while (file_exists($file));
         file_put_contents($file, $details);
         return realpath($file);
+    }
+
+    private static function processPlaceholders(string $configurationName, array $extra, string $message): string
+    {
+        $withExtra = self::screenWithExtra($configurationName);
+        if ($withExtra && $extra) {
+            $placeholders = [];
+            array_walk($extra, static function ($value, $key) use (&$placeholders) {
+                $placeholders["{{$key}}"] = $value;
+            });
+            $message = strtr($message, $placeholders);
+        }
+        return $message;
     }
 }

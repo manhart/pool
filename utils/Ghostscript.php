@@ -135,9 +135,6 @@ final class Ghostscript
         return self::handleOutputFiles($tempDir, $targetDir, $jpegPattern, self::checkImageFile(...), 'image/jpeg');
     }
 
-    /**
-     * @return string
-     */
     private static function getTempDir(string $suffix = ''): string
     {
         $tempDir = sys_get_temp_dir().'/'.uniqid("pool_$suffix");
@@ -150,11 +147,6 @@ final class Ghostscript
         return $tempDir;
     }
 
-    /**
-     * @param string $pages
-     * @param array $arguments
-     * @return array
-     */
     private static function getPageArguments(string $pages, array $arguments): array
     {
         if (!empty($pages)) {
@@ -321,13 +313,36 @@ final class Ghostscript
         }
     }
 
-    /**
-     * @param string $outputFile
-     * @param string $expectedMimeType
-     * @return bool
-     */
     private static function checkImageFile(string $outputFile, string $expectedMimeType): bool
     {
         return file_exists($outputFile) && mime_content_type($outputFile) === $expectedMimeType;
+    }
+
+    public static function repairPdf(string $inputFile, string $outputFile = null, array $options = []): string|false
+    {
+        self::getGsBin();
+
+        if (!is_file($inputFile) || !is_readable($inputFile)) {
+            throw new FileOperationException("PDF file '$inputFile' does not exist or is not readable.");
+        }
+
+        if ($outputFile === null) {
+            $tempDir = self::getTempDir('repaired_pdf');
+            $outputFile = "$tempDir/repaired_".basename($inputFile);
+        }
+
+        // default options for repairing PDF
+        $arguments = array_merge(
+            [
+                '-sDEVICE=pdfwrite',
+                '-o',
+                $outputFile,
+                '-dPDFSETTINGS=/prepress', // highest quality
+                $inputFile,
+            ],
+            $options,
+        );
+
+        return self::execute($arguments) ? $outputFile : false;
     }
 }

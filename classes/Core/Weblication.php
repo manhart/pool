@@ -26,7 +26,6 @@ use pool\classes\Cache\Memory;
 use pool\classes\Core\Input\Cookie;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
-use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
@@ -1150,7 +1149,6 @@ class Weblication extends Component
      * Initializes the settings of the application.
      *
      * @param array $settings
-     * @return void
      */
     protected function initializeSettings(array $settings): void
     {
@@ -1651,10 +1649,14 @@ class Weblication extends Component
     /**
      * @param string $servers memcached servers e.g. localhost:11211
      * @param int $expiration cache TTL in seconds
-     * @return void
      */
     private function setupMemory(string $servers, int $expiration): void
     {
+        if (!extension_loaded('memcached')) {
+            if ($servers) throw new RuntimeException('Memcached extension is not loaded. Please install the memcached extension.');
+            return;
+        }
+
         $this->memory ??= Memory::getInstance($servers);
         $this->memory->setDefaultExpiration($expiration);
     }

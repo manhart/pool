@@ -9,6 +9,9 @@
 .toast-container {
     position: fixed;
     z-index: 7777;
+    overflow: hidden;
+    width: auto;
+    height: auto;
 }
 
 .toast-container.top-right {
@@ -30,6 +33,7 @@
 .toast-container.bottom-right {
     right: 0;
     bottom: 0;
+    /* overflow: hidden; */
 }
 
 .toast-container.bottom-left {

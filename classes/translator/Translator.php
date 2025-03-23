@@ -389,18 +389,15 @@ class Translator
      *
      * @param array $keyArray the query to fill [translationKey => default Translation]
      * @param bool $noAlter Disables flagging of missing Translations useful if the key queried is potentially invalid
-     * @param string|array $language The list of languages to look in, will be set to the language the Translations were taken from
      * @param Exception|null $exception last Exception produced
      * @return bool Success of the query
      */
-    public function getMessageSet(array &$keyArray, bool $noAlter = false, array|string &$language = "", ?Exception &$exception = null): bool
+    public function getMessageSet(array &$keyArray, bool $noAlter = false, ?Exception &$exception = null): bool
     {
         try {
-            $backupLangList = $this->swapLangList($language);
             $language = "";
             $success = $this->queryTranslations($keyArray, $noAlter, $language, $exception);
             if ($success) $keyArray = array_map(fn($translation) => $translation->getMessage(), $keyArray);
-            $this->swapLangList($backupLangList);
             return $success;
         } catch (Exception $e) {
             $exception = $e;

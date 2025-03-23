@@ -27,14 +27,14 @@ const
  */
 class Toast
 {
-/**
-  ab ES7
-    static const STYLE_DEFAULT = 'toast';
-    static const STYLE_ERROR = 'error';
-    static const STYLE_INFO = 'info';
-    static const STYLE_SUCCESS = 'success';
-    static const STYLE_WARNING = 'warning';
-*/
+    /**
+     ab ES7
+     static const STYLE_DEFAULT = 'toast';
+     static const STYLE_ERROR = 'error';
+     static const STYLE_INFO = 'info';
+     static const STYLE_SUCCESS = 'success';
+     static const STYLE_WARNING = 'warning';
+     */
     autohide = true;
     delay = Toast.DEFAULT_DELAY;
     onHideCallback = null;
@@ -46,7 +46,8 @@ class Toast
         this.name = name;
     }
 
-    static get DEFAULT_DELAY() {
+    static get DEFAULT_DELAY()
+    {
         return 5000;
     }
 
@@ -55,7 +56,8 @@ class Toast
      *
      * @returns {string}
      */
-    static get TOAST_DEFAULT() {
+    static get TOAST_DEFAULT()
+    {
         return TOAST_DEFAULT;
     }
 
@@ -64,7 +66,8 @@ class Toast
      *
      * @returns {string}
      */
-    static get TOAST_ERROR() {
+    static get TOAST_ERROR()
+    {
         return TOAST_ERROR;
     }
 
@@ -73,7 +76,8 @@ class Toast
      *
      * @returns {string}
      */
-    static get TOAST_INFO() {
+    static get TOAST_INFO()
+    {
         return TOAST_INFO;
     }
 
@@ -82,7 +86,8 @@ class Toast
      *
      * @returns {string}
      */
-    static get TOAST_SUCCESS() {
+    static get TOAST_SUCCESS()
+    {
         return TOAST_SUCCESS;
     }
 
@@ -91,7 +96,8 @@ class Toast
      *
      * @returns {string}
      */
-    static get TOAST_WARNING() {
+    static get TOAST_WARNING()
+    {
         return TOAST_WARNING;
     }
 
@@ -106,17 +112,17 @@ class Toast
     {
         if(n > 1) {
             return {
-                'secondsBehind': n+' seconds ago',
-                'minutesBehind': n+' minutes ago',
-                'hoursBehind': n+' hours ago'
+                'secondsBehind': n + ' seconds ago',
+                'minutesBehind': n + ' minutes ago',
+                'hoursBehind': n + ' hours ago'
             }[key];
         }
         else {
             return {
                 'justNow': 'just now',
-                'secondsBehind': n+' second ago',
-                'minutesBehind': n+' minute ago',
-                'hoursBehind': n+' hours ago',
+                'secondsBehind': n + ' second ago',
+                'minutesBehind': n + ' minute ago',
+                'hoursBehind': n + ' hours ago',
             }[key];
         }
     }
@@ -187,11 +193,11 @@ class Toast
     static create(style, name, title, subtitle, message, autohide, delay, position)
     {
         this.count = ++this.count || 1;
-        let id = name + this.count;
-        let hideAfter = Math.floor(Date.now() / 1000) + (delay / 1000);
-        let now = Date.now();
+        const id = name + this.count;
+        const hideAfter = Math.floor(Date.now() / 1000) + (delay / 1000);
+        const now = Date.now();
 
-        let toast = `<div id="${id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide=${autohide}
+        const toast = `<div id="${id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide=${autohide}
 data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             <div class="toast-header">
                 <svg class="bd-placeholder-img rounded mr-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img">
@@ -206,7 +212,8 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
             </div>
         </div>`;
 
-        let container = document.querySelector('.toast-container');
+        const container = document.querySelector('.toast-container');
+        container.classList.remove('top-left', 'top-right', 'top-center', 'bottom-left', 'bottom-right', 'bottom-center');
         container.classList.add(position);
         container.insertAdjacentHTML('beforeend', toast);
         return id;
@@ -221,13 +228,12 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      * @param subtitle Additional information displayed instead of the Toasts age
      * @returns void
      */
-    show = (type, title, message, subtitle = null) =>
-    {
+    show = (type, title, message, subtitle = null) => {
         this.showAsync(type, title, message, subtitle).catch(
-            (e)  => {
-                if (e instanceof Error)
+            (e) => {
+                if(e instanceof Error)
                     console.error(e);
-                    window.alert('Displaying Notification failed: '+ message +'\n---------\n'+e.message );
+                window.alert('Displaying Notification failed: ' + message + '\n---------\n' + e.message);
             }
         );
     }
@@ -242,21 +248,20 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      * @param onHide A function to be called when the Toast is hidden
      * @returns {Promise<Toast>}
      */
-    showAsync = async (type, title, message, subtitle) => {
+    showAsync = async(type, title, message, subtitle) => {
         let translationError = null;
         let fallbackAvailable = 1;
         do {//this may run a second time
-            if (isArray(title)) {//Translatable Set
+            if(isArray(title)) {//Translatable Set
                 try {
                     title = Transl.get(title[0]);//fetch this key
-                }
-                catch (error) {
+                } catch(error) {
                     translationError = error;
                     title = title[1] ?? null;//use default provided by caller or fallback
                 }
             }
-            if (isString(title)) break;//work with the valid Title
-            switch (type){//Decide wich fallback to use based on type of the Toast
+            if(isString(title)) break;//work with the valid Title
+            switch(type) {//Decide wich fallback to use based on type of the Toast
                 case Toast.TOAST_ERROR:
                     title = ['global.errorMessage', 'Achtung'];
                     break;
@@ -275,22 +280,23 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
                 default:
                     title = null;
             }
-        }while (0 < fallbackAvailable--)//prevent infinite loops alt. fallbackAvailable && !(fallbackAvailable = false);
+        }
+        while(0 < fallbackAvailable--)//prevent infinite loops alt. fallbackAvailable && !(fallbackAvailable = false);
         //Check whether we can continue
-        if (!isString(title)) throw new Error("Unable to get titel for Toast-type: " + type, translationError)
+        if(!isString(title)) throw new Error("Unable to get titel for Toast-type: " + type, translationError)
         //start creation
-        let id = Toast.create(type, Toast.name, title, (subtitle) ? subtitle : this.gettext('justNow'),
+        const id = Toast.create(type, Toast.name, title, (subtitle) ? subtitle : this.gettext('justNow'),
             message, (this.pauseOnHover ? false : this.autohide), this.delay, this.position);
         //get newly created Object from the DOM
-        const jQueryToast = $('#'+id);
+        const jQueryToast = $('#' + id);
         //Update handler...
         if(!subtitle) {//Only necessary when the time isn't overridden by a subtitle
             //Create update intervall of 1s
-            let dateUpdateIntervall = setInterval(() => {
+            const dateUpdateIntervall = setInterval(() => {
                 //produce a message...
                 let secondsBehind, minutesBehind = null;
 
-                let created = parseInt(jQueryToast.data('created'), 10);
+                const created = parseInt(jQueryToast.data('created'), 10);
                 secondsBehind = Math.round((Date.now() - created) / 1000);
 
                 if(secondsBehind > 59) {
@@ -302,19 +308,21 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
                         this.gettext('secondsBehind', secondsBehind)
                 );
                 //inject new value directly into the DOM
-                document.querySelector('#'+id+' .toast-header .text-muted').innerHTML = subtitle;
+                document.querySelector('#' + id + ' .toast-header .text-muted').innerHTML = subtitle;
             }, 1000);
             //add a handler to stop the intervall when the Toast is hidden
             jQueryToast.on('hidden.bs.toast', () => clearInterval(dateUpdateIntervall));
         }
         //add a handler that removes the Toast from the DOM when it is hidden
-        jQueryToast.on('hidden.bs.toast', () => {
-            $('#'+id).remove();
-            if (typeof this.onHideCallback === 'function') {
+        jQueryToast.on('hidden.bs.toast', (evt) => {
+            const toast = evt.target;
+            toast.remove();
+            if(typeof this.onHideCallback === 'function') {
                 // execute callback
                 this.onHideCallback();
             }
         });
+
         //start displaying
         jQueryToast.toast('show');
         //check whether handlers for auto-hiding are required
@@ -342,7 +350,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
 
             this.paused = false;
 
-            if (current >= future) {
+            if(current >= future) {
                 jQueryToast.toast('hide');
             }
         });
@@ -358,8 +366,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      * @param {string} delay optional
      * @param {function|null} onHide
      */
-    static show = (type, title, message, delay = Toast.DEFAULT_DELAY, onHide = null) =>
-    {
+    static show = (type, title, message, delay = Toast.DEFAULT_DELAY, onHide = null) => {
         let $Toast = new Toast();
         $Toast.setDelay(delay);
         $Toast.onHide(onHide);
@@ -402,7 +409,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      */
     static showSuccess(title, message, delay = Toast.DEFAULT_DELAY)
     {
-        let $Toast = (new Toast()).setDelay(delay);
+        const $Toast = (new Toast()).setDelay(delay);
         $Toast.show(Toast.TOAST_SUCCESS, title, message);
     }
 
@@ -420,6 +427,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
     }
 
 }
+
 // Weblication.registerClass(Toast);
 
 /**
@@ -427,13 +435,13 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
  *
  */
 // ready(function () {
-    // Toast.showSuccess('Speichern', 'Die Daten wurden erfolgreich gespeichert', 3000);
-    // Toast.showInfo('Info', 'Sie haben eine neue Benachrichtigung', 2000);
-    // Toast.showError('Fehler', 'Es ist ein schwerwiegender Fehler aufgetreten!', 0);
-    // Toast.showWarning('Warnung', 'Sie werden in 5 Minuten automatisch ausgeloggt.', 0);
+// Toast.showSuccess('Speichern', 'Die Daten wurden erfolgreich gespeichert', 3000);
+// Toast.showInfo('Info', 'Sie haben eine neue Benachrichtigung', 2000);
+// Toast.showError('Fehler', 'Es ist ein schwerwiegender Fehler aufgetreten!', 0);
+// Toast.showWarning('Warnung', 'Sie werden in 5 Minuten automatisch ausgeloggt.', 0);
 
-    // let $Toast = new Toast().setDelay(0).setPosition('bottom-center');
-    // $Toast.show(Toast.TOAST_INFO, 'Message', 'Welcome message');
+// let $Toast = new Toast().setDelay(0).setPosition('bottom-center');
+// $Toast.show(Toast.TOAST_INFO, 'Message', 'Welcome message');
 
 /*
     window.setTimeout(function () {
@@ -461,8 +469,8 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
     }, 200)
     */
 
-    // $('body').on('hidden.bs.toast', '.toast', function () {
-    //     $(this).remove();
-    // });
-    // $('.toast').toast('show');
+// $('body').on('hidden.bs.toast', '.toast', function () {
+//     $(this).remove();
+// });
+// $('.toast').toast('show');
 // });

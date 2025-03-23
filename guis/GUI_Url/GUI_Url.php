@@ -64,7 +64,7 @@ class GUI_Url extends GUI_Module
         $withQuery = !$this->Input->getAsBool('empty');
 
         $script = $this->Input->getVar('script');
-        if ($script != '') {
+        if ($script !== '') {
             $Url = Url::fromString($script);
         } else {
             $Url = new Url($withQuery);
