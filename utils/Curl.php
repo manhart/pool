@@ -25,6 +25,8 @@ use function fclose;
 use function filter_var;
 use function fopen;
 use function http_build_query;
+use function isValidJSON;
+use function json_decode;
 use function json_encode;
 use function strlen;
 
@@ -41,6 +43,7 @@ use const CURLOPT_SSL_VERIFYHOST;
 use const CURLOPT_SSL_VERIFYPEER;
 use const CURLOPT_TIMEOUT;
 use const FILTER_VALIDATE_URL;
+use const JSON_THROW_ON_ERROR;
 
 final class Curl
 {
@@ -120,16 +123,33 @@ final class Curl
         return !$error_msg ? $result : throw new RuntimeException("Error while downloading file: $error_msg");
     }
 
+    private static function normalizeHeaders(array $headers): array
+    {
+        $normalized = [];
+        foreach ($headers as $key => $value) {
+            if (is_int($key)) {
+                $normalized[] = $value;
+            } else {
+                $normalized[] = "$key: $value";
+            }
+        }
+        return $normalized;
+    }
+
     /**
-     * Post Request
+     * POST Request
      *
+     * @param array $options Optional cURL options. Note: If you define CURLOPT_HTTPHEADER here,
+     *                       it will override any automatically generated headers (e.g., Content-Type).
+     * @param array $headers Optional headers to be added to the request as key-value pairs (merged unless CURLOPT_HTTPHEADER is already set).
      * @return array{
      *     body: string,
-     *     statusCode: int
+     *     statusCode: int,
+     *     contentType: ?string,
      * }
      * @throws InvalidArgumentException|\JsonException|RuntimeException
      */
-    public static function post(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded'): array
+    public static function post(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded', array $headers = []): array
     {
         [$postData, $autoHttpHeader] = match ($contentType) {
             'application/x-www-form-urlencoded' => [http_build_query($data), true],
@@ -142,20 +162,95 @@ final class Curl
         $options[CURLOPT_POST] = true;
         $options[CURLOPT_POSTFIELDS] = $postData;
         $options[CURLOPT_RETURNTRANSFER] = true;
-        $options[CURLOPT_HTTPHEADER] ??= $autoHttpHeader ? [
-            "Content-Type: $contentType",
-            'Content-Length: '.strlen($postData),
-        ] : [];
         $options[CURLOPT_SSL_VERIFYPEER] ??= true;
         $options[CURLOPT_SSL_VERIFYHOST] ??= 2;
         $options[CURLOPT_FAILONERROR] ??= true;
+        $options[CURLOPT_HTTPHEADER] ??= self::normalizeHeaders(
+            array_merge(
+                $autoHttpHeader ? ['Content-Type' => $contentType, 'Content-Length' => strlen($postData)] : [],
+                $headers,
+            ),
+        );
+
         curl_setopt_array($curl, $options);
 
         $response = curl_exec($curl);
         $httpStatusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
         $error_msg = curl_errno($curl) ? curl_error($curl).' (Error code: '.curl_errno($curl).')' : null;
         curl_close($curl);
 
-        return !$error_msg ? ['body' => $response, 'statusCode' => $httpStatusCode] : throw new RuntimeException("Error while posting data: $error_msg");
+        return !$error_msg ? ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType] :
+            throw new RuntimeException("Error while performing POST request: $error_msg");
+    }
+
+    /**
+     * GET Request
+     *
+     * @param string $url The target URL.
+     * @param array $queryParams Optional query parameters to append to the URL.
+     * @param array $options Additional cURL options to override defaults.
+     * @param array $headers Optional headers to include in the request as key-value pairs (merged unless CURLOPT_HTTPHEADER is already set).
+     * @return array{body: string, statusCode: int}
+     * @throws InvalidArgumentException|RuntimeException
+     */
+    public static function get(string $url, array $queryParams = [], array $options = [], array $headers = []): array
+    {
+        if (!empty($queryParams)) {
+            $query = http_build_query($queryParams);
+            $url .= (str_contains($url, '?') ? '&' : '?').$query;
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException("Invalid URL: $url");
+        }
+
+        $curl = curl_init($url);
+
+        $options[CURLOPT_RETURNTRANSFER] = true;
+        $options[CURLOPT_FOLLOWLOCATION] ??= true;
+        $options[CURLOPT_SSL_VERIFYPEER] ??= true;
+        $options[CURLOPT_SSL_VERIFYHOST] ??= 2;
+        $options[CURLOPT_FAILONERROR] ??= true;
+        $options[CURLOPT_HTTPHEADER] ??= self::normalizeHeaders($headers);
+
+        curl_setopt_array($curl, $options);
+
+        $response = curl_exec($curl);
+        $httpStatusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
+        $error_msg = curl_errno($curl) ? curl_error($curl).' (Error code: '.curl_errno($curl).')' : null;
+        curl_close($curl);
+
+        return !$error_msg ? ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType] :
+            throw new RuntimeException("Error while performing GET request: $error_msg");
+    }
+
+    /**
+     * @param array $headers Headers to be added to the request as key-value pairs (merged unless CURLOPT_HTTPHEADER is already set).
+     * @return array{
+     *     body: string,
+     *     data: array|null,
+     *     statusCode: int,
+     *     contentType: ?string,
+     * }
+     * @throws JsonException
+     */
+    public static function json(string $method, string $url, array $params = [], array $options = [], array $headers = []): array
+    {
+        $method = strtoupper($method);
+        $mimeType = 'application/json';
+        $headers = array_merge(['Accept' => $mimeType], $headers);
+
+        $response = match ($method) {
+            'GET' => self::get($url, $params, $options, $headers),
+            'POST' => self::post($url, $params, $options, $mimeType, $headers),
+            default => throw new InvalidArgumentException("Unsupported HTTP method: $method"),
+        };
+
+        $response['data'] = (str_contains($response['contentType'] ?? '', 'application/json') && isValidJSON($response['body'])) ?
+            json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR) : null;
+
+        return $response;
     }
 }

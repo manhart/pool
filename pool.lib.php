@@ -21,18 +21,7 @@ namespace pool
     const NAMESPACE_SEPARATOR = '\\';
 
     if (!defined('DIR_POOL_ROOT')) {
-        define('DIR_POOL_ROOT', realpath(__DIR__));
-    }
-
-    // Determines the relative path from the pool root directory to the document root directory (e.g., /var/www/html)
-    // for including pool files such as JavaScript, CSS or images.
-    if (!defined('DIR_RELATIVE_POOL_TO_DOC_ROOT')) {
-        $dirDocumentRoot = realpath($_SERVER['DOCUMENT_ROOT']);
-
-        if (str_starts_with(DIR_POOL_ROOT, $dirDocumentRoot)) {
-            $dirRelativePoolRoot = substr(DIR_POOL_ROOT, strlen($dirDocumentRoot));
-            define('DIR_RELATIVE_POOL_TO_DOC_ROOT', $dirRelativePoolRoot);
-        }
+        define('DIR_POOL_ROOT', __DIR__);
     }
 
     if (!defined('DIR_APP_ROOT')) { //necessary for applications without PSR-4
