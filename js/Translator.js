@@ -101,6 +101,9 @@ class Translator {
         if (typeof args != 'undefined') {
             let params;
             if (typeof args == 'object') {
+                // replace placeholder with params
+                message = message.replace(/{(\w+)}/g, (match, key) => args[key] ?? match);
+
                 //normalize to an array
                 params = (Array.isArray(args)) ? args : Object.values(args) ;
             } else {//"variadic" signature
