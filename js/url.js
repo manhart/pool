@@ -194,22 +194,36 @@ class Url {
     }
 
     /**
-     * Builds the full URL string from path, parameters, and fragment.
+     * Builds the full URL string from path, query parameters, and fragment.
      *
-     * @returns {string} The constructed URL.
+     * @param {Object} [options] Optional configuration
+     * @param {'csv'|'brackets'} [options.arrayFormat='csv']
+     *        Defines how array values are serialized:
+     *        - 'csv' → key=1,2,3
+     *        - 'brackets' → key[]=1&key[]=2&key[]=3
+     * @returns {string}
      */
-    getUrl() {
-        const query = Object.entries(this.params)
-                             .flatMap(([key, values]) => {
-            const value = Array.isArray(values)
-                ? values.join(',')
-                : values;
-            return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+    getUrl(options = {})
+    {
+        const arrayFormat = options.arrayFormat || 'csv';
+        
+        const query = Object.entries(this.params).flatMap(([key, values]) => {
+            const encodedKey = encodeURIComponent(key);
+            if(values.length <= 1) {
+                return [`${encodedKey}=${encodeURIComponent(values[0])}`];
+            }
+            switch(arrayFormat) {
+                case 'brackets':
+                    return values.map(val => `${encodedKey}[]=${encodeURIComponent(val)}`);
+                case 'csv':
+                default:
+                    return [`${encodedKey}=${encodeURIComponent(values.join(','))}`];
+            }
         }).join('&');
 
         let url = this.path;
-        if (query) url += '?' + query;
-        if (this.fragment) url += '#' + encodeURIComponent(this.fragment);
+        if(query) url += '?' + query;
+        if(this.fragment) url += '#' + encodeURIComponent(this.fragment);
         return url;
     }
 
