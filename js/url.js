@@ -14,7 +14,8 @@
  * @see https://github.com/manhart/pool
  */
 
-class Url {
+class Url
+{
     /**
      * Creates a new Url instance and parses path, query parameters, and fragment.
      *
@@ -25,7 +26,8 @@ class Url {
      * const url = new Url('?page=1&sort=asc#top');
      * const current = new Url(null); // uses current window location
      */
-    constructor(url = '') {
+    constructor(url = '')
+    {
         this.params = {};
         this.fragment = '';
         this.path = '';
@@ -34,12 +36,13 @@ class Url {
             url = window.location.href;
         }
 
-        if (url) {
+        if(url) {
             this.init(url);
         }
     }
 
-    setScript(script) {
+    setScript(script)
+    {
         return this.init(script);
     }
 
@@ -49,43 +52,46 @@ class Url {
      * @param {string} url A URL string to parse.
      * @returns {this}
      */
-    init(url) {
-        if (typeof url === 'object') url = url.toString();
+    init(url)
+    {
+        if(typeof url === 'object') url = url.toString();
 
         let basePath = url;
         let queryString = '';
         let fragment = '';
 
         const hashSplit = url.split('#');
-        if (hashSplit.length > 1) {
+        if(hashSplit.length > 1) {
             fragment = hashSplit[1];
             url = hashSplit[0];
         }
 
         const querySplit = url.split('?');
-        if (querySplit.length > 1) {
+        if(querySplit.length > 1) {
             basePath = querySplit[0];
             queryString = querySplit[1];
-        } else {
+        }
+        else {
             basePath = url;
         }
 
         this.path = basePath;
         this.fragment = fragment;
 
-        if (queryString) {
+        if(queryString) {
             // Try native URLSearchParams if available
             const parser = typeof URLSearchParams !== 'undefined'
                 ? new URLSearchParams(queryString)
                 : null;
 
-            if (parser) {
-                for (const [key, val] of parser.entries()) {
+            if(parser) {
+                for(const [key, val] of parser.entries()) {
                     this._addRawParam(key, val);
                 }
-            } else {
+            }
+            else {
                 const pairs = queryString.split('&');
-                for (const pair of pairs) {
+                for(const pair of pairs) {
                     const [rawKey, rawVal = ''] = pair.split('=');
                     const key = decodeURIComponent(rawKey);
                     const val = decodeURIComponent(rawVal);
@@ -97,8 +103,9 @@ class Url {
         return this;
     }
 
-    _addRawParam(key, val) {
-        if (!this.params[key]) {
+    _addRawParam(key, val)
+    {
+        if(!this.params[key]) {
             this.params[key] = [];
         }
         this.params[key].push(val);
@@ -111,9 +118,10 @@ class Url {
      * @param {string} key The parameter name.
      * @returns {string|string[]|undefined} The parameter value, array of values, or undefined if not set.
      */
-    getParam(key) {
+    getParam(key)
+    {
         const val = this.params[key];
-        if (!val) return undefined;
+        if(!val) return undefined;
         return val.length === 1 ? val[0] : val;
     }
 
@@ -123,7 +131,8 @@ class Url {
      * @param {string} key The parameter name.
      * @returns {boolean} True if the parameter exists, false otherwise.
      */
-    hasParam(key) {
+    hasParam(key)
+    {
         return Array.isArray(this.params[key]) && this.params[key].length > 0;
     }
 
@@ -138,12 +147,14 @@ class Url {
      * url.setParam('page', '2');
      * url.setParam({ sort: 'asc', filter: 'active' });
      */
-    setParam(key, val) {
-        if (typeof key === 'object') {
-            for (const [k, v] of Object.entries(key)) {
+    setParam(key, val)
+    {
+        if(typeof key === 'object') {
+            for(const [k, v] of Object.entries(key)) {
                 this.setParam(k, v);
             }
-        } else {
+        }
+        else {
             this.params[key] = Array.isArray(val) ? val : [val];
         }
         return this;
@@ -159,8 +170,9 @@ class Url {
      * @example
      * url.addParam('tag', 'php').addParam('tag', 'js');
      */
-    addParam(key, val) {
-        if (!this.params[key]) {
+    addParam(key, val)
+    {
+        if(!this.params[key]) {
             this.params[key] = [];
         }
         this.params[key].push(val);
@@ -173,12 +185,14 @@ class Url {
      * @param {string} key The parameter name to remove.
      * @returns {this}
      */
-    delParam(key) {
+    delParam(key)
+    {
         delete this.params[key];
         return this;
     }
 
-    removeParam(key) {
+    removeParam(key)
+    {
         return this.delParam(key);
     }
 
@@ -188,7 +202,8 @@ class Url {
      * @param {string} fragment The fragment (without the #).
      * @returns {this}
      */
-    setFragment(fragment) {
+    setFragment(fragment)
+    {
         this.fragment = fragment;
         return this;
     }
@@ -206,11 +221,11 @@ class Url {
     getUrl(options = {})
     {
         const arrayFormat = options.arrayFormat || 'csv';
-        
+
         const query = Object.entries(this.params).flatMap(([key, values]) => {
             const encodedKey = encodeURIComponent(key);
             if(values.length <= 1) {
-                return [`${encodedKey}=${encodeURIComponent(values[0])}`];
+                return [`${encodedKey}=${encodeURIComponent(values[0]??'')}`];
             }
             switch(arrayFormat) {
                 case 'brackets':
@@ -225,20 +240,6 @@ class Url {
         if(query) url += '?' + query;
         if(this.fragment) url += '#' + encodeURIComponent(this.fragment);
         return url;
-    }
-
-    /**
-     * Encodes a value for use in URLs, optionally applying stricter rules.
-     *
-     * @param {string} str The string to encode.
-     * @returns {string}
-     */
-    safeEncode(str) {
-        const encoded = encodeURIComponent(str);
-        // Strip/encode dangerous characters beyond standard URI encoding
-        return encoded
-            .replace(/%0A|%0D|%09/gi, '')    // Remove line/tab breaks
-            .replace(/[<>]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
     }
 
     /**
@@ -257,29 +258,31 @@ class Url {
      *   maxValueLength: 100
      * });
      */
-    sanitize(options = {}) {
+    sanitize(options = {})
+    {
         const whitelist = options.whitelist || null; // Array of allowed keys
         const maxValueLength = options.maxValueLength || 512;
         const suspiciousPattern = /<script|javascript:|on\w+=|union\s+select|--/i;
 
-        for (const key in this.params) {
-            if (whitelist && !whitelist.includes(key)) {
+        for(const key in this.params) {
+            if(whitelist && !whitelist.includes(key)) {
                 delete this.params[key];
                 continue;
             }
 
             let values = this.params[key];
-            if (!Array.isArray(values)) values = [values];
+            if(!Array.isArray(values)) values = [values];
 
             values = values.filter(v => {
-                if (typeof v !== 'string') return false;
-                if (v.length > maxValueLength) return false;
+                if(typeof v !== 'string') return false;
+                if(v.length > maxValueLength) return false;
                 return !suspiciousPattern.test(v);
             });
 
-            if (values.length === 0) {
+            if(values.length === 0) {
                 delete this.params[key];
-            } else {
+            }
+            else {
                 this.params[key] = values;
             }
         }
@@ -288,38 +291,22 @@ class Url {
     }
 
     /**
-     * Generates the full URL string using strict encoding.
-     * @returns {string}
-     */
-    getUrlSafe() {
-        const query = Object.entries(this.params)
-            .flatMap(([key, values]) =>
-                values.map(val =>
-                    `${this.safeEncode(key)}=${this.safeEncode(val)}`
-                )
-            )
-            .join('&');
-
-        let url = this.path;
-        if (query) url += '?' + query;
-        if (this.fragment) url += '#' + this.safeEncode(this.fragment);
-        return url;
-    }
-
-    /**
      * Reloads the page using the constructed URL.
      *
      * @returns {void}
      */
-    restartUrl() {
+    restartUrl()
+    {
         location.href = this.getUrl();
     }
 
-    toString() {
+    toString()
+    {
         return this.getUrl();
     }
 
-    toJSON() {
+    toJSON()
+    {
         return {
             path: this.path,
             params: this.params,
@@ -332,8 +319,9 @@ class Url {
  * SCRIPT_SCHEMA contains the current schema. If the schema parameter is not set, we use no schema.
  * @type {string|string}
  */
-const SCRIPT_SCHEMA = location.search.split('schema=')[1] || '';
+const SCRIPT_SCHEMA = new URLSearchParams(location.search).get('schema') || '';
 /**
- * SCRIPT_NAME contains the current script name with protocol, host and path. It is used to redirect to the start page. The query parameters are not included, except the schema parameter.
+ * SCRIPT_NAME contains the current script name with protocol, host and path. It is used to redirect to the start page. The query parameters are not included, except the schema
+ * parameter.
  */
 const SCRIPT_NAME = location.protocol + '//' + location.host + location.pathname + (SCRIPT_SCHEMA ? '?schema=' + SCRIPT_SCHEMA : '');
