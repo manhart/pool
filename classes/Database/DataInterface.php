@@ -318,6 +318,27 @@ class DataInterface extends PoolObject
     }
 
     /**
+     * Unregisters a resource from the DataInterface
+     */
+    public static function unregisterResource(string $alias): void
+    {
+        unset(self::$register[$alias]);
+    }
+
+    /**
+     * Unregisters the DataInterface from all resources
+     */
+    public function unregister(): void
+    {
+        foreach(self::$register as $alias => $item) {
+            if($item['interface'] !== $this) {
+                continue;
+            }
+            unset(self::$register[$alias]);
+        }
+    }
+
+    /**
      * Execute an SQL statement and return the result as a pool\classes\Core\ResultSet.
      *
      * @throws InvalidArgumentException
@@ -799,6 +820,14 @@ class DataInterface extends PoolObject
         } // same as host
         $databaseAlias = $databaseAlias ?: $this->default_database;
         return isset($this->connections[$mode->value][$databaseAlias]);
+    }
+
+    /**
+     * Returns the host of the current connection
+     */
+    public function getHost(ConnectionMode $mode = ConnectionMode::READ): string
+    {
+        return $this->hosts[$mode->value];
     }
 
     /**

@@ -26,7 +26,6 @@
  *  DIR_CONFIGS_ROOT (string) = (absoluter pfad) zeigt auf das Verzeichnis, in dem sich die Konfigurationsdateien befinden
  *  DIR_DOCUMENT_ROOT (string) = (absoluter pfad) zeigt auf DOCUMENT_ROOT des Apache Webservers
  *  DIR_RELATIVE_DOCUMENT_ROOT (string) = (relativer Pfad) zeigt auf DOCUMENT_ROOT des Apache Webservers
- *  DIR_POOL_ROOT (string) = (absoluter) Pfad zu den Hauptbibliotheken (POOL, DAOS, SUBCODES)
  *  DIR_DATA_DIR (string) = (absoluter pfad) zeigt auf das DATA Verzeichnis
  *  DIR_DAOS_ROOT (string) = (absoluter) Pfad zeigt direkt auf das DAOS Verzeichnis
  *  IS_DEVELOP (boolean) = gibt an, ob es sich um einen Entwicklungsrechner handelt.
