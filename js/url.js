@@ -200,16 +200,16 @@ class Url {
      */
     getUrl() {
         const query = Object.entries(this.params)
-            .flatMap(([key, values]) =>
-                values.map(val =>
-                    `${encodeURIComponent(key)}=${encodeURIComponent(val)}`
-                )
-            )
-            .join('&');
+                             .flatMap(([key, values]) => {
+            const value = Array.isArray(values)
+                ? values.join(',')
+                : values;
+            return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+        }).join('&');
 
         let url = this.path;
         if (query) url += '?' + query;
-        if (this.fragment) url += '#' + this.fragment;
+        if (this.fragment) url += '#' + encodeURIComponent(this.fragment);
         return url;
     }
 
