@@ -1260,8 +1260,7 @@ class Weblication extends Component
     public function render(): static
     {
         if ($this->run($this->getLaunchModule())) {
-            $this->prepareContent();
-            echo $this->finalizeContent();
+            echo $this->Main->render();
         }
 
         $measurePageSpeed = IS_DEVELOP || ((int)($_REQUEST['measurePageSpeed'] ?? 0));
@@ -1302,6 +1301,7 @@ class Weblication extends Component
 
     /**
      * Main logic of the front controller. compile main content.
+     * @deprecated
      */
     protected function prepareContent(): void
     {

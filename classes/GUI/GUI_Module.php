@@ -202,6 +202,7 @@ class GUI_Module extends Module
     {
         $GUIRootDirs = [];
         if (Autoloader::hasNamespace($GUIClassName)) {
+            /** @noinspection PhpUndefinedConstantInspection */
             $baseNameSpacePath = defined('BASE_NAMESPACE_PATH') ? BASE_NAMESPACE_PATH : DIR_DOCUMENT_ROOT;
             $GUIRootDirs[] = $baseNameSpacePath;
             $GUIClassName = str_replace(NAMESPACE_SEPARATOR, '/', $GUIClassName);
@@ -254,8 +255,6 @@ class GUI_Module extends Module
 
     /**
      * Autoload templates, css- and js-files
-     *
-     * @return GUI_Module
      */
     public function loadFiles(): static
     {
@@ -321,7 +320,6 @@ class GUI_Module extends Module
      *
      * @param bool $recurse Execute this while creating the GUIs found in the preloaded content
      * @param bool $autoLoadFiles Preload the GUIs found
-     * @return void
      * @throws ModulNotFoundException
      * @see GUI_Module::createGUIModule()
      */
@@ -414,6 +412,7 @@ class GUI_Module extends Module
         if (class_exists($GUIClassName, false)) return $GUIClassName;
         // construct namespace according to PSR-4 standards
         $docRoot = addEndingSlash(DIR_DOCUMENT_ROOT);
+        /** @noinspection PhpUndefinedConstantInspection */
         $baseNameSpace = defined('BASE_NAMESPACE_PATH') ? BASE_NAMESPACE_PATH : '';
         $nameSpaceClassName = str_replace([$docRoot, '/'], [$baseNameSpace, NAMESPACE_SEPARATOR], remove_extension($fileName));
         if (class_exists($nameSpaceClassName, false)) return $nameSpaceClassName;
@@ -422,8 +421,6 @@ class GUI_Module extends Module
 
     /**
      * Is this module the Target of an Ajax-Call
-     *
-     * @return bool
      */
     public function isAjax(): bool
     {
@@ -461,8 +458,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Runs prepare on all modules
-     * Preparing modules and their children.
+     * Main logic of the front controller. compile main content.
      */
     public function prepareContent(): void
     {
@@ -515,7 +511,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Finalizes the content of the html templates and makes sure that all children are also finished.
+     * Return finished HTML content
      * Walks from the inside out! (vice versa to createGUIModule, init, prepareContent)
      *
      * @return string Content / Inhalt
@@ -537,9 +533,6 @@ class GUI_Module extends Module
      * Processes transactions
      * This method is used to start/begin, commit, or rollback a TRANSACTION for the given database interfaces.
      *
-     * @param array $dbInterfaces
-     * @param string $action
-     * @return void
      * @throws Exception
      */
     private function processTransactions(array $dbInterfaces, string $action): void
@@ -648,13 +641,7 @@ class GUI_Module extends Module
     /**
      * Creates a response to an Ajax call handling client format and encoding
      *
-     * @param mixed $clientData
-     * @param mixed $error
      * @param string $callingMethod optional; use __METHOD__
-     * @param string $errorType
-     * @param int $statusCode
-     * @param int $flags JSON flags
-     * @return string
      */
     protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0): string
     {
@@ -762,8 +749,6 @@ class GUI_Module extends Module
 
     /**
      * Runs provision on all modules
-     *
-     * @return void
      */
     public function provisionContent(): void
     {
@@ -783,8 +768,6 @@ class GUI_Module extends Module
 
     /**
      * Checks if module is configurable (uses trait Configurable.trait.php; other solution would be via Reflections)
-     *
-     * @return bool
      */
     public function isConfigurable(): bool
     {
@@ -810,10 +793,7 @@ class GUI_Module extends Module
      *
      * @param string $alias name of the method
      * @param Closure $method class for anonymous function
-     * @param bool $noFormat
      * @param array $dbInterfaces list of database interfaces, for which transactions should be started, committed, or rolled back
-     * @param mixed ...$meta
-     * @return GUI_Module
      * @see GUI_Module::registerAjaxCalls()
      */
     protected function registerAjaxMethod(
@@ -834,8 +814,6 @@ class GUI_Module extends Module
     /**
      * Enable plain JSON return (without change by the POOL)
      *
-     * @param bool $activate
-     * @return GUI_Module
      * @deprecated Set this in the Metadata when registering your method.
      * @see GUI_Module::registerAjaxMethod()
      */
@@ -887,5 +865,15 @@ class GUI_Module extends Module
             $args = [...$args, ...$arguments->getData()];
         }
         return $args;
+    }
+
+    /**
+     * Render the content of this module and its children. Return finished HTML content
+     */
+    public function render(): string
+    {
+        $this->provisionContent();
+        if(!$this->isAjax) $this->prepareContent();
+        return $this->finalizeContent();
     }
 }
