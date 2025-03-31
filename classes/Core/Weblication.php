@@ -26,7 +26,6 @@ use pool\classes\Cache\Memory;
 use pool\classes\Core\Input\Cookie;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
-use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\Exception\RuntimeException;
@@ -89,9 +88,9 @@ use const pool\PWD_TILL_SKINS;
  */
 class Weblication extends Component
 {
-    public const REQUEST_PARAM_MODULE = 'module';
-    public const REQUEST_PARAM_METHOD = 'method';
-    public const REQUEST_PARAM_SCHEMA = 'schema';
+    public const string REQUEST_PARAM_MODULE = 'module';
+    public const string REQUEST_PARAM_METHOD = 'method';
+    public const string REQUEST_PARAM_SCHEMA = 'schema';
 
     /**
      * Is this request an ajax call
@@ -118,9 +117,6 @@ class Weblication extends Component
      */
     private GUI_Module $Main;
 
-    /**
-     * @var GUI_CustomFrame|null
-     */
     private ?GUI_CustomFrame $Frame = null;
 
     /**
@@ -135,9 +131,6 @@ class Weblication extends Component
      */
     private static ?Weblication $Instance = null;
 
-    /**
-     * @var Input
-     */
     public Input $Input;
 
     /**
@@ -161,9 +154,6 @@ class Weblication extends Component
      */
     private string $skin = 'default';
 
-    /**
-     * @var array|null
-     */
     private ?array $skins = null;
 
     /**
@@ -174,31 +164,15 @@ class Weblication extends Component
     protected string $schema = 'index';
 
     /**
-     * Bewahrt alle Schnittstellen Instanzen der unterschiedlichsten Speichermedien als Liste auf
-     *
-     * @var array<string, DataInterface>
-     * @deprecated
-     * @see DataInterface::$register
-     */
-    private array $interfaces = [];
-
-    /**
-     * Default charset
-     *
-     * @var string
+     * @var string Default charset
      */
     private string $charset = 'utf-8';
 
     /**
-     * Programm ID
-     *
-     * @var int
+     * @var int Default charset
      */
     private int $progId = 0;
 
-    /**
-     * @var string
-     */
     private string $cssFolder = 'css';
 
     /**
@@ -211,9 +185,6 @@ class Weblication extends Component
      */
     private ?bool $xdebug = null;
 
-    /**
-     * @var string
-     */
     private string $commonSkinFolder = 'common';
 
     /**
@@ -260,19 +231,19 @@ class Weblication extends Component
     /**
      * locale unchanged / as is.
      */
-    public const LOCALE_UNCHANGED = 0;
+    public const int LOCALE_UNCHANGED = 0;
     /**
      * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
      */
-    public const LOCALE_FORCE_REGION = 1;
+    public const int LOCALE_FORCE_REGION = 1;
     /**
      * The application's charset is appended if no charset is attached to the locale.
      */
-    public const LOCALE_FORCE_CHARSET = 2;
+    public const int LOCALE_FORCE_CHARSET = 2;
     /**
      * Removes possible charsets.
      */
-    public const LOCALE_WITHOUT_CHARSET = 4;
+    public const int LOCALE_WITHOUT_CHARSET = 4;
 
     /**
      * @var array all possible default formats
@@ -302,9 +273,6 @@ class Weblication extends Component
         ],
     ];
 
-    /**
-     * @var Translator
-     */
     protected Translator $translator;
 
     /**
@@ -322,13 +290,13 @@ class Weblication extends Component
     /**
      * @var int Cache time to live
      */
-    private const CACHE_TTL = 86400;
+    private const int CACHE_TTL = 86400;
     /**
      * Types of caching
      */
-    public const CACHE_FILE_ACCESS = 'fileAccess';
-    public const CACHE_FILE = 'file';
-    public const CACHE_ITEM = 'item';
+    public const string CACHE_FILE_ACCESS = 'fileAccess';
+    public const string CACHE_FILE = 'file';
+    public const string CACHE_ITEM = 'item';
 
     /**
      * Enable or disable caching of different types
@@ -371,9 +339,6 @@ class Weblication extends Component
         return self::$Instance;
     }
 
-    /**
-     * @return bool
-     */
     public static function hasInstance(): bool
     {
         return static::$Instance !== null;
@@ -393,7 +358,6 @@ class Weblication extends Component
      * Changes the folder for the design templates (Html templates) and images.
      *
      * @param string $skin folder for frontend design (css, templates and images).
-     * @return static
      */
     public function setSkin(string $skin): static
     {
@@ -465,8 +429,6 @@ class Weblication extends Component
     /**
      * Set charset for the Web Application
      *
-     * @param string $charset
-     * @return static
      */
     public function setCharset(string $charset): static
     {
@@ -476,10 +438,7 @@ class Weblication extends Component
     }
 
     /**
-     * all kinds of formats.There are predefined ones: datetime, date and time
-     *
-     * @param array $formats
-     * @return static
+     * All kinds of formats.There are predefined ones: datetime, date and time
      */
     public function setDefaultFormats(array $formats): static
     {
@@ -488,10 +447,7 @@ class Weblication extends Component
     }
 
     /**
-     * reads the saved format
-     *
-     * @param string $key
-     * @return string|array
+     * Reads the saved format
      */
     public function getDefaultFormat(string $key): array|string
     {
@@ -500,9 +456,6 @@ class Weblication extends Component
 
     /**
      * Set an application id
-     *
-     * @param int $progId
-     * @return static
      */
     public function setProgId(int $progId): static
     {
@@ -512,8 +465,6 @@ class Weblication extends Component
 
     /**
      * Get an application id (if set)
-     *
-     * @return int|null
      */
     public function getProgId(): ?int
     {
@@ -522,8 +473,6 @@ class Weblication extends Component
 
     /**
      * Is this request an ajax call
-     *
-     * @return bool
      */
     public static function isAjax(): bool
     {
@@ -531,10 +480,7 @@ class Weblication extends Component
     }
 
     /**
-     * set default schema/layout, if none is loaded by request
-     *
-     * @param string $default
-     * @return static
+     * Set default schema/layout, if none is loaded by request
      */
     public function setDefaultSchema(string $default = 'index'): static
     {
@@ -543,10 +489,8 @@ class Weblication extends Component
     }
 
     /**
-     * returns the default scheme
-     *
-     * @return string default schema
-     **/
+     * Returns the default scheme
+     */
     public function getDefaultSchema(): string
     {
         return $this->schema;
@@ -554,7 +498,6 @@ class Weblication extends Component
 
     /**
      * @param string $version application version
-     * @return static
      */
     public function setVersion(string $version): static
     {
@@ -571,10 +514,7 @@ class Weblication extends Component
     }
 
     /**
-     * Setzt das Haupt-GUI.
-     *
-     * @param GUI_Module $GUI_Module
-     * @return static
+     * Sets the main gui.
      */
     public function setMain(GUI_Module $GUI_Module): static
     {
@@ -584,17 +524,12 @@ class Weblication extends Component
 
     /**
      * Liefert das Haupt-GUI (meistens erstes GUI, das im Startscript uebergeben wurde).
-     *
-     * @return GUI_Module
      */
     public function getMain(): GUI_Module
     {
         return $this->Main;
     }
 
-    /**
-     * @return GUI_HeadData
-     */
     public function getHead(): GUI_HeadData
     {
         return $this->getFrame()?->getHeadData() ?? new GUI_HeadData($this);
@@ -602,8 +537,6 @@ class Weblication extends Component
 
     /**
      * Returns the main frame
-     *
-     * @return GUI_CustomFrame|null
      */
     public function getFrame(): ?GUI_CustomFrame
     {
@@ -626,9 +559,6 @@ class Weblication extends Component
 
     /**
      * Sets a common skin folder
-     *
-     * @param string $skinName
-     * @return static
      */
     public function setCommonSkinFolder(string $skinName): static
     {
@@ -636,19 +566,11 @@ class Weblication extends Component
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getCommonSkinFolder(): string
     {
         return $this->commonSkinFolder;
     }
 
-    /**
-     * @param string $additionalDir
-     * @param bool $absolute
-     * @return string
-     */
     public function getCommonSkinPath(string $additionalDir = '', bool $absolute = true): string
     {
         $path = '';
@@ -700,8 +622,6 @@ class Weblication extends Component
      * Liefert einen Pfad zum Skin-Verzeichnis zurück. Wenn der Parameter $additionalDir gef�llt wird, wird er an das Skin-Verzeichnis dran geh�ngt.
      *
      * @param string $additionalDir Unterverzeichnis vom Skin-Verzeichnis
-     * @param bool $absolute
-     * @return string
      */
     public function getSkinPath(string $additionalDir = '', bool $absolute = true): string
     {
@@ -797,9 +717,6 @@ class Weblication extends Component
 
     /**
      * Does the project have a common skin folder?
-     *
-     * @param string|null $subFolder
-     * @return bool
      */
     public function hasCommonSkinFolder(?string $subFolder = null): bool
     {
@@ -822,11 +739,6 @@ class Weblication extends Component
 
     /**
      * Does the project have the skin?
-     *
-     * @param string|null $subFolder
-     * @param string|null $language
-     * @param string|null $translated
-     * @return bool
      */
     public function hasSkinFolder(?string $subFolder = null, ?string $language = null, ?string $translated = null): bool
     {
@@ -939,16 +851,6 @@ class Weblication extends Component
         return '';
     }
 
-    /**
-     * @param string $elementSubFolder
-     * @param string $filename
-     * @param string $language
-     * @param string $classFolder
-     * @param bool $baseLib
-     * @param bool $all
-     * @param bool $translate
-     * @return string
-     */
     public function findBestElement(
         string $elementSubFolder,
         string $filename,
@@ -1012,8 +914,6 @@ class Weblication extends Component
      *
      * @param string $filename JavaScript Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
-     * @param bool $baseLib
-     * @param bool $raiseError
      * @param bool $clientSideRelativePath If true, the path to the JavaScript is relative to the client side. If false, the path is relative to the
      *     server side.
      * @return string If successful, the path and filename of the JavaScript found are returned. In case of error an empty string.
@@ -1055,11 +955,6 @@ class Weblication extends Component
         return '';
     }
 
-    /**
-     * @param string $clientSidePath
-     * @param string $serverSidePath
-     * @return static
-     */
     public function setPoolRelativePath(string $clientSidePath, string $serverSidePath): static
     {
         $this->poolClientSideRelativePath = $clientSidePath;
@@ -1069,9 +964,6 @@ class Weblication extends Component
 
     /**
      * Client-side relative path to the pool root directory
-     *
-     * @param string $subDir
-     * @return string path from the application to the pool
      */
     public function getPoolClientSideRelativePath(string $subDir = ''): string
     {
@@ -1080,9 +972,6 @@ class Weblication extends Component
 
     /**
      * Server-side relative path to the pool root directory
-     *
-     * @param string $subDir
-     * @return string path from the application to the pool
      */
     public function getPoolServerSideRelativePath(string $subDir = ''): string
     {
@@ -1135,7 +1024,6 @@ class Weblication extends Component
      *   application.translator Instance of Translator
      *   application.translatorResource Instance of TranslationProviderFactory
      *   application.translatorResourceDir Directory where translation files are stored
-     * @return static
      * @throws Exception
      */
     public function setup(array $settings = []): static
@@ -1147,8 +1035,6 @@ class Weblication extends Component
 
     /**
      * Initializes the settings of the application.
-     *
-     * @param array $settings
      */
     protected function initializeSettings(array $settings): void
     {
@@ -1189,7 +1075,6 @@ class Weblication extends Component
      * @param bool $useOnlyCookies Verwende nur Cookies (Default: 0)
      * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
      * @param string $sessionClassName default is session class
-     * @return static
      * @throws SessionDisabledException
      * @throws RuntimeException
      */
@@ -1236,9 +1121,6 @@ class Weblication extends Component
 
     /**
      * Set page title
-     *
-     * @param string $title
-     * @return static
      */
     public function setTitle(string $title): static
     {
@@ -1248,8 +1130,6 @@ class Weblication extends Component
 
     /**
      * Returns page title
-     *
-     * @return string
      */
     public function getTitle(): string
     {
@@ -1258,8 +1138,6 @@ class Weblication extends Component
 
     /**
      * Returns requested ajax module
-     *
-     * @return string
      */
     public static function getRequestedAjaxModule(): string
     {
@@ -1268,8 +1146,6 @@ class Weblication extends Component
 
     /**
      * Return requested ajax method
-     *
-     * @return string
      */
     public static function getRequestedAjaxMethod(): string
     {
@@ -1277,10 +1153,7 @@ class Weblication extends Component
     }
 
     /**
-     * set locale (the POOL is independent of the system locale, e.g. php's setlocale).
-     *
-     * @param string $locale
-     * @return static
+     * Set locale (the POOL is independent of the system locale, e.g. php's setlocale).
      */
     public function setLocale(string $locale): static
     {
@@ -1299,8 +1172,6 @@ class Weblication extends Component
     /**
      * Returns the determined locale (of the browser) if it has not been overwritten. Format: [language[_region][.charset][@modifier]]
      *
-     * @param int $type
-     * @return string
      * @see Weblication::setLocale()
      * @see Translator::getPrimaryLocale()
      */
@@ -1335,7 +1206,6 @@ class Weblication extends Component
      * Sets the language for the Page. It's used for html templates and images
      *
      * @param string $lang Country Code
-     * @return static
      */
     public function setLanguage(string $lang): static
     {
@@ -1358,8 +1228,6 @@ class Weblication extends Component
 
     /**
      * Returns cookie for this application
-     *
-     * @return Cookie
      */
     public function getCookie(): Cookie
     {
@@ -1369,10 +1237,6 @@ class Weblication extends Component
         return $this->Cookie;
     }
 
-    /**
-     * @param string $launchModule
-     * @return static
-     */
     public function setLaunchModule(string $launchModule): static
     {
         $this->launchModule = $launchModule;
@@ -1381,8 +1245,6 @@ class Weblication extends Component
 
     /**
      * Returns module that should be launched
-     *
-     * @return string
      */
     public function getLaunchModule(): string
     {
@@ -1392,15 +1254,13 @@ class Weblication extends Component
     /**
      * Render application
      *
-     * @return static
      * @throws ModulNotFoundException
      * @throws Exception
      */
     public function render(): static
     {
         if ($this->run($this->getLaunchModule())) {
-            $this->prepareContent();
-            echo $this->finalizeContent();
+            echo $this->Main->render();
         }
 
         $measurePageSpeed = IS_DEVELOP || ((int)($_REQUEST['measurePageSpeed'] ?? 0));
@@ -1414,7 +1274,6 @@ class Weblication extends Component
      * Creates the first GUI_Module in the chain (the page title is filled with the project name).
      *
      * @param string $className GUI_Module (Standard-Wert: GUI_CustomFrame)
-     * @return static
      * @throws ModulNotFoundException|Exception
      */
     public function run(string $className = GUI_CustomFrame::class): static
@@ -1442,6 +1301,7 @@ class Weblication extends Component
 
     /**
      * Main logic of the front controller. compile main content.
+     * @deprecated
      */
     protected function prepareContent(): void
     {
@@ -1465,7 +1325,6 @@ class Weblication extends Component
     /**
      * Creates an array with given default values / structure for ajax results
      *
-     * @param ...$result
      * @return mixed
      * @deprecated
      */
@@ -1487,7 +1346,6 @@ class Weblication extends Component
     /**
      * Creates an array with references to the variadic default values for ajax results
      *
-     * @param mixed ...$defaults
      * @return mixed
      */
     public static function &makeResultArray(...$defaults): array
@@ -1502,17 +1360,12 @@ class Weblication extends Component
 
     /**
      * Returns the current timezone
-     *
-     * @return string
      */
     public function getTimezone(): string
     {
         return date_default_timezone_get();
     }
 
-    /**
-     * @return bool
-     */
     public function isXdebugEnabled(): bool
     {
         if ($this->xdebug === null) {
@@ -1524,7 +1377,6 @@ class Weblication extends Component
     /**
      * Measure page speed and print it in the footer
      *
-     * @return void
      * @todo ajax requests?
      */
     public function measurePageSpeed(): void
@@ -1551,11 +1403,6 @@ class Weblication extends Component
 
     /**
      * Terminates Ajax requests with a caller-defined error
-     *
-     * @param $messageKey
-     * @param $defaultMessage
-     * @param $response_code
-     * @param $errorType
      */
     public function denyAJAX_Request($messageKey, $defaultMessage, $response_code, $errorType): void
     {
@@ -1573,9 +1420,6 @@ class Weblication extends Component
         }
     }
 
-    /**
-     * @return void
-     */
     public function logout(): void
     {
         // reset the session
@@ -1587,8 +1431,6 @@ class Weblication extends Component
     /**
      * Setup AppTranslator and TemplateTranslator
      *
-     * @param array $settings
-     * @return static
      * @throws Exception
      */
     public function setupTranslator(array $settings): static
