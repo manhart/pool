@@ -531,12 +531,46 @@ function getClientIP(): string
             'HTTP_X_FORWARDED',
             'HTTP_X_CLUSTER_CLIENT_IP',
             'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',
+            'HTTP_FORWARDED',//
             'REMOTE_ADDR',
         ] as $key
     ) {
-        if (array_key_exists($key, $_SERVER) === true) {
-            foreach (explode(',', $_SERVER[$key]) as $ip) {
+        if(!isset($_SERVER[$key])) {
+            continue;
+        }
+
+        $value = $_SERVER[$key];
+
+        // Check if RFC 7239 Forwarded header is present
+        if ($key === 'HTTP_FORWARDED') {
+            // Forwarded: for=192.0.2.43, for=198.51.100.17 or for=2001:db8::1 or for="[2001:db8::1]:4711"
+            $entries = explode(',', $value);
+            foreach ($entries as $entry) {
+                if (preg_match('/for="?([^";]+)"?/i', $entry, $match)) {
+                    $raw = trim($match[1]);
+
+                    // IPv6 in [] + optional port e.g. [2001:db8::1]:4711
+                    if (preg_match('/^\[([a-f0-9:]+)\](?::\d+)?$/i', $raw, $ipMatch)) {
+                        $ip = $ipMatch[1];
+                    }
+                    // IPv4 + optional port e.g. 192.168.1.1:12345
+                    elseif (preg_match('/^([0-9.]+)(?::\d+)?$/', $raw, $ipMatch)) {
+                        $ip = $ipMatch[1];
+                    }
+                    // fallback: raw IP without port
+                    else {
+                        $ip = $raw;
+                    }
+
+                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                        return $ip;
+                    }
+                }
+            }
+        }
+        else {
+            foreach (explode(',', $value) as $ip) {
+                $ip = trim($ip);
                 if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
                     return $ip;
                 }
