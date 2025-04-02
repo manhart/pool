@@ -52,12 +52,12 @@ function decbin32($dec)
 // The function will return true if the supplied IP is within the range.
 // Note little validation is done on the range inputs - it expects you to
 // use one of the above 3 formats.
-function ipv4_in_range($ip, $range)
+function ipv4_in_range(string $ip, string $range): bool
 {
-    if (strpos($range, '/') !== false) {
+    if (str_contains($range, '/')) {
         // $range is in IP/NETMASK format
         [$range, $netmask] = explode('/', $range, 2);
-        if (strpos($netmask, '.') !== false) {
+        if (str_contains($netmask, '.')) {
             // $netmask is a 255.255.0.0 format
             $netmask = str_replace('*', '0', $netmask);
             $netmask_dec = ip2long($netmask);
@@ -85,14 +85,14 @@ function ipv4_in_range($ip, $range)
         }
     } else {
         // range might be 255.255.*.* or 1.2.3.0-1.2.3.255
-        if (strpos($range, '*') !== false) { // a.b.*.* format
+        if (str_contains($range, '*')) { // a.b.*.* format
             // Just convert to A-B format by setting * to 0 for A and 255 for B
             $lower = str_replace('*', '0', $range);
             $upper = str_replace('*', '255', $range);
             $range = "$lower-$upper";
         }
 
-        if (strpos($range, '-') !== false) { // A-B format
+        if (str_contains($range, '-')) { // A-B format
             [$lower, $upper] = explode('-', $range, 2);
             $lower_dec = (float)sprintf("%u", ip2long($lower));
             $upper_dec = (float)sprintf("%u", ip2long($upper));
