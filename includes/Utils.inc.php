@@ -39,7 +39,6 @@ function getMicroTime(int $seed = 1): float
  *
  * @param mixed $data Variable jeden Datentyps
  * @param boolean $functions Zeige Funktionsnamen der Objekte (Standard = 0)
- * @return string
  */
 function pray(mixed $data, bool $functions = false): string
 {
@@ -273,8 +272,6 @@ function removeBeginningSlash(string $value): string
 /**
  * Creates directories recursively e.g. /var/log/prog/main/ups.log if prog and main don't exist, they are created.
  *
- * @param string $strPath
- * @param integer $mode
  * @return boolean success
  */
 function mkdirs(string $strPath, int $mode = 0777): bool
@@ -430,10 +427,7 @@ function shorten(string $str = '', int $len = 150, string|int $more = 1, bool $b
 
 /**
  * Entfernt leere Zeilen. Z.B. $lines = array_filter($lines, 'removeEmptyLines');
- *
- * @param string $line Wert
- * @return boolean
- **/
+ */
 function removeEmptyLines(string $line): bool
 {
     return trim($line) !== '';
@@ -452,7 +446,7 @@ function formatDateTime(int|string $datetime, string $format): string
 }
 
 /**
- * replaces the html tag <br> by a new line
+ * Replaces the html tag <br> by a new line
  *
  * @param string $subject text
  * @return string replaced text
@@ -465,10 +459,7 @@ function br2nl(string $subject): string
 /**
  * strips body from html page.
  * html, head and body tags will be dropped.
- *
- * @param string $file_content Datei
- * @return string Datei ohne Html, Head und Body Tags
- **/
+ */
 function strip_body(string $file_content): string
 {
     $body = '';
@@ -492,37 +483,44 @@ function strip_head(string $html): string
     return $head;
 }
 
-/**
- * Liefert den verwendeten Browser des Clients
- *
- * @return array Browser und Version
- */
-function getClientBrowser(): array
+function parseForwardedHeader(string $header): ?string
 {
-    $userAgent = $_SERVER['HTTP_USER_AGENT'];
-    if (($pos = strpos($userAgent, 'MSIE')) !== false) {
-        [$version] = sscanf(substr($userAgent, $pos), 'MSIE %f; ');
-        $browser = 'IE';
-    } elseif (strpos($userAgent, 'Opera')) {
-        $browser = 'Opera';
-    } elseif (strpos($userAgent, 'Mozilla/([0-9].[0-9]{1,2})')) {
-        $browser = 'Mozilla';
-    } else {
-        $browser = 'Other';
-    }
+    foreach (explode(',', $header) as $segment) {
+        $segment = trim($segment);
+        foreach (explode(';', $segment) as $kv) {
+            [$key, $val] = array_map('trim', explode('=', $kv, 2) + [1 => '']);
+            if (strtolower($key) === 'for') {
+                $val = trim($val, '"');
 
-    return [
-        'name' => $browser,
-        'version' => $version,
-    ];
+                // IPv6 with brackets + port → e.g. [2001:db8::1]:4711
+                if (str_starts_with($val, '[')) {
+                    $closing = strpos($val, ']');
+                    if ($closing !== false) {
+                        $ip = substr($val, 1, $closing - 1);
+                    } else {
+                        $ip = $val; // fallback
+                    }
+                } else {
+                    // remove optional port from IPv4 or unbracketed IPv6
+                    $colon = strpos($val, ':');
+                    $ip = $colon !== false ? substr($val, 0, $colon) : $val;
+                }
+
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+    }
+    return null;
 }
 
 /**
- * Liefert die IP des Clients (kann jedoch durch proxy oder anonymizer verfaelscht werden)
+ * Delivers the client's IP
  *
- * @return string Remote/Client IP Adresse
- **/
-function getClientIP(): string
+ * @return string|null Remote/Client IP Adresse
+ */
+function getClientIP(): ?string
 {
     foreach (
         [
@@ -531,53 +529,37 @@ function getClientIP(): string
             'HTTP_X_FORWARDED',
             'HTTP_X_CLUSTER_CLIENT_IP',
             'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',//
+            'HTTP_FORWARDED',// RFC 7239
             'REMOTE_ADDR',
         ] as $key
     ) {
-        if(!isset($_SERVER[$key])) {
+        if(empty($_SERVER[$key])) {
             continue;
         }
 
-        $value = $_SERVER[$key];
+        $raw = $_SERVER[$key];
 
         // Check if RFC 7239 Forwarded header is present
         if ($key === 'HTTP_FORWARDED') {
             // Forwarded: for=192.0.2.43, for=198.51.100.17 or for=2001:db8::1 or for="[2001:db8::1]:4711"
-            $entries = explode(',', $value);
-            foreach ($entries as $entry) {
-                if (preg_match('/for="?([^";]+)"?/i', $entry, $match)) {
-                    $raw = trim($match[1]);
-
-                    // IPv6 in [] + optional port e.g. [2001:db8::1]:4711
-                    if (preg_match('/^\[([a-f0-9:]+)\](?::\d+)?$/i', $raw, $ipMatch)) {
-                        $ip = $ipMatch[1];
-                    }
-                    // IPv4 + optional port e.g. 192.168.1.1:12345
-                    elseif (preg_match('/^([0-9.]+)(?::\d+)?$/', $raw, $ipMatch)) {
-                        $ip = $ipMatch[1];
-                    }
-                    // fallback: raw IP without port
-                    else {
-                        $ip = $raw;
-                    }
-
-                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                        return $ip;
-                    }
-                }
+            $ip = parseForwardedHeader($raw);
+            if ($ip !== null) {
+                return $ip;
             }
         }
         else {
-            foreach (explode(',', $value) as $ip) {
-                $ip = trim($ip);
+            foreach (explode(',', $raw) as $entry) {
+                $ip = trim($entry);
+                if (str_contains($ip, ':')) {
+                    $ip = explode(':', $ip)[0]; // strip port
+                }
                 if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
                     return $ip;
                 }
             }
         }
     }
-    return '';
+    return null;
 }
 
 /**
@@ -585,7 +567,7 @@ function getClientIP(): string
  */
 function getBrowserFingerprint(bool $withClientIP = true): string
 {
-    $data = ($withClientIP ? getClientIp() : '');
+    $data = ($withClientIP ? getClientIP() : '');
     $data .= $_SERVER['HTTP_USER_AGENT'];
     $data .= $_SERVER['HTTP_ACCEPT'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
@@ -598,7 +580,6 @@ function getBrowserFingerprint(bool $withClientIP = true): string
  * Holt sich den Inhalt von PHP Skripten und gibt ihn per return Wert zurueck.
  *
  * @param string $includeFile Absoluter Dateipfad
- * @return string
  */
 function getContentFromPHPFile(string $includeFile): string
 {
@@ -614,7 +595,6 @@ function getContentFromPHPFile(string $includeFile): string
  * Wandelt ein Array in das HTML Attribute Format um: name="Manhart" vorname="Alexander"
  *
  * @param array $array Array
- * @return string
  */
 function arrayToAttr(array $array): string
 {
@@ -660,8 +640,6 @@ function identity(mixed $var): mixed
  *
  * @see https://stackoverflow.com/questions/2021624/string-sanitizer-for-filename
  * @param string $filename $file without path
- * @param bool $lowerCase
- * @return string
  */
 function sanitizeFilename(string $filename, bool $lowerCase = true): string
 {
