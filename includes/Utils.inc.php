@@ -39,7 +39,6 @@ function getMicroTime(int $seed = 1): float
  *
  * @param mixed $data Variable jeden Datentyps
  * @param boolean $functions Zeige Funktionsnamen der Objekte (Standard = 0)
- * @return string
  */
 function pray(mixed $data, bool $functions = false): string
 {
@@ -128,6 +127,7 @@ function abbreviateNumber(int $number, int $decimals = 2, string $decimal_separa
  *
  * @param string $value The storage unit string (e.g., '10MB', '5GB') to convert.
  * @return int The byte value equivalent of the provided storage unit string.
+ * @noinspection PhpMissingBreakStatementInspection
  */
 function storageUnitToBytes(string $value): int
 {
@@ -273,8 +273,6 @@ function removeBeginningSlash(string $value): string
 /**
  * Creates directories recursively e.g. /var/log/prog/main/ups.log if prog and main don't exist, they are created.
  *
- * @param string $strPath
- * @param integer $mode
  * @return boolean success
  */
 function mkdirs(string $strPath, int $mode = 0777): bool
@@ -430,10 +428,7 @@ function shorten(string $str = '', int $len = 150, string|int $more = 1, bool $b
 
 /**
  * Entfernt leere Zeilen. Z.B. $lines = array_filter($lines, 'removeEmptyLines');
- *
- * @param string $line Wert
- * @return boolean
- **/
+ */
 function removeEmptyLines(string $line): bool
 {
     return trim($line) !== '';
@@ -452,7 +447,7 @@ function formatDateTime(int|string $datetime, string $format): string
 }
 
 /**
- * replaces the html tag <br> by a new line
+ * Replaces the html tag <br> by a new line
  *
  * @param string $subject text
  * @return string replaced text
@@ -465,18 +460,10 @@ function br2nl(string $subject): string
 /**
  * strips body from html page.
  * html, head and body tags will be dropped.
- *
- * @param string $file_content Datei
- * @return string Datei ohne Html, Head und Body Tags
- **/
+ */
 function strip_body(string $file_content): string
 {
-    $body = '';
-    if (preg_match('#<body[^>]*?>(.*?)</body>#si', $file_content, $matches)) {
-        $body = $matches[1];
-    }
-
-    return $body;
+    return preg_match('#<body[^>]*?>(.*?)</body>#si', $file_content, $matches) ? $matches[1] : '';
 }
 
 /**
@@ -484,45 +471,47 @@ function strip_body(string $file_content): string
  */
 function strip_head(string $html): string
 {
-    $head = '';
-    if (preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches)) {
-        $head = $matches[1];
-    }
-
-    return $head;
+    return preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches) ? $matches[1] : '';
 }
 
-/**
- * Liefert den verwendeten Browser des Clients
- *
- * @return array Browser und Version
- */
-function getClientBrowser(): array
+function parseForwardedHeader(string $header): ?string
 {
-    $userAgent = $_SERVER['HTTP_USER_AGENT'];
-    if (($pos = strpos($userAgent, 'MSIE')) !== false) {
-        [$version] = sscanf(substr($userAgent, $pos), 'MSIE %f; ');
-        $browser = 'IE';
-    } elseif (strpos($userAgent, 'Opera')) {
-        $browser = 'Opera';
-    } elseif (strpos($userAgent, 'Mozilla/([0-9].[0-9]{1,2})')) {
-        $browser = 'Mozilla';
-    } else {
-        $browser = 'Other';
-    }
+    foreach (explode(',', $header) as $segment) {
+        $segment = trim($segment);
+        foreach (explode(';', $segment) as $kv) {
+            [$key, $val] = array_map('trim', explode('=', $kv, 2) + [1 => '']);
+            if (strtolower($key) === 'for') {
+                $val = trim($val, '"');
 
-    return [
-        'name' => $browser,
-        'version' => $version,
-    ];
+                // IPv6 with brackets + port → e.g. [2001:db8::1]:4711
+                if (str_starts_with($val, '[')) {
+                    $closing = strpos($val, ']');
+                    if ($closing !== false) {
+                        $ip = substr($val, 1, $closing - 1);
+                    } else {
+                        $ip = $val; // fallback
+                    }
+                } else {
+                    // remove optional port from IPv4 or unbracketed IPv6
+                    $colon = strpos($val, ':');
+                    $ip = $colon !== false ? substr($val, 0, $colon) : $val;
+                }
+
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+    }
+    return null;
 }
 
 /**
- * Liefert die IP des Clients (kann jedoch durch proxy oder anonymizer verfaelscht werden)
+ * Delivers the client's IP
  *
- * @return string Remote/Client IP Adresse
- **/
-function getClientIP(): string
+ * @return string|null Remote/Client IP Adresse
+ */
+function getClientIP(): ?string
 {
     foreach (
         [
@@ -531,19 +520,37 @@ function getClientIP(): string
             'HTTP_X_FORWARDED',
             'HTTP_X_CLUSTER_CLIENT_IP',
             'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',
+            'HTTP_FORWARDED',// RFC 7239
             'REMOTE_ADDR',
         ] as $key
     ) {
-        if (array_key_exists($key, $_SERVER) === true) {
-            foreach (explode(',', $_SERVER[$key]) as $ip) {
+        if(empty($_SERVER[$key])) {
+            continue;
+        }
+
+        $raw = $_SERVER[$key];
+
+        // Check if RFC 7239 Forwarded header is present
+        if ($key === 'HTTP_FORWARDED') {
+            // Forwarded: for=192.0.2.43, for=198.51.100.17 or for=2001:db8::1 or for="[2001:db8::1]:4711"
+            $ip = parseForwardedHeader($raw);
+            if ($ip !== null) {
+                return $ip;
+            }
+        }
+        else {
+            foreach (explode(',', $raw) as $entry) {
+                $ip = trim($entry);
+                if (str_contains($ip, ':')) {
+                    $ip = explode(':', $ip)[0]; // strip port
+                }
                 if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
                     return $ip;
                 }
             }
         }
     }
-    return '';
+    return null;
 }
 
 /**
@@ -551,7 +558,7 @@ function getClientIP(): string
  */
 function getBrowserFingerprint(bool $withClientIP = true): string
 {
-    $data = ($withClientIP ? getClientIp() : '');
+    $data = ($withClientIP ? getClientIP() : '');
     $data .= $_SERVER['HTTP_USER_AGENT'];
     $data .= $_SERVER['HTTP_ACCEPT'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
@@ -564,7 +571,6 @@ function getBrowserFingerprint(bool $withClientIP = true): string
  * Holt sich den Inhalt von PHP Skripten und gibt ihn per return Wert zurueck.
  *
  * @param string $includeFile Absoluter Dateipfad
- * @return string
  */
 function getContentFromPHPFile(string $includeFile): string
 {
@@ -580,7 +586,6 @@ function getContentFromPHPFile(string $includeFile): string
  * Wandelt ein Array in das HTML Attribute Format um: name="Manhart" vorname="Alexander"
  *
  * @param array $array Array
- * @return string
  */
 function arrayToAttr(array $array): string
 {
@@ -626,19 +631,17 @@ function identity(mixed $var): mixed
  *
  * @see https://stackoverflow.com/questions/2021624/string-sanitizer-for-filename
  * @param string $filename $file without path
- * @param bool $lowerCase
- * @return string
  */
 function sanitizeFilename(string $filename, bool $lowerCase = true): string
 {
     $filename = umlauts($filename);
-    $pattern = '/[^a-z0-9\-\. _]+/';
+    $pattern = '/[^a-z0-9\-. _]+/';
 
     // lowercase for windows/unix interoperability http://support.microsoft.com/kb/100625
     if ($lowerCase) {
         $filename = mb_strtolower($filename, mb_detect_encoding($filename));
     } else {
-        $pattern = '/[^a-zA-Z0-9\-\. _]+/';
+        $pattern = '/[^a-zA-Z0-9\-. _]+/';
     }
     $filename = preg_replace($pattern, '-', $filename);
     $filename = preg_replace(
@@ -857,58 +860,6 @@ function hyphenation(string $word): array
     }
 
     return $hyphenationPositions;
-}
-
-/**
- * HTTP Protocol defined status codes
- *
- * @param int $num
- */
-function setHttpResponseCode(int $num): void
-{
-    static $http = [
-        100 => "HTTP/1.1 100 Continue",
-        101 => "HTTP/1.1 101 Switching Protocols",
-        200 => "HTTP/1.1 200 OK",
-        201 => "HTTP/1.1 201 Created",
-        202 => "HTTP/1.1 202 Accepted",
-        203 => "HTTP/1.1 203 Non-Authoritative Information",
-        204 => "HTTP/1.1 204 No Content",
-        205 => "HTTP/1.1 205 Reset Content",
-        206 => "HTTP/1.1 206 Partial Content",
-        300 => "HTTP/1.1 300 Multiple Choices",
-        301 => "HTTP/1.1 301 Moved Permanently",
-        302 => "HTTP/1.1 302 Found",
-        303 => "HTTP/1.1 303 See Other",
-        304 => "HTTP/1.1 304 Not Modified",
-        305 => "HTTP/1.1 305 Use Proxy",
-        307 => "HTTP/1.1 307 Temporary Redirect",
-        400 => "HTTP/1.1 400 Bad Request",
-        401 => "HTTP/1.1 401 Unauthorized",
-        402 => "HTTP/1.1 402 Payment Required",
-        403 => "HTTP/1.1 403 Forbidden",
-        404 => "HTTP/1.1 404 Not Found",
-        405 => "HTTP/1.1 405 Method Not Allowed",
-        406 => "HTTP/1.1 406 Not Acceptable",
-        407 => "HTTP/1.1 407 Proxy Authentication Required",
-        408 => "HTTP/1.1 408 Request Time-out",
-        409 => "HTTP/1.1 409 Conflict",
-        410 => "HTTP/1.1 410 Gone",
-        411 => "HTTP/1.1 411 Length Required",
-        412 => "HTTP/1.1 412 Precondition Failed",
-        413 => "HTTP/1.1 413 Request Entity Too Large",
-        414 => "HTTP/1.1 414 Request-URI Too Large",
-        415 => "HTTP/1.1 415 Unsupported Media Type",
-        416 => "HTTP/1.1 416 Requested range not satisfiable",
-        417 => "HTTP/1.1 417 Expectation Failed",
-        500 => "HTTP/1.1 500 Internal Server Error",
-        501 => "HTTP/1.1 501 Not Implemented",
-        502 => "HTTP/1.1 502 Bad Gateway",
-        503 => "HTTP/1.1 503 Service Unavailable",
-        504 => "HTTP/1.1 504 Gateway Time-out",
-    ];
-
-    header($http[$num]);
 }
 
 /**
@@ -1168,16 +1119,14 @@ function makeRelativePathsFrom(?string $here, string $toThis, string $base = nul
 
 /**
  * Resolves symbolic links into real path.
- *
- * @param string $path
- * @return string
  */
 function getRealFile(string $path): string
 {
     return is_link($path) ? realpath($path) : $path;
 }
 
-/**Determine if a path is absolute
+/**
+ * Determine if a path is absolute
  *
  * @param string $path the path to check
  * @return string|false the absolute prefix e.g. '/' or 'C:\' or 'https://
@@ -1199,7 +1148,6 @@ function isAbsolutePath(string $path): bool|string
  * @param string $dirPattern Verzeichnisfilter
  * @param string $subdir auszulesendes Unterverzeichnis
  * @param Closure|null $callback
- * @return array
  * @throws Exception
  */
 function readFilesRecursive(string $path, bool $absolute = true, string $filePattern = '', string $dirPattern = '/^[^\.].*$/', string $subdir = '', Closure $callback = null): array
@@ -1310,7 +1258,6 @@ function packArray(Closure $closure, ...$namedValues): array
  * @param string $columnName Spaltenname im multidimensionalen Array
  * @param int $sorttype PHP Konstante
  * @param int $sortorder PHP Konstante
- * @return array
  */
 function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_STRING, int $sortorder = SORT_ASC): array
 {
@@ -1329,8 +1276,6 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
 /**
  * Checks if it is an Ajax call (XmlHttpRequest)
  * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
- *
- * @return boolean
  */
 function isAjax(): bool
 {
@@ -1341,8 +1286,6 @@ function isAjax(): bool
  * Umrechnung DTP-Punkt in Millimeter (Desktop-Publishing Wobla);
  *
  * @link http://de.wikipedia.org/wiki/Pica_%28Typografie%29
- * @param float $pt
- * @return float
  */
 function pt2mm(float $pt): float
 {
@@ -1416,8 +1359,6 @@ function legibleColor(string $hexcolor, string $dark = '#000000', string $light 
 
 /**
  * Erzeugt einen zuf�lligen Farbcode
- *
- * @return string
  */
 function randColor(): string
 {
@@ -1435,8 +1376,6 @@ function randColor(): string
 /**
  * Wandelt UTF-8 in RTF Text um
  *
- * @param string $utf8_text
- * @return string
  * @author Kyle Gibson
  * @see http://spin.atomicobject.com/2010/08/25/rendering-utf8-characters-in-rich-text-format-with-php/
  */
@@ -1483,78 +1422,43 @@ function shell_exec_background(string $cmd, array $args = [], int $priority = 0,
 }
 
 /**
- * Prueft, ob der uebergebene Prozess (PID) noch laeuft
- *
- * @param int $PID
- * @return boolean
+ * Checks if a process is running by its PID.
  */
-function is_process_running(int $PID): bool
+function isProcessAlive(int $pid): bool
 {
-    exec('ps '.$PID, $state);
-
-    return (count($state) >= 2);
+    if (!function_exists('posix_kill')) {
+        throw new RuntimeException('POSIX functions not available');
+    }
+    return posix_kill($pid, 0);
 }
 
 /**
- * Berechne Alter
- *
- * @param string $from Datum im englischen Format
- * @param string $to Datum im englischen Format
- * @return int Alter
+ * @throws DateMalformedStringException
  */
-function calcAge(string $from, string $to = 'now'): int
+function getAge(string $birthdate, string $asOf = 'now'): int
 {
-    // funktioniert leider erst ab PHP 5.3
-    //    if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-    //        $age = date_diff(date_create($from), date_create($to))->y;
-    //      funktioniert nicht mit Schaltjahren und to = 2020-02-29
-    //    }
-    //    else {
-    if ($to == 'now') {
-        $to = date('%Y-%m-%d');
+    $fromDate = new DateTime($birthdate);
+    $toDate = new DateTime($asOf);
+    return $fromDate->diff($toDate)->y;
+}
+
+function formatDuration(int $minutes): string
+{
+    $hours = intdiv($minutes, 60);
+    return sprintf('%dh %02dm', $hours, ($minutes % 60));
+}
+
+function format24hTime(int $minutes): string
+{
+    $minutes = $minutes % 1440; // 1440 Minuten pro Tag
+    if ($minutes < 0) {
+        $minutes += 1440;
     }
 
-    $from = strtotime($from); // von (eventl. Geburtsdatum)
-    $to = strtotime($to); // bis
+    $hours = intdiv($minutes, 60);
+    $mins = $minutes % 60;
 
-    $age = (intval(date('Y', $to)) - intval(date('Y', $from)));
-    $from_month = date('m', $from);
-    $to_month = date('m', $to);
-    if ($from_month > $to_month) {
-        $age -= 1;
-    } elseif ($from_month == $to_month) {
-        if (date('d', $from) > date('d', $to)) {
-            $age -= 1;
-        }
-    }
-
-    return $age;
-}
-
-/**
- * Formatiere Minuten um als Stunde-Minuten Text
- *
- * @param int $min Minuten
- * @return string
- */
-function formatStdMin(int $min): string
-{
-    $val = intval($min);
-
-    return floor($val / 60).' Std. '.($val % 60).' Min.';
-}
-
-/**
- * Formatiere Minuten in 24h Format um
- *
- * @param mixed $min
- * @return string
- */
-function format24h($min): string
-{
-    $val = intval($min);
-
-    return str_pad((($val < 0) ? ceil($val / 60) : floor($val / 60)), 2, '0', STR_PAD_LEFT).':'.str_pad((($val % 60) * (($val < 0) ? -1 : 1)), 2, '0', STR_PAD_LEFT);
+    return sprintf('%02d:%02d', $hours, $mins);
 }
 
 /**
@@ -1562,8 +1466,6 @@ function format24h($min): string
  *
  * @param int $bytes Anzahl Zeichen
  * @param int $parts Anzahl Blöcke
- * @param array $options
- * @return string
  */
 function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []): string
 {
@@ -1608,9 +1510,6 @@ function getFieldData($array, $column): array
  * creates path from last alphanumeric characters
  *('abcde', 3) => 'c/d/e/'
  *
- * @param $chars
- * @param int $numberOfDirectories
- * @return string
  */
 function createPathFromLastChars($chars, int $numberOfDirectories = 4): string
 {
@@ -1687,11 +1586,8 @@ function base64url_encode(string $data): string
 /**
  * Pendant to the .NET API HttpServerUtility.UrlTokenDecode.
  * Decodes a base64 URL token back into a string.
- *
- * @param $token
- * @return false|string
  */
-function base64url_decode($token): bool|string
+function base64url_decode($token): string|false
 {
     $length = strlen($token);
     if ($length == 0) return false;
@@ -1704,15 +1600,11 @@ function base64url_decode($token): bool|string
 }
 
 /**
- * determines http status from response headers
+ * Determines http status from response headers
  */
-function getHttpStatusCode(string $responseLine): int
+function getHttpStatusCode(string $responseLine): ?int
 {
-    $httpResponseCode = 0;
-    if (preg_match("#HTTP/[0-9\.]+\s+([0-9]+)#", $responseLine, $out)) {
-        $httpResponseCode = intval($out[1]);
-    }
-    return $httpResponseCode;
+    return preg_match("#HTTP/\d(?:\.\d)?\s+(\d{3,})#", $responseLine, $matches) ? (int)($matches[1]) : null;
 }
 
 /**
@@ -1751,9 +1643,6 @@ function preg_last_error_message(int $lastErrorCode): string
 
 /**
  * Simple test if string is HTML
- *
- * @param string $string
- * @return bool
  */
 function isHTML(string $string): bool
 {
@@ -1778,7 +1667,6 @@ function isValidJSON(string $string): bool
  * @param string $string text
  * @param bool $capitalizeFirstCharacter default false
  * @param string $separator default dash
- * @return string
  */
 function camelize(string $string, bool $capitalizeFirstCharacter = false, string $separator = '-'): string
 {
@@ -1927,10 +1815,6 @@ function umlauts(string $string, bool $reverse = false): string
 
 /**
  * Check if a process is already running and abort if so. Needs a writable directory for the PID file.
- *
- * @param string $pidDir
- * @param string $jobName
- * @return void
  */
 function checkRunningProcess(string $pidDir, string $jobName): void
 {
@@ -1961,11 +1845,6 @@ function checkRunningProcess(string $pidDir, string $jobName): void
 
 /**
  * Determine whether a string contains substrings from an array
- *
- * @param string $haystack
- * @param array $needles
- * @param bool $case_sensitive
- * @return bool
  */
 function str_contains_any(string $haystack, array $needles, bool $case_sensitive = true): bool
 {
