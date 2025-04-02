@@ -1716,15 +1716,11 @@ function base64url_decode($token): bool|string
 }
 
 /**
- * determines http status from response headers
+ * Determines http status from response headers
  */
-function getHttpStatusCode(string $responseLine): int
+function getHttpStatusCode(string $responseLine): ?int
 {
-    $httpResponseCode = 0;
-    if (preg_match("#HTTP/[0-9\.]+\s+([0-9]+)#", $responseLine, $out)) {
-        $httpResponseCode = intval($out[1]);
-    }
-    return $httpResponseCode;
+    return preg_match("#HTTP/\d(?:\.\d)?\s+(\d{3,})#", $responseLine, $matches) ? (int)($matches[1]) : null;
 }
 
 /**
