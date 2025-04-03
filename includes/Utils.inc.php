@@ -558,7 +558,7 @@ function getClientIP(): ?string
  */
 function getBrowserFingerprint(bool $withClientIP = true): string
 {
-    $data = ($withClientIP ? getClientIP() : '');
+    $data = $withClientIP && ($clientIP = getClientIP()) ? $clientIP : '';
     $data .= $_SERVER['HTTP_USER_AGENT'];
     $data .= $_SERVER['HTTP_ACCEPT'] ?? '';
     $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
