@@ -58,7 +58,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     /**
      * @var array the valid schemes
      */
-    public const VALID_SCHEMES = [
+    public const array VALID_SCHEMES = [
         'http',
         'https',
         'ftp',
@@ -71,7 +71,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     /**
      * @var array the default ports for the schemes
      */
-    public const PORTS = [
+    public const array PORTS = [
         'http' => 80,
         'https' => 443,
         'ftp' => 21,
@@ -207,7 +207,6 @@ class Url extends PoolObject implements Stringable, JsonSerializable
      * Retrieve the scheme component of the URI
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.1
-     * @return string
      */
     public function getScheme(): string
     {
@@ -513,18 +512,13 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     }
 
     /**
-     * transform the url to a string
-     *
-     * @return string
+     * Transform the url to a string
      */
     public function __toString(): string
     {
         return $this->getUrl();
     }
 
-    /**
-     * @return never
-     */
     #[NoReturn]
     public function reload(): never
     {
@@ -532,11 +526,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     }
 
     /**
-     * redirect to the current url
-     *
-     * @param bool $replace
-     * @param int $http_response_code
-     * @return never
+     * Redirect to the current url
      */
     #[NoReturn]
     public function redirect(bool $replace = true, int $http_response_code = 302): never
@@ -556,6 +546,14 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     public function jsonSerialize(): string
     {
         return $this->getUrl();
+    }
+
+    /**
+     * Check if the given string is a valid URL
+     */
+    public static function isUrl(string $url): bool
+    {
+        return filter_var($url, FILTER_VALIDATE_URL) !== false;
     }
 }
 
