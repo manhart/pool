@@ -17,15 +17,15 @@ use const STR_PAD_LEFT;
 
 final class Date
 {
-    public static function hasChanged(?string $new, ?string $existing): bool
+    public static function hasChanged(string|\DateTimeInterface|null $new, string|\DateTimeInterface|null $existing): bool
     {
         if (!$new || !$existing) {
             return true;
         }
 
         try {
-            $newDateRaw = $new;
-            $existingDateRaw = $existing;
+            $newDateRaw = $new instanceof \DateTimeInterface ? $new->format(\DateTimeInterface::ATOM) : $new;
+            $existingDateRaw = $existing instanceof \DateTimeInterface ? $existing->format(\DateTimeInterface::ATOM) : $existing;
 
             $newDate = new \DateTimeImmutable($newDateRaw);
             $existingDate = new \DateTimeImmutable($existingDateRaw);
