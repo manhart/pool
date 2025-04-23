@@ -99,7 +99,7 @@ class Translator
     /**
      * @param TranslationProviderFactory|null $translationResource
      */
-    public function __construct(TranslationProviderFactory $translationResource = null)
+    public function __construct(?TranslationProviderFactory $translationResource = null)
     {
         if ($translationResource)
             $this->addTranslationResource($translationResource);

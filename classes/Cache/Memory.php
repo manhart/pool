@@ -49,12 +49,12 @@ class Memory extends Memcached
         $this->defaultExpiration = $expiration;
     }
 
-    public function setValue(string $key, $value, int $expiration = null): bool
+    public function setValue(string $key, $value, ?int $expiration = null): bool
     {
         return $this->set($key, $value, $expiration ?? $this->defaultExpiration);
     }
 
-    public function getValue(string $key, callable $cache_cb = null, int $flags = 0): mixed
+    public function getValue(string $key, ?callable $cache_cb = null, int $flags = 0): mixed
     {
         return ($value = $this->get($key, $cache_cb, $flags)) === false && !$this->lastKeyExists() ? null : $value;
     }

@@ -24,6 +24,7 @@ use pool\classes\Core\Weblication;
 use pool\classes\Exception\FileNotFoundException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\GUI\GUI_Module;
+
 use const pool\NAMESPACE_SEPARATOR;
 
 /**
@@ -375,7 +376,7 @@ class GUI_HeadData extends GUI_Module
      * @param string|null $jsClassName if null, the Module's class name is used
      * @return GUI_HeadData
      */
-    public function setClientData(Module $Module, ?array $initOptions = null, string $jsClassName = null): self
+    public function setClientData(Module $Module, ?array $initOptions = null, ?string $jsClassName = null): self
     {
         $clientData =& $this->clientData[$Module->getName()];
         $clientData ??= [

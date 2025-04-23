@@ -262,7 +262,7 @@ class DataInterface extends PoolObject
     /**
      * When using clusters moves random hosts from $this->available_hosts to $this->hosts
      */
-    protected function findHostForConnection(ConnectionMode $connectionMode = null): int
+    protected function findHostForConnection(?ConnectionMode $connectionMode = null): int
     {
         $available_hosts =& $this->available_hosts;
         $alternativeHosts = 0;

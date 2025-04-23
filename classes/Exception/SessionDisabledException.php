@@ -18,7 +18,7 @@ use Throwable;
  */
 class SessionDisabledException extends PhpRuntimeException implements PoolExceptionInterface
 {
-    public function __construct(string $message = 'Session is disabled', int $code = 0, Throwable $previous = null)
+    public function __construct(string $message = 'Session is disabled', int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

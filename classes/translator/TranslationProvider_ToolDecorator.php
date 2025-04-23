@@ -115,7 +115,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     /**
      * @throws Exception
      */
-    public static function writePostbox(string $id = null): void
+    public static function writePostbox(?string $id = null): void
     {
         $file = self::getPostboxPath($id);
         file_put_contents($file, '<?php return '.var_export(self::$postbox, true).';?>');
@@ -124,7 +124,7 @@ class TranslationProvider_ToolDecorator extends TranslationProvider_BaseDecorato
     /**
      * @throws Exception
      */
-    public static function readPostbox(string $id = null): void
+    public static function readPostbox(?string $id = null): void
     {
         sleep(1);//wait for PHP to realize that the OP-Cache is outdated
 

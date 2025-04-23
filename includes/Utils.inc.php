@@ -1010,7 +1010,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
  * @param string $separator directory separator defaults to /
  * @return string|false the calculated vector or false if normalization fails
  */
-function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, string $base = null, string $separator = '/'): bool|string
+function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, ?string $base = null, string $separator = '/'): bool|string
 {
     $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
     $base ??= $browserPath;
@@ -1062,7 +1062,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
  * @param string $separator The directory separator to use (optional, defaults to DIRECTORY_SEPARATOR).
  * @return array An array containing the serverside and clientside relative paths.
  */
-function makeRelativePathsFrom(?string $here, string $toThis, string $base = null, string $separator = DIRECTORY_SEPARATOR): array
+function makeRelativePathsFrom(?string $here, string $toThis, ?string $base = null, string $separator = DIRECTORY_SEPARATOR): array
 {
     $base ??= $_SERVER['DOCUMENT_ROOT'];
     $here ??= dirname($_SERVER['SCRIPT_FILENAME']);
@@ -1147,10 +1147,9 @@ function isAbsolutePath(string $path): bool|string
  * @param string $filePattern Dateifilter
  * @param string $dirPattern Verzeichnisfilter
  * @param string $subdir auszulesendes Unterverzeichnis
- * @param Closure|null $callback
  * @throws Exception
  */
-function readFilesRecursive(string $path, bool $absolute = true, string $filePattern = '', string $dirPattern = '/^[^\.].*$/', string $subdir = '', Closure $callback = null): array
+function readFilesRecursive(string $path, bool $absolute = true, string $filePattern = '', string $dirPattern = '/^[^\.].*$/', string $subdir = '', ?Closure $callback = null): array
 {
     $files = [];
 
@@ -1870,7 +1869,7 @@ function curry(Closure $closure, ...$args): Closure
     return fn(...$more) => $closure(...$args, ...$more);
 }
 
-function containThrowable(Closure $closure, Closure $fallbackHandler = null): Closure
+function containThrowable(Closure $closure, ?Closure $fallbackHandler = null): Closure
 {
     return function (...$args) use ($closure, $fallbackHandler) {
         try {
