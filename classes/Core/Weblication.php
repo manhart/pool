@@ -691,7 +691,7 @@ class Weblication extends Component
      * @param string $filename wanted image
      * @return string Filename or empty string in case of failure
      */
-    public function findImage(string $filename, string $skin = null): string
+    public function findImage(string $filename, ?string $skin = null): string
     {
         $skinFolder = addEndingSlash($skin ?? $this->skin);
         $language = addEndingSlash($this->language);
@@ -1066,15 +1066,15 @@ class Weblication extends Component
     }
 
     /**
-     * Starts a PHP Session via session_start()!
-     * We use the standard php sessions.
+     * Starts a PHP Session via session_start().
+     * We use standard PHP sessions.
      *
-     * @param string $session_name Name der Session (Default: sid)
-     * @param bool $useTransSID Transparente Session ID (Default: 0)
-     * @param bool $useCookies Verwende Cookies (Default: 1)
-     * @param bool $useOnlyCookies Verwende nur Cookies (Default: 0)
-     * @param boolean $autoClose session will not be kept open during runtime. Each write opens and closes the session. Session is not locked in parallel execution.
-     * @param string $sessionClassName default is session class
+     * @param string $session_name Name of the session (default: WebAppSID)
+     * @param bool $useTransSID Transparent Session ID (default: false)
+     * @param bool $useCookies Use cookies (default: true)
+     * @param bool $useOnlyCookies Use only cookies (default: true) – always enabled from PHP 8.4 for security reasons
+     * @param bool $autoClose If true, session is opened and closed around each write (no locking during runtime)
+     * @param string $sessionClassName Session class to instantiate (must extend base Session class)
      * @throws SessionDisabledException
      * @throws RuntimeException
      */
@@ -1082,7 +1082,7 @@ class Weblication extends Component
         string $session_name = 'WebAppSID',
         bool $useTransSID = false,
         bool $useCookies = true,
-        bool $useOnlyCookies = false,
+        bool $useOnlyCookies = true,
         bool $autoClose = true,
         string $sessionClassName = Session::class,
     ): static {
@@ -1096,10 +1096,12 @@ class Weblication extends Component
                     'session.name' => $session_name,
                     'session.use_trans_sid' => $useTransSID,
                     'session.use_cookies' => $useCookies,
-                    'session.use_only_cookies' => $useOnlyCookies,
+                    'session.use_only_cookies' => (PHP_VERSION_ID < 80400) ? $useOnlyCookies : true,
                 ];
                 foreach ($sessionConfig as $option => $value) {
-                    if (ini_get($option) !== $value) ini_set($option, $value);
+                    $current = ini_get($option);
+                    $expected = is_bool($value) ? ($value ? '1' : '0') : (string)$value;
+                    if ($current !== $expected) ini_set($option, $expected);
                 }
                 break;
 

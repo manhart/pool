@@ -955,7 +955,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
         string $line_break = "\n",
         string $text_clinch = '"',
         bool $formatNumericAsText = false,
-        callable $formatter = null,
+        ?callable $formatter = null,
     ): string {
         if (!$this->count()) {
             return '';
@@ -1092,7 +1092,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      *      showExtendedPagination
      * @return array
      */
-    public function getRecordsAsBSTable(int $total, int $totalNotFiltered = null): array
+    public function getRecordsAsBSTable(int $total, ?int $totalNotFiltered = null): array
     {
         // @todo move into GUI_Table and get Keys from Configuration e.g. https://bootstrap-table.com/docs/api/table-options/#datafield
         return [

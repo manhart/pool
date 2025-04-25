@@ -146,8 +146,11 @@ final class Curl
      *     body: string,
      *     statusCode: int,
      *     contentType: ?string,
+     *     error: ?string,
+     *     errno: ?int
      * }
-     * @throws InvalidArgumentException|\JsonException|RuntimeException
+     * @throws InvalidArgumentException
+     * @throws JsonException
      */
     public static function post(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded', array $headers = []): array
     {
@@ -177,11 +180,11 @@ final class Curl
         $response = curl_exec($curl);
         $httpStatusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-        $error_msg = curl_errno($curl) ? curl_error($curl).' (Error code: '.curl_errno($curl).')' : null;
+        $curl_errno = curl_errno($curl);
+        $error_msg = $curl_errno ? curl_error($curl).' (Error code: '.$curl_errno.')' : null;
         curl_close($curl);
 
-        return !$error_msg ? ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType] :
-            throw new RuntimeException("Error while performing POST request: $error_msg");
+        return ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType, 'error' => $error_msg, 'errno' => $curl_errno];
     }
 
     /**
@@ -191,8 +194,14 @@ final class Curl
      * @param array $queryParams Optional query parameters to append to the URL.
      * @param array $options Additional cURL options to override defaults.
      * @param array $headers Optional headers to include in the request as key-value pairs (merged unless CURLOPT_HTTPHEADER is already set).
-     * @return array{body: string, statusCode: int}
-     * @throws InvalidArgumentException|RuntimeException
+     * @return array{
+     *     body: string,
+     *     statusCode: int,
+     *     contentType: ?string,
+     *     error: ?string,
+     *     errno: ?int
+     * }
+     * @throws InvalidArgumentException
      */
     public static function get(string $url, array $queryParams = [], array $options = [], array $headers = []): array
     {
@@ -219,11 +228,11 @@ final class Curl
         $response = curl_exec($curl);
         $httpStatusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-        $error_msg = curl_errno($curl) ? curl_error($curl).' (Error code: '.curl_errno($curl).')' : null;
+        $curl_errno = curl_errno($curl);
+        $error_msg = $curl_errno ? curl_error($curl)." (Error code: $curl_errno)" : null;
         curl_close($curl);
 
-        return !$error_msg ? ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType] :
-            throw new RuntimeException("Error while performing GET request: $error_msg");
+        return ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType, 'error' => $error_msg, 'errno' => $curl_errno];
     }
 
     /**
@@ -233,8 +242,10 @@ final class Curl
      *     data: array|null,
      *     statusCode: int,
      *     contentType: ?string,
+     *     error: ?string,
+     *     errno: ?int,
      * }
-     * @throws JsonException
+     * @throws InvalidArgumentException|JsonException
      */
     public static function json(string $method, string $url, array $params = [], array $options = [], array $headers = []): array
     {
@@ -248,8 +259,14 @@ final class Curl
             default => throw new InvalidArgumentException("Unsupported HTTP method: $method"),
         };
 
-        $response['data'] = (str_contains($response['contentType'] ?? '', 'application/json') && isValidJSON($response['body'])) ?
-            json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR) : null;
+        try {
+            $response['data'] = (str_contains($response['contentType'] ?? '', 'application/json') && isValidJSON($response['body'])) ?
+                json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR) : null;
+        } catch (JsonException $e) {
+            $response['data'] = null;
+            $response['error'] = "JSON decode error: {$e->getMessage()}";
+            $response['errno'] = $e->getCode();
+        }
 
         return $response;
     }
