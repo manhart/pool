@@ -41,12 +41,19 @@ final class UnoServerConverter
         if (!filter_var($serverUrl, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException("Invalid unoserver URL: $serverUrl");
         }
+        $this->serverUrl = rtrim($serverUrl, '/');
 
-        if(!Curl::isServiceAlive($serverUrl)) {
+        if (!$this->isAlive()) {
             throw new ServiceUnavailableException("Unoserver is not alive at $serverUrl");
         }
+    }
 
-        $this->serverUrl = rtrim($serverUrl, '/');
+    /**
+     * Checks if the unoserver is alive.
+     */
+    public function isAlive(): bool
+    {
+        return Curl::isServiceAlive($this->serverUrl);
     }
 
     /**

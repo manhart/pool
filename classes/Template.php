@@ -814,9 +814,10 @@ class Template extends PoolObject
      * @param string $handle Handle-Name; es kann auch ein Array mit Schluesselname und Wert (= Dateinamen) uebergeben werden.
      * @param string $filename Dateiname
      */
-    public function setFile(string $handle, string $filename = ''): void
+    public function setFile(string $handle, string $filename = ''): static
     {
         $this->addFile($handle, $filename);
+        return $this;
     }
 
     /**

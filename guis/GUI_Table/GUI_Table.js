@@ -1,9 +1,11 @@
 /*
- * POOL
+ * POOL - GUI_Table class for enhanced bootstrap-table integration.
  *
- * table.js created at 08.04.21, 13:17
+ * This class provides a wrapper around Bootstrap Table with POOL-specific
+ * extensions for formatting, event delegation, selection tracking,
+ * and client/server pagination support.
  *
- * @author Alexander Manhart <alexander@manhart-it.de>
+ * GUI_Table.js created at 08.04.21, 13:17
  */
 
 // 09.12.2021, AM, override default filterDatepickerOptions, because the default is undefined
@@ -625,7 +627,7 @@ class GUI_Table extends GUI_Module
      */
     getSelectedUniqueIds()
     {
-        let uniqueId = this.getUniqueId()
+        const uniqueId = this.getUniqueId()
         if(!uniqueId) {
             return [];
         }
@@ -641,18 +643,33 @@ class GUI_Table extends GUI_Module
      */
     getSelectedUniqueId()
     {
-        let uniqueIds = this.getSelectedUniqueIds();
+        const uniqueIds = this.getSelectedUniqueIds();
         return uniqueIds[0] ? uniqueIds[0] : null;
     }
 
     /**
-     * get selected row
+     * Get selected row
      * @return {*|*[]}
      */
     getSelectedRow()
     {
-        let selections = this.getSelections();
+        const selections = this.getSelections();
         return selections[0] ? selections[0] : [];
+    }
+
+    isServerPaginated()
+    {
+        return this.getOption('sidePagination') === 'server';
+    }
+
+    /**
+     * Check if a given row is currently selected
+     * @param {Object} row
+     * @returns {boolean}
+     */
+    isSelected(row)
+    {
+        return !!row.state;
     }
 
     /**
@@ -704,34 +721,55 @@ class GUI_Table extends GUI_Module
     }
 
     /**
-     * check all rows
+     * Check all rows
      */
     checkAll()
     {
-        // console.debug(this.getName()+'.checkAll', this.getOption('pagination'));
-        // if(this.getOption('pagination')) {
-        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('checkAll').bootstrapTable('togglePagination');
-        // } else {
-        // maybe todo serverside?
         this.getTable().bootstrapTable('checkAll');
-        // }
     }
 
     /**
-     * uncheck all rows
+     * Unchecks all rows on the currently visible page.
      */
     uncheckAll()
     {
-        // console.debug(this.getName()+'.uncheckAll', this.getOption('pagination'));
-        // if(this.getOption('pagination')) {
-        //     this.getTable().bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
-        // }
-        // else {
+        this.getTable().bootstrapTable('uncheckAll');
+
+        // Cleanup internal state used by POOL
         this.pageIds = [];
         this.selections = [];
+    }
 
-        this.getTable().bootstrapTable('uncheckAll');
-        // }
+    /**
+     * Clears all selected rows across all pages.
+     *
+     * This method affects both the internal data model (`row.state`) and the visible UI checkboxes:
+     * - `row.state = false` disables selection flags in the data model.
+     *   This ensures that `getSelections()` no longer returns these rows,
+     *   and that `responseHandler()` renders rows as unselected upon reload.
+     *
+     * - `bootstrapTable('uncheckAll')` clears checkboxes in the DOM on the
+     *   current page only. This is necessary because updating `row.state`
+     *   alone does not affect already rendered UI elements.
+     *
+     * @param {boolean} [triggerEvents=true] Whether to fire the `uncheck.bs.table` event for each deselected row.
+     */
+    clearAllSelections(triggerEvents = true)
+    {
+        const selectedRows = this.getData(false).filter(row => row.state === true);
+
+        for (const row of selectedRows) {
+            row.state = false;// this disables the checkbox and selection
+        }
+
+        // Uncheck checkboxes on the currently visible page and resets internal state used by POOL for serverside pagination.
+        this.uncheckAll();
+
+        if(triggerEvents) {
+            for(const row of selectedRows) {
+                this.getTable().trigger('uncheck.bs.table', [row, false]);
+            }
+        }
     }
 
     /**
@@ -804,7 +842,7 @@ class GUI_Table extends GUI_Module
             // this.checkBy(uniqueId, [row[uniqueId]]);
         }
         // 29.03.22, AM, fix correct index
-        let index = this.getData().indexOf(row);
+        const index = this.getData().indexOf(row);
 
         if(paging) {
             this.selectPageByIndex(index);
@@ -1005,7 +1043,7 @@ class GUI_Table extends GUI_Module
     onCheckUncheckRows = (evt) =>
     {
 
-        let ids = this.getSelectedUniqueIds();
+        const ids = this.getSelectedUniqueIds();
 
         // let prev = this.selections;
         if(this.getOption('singleSelect')) {

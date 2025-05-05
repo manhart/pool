@@ -61,7 +61,7 @@ trait CUD
         ?array $dataMask = null,
         string $successMessage = 'successfully %s.',
         array $verbs = ['inserted', 'updated'],
-        string $rowName = null,
+        ?string $rowName = null,
         array $collisionFilter = [],
         string|Closure $collisionMessage = 'saving failed: non unique identifier',
         ?array &$data = null,

@@ -17,6 +17,56 @@ use const STR_PAD_LEFT;
 
 final class Date
 {
+    public static function hasChanged(string|\DateTimeInterface|null $new, string|\DateTimeInterface|null $existing): bool
+    {
+        if (!$new || !$existing) {
+            return true;
+        }
+
+        try {
+            $newDateRaw = $new instanceof \DateTimeInterface ? $new->format(\DateTimeInterface::ATOM) : $new;
+            $existingDateRaw = $existing instanceof \DateTimeInterface ? $existing->format(\DateTimeInterface::ATOM) : $existing;
+
+            $newDate = new \DateTimeImmutable($newDateRaw);
+            $existingDate = new \DateTimeImmutable($existingDateRaw);
+        } catch (\Exception) {
+            return true;
+        }
+
+        // Compare date
+        if ($newDate->format('Y-m-d') !== $existingDate->format('Y-m-d')) {
+            return true;
+        }
+
+        // Compare the time - but only if both input time contains time
+        $newHasRealTime = self::hasSignificantTime($newDateRaw);
+        $existingHasRealTime = self::hasSignificantTime($existingDateRaw);
+
+        if ($newHasRealTime !== $existingHasRealTime) {
+            return true; // One has time, the other not
+        }
+
+        if ($newHasRealTime && $newDate->format('H:i:s') !== $existingDate->format('H:i:s')) {
+            return true; // Both have time, but different
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the input string has a significant time component, i.e. not just "00:00:00"
+     */
+    public static function hasSignificantTime(string $input): bool
+    {
+        $dt = new \DateTimeImmutable($input);
+        return $dt->format('H:i:s') !== '00:00:00' && (strlen($input) > 10 || str_contains($input, 'T'));
+    }
+
+    public static function stringHasTimeComponent(string $input): bool
+    {
+        return str_contains($input, ' ') || str_contains($input, 'T');
+    }
+
     /**
      * Calculates a custom week number
      *

@@ -318,7 +318,7 @@ final class Ghostscript
         return file_exists($outputFile) && mime_content_type($outputFile) === $expectedMimeType;
     }
 
-    public static function repairPdf(string $inputFile, string $outputFile = null, array $options = []): string|false
+    public static function repairPdf(string $inputFile, ?string $outputFile = null, array $options = []): string|false
     {
         self::getGsBin();
 

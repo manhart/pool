@@ -32,7 +32,7 @@ namespace pool\includes\Resources\dir
         protected const SUB_PATH = '';
         protected const FILE_EXT_FILTER = '';
 
-        public static function addResourceTo(GUI_HeadData $Head, bool $min, string $version = '', array $resource = null): int
+        public static function addResourceTo(GUI_HeadData $Head, bool $min, string $version = '', ?array $resource = null): int
         {
             $className = static::class;
             //try to load default if no subresource is specified

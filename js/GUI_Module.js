@@ -295,7 +295,7 @@ class GUI_Module
         Endpoint.searchParams.set('method', ajaxMethod);
 
         // console.debug('fetch', Endpoint.toString(), reqOptions);
-        let promise = fetch(Endpoint, reqOptions).then(this.parseAjaxResponse.bind(this), this.onFetchNetworkError);
+        const promise = fetch(Endpoint, reqOptions).then(this.parseAjaxResponse.bind(this), this.onFetchNetworkError);
         //add a default handler
         promise.then = this.getThenMod(this.onAjax_UnhandledException).bind(promise);
         return promise;
@@ -315,7 +315,6 @@ class GUI_Module
     getThenMod = (handler) =>
     {
         const thenMod = function (onFulfilled, onRejected) {
-            console.debug('modded')
             onRejected ??= e => {//create delegating handler
                 //handle rejection
                 if (newPromise.hasNext)//closure magic!
@@ -328,7 +327,6 @@ class GUI_Module
             this.hasNext = true;
             //Pass the modification on to the next Promise in the chain
             newPromise.then = thenMod.bind(newPromise);//more closure magic
-            console.debug('mod complete')
             return newPromise;
         };
         return thenMod;
