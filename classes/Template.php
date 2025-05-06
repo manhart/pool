@@ -942,6 +942,11 @@ class Template extends PoolObject
         return count($this->FileList);
     }
 
+    public function getFileList(): array
+    {
+        return $this->FileList;
+    }
+
     /**
      * Add a global hook between parsing and returning the content (currently only for blocks)
      */
