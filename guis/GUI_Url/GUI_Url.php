@@ -53,6 +53,7 @@ class GUI_Url extends GUI_Module
         $this->Defaults->addVar('passthrough');
         $this->Defaults->addVar('eliminate');
         $this->Defaults->addVar('empty', 0);
+        $this->Defaults->addVar('redirect');
         parent::init($superglobals);
     }
 
@@ -96,6 +97,10 @@ class GUI_Url extends GUI_Module
             foreach ($eliminate as $param) {
                 $Url->setParam($param, null);
             }
+        }
+
+        if($http_response_code = $this->Input->getAsInt('redirect')) {
+            $Url->redirect(true, $http_response_code);
         }
 
         $this->content = $Url->getUrl();
