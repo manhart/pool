@@ -51,10 +51,6 @@ enum DataType
     case ALPHANUMERIC_SPACE; // only a-z, A-Z, 0-9, _, space
     case ALPHANUMERIC_SPACE_PUNCTUATION; // only a-z, A-Z, 0-9, _, space, ., ,;:!?()-+/&
 
-    /**
-     * @param DataType $dataType
-     * @return Closure
-     */
     public static function getFilter(DataType $dataType): Closure
     {
         $alphaNum = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
