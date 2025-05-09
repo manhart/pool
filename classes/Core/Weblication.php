@@ -1121,6 +1121,17 @@ class Weblication extends Component
         return $this;
     }
 
+    public function regenerateSession(array $stickySessionValues, ...$sessionValues): void
+    {
+        $this->Session->setData(
+            array_intersect_key($this->Session->getData(), array_flip($stickySessionValues)) + ((
+            $sessionValues && array_is_list($sessionValues) ? $sessionValues[0] : $sessionValues) ?? []),
+        );//user may pass [key => value, ...] which becomes [[...]]
+        $this->Session->start();
+        $this->Session->regenerate_id();
+        $this->Session->write_close();
+    }
+
     /**
      * Set page title
      */
