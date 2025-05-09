@@ -1498,7 +1498,7 @@ class Weblication extends Component
      */
     private function isMemoryAvailable(): bool
     {
-        return (bool)($this->memory ?? false);
+        return ($this->memory ?? false) && $this->memory->isAvailable();
     }
 
     /**

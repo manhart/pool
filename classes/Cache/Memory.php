@@ -11,27 +11,42 @@
 namespace pool\classes\Cache;
 
 use Memcached;
+use pool\classes\Exception\InvalidArgumentException;
 
 class Memory extends Memcached
 {
     private static ?Memory $instance = null;
 
+    private bool $initialized;
+
     private int $defaultExpiration = 0;
 
     private function __construct(string $servers)
     {
-        parent::__construct();
+        parent::__construct('pool');
         if (ini_get('session.save_handler') === 'memcached') {
             $servers = $servers ?: ini_get('session.save_path');
         }
-        // Configure default servers if no servers have been configured
-        $servers = $servers ?: 'localhost:11211';
-        $servers = explode(',', $servers);
-        $servers = array_map(curry(explode(...), ':'), $servers);
-        $this->addServers($servers);
-        if (!$this->getVersion()) {
-            throw new \MemcachedException($this->getResultMessage() . $this->getLastErrorMessage());
+
+        if ($servers) {
+            $list = explode(',', $servers);
+            $this->addServers(
+                array_map(
+                    fn(string $srv) => explode(':', $srv, 2),
+                    $list,
+                ),
+            );
         }
+    }
+
+    public function isAvailable(): bool
+    {
+        if (isset($this->initialized)) {
+            return $this->initialized;
+        }
+        $versions = $this->getVersion();
+        $this->initialized ??= $versions && !in_array(false, $versions, true);
+        return $this->initialized;
     }
 
     public static function getInstance(string $servers = ''): self
