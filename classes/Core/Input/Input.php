@@ -109,6 +109,11 @@ namespace pool\classes\Core\Input
         protected array $vars = [];
 
         /**
+         * @var array variables internal container
+         */
+        protected array $vars = [];
+
+        /**
          * @var int Superglobals
          * @see https://www.php.net/manual/de/language.variables.superglobals.php
          */
@@ -266,12 +271,20 @@ namespace pool\classes\Core\Input
             return $value;
         }
 
+        /**
+         * Processes incoming HTTP POST requests with JSON payloads. Decodes the JSON data
+         * and populates the $_POST and $_REQUEST superglobals with the decoded values.
+         * JSON arrays are not supported and will be ignored. In the case of invalid JSON, an exception
+         * is caught, and no data is processed.
+         */
         public static function processJsonPostRequest(): void
         {
-            // decode POST requests with JSON-Data
             if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_SERVER['CONTENT_TYPE'] ?? '') === 'application/json') {
                 $json = file_get_contents('php://input');
-                if (str_starts_with($json, '[')) { // JSON Array not supported
+                if (!$json) {
+                    return;
+                }
+                if (str_starts_with($json, '[')) { // JSON Array isn't supported
                     return;
                 }
                 try {
@@ -293,9 +306,10 @@ namespace pool\classes\Core\Input
         /**
          * Reinitialize superglobals.
          */
-        public function reInit(): void
+        public function reInit(): static
         {
             $this->clear()->init($this->superglobals);
+            return $this;
         }
 
         /**
@@ -340,17 +354,12 @@ namespace pool\classes\Core\Input
         /**
          * Returns if all variables are empty
          */
-        public function allEmpty(): bool
+        public function hasEmptyVars(): bool
         {
             if ($this->count() === 0) {
                 return true;
             }
-            foreach ($this->vars as $value) {
-                if (!empty($value)) {
-                    return false;
-                }
-            }
-            return true;
+            return array_all($this->vars, fn($value) => empty($value));
         }
 
         /**
@@ -373,7 +382,7 @@ namespace pool\classes\Core\Input
          * Returns the value for the given key.
          *
          * @param string $key Name of the variable
-         * @param mixed $default Returns this value as default, if key is not set
+         * @param mixed $default Returns this value as default if the key is not set
          * @return mixed Value of the variable or $default/NULL if the variable does not exist
          */
         public function getVar(string $key, mixed $default = null): mixed
@@ -401,7 +410,7 @@ namespace pool\classes\Core\Input
          * Returns the reference for the given key.
          *
          * @param string $key Name of the variable
-         * @param mixed $default Return this value as default, if key is not set
+         * @param mixed $default Return this value as default if the key is not set
          * @return mixed Reference to the object, or $default/NULL if the object does not exist
          */
         public function &getRef(string $key, mixed $default = null): mixed
@@ -468,11 +477,10 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Sets the data type of variable
+         * Sets the type of the specified variable in the internal container if it exists.
          *
-         * @param string $key variable name
-         * @param string $type data type
-         * @see Input::getType()
+         * @param string $type The type to which the variable should be converted.
+         * @see settype()
          */
         public function setType(string $key, string $type): static
         {
@@ -518,7 +526,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Sets a variable and encrypts its value using a key. The value is encoded using MIME base64 and a simple XOR encryption.
+         * Sets a variable and encrypts its value using a key. The value is encoded using MIME base64 and simple XOR encryption.
          *
          * @param string $name name of the variable
          * @param string $value value to encrypt
@@ -571,9 +579,10 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Overrides all variables (internal container) with the given array
+         * Sets the internal data container with the provided array.
          *
-         * @param array $data associative array of data
+         * @param array $data The associative array to set as the internal container.
+         * @return static The current instance for method chaining.
          */
         public function setData(array $data): static
         {
@@ -583,9 +592,7 @@ namespace pool\classes\Core\Input
 
         /**
          * Returns all variables as array
-         *
-         * @return array Daten
-         **/
+         */
         public function getData(): array
         {
             return $this->vars;
@@ -618,9 +625,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Deletes a variable from the internal container.
-         *
-         * @param string $key name of the variable
+         * Removes a variable from the internal container by its key.
          */
         public function delVar(string $key): static
         {
@@ -637,7 +642,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Computes the difference between the internal variables and the given array with additional index check
+         * Computes the difference between the internal variables and the given array with an additional index check
          */
         public function diff_assoc(array $array): array
         {
@@ -686,7 +691,7 @@ namespace pool\classes\Core\Input
         }
 
         /**
-         * Adds parameters (e.g. from a URL) to the internal container. Format: key=value&key=value.
+         * Adds parameters (e.g., from a URL) to the internal container. Format: key=value&key=value.
          *
          * @param string $params Siehe oben Beschreibung
          * @see htmlspecialchars_decode()
@@ -706,9 +711,8 @@ namespace pool\classes\Core\Input
         /**
          * Joins the variable containers of two input objects. Existing keys are not overwritten.
          *
-         * @param Input $Input other input object
-         * @param boolean $flip if true, the variables of the other input object are merged into the internal container (affects the order of merge)
-         **/
+         * @param bool $flip if true, the variables of the other input object are merged into the internal container (affects the order of merge)
+         */
         public function mergeVars(Input $Input, bool $flip = false): Input
         {
             if ($flip) {

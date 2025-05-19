@@ -3,20 +3,20 @@
  * -= Rapid Template Engine (RTE) =-
  * Template.class.php
  * Rapid Template Engine (RTE) ist eine Template-Engine für PHP. Genauer gesagt erlaubt es die einfache Trennung von
- * Applikations-Logik und Design/Ausgabe. Dies ist vor allem wuenschenswert, wenn der Applikationsentwickler nicht die
- * selbe Person ist wie der Designer. Nehmen wir zum Beispiel eine Webseite die Zeitungsartikel ausgibt.
- * Der Titel, die Einfuehrung, der Author und der Inhalt selbst enthalten keine Informationen darueber wie sie dargestellt
- * werden sollen. Also werden sie von der Applikation an RTE uebergeben, damit der Designer in den Templates mit einer
- * Kombination von HTML- und Template-Tags die Ausgabe (Tabellen, Hintergrundfarben, Schriftgroessen, Stylesheets, etc.)
- * gestalten kann. Falls nun die Applikation eines Tages angepasst werden muss, ist dies fuer den Designer nicht von
- * Belang, da die Inhalte immer noch genau gleich uebergeben werden. Genauso kann der Designer die Ausgabe der Daten beliebig
- * veraendern, ohne dass eine Aenderung der Applikation vorgenommen werden muss. Somit koennen der Programmierer die
+ * Applications-Logik und Design/Ausgabe. Dies ist vor allem wünschenswert, wenn der Applikationsentwickler nicht dieselbe
+ * Person ist wie der Designer. Nehmen wir zum Beispiel eine Webseite, die Zeitungsartikel ausgibt.
+ * Der Titel, die Einführung, der Author und der Inhalt selbst enthalten keine Informationen, darüber wie sie dargestellt
+ * werden sollen. Also werden sie von der Applikation an RTE übergeben, damit der Designer in den Templates mit einer
+ * Kombination von HTML- und Template-Tags die Ausgabe (Tabellen, Hintergrundfarben, Schriftgrößen, Stylesheets, etc.)
+ * gestalten kann. Falls nun die Applikation eines Tages angepasst werden muss, ist dies für den Designer nicht von
+ * Belang, da die Inhalte immer noch genau gleich übergeben werden. Genauso kann der Designer die Ausgabe der Daten beliebig
+ * verändern, ohne dass eine Änderung der Applikation vorgenommen werden muss. Somit kann der Programmierer die
  * Applikations-Logik und der Designer die Ausgabe frei anpassen, ohne sich dabei in die Quere zu kommen.
  * Features:
  * Schnelligkeit
- * Dynamische Bloecke
- * Beliebige Template-Quellen
- * Ermoeglicht die direkte Einbettung von PHP-Code (Obwohl es weder benoetigt noch empfohlen wird, da die Engine einfach erweiterbar ist).
+ * dynamische Blöcke
+ * beliebige Template-Quellen
+ * ermöglicht die direkte Einbettung von PHP-Code (Obwohl es weder benötigt noch empfohlen wird, da die Engine einfach erweiterbar ist).
  * @date $Date: 2007/03/13 08:52:50 $
  *
  * @version $Id: Template.class.php,v 1.12 2007/03/13 08:52:50 manhart Exp $
@@ -40,9 +40,8 @@ const TEMP_TRANSL_IDENT = 'TRANSL';
 const TEMP_SESSION_IDENT = 'SESSION';
 
 /**
- * TempHandle
- * TempHandle ist die abstrakte Basisklasse fuer alle eingebetteten Template Elemente (oder auch Platzhalter).
- * Die Klasse bewahrt den Name des Handles, Typ und Inhalt auf.
+ * TempHandle ist die abstrakte Basisklasse für alle eingebetteten Template Elemente (oder auch Platzhalter).
+ * Die Klasse bewahrt den Namen des Handles, Typ und Inhalt auf.
  *
  * @package rte
  * @author Alexander Manhart <alexander@manhart-it.de>
@@ -178,7 +177,6 @@ class TempCoreHandle extends TempHandle
      * Konstruktor: benoetigt Handle-Typ und Verzeichnis zum Template.
      * Array fuer Variablen Container und Block Container werden angelegt.
      *
-     * @param string $handle
      * @param string $type Handle-Typ set of (BLOCK, FILE)
      * @param string $directory Directory to the template
      */
@@ -194,7 +192,6 @@ class TempCoreHandle extends TempHandle
      * @param string $handle Name des Handles
      * @param string $dir Verzeichnis zum Template
      * @param string $content Inhalt des Blocks
-     * @param string $charset
      * @return TempBlock TempBlock
      * @see TempBlock
      */
@@ -212,8 +209,6 @@ class TempCoreHandle extends TempHandle
      * @param string $handle Name des Handles
      * @param string $dir Verzeichnis zum Template
      * @param string $filename Dateiname (des Templates)
-     * @param string $charset
-     * @return TempFile
      * @see TempFile
      */
     public function createFile(string $handle, string $dir, string $filename, string $charset): TempFile
@@ -231,8 +226,6 @@ class TempCoreHandle extends TempHandle
      * @param string $handle Name des Handles
      * @param string $dir Verzeichnis zum Template
      * @param string $filename Dateiname (des Scripts)
-     * @param string $charset
-     * @return TempScript
      * @see TempScript
      */
     public function createScript(string $handle, string $dir, string $filename, string $charset): TempScript
@@ -245,9 +238,7 @@ class TempCoreHandle extends TempHandle
     /**
      * Convert special characters to HTML Entities
      *
-     * @param mixed $value
      * @param int $convert convert method
-     * @return string
      */
     private function convertToHTML(mixed $value, int $convert): string
     {
@@ -277,10 +268,6 @@ class TempCoreHandle extends TempHandle
 
     /**
      * Fills multiple placeholders with values
-     *
-     * @param array $vars
-     * @param int $convert
-     * @return TempCoreHandle
      */
     public function setVars(array $vars, int $convert = Template::CONVERT_NONE): static
     {
@@ -382,7 +369,6 @@ class TempCoreHandle extends TempHandle
      * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
      *
      * @param boolean $returnContent Bei true wird der geparste Inhalt an den Aufrufer zurueck gegeben, bei false gespeichert.
-     * @param bool $clearParsedContent
      * @return string Geparster Inhalt
      */
     public function parse(bool $returnContent = false, bool $clearParsedContent = true): string
@@ -466,7 +452,6 @@ class TempCoreHandle extends TempHandle
 /* --------------------- */
 
 /**
- * TempBlock
  * TempBlock ein Template Element konzipiert fuer dynamische Inhalte. Im Template definiert man einen Block wie folgt:
  * <!-- BEGIN BLOCK_MYNAME --> ...Inhalt... <!-- END BLOCK_MYNAME -->
  * Ob der Block im Endresultat erscheint oder wie oft wiederholt wird, bestimmt der Programmierer.
@@ -495,13 +480,7 @@ class TempBlock extends TempCoreHandle
     }
 
     /**
-     *f Die Funktion fraegt ab, ob geparst werden darf.
-     * Beim ersten Aufruf der Funktion NewBlock darf noch nicht geparst werden,
-     * da noch keine Variablen zugewiesen wurden. Erst bei weiteren Aufrufen (z.B. Schleife) wird geparst,
-     * damit neuer Content entsteht.
-     * Hinweis: wird in Verwendung mit parse($returncontent) verwendet. Um bei Schleifen den Content aneinander zu haengen.
-     *
-     * @return boolean Bei true darf geparst werden, bei false nicht.
+     * Determines whether parsing is allowed.
      */
     public function allowParse(): bool
     {
@@ -517,7 +496,11 @@ class TempBlock extends TempCoreHandle
     }
 
     /**
-     * Parst den Block Inhalt und fuegt das Ergebnis an den bisherigen geparsten Inhalt hinzu.
+     * Parses the content and optionally returns it.
+     *
+     * @param bool $returnContent Determines whether to return the parsed content or not.
+     * @param bool $clearParsedContent Indicates if previously parsed content should be cleared before parsing.
+     * @return string Returns the parsed content if $returnContent is true, otherwise an empty string.
      */
     public function parse(bool $returnContent = false, bool $clearParsedContent = true): string
     {
@@ -539,7 +522,6 @@ class TempBlock extends TempCoreHandle
 /* --------------------- */
 
 /**
- * TempFile
  * TempFile ein Template Element konzipiert fuer weitere Template Dateien. Im Template definiert man eine neues Template wie folgt:
  * <!-- INCLUDE MYNAME --> Pfad + Dateiname des Html Templates <!-- END MYNAME -->
  * Inkludierte Dateien werden genauso behandelt wie andere Html Templates. Man kann darin Variablen, Bloecke und weitere Html Templates definieren.
@@ -732,15 +714,12 @@ class Template extends PoolObject
     public const CONVERT_HTMLSPECIALCHARS = 1;
     public const CONVERT_HTMLENTITIES = 2;
 
-    /**
-     * @var string
-     */
     private string $charset = 'UTF-8';
 
     private array $globalHooks = ['BLOCK' => []];
 
     /**
-     * @param string $dir Verzeichnis zu den Templates (Standardwert ./)
+     * @param string $dir Verzeichnis zu den Templates (Standardwert./)
      */
     public function __construct(string $dir = './')
     {
@@ -771,17 +750,11 @@ class Template extends PoolObject
         return static::getTranslator() !== null ? static::$cacheTranslations : false;
     }
 
-    /**
-     * @param bool $cacheTranslations
-     */
     public static function setCacheTranslations(bool $cacheTranslations): void
     {
         self::$cacheTranslations = $cacheTranslations;
     }
 
-    /**
-     * @param string $charset
-     */
     public function setCharset(string $charset): void
     {
         $this->charset = $charset;
@@ -849,10 +822,6 @@ class Template extends PoolObject
 
     /**
      * Set the parentheses for the placeholders
-     *
-     * @param string $varStart
-     * @param string $varEnd
-     * @return void
      */
     public function setParentheses(string $varStart, string $varEnd): void
     {
@@ -934,9 +903,6 @@ class Template extends PoolObject
         return $files;
     }
 
-    /**
-     * @return int
-     */
     public function countFileList(): int
     {
         return count($this->FileList);
@@ -964,7 +930,6 @@ class Template extends PoolObject
      * Anweisung, dass ein neuer Block folgt, dem die n�chsten Variablen zugewiesen werden.
      *
      * @param string $handle Handle-Name
-     * @return TempBlock|null
      */
     public function newBlock(string $handle): ?TempBlock
     {
@@ -1004,8 +969,6 @@ class Template extends PoolObject
 
     /**
      * Verlaesst einen Block (einleitend mit der Funktion Template::newBlock(), anschliessend Template::leaveBlock())
-     *
-     * @return Template
      */
     public function leaveBlock(): static
     {
@@ -1018,7 +981,6 @@ class Template extends PoolObject
      * Weist die Template Engine an, als nächstes einen anderen BLOCK zu verwenden.
      *
      * @param string $blockHandle name of block
-     * @return null|TempBlock
      */
     public function useBlock(string $blockHandle): ?TempBlock
     {
@@ -1052,10 +1014,6 @@ class Template extends PoolObject
 
     /**
      * Fill multiple placeholders with values
-     *
-     * @param array $vars
-     * @param int $encoding
-     * @return Template
      */
     public function setVars(array $vars, int $encoding = Template::CONVERT_NONE): static
     {
@@ -1076,8 +1034,6 @@ class Template extends PoolObject
      * Das Array muss wie folgt aufgebaut werden: $array[$laufender_record_index][$varname] = $value !
      *
      * @param string $blockHandle Handle-Name des Blocks
-     * @param array $recordset
-     * @return Template
      */
     public function assignRecordset(string $blockHandle, array $recordset = []): static
     {
@@ -1092,8 +1048,6 @@ class Template extends PoolObject
      * Alias for Template::assignRecordset()
      *
      * @param string $blockHandle Handle-Name des Blocks
-     * @param array $recordSet
-     * @return Template
      * @see Template::assignRecordset()
      */
     public function setRecordset(string $blockHandle, array $recordSet = []): static
@@ -1105,7 +1059,6 @@ class Template extends PoolObject
      * Die Prozedur veranlasst, dass alle Dateien (Template Elemente) rekursiv geparst werden.
      *
      * @param string $handle Handle-Name eines Files (bei Nicht-Angabe wird das Default File verwendet)
-     * @return Template
      */
     public function parse(string $handle = ''): self
     {
@@ -1156,8 +1109,6 @@ class Template extends PoolObject
 
     /**
      * Setzt alle Werte zurueck (Loescht alle Files aus dem Buffer).
-     *
-     * @return void
      */
     public function reset(): void
     {

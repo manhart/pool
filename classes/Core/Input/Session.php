@@ -19,12 +19,12 @@ namespace pool\classes\Core\Input;
 class Session extends Input
 {
     /**
-     * @var boolean mark session as started
+     * @var boolean mark the session as started
      */
     private bool $session_started = false;
 
     /**
-     * @var bool writes session every time a data change occurs and closes the session
+     * @var bool writes the session every time a data change occurs and closes the session
      */
     private bool $autoClose = true;
 
@@ -38,7 +38,7 @@ class Session extends Input
     }
 
     /**
-     * Starts Session
+     * Starts a session
      */
     public function start(): void
     {
@@ -52,9 +52,6 @@ class Session extends Input
 
     /**
      * Set auto close session
-     *
-     * @param $autoClose
-     * @return Session
      */
     public function setAutoClose($autoClose): static
     {
@@ -64,11 +61,6 @@ class Session extends Input
 
     /**
      * Set a value to a variable
-     *
-     * @param string $key
-     * @param mixed $value
-     * @param bool $suppressException
-     * @return Session
      */
     public function setVar(string $key, mixed $value = '', bool $suppressException = false): static
     {
@@ -83,11 +75,7 @@ class Session extends Input
     }
 
     /**
-     * Set more values as array to variables
-     *
-     * @param array $assoc
-     * @param bool $suppressException
-     * @return Session
+     * Set more values as an array
      */
     public function setVars(array $assoc, bool $suppressException = false): static
     {
@@ -103,11 +91,8 @@ class Session extends Input
      * Adds a default value/data to a variable if it does not exist. It does not override existing values! We can also add a filter on an incoming
      * variable.
      *
-     * @param string $key name of variable
-     * @param mixed $value value of variable
-     * @param int $filter
-     * @param mixed $filterOptions
      * @return Session Erfolgsstatus
+     * @deprecated
      */
     public function addVar(string $key, mixed $value = '', int $filter = FILTER_FLAG_NONE, array|int $filterOptions = 0): static
     {
@@ -118,10 +103,9 @@ class Session extends Input
     }
 
     /**
-     * merge array with vars but don't override existing vars
+     * Merge array with vars but don't override existing vars
      *
-     * @param array $vars
-     * @return $this
+     * @deprecated
      */
     public function addVars(array $vars): static
     {
@@ -136,8 +120,6 @@ class Session extends Input
 
     /**
      * Delete a session variable
-     *
-     * @param string $key name of variable
      */
     public function delVar(string $key): static
     {
@@ -149,8 +131,6 @@ class Session extends Input
 
     /**
      * Overwrites the data of the session with the data of the array
-     *
-     * @param array $data Indexiertes Array, enth�lt je Satz ein assoziatives Array
      */
     public function setData(array $data): static
     {
@@ -161,10 +141,9 @@ class Session extends Input
     }
 
     /**
-     * Vereinigt die Variablen Container von zwei Input Objekten. Vorhandene Keys werden nicht ueberschrieben.
+     * Joins the variable containers of two input objects. Existing keys are not overwritten.
      *
-     * @param Input $Input Objekt vom Typ Input
-     * @param boolean $flip Fuegt die Daten in umgekehrter Reihenfolge zusammen (true), Standard ist false (Parameter nicht erforderlich)
+     * @param boolean $flip if true, the variables of the other input object are merged into the internal container (affects the order of merge)
      */
     public function mergeVars(Input $Input, bool $flip = false): Input
     {
@@ -177,7 +156,6 @@ class Session extends Input
     /**
      * Sets the data type of variable
      *
-     * @param string $key variable name
      * @param string $type data type
      * @see Input::getType()
      */
@@ -190,9 +168,7 @@ class Session extends Input
     }
 
     /**
-     * Delivers the maximum session lifetime
-     *
-     * @return int Maximale Lebenszeit in Sekunden
+     * Delivers the maximum session lifetime in seconds
      */
     public function getMaxLifetime(): int
     {
@@ -200,9 +176,7 @@ class Session extends Input
     }
 
     /**
-     * get the session ID
-     *
-     * @return string
+     * Get the current session ID
      */
     public function getSID(): string
     {
@@ -219,7 +193,7 @@ class Session extends Input
     }
 
     /**
-     * write session and close it. Zu empfehlen bei lang laufenden Programmen, damit andere Scripte nicht gesperrt werden
+     * Write the session and close it. Recommended for long-running scripts so that other scripts or ajax calls are not blocked
      */
     public function write_close(): static
     {
@@ -230,7 +204,7 @@ class Session extends Input
     }
 
     /**
-     * destroy the session
+     * Destroy the session
      */
     public function destroy(): static
     {
