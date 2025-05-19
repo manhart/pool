@@ -15,6 +15,8 @@
  * @see https://github.com/manhart/pool
  */
 
+/** @noinspection PhpUnused, PhpUnusedParameterInspection */
+
 namespace pool\classes\GUI\Builtin;
 
 use pool\classes\Core\Component;
@@ -24,18 +26,15 @@ use pool\classes\translator\TranslationProvider_ToolDecorator;
 use pool\guis\GUI_HeadData\GUI_HeadData;
 
 /**
- * GUI_CustomFrame ist eine abstrakte Klasse. Der Haupteinsatzzweck dieser Klasse besteht darin,
- * Kopf- Menue- Fuss- und Seitenleiste an zentraler Stelle zu halten.
- * In 85-90% der Faelle ist der Kopf und die Fusszeile auf jeder Seite gleich und nur der Inhalt aendert sich!
+ * GUI_CustomFrame is an abstract class. The main purpose of this class is to
+ * keep header, menu, footer and sidebar in a central place.
+ * In 85-90% of cases, the header and footer are the same on each page and only the content changes.
  *
  * @since 2003-07-10
  * @link https://github.com/manhart/pool
  */
 class GUI_CustomFrame extends GUI_Module
 {
-    /**
-     * @var GUI_HeadData
-     */
     protected GUI_HeadData $HeadData;
 
     /**
@@ -60,30 +59,21 @@ class GUI_CustomFrame extends GUI_Module
 */
     ];
 
+    private array $bodyClasses = [];
+
     /**
      * @var array|callable|null
      */
     private $addFileFct = null;
 
-    /**
-     * @var array
-     */
     private array $scriptAtTheEnd = [];
 
-    /**
-     * @var array
-     */
     private array $scriptFilesAtTheEnd = [];
 
-    /**
-     * @var array
-     */
     private array $scriptWhenReady = [];
 
     /**
-     * @param Component|null $Owner
-     * @param array $params
-     * @throws ModulNotFoundException|Exception
+     * @throws ModulNotFoundException|\Exception
      */
     public function __construct(?Component $Owner, array $params = [])
     {
@@ -97,13 +87,13 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * load default Weblication.class.js and GUI_Module.js
+     * Load default Weblication.js, GUI_Module.js, Error.js, helpers.js, translatorToolInline.css and translatorToolInline.js
      */
     public function loadFiles(): static
     {
         parent::loadFiles();
         if (@TranslationProvider_ToolDecorator::isActive()) {
-            $this->HeadData->addStyleSheet($this->Weblication->findStyleSheet('translatorToolInline.css', '', false));
+            $this->HeadData->addStyleSheet($this->Weblication->findStyleSheet('translatorToolInline.css'));
             $this->HeadData->addJavaScript($this->Weblication->findJavaScript('translatorToolInline.js', '', true));
         }
         $this->HeadData->addJavaScript($this->Weblication->findJavaScript('helpers.js', '', true));
@@ -114,7 +104,7 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Liefert das GUI_Head Object zum Aendern der Html Kopfdaten.
+     * Returns the GUI_HeadData object for modifying HTML head data.
      *
      * @return GUI_HeadData Head of HTML
      */
@@ -124,12 +114,65 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Adds a window event to the html body
+     * Adds one or more CSS classes to the body.
+     * Automatically stacks new classes without allowing duplicates.
+     *
+     * @param string|array $classes Single class or array of classes.
+     * @return $this
+     */
+    public function addBodyClass(string|array $classes): static
+    {
+        if (is_string($classes)) {
+            $classes = [$classes];
+        }
+
+        // Merge classes and remove duplicates
+        $this->bodyClasses = array_unique(array_merge($this->bodyClasses, $classes));
+        return $this;
+    }
+
+    /**
+     * Removes one or more CSS classes from the body.
+     *
+     * @param string|array $classes Single class or array of classes.
+     * @return $this
+     */
+    public function removeBodyClass(string|array $classes): static
+    {
+        if (is_string($classes)) {
+            $classes = [$classes];
+        }
+
+        $this->bodyClasses = array_diff($this->bodyClasses, $classes);
+        return $this;
+    }
+
+    /**
+     * Checks if the body has a specific CSS class.
+     *
+     * @param string $class The class to check.
+     * @return bool Returns `true` if the class exists, `false` otherwise.
+     */
+    public function hasBodyClass(string $class): bool
+    {
+        return in_array($class, $this->bodyClasses);
+    }
+
+    /**
+     * Returns all current body classes as a string.
+     *
+     * @return string The classes as a space-separated string.
+     */
+    public function getBodyClasses(): string
+    {
+        return implode(' ', $this->bodyClasses);
+    }
+
+    /**
+     * Adds a window event to the HTML body
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/body?retiredLocale=de
      * @param string $event an event like onload
-     * @param string $function
-     * @return GUI_CustomFrame
      */
     public function addBodyEvent(string $event, string $function): static
     {
@@ -144,11 +187,9 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Add a javascript file at the end of the body
+     * Add a JavaScript file at the end of the body
      *
-     * @param string $jsFile
      * @param null $position (not yet implemented, should control position)
-     * @return GUI_CustomFrame
      */
     public function addScriptFileAtTheEnd(string $jsFile, $position = null): static
     {
@@ -160,10 +201,7 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Add javascript or a javascript function at the end of the body
-     *
-     * @param string $function
-     * @return GUI_CustomFrame
+     * Add JavaScript or a JavaScript function at the end of the body
      */
     public function addScriptAtTheEnd(string $function): static
     {
@@ -172,10 +210,7 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * Add javascript or a javascript function at the end of the body and call it when DOM is loaded/ready
-     *
-     * @param string $function
-     * @return GUI_CustomFrame
+     * Add JavaScript or a JavaScript function at the end of the body and call it when DOM is loaded/ready
      */
     public function addScriptWhenReady(string $function): static
     {
@@ -184,10 +219,8 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * set callable for event on add file
+     * Set callable for event "onAddFile"
      *
-     * @param callable $addFileFct
-     * @return GUI_CustomFrame
      * @see GUI_CustomFrame::addScriptFileAtTheEnd()
      */
     public function onAddFile(callable $addFileFct): GUI_CustomFrame
@@ -199,7 +232,6 @@ class GUI_CustomFrame extends GUI_Module
     /**
      * Calls Weblication->run on the client
      *
-     * @return void
      */
     public function prepareContent(): void
     {
@@ -209,7 +241,7 @@ class GUI_CustomFrame extends GUI_Module
     }
 
     /**
-     * puts javascript code into the template
+     * Puts JavaScript code into the template
      *
      * @return string parsed content
      */
@@ -233,8 +265,8 @@ class GUI_CustomFrame extends GUI_Module
         }
 
         if ($scriptWhenReady || $scriptAtTheEnd) {
-            $InlineScriptBlock = $this->Template->newBlock('INLINE-SCRIPT');
-            $InlineScriptBlock?->setVars([
+            $inlineScriptBlock = $this->Template->newBlock('INLINE-SCRIPT');
+            $inlineScriptBlock?->setVars([
                 'ScriptWhenReady' => $scriptWhenReady,
                 'ScriptAtTheEnd' => $scriptAtTheEnd,
             ]);
@@ -246,6 +278,7 @@ class GUI_CustomFrame extends GUI_Module
             // concatenating javascript functions
             return implode(';', $functions);
         }, $this->events);
+        $vars['bodyClass'] = $this->getBodyClasses();
         $this->Template->setVars($vars);
 
         return parent::finalize();
