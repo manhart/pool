@@ -710,9 +710,9 @@ class Template extends PoolObject
 
     private string $varEnd = TEMP_VAR_END;
 
-    public const CONVERT_NONE = 0;
-    public const CONVERT_HTMLSPECIALCHARS = 1;
-    public const CONVERT_HTMLENTITIES = 2;
+    public const int CONVERT_NONE = 0;
+    public const int CONVERT_HTMLSPECIALCHARS = 1;
+    public const int CONVERT_HTMLENTITIES = 2;
 
     private string $charset = 'UTF-8';
 

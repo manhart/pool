@@ -57,56 +57,51 @@ namespace pool\classes\Core\Input
         /**
          * @constant int EMPTY no superglobals
          */
-        public const EMPTY = 0;
+        public const int EMPTY = 0;
         /**
          * @constant int COOKIE $_COOKIE (php equivalent INPUT_COOKIE (2))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const COOKIE = 1;
+        public const int COOKIE = 1;
         /**
          * @constant int GET $_GET (php equivalent INPUT_GET (1))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const GET = 2;
+        public const int GET = 2;
         /**
          * @constant int POST $_POST (php equivalent INPUT_POST (0))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const POST = 4;
+        public const int POST = 4;
         /**
          * @constant int FILES $_FILES (php equivalent INPUT_FILES (3))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const FILES = 8;
+        public const int FILES = 8;
         /**
          * @constant int ENV $_ENV (php equivalent INPUT_ENV (4))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const ENV = 16;
+        public const int ENV = 16;
         /**
          * @constant int SERVER $_SERVER (php equivalent INPUT_SERVER (5))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const SERVER = 32;
+        public const int SERVER = 32;
         /**
          * @constant int SESSION $_SESSION (php equivalent INPUT_SESSION (6))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const SESSION = 64;
+        public const int SESSION = 64;
         /**
          * @constant int REQUEST $_REQUEST (php equivalent INPUT_REQUEST (99))
          * @see https://www.php.net/manual/de/filter.constants.php
          */
-        public const REQUEST = 128;
+        public const int REQUEST = 128;
         /**
          * @constant int I_ALL all superglobals
          */
-        public const ALL = 255;
-
-        /**
-         * @var array variables internal container
-         */
-        protected array $vars = [];
+        public const int ALL = 255;
 
         /**
          * @var array variables internal container
