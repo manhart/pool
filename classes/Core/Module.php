@@ -238,9 +238,7 @@ class Module extends Component
     }
 
     /**
-     * returns client data
-     *
-     * @return array
+     * Returns client data
      */
     public function getClientVars(): array
     {
@@ -248,9 +246,8 @@ class Module extends Component
     }
 
     /**
-     * passes data to the client
+     * Passes data to the client
      *
-     * @param array $vars
      * @return $this
      */
     public function setClientVars(array $vars): self
@@ -262,8 +259,6 @@ class Module extends Component
     /**
      * Wrapper for Input::emptyVar
      *
-     * @param string $key
-     * @return boolean
      * @see Input
      */
     public function emptyVar(string $key): bool

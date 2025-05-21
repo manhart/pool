@@ -122,11 +122,12 @@ class GUI_Module
     /**
      * populates named Elements with the data of an iterator
      * @see FormData.entries()
-     * @param {Iterable} data key is used as name value may be an array in which case the function will attempt to find elements named `name[]` analog to the way php parses a form. <br>
-     * Currently only supports one layer of nesting
+     * @param {Iterable} data key is used as name value may be an array in which case the function will attempt to find elements named `name[]` analog to the way php parses a
+     *     form. <br> Currently only supports one layer of nesting
      * @param {Element} node the Element in which to search, typically a specific form or fieldset
      * @param overwriteDefault additionally write the value to the defaultValue
-     * @param {function(number, number)} indexMapper is given the current iteration counter (0 based) and the length of the provided data array. The function is expected to return an appropriate index
+     * @param {function(number, number)} indexMapper is given the current iteration counter (0 based) and the length of the provided data array. The function is expected to return
+     *     an appropriate index
      */
     loadFormData(data, node, overwriteDefault = false, indexMapper = x => x) {
         for (const [name, dataItem] of data) {
@@ -213,7 +214,7 @@ class GUI_Module
                     key = 'body';
                     break;
                 default:
-                    throw new Error('Unrecognized request Method ' + options.method);
+                    throw new Error(`Unrecognized request Method ${options.method}`);
             }
         }
         options[key] = data;
@@ -225,10 +226,9 @@ class GUI_Module
             module = this.getFullyQualifiedClassName(),
             moduleName = this.name,
             body,
-            rawResponse = false,
+            responseType = 'pool',
             ...extraOpts
         } = options;
-
 
         const reqOptions = {
             method,
@@ -296,7 +296,20 @@ class GUI_Module
         endpointURL.searchParams.set('method', ajaxMethod);
 
         // console.debug('fetch', endpointURL.toString(), reqOptions);
-        const promise = fetch(endpointURL, reqOptions).then(response => rawResponse? response : this.parseAjaxResponse(response),
+        let responseHandler;
+        switch(responseType) {
+            case "pool":
+                responseHandler = this.parseAjaxResponse.bind(this);
+                break;
+            case 'raw':
+                responseHandler = x => x;
+                break;
+            default:
+                const responseTypeEncoded = encodeURI(responseType);
+                const encoded = responseTypeEncoded === responseType ? '' : ' (encoded)';
+                throw new Error(`Unrecognized response type ${responseTypeEncoded}${encoded} requested`);
+        }
+        const promise = fetch(endpointURL, reqOptions).then(responseHandler,
             this.onFetchNetworkError);
         //add a default handler
         promise.then = this.getThenMod(this.onAjax_UnhandledException).bind(promise);

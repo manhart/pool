@@ -106,8 +106,6 @@ class Component extends PoolObject
 
     /**
      * Creates an unique name for this component
-     *
-     * @return string
      */
     protected function getUniqueName(): string
     {
@@ -138,7 +136,6 @@ class Component extends PoolObject
      * If the name is not unique, the component is not renamed.
      *
      * @param string $new_name new name for component
-     * @return Component
      */
     public function setName(string $new_name): static
     {
