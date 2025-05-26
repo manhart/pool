@@ -365,6 +365,11 @@ class TempCoreHandle extends TempHandle
         return count($changes);
     }
 
+    public function getBlockList(): array
+    {
+        return $this->blockList;
+    }
+
     /**
      * Ersetzt alle Bloecke und Variablen mit den fertigen Inhalten.
      *
@@ -963,6 +968,23 @@ class Template extends PoolObject
                 unset($this->ActiveBlock);
         }
         return null;
+    }
+
+    public function parsePendingBlocks(string $fileHandle = ''): static
+    {
+        if ($fileHandle && $this->activeHandle !== $fileHandle) {
+            $this->useFile($fileHandle);
+        }
+        if ($this->activeFile instanceof TempFile) {
+            foreach ($this->activeFile->getBlockList() as $block) {
+                $block->setParentheses($this->varStart, $this->varEnd);
+                if ($block->allowParse()) {
+                    $block->parse();
+                    $block->setAllowParse(false);
+                }
+            }
+        }
+        return $this;
     }
 
     /**
