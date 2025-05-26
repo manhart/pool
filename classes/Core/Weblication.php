@@ -433,12 +433,13 @@ class Weblication extends Component
     public function setCharset(string $charset): static
     {
         header("Content-Type: text/html; charset=$charset");
+        ini_set('default_charset', $charset);
         $this->charset = $charset;
         return $this;
     }
 
     /**
-     * All kinds of formats.There are predefined ones: datetime, date and time
+     * All kinds of formats. There are predefined ones: datetime, date and time
      */
     public function setDefaultFormats(array $formats): static
     {
