@@ -47,7 +47,7 @@ use const pool\PWD_TILL_GUIS;
  * Class GUI_Module
  * Base class for all graphical frontend controls.
  * They have the template engine on board. GUIs defined in HTML templates with the syntax [GUI_xyz(param1=value&param2=value] are read in automatically,
- * instantiated and filled with parameters.
+ * instantiated, and filled with parameters.
  *
  * @package pool
  * @since 2003-07-10
@@ -176,11 +176,11 @@ class GUI_Module extends Module
         bool $search = true,
     ): GUI_Module {
         $GUIFQClassName = self::$guiCache[$GUIClassName] ??= self::findGUIModule($GUIClassName, $ParentGUI);
-        $Params = new Input(Input::EMPTY);
-        $Params->setParams($params);
+        $paramsInput = new Input(Input::EMPTY);
+        $paramsInput->setParams($params);
 
         /* @var $GUI GUI_Module */
-        $GUI = new $GUIFQClassName($Owner, $Params->getData());
+        $GUI = new $GUIFQClassName($Owner, $paramsInput->getData());
         //TODO check authorisation
         //$GUI->disable();
         if ($ParentGUI instanceof Module) {
@@ -345,7 +345,7 @@ class GUI_Module extends Module
     /**
      * Durchsucht den Inhalt nach GUIs.
      *
-     * @param string $content Zu durchsuchender Inhalt
+     * @param string $content content to be searched
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
      * @throws ModulNotFoundException
      */
@@ -449,6 +449,7 @@ class GUI_Module extends Module
      */
     private function prepareChildren(): void
     {
+        $this->finalizePendingBlocks();
         foreach ($this->childModules as $Module) {
             $Module->importHandoff($this->handoff);
             if ($Module instanceof self) {
@@ -458,7 +459,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Main logic of the front controller. compile main content.
+     * Main logic of the front controller. Compile main content.
      */
     public function prepareContent(): void
     {
@@ -475,6 +476,19 @@ class GUI_Module extends Module
      * frontend control: run/execute the main logic and fill templates.
      */
     protected function prepare(): void {}
+
+    /**
+     * Parses all unfinished blocks in the templates.
+     * This method triggers the hook system during block parsing,
+     * which might create and insert new GUI's as children
+     */
+    private function finalizePendingBlocks(): void
+    {
+        $templates = $this->getTemplates();
+        foreach ($templates as $handle => $_) {
+            $this->Template->parsePendingBlocks($handle);
+        }
+    }
 
     /**
      * Automatically includes the appropriate JavaScript class, instantiates it, and adds it to JS Weblication. It also includes the CSS file.
@@ -503,10 +517,10 @@ class GUI_Module extends Module
      */
     private function finalizeChildren(): void
     {
-        foreach ($this->childModules as $GUI) {
-            if (!$GUI->enabled()) continue;
-            if (!$GUI instanceof self) continue;
-            $GUI->finalContent = $GUI->finalizeContent();
+        foreach ($this->childModules as $currentChild) {
+            if (!$currentChild->enabled()) continue;
+            if (!$currentChild instanceof self) continue;
+            $currentChild->finalContent = $currentChild->finalizeContent();
         }
     }
 
@@ -717,7 +731,7 @@ class GUI_Module extends Module
         if (!array_key_exists('stdout', $templates) && in_array('stdout', $this->Template->getFiles(false))) {
             $templates['stdout'] = null;//patch for existing projects using loadFiles()
         }
-        foreach ($templates as $handle => $tplFile) {
+        foreach ($templates as $handle => $_) {
             $content .= $this->Template->parse($handle)->getContent($handle);
         }
         return $content;
@@ -812,7 +826,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Enable plain JSON return (without change by the POOL)
+     * Enable plain JSON return (without a change by the POOL)
      *
      * @deprecated Set this in the Metadata when registering your method.
      * @see GUI_Module::registerAjaxMethod()

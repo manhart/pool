@@ -53,16 +53,6 @@ class MySQLi extends Driver
      */
     private string $charset = 'utf8';
 
-    /**
-     * @param DataInterface $dataInterface
-     * @param string $hostname
-     * @param int $port
-     * @param string $username
-     * @param string $password
-     * @param string $database
-     * @param mixed ...$options
-     * @return Connection
-     */
     public function connect(
         DataInterface $dataInterface,
         string $hostname,
@@ -124,7 +114,6 @@ class MySQLi extends Driver
 
     /**
      * @param mysqli_result $result
-     * @return int
      */
     public function numRows(mixed $result): int
     {
@@ -133,7 +122,6 @@ class MySQLi extends Driver
 
     /**
      * @param mysqli_result $result
-     * @return bool
      */
     public function hasRows(mixed $result): bool
     {
@@ -143,9 +131,7 @@ class MySQLi extends Driver
     /**
      * Gets the number of affected rows in a previous SQL operation
      *
-     * @param Connection $connection
      * @param mysqli_result $result
-     * @return int|false
      */
     public function affectedRows(Connection $connection, mixed $result): int|false
     {
@@ -169,7 +155,7 @@ class MySQLi extends Driver
     }
 
     /**
-     * Get the columns info of a table
+     * Get the column info of a table
      */
     public function getTableColumnsInfo(Connection $connection, string $database, string $table): array
     {
@@ -212,9 +198,7 @@ class MySQLi extends Driver
     /**
      * Executes a query and returns the query result
      *
-     * @param Connection $connection
      * @param string $query SQL query
-     * @param ...$params
      * @return mixed query result
      */
     public function query(Connection $connection, string $query, ...$params): mixed

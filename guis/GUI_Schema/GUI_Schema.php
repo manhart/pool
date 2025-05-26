@@ -46,9 +46,6 @@ class GUI_Schema extends GUI_Module
 
     /**
      * load schemes
-     *
-     * @param array $schemes
-     * @return void
      */
     private function loadSchemes(array $schemes = []): void
     {

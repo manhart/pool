@@ -122,11 +122,12 @@ class GUI_Module
     /**
      * populates named Elements with the data of an iterator
      * @see FormData.entries()
-     * @param {Iterable} data key is used as name value may be an array in which case the function will attempt to find elements named `name[]` analog to the way php parses a form. <br>
-     * Currently only supports one layer of nesting
+     * @param {Iterable} data key is used as name value may be an array in which case the function will attempt to find elements named `name[]` analog to the way php parses a
+     *     form. <br> Currently only supports one layer of nesting
      * @param {Element} node the Element in which to search, typically a specific form or fieldset
      * @param overwriteDefault additionally write the value to the defaultValue
-     * @param {function(number, number)} indexMapper is given the current iteration counter (0 based) and the length of the provided data array. The function is expected to return an appropriate index
+     * @param {function(number, number)} indexMapper is given the current iteration counter (0 based) and the length of the provided data array. The function is expected to return
+     *     an appropriate index
      */
     loadFormData(data, node, overwriteDefault = false, indexMapper = x => x) {
         for (const [name, dataItem] of data) {
@@ -213,7 +214,7 @@ class GUI_Module
                     key = 'body';
                     break;
                 default:
-                    throw new Error('Unrecognized request Method ' + options.method);
+                    throw new Error(`Unrecognized request Method ${options.method}`);
             }
         }
         options[key] = data;
@@ -225,9 +226,9 @@ class GUI_Module
             module = this.getFullyQualifiedClassName(),
             moduleName = this.name,
             body,
+            responseType = 'pool',
             ...extraOpts
         } = options;
-
 
         const reqOptions = {
             method,
@@ -259,28 +260,28 @@ class GUI_Module
 
         let queryString = '';
         if (query) {
-            let QueryURL = new URLSearchParams();
+            const queryURL = new URLSearchParams();
 
             for (const [key, value] of Object.entries(query)) {
                 if (Array.isArray(value)) {
-                    value.forEach(innerValue => QueryURL.append(key, innerValue));
+                    value.forEach(innerValue => queryURL.append(key, innerValue));
                 }
                 else if(value === null) {
-                    QueryURL.append(key, '');
+                    queryURL.append(key, '');
                 }
                 //doesn't work with empty Objects
                 else if (typeof value === 'object') {
                     for (const [innerKey, innerValue] of Object.entries(value)) {
-                        QueryURL.append(key + '[' + innerKey + ']', String(innerValue));
+                        queryURL.append(key + '[' + innerKey + ']', String(innerValue));
                     }
                 }
                 else if (value !== undefined) {
-                    QueryURL.append(key, value.toString());
+                    queryURL.append(key, value.toString());
                 }
             }
 
             // Convert to encoded string and prepend with ?
-            queryString = QueryURL.toString();
+            queryString = queryURL.toString();
             queryString = queryString && `?${queryString}`;
         }
 
@@ -288,14 +289,28 @@ class GUI_Module
             origin, pathname, search
         } = window.location;
 
-        let Endpoint = new URL(pathname + queryString, origin);
-        Endpoint.searchParams.get('schema') || Endpoint.searchParams.set('schema', (new URLSearchParams(search).get('schema') || ''));
-        Endpoint.searchParams.set('module', module); // for the server-side module to know which module is calling
-        Endpoint.searchParams.set('moduleName', moduleName); // for the server-side module to know the name of the module
-        Endpoint.searchParams.set('method', ajaxMethod);
+        const endpointURL = new URL(pathname + queryString, origin);
+        endpointURL.searchParams.get('schema') || endpointURL.searchParams.set('schema', (new URLSearchParams(search).get('schema') || ''));
+        endpointURL.searchParams.set('module', module); // for the server-side module to know which module is calling
+        endpointURL.searchParams.set('moduleName', moduleName); // for the server-side module to know the name of the module
+        endpointURL.searchParams.set('method', ajaxMethod);
 
-        // console.debug('fetch', Endpoint.toString(), reqOptions);
-        const promise = fetch(Endpoint, reqOptions).then(this.parseAjaxResponse.bind(this), this.onFetchNetworkError);
+        // console.debug('fetch', endpointURL.toString(), reqOptions);
+        let responseHandler;
+        switch(responseType) {
+            case "pool":
+                responseHandler = this.parseAjaxResponse.bind(this);
+                break;
+            case 'raw':
+                responseHandler = x => x;
+                break;
+            default:
+                const responseTypeEncoded = encodeURI(responseType);
+                const encoded = responseTypeEncoded === responseType ? '' : ' (encoded)';
+                throw new Error(`Unrecognized response type ${responseTypeEncoded}${encoded} requested`);
+        }
+        const promise = fetch(endpointURL, reqOptions).then(responseHandler,
+            this.onFetchNetworkError);
         //add a default handler
         promise.then = this.getThenMod(this.onAjax_UnhandledException).bind(promise);
         return promise;

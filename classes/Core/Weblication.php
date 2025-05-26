@@ -433,12 +433,13 @@ class Weblication extends Component
     public function setCharset(string $charset): static
     {
         header("Content-Type: text/html; charset=$charset");
+        ini_set('default_charset', $charset);
         $this->charset = $charset;
         return $this;
     }
 
     /**
-     * All kinds of formats.There are predefined ones: datetime, date and time
+     * All kinds of formats. There are predefined ones: datetime, date and time
      */
     public function setDefaultFormats(array $formats): static
     {
@@ -1121,6 +1122,17 @@ class Weblication extends Component
         return $this;
     }
 
+    public function regenerateSession(array $stickySessionValues, ...$sessionValues): void
+    {
+        $this->Session->setData(
+            array_intersect_key($this->Session->getData(), array_flip($stickySessionValues)) + ((
+            $sessionValues && array_is_list($sessionValues) ? $sessionValues[0] : $sessionValues) ?? []),
+        );//user may pass [key => value, ...] which becomes [[...]]
+        $this->Session->start();
+        $this->Session->regenerate_id();
+        $this->Session->write_close();
+    }
+
     /**
      * Set page title
      */
@@ -1487,7 +1499,7 @@ class Weblication extends Component
      */
     private function isMemoryAvailable(): bool
     {
-        return (bool)($this->memory ?? false);
+        return ($this->memory ?? false) && $this->memory->isAvailable();
     }
 
     /**

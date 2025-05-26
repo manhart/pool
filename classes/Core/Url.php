@@ -143,7 +143,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
         $this->port = (int)($_SERVER['SERVER_PORT'] ?? 0);
         $this->path = $_SERVER['SCRIPT_NAME'] ?? '';
         if ($withQuery) {
-            $this->withQuery($_GET);
+            $this->withQuery($_SERVER['QUERY_STRING'] ?? []);
         }
     }
 

@@ -50,11 +50,8 @@ enum DataType
     case ALPHANUMERIC;// only a-z, A-Z, 0-9, _
     case ALPHANUMERIC_SPACE; // only a-z, A-Z, 0-9, _, space
     case ALPHANUMERIC_SPACE_PUNCTUATION; // only a-z, A-Z, 0-9, _, space, ., ,;:!?()-+/&
+    case HTML_SAFE; // = FILTER_SANITIZE_FULL_SPECIAL_CHARS
 
-    /**
-     * @param DataType $dataType
-     * @return Closure
-     */
     public static function getFilter(DataType $dataType): Closure
     {
         $alphaNum = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
@@ -90,6 +87,8 @@ enum DataType
                 throw new InvalidArgumentException('Value is not alphanumeric with spaces.'),
             self::ALPHANUMERIC_SPACE_PUNCTUATION => static fn($value) => strcspn($value, "$alphaNum .,;:!?()-+/&") === 0 ? $value :
                 throw new InvalidArgumentException('Value is not alphanumeric with spaces and punctuation.'),
+            self::HTML_SAFE => static fn($value) => is_string(filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS)) ? $value :
+                throw new InvalidArgumentException('Value is not a valid string or could not be sanitized for HTML safety.'),
         };
         return match ($dataType) {
             self::ANY => $filter,

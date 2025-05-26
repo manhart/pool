@@ -59,17 +59,17 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * don't quote the value in the (sql) query
      */
-    public const DAO_NO_QUOTES = 1;
+    public const int DAO_NO_QUOTES = 1;
     /**
      * don't escape the value in the (sql) query
      */
-    public const DAO_NO_ESCAPE = 2;
+    public const int DAO_NO_ESCAPE = 2;
     /**
      * Data types
      */
-    public const STRING = 1;
-    public const INT = 2;
-    public const FLOAT = 3;
+    public const int STRING = 1;
+    public const int INT = 2;
+    public const int FLOAT = 3;
 
     /**
      * @var string|null Name of the table / file / view (must be declared in derived class)

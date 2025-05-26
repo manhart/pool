@@ -1284,13 +1284,13 @@ function htmlspecialchars(string, quoteStyle, charset, doubleEncode) {
     }
     string = string || ''
     string = string.toString()
+
     if (doubleEncode !== false) {
         // Put this first to avoid double-encoding
         string = string.replace(/&/g, '&amp;')
     }
-    string = string
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
+    string = string.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
     const OPTS = {
         ENT_NOQUOTES: 0,
         ENT_HTML_QUOTE_SINGLE: 1,

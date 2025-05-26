@@ -152,17 +152,3 @@ namespace pool\includes\Resources\dir
         }
     }
 }
-
-namespace pool\includes\Resources
-{
-
-    interface JavaScriptResource
-    {
-        public const DEFAULT_FILE_EXT = 'js';
-    }
-
-    interface StylesheetResource
-    {
-        public const DEFAULT_FILE_EXT = '(css|scss)'; //todo scss less?
-    }
-}
