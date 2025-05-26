@@ -1346,7 +1346,7 @@ class GUI_Table extends GUI_Module
     {
         $this->poolOptions['moduleName'] = $this->getName();
 
-        $this->Template->setVar([
+        $this->Template->setVars([
             'moduleName' => $this->getName(),
             'className' => $this->getClassName(),
             'poolOptions' => json_encode($this->poolOptions, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
@@ -1377,7 +1377,7 @@ class GUI_Table extends GUI_Module
             //            echo $name.'='.$value.'<br>';
 
             $TableAttributeBlock = $this->Template->newBlock('tableAttribute');
-            $TableAttributeBlock->setVar([
+            $TableAttributeBlock->setVars([
                 'data-name' => $attrName,
                 'data-value' => $value,
             ],
