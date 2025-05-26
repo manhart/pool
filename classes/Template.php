@@ -651,11 +651,22 @@ class TempScript extends TempFile
             return $content;
         }
 
-        ob_start();
-        eval("?>$this->parsedContent<?php ");
-        $this->parsedContent = ob_get_clean();
-
+        $this->parsedContent = $this->executeIsolatedPHP($this->parsedContent);
         return '';
+    }
+
+    protected function executeIsolatedPHP(string $code): string
+    {
+        ob_start();
+        try {
+            (static function () use ($code) {
+                eval("?>$code<?php ");
+            })();
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            throw new \RuntimeException("Error in template script: {$e->getMessage()}", 0, $e);
+        }
+        return ob_get_clean();
     }
 }
 
