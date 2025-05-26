@@ -202,10 +202,6 @@ trait Configurable
 
     /**
      * Set configuration for module (it only takes different values)
-     *
-     * @param array $configuration
-     * @param bool $inDesignMode
-     * @return Configurable
      */
     public function setConfiguration(array $configuration, bool $inDesignMode = false): static
     {
@@ -229,9 +225,6 @@ trait Configurable
         return $this->inDesignMode;
     }
 
-    /**
-     * @return void
-     */
     private function writeSessionProperties(): void
     {
         if (!$this->configuration) return;
@@ -251,9 +244,7 @@ trait Configurable
     }
 
     /**
-     * returns the configuration
-     *
-     * @return array
+     * Returns the configuration
      */
     public function getConfiguration(): array
     {
@@ -265,10 +256,6 @@ trait Configurable
         return true;
     }
 
-    /**
-     * @param bool $autoloadConfiguration
-     * @return $this
-     */
     public function autoloadConfiguration(bool $autoloadConfiguration): static
     {
         $this->autoloadConfiguration = $autoloadConfiguration;

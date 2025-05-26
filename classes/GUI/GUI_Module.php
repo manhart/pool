@@ -345,7 +345,7 @@ class GUI_Module extends Module
     /**
      * Durchsucht den Inhalt nach GUIs.
      *
-     * @param string $content Zu durchsuchender Inhalt
+     * @param string $content content to be searched
      * @return string Neuer Inhalt (gefundene GUIs wurden im Html Code ersetzt)
      * @throws ModulNotFoundException
      */
@@ -458,7 +458,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Main logic of the front controller. compile main content.
+     * Main logic of the front controller. Compile main content.
      */
     public function prepareContent(): void
     {
@@ -812,7 +812,7 @@ class GUI_Module extends Module
     }
 
     /**
-     * Enable plain JSON return (without change by the POOL)
+     * Enable plain JSON return (without a change by the POOL)
      *
      * @deprecated Set this in the Metadata when registering your method.
      * @see GUI_Module::registerAjaxMethod()

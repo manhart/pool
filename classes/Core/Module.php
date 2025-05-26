@@ -123,11 +123,10 @@ class Module extends Component
     }
 
     /**
-     * get internal param
+     * Get internal param
      *
      * @param string $param parameter name
      * @param mixed|null $default default value null if omitted
-     * @return mixed
      */
     public function getInternalParam(string $param, mixed $default = null): mixed
     {
@@ -288,10 +287,7 @@ class Module extends Component
     }
 
     /**
-     * insert module as child
-     *
-     * @param Module $Module
-     * @return Module
+     * Insert module as child
      */
     public function insertModule(Module $Module): static
     {
@@ -301,9 +297,6 @@ class Module extends Component
 
     /**
      * Remove module
-     *
-     * @param Module $Module
-     * @return Module
      */
     public function removeModule(Module $Module): static
     {

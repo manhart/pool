@@ -57,18 +57,15 @@ class GUI_Url extends GUI_Module
         parent::init($superglobals);
     }
 
-    /**
-     * prepare url
-     */
     protected function prepare(): void
     {
         $withQuery = !$this->Input->getAsBool('empty');
 
         $script = $this->Input->getVar('script');
         if ($script !== '') {
-            $Url = Url::fromString($script);
+            $url = Url::fromString($script);
         } else {
-            $Url = new Url($withQuery);
+            $url = new Url($withQuery);
         }
 
         $params = $this->Input->getVar('params');
@@ -78,7 +75,7 @@ class GUI_Url extends GUI_Module
                 $param = explode(':', $piece);
                 $key = $param[0];
                 $value = $param[1] ?? null;
-                $Url->setParam($key, $value);
+                $url->setParam($key, $value);
             }
         }
 
@@ -87,7 +84,7 @@ class GUI_Url extends GUI_Module
             $IGet = new Input(Input::GET);
             $passThrough = explode(';', $passThrough);
             foreach ($passThrough as $param) {
-                $Url->setParam($param, $IGet->getVar($param));
+                $url->setParam($param, $IGet->getVar($param));
             }
             unset($IGet);
         }
@@ -95,20 +92,17 @@ class GUI_Url extends GUI_Module
         if ($eliminate) {
             $eliminate = explode(';', $eliminate);
             foreach ($eliminate as $param) {
-                $Url->setParam($param, null);
+                $url->setParam($param, null);
             }
         }
 
         if($http_response_code = $this->Input->getAsInt('redirect')) {
-            $Url->redirect(true, $http_response_code);
+            $url->redirect(true, $http_response_code);
         }
 
-        $this->content = $Url->getUrl();
+        $this->content = $url->getUrl();
     }
 
-    /**
-     * @return string return url
-     */
     protected function finalize(): string
     {
         return $this->content;

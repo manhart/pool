@@ -1099,14 +1099,11 @@ class GUI_Table extends GUI_Module
 
     protected array $poolOptions = [];
 
-    const RENDER_NONE = 0;
-    const RENDER_IMMEDIATELY = 1;
-    const RENDER_ONDOMLOADED = 2;
+    public const int RENDER_NONE = 0;
+    public const int RENDER_IMMEDIATELY = 1;
+    public const int RENDER_ONDOMLOADED = 2;
     //    private string $version = '1.19.1';
 
-    /**
-     * @param int|null $superglobals
-     */
     public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVar('framework', 'bs4');
@@ -1157,33 +1154,22 @@ class GUI_Table extends GUI_Module
     //     return $this->inspectorProperties + parent::getInspectorProperties();
     // }
 
-    /**
-     * @return array
-     */
     public function getInspectorProperties(): array
     {
         return $this->inspectorProperties + $this->getDefaultInspectorProperties();
     }
 
-    /**
-     * @return array
-     */
     public function getColumnsProperties(): array
     {
         return $this->getInspectorProperties()['columns']['properties'];
     }
 
-    /**
-     * @param string $property
-     * @return array
-     */
     public function getColumnProperty(string $property): array
     {
         return $this->getColumnsProperties()[$property];
     }
 
     /**
-     * @param array $columns
      * @return $this
      */
     public function setColumns(array $columns): GUI_Table
@@ -1468,67 +1454,12 @@ class GUI_Table extends GUI_Module
             $this->setClientVar('columns', $clientColumns);
         }
 
-        //        foreach($this->configuration as $optName => $attrValue) {
-        ////            $inpValue = $this->Input->getVar($attrName);
-        ////            $attrValue = $inpValue ?? $attrValue;
-        //            $attrName = $this->getInspectorProperties()[$optName]['attribute'] ?? null;
-        //            if($attrName == null) continue; // no data-attribute
-        //            // $attrType = $this->getDefaultOptions()[$optName]['type'];
-        //
-        //            if(is_bool($attrValue)) {
-        //                $attrValue = bool2string($attrValue);
-        //            }
-        //
-        //            if($attrValue == '') {
-        //                continue;
-        //            }
-        //
-        //            $TableAttributeBlock = $this->Template->newBlock('tableAttribute');
-        //            $TableAttributeBlock->setVar([
-        //                    'data-name' => $attrName,
-        //                    'data-value' => $attrValue
-        //                ]
-        //            );
-        //        }
-        //        unset($optName);
-
-        //        $this->Template->newBlock('row');
-        //        foreach($this->columns as $column) {
-        //            $ColumnBlock = $this->Template->newBlock('column');
-        //            $ColumnBlock->setVar('caption', $column['caption'] ?? '');
-        //            unset($column['caption']);
-        //            foreach($column as $attrName => $attrValue) {
-        //                $ColumnAttributeBlock = $this->Template->newBlock('columnAttribute');
-        //                $ColumnAttributeBlock->setVar([
-        //                    'data-name' => $attrName,
-        //                    'data-value' => $attrValue
-        //                ]);
-        //            }
-        //        }
-
         $this->Template->leaveBlock();
-
-        // render table
-        //        $render_immediately = $render_ondomloaded = '';
-        //        if($this->getVar('render') == self::RENDER_ONDOMLOADED) {
-        //            $render_ondomloaded = 'ready(() => $Weblication.getModule(\''.$this->getName().'\').render());';
-        //        }
-        //        elseif($this->getVar('render') == self::RENDER_IMMEDIATELY) {
-        //            $render_immediately = '.render()';
-        //        }
         $this->setClientVar('render', (int)$this->getVar('render'));
-        //        $this->Template->setVar([
-        //            'RENDER_IMMEDIATELY' => $render_immediately,
-        //            'RENDER_ONDOMLOADED' => $render_ondomloaded
-        //        ]);
-        parent::prepare();
     }
 
     /**
      * parse columns
-     *
-     * @param string $columns
-     * @return array
      */
     public function parseColumns(string $columns): array
     {
@@ -1592,7 +1523,6 @@ class GUI_Table extends GUI_Module
      * @param string $filter filter (e.g. from client side request)
      * @param array $mandatoryFilter it involves strict and mandatory constraints.
      * @param array $searchFilter it involves additional search patterns
-     * @return array
      * @throws JsonException
      * @see MySQL_DAO::buildFilter()
      */
