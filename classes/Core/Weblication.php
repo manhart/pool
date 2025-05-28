@@ -1418,7 +1418,7 @@ class Weblication extends Component
     /**
      * Terminates Ajax requests with a caller-defined error
      */
-    public function denyAJAX_Request($messageKey, $defaultMessage, $response_code, $errorType): void
+    public function denyAJAX_Request(string $messageKey, ?string $defaultMessage, int $response_code, string $errorType): void
     {
         if (self::isAjax()) {
             header('Content-Type: application/json', true, $response_code);

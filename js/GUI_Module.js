@@ -356,8 +356,14 @@ class GUI_Module
     async parseAjaxResponse(response)
     {
         const status = response.status;
-        if (500 <= status && status < 600)//Server error
+        if (500 <= status && status < 600) {//Server error
+            const contentType = response.headers.get('Content-Type') || '';
+            if (contentType.includes('application/json')) {
+                const {error, data} = await this.parseJSON(response);
+                throw new PoolAjaxResponseError(error?.message ?? 'Internal server error', data, error?.type ?? 'internal');
+            }
             throw new PoolAjaxResponseError(await response.text(), null, 'internal');
+        }
         switch (status) {
             case 200: {
                 // if a body response exists, parse and extract the possible properties
