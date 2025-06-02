@@ -1547,6 +1547,7 @@ class Weblication extends Component
         if (!$this->isMemoryAvailable()) return;
         if (!self::$cacheItem[$topic]) return;
         $allKeys = $this->memory->getAllKeys();
+        if ($allKeys === false) return;
         $keys = [];
         foreach ($allKeys as $key) {
             if (str_starts_with($key, $topic)) {
