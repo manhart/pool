@@ -23,14 +23,29 @@ class Memory extends Memcached
     private function __construct(string $servers)
     {
         parent::__construct('pool');
-        $this->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
-        if (ini_get('session.save_handler') === 'memcached') {
-            $servers = $servers ?: ini_get('session.save_path');
+        $this->configureMemcachedOptions();
+
+        static $sessionHandler = null;
+        static $sessionSavePath = null;
+
+        if($sessionHandler === null) {
+            $sessionHandler = ini_get('session.save_handler');
+            $sessionSavePath = ini_get('session.save_path');
+        }
+        if ($sessionHandler === 'memcached') {
+            $servers = $servers ?: $sessionSavePath;
         }
 
         if ($servers !== '' && $servers !== null) {
             $this->parseAndAddServers($servers);
         }
+    }
+
+    private function configureMemcachedOptions(): void
+    {
+        $this->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
+        $this->setOption(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+        $this->setOption(Memcached::OPT_AUTO_EJECT_HOSTS, true);
     }
 
     private function parseAndAddServers(string $servers): void
@@ -58,6 +73,7 @@ class Memory extends Memcached
             $this->addServers($serversToAdd);
         }
     }
+
     public function isAvailable(): bool
     {
         if (isset($this->initialized)) {
