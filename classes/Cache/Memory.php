@@ -11,7 +11,6 @@
 namespace pool\classes\Cache;
 
 use Memcached;
-use pool\classes\Exception\InvalidArgumentException;
 
 class Memory extends Memcached
 {
@@ -24,6 +23,7 @@ class Memory extends Memcached
     private function __construct(string $servers)
     {
         parent::__construct('pool');
+        $this->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
         if (ini_get('session.save_handler') === 'memcached') {
             $servers = $servers ?: ini_get('session.save_path');
         }
