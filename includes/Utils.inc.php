@@ -16,6 +16,7 @@
 
 use JetBrains\PhpStorm\NoReturn;
 use JetBrains\PhpStorm\Pure;
+use pool\classes\Core\Http\Request;
 
 /**
  * Returns the current Unix timestamp with microseconds.
@@ -474,99 +475,6 @@ function strip_head(string $html): string
     return preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches) ? $matches[1] : '';
 }
 
-function parseForwardedHeader(string $header): ?string
-{
-    foreach (explode(',', $header) as $segment) {
-        $segment = trim($segment);
-        foreach (explode(';', $segment) as $kv) {
-            [$key, $val] = array_map('trim', explode('=', $kv, 2) + [1 => '']);
-            if (strtolower($key) === 'for') {
-                $val = trim($val, '"');
-
-                // IPv6 with brackets + port → e.g. [2001:db8::1]:4711
-                if (str_starts_with($val, '[')) {
-                    $closing = strpos($val, ']');
-                    if ($closing !== false) {
-                        $ip = substr($val, 1, $closing - 1);
-                    } else {
-                        $ip = $val; // fallback
-                    }
-                } else {
-                    // remove optional port from IPv4 or unbracketed IPv6
-                    $colon = strpos($val, ':');
-                    $ip = $colon !== false ? substr($val, 0, $colon) : $val;
-                }
-
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * Delivers the client's IP
- *
- * @return string|null Remote/Client IP Adresse
- */
-function getClientIP(): ?string
-{
-    foreach (
-        [
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_FORWARDED',
-            'HTTP_X_CLUSTER_CLIENT_IP',
-            'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',// RFC 7239
-            'REMOTE_ADDR',
-        ] as $key
-    ) {
-        if(empty($_SERVER[$key])) {
-            continue;
-        }
-
-        $raw = $_SERVER[$key];
-
-        // Check if RFC 7239 Forwarded header is present
-        if ($key === 'HTTP_FORWARDED') {
-            // Forwarded: for=192.0.2.43, for=198.51.100.17 or for=2001:db8::1 or for="[2001:db8::1]:4711"
-            $ip = parseForwardedHeader($raw);
-            if ($ip !== null) {
-                return $ip;
-            }
-        }
-        else {
-            foreach (explode(',', $raw) as $entry) {
-                $ip = trim($entry);
-                if (str_contains($ip, ':')) {
-                    $ip = explode(':', $ip)[0]; // strip port
-                }
-                if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
-                    return $ip;
-                }
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * Creates a browser fingerprint
- */
-function getBrowserFingerprint(bool $withClientIP = true): string
-{
-    $data = $withClientIP && ($clientIP = getClientIP()) ? $clientIP : '';
-    $data .= $_SERVER['HTTP_USER_AGENT'];
-    $data .= $_SERVER['HTTP_ACCEPT'] ?? '';
-    $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
-    $data .= $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
-    $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-    return md5($data);
-}
-
 /**
  * Holt sich den Inhalt von PHP Skripten und gibt ihn per return Wert zurueck.
  *
@@ -1012,7 +920,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
  */
 function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, ?string $base = null, string $separator = '/'): bool|string
 {
-    $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
+    $browserPath = dirname(Request::scriptName());
     $base ??= $browserPath;
     $here ??= $browserPath;
     //base relative paths and normalize
@@ -1065,7 +973,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
 function makeRelativePathsFrom(?string $here, string $toThis, ?string $base = null, string $separator = DIRECTORY_SEPARATOR): array
 {
     $base ??= $_SERVER['DOCUMENT_ROOT'];
-    $here ??= dirname($_SERVER['SCRIPT_FILENAME']);
+    $here ??= dirname(Request::scriptName());
 
     // Resolve symbolic links and remove trailing slashes
     $base = rtrim($base, $separator);
@@ -1275,10 +1183,12 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
 /**
  * Checks if it is an Ajax call (XmlHttpRequest)
  * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
+ *
+ * @deprecated
  */
 function isAjax(): bool
 {
-    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
+    return Request::isAjax();
 }
 
 /**

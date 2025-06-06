@@ -17,6 +17,7 @@
 
 namespace pool\guis\GUI_Schema;
 
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Weblication;
 use pool\classes\GUI\GUI_Module;
@@ -135,11 +136,10 @@ class GUI_Schema extends GUI_Module
      * Checks whether the given directory includes a subdirectory which name matches the current vHost and appends it
      *
      * @param string $directory the directory to be appended
-     * @return void
      */
     private function appendVHost(string &$directory): void
     {
-        $vhost = $_SERVER['SERVER_NAME'];
+        $vhost = Request::host();
         if (is_dir($proposed = buildDirPath($directory, $vhost)))
             $directory = $proposed;
     }

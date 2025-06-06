@@ -23,6 +23,7 @@ use Exception;
 use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Cookie;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
@@ -60,7 +61,6 @@ use function ini_set;
 use function is_dir;
 use function is_null;
 use function is_subclass_of;
-use function isAjax;
 use function json_encode;
 use function makeRelativePathsFrom;
 use function microtime;
@@ -319,7 +319,7 @@ class Weblication extends Component
     final private function __construct()
     {
         parent::__construct(null);
-        self::$isAjax = isAjax();
+        self::$isAjax = Request::isAjax();
         self::$workingDirectory = getcwd();
         $this->context = new Input();
         //handles POST requests containing JSON data
@@ -984,19 +984,19 @@ class Weblication extends Component
      */
     protected function transformPathInfo(): Input
     {
-        $Input = new Input();
-        if (isset($_SERVER['PATH_INFO'])) {
-            $pathInfo = trim($_SERVER['PATH_INFO'], '/');
+        $input = new Input();
+        if ($pathInfo = Request::pathInfo()) {
+            $pathInfo = trim($pathInfo, '/');
             $segments = explode('/', $pathInfo);
             $count = count($segments);
 
             for ($i = 0; $i < $count; $i += 2) {
                 $name = $segments[$i];
                 $value = $segments[$i + 1] ?? null;
-                $Input->setVar($name, $value);
+                $input->setVar($name, $value);
             }
         }
-        return $Input;
+        return $input;
     }
 
     /**

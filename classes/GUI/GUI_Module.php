@@ -23,6 +23,7 @@ use JetBrains\PhpStorm\Pure;
 use Log;
 use pool\classes\Autoloader;
 use pool\classes\Core\Component;
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
 use pool\classes\Core\Weblication;
@@ -141,7 +142,7 @@ class GUI_Module extends Module
         parent::__construct($Owner, $params);
 
         $this->ajaxMethod = $_REQUEST[Weblication::REQUEST_PARAM_METHOD] ?? '';
-        $this->isAjax = isAjax() && $_REQUEST[Weblication::REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
+        $this->isAjax = Request::isAjax() && $_REQUEST[Weblication::REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
             ($_REQUEST[Weblication::REQUEST_PARAM_MODULE] === static::class || $_REQUEST[Weblication::REQUEST_PARAM_MODULE] === $this->getClassName());
 
         // set the module name (if it is necessary for ajax calls)

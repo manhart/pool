@@ -14,6 +14,7 @@ namespace pool\classes\Core;
 
 use JetBrains\PhpStorm\NoReturn;
 use JsonSerializable;
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Input;
 use pool\classes\Exception\InvalidArgumentException;
 use SensitiveParameter;
@@ -138,12 +139,12 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     public function __construct(bool|int $withQuery = true)
     {
         // initialize with current url
-        $this->scheme = $_SERVER['REQUEST_SCHEME'] ?? 'https';
-        $this->host = $_SERVER['SERVER_NAME'];
-        $this->port = (int)($_SERVER['SERVER_PORT'] ?? 0);
-        $this->path = $_SERVER['SCRIPT_NAME'] ?? '';
+        $this->scheme = Request::scheme();
+        $this->host = Request::host();
+        $this->port = Request::port();
+        $this->path = Request::scriptName();
         if ($withQuery) {
-            $this->withQuery($_SERVER['QUERY_STRING'] ?? []);
+            $this->withQuery(Request::queryRaw());
         }
     }
 
@@ -158,7 +159,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
         }
 
         $Url = new static(false);
-        $Url->withScheme(strtolower($parts['scheme'] ?? $_SERVER['REQUEST_SCHEME'] ?? ''));
+        $Url->withScheme(strtolower($parts['scheme'] ?? Request::scheme()));
         $Url->withHost(rawurldecode($parts['host'] ?? ''));
         $Url->withPort($parts['port'] ?? 0);
         $Url->withUserInfo(rawurldecode($parts['user'] ?? ''), rawurldecode($parts['pass'] ?? ''));

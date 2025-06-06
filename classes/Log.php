@@ -127,7 +127,7 @@ class Log
                 $level = $facility['level'] ?? 0;
                 $from = $facility['from'] ?? G7SYSTEM_DEFAULT_MAIL_ADDRESS;
                 $to = $facility['to'] ?? '';
-                $subject = $facility['subject'] ?? $_SERVER['SERVER_NAME'].' '.Weblication::getInstance()->getName().' reports';
+                $subject = $facility['subject'] ?? \pool\classes\Core\Http\Request::host().' '.Weblication::getInstance()->getName().' reports';
 
                 $Mailer = new SendmailMailer();
                 $MailMsg = new Message();
