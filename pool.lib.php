@@ -10,7 +10,6 @@
 
 namespace pool
 {
-
     use pool\classes\Autoloader;
 
     use function define;
