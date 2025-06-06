@@ -157,6 +157,11 @@ final class Request
         return self::inputServer()->getAsString('SCRIPT_NAME');
     }
 
+    public static function scriptFilename(): string
+    {
+        return self::inputServer()->getAsString('SCRIPT_FILENAME');
+    }
+
     public static function queryRaw(): string
     {
         return self::inputServer()->getAsString('QUERY_STRING');
