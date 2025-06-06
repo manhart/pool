@@ -161,7 +161,6 @@ class GUI_HeadData extends GUI_Module
     /**
      * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
      *
-     * @param string $xuaCompatible
      */
     public function setXuaCompatible(string $xuaCompatible)
     {

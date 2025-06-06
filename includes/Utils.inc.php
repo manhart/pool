@@ -920,7 +920,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
  */
 function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, ?string $base = null, string $separator = '/'): bool|string
 {
-    $browserPath = dirname(Request::scriptName());
+    $browserPath = dirname(Request::scriptFilename());
     $base ??= $browserPath;
     $here ??= $browserPath;
     //base relative paths and normalize
@@ -973,7 +973,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
 function makeRelativePathsFrom(?string $here, string $toThis, ?string $base = null, string $separator = DIRECTORY_SEPARATOR): array
 {
     $base ??= $_SERVER['DOCUMENT_ROOT'];
-    $here ??= dirname(Request::scriptName());
+    $here ??= dirname(Request::scriptFilename());
 
     // Resolve symbolic links and remove trailing slashes
     $base = rtrim($base, $separator);
