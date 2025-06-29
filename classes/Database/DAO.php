@@ -555,10 +555,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected function buildFilter(
         array $filter_rules,
-        Operator $operator = Operator::and,
+        ?Operator $operator = Operator::and,
         bool $skip_next_operator = false,
         string $initialOperator = ' and',
     ): string {
+        $operator ??= Operator::and;
         if (!$filter_rules) {//not filter anything (terminate floating operators)
             return $skip_next_operator ? $this->dummyWhere : '';
         }
@@ -579,7 +580,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 continue;
             }
             if (is_array($record[0])) {// nesting detected
-                $record = "({$this->buildFilter($record[0], $record[1], true)})";
+                $record = "({$this->buildFilter($record[0], $record[1] ?? null, true)})";
             } else {//normal record
                 $record = $this->assembleFilterRecord($record);
             }
