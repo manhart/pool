@@ -62,6 +62,14 @@ final class Date
         return $dt->format('H:i:s') !== '00:00:00' && (strlen($input) > 10 || str_contains($input, 'T'));
     }
 
+    /**
+     * Checks if the given string contains a time indicator, such as a space or the letter 'T'.
+     */
+    public static function hasTime(string $input): bool
+    {
+        return str_contains($input, ' ') || str_contains($input, 'T');
+    }
+
     public static function isParseErrorFree(null|array|false $errors): bool
     {
         return $errors === false || (isset($errors['warning_count'], $errors['error_count']) && $errors['warning_count'] === 0 && $errors['error_count'] === 0);
