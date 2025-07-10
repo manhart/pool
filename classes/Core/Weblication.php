@@ -481,7 +481,7 @@ class Weblication extends Component
     }
 
     /**
-     * Set default schema/layout, if none is loaded by request
+     * Set default schema/layout, if request loads none
      */
     public function setDefaultSchema(string $default = 'index'): static
     {
@@ -492,9 +492,9 @@ class Weblication extends Component
     /**
      * Returns the default scheme
      */
-    public function getDefaultSchema(): string
+    public static function getDefaultSchema(): string
     {
-        return $this->schema;
+        return self::getInstance()->schema;
     }
 
     /**

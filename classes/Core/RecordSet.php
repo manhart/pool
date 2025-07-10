@@ -703,8 +703,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Returns all values of a field name
      *
-     * @param array|string $fieldNames
-     * @param array|string $keyByFields
      * @param string $type type conversion (int, float, bool, string)
      * @return array Felddaten als Array z.B. array('Alex', 'Florian', 'Andreas')
      */
