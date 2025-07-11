@@ -134,16 +134,17 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     private bool $withoutHost = false;
 
     /**
-     * @param bool|int $withQuery if true, the query params will be initialized with the current query params
+     * @param bool|int $preserveQuery If `true`, the query parameters (`query string`) of the current request are preserved and initialized in the new URL instance.
+     *                                If `false`, the URL will be created without query parameters.
      */
-    public function __construct(bool|int $withQuery = true)
+    public function __construct(bool|int $preserveQuery = true)
     {
-        // initialize with current url
+        // initialize with the current url
         $this->scheme = Request::scheme();
         $this->host = Request::host();
         $this->port = Request::port();
         $this->path = Request::scriptName();
-        if ($withQuery) {
+        if ($preserveQuery) {
             $this->withQuery(Request::queryRaw());
         }
     }
