@@ -1002,12 +1002,13 @@ class Weblication extends Component
     /**
      * Redirect to schema
      */
-    public function redirect(string $schema, bool $withQuery = false, string $path = ''): never
+    public function redirect(string $schema, bool $withQuery = false, string $path = '', array $query = []): never
     {
-        $Url = new Url($withQuery);
-        $Url->setParam(self::REQUEST_PARAM_SCHEMA, $schema);
-        if ($path) $Url->setScriptPath($path);
-        $Url->redirect();
+        $url = new Url($withQuery);
+        $url->setParam(self::REQUEST_PARAM_SCHEMA, $schema);
+        if ($path) $url->setScriptPath($path);
+        if ($query) $url->setParams($query);
+        $url->redirect();
     }
 
     /**
