@@ -581,6 +581,7 @@ class GUI_Module extends Module
         $Closure = $ajaxMethod['method'] ?? null;
         $this->plainJSON = $ajaxMethod['noFormat'] ?? false;
         $dbInterfaces = $ajaxMethod['dbInterfaces'] ?? [];
+        $logConfigurationName = $ajaxMethod['logConfigurationName'] ?? null;
 
         if (!$Closure instanceof Closure) {
             if (is_callable([$this, $requestedMethod]))// 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
@@ -590,6 +591,7 @@ class GUI_Module extends Module
                     __METHOD__,
                     'access-denied',
                     403,
+                    logConfigurationName: $logConfigurationName
                 );
             return $this->respondToAjaxCall(
                 null,
@@ -597,6 +599,7 @@ class GUI_Module extends Module
                 __METHOD__,
                 'not-callable',
                 405,
+                logConfigurationName: $logConfigurationName
             );
         }
 
@@ -604,7 +607,7 @@ class GUI_Module extends Module
         try {
             $ReflectionMethod = new ReflectionFunction($Closure);
         } catch (ReflectionException $e) {
-            return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500);
+            return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500, logConfigurationName: $logConfigurationName);
         }
 
         error_clear_last();
@@ -650,6 +653,7 @@ class GUI_Module extends Module
             $potentialErrorType,
             $statusCode ?? 200,
             $ajaxMethod['flags'] ?? 0,
+            $logConfigurationName
         );
     }
 
@@ -658,12 +662,13 @@ class GUI_Module extends Module
      *
      * @param string $callingMethod optional; use __METHOD__
      */
-    protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0): string
+    protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0,
+        ?string $logConfigurationName = null): string
     {
         Log::info(
             $error,
             ['className' => $this->getClassName(), 'method' => $this->ajaxMethod, 'errorType' => $errorType, 'status' => $statusCode],
-            'ajaxCallLog',
+            $logConfigurationName ?? 'ajaxCallLog',
         );
         header('Content-Type: application/json');
         if (!$this->plainJSON || $statusCode != 200) {//report failed functions in standard format
@@ -816,12 +821,14 @@ class GUI_Module extends Module
         Closure $method,
         bool $noFormat = false,
         array $dbInterfaces = [],
+        ?string $logConfigurationName = null,
         ...$meta
     ): self {
         $meta['alias'] = $alias;
         $meta['method'] = $method;
         $meta['noFormat'] = $noFormat;
         $meta['dbInterfaces'] = $dbInterfaces;
+        $meta['logConfigurationName'] = $logConfigurationName;
         $this->ajaxMethods[$alias] = $meta;
         return $this;
     }
