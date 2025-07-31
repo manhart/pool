@@ -599,7 +599,8 @@ class GUI_Module extends Module
                 __METHOD__,
                 'not-callable',
                 405,
-                logConfigurationName: $logConfigurationName
+                logConfigurationName: $logConfigurationName,
+                logLevel: Log::LEVEL_WARN
             );
         }
 
@@ -607,7 +608,8 @@ class GUI_Module extends Module
         try {
             $ReflectionMethod = new ReflectionFunction($Closure);
         } catch (ReflectionException $e) {
-            return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500, logConfigurationName: $logConfigurationName);
+            return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500,
+                logConfigurationName: $logConfigurationName, logLevel: Log::LEVEL_ERROR);
         }
 
         error_clear_last();
@@ -653,7 +655,8 @@ class GUI_Module extends Module
             $potentialErrorType,
             $statusCode ?? 200,
             $ajaxMethod['flags'] ?? 0,
-            $logConfigurationName
+            $logConfigurationName,
+            $errorText ? Log::LEVEL_ERROR : Log::LEVEL_INFO
         );
     }
 
@@ -663,10 +666,11 @@ class GUI_Module extends Module
      * @param string $callingMethod optional; use __METHOD__
      */
     protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0,
-        ?string $logConfigurationName = null): string
+        ?string $logConfigurationName = null, int $logLevel = Log::LEVEL_INFO): string
     {
-        Log::info(
+        Log::message(
             $error,
+            $logLevel,
             ['className' => $this->getClassName(), 'method' => $this->ajaxMethod, 'errorType' => $errorType, 'status' => $statusCode],
             $logConfigurationName ?? 'ajaxCallLog',
         );
