@@ -628,7 +628,9 @@ class GUI_Module extends Module
                 // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
 
                 $result = $Closure(...$args);
-                $this->processTransactions($dbInterfaces, 'commit');
+
+                $rollbackTransaction = $result['poolRollbackTransaction'] ?? false;
+                $this->processTransactions($dbInterfaces, $rollbackTransaction ? 'rollback' : 'commit');
             } catch (Throwable $e) {
                 $this->processTransactions($dbInterfaces, 'rollback');
                 $this->plainJSON = false;
@@ -727,6 +729,16 @@ class GUI_Module extends Module
     {
         $result['success'] = false;
         $result['message'] = $message;
+        return $result;
+    }
+
+    #[Pure]
+    /** sets the success, rollback flag, and message of a result and returns the result */
+    protected static function abort(array $result = [], string $message = ''): array
+    {
+        $result['success'] = false;
+        $result['message'] = $message;
+        $result['poolRollbackTransaction'] = true;
         return $result;
     }
 
