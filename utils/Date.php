@@ -19,7 +19,7 @@ final class Date
 {
     public static function hasChanged(string|\DateTimeInterface|null $new, string|\DateTimeInterface|null $existing): bool
     {
-        if (!$new || !$existing) {
+        if (!$new xor !$existing) {
             return true;
         }
 
