@@ -454,7 +454,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record as DateTime object
+     * Returns a value of a field of the current record as a DateTime object
      */
     public function getValueAsDateTime(string $key, ?DateTime $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
@@ -466,7 +466,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
         try {
             if (is_numeric($value) && !str_contains($value, '-'))
-                return (new DateTime(timezone: $timezone))->setTimestamp($value);
+                return new DateTime(timezone: $timezone)->setTimestamp($value);
             return new DateTime($value, $timezone);
         } catch (Exception) {
         }
