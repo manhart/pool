@@ -630,6 +630,7 @@ class GUI_Module extends Module
                 $result = $Closure(...$args);
 
                 $rollbackTransaction = $result['poolRollbackTransaction'] ?? false;
+                $statusCode = $result['poolStatusCode'] ?? null;
                 $this->processTransactions($dbInterfaces, $rollbackTransaction ? 'rollback' : 'commit');
             } catch (Throwable $e) {
                 $this->processTransactions($dbInterfaces, 'rollback');
@@ -734,11 +735,12 @@ class GUI_Module extends Module
 
     #[Pure]
     /** sets the success, rollback flag, and message of a result and returns the result */
-    protected static function abort(array $result = [], string $message = ''): array
+    protected static function abort(array $result = [], string $message = '', int $statusCode = 422): array
     {
         $result['success'] = false;
         $result['message'] = $message;
         $result['poolRollbackTransaction'] = true;
+        $result['poolStatusCode'] = $statusCode;
         return $result;
     }
 
