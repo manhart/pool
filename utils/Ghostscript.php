@@ -25,7 +25,7 @@ use function deleteDir;
 
 final class Ghostscript
 {
-    const GHOSTSCRIPT_SUPPRESS_OPTIONS = ['-dBATCH', '-dNOPAUSE', '-dNOPROMPT', '-dSAFER'];
+    const array GHOSTSCRIPT_SUPPRESS_OPTIONS = ['-dBATCH', '-dNOPAUSE', '-dNOPROMPT', '-dSAFER'];
 
     /**
      * @var string $gsBin ghostscript path to the executable
@@ -65,7 +65,7 @@ final class Ghostscript
         $arguments = array_merge(self::GHOSTSCRIPT_SUPPRESS_OPTIONS, $arguments);
         $escapedArguments = array_map(escapeshellarg(...), $arguments);
         $argumentsString = implode(' ', $escapedArguments);
-        $command = escapeshellcmd(self::getGsBin().' '.$argumentsString);
+        $command = escapeshellcmd(self::getGsBin()).' '.$argumentsString;
         exec($command, $output, $resultCode);
         return $resultCode === 0;
     }

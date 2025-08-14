@@ -1315,7 +1315,7 @@ function shell_exec_background(string $cmd, array $args = [], int $priority = 0,
     $cmd = escapeshellcmd($cmd);
     $args = implode(' ', array_map(escapeshellarg(...), $args));
 
-    // Ensure priority is within valid range (-20 to 19)
+    // Ensure priority is within the valid range (-20 to 19)
     if ($priority < -20 || $priority > 19) {
         throw new \InvalidArgumentException('Priority must be between -20 and 19.');
     }
@@ -1615,8 +1615,8 @@ function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
 {
     $pdfSourceFiles = implode(' ', array_map(escapeshellarg(...), $pdfSourceFiles));
     $pdfDestFile = escapeshellarg($pdfOut);
-    $cmd = escapeshellcmd("pdfunite $pdfSourceFiles $pdfDestFile");
-    exec($cmd, result_code: $resultCode);
+    $cmd = "pdfunite $pdfSourceFiles $pdfDestFile";
+    exec($cmd, result_code: $resultCode);/** @var int $resultCode */
     return ($resultCode === 0) && file_exists($pdfOut);
 }
 
