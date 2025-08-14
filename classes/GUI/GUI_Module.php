@@ -87,12 +87,12 @@ class GUI_Module extends Module
     protected array $templates = [];
 
     /**
-     * @var array<int, string> $jsFiles javascript files to be loaded, defined as indexed array
+     * @var array<int, string> $jsFiles JavaScript files to be loaded, defined as an indexed array
      */
     protected array $jsFiles = [];
 
     /**
-     * @var array|string[] $cssFiles css files to be loaded, defined as indexed array
+     * @var array|string[] $cssFiles CSS files to be loaded, defined as an indexed array
      */
     protected array $cssFiles = [];
 
@@ -103,22 +103,16 @@ class GUI_Module extends Module
 
     /**
      * Merkt sich mit dieser Variable das eigene Muster im Template (dient der Identifikation)
-     *
-     * @var string $marker
      */
     private string $marker;
 
     /**
-     * Kompletter Inhalt (geparster Content)
-     *
-     * @var string $finalContent
+     * Holds the final content of this GUI_Module
      */
     private string $finalContent = '';
 
     /**
      * Is this module the Target of an Ajax-Call
-     *
-     * @var boolean
      */
     private bool $isAjax;
 
