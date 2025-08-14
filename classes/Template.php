@@ -511,7 +511,8 @@ class TempBlock extends TempCoreHandle
     {
         $content = parent::parse($this->allowParse, $clearParsedContent);
         // run hooks
-        foreach ($this->hooks[$this->type] as $hook) {
+        $hooks = $this->hooks[$this->type] ?? [];
+        foreach ($hooks as $hook) {
             $content = $hook($this, $content);
         }
         if ($returnContent) {
@@ -949,7 +950,7 @@ class Template extends PoolObject
      */
     public function newBlock(string $handle): ?TempBlock
     {
-        if ($this->activeFile instanceof TempFile) {
+        if ($this->activeFile instanceof TempFile || $this->activeFile instanceof TempSimple) {
             if ((!isset($this->ActiveBlock)) || ($this->ActiveBlock->getHandle() !== $handle)) {
                 $this->ActiveBlock = $this->activeFile->getTempBlock($handle);
             }
