@@ -14,7 +14,6 @@
  * @since 07/28/2003
  */
 
-use JetBrains\PhpStorm\NoReturn;
 use JetBrains\PhpStorm\Pure;
 use pool\classes\Core\Http\Request;
 
@@ -594,7 +593,7 @@ function bool2int(bool $bool): int
 }
 
 /**
- * Convert boolean expression to string ("true" or "false")
+ * Convert a boolean expression to string ("true" or "false")
  */
 function bool2string(bool $bool): string
 {
@@ -1202,30 +1201,89 @@ function pt2mm(float $pt): float
 }
 
 /**
- * Erzwingt einen Download im Browser
+ * Forced a download in the browser
  *
- * @param string $file Datei (mit absolutem Pfad)
- * @param string $mimetype Mimetype z.b. application/octet-stream
+ * @param string $file absolute path to the file to be downloaded
+ * @param string|null $downloadName optional name of the file to be downloaded
+ * @param string|null $mimetype Mimetype e.g. application/octet-stream
+ * @param bool $forceDownload force download even if the browser supports the download attribute
+ * @param array $headers additional headers
+ * @param callable|null $onSuccess optional callback to be called on success
+ * @param callable|null $onFailure optional callback to be called on failure
  */
-#[NoReturn]
-function forceFileDownload(string $file, string $mimetype = ''): void
+function serveFile(string $file, ?string $downloadName = null, ?string $mimetype = null, bool $forceDownload = true, array $headers = [], ?callable $onSuccess = null, ?callable $onFailure = null): never
 {
-    if (empty($mimetype)) $mimetype = mime_content_type($file);
-    if (empty($mimetype)) $mimetype = 'application/octet-stream';
-    $filesize = filesize($file);
+    // Pre-check
+    if(!is_file($file) || !is_readable($file)) {
+        if (is_callable($onFailure)) $onFailure();
+        http_response_code(404);
+        exit(1);
+    }
 
+    $filesize = @filesize($file);
+    if($filesize === false) {
+        if (is_callable($onFailure)) $onFailure();
+        http_response_code(500);
+        exit(1);
+    }
+
+    $type =  $mimetype ?: mime_content_type($file) ?: 'application/octet-stream';
+
+    $filename = $downloadName ?: basename($file);
+    $fallback = preg_replace('/[^A-Za-z0-9_.-]/', '_', $filename);// ASCII-Fallback
+
+    //UTF-8 safety
+    if (!mb_check_encoding($filename, 'UTF-8')) {
+        $filename = mb_convert_encoding($filename, 'UTF-8', 'auto');
+    }
+
+    if (function_exists('ini_set')) {
+        @ini_set('zlib.output_compression', 'Off');
+    }
+    // clear output buffer
+    while (ob_get_level() > 0) { @ob_end_clean(); }
+
+    $disposition = $forceDownload ? 'attachment': 'inline';
     // Start sending headers
-    header('Pragma: public'); // required
-    header('Expires: 0');
-    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-    header('Cache-Control: private', false); // required for certain browsers
+    header("Content-Type: $type");
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Disposition: $disposition; filename=\"$fallback\"; filename*=UTF-8''" . rawurlencode($filename));
     header('Content-Transfer-Encoding: binary');
-    header('Content-Type: '.$mimetype);
-    header('Content-Length: '.(string)$filesize);
-    header('Content-Disposition: attachment; filename="'.basename($file).'";');
 
-    readfile($file);
-    exit;
+    // No caching
+    header('Expires: 0');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Cache-Control: post-check=0, pre-check=0', false);// IE relict
+    header('Accept-Ranges: none');// no range requests
+    header('Pragma: no-cache');// HTTP/1.0 relict
+
+    header("Content-Length: $filesize");
+
+    // Additional headers
+    foreach ($headers as $header) {
+        header($header);
+    }
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();// prevent session locking
+    }
+
+    @ignore_user_abort(true);
+    if(function_exists('set_time_limit')) @set_time_limit(0);
+
+    if(readfile($file) === false) {
+        if (is_callable($onFailure)) $onFailure();
+        exit(1);
+    }
+
+    if (function_exists('fastcgi_finish_request')) {
+        @fastcgi_finish_request();
+    } else {
+        @flush();
+    }
+
+    if (is_callable($onSuccess)) $onSuccess();
+    exit(0);
 }
 
 /**
