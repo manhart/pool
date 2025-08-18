@@ -10,9 +10,13 @@
 
 namespace pool\classes\Exception;
 
-use RuntimeException as PhpRuntimeException;
+use pool\classes\Core\Http\hasHttpStatus;
+use pool\classes\Core\Http\HttpStatusInterface;
 
 /**
  * Thrown to indicate that a service is unavailable.
  */
-class ServiceUnavailableException extends PhpRuntimeException implements PoolExceptionInterface {}
+class ServiceUnavailableException extends RuntimeException implements HttpStatusInterface {
+    use hasHttpStatus;
+    protected const int HTTP_STATUS = 503;
+}

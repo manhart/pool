@@ -10,13 +10,12 @@
 
 namespace pool\classes\Exception;
 
-use RuntimeException as PhpRuntimeException;
 use Throwable;
 
 /**
  * Thrown to indicate that the argument received is not valid.
  */
-class SessionDisabledException extends PhpRuntimeException implements PoolExceptionInterface
+class SessionDisabledException extends RuntimeException
 {
     public function __construct(string $message = 'Session is disabled', int $code = 0, ?Throwable $previous = null)
     {

@@ -10,9 +10,8 @@
 
 namespace pool\classes\Exception;
 
-use InvalidArgumentException as PhpInvalidArgumentException;
-
 /**
  * Thrown to indicate that the argument received is not valid.
  */
-class MissingArgumentException extends PhpInvalidArgumentException implements PoolExceptionInterface {}
+class MissingArgumentException extends InvalidArgumentException {
+}

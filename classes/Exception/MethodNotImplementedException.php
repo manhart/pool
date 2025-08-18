@@ -10,6 +10,10 @@
 
 namespace pool\classes\Exception;
 
-use LogicException as PhpLogicException;
+use pool\classes\Core\Http\hasHttpStatus;
+use pool\classes\Core\Http\HttpStatusInterface;
 
-class MethodNotImplementedException extends PhpLogicException implements PoolExceptionInterface {}
+class MethodNotImplementedException extends LogicException implements HttpStatusInterface {
+    use hasHttpStatus;
+    protected const int HTTP_STATUS = 501;
+}

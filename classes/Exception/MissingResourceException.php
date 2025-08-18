@@ -10,6 +10,10 @@
 
 namespace pool\classes\Exception;
 
-use RuntimeException as PhpRuntimeException;
+use pool\classes\Core\Http\hasHttpStatus;
+use pool\classes\Core\Http\HttpStatusInterface;
 
-class MissingResourceException extends PhpRuntimeException implements PoolExceptionInterface {}
+class MissingResourceException extends RuntimeException implements HttpStatusInterface {
+    use hasHttpStatus;
+    protected const int HTTP_STATUS = 404;
+}

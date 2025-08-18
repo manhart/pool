@@ -10,7 +10,10 @@
 
 namespace pool\classes\Exception;
 
-/**
- * Thrown to indicate that cURL has thrown an error.
- */
-class CurlException extends RuntimeException {}
+use pool\classes\Core\Http\hasHttpStatus;
+use pool\classes\Core\Http\HttpStatusInterface;
+
+class AuthenticationRequiredException extends SecurityException implements HttpStatusInterface {
+    use hasHttpStatus;
+    protected const int HTTP_STATUS = 401;
+}

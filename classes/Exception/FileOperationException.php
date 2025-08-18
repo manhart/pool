@@ -10,4 +10,4 @@
 
 namespace pool\classes\Exception;
 
-class FileOperationException extends RuntimeException implements PoolExceptionInterface {}
+class FileOperationException extends RuntimeException {}
