@@ -15,5 +15,5 @@ use pool\classes\Core\Http\HttpStatusInterface;
 
 class ResourceGoneException extends MissingResourceException implements HttpStatusInterface {
     use hasHttpStatus;
-    protected $code = 410;
+    protected const int HTTP_STATUS = 410;
 }
