@@ -831,7 +831,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function getDefaultColumns(): array
     {
-        if ($this->defaultColumns === false)
+        if (isset($this->defaultColumns) && $this->defaultColumns === false)
             return $this->defaultColumns = $this->fetchColumnsList();
         return $this->defaultColumns ??= $this->getColumns();
     }
