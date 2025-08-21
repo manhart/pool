@@ -488,7 +488,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
      *
      * @see Weblication::setDefaultFormats()
      */
-    public function getValueAsNumber(string $key, $default = null, $decimals = null): ?string
+    public function formatValueAsNumber(string $key, $default = null, $decimals = null): ?string
     {
         $value = $this->getValue($key, $default);
         if (!is_null($value)) {
@@ -539,21 +539,21 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Sets new/overwrites values of fields in the result set.
+     * Merges the given fields into the current record or adds a new record if no current record exists.
      */
-    public function setValues(array $assoc): RecordSet
+    public function unionIntoCurrent(array $fields): static
     {
         if (!$this->count()) {
-            return $this->addValues($assoc);
+            return $this->appendRecord($fields);
         }
-        $this->records[$this->index] = $assoc + $this->records[$this->index];
+        $this->records[$this->index] = $fields + $this->records[$this->index];
         return $this;
     }
 
     /**
      * Adds a new record into the record set.
      */
-    public function addValues(array $assoc): RecordSet
+    public function appendRecord(array $assoc): static
     {
         $this->records[$this->count()] = $assoc;
         $this->index = $this->count() - 1;
@@ -561,14 +561,49 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * This is the equivalent of the setValue function, except that the fields are appended to the back of the array
+     * Appends a value or multiple key-value pairs to the current record in the record set.
      */
-    public function addFields(array|string $key, string $value = ''): RecordSet
+    public function appendValue(array|string $key, string $value = ''): static
     {
         if (!$this->count())
-            return is_array($key) ? $this->addValues($key) : $this->addValue($key, $value);
+            return is_array($key) ? $this->appendRecord($key) : $this->addValue($key, $value);
         $insert = is_array($key) ? $key : [$key => $value];
         $this->records[$this->index] = array_merge($this->records[$this->index], $insert);
+        return $this;
+    }
+
+    /**
+     * Appends the records from the given RecordSet to the current set of records.
+     */
+    public function appendAll(self $recordSet): self
+    {
+        $this->records = array_merge($this->records, $recordSet->getRaw());
+        return $this;
+    }
+
+    /**
+     * Filters the records to ensure each value of the specified field is unique,
+     * removing duplicates based on the given field name.
+     */
+    public function uniqueBy(string $fieldName): static
+    {
+        $seen = [];
+        $this->records = array_values(
+            array_filter(
+                $this->records,
+                function ($row) use ($fieldName, &$seen) {
+                    if (!isset($row[$fieldName])) {
+                        return true;//if field is missing do not filter
+                    }
+                    if (in_array($row[$fieldName], $seen, true)) {
+                        return false;//duplicate
+                    }
+                    $seen[] = $row[$fieldName];
+                    return true;
+                },
+            ),
+        );
+        $this->reset();
         return $this;
     }
 
