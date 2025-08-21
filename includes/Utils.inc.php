@@ -1201,7 +1201,7 @@ function pt2mm(float $pt): float
 }
 
 /**
- * Forced a download in the browser
+ * Send a file to the client (browser) for download.
  *
  * @param string $file absolute path to the file to be downloaded
  * @param string|null $downloadName optional name of the file to be downloaded
