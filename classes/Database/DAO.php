@@ -866,7 +866,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function getMetaData(string $which = ''): array
     {
-        return $which ? $this->metaData[$which] : $this->metaData;
+        return $which ? $this->metaData[$which] ?? [] : $this->metaData;
     }
 
     /**
