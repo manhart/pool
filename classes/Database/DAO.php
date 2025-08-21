@@ -941,58 +941,72 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
     /**
      * Insert new records based on the data passed as an array, with the key corresponding to the column name.
+     *
+     * @param array<string, mixed>|array<array<string, mixed>> $data Data to insert, as a single record or list of records.
+     * @param string $mode Insert mode: 'normal', 'ignore', 'replace', 'delayed', 'low', or 'high'. Defaults to 'normal'.
+     * @param array<string, mixed>|true|null $onDuplicate Columns to update on a duplicate key, or true to update non-primary key columns. Not compatible with 'replace' or 'delayed' modes.
      */
-    public function insert(array $data): RecordSet
+    public function insert(array $data, string $mode = 'normal', array|true|null $onDuplicate = null): RecordSet
     {
         if (!$data) {
-            throw new DAOException('DAO::insert failed. No data specified!');
+            throw new DAOException(__CLASS__.'::insert failed. No data specified!');
         }
         if (!array_is_list($data)) {
             $data = [$data];
         }
-        $columns = array_map([$this, 'wrapSymbols'], array_keys($data[0]));
+        // Validate columns
+        $columns = array_keys($data[0]);
+        $validColumns = $this->getDefaultColumns();
+        if ($invalidColumns = array_diff($columns, $validColumns)) {
+            throw new DAOException('Invalid columns: '.implode(', ', $invalidColumns).' in '.__CLASS__);
+        }
+
+        $insertKeyword = match(strtolower($mode)) {
+            'ignore' => 'INSERT IGNORE',
+            'replace' => 'REPLACE',
+            'delayed' => 'INSERT DELAYED',
+            'low' => 'INSERT LOW_PRIORITY',
+            'high' => 'INSERT HIGH_PRIORITY',
+            default => 'INSERT',
+        };
+
+        $wrappedColumnNames = array_map([$this, 'wrapSymbols'], $columns);
+        $columnsStr = implode(',', $wrappedColumnNames);
 
         $valuesList = [];
         foreach ($data as $record) {
             $values = [];
             foreach ($record as $column => $value) {
-                // make value
-                if (is_null($value)) {
-                    $value = 'NULL';
-                } elseif (is_bool($value)) {
-                    $value = bool2string($value);
-                } elseif (is_array($value)) {
-                    $value = is_null($value[0]) ? 'NULL' : $value[0];
-                } elseif ($value instanceof Commands) {
-                    // reserved keywords don't need to be masked
-                    $expression = $this->commands[$value->name];
-                    $value = $expression instanceof Closure ? $expression($column) : $expression;
-                } elseif ($value instanceof SqlStatement) {
-                    $value = $value->getStatement();
-                } elseif ($value instanceof DateTimeInterface) {
-                    $value = "'{$value->format('Y-m-d H:i:s')}'";
-                } else {
-                    $value = match (gettype($value)) {
-                        'NULL' => 'NULL',
-                        'boolean' => bool2string($value),
-                        default => $this->escapeValue($value)
-                    };
-                }
-                $values[] = $value;
+                $values[] = $this->formatSqlValue($value, $column);
             }
             $valuesList[] = '('.implode(',', $values).')';
         }
+        $valuesStr = implode(',', $valuesList);
 
-        $columns = implode(',', $columns);
-        $valuesList = implode(',', $valuesList);
+        $aliasForInserted = '';
+        $updateClause = '';
+        if ($onDuplicate !== null) {
+            if ($mode === 'replace' || $mode === 'delayed')
+                throw new DAOException(__CLASS__.'::insert failed. Cannot use ON DUPLICATE KEY UPDATE with REPLACE or DELAYED mode.');
+            $isMaria = true;//@todo check if MariaDB
+            if(!$isMaria) $aliasForInserted = ' AS new';
+            if ($onDuplicate === true) {
+                $nonPkCols = array_values(array_diff($columns, $this->getPrimaryKey()));
+                $onDuplicate = $isMaria ? $this->valuesForColumns($nonPkCols) : $this->valuesForColumnsAlias($nonPkCols, 'new');
+            }
+            $updateList = $this->buildAssignmentList($onDuplicate);
+            if ($updateList) $updateClause = "ON DUPLICATE KEY UPDATE $updateList";
+        }
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-            INSERT INTO $this
-                ($columns)
+            $insertKeyword INTO $this$aliasForInserted
+                ($columnsStr)
             VALUES
-                $valuesList
+                $valuesStr
+            $updateClause
             SQL;
+
         return $this->execute($sql);
     }
 
@@ -1042,33 +1056,49 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $this->execute($sql);
     }
 
+    protected function formatSqlValue(mixed $value, string $column): string
+    {
+        $columnMeta = $this->getMetaData('columns')[$column] ?? [];
+        $type = $columnMeta['type'] ?? '';
+        if (is_null($value)) {
+            return 'NULL';
+        }
+        if (is_bool($value)) {
+            return bool2string($value);
+        }
+        if (is_array($value)) {
+            //if(in_array($type, ['json', 'text', 'mediumtext', 'longtext'])) return json_encode($value);
+            return is_null($value[0]) ? 'NULL' : $this->escapeValue($value[0]);//? json_encode would make more sense? Where is it used?
+        }
+        if ($value instanceof Commands) {
+            // reserved keywords don't need to be masked
+            $expression = $this->commands[$value->name];
+            return $expression instanceof Closure ? $expression($column) : $expression;
+        }
+        if ($value instanceof SqlStatement) {
+            return $value->getStatement();
+        }
+        if ($value instanceof DateTimeInterface) {
+            return "'{$value->format('Y-m-d H:i:s')}'";
+        }
+        if (is_int($value) || is_float($value)) {
+            return match ($type) {
+                'int'   => (string)(int)$value,
+                'float' => (string)(float)$value,
+                default => (string)$value,
+            };
+        }
+        return "'{$this->escapeSQL($value)}'";
+    }
+
     /**
      * Build assignment list for update statements
      */
     protected function buildAssignmentList(array $data): string
     {
         $assignments = [];
-        foreach ($data as $field => $value) {
-            if (is_null($value)) {
-                $value = 'NULL';
-            } elseif (is_bool($value)) {
-                $value = bool2string($value);
-            } elseif ($value instanceof Commands) {
-                // reserved keywords don't need to be masked
-                $expression = $this->commands[$value->name];
-                if ($expression instanceof Closure) {
-                    $value = $expression($field);
-                } else {
-                    $value = $expression;
-                }
-            } elseif ($value instanceof DateTimeInterface) {
-                $value = "'{$value->format('Y-m-d H:i:s')}'";
-            } elseif ($value instanceof SqlStatement) {
-                $value = $value->getStatement();
-            } elseif (!is_int($value) && !is_float($value)) {
-                $value = "'{$this->escapeSQL($value)}'";
-            }
-            $assignments[] = "`$field`=$value";
+        foreach ($data as $column => $value) {
+            $assignments[] = "`$column`={$this->formatSqlValue($value, $column)}";
         }
         return implode(', ', $assignments);
     }
@@ -1194,6 +1224,24 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             return $column;
         }
         return $this->wrapSymbols($column);
+    }
+
+    protected function valuesForColumns(array $columns): array
+    {
+        $assign = [];
+        foreach ($columns as $col) {
+            $assign[$col] = new SqlStatement("VALUES({$this->encloseColumnName($col)})");
+        }
+        return $assign;
+    }
+
+    protected function valuesForColumnsAlias(array $columns, string $alias = 'new'): array
+    {
+        $assign = [];
+        foreach ($columns as $col) {
+            $assign[$col] = new SqlStatement("{$this->encloseColumnName($alias)}.{$this->encloseColumnName($col)}");
+        }
+        return $assign;
     }
 
     /**
