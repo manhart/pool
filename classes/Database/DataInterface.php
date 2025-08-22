@@ -862,7 +862,7 @@ class DataInterface extends PoolObject
      * Attention: Statements using the FOUND_ROWS() function are not safe for replication.
      *
      * @return int Number of found rows
-     * @throws Exception
+     * @throws InvalidArgumentException|DatabaseConnectionException
      */
     public function foundRows(string $databaseAlias): int
     {

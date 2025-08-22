@@ -15,6 +15,7 @@ use CustomMySQL_DAO;
 use DateTimeInterface;
 use JetBrains\PhpStorm\Pure;
 use mysqli_sql_exception;
+use Override;
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\RecordSet;
 use pool\classes\Core\Weblication;
@@ -36,7 +37,6 @@ use function bool2string;
 use function chr;
 use function class_exists;
 use function count;
-use function date;
 use function explode;
 use function file_exists;
 use function gettype;
@@ -77,7 +77,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected static ?string $tableName = null;
 
     /**
-     * @var string|null Name of the schema (must be declared in derived class if available)
+     * @var string|null Name of the schema (must be declared in a derived class if available)
      */
     protected static ?string $schemaName = null;
 
@@ -117,17 +117,17 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected array $metaData = [];
 
     /**
-     * @var array|string[] Primary key of table
+     * @var array|string[] Primary key of the table
      */
     protected array $pk = [];
 
     /**
-     * @var array|string[] Columns of table
+     * @var array|string[] Columns of the table
      */
     protected array $columns = [];
 
     /**
-     * @var array|string[] Escaped columns of table
+     * @var array|string[] Escaped columns of the table
      */
     protected array $escapedColumns = [];
 
@@ -259,10 +259,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $DAO;
     }
 
-    #[Pure]
     /**
      * Creates a Data Access Object
      */
+    #[Pure]
     final public static function create(?string $tableName = null, ?string $databaseName = null, bool $throws = false): static
     {
         // class stuff
@@ -397,7 +397,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Shorthand for fetching one or multiple values of a record
      *
-     * @param array|int|string $pk a unique identifier use an array [$pk, $column] to specify the primary key column or search field. $pk and $column each can also be a list as is
+     * @param array|int|string $pk a unique identifier uses an array [$pk, $column] to specify the primary key column or search field. $pk and $column each can also be a list as is
      *     usual with DAO::get()
      * @param mixed ...$fields a list of columns to retrieve if omitted will return the associated primary key (useful for reverse lookup)
      * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively
@@ -424,7 +424,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
-     * Returns a single record e.g. by primary key
+     * Returns a single record e.g., by primary key
      *
      * @see \MySQL_DAO::buildWhere
      */
@@ -440,14 +440,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 $where
             SQL;
         return $this->execute($sql);
-    }
-
-    /**
-     * Shorthand for current date()
-     */
-    final public static function now(string $format = 'Y-m-d H:i:s'): string
-    {
-        return date($format);
     }
 
     /**
@@ -524,13 +516,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
-     * Add value to query
+     * Escapes and/or quotes a value for safe usage in an SQL query.
      */
     protected function escapeValue(mixed $value, false|int $noEscape = false, false|int $noQuotes = false): int|float|string
     {
         if (is_int($value) || is_float($value)) {
             return $value;
-        }// If the value is not a string that can be directly used in SQL escape and quote it.
+        }// If the value is not a string that can be directly used, that can be directly used in SQL escape and quote it.
         $value = $noEscape ? $value : $this->escapeSQL($value);
         return $noQuotes ? $value : "'$value'"; //quote
     }
@@ -546,10 +538,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Build complex conditions for where or on clauses
      *
-     * @param array $filter_rules Filter rules in following format [[columnName, operator, value], ...]
-     * @param Operator $operator Logical operator for combining all conditions
+     * @param array $filter_rules Filter rules in the following format [[columnName, operator, value], ...]
+     * @param Operator|null $operator Logical operator for combining all conditions
      * @param boolean $skip_next_operator false skips first logical operator
-     * @param string $initialOperator Initial logical operator, if first rule is not an array and not a logical operator
+     * @param string $initialOperator Initial logical operator, if the first rule is not an array and not a logical operator
      * @return string conditions for where clause
      * @see MySQL_DAO::$operatorMap
      */
@@ -566,7 +558,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         $queryParts = [];
         $firstRule = $filter_rules[0] ?? null;
-        if (!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non joining operator
+        if (!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non-joining operator
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
@@ -585,7 +577,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 $record = $this->assembleFilterRecord($record);
             }
             $queryParts[] = !$skipAutomaticOperator ? //automatic operator?
-                " $mappedOperator $record" : $record;//automation puts operator between the last record and this one
+                " $mappedOperator $record" : $record;//automation puts an operator between the last record and this one
         }
         return implode('', $queryParts);
     }
@@ -647,8 +639,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 $value .= " {$this->mapOperator(Operator::and)} ";
                 $value .= /* max */
                     $this->escapeValue($values[1], $noEscape, $noQuotes);
-            } else {//enlist all values e.g. in, not in
-                //apply quotation rules
+            } else {//enlist all values e.g., in, not in
+                //apply the quotation rules
                 $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
                 $value = implode(', ', $values);//for some reason '0' is false
                 $values = $value === '' ? 'NULL' : $value;//https://www.php.net/manual/en/language.types.boolean.php#112190
@@ -699,7 +691,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Build a group by statement for a SQL query
      *
-     * @param array $groupBy Group by columns with sort order in following format ['column1' => 'ASC', 'column2' => 'DESC']. With rollup is also possible,
+     * @param array $groupBy Group by columns with sort order in the following format ['column1' => 'ASC', 'column2' => 'DESC']. With rollup it is also possible.
      *     e.g. ['column1' => 'ASC', 'WITH ROLLUP']
      * @return string GROUP BY statement
      */
@@ -732,7 +724,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Build a having statement for a SQL query
      *
-     * @param array $filter_rules Filter rules in following format [[columnName, operator, value], ...]
+     * @param array $filter_rules Filter rules in the following format [[columnName, operator, value], ...]
      * @return string HAVING statement
      */
     protected function buildHaving(array $filter_rules): string
@@ -796,7 +788,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
-     * Set primary key
+     * Set the primary key
      */
     public function setPrimaryKey(string ...$primaryKey): static
     {
@@ -817,7 +809,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
-     * Set columns as array
+     * Set columns as an array
      */
     public function setColumnsAsArray(array $columns): static
     {
@@ -930,6 +922,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $this->execute($sql);
     }
 
+    /** @noinspection PhpUnused */
     public function optimize(): RecordSet
     {
         /** @noinspection SqlResolve */
@@ -944,59 +937,31 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      *
      * @param array<string, mixed>|array<array<string, mixed>> $data Data to insert, as a single record or list of records.
      * @param string $mode Insert mode: 'normal', 'ignore', 'replace', 'delayed', 'low', or 'high'. Defaults to 'normal'.
-     * @param array<string, mixed>|true|null $onDuplicate Columns to update on a duplicate key, or true to update non-primary key columns. Not compatible with 'replace' or 'delayed' modes.
      */
-    public function insert(array $data, string $mode = 'normal', array|true|null $onDuplicate = null): RecordSet
+    #[Override]
+    public function insert(array $data, string $mode = 'normal'): RecordSet
     {
-        if (!$data) {
-            throw new DAOException(__CLASS__.'::insert failed. No data specified!');
-        }
-        if (!array_is_list($data)) {
-            $data = [$data];
-        }
-        // Validate columns
-        $columns = array_keys($data[0]);
-        $validColumns = $this->getDefaultColumns();
-        if ($invalidColumns = array_diff($columns, $validColumns)) {
-            throw new DAOException('Invalid columns: '.implode(', ', $invalidColumns).' in '.__CLASS__);
-        }
+        [, $columnsStr, $valuesStr, $insertKeyword] = $this->prepareInsertParts($data, $mode);
 
-        $insertKeyword = match(strtolower($mode)) {
-            'ignore' => 'INSERT IGNORE',
-            'replace' => 'REPLACE',
-            'delayed' => 'INSERT DELAYED',
-            'low' => 'INSERT LOW_PRIORITY',
-            'high' => 'INSERT HIGH_PRIORITY',
-            default => 'INSERT',
-        };
+        /** @noinspection SqlResolve */
+        $sql = <<<SQL
+            $insertKeyword INTO $this
+                ($columnsStr)
+            VALUES
+                $valuesStr
+            SQL;
 
-        $wrappedColumnNames = array_map([$this, 'wrapSymbols'], $columns);
-        $columnsStr = implode(',', $wrappedColumnNames);
+        return $this->execute($sql);
+    }
 
-        $valuesList = [];
-        foreach ($data as $record) {
-            $values = [];
-            foreach ($record as $column => $value) {
-                $values[] = $this->formatSqlValue($value, $column);
-            }
-            $valuesList[] = '('.implode(',', $values).')';
+    #[Override]
+    public function upsert(array $data, array|true $onDuplicate = true, string $mode = 'normal'): RecordSet
+    {
+        if ($mode === 'replace' || $mode === 'delayed') {
+            throw new DAOException(__CLASS__.'::upsert failed. Cannot use ON DUPLICATE KEY UPDATE with REPLACE or DELAYED mode.');
         }
-        $valuesStr = implode(',', $valuesList);
-
-        $aliasForInserted = '';
-        $updateClause = '';
-        if ($onDuplicate !== null) {
-            if ($mode === 'replace' || $mode === 'delayed')
-                throw new DAOException(__CLASS__.'::insert failed. Cannot use ON DUPLICATE KEY UPDATE with REPLACE or DELAYED mode.');
-            $isMaria = true;//@todo check if MariaDB
-            if(!$isMaria) $aliasForInserted = ' AS new';
-            if ($onDuplicate === true) {
-                $nonPkCols = array_values(array_diff($columns, $this->getPrimaryKey()));
-                $onDuplicate = $isMaria ? $this->valuesForColumns($nonPkCols) : $this->valuesForColumnsAlias($nonPkCols, 'new');
-            }
-            $updateList = $this->buildAssignmentList($onDuplicate);
-            if ($updateList) $updateClause = "ON DUPLICATE KEY UPDATE $updateList";
-        }
+        [$columns, $columnsStr, $valuesStr, $insertKeyword] = $this->prepareInsertParts($data, $mode);
+        [$updateClause, $aliasForInserted] = $this->buildOnDuplicateClause($columns, $onDuplicate );
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
@@ -1013,6 +978,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Update a record by primary key (put the primary key in the data array)
      */
+    #[Override]
     public function update(array $data): RecordSet
     {
         // Check if all primary keys are set in the data array
@@ -1155,7 +1121,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * Warning: When used after a CALL statement, this function returns the number of rows selected by the last query in the procedure, not by the whole
      * procedure. Attention: Statements using the FOUND_ROWS() function are not safe for replication.
      *
-     * @throws \Exception
+     * @throws InvalidArgumentException|DatabaseConnectionException
      */
     public function foundRows(): int
     {
@@ -1185,7 +1151,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $count = $this->wrapSymbols('count');
         $sql = <<<SQL
             SELECT COUNT(*) AS $count
-            FROM $this->quotedTable$this->quotedTableAlias
+            FROM $this->quotedTable $this->quotedTableAlias
             WHERE
                 $whereClause
             SQL;
@@ -1212,6 +1178,63 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             ALTER TABLE $this->quotedTable AUTO_INCREMENT = 1
             SQL;
         return $this->execute($sql);
+    }
+
+    protected function prepareInsertParts(array $data, string $mode): array
+    {
+        if (!$data) {
+            throw new DAOException('No data specified in '.__CLASS__);
+        }
+        if (!array_is_list($data)) {
+            $data = [$data];
+        }
+        // Validate columns
+        $columns = array_keys($data[0]);
+        $validColumns = $this->getDefaultColumns();
+        if ($invalidColumns = array_diff($columns, $validColumns)) {
+            throw new DAOException('Invalid columns: '.implode(', ', $invalidColumns).' in '.__CLASS__);
+        }
+
+        $insertKeyword = match (strtolower($mode)) {
+            'ignore' => 'INSERT IGNORE',
+            'replace' => 'REPLACE',
+            'delayed' => 'INSERT DELAYED',
+            'low' => 'INSERT LOW_PRIORITY',
+            'high' => 'INSERT HIGH_PRIORITY',
+            default => 'INSERT',
+        };
+
+        $wrappedColumnNames = array_map([$this, 'wrapSymbols'], $columns);
+        $columnsStr = implode(',', $wrappedColumnNames);
+
+        $valuesList = [];
+        foreach ($data as $record) {
+            $row = [];
+            foreach ($columns as $column) {
+                $row[] = $this->formatSqlValue($record[$column], $column);
+            }
+            $valuesList[] = '('.implode(',', $row).')';
+        }
+        $valuesStr = implode(',', $valuesList);
+        return [$columns, $columnsStr, $valuesStr, $insertKeyword];
+    }
+
+    /** @noinspection PhpConditionAlreadyCheckedInspection */
+    protected function buildOnDuplicateClause(array $columns, array|true $onDuplicate): array
+    {
+        $updateClause = '';
+        $aliasForInserted = '';
+        $isMaria = true;//@todo check if MariaDB or MySQL
+        if (!$isMaria) $aliasForInserted = ' AS new';
+        if ($onDuplicate === true) {
+            $nonPkCols = array_values(array_diff($columns, $this->getPrimaryKey()));
+            /** @noinspection PhpRedundantOptionalArgumentInspection */
+            $onDuplicate = $isMaria ? $this->valuesForColumns($nonPkCols) : /* mysql */
+                $this->valuesForColumnsAlias($nonPkCols, 'new');
+        }
+        $updateList = $this->buildAssignmentList($onDuplicate);
+        if ($updateList) $updateClause = "ON DUPLICATE KEY UPDATE $updateList";
+        return [$updateClause, $aliasForInserted];
     }
 
     /**
