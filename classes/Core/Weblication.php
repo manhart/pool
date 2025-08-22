@@ -993,7 +993,8 @@ class Weblication extends Component
             for ($i = 0; $i < $count; $i += 2) {
                 $name = $segments[$i];
                 $value = $segments[$i + 1] ?? null;
-                $input->setVar($name, $value);
+                $valueDecoded = $value !== null ? rawurldecode($value) : null;// decode once after server's decode
+                $input->setVar($name, $valueDecoded);
             }
         }
         return $input;
