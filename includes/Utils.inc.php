@@ -458,20 +458,21 @@ function br2nl(string $subject): string
 }
 
 /**
- * strips body from html page.
- * html, head and body tags will be dropped.
+ * Extracts the content inside the <body> tag from an HTML string.
+ * If no <body> tag is found, the original HTML string is returned.
  */
-function strip_body(string $file_content): string
+function strip_body(string $html): string
 {
-    return preg_match('#<body[^>]*?>(.*?)</body>#si', $file_content, $matches) ? $matches[1] : '';
+    return preg_match('#<body[^>]*?>(.*?)</body>#si', $html, $matches) ? $matches[1] : $html;
 }
 
 /**
- * Strips head from html page
+ * Extracts and returns the contents of the <head> section from an HTML string.
+ * If no <head> section is found, the entire HTML string is returned.
  */
 function strip_head(string $html): string
 {
-    return preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches) ? $matches[1] : '';
+    return preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches) ? $matches[1] : $html;
 }
 
 /**
