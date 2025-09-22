@@ -10,6 +10,9 @@
 
 namespace pool\utils;
 
+use DateTime;
+use DateTimeZone;
+
 use function mktime;
 use function str_pad;
 
@@ -87,7 +90,6 @@ final class Date
      * @param int $day day
      * @param int $year year
      * @param int $breakpoint calendar week based on this weekday
-     * @return string
      */
     public static function getCustomWeekNumber(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
@@ -108,7 +110,6 @@ final class Date
      * @param int $day day
      * @param int $year year
      * @param int $breakpoint calendar week based on this weekday
-     * @return string
      */
     public static function getCustomMonth(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
@@ -125,11 +126,7 @@ final class Date
     /**
      * Calculates a custom year
      *
-     * @param int $mon
-     * @param int $day
-     * @param int $year
      * @param int $breakpoint calendar week based on this weekday
-     * @return string
      */
     public static function getCustomYear(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
@@ -141,5 +138,35 @@ final class Date
         }
 
         return $jahr;
+    }
+
+    /**
+     * Validates a given date string against a specified format.
+     *
+     * @noinspection PhpUnhandledExceptionInspection
+     */
+    public static function isValidDateString(string $date, string $format = 'Y-m-d H:i:s', ?DateTimeZone $timeZone = null, bool $strict = true): bool
+    {
+        $dateTime = DateTime::createFromFormat($format, $date, $timeZone ?? new DateTimeZone(date_default_timezone_get()));
+        if ($dateTime === false) return false;
+        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return false;
+        return !$strict || $dateTime->format($format) === $date;
+    }
+
+    /**
+     * Validates a given time string
+     */
+    public static function isValidTimeString(string $time, bool $strict = true): bool
+    {
+        $timeParts = explode(':', $time, 3);
+        $countTimeParts = count($timeParts);
+
+        $formatParts = ['H', 'i', 's'];
+        $format = implode(':', array_slice($formatParts, 0, $countTimeParts));
+
+        $dateTime = DateTime::createFromFormat($format, $time);
+        if ($dateTime === false) return false;
+        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return false;
+        return !$strict || $dateTime->format($format) === $time;
     }
 }

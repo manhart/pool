@@ -1679,32 +1679,6 @@ function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
     return ($resultCode === 0) && file_exists($pdfOut);
 }
 
-
-/**
- * Validates a given date string against a specified format.
- */
-function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
-{
-    $dateTime = DateTime::createFromFormat($format, $date);
-    return $dateTime && $dateTime->format($format) === $date;
-}
-
-/**
- * Validates a given time string
- */
-function validateTime(string $time): bool
-{
-    $timeParts = explode(':', $time);
-    $countTimeParts = count($timeParts);
-    if ($countTimeParts === 0 || $countTimeParts > 3) return false;
-
-    $formatParts = explode(':', 'H:i:s');
-    $format = implode(':', array_slice($formatParts, 0, $countTimeParts));
-
-    $dateTime = DateTime::createFromFormat($format, $time);
-    return $dateTime && $dateTime->format($format) === $time;
-}
-
 /**
  * Calculates the next day of the week based on a day of the week and an operand (subtrahend or summand).
  */
