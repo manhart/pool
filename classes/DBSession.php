@@ -136,9 +136,9 @@ class DBSession extends PoolObject
      * DBSession::generateSID()
      * Generiert eine eindeutige Session ID (MD5 hash).
      */
-    public function generateSID()
+    public function generateSID(): string
     {
-        mt_srand((double)microtime() * 1000000);
+        mt_srand((float)microtime() * 1000000);
         return md5(time().$this->RemoteAddr.$this->HttpUserAgent.mt_rand(100000, 999999));
     }
 
