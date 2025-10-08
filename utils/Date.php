@@ -169,4 +169,21 @@ final class Date
         if (!Date::isParseErrorFree(DateTime::getLastErrors())) return false;
         return !$strict || $dateTime->format($format) === $time;
     }
+
+    public static function getDayOfWeek(\DateTimeInterface $date, bool $short = false, ?string $locale = null): string
+    {
+        if (\extension_loaded('intl')) {
+            $pattern = $short ? 'EEE' : 'EEEE';
+            $fmt = new \IntlDateFormatter(
+                $locale ?? \Locale::getDefault(), \IntlDateFormatter::FULL, \IntlDateFormatter::NONE,
+                $date->getTimezone(), null, $pattern,
+            );
+            
+            $w = $fmt->format($date);
+            if ($w !== false) {
+                return rtrim($w, '.'); // e.g. "Mo." -> "Mo"
+            }
+        }
+        return $short ? date('D', $date->getTimestamp()) : date('l', $date->getTimestamp());
+    }
 }
