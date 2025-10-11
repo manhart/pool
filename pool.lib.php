@@ -10,9 +10,13 @@
 
 namespace pool
 {
+    // PHP version check
+    if(PHP_VERSION_ID < 80400) {
+        $msg = 'POOL requires PHP version 8.4 or higher. You are running PHP '.PHP_VERSION.'.';
+        throw new \RuntimeException($msg);
+    }
 
     use pool\classes\Autoloader;
-
     use function define;
     use function defined;
 
@@ -26,7 +30,7 @@ namespace pool
     }
 
     if (!defined('DIR_APP_ROOT')) { //necessary for applications without PSR-4
-        define('DIR_APP_ROOT', dirname($_SERVER['SCRIPT_FILENAME']));//includes symlinked directory
+        define('DIR_APP_ROOT', dirname($_SERVER['SCRIPT_FILENAME']));//includes a symlinked directory
     }
 
     const PWD_TILL_INCLUDES = 'includes'; // todo remove after refactoring to PSR-4
