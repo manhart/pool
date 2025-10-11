@@ -24,21 +24,21 @@ use pool\classes\Exception\InvalidArgumentException;
  */
 class Log
 {
-    const OUTPUT_SCREEN = 'screen';
-    const OUTPUT_SYSTEM = 'system';
-    const OUTPUT_FILE = 'file';
-    const OUTPUT_DAO = 'dao';
-    const OUTPUT_MAIL = 'mail';
-    const LEVEL_NONE = 0;
-    const LEVEL_FATAL = 1;
-    const LEVEL_ERROR = 2;
-    const LEVEL_WARN = 4;
-    const LEVEL_INFO = 8;
-    const LEVEL_DEBUG = 16;
-    const LEVEL_UNTIL_ERROR = 3;
-    const LEVEL_UNTIL_WARN = 7;
-    const LEVEL_UNTIL_INFO = 15;
-    const LEVEL_ALL = 31;
+    const string OUTPUT_SCREEN = 'screen';
+    const string OUTPUT_SYSTEM = 'system';
+    const string OUTPUT_FILE = 'file';
+    const string OUTPUT_DAO = 'dao';
+    const string OUTPUT_MAIL = 'mail';
+    const int LEVEL_NONE = 0;
+    const int LEVEL_FATAL = 1;
+    const int LEVEL_ERROR = 2;
+    const int LEVEL_WARN = 4;
+    const int LEVEL_INFO = 8;
+    const int LEVEL_DEBUG = 16;
+    const int LEVEL_UNTIL_ERROR = 3;
+    const int LEVEL_UNTIL_WARN = 7;
+    const int LEVEL_UNTIL_INFO = 15;
+    const int LEVEL_ALL = 31;
 
     private static array $TEXT_LEVEL = [
         1 => 'fatal',
@@ -127,7 +127,7 @@ class Log
                 $level = $facility['level'] ?? 0;
                 $from = $facility['from'] ?? G7SYSTEM_DEFAULT_MAIL_ADDRESS;
                 $to = $facility['to'] ?? '';
-                $subject = $facility['subject'] ?? $_SERVER['SERVER_NAME'].' '.Weblication::getInstance()->getName().' reports';
+                $subject = $facility['subject'] ?? \pool\classes\Core\Http\Request::host().' '.Weblication::getInstance()->getName().' reports';
 
                 $Mailer = new SendmailMailer();
                 $MailMsg = new Message();

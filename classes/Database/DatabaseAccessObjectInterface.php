@@ -78,7 +78,12 @@ interface DatabaseAccessObjectInterface
     /**
      * Insert a new record based on the data passed as an array, with the key corresponding to the column name.
      */
-    public function insert(array $data): RecordSet;
+    public function insert(array $data, string $mode = 'normal'): RecordSet;
+
+    /**
+     * Insert a new record or update an existing one based on the data passed as an array.
+     */
+    public function upsert(array $data, array|true $onDuplicate = true, string $mode = 'normal'): RecordSet;
 
     /**
      * Update a record by primary key (put the primary key in the data array)

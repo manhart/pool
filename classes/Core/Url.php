@@ -14,6 +14,7 @@ namespace pool\classes\Core;
 
 use JetBrains\PhpStorm\NoReturn;
 use JsonSerializable;
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Input;
 use pool\classes\Exception\InvalidArgumentException;
 use SensitiveParameter;
@@ -133,17 +134,18 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     private bool $withoutHost = false;
 
     /**
-     * @param bool|int $withQuery if true, the query params will be initialized with the current query params
+     * @param bool|int $preserveQuery If `true`, the query parameters (`query string`) of the current request are preserved and initialized in the new URL instance.
+     *                                If `false`, the URL will be created without query parameters.
      */
-    public function __construct(bool|int $withQuery = true)
+    public function __construct(bool|int $preserveQuery = true)
     {
-        // initialize with current url
-        $this->scheme = $_SERVER['REQUEST_SCHEME'] ?? 'https';
-        $this->host = $_SERVER['SERVER_NAME'];
-        $this->port = (int)($_SERVER['SERVER_PORT'] ?? 0);
-        $this->path = $_SERVER['SCRIPT_NAME'] ?? '';
-        if ($withQuery) {
-            $this->withQuery($_SERVER['QUERY_STRING'] ?? []);
+        // initialize with the current url
+        $this->scheme = Request::scheme();
+        $this->host = Request::host();
+        $this->port = Request::port();
+        $this->path = Request::scriptName();
+        if ($preserveQuery) {
+            $this->withQuery(Request::queryRaw());
         }
     }
 
@@ -158,7 +160,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
         }
 
         $Url = new static(false);
-        $Url->withScheme(strtolower($parts['scheme'] ?? $_SERVER['REQUEST_SCHEME'] ?? ''));
+        $Url->withScheme(strtolower($parts['scheme'] ?? Request::scheme()));
         $Url->withHost(rawurldecode($parts['host'] ?? ''));
         $Url->withPort($parts['port'] ?? 0);
         $Url->withUserInfo(rawurldecode($parts['user'] ?? ''), rawurldecode($parts['pass'] ?? ''));

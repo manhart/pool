@@ -10,4 +10,4 @@
 
 namespace pool\classes\Exception;
 
-class SecurityException extends RuntimeException implements PoolExceptionInterface {}
+class SecurityException extends RuntimeException {}

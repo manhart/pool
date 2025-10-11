@@ -37,19 +37,11 @@ class MySQL_DAO extends DAO
 {
     /**
      * Columns to translate
-     *
-     * @var array
      */
     protected array $translate = [];
 
-    /**
-     * @var Translator
-     */
     protected Translator $Translator;
 
-    /**
-     * @var array
-     */
     private array $cache = [
         'translatedValues' => [],
         'translate' => [],

@@ -11,14 +11,12 @@
 namespace pool\classes\Exception;
 
 use pool\classes\Core\RecordSet;
-use RuntimeException as PhpRuntimeException;
 
-class DAOException extends PhpRuntimeException implements PoolExceptionInterface
+class DAOException extends RuntimeException
 {
     /**
      * You can pass the last error from the pool\classes\Core\ResultSet to this exception.
      *
-     * @param array $lastError
      * @return $this
      * @see RecordSet::getLastError()
      */

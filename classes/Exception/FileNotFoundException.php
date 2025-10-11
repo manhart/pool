@@ -10,4 +10,4 @@
 
 namespace pool\classes\Exception;
 
-class FileNotFoundException extends MissingResourceException implements PoolExceptionInterface {}
+class FileNotFoundException extends MissingResourceException {}

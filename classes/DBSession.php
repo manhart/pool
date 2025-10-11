@@ -25,6 +25,7 @@
  * @link http://www.misterelsa.de
  */
 
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\PoolObject;
 use pool\classes\Database\DAO;
@@ -97,20 +98,14 @@ class DBSession extends PoolObject
      * @param boolean $ipUserAgentRestriction Beschraenkung der DBSession auf IP/Browser (solange nicht die Gefahr besteht, dass man die URL z.B. in Foren kopiert, kann man dieses
      *     Feature ausschalten)
      **/
-    function __construct($tabledefine, $sid = '', $ipUserAgentRestriction = true)
+    public function __construct($tabledefine, $sid = '', $ipUserAgentRestriction = true)
     {
         $this->ipUserAgentRestriction = $ipUserAgentRestriction;
 
         $this->DAO_Session = DAO::createDAO($tabledefine);
 
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            // Proxy Weiterleitung
-            $client_ip = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            $this->RemoteAddr = $client_ip[0];
-        } else {
-            $this->RemoteAddr = $_SERVER['REMOTE_ADDR'];
-        }
-        $this->HttpUserAgent = $_SERVER['HTTP_USER_AGENT'];
+        $this->RemoteAddr = Request::clientIp();
+        $this->HttpUserAgent = Request::userAgent();
 
         $this->expire = $this->getCurrentTime() + $this->getMaxLifetime();
         $this->cleanUp();
@@ -140,23 +135,17 @@ class DBSession extends PoolObject
     /**
      * DBSession::generateSID()
      * Generiert eine eindeutige Session ID (MD5 hash).
-     *
-     * @access public
-     * @return string Session ID
-     **/
-    function generateSID()
+     */
+    public function generateSID(): string
     {
-        mt_srand((double)microtime() * 1000000);
+        mt_srand((float)microtime() * 1000000);
         return md5(time().$this->RemoteAddr.$this->HttpUserAgent.mt_rand(100000, 999999));
     }
 
     /**
      * Liest die Session Daten ein und cached sie im Input Object.
-     *
-     * @access public
-     * @return boolean Erfolgsstatus
-     **/
-    function initialize()
+     */
+    public function initialize()
     {
         $this->Input = new Input(Input::EMPTY);
 
@@ -177,10 +166,8 @@ class DBSession extends PoolObject
 
     /**
      * Speichert die gecachten Daten weg.
-     *
-     * @access public
-     **/
-    function save()
+     */
+    public function save()
     {
         $data = $this->Input->getByteStream();
         //echo 'sid: ' .$this -> sid. ' data:'.$data;
@@ -203,12 +190,8 @@ class DBSession extends PoolObject
     /**
      * DBSession::sid_exists()
      * Prueft, ob eine Session existiert
-     *
-     * @access public
-     * @param string $sid Session ID
-     * @return boolean Status, ob die Session existiert
-     **/
-    function sid_exists($sid)
+     */
+    public function sid_exists($sid): bool
     {
         $remoteAddr = null;
         $httpUserAgent = null;
@@ -221,23 +204,16 @@ class DBSession extends PoolObject
 
     /**
      * Gibt die aktuelle Session ID zurueck
-     *
-     * @access public
-     * @return string Session ID
-     **/
-    function getSID()
+     */
+    public function getSID(): string
     {
         return $this->sid;
     }
 
     /**
      * Setzt einen Wert und schreibt die Daten weg.
-     *
-     * @access public
-     * @param string $key Schluessel
-     * @param string $value Wert
-     **/
-    function setVar($key, $value = '')
+     */
+    public function setVar($key, $value = ''): void
     {
         $this->Input->setVar($key, $value);
         $this->save();
@@ -245,33 +221,24 @@ class DBSession extends PoolObject
 
     /**
      * Liefert einen Wert.
-     *
-     * @param string $key Schluessel
-     * @return string Wert
-     **/
-    function getVar($key)
+     */
+    public function getVar($key)
     {
         return $this->Input->getVar($key);
     }
 
     /**
      * Prueft, ob eine Variable ueberhaupt gesetzt wurde.
-     *
-     * @param string $key Name der Variable
-     * @return boolean True=ja; False=nein
-     **/
-    function exists($key)
+     */
+    public function exists($key): bool
     {
         return $this->Input->exists($key);
     }
 
     /**
      * Loescht eine Variable aus dem internen Container.
-     *
-     * @access public
-     * @param string $key Schluessel (bzw. Name der Variable)
      */
-    function delVar($key)
+    public function delVar($key)
     {
         $this->Input->delVar($key);
         $this->save();

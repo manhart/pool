@@ -23,6 +23,7 @@ use Exception;
 use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Cookie;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
@@ -60,7 +61,6 @@ use function ini_set;
 use function is_dir;
 use function is_null;
 use function is_subclass_of;
-use function isAjax;
 use function json_encode;
 use function makeRelativePathsFrom;
 use function microtime;
@@ -207,9 +207,9 @@ class Weblication extends Component
     private string $language = '';
 
     /**
-     * @var string an identifier used to get language, culture, or regionally-specific behavior
+     * @var null|string an identifier used to get language, culture, or regionally-specific behavior
      */
-    private string $locale = '';
+    private ?string $locale = '';
 
     /**
      * @var string used as fallback
@@ -319,7 +319,7 @@ class Weblication extends Component
     final private function __construct()
     {
         parent::__construct(null);
-        self::$isAjax = isAjax();
+        self::$isAjax = Request::isAjax();
         self::$workingDirectory = getcwd();
         $this->context = new Input();
         //handles POST requests containing JSON data
@@ -481,7 +481,7 @@ class Weblication extends Component
     }
 
     /**
-     * Set default schema/layout, if none is loaded by request
+     * Set default schema/layout, if request loads none
      */
     public function setDefaultSchema(string $default = 'index'): static
     {
@@ -492,9 +492,9 @@ class Weblication extends Component
     /**
      * Returns the default scheme
      */
-    public function getDefaultSchema(): string
+    public static function getDefaultSchema(): string
     {
-        return $this->schema;
+        return self::getInstance()->schema;
     }
 
     /**
@@ -984,30 +984,32 @@ class Weblication extends Component
      */
     protected function transformPathInfo(): Input
     {
-        $Input = new Input();
-        if (isset($_SERVER['PATH_INFO'])) {
-            $pathInfo = trim($_SERVER['PATH_INFO'], '/');
+        $input = new Input();
+        if ($pathInfo = Request::pathInfo()) {
+            $pathInfo = trim($pathInfo, '/');
             $segments = explode('/', $pathInfo);
             $count = count($segments);
 
             for ($i = 0; $i < $count; $i += 2) {
                 $name = $segments[$i];
                 $value = $segments[$i + 1] ?? null;
-                $Input->setVar($name, $value);
+                $valueDecoded = $value !== null ? rawurldecode($value) : null;// decode once after server's decode
+                $input->setVar($name, $valueDecoded);
             }
         }
-        return $Input;
+        return $input;
     }
 
     /**
      * Redirect to schema
      */
-    public function redirect(string $schema, bool $withQuery = false, string $path = ''): never
+    public function redirect(string $schema, bool $preserveQuery = false, string $path = '', array $query = []): never
     {
-        $Url = new Url($withQuery);
-        $Url->setParam(self::REQUEST_PARAM_SCHEMA, $schema);
-        if ($path) $Url->setScriptPath($path);
-        $Url->redirect();
+        $url = new Url($preserveQuery);
+        $url->setParam(self::REQUEST_PARAM_SCHEMA, $schema);
+        if ($path) $url->setScriptPath($path);
+        if ($query) $url->setParams($query);
+        $url->redirect();
     }
 
     /**
@@ -1167,11 +1169,32 @@ class Weblication extends Component
     }
 
     /**
-     * Set locale (the POOL is independent of the system locale, e.g. php's setlocale).
+     * Sets the locale for this Weblication instance
+     * This defines the application-level locale used by POOL (e.g. for translation, formatting, etc.).
+     * Optionally, the process-level locale (libc / ICU) can also be synchronized.
+     * Note:
+     * - Since PHP 8.0, number and string functions are locale-independent.
+     * ⚠ Both `setlocale()` and `Locale::setDefault()` modify global process state.
+     *     Under PHP-FPM these changes persist per worker until it is recycled.
+     *     Therefore synchronization should only occur once per request, if at all.
+     *
+     * @see https://php.watch/versions/8.0/float-to-string-locale-independent
+     * @see https://wiki.php.net/rfc/strtolower-ascii
      */
-    public function setLocale(string $locale): static
+    public function setLocale(string $locale, bool $synchronize = true, ?int $category = LC_ALL, string ...$rest): static
     {
+        // Set the application-level (POOL) locale property
         $this->locale = $locale;
+
+        // Synchronize C-library locale and intl default locale (only if requested)
+        if ($synchronize) {
+            // Set POSIX / libc locale for the current process
+            setlocale($category, $locale, ...$rest);
+            //  Set ICU default locale (intl extension, if available)
+            if (class_exists(Locale::class)) {
+                Locale::setDefault($locale);
+            }
+        }
         return $this;
     }
 
@@ -1418,7 +1441,7 @@ class Weblication extends Component
     /**
      * Terminates Ajax requests with a caller-defined error
      */
-    public function denyAJAX_Request($messageKey, $defaultMessage, $response_code, $errorType): void
+    public function denyAJAX_Request(string $messageKey, ?string $defaultMessage, int $response_code, string $errorType): void
     {
         if (self::isAjax()) {
             header('Content-Type: application/json', true, $response_code);
@@ -1547,6 +1570,7 @@ class Weblication extends Component
         if (!$this->isMemoryAvailable()) return;
         if (!self::$cacheItem[$topic]) return;
         $allKeys = $this->memory->getAllKeys();
+        if ($allKeys === false) return;
         $keys = [];
         foreach ($allKeys as $key) {
             if (str_starts_with($key, $topic)) {

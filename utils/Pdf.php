@@ -46,7 +46,7 @@ final class Pdf
         $options[] = $pdfFile;
         $options[] = $txtFile;
         $arguments = implode(' ', array_map(escapeshellarg(...), $options));
-        $cmd = escapeshellcmd("pdftotext $arguments");
+        $cmd = "pdftotext $arguments";
         exec($cmd, result_code: $resultCode);
         if ($resultCode) match ($resultCode) {
             1 => throw new RuntimeException('Error opening PDF file'),

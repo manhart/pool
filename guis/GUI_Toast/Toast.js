@@ -363,7 +363,7 @@ data-delay="${delay}" data-hide-after="${hideAfter}" data-created="${now}">
      * @param type @see Toast.TOAST_* constants
      * @param title
      * @param message
-     * @param {string} delay optional
+     * @param {number} delay optional
      * @param {function|null} onHide
      */
     static show = (type, title, message, delay = Toast.DEFAULT_DELAY, onHide = null) => {

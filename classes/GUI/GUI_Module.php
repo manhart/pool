@@ -23,6 +23,7 @@ use JetBrains\PhpStorm\Pure;
 use Log;
 use pool\classes\Autoloader;
 use pool\classes\Core\Component;
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
 use pool\classes\Core\Weblication;
@@ -86,12 +87,12 @@ class GUI_Module extends Module
     protected array $templates = [];
 
     /**
-     * @var array<int, string> $jsFiles javascript files to be loaded, defined as indexed array
+     * @var array<int, string> $jsFiles JavaScript files to be loaded, defined as an indexed array
      */
     protected array $jsFiles = [];
 
     /**
-     * @var array|string[] $cssFiles css files to be loaded, defined as indexed array
+     * @var array|string[] $cssFiles CSS files to be loaded, defined as an indexed array
      */
     protected array $cssFiles = [];
 
@@ -102,22 +103,16 @@ class GUI_Module extends Module
 
     /**
      * Merkt sich mit dieser Variable das eigene Muster im Template (dient der Identifikation)
-     *
-     * @var string $marker
      */
     private string $marker;
 
     /**
-     * Kompletter Inhalt (geparster Content)
-     *
-     * @var string $finalContent
+     * Holds the final content of this GUI_Module
      */
     private string $finalContent = '';
 
     /**
      * Is this module the Target of an Ajax-Call
-     *
-     * @var boolean
      */
     private bool $isAjax;
 
@@ -141,7 +136,7 @@ class GUI_Module extends Module
         parent::__construct($Owner, $params);
 
         $this->ajaxMethod = $_REQUEST[Weblication::REQUEST_PARAM_METHOD] ?? '';
-        $this->isAjax = isAjax() && $_REQUEST[Weblication::REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
+        $this->isAjax = Request::isAjax() && $_REQUEST[Weblication::REQUEST_PARAM_MODULE] && $this->ajaxMethod &&
             ($_REQUEST[Weblication::REQUEST_PARAM_MODULE] === static::class || $_REQUEST[Weblication::REQUEST_PARAM_MODULE] === $this->getClassName());
 
         // set the module name (if it is necessary for ajax calls)
@@ -580,6 +575,7 @@ class GUI_Module extends Module
         $Closure = $ajaxMethod['method'] ?? null;
         $this->plainJSON = $ajaxMethod['noFormat'] ?? false;
         $dbInterfaces = $ajaxMethod['dbInterfaces'] ?? [];
+        $logConfigurationName = $ajaxMethod['logConfigurationName'] ?? null;
 
         if (!$Closure instanceof Closure) {
             if (is_callable([$this, $requestedMethod]))// 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
@@ -589,6 +585,7 @@ class GUI_Module extends Module
                     __METHOD__,
                     'access-denied',
                     403,
+                    logConfigurationName: $logConfigurationName
                 );
             return $this->respondToAjaxCall(
                 null,
@@ -596,6 +593,8 @@ class GUI_Module extends Module
                 __METHOD__,
                 'not-callable',
                 405,
+                logConfigurationName: $logConfigurationName,
+                logLevel: Log::LEVEL_WARN
             );
         }
 
@@ -603,7 +602,8 @@ class GUI_Module extends Module
         try {
             $ReflectionMethod = new ReflectionFunction($Closure);
         } catch (ReflectionException $e) {
-            return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500);
+            return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500,
+                logConfigurationName: $logConfigurationName, logLevel: Log::LEVEL_ERROR);
         }
 
         error_clear_last();
@@ -622,7 +622,10 @@ class GUI_Module extends Module
                 // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
 
                 $result = $Closure(...$args);
-                $this->processTransactions($dbInterfaces, 'commit');
+
+                $rollbackTransaction = $result['poolRollbackTransaction'] ?? false;
+                $statusCode = $result['poolStatusCode'] ?? null;
+                $this->processTransactions($dbInterfaces, $rollbackTransaction ? 'rollback' : 'commit');
             } catch (Throwable $e) {
                 $this->processTransactions($dbInterfaces, 'rollback');
                 $this->plainJSON = false;
@@ -649,6 +652,8 @@ class GUI_Module extends Module
             $potentialErrorType,
             $statusCode ?? 200,
             $ajaxMethod['flags'] ?? 0,
+            $logConfigurationName,
+            $errorText ? Log::LEVEL_ERROR : Log::LEVEL_INFO
         );
     }
 
@@ -657,12 +662,14 @@ class GUI_Module extends Module
      *
      * @param string $callingMethod optional; use __METHOD__
      */
-    protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0): string
+    protected function respondToAjaxCall(mixed $clientData, mixed $error, string $callingMethod = '', string $errorType = '', int $statusCode = 200, int $flags = 0,
+        ?string $logConfigurationName = null, int $logLevel = Log::LEVEL_INFO): string
     {
-        Log::info(
+        Log::message(
             $error,
+            $logLevel,
             ['className' => $this->getClassName(), 'method' => $this->ajaxMethod, 'errorType' => $errorType, 'status' => $statusCode],
-            'ajaxCallLog',
+            $logConfigurationName ?? 'ajaxCallLog',
         );
         header('Content-Type: application/json');
         if (!$this->plainJSON || $statusCode != 200) {//report failed functions in standard format
@@ -717,6 +724,17 @@ class GUI_Module extends Module
     {
         $result['success'] = false;
         $result['message'] = $message;
+        return $result;
+    }
+
+    #[Pure]
+    /** sets the success, rollback flag, and message of a result and returns the result */
+    protected static function abort(array $result = [], string $message = '', int $statusCode = 422): array
+    {
+        $result['success'] = false;
+        $result['message'] = $message;
+        $result['poolRollbackTransaction'] = true;
+        $result['poolStatusCode'] = $statusCode;
         return $result;
     }
 
@@ -815,12 +833,14 @@ class GUI_Module extends Module
         Closure $method,
         bool $noFormat = false,
         array $dbInterfaces = [],
+        ?string $logConfigurationName = null,
         ...$meta
     ): self {
         $meta['alias'] = $alias;
         $meta['method'] = $method;
         $meta['noFormat'] = $noFormat;
         $meta['dbInterfaces'] = $dbInterfaces;
+        $meta['logConfigurationName'] = $logConfigurationName;
         $this->ajaxMethods[$alias] = $meta;
         return $this;
     }

@@ -10,6 +10,9 @@
 
 namespace pool\utils;
 
+use DateTime;
+use DateTimeZone;
+
 use function mktime;
 use function str_pad;
 
@@ -19,7 +22,7 @@ final class Date
 {
     public static function hasChanged(string|\DateTimeInterface|null $new, string|\DateTimeInterface|null $existing): bool
     {
-        if (!$new || !$existing) {
+        if (!$new xor !$existing) {
             return true;
         }
 
@@ -62,6 +65,19 @@ final class Date
         return $dt->format('H:i:s') !== '00:00:00' && (strlen($input) > 10 || str_contains($input, 'T'));
     }
 
+    /**
+     * Checks if the given string contains a time indicator, such as a space or the letter 'T'.
+     */
+    public static function hasTime(string $input): bool
+    {
+        return str_contains($input, ' ') || str_contains($input, 'T');
+    }
+
+    public static function isParseErrorFree(null|array|false $errors): bool
+    {
+        return $errors === false || (isset($errors['warning_count'], $errors['error_count']) && $errors['warning_count'] === 0 && $errors['error_count'] === 0);
+    }
+
     public static function stringHasTimeComponent(string $input): bool
     {
         return str_contains($input, ' ') || str_contains($input, 'T');
@@ -74,7 +90,6 @@ final class Date
      * @param int $day day
      * @param int $year year
      * @param int $breakpoint calendar week based on this weekday
-     * @return string
      */
     public static function getCustomWeekNumber(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
@@ -95,7 +110,6 @@ final class Date
      * @param int $day day
      * @param int $year year
      * @param int $breakpoint calendar week based on this weekday
-     * @return string
      */
     public static function getCustomMonth(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
@@ -112,11 +126,7 @@ final class Date
     /**
      * Calculates a custom year
      *
-     * @param int $mon
-     * @param int $day
-     * @param int $year
      * @param int $breakpoint calendar week based on this weekday
-     * @return string
      */
     public static function getCustomYear(int $mon, int $day, int $year, int $breakpoint = 4): string
     {
@@ -128,5 +138,52 @@ final class Date
         }
 
         return $jahr;
+    }
+
+    /**
+     * Validates a given date string against a specified format.
+     *
+     * @noinspection PhpUnhandledExceptionInspection
+     */
+    public static function isValidDateString(string $date, string $format = 'Y-m-d H:i:s', ?DateTimeZone $timeZone = null, bool $strict = true): bool
+    {
+        $dateTime = DateTime::createFromFormat($format, $date, $timeZone ?? new DateTimeZone(date_default_timezone_get()));
+        if ($dateTime === false) return false;
+        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return false;
+        return !$strict || $dateTime->format($format) === $date;
+    }
+
+    /**
+     * Validates a given time string
+     */
+    public static function isValidTimeString(string $time, bool $strict = true): bool
+    {
+        $timeParts = explode(':', $time, 3);
+        $countTimeParts = count($timeParts);
+
+        $formatParts = ['H', 'i', 's'];
+        $format = implode(':', array_slice($formatParts, 0, $countTimeParts));
+
+        $dateTime = DateTime::createFromFormat($format, $time);
+        if ($dateTime === false) return false;
+        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return false;
+        return !$strict || $dateTime->format($format) === $time;
+    }
+
+    public static function getDayOfWeek(\DateTimeInterface $date, bool $short = false, ?string $locale = null): string
+    {
+        if (\extension_loaded('intl')) {
+            $pattern = $short ? 'EEE' : 'EEEE';
+            $fmt = new \IntlDateFormatter(
+                $locale ?? \Locale::getDefault(), \IntlDateFormatter::FULL, \IntlDateFormatter::NONE,
+                $date->getTimezone(), null, $pattern,
+            );
+            
+            $w = $fmt->format($date);
+            if ($w !== false) {
+                return rtrim($w, '.'); // e.g. "Mo." -> "Mo"
+            }
+        }
+        return $short ? date('D', $date->getTimestamp()) : date('l', $date->getTimestamp());
     }
 }

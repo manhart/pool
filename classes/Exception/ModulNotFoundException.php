@@ -10,4 +10,4 @@
 
 namespace pool\classes\Exception;
 
-class ModulNotFoundException extends MissingResourceException implements PoolExceptionInterface {}
+class ModulNotFoundException extends MissingResourceException {}

@@ -18,6 +18,7 @@
 namespace pool\guis\GUI_HeadData;
 
 use pool\classes\Core\Component;
+use pool\classes\Core\Http\Request;
 use pool\classes\Core\Module;
 use pool\classes\Core\Url;
 use pool\classes\Core\Weblication;
@@ -144,7 +145,7 @@ class GUI_HeadData extends GUI_Module
     public function __construct(?Component $Owner, array $params = [])
     {
         parent::__construct($Owner, $params);
-        $this->baseHref = $_SERVER['PHP_SELF'];
+        $this->baseHref = Request::phpSelf();
     }
 
     /**
@@ -160,7 +161,6 @@ class GUI_HeadData extends GUI_Module
     /**
      * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
      *
-     * @param string $xuaCompatible
      */
     public function setXuaCompatible(string $xuaCompatible)
     {

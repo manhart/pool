@@ -1362,9 +1362,10 @@ const areArraysEqual = (a, b) =>
 }
 
 /**
- * compares objects if they are equal
- * @param obj1
- * @param obj2
+ * Compares objects if they are equal
+ *
+ * @param {object} obj1
+ * @param {object} obj2
  * @return {boolean}
  */
 const areObjectsEqual = (obj1, obj2) =>

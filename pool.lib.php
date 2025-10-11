@@ -17,6 +17,7 @@ namespace pool
     use function defined;
 
     const IS_CLI = PHP_SAPI === 'cli';// check if we are in command line mode
+    const IS_FPM = PHP_SAPI === 'fpm-fcgi';// check if we are in fast-cgi mode
     const LINE_BREAK = IS_CLI ? PHP_EOL : '<br>';
     const NAMESPACE_SEPARATOR = '\\';
 

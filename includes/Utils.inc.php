@@ -14,8 +14,8 @@
  * @since 07/28/2003
  */
 
-use JetBrains\PhpStorm\NoReturn;
 use JetBrains\PhpStorm\Pure;
+use pool\classes\Core\Http\Request;
 
 /**
  * Returns the current Unix timestamp with microseconds.
@@ -458,113 +458,21 @@ function br2nl(string $subject): string
 }
 
 /**
- * strips body from html page.
- * html, head and body tags will be dropped.
+ * Extracts the content inside the <body> tag from an HTML string.
+ * If no <body> tag is found, the original HTML string is returned.
  */
-function strip_body(string $file_content): string
+function strip_body(string $html): string
 {
-    return preg_match('#<body[^>]*?>(.*?)</body>#si', $file_content, $matches) ? $matches[1] : '';
+    return preg_match('#<body[^>]*?>(.*?)</body>#si', $html, $matches) ? $matches[1] : $html;
 }
 
 /**
- * Strips head from html page
+ * Extracts and returns the contents of the <head> section from an HTML string.
+ * If no <head> section is found, the entire HTML string is returned.
  */
 function strip_head(string $html): string
 {
-    return preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches) ? $matches[1] : '';
-}
-
-function parseForwardedHeader(string $header): ?string
-{
-    foreach (explode(',', $header) as $segment) {
-        $segment = trim($segment);
-        foreach (explode(';', $segment) as $kv) {
-            [$key, $val] = array_map('trim', explode('=', $kv, 2) + [1 => '']);
-            if (strtolower($key) === 'for') {
-                $val = trim($val, '"');
-
-                // IPv6 with brackets + port → e.g. [2001:db8::1]:4711
-                if (str_starts_with($val, '[')) {
-                    $closing = strpos($val, ']');
-                    if ($closing !== false) {
-                        $ip = substr($val, 1, $closing - 1);
-                    } else {
-                        $ip = $val; // fallback
-                    }
-                } else {
-                    // remove optional port from IPv4 or unbracketed IPv6
-                    $colon = strpos($val, ':');
-                    $ip = $colon !== false ? substr($val, 0, $colon) : $val;
-                }
-
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * Delivers the client's IP
- *
- * @return string|null Remote/Client IP Adresse
- */
-function getClientIP(): ?string
-{
-    foreach (
-        [
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_FORWARDED',
-            'HTTP_X_CLUSTER_CLIENT_IP',
-            'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',// RFC 7239
-            'REMOTE_ADDR',
-        ] as $key
-    ) {
-        if(empty($_SERVER[$key])) {
-            continue;
-        }
-
-        $raw = $_SERVER[$key];
-
-        // Check if RFC 7239 Forwarded header is present
-        if ($key === 'HTTP_FORWARDED') {
-            // Forwarded: for=192.0.2.43, for=198.51.100.17 or for=2001:db8::1 or for="[2001:db8::1]:4711"
-            $ip = parseForwardedHeader($raw);
-            if ($ip !== null) {
-                return $ip;
-            }
-        }
-        else {
-            foreach (explode(',', $raw) as $entry) {
-                $ip = trim($entry);
-                if (str_contains($ip, ':')) {
-                    $ip = explode(':', $ip)[0]; // strip port
-                }
-                if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
-                    return $ip;
-                }
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * Creates a browser fingerprint
- */
-function getBrowserFingerprint(bool $withClientIP = true): string
-{
-    $data = $withClientIP && ($clientIP = getClientIP()) ? $clientIP : '';
-    $data .= $_SERVER['HTTP_USER_AGENT'];
-    $data .= $_SERVER['HTTP_ACCEPT'] ?? '';
-    $data .= $_SERVER['HTTP_ACCEPT_CHARSET'] ?? '';
-    $data .= $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
-    $data .= $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-    return md5($data);
+    return preg_match('#<head[^>]*?>(.*?)</head>#si', $html, $matches) ? $matches[1] : $html;
 }
 
 /**
@@ -686,7 +594,7 @@ function bool2int(bool $bool): int
 }
 
 /**
- * Convert boolean expression to string ("true" or "false")
+ * Convert a boolean expression to string ("true" or "false")
  */
 function bool2string(bool $bool): string
 {
@@ -1012,7 +920,7 @@ function normalizePath(string $path, bool $noFailOnRoot = false, string $separat
  */
 function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = false, ?string $base = null, string $separator = '/'): bool|string
 {
-    $browserPath = dirname($_SERVER['SCRIPT_FILENAME']);
+    $browserPath = dirname(Request::scriptFilename());
     $base ??= $browserPath;
     $here ??= $browserPath;
     //base relative paths and normalize
@@ -1065,7 +973,7 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
 function makeRelativePathsFrom(?string $here, string $toThis, ?string $base = null, string $separator = DIRECTORY_SEPARATOR): array
 {
     $base ??= $_SERVER['DOCUMENT_ROOT'];
-    $here ??= dirname($_SERVER['SCRIPT_FILENAME']);
+    $here ??= dirname(Request::scriptFilename());
 
     // Resolve symbolic links and remove trailing slashes
     $base = rtrim($base, $separator);
@@ -1275,10 +1183,12 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
 /**
  * Checks if it is an Ajax call (XmlHttpRequest)
  * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
+ *
+ * @deprecated
  */
 function isAjax(): bool
 {
-    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
+    return Request::isAjax();
 }
 
 /**
@@ -1292,30 +1202,89 @@ function pt2mm(float $pt): float
 }
 
 /**
- * Erzwingt einen Download im Browser
+ * Send a file to the client (browser) for download.
  *
- * @param string $file Datei (mit absolutem Pfad)
- * @param string $mimetype Mimetype z.b. application/octet-stream
+ * @param string $file absolute path to the file to be downloaded
+ * @param string|null $downloadName optional name of the file to be downloaded
+ * @param string|null $mimetype Mimetype e.g. application/octet-stream
+ * @param bool $forceDownload force download even if the browser supports the download attribute
+ * @param array $headers additional headers
+ * @param callable|null $onSuccess optional callback to be called on success
+ * @param callable|null $onFailure optional callback to be called on failure
  */
-#[NoReturn]
-function forceFileDownload(string $file, string $mimetype = ''): void
+function serveFile(string $file, ?string $downloadName = null, ?string $mimetype = null, bool $forceDownload = true, array $headers = [], ?callable $onSuccess = null, ?callable $onFailure = null): never
 {
-    if (empty($mimetype)) $mimetype = mime_content_type($file);
-    if (empty($mimetype)) $mimetype = 'application/octet-stream';
-    $filesize = filesize($file);
+    // Pre-check
+    if(!is_file($file) || !is_readable($file)) {
+        if (is_callable($onFailure)) $onFailure();
+        http_response_code(404);
+        exit(1);
+    }
 
+    $filesize = @filesize($file);
+    if($filesize === false) {
+        if (is_callable($onFailure)) $onFailure();
+        http_response_code(500);
+        exit(1);
+    }
+
+    $type =  $mimetype ?: mime_content_type($file) ?: 'application/octet-stream';
+
+    $filename = $downloadName ?: basename($file);
+    $fallback = preg_replace('/[^A-Za-z0-9_.-]/', '_', $filename);// ASCII-Fallback
+
+    //UTF-8 safety
+    if (!mb_check_encoding($filename, 'UTF-8')) {
+        $filename = mb_convert_encoding($filename, 'UTF-8', 'auto');
+    }
+
+    if (function_exists('ini_set')) {
+        @ini_set('zlib.output_compression', 'Off');
+    }
+    // clear output buffer
+    while (ob_get_level() > 0) { @ob_end_clean(); }
+
+    $disposition = $forceDownload ? 'attachment': 'inline';
     // Start sending headers
-    header('Pragma: public'); // required
-    header('Expires: 0');
-    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-    header('Cache-Control: private', false); // required for certain browsers
+    header("Content-Type: $type");
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Disposition: $disposition; filename=\"$fallback\"; filename*=UTF-8''" . rawurlencode($filename));
     header('Content-Transfer-Encoding: binary');
-    header('Content-Type: '.$mimetype);
-    header('Content-Length: '.(string)$filesize);
-    header('Content-Disposition: attachment; filename="'.basename($file).'";');
 
-    readfile($file);
-    exit;
+    // No caching
+    header('Expires: 0');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Cache-Control: post-check=0, pre-check=0', false);// IE relict
+    header('Accept-Ranges: none');// no range requests
+    header('Pragma: no-cache');// HTTP/1.0 relict
+
+    header("Content-Length: $filesize");
+
+    // Additional headers
+    foreach ($headers as $header) {
+        header($header);
+    }
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();// prevent session locking
+    }
+
+    @ignore_user_abort(true);
+    if(function_exists('set_time_limit')) @set_time_limit(0);
+
+    if(readfile($file) === false) {
+        if (is_callable($onFailure)) $onFailure();
+        exit(1);
+    }
+
+    if (function_exists('fastcgi_finish_request')) {
+        @fastcgi_finish_request();
+    } else {
+        @flush();
+    }
+
+    if (is_callable($onSuccess)) $onSuccess();
+    exit(0);
 }
 
 /**
@@ -1405,7 +1374,7 @@ function shell_exec_background(string $cmd, array $args = [], int $priority = 0,
     $cmd = escapeshellcmd($cmd);
     $args = implode(' ', array_map(escapeshellarg(...), $args));
 
-    // Ensure priority is within valid range (-20 to 19)
+    // Ensure priority is within the valid range (-20 to 19)
     if ($priority < -20 || $priority > 19) {
         throw new \InvalidArgumentException('Priority must be between -20 and 19.');
     }
@@ -1705,35 +1674,9 @@ function pdfunite(array $pdfSourceFiles, string $pdfOut): bool
 {
     $pdfSourceFiles = implode(' ', array_map(escapeshellarg(...), $pdfSourceFiles));
     $pdfDestFile = escapeshellarg($pdfOut);
-    $cmd = escapeshellcmd("pdfunite $pdfSourceFiles $pdfDestFile");
-    exec($cmd, result_code: $resultCode);
+    $cmd = "pdfunite $pdfSourceFiles $pdfDestFile";
+    exec($cmd, result_code: $resultCode);/** @var int $resultCode */
     return ($resultCode === 0) && file_exists($pdfOut);
-}
-
-
-/**
- * Validates a given date string against a specified format.
- */
-function validateDate(string $date, string $format = 'Y-m-d H:i:s'): bool
-{
-    $dateTime = DateTime::createFromFormat($format, $date);
-    return $dateTime && $dateTime->format($format) === $date;
-}
-
-/**
- * Validates a given time string
- */
-function validateTime(string $time): bool
-{
-    $timeParts = explode(':', $time);
-    $countTimeParts = count($timeParts);
-    if ($countTimeParts === 0 || $countTimeParts > 3) return false;
-
-    $formatParts = explode(':', 'H:i:s');
-    $format = implode(':', array_slice($formatParts, 0, $countTimeParts));
-
-    $dateTime = DateTime::createFromFormat($format, $time);
-    return $dateTime && $dateTime->format($format) === $time;
 }
 
 /**

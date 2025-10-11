@@ -12,6 +12,7 @@ namespace pool\classes\Core;
 
 use Countable;
 use DateTime;
+use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use Iterator;
@@ -89,9 +90,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     protected array $returnFields = [];
 
     #[Pure]
-    /**
-     * Constructor
-     */
     public function __construct(array $records = [])
     {
         if (!array_is_list($records)) {
@@ -104,7 +102,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Reset pointer to first record
+     * Reset pointer to the first record
      */
     public function reset(): int
     {
@@ -163,8 +161,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Sort an array by values using a user-defined comparison function
-     *
-     * @param callable $cmp_function
      */
     public function usort(callable $cmp_function): void
     {
@@ -185,7 +181,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $fieldName field name
      * @param mixed $uniqueValue unique value to search for
      * @param integer $newPos Position where the record should be moved
-     * @return boolean
      */
     public function move(string $fieldName, mixed $uniqueValue, int $newPos): bool
     {
@@ -199,7 +194,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
             }
         }
 
-        // if the item is not found cancel early
+        // if the item is not found, cancel early
         if ($currentPos === null) {
             return false;
         }
@@ -218,7 +213,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Remove a portion of the record set (array) and replace it with something else.
-     * Removes the elements designated by offset and length from the array, and replaces them with the elements of the replacement array, if
+     * Removes the elements designated by offset and length from the array and replaces them with the elements of the replacement array, if
      * supplied.
      *
      * @see array_splice()
@@ -251,7 +246,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Set pointer to last record and return it
+     * Set pointer to the last record and return it
      */
     public function last(): array
     {
@@ -309,7 +304,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Move forward to next record
+     * Move forward to the next record
      */
     public function next(): void
     {
@@ -346,7 +341,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record as a string
+     * Returns a value of the current record as a string
      */
     public function getValueAsString(string $key, string $default = ''): string
     {
@@ -355,7 +350,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record
+     * Returns a value of the current record
      */
     public function getValue(string $key, mixed $default = null): mixed
     {
@@ -364,7 +359,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Returns a value of a field of the current record as a decoded json
+     * Returns a value of the current record as a decoded JSON
      *
      * @throws InvalidJsonException|JsonException
      */
@@ -379,7 +374,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record as an integer. It is also possible to return null as default value.
+     * Returns a value of the current record as an integer. It is also possible to return null as the default value.
      */
     public function getValueAsInt(string $key, int $default = 0): int
     {
@@ -391,8 +386,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     #[Pure]
     /**
      * Shorthand of getValueAsInt('count')
-     *
-     * @return int
      */
     public function getCountValue(): int
     {
@@ -402,8 +395,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     #[Pure]
     /**
      * Shorthand for getValueAsInt('last_insert_id')
-     *
-     * @return int
      */
     public function getLastInsertID(): int
     {
@@ -413,8 +404,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     #[Pure]
     /**
      * Shorthand for getValueAsInt('affected_rows')
-     *
-     * @return int
      */
     public function getAffectedRows(): int
     {
@@ -423,7 +412,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record as a float
+     * Returns a value of the current record as a float
      */
     public function getValueAsFloat(string $key, float $default = 0.00): float
     {
@@ -434,7 +423,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record as a boolean
+     * Returns a value of the current record as a boolean
      */
     public function getValueAsBool(string $key, bool $default = false): bool
     {
@@ -442,7 +431,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Returns a value of a field of the current record as formatted date string
+     * Returns a value of the current record as a formatted date string
      */
     public function getValueAsFormattedDate(string $key, $default = null): ?string
     {
@@ -454,7 +443,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record as DateTime object
+     * Returns a value of the current record as a DateTime object
      */
     public function getValueAsDateTime(string $key, ?DateTime $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
@@ -466,15 +455,25 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
         try {
             if (is_numeric($value) && !str_contains($value, '-'))
-                return (new DateTime(timezone: $timezone))->setTimestamp($value);
+                return new DateTime(timezone: $timezone)->setTimestamp($value);
             return new DateTime($value, $timezone);
         } catch (Exception) {
         }
         return $default;
     }
 
+    #[Pure]
     /**
-     * Returns a value of a field of the current record as formatted "date.time" string
+     * Returns a value of the current record as a DateTimeImmutable object
+     */
+    public function getValueAsDateTimeImmutable(string $key, ?DateTimeImmutable $default = null, ?DateTimeZone $timezone = null): ?DateTimeImmutable
+    {
+        $dt = $this->getValueAsDateTime($key, $default, $timezone);
+        return $dt instanceof DateTime ? DateTimeImmutable::createFromMutable($dt) : $default;
+    }
+
+    /**
+     * Returns a value of the current record as a formatted "date.time" string
      */
     public function getValueAsFormattedDateTime(string $key, $default = null, bool $seconds = true): ?string
     {
@@ -485,11 +484,11 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Returns a value of a field of the current record as formatted number
+     * Returns a value of the current record as a formatted number
      *
      * @see Weblication::setDefaultFormats()
      */
-    public function getValueAsNumber(string $key, $default = null, $decimals = null): ?string
+    public function formatValueAsNumber(string $key, $default = null, $decimals = null): ?string
     {
         $value = $this->getValue($key, $default);
         if (!is_null($value)) {
@@ -506,7 +505,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns a value of a field of the current record as an array
+     * Returns a value of the current record as an array
      */
     public function getValueAsArray(string $key, array $default = [], string $separator = ','): array
     {
@@ -518,7 +517,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Sets a new/overwrites a value of a field in the result set.
+     * Sets new/overwrites a value of a field in the result set.
      */
     public function setValue(string $key, mixed $value): RecordSet
     {
@@ -540,21 +539,21 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Sets new/overwrites values of fields in the result set.
+     * Merges the given fields into the current record or adds a new record if no current record exists.
      */
-    public function setValues(array $assoc): RecordSet
+    public function unionIntoCurrent(array $fields): static
     {
         if (!$this->count()) {
-            return $this->addValues($assoc);
+            return $this->appendRecord($fields);
         }
-        $this->records[$this->index] = $assoc + $this->records[$this->index];
+        $this->records[$this->index] = $fields + $this->records[$this->index];
         return $this;
     }
 
     /**
      * Adds a new record into the record set.
      */
-    public function addValues(array $assoc): RecordSet
+    public function appendRecord(array $assoc): static
     {
         $this->records[$this->count()] = $assoc;
         $this->index = $this->count() - 1;
@@ -562,14 +561,49 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * This is the equivalent of the setValue function, except that the fields are appended to the back of the array
+     * Appends a value or multiple key-value pairs to the current record in the record set.
      */
-    public function addFields(array|string $key, string $value = ''): RecordSet
+    public function appendValue(array|string $key, string $value = ''): static
     {
         if (!$this->count())
-            return is_array($key) ? $this->addValues($key) : $this->addValue($key, $value);
+            return is_array($key) ? $this->appendRecord($key) : $this->addValue($key, $value);
         $insert = is_array($key) ? $key : [$key => $value];
         $this->records[$this->index] = array_merge($this->records[$this->index], $insert);
+        return $this;
+    }
+
+    /**
+     * Appends the records from the given RecordSet to the current set of records.
+     */
+    public function appendAll(self $recordSet): self
+    {
+        $this->records = array_merge($this->records, $recordSet->getRaw());
+        return $this;
+    }
+
+    /**
+     * Filters the records to ensure each value of the specified field is unique,
+     * removing duplicates based on the given field name.
+     */
+    public function uniqueBy(string $fieldName): static
+    {
+        $seen = [];
+        $this->records = array_values(
+            array_filter(
+                $this->records,
+                function ($row) use ($fieldName, &$seen) {
+                    if (!isset($row[$fieldName])) {
+                        return true;//if field is missing do not filter
+                    }
+                    if (in_array($row[$fieldName], $seen, true)) {
+                        return false;//duplicate
+                    }
+                    $seen[] = $row[$fieldName];
+                    return true;
+                },
+            ),
+        );
+        $this->reset();
         return $this;
     }
 
@@ -595,9 +629,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Deletes fields (keys) including their content (values) from all data records
-     *
-     * @param array $keys
-     * @return $this
      */
     public function delKeysFromAll(array $keys): static
     {
@@ -614,7 +645,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
      *
      * @param array $old_key old key name
      * @param array $new_key new key name
-     * @return RecordSet
      */
     public function changeKeysFromAll(array $old_key, array $new_key): static
     {
@@ -644,7 +674,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
      *
      * @param string $key Schlüssel
      * @param string $value Wert
-     * @return RecordSet
      */
     public function fillValues(string $key, string $value): static
     {
@@ -656,7 +685,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Deletes a specified amount of records from the set. Iterator will be set to the record preceding the removed record(s).
+     * Deletes a specified number of records from the set. Iterator will be set to the record preceding the removed record(s).
      * Failure results in the Iterator being reset to -1
      *
      * @param int $amount number of records to delete including the selected.
@@ -703,8 +732,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Returns all values of a field name
      *
-     * @param array|string $fieldNames
-     * @param array|string $keyByFields
      * @param string $type type conversion (int, float, bool, string)
      * @return array Felddaten als Array z.B. array('Alex', 'Florian', 'Andreas')
      */
@@ -728,7 +755,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
-     * Returns an array of the values of multiple columns from a record set
+     * Returns an array of multiple columns from a record set
      */
     private function getMultipleFields(array $fieldNames, array $keyByFields): array
     {
@@ -886,9 +913,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     /**
      * Vergleicht ein Resultset, ob es identisch ist. Ist das Resultset nicht identisch, bleibt der Satzzeiger auf diesem stehen.
-     *
-     * @param RecordSet $ResultSet
-     * @return boolean
      */
     public function isEqual(RecordSet $ResultSet): bool
     {
@@ -984,8 +1008,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param string $val Wert
      * @param string $separator Trenner
      * @param string $text_clinch Zeichen für Textklammer
-     * @param bool $formatNumericAsText
-     * @return string
      */
     public static function maskTextCSVCompliant(string $val, string $separator = ';', string $text_clinch = '"', bool $formatNumericAsText = false): string
     {
@@ -1008,7 +1030,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Sets the fields, or the order of the fields to be returned
      *
-     * @param array $fields
      * @see RecordSet::getRecordAsCSV()
      */
     public function setReturnFields(array $fields): void
@@ -1060,7 +1081,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Returns records as json
+     * Returns records as JSON
      *
      * @throws JsonException
      */
@@ -1072,10 +1093,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     #[Pure]
     /**
      * Zeile als Ini Werte ausgeben
-     *
-     * @param string $key_value_separator
-     * @param string $separator
-     * @return string
      */
     public function getRecordAsIni(string $key_value_separator = '=', string $separator = "\n"/*, $text_clinch=''*/): string
     {
@@ -1085,12 +1102,11 @@ class RecordSet extends PoolObject implements Iterator, Countable
     }
 
     /**
-     * Creates data format for the bootstrap table
+     * Creates a data format for the bootstrap table
      *
      * @param int $total total or filtered total
-     * @param int|null $totalNotFiltered (optional) total - Use totalNotFilteredField parameter to set the field from the json response which will used for
+     * @param int|null $totalNotFiltered (optional) total - Use totalNotFilteredField parameter to set the field from the JSON response which will used for
      *      showExtendedPagination
-     * @return array
      */
     public function getRecordsAsBSTable(int $total, ?int $totalNotFiltered = null): array
     {
@@ -1105,15 +1121,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
     /**
      * Returns all data in XML format for the JS component DHtmlXGrid
      *
-     * @param array $pk
-     * @param int $total_count
-     * @param int $pos
-     * @param boolean $without_pk
-     * @param string $encoding
-     * @param boolean $encode
-     * @param array $callbackRow
-     * @param array $callbackCell
-     * @return string
      * @todo move into GUI_Table for dhtmlxGrid
      */
     public function getRecordsAsXGrid(
@@ -1187,8 +1194,6 @@ class RecordSet extends PoolObject implements Iterator, Countable
      * @param array $pkAsValue primary key
      * @param string $fieldNameAsOption field name as option text
      * @param boolean|null $add [optional]
-     * @param string $encoding
-     * @return string
      * @todo move into GUI_Combo for dhtmlxCombo
      */
     public function getRecordsAsXCombo(array $pkAsValue, string $fieldNameAsOption, ?bool $add = null, string $encoding = 'ISO-8859-1'): string

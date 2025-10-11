@@ -11,7 +11,6 @@
 namespace pool\classes\Cache;
 
 use Memcached;
-use pool\classes\Exception\InvalidArgumentException;
 
 class Memory extends Memcached
 {
@@ -24,18 +23,54 @@ class Memory extends Memcached
     private function __construct(string $servers)
     {
         parent::__construct('pool');
-        if (ini_get('session.save_handler') === 'memcached') {
-            $servers = $servers ?: ini_get('session.save_path');
+        $this->configureMemcachedOptions();
+
+        static $sessionHandler = null;
+        static $sessionSavePath = null;
+
+        if($sessionHandler === null) {
+            $sessionHandler = ini_get('session.save_handler');
+            $sessionSavePath = ini_get('session.save_path');
+        }
+        if ($sessionHandler === 'memcached') {
+            $servers = $servers ?: $sessionSavePath;
         }
 
-        if ($servers) {
-            $list = explode(',', $servers);
-            $this->addServers(
-                array_map(
-                    fn(string $srv) => explode(':', $srv, 2),
-                    $list,
-                ),
-            );
+        if ($servers !== '' && $servers !== null) {
+            $this->parseAndAddServers($servers);
+        }
+    }
+
+    private function configureMemcachedOptions(): void
+    {
+        $this->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
+        $this->setOption(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+        $this->setOption(Memcached::OPT_AUTO_EJECT_HOSTS, true);
+    }
+
+    private function parseAndAddServers(string $servers): void
+    {
+        $currentServers = $this->getServerList();
+        $existingServers = array_flip(
+            array_map(fn($server) => "{$server['host']}:{$server['port']}", $currentServers)
+        );
+
+        $serversToAdd = [];
+        $serverList = explode(',', $servers);
+
+        foreach ($serverList as $serverString) {
+            $serverString = trim($serverString); // Handle whitespace
+
+            if ($serverString !== '' && !isset($existingServers[$serverString])) {
+                $parts = explode(':', $serverString, 2);
+                if (count($parts) === 2 && $parts[1] !== '') {
+                    $serversToAdd[] = [$parts[0], (int)$parts[1]];
+                }
+            }
+        }
+
+        if ($serversToAdd !== []) {
+            $this->addServers($serversToAdd);
         }
     }
 
@@ -45,7 +80,7 @@ class Memory extends Memcached
             return $this->initialized;
         }
         $versions = $this->getVersion();
-        $this->initialized ??= $versions && !in_array(false, $versions, true);
+        $this->initialized ??= $versions && count(array_filter($versions, fn($v) => $v !== false)) > 0;
         return $this->initialized;
     }
 
@@ -76,7 +111,8 @@ class Memory extends Memcached
 
     public function keyExists(string $key): bool
     {
-        return $this->get($key) === false && $this->lastKeyExists();
+        $this->get($key);// Just to set the result code
+        return  $this->lastKeyExists();
     }
 
     public function lastKeyExists(): bool
