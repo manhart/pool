@@ -446,6 +446,38 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     }
 
     /**
+     * Retrieve the base path of the script, standardized to use forward slashes.
+     *
+     * @return string The normalized base path of the current script, or '/' if the directory is empty.
+     */
+    public function getBasePath(): string
+    {
+        $script = Request::scriptName();
+        if (str_contains($script, '\\')) {
+            $script = str_replace('\\', '/', $script);
+        }
+        $dir = rtrim(dirname($script), '/');
+        return $dir === '' ? '/' : $dir;
+    }
+
+    /**
+     * Returns the route-relevant path of the current request.
+     * This method extracts the part of the request URI that follows the executing script (e.g. returns '/foo/bar' for '/index.php/foo/bar').
+     * It can be used by for a future routing system to determine which module or handler should process the request.
+     *
+     * @return string The path portion of the URI, with the script name removed if present, prefixed with a slash.
+     */
+    public function getRoutePath(): string
+    {
+        $path = parse_url(Request::uri(), PHP_URL_PATH);
+        $script = Request::scriptName();
+        if (str_starts_with($path, $script)) {
+            $path = substr($path, strlen($script));
+        }
+        return '/'.ltrim($path, '/');
+    }
+
+    /**
      * Return the port if it's not the default port of the scheme
      */
     private function _getPortInfo(): string
