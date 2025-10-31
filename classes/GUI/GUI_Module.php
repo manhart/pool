@@ -24,6 +24,7 @@ use Log;
 use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Http\Request;
+use pool\classes\Core\Input\Filter\DataType;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
 use pool\classes\Core\Weblication;
@@ -125,6 +126,7 @@ class GUI_Module extends Module
 
     private static array $guiCache = [];
 
+
     /**
      * Checks if we are in an ajax call and creates a template object
      *
@@ -142,7 +144,11 @@ class GUI_Module extends Module
         // set the module name (if it is necessary for ajax calls)
         if ($this->isAjax) {
             $moduleName = $_REQUEST['moduleName'] ?? null;
-            if ($moduleName) $this->setName($moduleName);
+            if ($moduleName) {
+                $filter = DataType::getFilter(DataType::ALPHANUMERIC);
+                $moduleName = $filter($moduleName);
+                $this->setName($moduleName);
+            }
         }
         $this->Template = new Template();
         $this->Template->addGlobalHook($this->searchGUIsInParsedBlockContent(...));// adds hook for parsed block content
