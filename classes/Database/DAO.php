@@ -424,6 +424,14 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
+     * Returns primary key
+     */
+    public function getForeignKey(): array
+    {
+        return $this->fk ?? [];
+    }
+
+    /**
      * Returns a single record e.g., by primary key
      *
      * @see \MySQL_DAO::buildWhere
