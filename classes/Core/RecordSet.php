@@ -403,6 +403,15 @@ class RecordSet extends PoolObject implements Iterator, Countable
 
     #[Pure]
     /**
+     * Shorthand for getValueAsInt('id')
+     */
+    public function getID(): int
+    {
+        return $this->getValueAsInt('id');
+    }
+
+    #[Pure]
+    /**
      * Shorthand for getValueAsInt('affected_rows')
      */
     public function getAffectedRows(): int
