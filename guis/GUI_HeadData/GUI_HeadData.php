@@ -36,10 +36,6 @@ use const pool\NAMESPACE_SEPARATOR;
  */
 class GUI_HeadData extends GUI_Module
 {
-    public const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
-    public const ROBOTS_INDEX = 'index';        # Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (index = Indizierung).
-    public const ROBOTS_NOFOLLOW = 'nofollow';    # Damit erlauben Sie einem Suchprogramm, Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (nofollow = nicht folgen). Sie verbieten dem Suchprogramm jedoch, untergeordnete Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen.
-    public const ROBOTS_FOLLOW = 'follow';        # Damit erlauben Sie einem Suchprogramm ausdruecklich, Inhalte aus der aktuellen HTML-Datei und aus untergeordneten Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen und an seine Suchdatenbank zu uebermitteln (follow = folgen).
     // @var integer Datei von Originaladresse laden; z.B. 12 Stunden = 43200; (vertraegt auch String siehe Selfhtml)
     // @access private
     var $Expires = 0;
@@ -70,8 +66,15 @@ class GUI_HeadData extends GUI_Module
     // @var string Beschreibung des Html Dokuments (Seite)
     private string $description = '';
 
-    // @var string Suchmaschinenen-Robot Anweisungen
-    private string $robots = self::ROBOTS_NOFOLLOW;
+    /**
+     * Active robots directives.
+     *
+     * Stored as a map of directive-value => RobotsDirective for deduplication.
+     * Default: "nofollow".
+     *
+     * @var array<string, RobotsDirective>
+     */
+    private array $robots = [RobotsDirective::NOFOLLOW->value => RobotsDirective::NOFOLLOW];
 
     /**
      * StyleSheet Files
@@ -242,14 +245,40 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Gibt Suchmaschinen Robots Anweisungen, was er auf dieser Seite tun soll. Siehe head.class.php Konstanten im oberen Bereich!!
-     * z.b. Indexierung oder keine Indexierung, Follow etc.
+     * Assign robots directives controlling search engine behavior.
+     * Accepts a single directive or an array; duplicates are merged.
      *
-     * @param string $sRobots Uebergabe von ROBOT_ Konstanten
-     **/
-    function setRobots(string $sRobots)
+     * - "noindex" overrides "index"
+     * - "nofollow" overrides "follow"
+     *
+     * @param RobotsDirective|array<RobotsDirective> $directives
+     */
+    public function setRobotsDirective(RobotsDirective|array $directives): static
     {
-        $this->robots = $sRobots;
+        $arr = is_array($directives) ? $directives : [$directives];
+
+        foreach ($arr as $dir) {
+            $this->robots[$dir->value] = $dir;
+        }
+
+        // --- normalize robots / conflict check ---
+        if (isset($this->robots['noindex']) && isset($this->robots['index'])) {
+            unset($this->robots['index']);
+        }
+        if (isset($this->robots['nofollow']) && isset($this->robots['follow'])) {
+            unset($this->robots['follow']);
+        }
+        return $this;
+    }
+
+    /**
+     * Returns a string suitable for <meta name="robots" content="...">.
+     *
+     * Example: "noindex, nofollow"
+     */
+    private function getRobotsTagValue(): string
+    {
+        return implode(', ', array_map(fn(RobotsDirective $d) => $d->value, $this->robots));
     }
 
     /**
@@ -398,14 +427,14 @@ class GUI_HeadData extends GUI_Module
      */
     public function finalize(): string
     {
-        $Url = new Url(false);
+        $url = new Url(false);
 
         $this->Template->setVars([
             'EXPIRES' => $this->Expires,
             'LANGUAGE' => $this->Weblication->getLanguage(),
             'TITLE' => $this->title,
             'DESCRIPTION' => $this->description,
-            'ROBOTS' => $this->robots,
+            'ROBOTS' => $this->getRobotsTagValue(),
             'BASE_HREF' => $this->baseHref,
             'BASE_TARGET' => $this->baseTarget,
             'CHARSET' => $this->charset,
@@ -417,7 +446,7 @@ class GUI_HeadData extends GUI_Module
                     JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION,
                 ),
             ),
-            'SCRIPT' => $Url->getUrl(),
+            'SCRIPT' => $url->getUrl(),
         ],
         );
 
