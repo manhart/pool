@@ -1234,11 +1234,20 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $aliasForInserted = '';
         $isMaria = true;//@todo check if MariaDB or MySQL
         if (!$isMaria) $aliasForInserted = ' AS new';
+        $primaryKey = $this->getPrimaryKey();
         if ($onDuplicate === true) {
-            $nonPkCols = array_values(array_diff($columns, $this->getPrimaryKey()));
+            $nonPkCols = array_values(array_diff($columns, $primaryKey));
             /** @noinspection PhpRedundantOptionalArgumentInspection */
             $onDuplicate = $isMaria ? $this->valuesForColumns($nonPkCols) : /* mysql */
                 $this->valuesForColumnsAlias($nonPkCols, 'new');
+        }
+        // If the table has a single primary key and the PK is not already
+        // part of the ON DUPLICATE KEY UPDATE list, automatically inject
+        // `pk = LAST_INSERT_ID(pk)` so that LAST_INSERT_ID() returns the
+        // existing key on UPDATE as well as the newly generated key on INSERT.
+        if (count($primaryKey) === 1 && !isset($onDuplicate[$primaryKey[0]])) {
+            $col = $this->encloseColumnName($primaryKey[0]);
+            $onDuplicate[$primaryKey[0]] = new SqlStatement("LAST_INSERT_ID($col)");
         }
         $updateList = $this->buildAssignmentList($onDuplicate);
         if ($updateList) $updateClause = "ON DUPLICATE KEY UPDATE $updateList";
