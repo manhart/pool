@@ -174,20 +174,19 @@ class MySQL_DAO extends DAO
     }
 
     /**
-     * Get enumerable values from field
+     * Get enumerable values from a field
      */
-    public function getColumnEnumValues(string $column): array
+    public function getEnumValues(string $column): array
     {
         $fieldInfo = $this->getDataInterface()->getColumnMetadata($this->getDatabase(), static::getTableName(), $column);
         if (!isset($fieldInfo['Type'])) {
             return [];
         }
-        $type = substr($fieldInfo['Type'], 0, 4);
-        if ($type !== 'enum') {
+        if (!str_starts_with($fieldInfo['Type'], 'enum(')) {
             return [];
         }
-        $buf = substr($fieldInfo['Type'], 5, -1);
-        return explode("','", substr($buf, 1, -1));
+        $enumValues = substr($fieldInfo['Type'], 5, -1);
+        return explode("','", trim($enumValues, "'"));
     }
 
     /**
