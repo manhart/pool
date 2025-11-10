@@ -10,12 +10,10 @@
 
 namespace pool\classes\Core;
 
-use Countable;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
-use Iterator;
 use JetBrains\PhpStorm\Pure;
 use JsonException;
 use pool\classes\Database\DataInterface;
@@ -67,7 +65,7 @@ use const SORT_STRING;
  * @package pool\classes\Core
  * @since 2003-07-10
  */
-class RecordSet extends PoolObject implements Iterator, Countable
+class RecordSet extends PoolObject implements \Iterator, \Countable
 {
     /**
      * @var array records
