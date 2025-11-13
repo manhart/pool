@@ -346,6 +346,28 @@ class RecordSet extends PoolObject implements \Iterator, \Countable
         return (string)$this->getValue($key, $default);
     }
 
+    /**
+     * Returns the current record row as a numerically indexed value list.
+     * Optionally extracts only the specified fields and preserves their order.
+     */
+    public function getValueList(?array $fields = null): array
+    {
+        $row = $this->records[$this->index] ?? [];
+
+        // No field filter: return all values in natural order
+        if ($fields === null) {
+            return array_values($row);
+        }
+
+        // Fast path: the row already contains exactly the requested fields in the same order
+        if (array_keys($row) === $fields) {
+            return array_values($row);
+        }
+
+        // Fallback: extract only the requested fields, preserving order
+        return array_map(fn($f) => $row[$f] ?? null, $fields);
+    }
+
     #[Pure]
     /**
      * Returns a value of the current record
