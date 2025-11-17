@@ -1134,21 +1134,25 @@ function findPropertyDescriptor(object, propertyName) {
 /**
  * Trigger an event
  *
- * @param element Element
- * @param type Event Type
+ * @param {HTMLElement} element
+ * @param {string} type Event Type
+ * @param {object} options
  */
-function triggerEvent(element, type) {
-    if ('createEvent' in document) {
-        // modern browsers, IE9+
-        let Event = document.createEvent('HTMLEvents');
-        Event.initEvent(type, false, true);
-        element.dispatchEvent(Event);
-    } else {
-        // IE 8
-        let Event = document.createEventObject();
-        Event.eventType = type;
-        element.fireEvent('on' + Event.eventType, Event);
-    }
+function triggerEvent(element, type, options = {})
+{
+    const {
+        bubbles = true,
+        cancelable = true,
+        composed = false,
+        detail
+    } = options;
+
+    const event = detail !== undefined
+        ? new CustomEvent(type, {bubbles, cancelable, composed, detail})
+        : new Event(type, {bubbles, cancelable, composed});
+
+    element.dispatchEvent(event);
+    return event;
 }
 
 /**
