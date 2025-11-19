@@ -782,8 +782,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * Executes sql statement and returns RecordSet
      *
      * @param string $sql sql statement to execute
-     * @throws mysqli_sql_exception
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|DAOException|mysqli_sql_exception
      */
     protected function execute(string $sql, ?callable $customCallback = null): RecordSet
     {
