@@ -294,32 +294,39 @@ function int2pix(px) {
 /**
  * Adds an option to a select element at a specific position.
  *
- * @param {HTMLSelectElement} selectElement - The select element to add the option to.
- * @param {string} caption - The text to display for the option.
+ * @param {HTMLSelectElement} select - The select element to add the option to.
+ * @param {string} label - The text to display for the option.
  * @param {string} value - The value of the option.
  * @param {boolean} [selected=false] - Whether the option should be selected.
- * @param {number} [position=-1] - The position to insert the option at. Default is -1 (end position).
+ * @param {number} [position=-1] - If the position is outside the range 0..length-1, the option is appended.
  * @returns {HTMLOptionElement} - The created option element.
  */
-function addOption(selectElement, caption, value, selected = false, position = -1) {
-    const optionElement = document.createElement('OPTION');
-    optionElement.text = caption;
-    optionElement.value = value;
-    optionElement.selected = selected;
+function addOption(select, label, value, selected = false, position = -1)
+{
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    if(selected) opt.selected = true;
 
-    if(position < 0 || position > selectElement.options.length) {
-        selectElement.add(optionElement);
+    const opts = select.options;
+
+    if(position < 0 || position >= opts.length) {
+        select.append(opt);
     }
     else {
-        selectElement.insertBefore(optionElement, selectElement.options[position]);
+        select.insertBefore(opt, opts[position]);
     }
-    return optionElement;
+    return opt;
 }
 
-function clearSelect(selectElement) {
-    for (let i = selectElement.options.length - 1; i >= 0; i--) {
-        selectElement.options[i] = null;
-    }
+/**
+ * Clears all options from a select element.
+ *
+ * @param {HTMLSelectElement} select
+ */
+function clearSelect(select)
+{
+    select.replaceChildren();
 }
 
 /**
