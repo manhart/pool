@@ -20,6 +20,7 @@ declare(strict_types = 1);
 namespace pool\classes\Core;
 
 use Exception;
+use JetBrains\PhpStorm\NoReturn;
 use JetBrains\PhpStorm\Pure;
 use Locale;
 use pool\classes\Cache\Memory;
@@ -1441,20 +1442,19 @@ class Weblication extends Component
     /**
      * Terminates Ajax requests with a caller-defined error
      */
-    public function denyAJAX_Request(string $messageKey, ?string $defaultMessage, int $response_code, string $errorType): void
+    public function denyAJAX_Request(string $messageKey, ?string $defaultMessage, int $response_code, string $errorType): never
     {
-        if (self::isAjax()) {
-            header('Content-Type: application/json', true, $response_code);
-            $message = $this->getTranslator()->getTranslation($messageKey, $defaultMessage);
-            $return = [
-                'success' => false,
-                'error' => [
-                    'type' => $errorType,
-                    'message' => $message,
-                ],
-            ];
-            die(json_encode($return));
-        }
+        if (Request::hasBasicAuth()) header('WWW-Authenticate: Basic realm="Restricted Area"');
+        header('Content-Type: application/json', true, $response_code);
+        $message = $this->getTranslator()->getTranslation($messageKey, $defaultMessage);
+        $return = [
+            'success' => false,
+            'error' => [
+                'type' => $errorType,
+                'message' => $message,
+            ],
+        ];
+        die(json_encode($return));
     }
 
     public function logout(): void
