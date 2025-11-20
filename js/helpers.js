@@ -1414,3 +1414,26 @@ const parseFloatByLocale = (str, locale = null) =>
     }
     return parseFloat(Array.from(str, c => c === thousandsSep ? '' : c === decimalSep ? '.' : c).join(''));
 }
+
+/**
+ * Extends a data container (plain object or FormData) with additional key-value pairs, preserving the appropriate structure for each type.
+ */
+function extendData(data, additions)
+{
+    if(!additions || typeof additions !== 'object') {
+        return data;
+    }
+
+    if(data instanceof FormData) {
+        for(const [key, value] of Object.entries(additions)) {
+            data.append(key, value);
+        }
+        return data;
+    }
+
+    if(data && typeof data === 'object') {
+        return {...data, ...additions};
+    }
+
+    return data;
+}
