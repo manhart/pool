@@ -400,21 +400,17 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * @param Module $Module
-     * @param array|null $initOptions
      * @param string|null $jsClassName if null, the Module's class name is used
-     * @return GUI_HeadData
      */
-    public function setClientData(Module $Module, ?array $initOptions = null, ?string $jsClassName = null): self
+    public function setClientData(Module $module, ?array $initOptions = null, ?string $jsClassName = null): self
     {
-        $clientData =& $this->clientData[$Module->getName()];
+        $clientData = &$this->clientData[$module->getName()];
         $clientData ??= [
-            'className' => $jsClassName ?? $Module->getClassName(),
-            'fullyQualifiedClassName' => $Module::class,
-            'parentModuleName' => $Module->getParent()?->getName(),
+            'className' => $jsClassName ?? $module->getClassName(),
+            'fullyQualifiedClassName' => $module::class,
+            'parentModuleName' => $module->getParent()?->getName(),
         ];
-        if (!$initOptions) return $this;
-        $existingInitOptions =& $clientData['initOptions'];
+        $existingInitOptions = &$clientData['initOptions'];
         $existingInitOptions ??= [];
         $existingInitOptions += $initOptions;
         return $this;

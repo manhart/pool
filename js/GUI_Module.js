@@ -224,7 +224,7 @@ class GUI_Module
             query = null,
             method = 'GET',
             module = this.getFullyQualifiedClassName(),
-            moduleName = this.name,
+            moduleName = this.getName(),
             body,
             responseType = 'pool',
             ...extraOpts
