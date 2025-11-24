@@ -199,11 +199,7 @@ class Module extends Component
     }
 
     /**
-     * set internal param
-     *
-     * @param string $param
-     * @param mixed $value
-     * @return Module
+     * Set internal param
      */
     public function setInternalParam(string $param, mixed $value): Module
     {
@@ -212,11 +208,7 @@ class Module extends Component
     }
 
     /**
-     * puts variables into the Input container
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return Input
+     * Puts variables into the Input container
      */
     public function setVar(string $key, mixed $value = ''): Input
     {
@@ -224,10 +216,8 @@ class Module extends Component
     }
 
     /**
-     * passes data to the client
+     * Passes data to the client
      *
-     * @param string $key
-     * @param mixed $value
      * @return $this
      */
     public function setClientVar(string $key, mixed $value): self
