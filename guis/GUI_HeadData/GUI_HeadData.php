@@ -412,7 +412,7 @@ class GUI_HeadData extends GUI_Module
         ];
         $existingInitOptions = &$clientData['initOptions'];
         $existingInitOptions ??= [];
-        $existingInitOptions += $initOptions;
+        if ($initOptions) $existingInitOptions += $initOptions;
         return $this;
     }
 
