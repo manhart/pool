@@ -389,7 +389,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      *
      * @see self::fetchData()
      */
-    public static function fetchDataStatic($pk, ...$fields)
+    public static function fetchDataStatic(array|int|string $pk, ...$fields)
     {
         return static::create(throws: true)->fetchData($pk, ...$fields);
     }
