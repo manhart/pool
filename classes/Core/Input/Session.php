@@ -170,7 +170,7 @@ class Session extends Input
     /**
      * Delivers the maximum session lifetime in seconds
      */
-    public function getMaxLifetime(): int
+    static public function getMaxLifetime(): int
     {
         return (int)get_cfg_var('session.gc_maxlifetime');
     }
