@@ -116,8 +116,6 @@ class PoolObject extends stdClass
 
     /**
      * Determines whether the class is inside the POOL (base library)
-     *
-     * @return bool
      */
     protected function isPOOL(): bool
     {
