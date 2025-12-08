@@ -23,6 +23,7 @@ use function substr_compare;
 use function trigger_error;
 
 use const E_USER_NOTICE;
+use const pool\NAMESPACE_SEPARATOR;
 
 /**
  * Core class for all POOL objects. Provides basic functionality for all POOL objects.
