@@ -63,6 +63,17 @@ class PoolObject extends stdClass
     private ReflectionClass $ReflectionClass;
 
     /**
+     * Returns the fully qualified class name
+     *
+     * @return string fully qualified class name
+     */
+    #[Pure]
+    public static function theClass(): string
+    {
+        return static::class;
+    }
+
+    /**
      * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
      */
     public function getClass(): string
@@ -71,13 +82,25 @@ class PoolObject extends stdClass
     }
 
     /**
-     * Returns the fully qualified class name
-     *
-     * @return string fully qualified class name
+     * @param string $class Fully qualified class name (e.g. __CLASS__)
+     * @return array{0:string,1:string} Tupel: [shortName, namespace]
      */
-    public static function theClass(): string
+    #[Pure]
+    static public function splitClassName(string $class): array
     {
-        return static::class;
+        $pos = strrpos($class, NAMESPACE_SEPARATOR);
+
+        if ($pos === false) {
+            return [
+                $class,
+                '',
+            ];
+        }
+
+        return [
+            substr($class, $pos + 1),
+            substr($class, 0, $pos),
+        ];
     }
 
     /**
