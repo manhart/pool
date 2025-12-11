@@ -391,19 +391,16 @@ class TempCoreHandle extends TempHandle
         if ($this->inheritFrom) {
             $varList = array_merge($this->inheritFrom->getVars(), $varList);
         }
-        $search = [];
-        $replace = [];
-        foreach ($varList as $key => $val) {
-            $search[] = "$this->varStart$key$this->varEnd";
-            $replace[] = $val;
-        }
+        if (count($varList)) {
+            $varPairs = [];
+            foreach ($varList as $key => $val) {
+                $varPairs["$this->varStart$key$this->varEnd"] = $val;
+            }
 
-        $sizeOfVarList = count($varList);
-        $iterations = 0;
-        $count = 1;
-        while ($count && $iterations < $sizeOfVarList) {
-            $content = str_replace($search, $replace, $content, $count);
-            $iterations++;
+            do {
+                $oldContent = $content;
+                $content = strtr($content, $varPairs);
+            } while ($oldContent !== $content);
         }
 
         $replace_pairs = [];
