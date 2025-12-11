@@ -24,6 +24,7 @@ use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
+use pool\classes\Exception\SecurityException;
 use Stringable;
 
 use function addEndingSlash;
@@ -1014,8 +1015,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $where = $this->buildWhere($pk, $this->pk);
         if ($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
-            $this->raiseError(__FILE__, __LINE__, $error_msg);
-            die($error_msg);
+            throw new SecurityException($error_msg);
         }
 
         /** @noinspection SqlResolve */
@@ -1108,8 +1108,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $where = $this->buildFilter($filter_rules, Operator::and, true);
         if ($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
-            $this->raiseError(__FILE__, __LINE__, $error_msg);
-            die($error_msg);
+            throw new SecurityException($error_msg);
         }
 
         /** @noinspection SqlResolve */

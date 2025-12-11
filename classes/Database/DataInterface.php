@@ -415,10 +415,9 @@ class DataInterface extends PoolObject
             if ($useExceptions) {
                 throw new DAOException($error_msg, previous: $e ?? null);
             }
-            $interface->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
             $error = $interface->getError();
             $error['sql'] = $sql;
-            $RecordSet = (new RecordSet())->addError($error);
+            $RecordSet = new RecordSet()->addError($error);
         }
 
         // SQL Statement Performance Logging:
