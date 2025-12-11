@@ -58,11 +58,11 @@ class Translator
      *The Content should avoid constructs like )?? )} in args and >} in default to avoid failure of the RegEx<br>
      *key and args are retrieved as handle in group 2<br>
      */
-    public const CURLY_TAG_REGEX = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?>\?\?<((?>[^>]*(?>>(?!}))?)*)>)?}/u';
+    public const string CURLY_TAG_REGEX = '/\{(TRANSL) +([^\s(?]+(?>\((?>[^)]*(?>\)(?!\?\?|}))?)+\))?)(?:\?\?<((?>[^>]*(?>>(?!}))?)*)>|\?\?«([^»]*)»)?}/u';
     /**
      *Matches Blocks like <code><!-- TRANSL handle -->freeform-text<!-- END handle --></code>
      */
-    public const COMMENT_TAG_REGEX = '/<!-- (TRANSL) ([^>]+) -->(.*?)<!-- END \1 -->/s';
+    public const string COMMENT_TAG_REGEX = '/<!-- (TRANSL) ([^>]+) -->(.*?)<!-- END \1 -->/s';
 
     /**
      * @var bool Determines whether text-translations with args should be resolved<br>
@@ -340,7 +340,7 @@ class Translator
             //the handle part -> the key
             $handle = ($match[2]);
             //the freeform-text part -> the default value (optional)
-            $tagContent = $match[3] ?? null;
+            $tagContent = ($match[3] ?? null) ?: $match[4] ?? null;
             //skip repeating tags
             if (!isset($changes[$fullMatchText])) {
                 $value = $this->translateTag($handle, $tagContent);
