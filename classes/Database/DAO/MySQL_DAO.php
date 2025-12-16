@@ -185,8 +185,8 @@ class MySQL_DAO extends DAO
         if (!str_starts_with($fieldInfo['Type'], 'enum(')) {
             return [];
         }
-        $enumValues = substr($fieldInfo['Type'], 5, -1);
-        return explode("','", trim($enumValues, "'"));
+        preg_match_all("/'([^']*)'/", $fieldInfo['Type'], $matches);
+        return $matches[1] ?? [];
     }
 
     /**
