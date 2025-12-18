@@ -652,7 +652,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 //apply the quotation rules
                 $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
                 $value = implode(', ', $values);//for some reason '0' is false
-                $values = $value === '' ? 'NULL' : $value;//https://www.php.net/manual/en/language.types.boolean.php#112190
+                if ($value === '') {
+                    return 'false';
+                } else {
+                    $values = $value;
+                }//https://www.php.net/manual/en/language.types.boolean.php#112190
                 $value = "($values)";
             }
         } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
