@@ -156,6 +156,7 @@ class GUI_Module
     {
         const isCheckbox = input.type === 'checkbox';
         const isRadio = input.type === 'radio';
+        const isSelect = (input.tagName.toLowerCase() === 'select');
         let changed;
         if (isCheckbox) {
             changed = input.checked !== value || (overwriteDefault && input.defaultChecked !== value);
@@ -166,7 +167,22 @@ class GUI_Module
             const checked = input.checked = input.value === value;
             if (overwriteDefault) input.defaultChecked = checked;
             if (checked > wasChecked) input.dispatchEvent(new Event('change', {bubbles: true}));//as per HTML spec only on rise
-        } else {
+        }
+        else if(isSelect) {
+            //select-one compatible @todo multiple
+            // for <select>, the default state is defined by option.defaultSelected, not by select.defaultValue
+            const prevValue = input.value;
+            changed = prevValue !== value;
+            input.value = value;
+            if(overwriteDefault) {
+                // optional / legacy: input.defaultValue = input.value;
+                for(const opt of input.options) {
+                    if(opt.defaultSelected !== opt.selected) changed = true;
+                    opt.defaultSelected = opt.selected
+                }
+            }
+        }
+        else {
             changed = input.value !== value || (overwriteDefault && input.defaultValue !== value);
             input.value = value;
             if (overwriteDefault) input.defaultValue = input.value;//in case you missed the memo, JS is strange so only .value will normalize assigned data
