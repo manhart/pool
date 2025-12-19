@@ -126,6 +126,11 @@ class GUI_Module extends Module
 
     private static array $guiCache = [];
 
+    /**
+     * Callbacks that are fired when a specific module is created.
+     * Format: ['ModulName' => Closure]
+     */
+    protected array $onCreationCallbacks = [];
 
     /**
      * Checks if we are in an ajax call and creates a template object
@@ -368,8 +373,13 @@ class GUI_Module extends Module
             $params = trim($params, '()');
             //try building the GUI found
             $new_GUI = self::createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
+            $moduleName = $new_GUI->getName();
+            if (isset($this->onCreationCallbacks[$moduleName])) {
+                $callback = $this->onCreationCallbacks[$moduleName];
+                $callback($new_GUI);
+            }
             //get unique identifier
-            $guiIdentifier = "[{$new_GUI->getName()}]";
+            $guiIdentifier = "[{$moduleName}]";
             //store reference for later insertion in pasteChildren()
             $new_GUI->setMarker($guiIdentifier);
             //add GUI to child-list
@@ -388,6 +398,14 @@ class GUI_Module extends Module
         //add remainder
         $newContent[] = substr($content, $caret);
         return implode($newContent);
+    }
+
+    /**
+     * Registers a function executed once a child module named $name is created. This is ideal for injecting variables into modules that live in blocks.
+     */
+    public function onComponentCreation(string $moduleName, Closure $callback): void
+    {
+        $this->onCreationCallbacks[$moduleName] = $callback;
     }
 
     /**
