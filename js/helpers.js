@@ -338,13 +338,13 @@ function clearSelect(select)
  * @link http://www.overset.com/2008/09/01/javascript-natural-sort-algorithm/
  */
 function str_natsort(a, b, order) {
-    var retval = 0;
+    let retval = 0;
 
-    var isDesc = (order == 'desc' || order == 'des');
+    const isDesc = (order === 'desc' || order === 'des');
     // die einfache Version reichte nicht aus.
     // return (a.toLowerCase()>b.toLowerCase()?1:-1)*(order=="asc"?1:-1);
 
-    // setup temp-scope variables for comparison evauluation
+    // setup temp-scope variables for comparison evaluation
     var re = /(-?[0-9\.]+)/g,
         x = a.toString().toLowerCase() || '',
         y = b.toString().toLowerCase() || '',
@@ -1436,4 +1436,90 @@ function extendData(data, additions)
     }
 
     return data;
+}
+
+/**
+ * Copies text to clipboard.
+ * Works in IE11 (via execCommand) and modern browsers (via Clipboard API).
+ * Uses callbacks instead of Promises to ensure IE11 compatibility without polyfills.
+ *
+ * @param {string} text - Text to copy
+ * @param {function} [onSuccess] - Callback on success
+ * @param {function} [onError] - Callback on error
+ * @param {boolean} [isSensitive=false] - If true, blocks copying on non-HTTPS pages
+ */
+function copyTextToClipboard(text, onSuccess, onError, isSensitive)
+{
+    // Default to false if not provided
+    isSensitive = isSensitive || false;
+
+    // 1. Security Check: Block sensitive data on insecure contexts (HTTP)
+    // noinspection ES6ConvertVarToLetConst
+    var isSecure = window.isSecureContext;
+    if(isSecure === undefined) {
+        // Fallback check for older browsers
+        isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    }
+
+    if(isSensitive && !isSecure) {
+        // noinspection ES6ConvertVarToLetConst
+        var securityError = new Error("Security Restriction: Sensitive data cannot be copied over an insecure connection (HTTP).");
+        console.warn(securityError.message);
+        if(onError) onError(securityError);
+        return;
+    }
+
+    // 2. Try Modern API (Only if available and secure)
+    if(navigator.clipboard && isSecure) {
+        navigator.clipboard.writeText(text).then(function() {
+            if(onSuccess) onSuccess();
+        }).catch(function(err) {
+            if(onError) onError(err);
+        });
+        return;
+    }
+
+    // 3. Legacy Fallback (IE11, older Chrome/FF, HTTP)
+    // noinspection ES6ConvertVarToLetConst
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    // Avoid scrolling to the bottom
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.width = "2em";
+    textArea.style.height = "2em";
+    textArea.style.padding = "0";
+    textArea.style.border = "none";
+    textArea.style.outline = "none";
+    textArea.style.boxShadow = "none";
+    textArea.style.background = "transparent";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    // Critical for Mobile/iOS compatibility
+    try {
+        textArea.setSelectionRange(0, 99999);
+    } catch(e) {
+        // Ignore if the browser doesn't support this
+    }
+
+    try {
+        // noinspection ES6ConvertVarToLetConst
+        var successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if(successful) {
+            if(onSuccess) onSuccess();
+        }
+        else {
+            if(onError) onError(new Error("Fallback: execCommand returned false"));
+        }
+    } catch(err) {
+        document.body.removeChild(textArea);
+        if(onError) onError(err);
+    }
 }
