@@ -176,13 +176,12 @@ class Component extends PoolObject
      * Returns the components with the given class
      *
      * @param string $class Search for a Component with class
-     * @return Generator
      */
     public function findComponents(string $class): Generator
     {
-        foreach ($this->components as $Component) {
-            if ($Component instanceof $class) {
-                yield $Component;
+        foreach ($this->components as $component) {
+            if ($component instanceof $class) {
+                yield $component;
             }
         }
         return null;
