@@ -1033,7 +1033,23 @@ function clearControls(elements) {
                 // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute#non-existing_attributes
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
                 elem.options.selectedIndex = -1;
-                elem.value = elem.getAttribute('data-default-value') ?? '';
+
+                const raw = elem.getAttribute('data-default-value') ?? '';
+                if(elemType === 'SELECT-MULTIPLE') {
+                    let values = [];
+                    try {
+                        const parsed = JSON.parse(raw);
+                        values = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
+                    } catch {
+                        // fallback: single value
+                        values = raw ? [String(raw)] : [];
+                    }
+                    const set = new Set(values);
+                    for(const opt of elem.options) opt.selected = set.has(opt.value);
+                }
+                else {
+                    elem.value = raw;
+                }
 
                 // 04.01.22, AM, selectpicker support
                 if (elem.classList.contains('selectpicker')) {
