@@ -22,28 +22,43 @@ namespace pool\classes\Database;
  */
 enum Operator
 {
+    // Comparison operators
     case equal;
     case notEqual;
     case greater;
     case greaterEqual;
     case less;
     case lessEqual;
+    // SQL specific operators
     case like;
     case notLike;
     case in;
     case notIn;
     case is;
     case isNot;
+    // Null operators
     case isNull;
     case isNotNull;
+    // Range operators
     case between;
     case notBetween;
+    // Existence operators
     case exists;
     case notExists;
+    // Quantifiers
     case all;
     case any;
+    // Logical operators
     case or;
     case and;
     case xor;
     case not;
+
+    public function isRange(): bool
+    {
+        return match ($this) {
+            self::between, self::notBetween => true,
+            default => false
+        };
+    }
 }
