@@ -900,7 +900,8 @@ class DataInterface extends PoolObject
     /**
      * Get information about a column
      *
-     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function getColumnMetadata(string $databaseAlias, string $table, string $field): array
     {
