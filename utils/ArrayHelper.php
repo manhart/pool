@@ -55,4 +55,46 @@ final class ArrayHelper
 
         return true;
     }
+
+    /**
+     * Sets a value in a nested array by a delimiter-separated path (e.g. "rootNode.childNode.leafNode").
+     * If intermediate path segments do not exist, they are created as arrays.
+     * If an intermediate segment exists but is not an array:
+     *  - strict=false: it will be overwritten with an array
+     *  - strict=true : an \InvalidArgumentException is thrown
+     *
+     * @param array $array Target array (modified in place)
+     * @param string $path Delimiter-separated path
+     * @param mixed $value Value to set
+     * @param string $delimiter Path delimiter (default ".")
+     * @param bool $strict Throw on scalar/array collisions
+     */
+    public static function setByPath(
+        array &$array,
+        string $path,
+        mixed $value,
+        string $delimiter = '.',
+        bool $strict = false,
+    ): void {
+        if ($path === '') {
+            throw new \InvalidArgumentException('Path must not be empty.');
+        }
+
+        $segments = explode($delimiter, $path);
+        $cursor = &$array;
+
+        foreach ($segments as $segment) {
+            if ($segment === '') throw new \InvalidArgumentException('Path contains an empty segment.');
+            if (!array_key_exists($segment, $cursor)) {
+                $cursor[$segment] = [];
+            } elseif (!is_array($cursor[$segment])) {
+                if ($strict) throw new \InvalidArgumentException("Cannot descend into \"$segment\": existing value is not an array.");
+                $cursor[$segment] = [];
+            }
+            $cursor = &$cursor[$segment];
+        }
+
+        $cursor = $value;
+        unset($cursor);
+    }
 }
