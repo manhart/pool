@@ -19,6 +19,22 @@ use function trim;
 final class StringHelper
 {
     /**
+     * Unwraps the string if enclosed by the given character.
+     */
+    public static function unwrap(string $value, string $char): string
+    {
+        if ($char === '' || strlen($value) < 2) {
+            return $value;
+        }
+
+        if (str_starts_with($value, $char) && str_ends_with($value, $char)) {
+            return substr($value, strlen($char), -strlen($char));
+        }
+
+        return $value;
+    }
+
+    /**
      * Removes a prefix from a string.
      *
      * @param string $value The input string
