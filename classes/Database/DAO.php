@@ -558,7 +558,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         array $filter_rules,
         ?Operator $operator = Operator::and,
         bool $skip_next_operator = false,
-        string $initialOperator = ' and',
+        string $initialOperator = ' '.Operator::and->value,
     ): string {
         $operator ??= Operator::and;
         if (!$filter_rules) {//not filter anything (terminate floating operators)
@@ -571,13 +571,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
-        $mappedOperator = $this->mapOperator($operator);
+        $mappedOperator = $operator->value;
         foreach ($filter_rules as $record) {
             if (!$record) continue;
             $skipAutomaticOperator = $skip_next_operator;
             if ($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
-                if ($record instanceof Operator) $record = $this->mapOperator($record);
-                $queryParts[] = " $record "; //operator e.g. or, and
+                $conditionalPart = $record instanceof Operator ? $record->value : $record;
+                $queryParts[] = " $conditionalPart "; //operator or parentheses e.g., OR, AND, XOR, (, )
                 continue;
             }
             if (is_array($record[0])) {// nesting detected
@@ -591,48 +591,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return implode('', $queryParts);
     }
 
-    /**
-     * Map operator to SQL
-     */
-    protected function mapOperator(Operator $operator): string
-    {
-        return match ($operator) {
-            Operator::equal => '=',
-            Operator::notEqual => '!=',
-            Operator::greater => '>',
-            Operator::greaterEqual => '>=',
-            Operator::less => '<',
-            Operator::lessEqual => '<=',
-            Operator::like => 'like',
-            Operator::notLike => 'not like',
-            Operator::in => 'in',
-            Operator::notIn => 'not in',
-            Operator::is => 'is',
-            Operator::isNot => 'is not',
-            Operator::isNull => 'is null',
-            Operator::isNotNull => 'is not null',
-            Operator::between => 'between',
-            Operator::notBetween => 'not between',
-            Operator::exists => 'exists',
-            Operator::notExists => 'not exists',
-            Operator::all => 'all',
-            Operator::any => 'any',
-            Operator::or => 'or',
-            Operator::and => 'and',
-            Operator::xor => 'xor',
-            Operator::not => 'not',
-        };
-    }
-
     private function assembleFilterRecord(array $record): string
     {
         $field = $this->translateValues ? //get field 'name'
             $this->translateValues($record[0]) : $record[0];//inject replace command?
+
         if (!($record[1] instanceof Operator) && !is_string($record[1])) // we assume that if an operator does not exist, an equal operator is meant
             array_splice($record, 1, 0, [Operator::equal]);
         $rawInnerOperator = $record[1];
         $innerOperator = match (true) {
-            $rawInnerOperator instanceof Operator => $this->mapOperator($rawInnerOperator),
+            $rawInnerOperator instanceof Operator => $rawInnerOperator->value,
             default => $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator,
         };
 
@@ -642,10 +610,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
         if (is_array($values)) {//multi value operation
-            if ($innerOperator === 'between') {
+            if ($innerOperator === Operator::between->value || $innerOperator === Operator::notBetween->value) {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
-                $value .= " {$this->mapOperator(Operator::and)} ";
+                $value .= ' '.Operator::and->value.' ';
                 $value .= /* max */
                     $this->escapeValue($values[1], $noEscape, $noQuotes);
             } else {//enlist all values e.g., in, not in

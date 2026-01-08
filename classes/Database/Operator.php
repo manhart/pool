@@ -18,41 +18,41 @@
 namespace pool\classes\Database;
 
 /**
- * Define general operators for DAO's
+ * Define general operators for DAO's directly mapped to SQL strings
  */
-enum Operator
+enum Operator: string
 {
     // Comparison operators
-    case equal;
-    case notEqual;
-    case greater;
-    case greaterEqual;
-    case less;
-    case lessEqual;
+    case equal = '=';
+    case notEqual = '!=';
+    case greater = '>';
+    case greaterEqual = '>=';
+    case less = '<';
+    case lessEqual = '<=';
     // SQL specific operators
-    case like;
-    case notLike;
-    case in;
-    case notIn;
-    case is;
-    case isNot;
+    case like = 'like';
+    case notLike = 'not like';
+    case in = 'in';
+    case notIn = 'not in';
+    case is = 'is';
+    case isNot = 'is not';
     // Null operators
-    case isNull;
-    case isNotNull;
+    case isNull = 'is null';
+    case isNotNull = 'is not null';
     // Range operators
-    case between;
-    case notBetween;
+    case between = 'between';
+    case notBetween = 'not between';
     // Existence operators
-    case exists;
-    case notExists;
+    case exists = 'exists';
+    case notExists = 'not exists';
     // Quantifiers
-    case all;
-    case any;
+    case all = 'all';
+    case any = 'any';
     // Logical operators
-    case or;
-    case and;
-    case xor;
-    case not;
+    case or = 'or';
+    case and = 'and';
+    case xor = 'xor';
+    case not = 'not';
 
     public function isRange(): bool
     {
