@@ -145,7 +145,7 @@ function isAlien(a) {
 }
 
 function isArray(a) {
-    return isObject(a) && a.constructor == Array;
+    return isObject(a) && a.constructor === Array;
 }
 
 function isBoolean(a) {
@@ -164,7 +164,7 @@ function isEmpty(o) {
             // }
         }
     } else {
-        return (o == '' || o == 0 || o == null);
+        return (o === '' || o === 0 || o == null);
     }
     return true;
 }
@@ -186,7 +186,7 @@ function isObject(a) {
 }
 
 function isString(a) {
-    return typeof a == 'string';
+    return typeof a === 'string';
 }
 
 function isUndefined(a) {
@@ -194,11 +194,11 @@ function isUndefined(a) {
 }
 
 function isInt(n) {
-    return n != "" && !isNaN(n) && Math.round(n) == n;
+    return n !== "" && !isNaN(n) && Math.round(n) == n;
 }
 
 function isFloat(n) {
-    return n != "" && !isNaN(n) && Math.round(n) != n;
+    return n !== "" && !isNaN(n) && Math.round(n) != n;
 }
 
 
@@ -1001,77 +1001,93 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
 /**
  * Empties the contents of the elements
  *
- * @param {array|object|string} array of elements (input fields) or a selector
+ * @param {array|object|string} elementsInput array of elements (input fields) or a selector
+ * @param {Event|string} triggerEvent triggerEvent optional event object or event name (string) on change
  */
-function clearControls(elements) {
+function clearControls(elementsInput, triggerEvent = null)
+{
+    let elements = elementsInput;
     if (isString(elements)) {
-        elements = explode(',', elements, false);
-        elements = document.querySelectorAll(elements);
+        const selector = elements.split(',').map(s => s.trim()).join(',');
+        elements = document.querySelectorAll(selector);
     }
 
-    for (let z = 0; z < elements.length; z++) {
-        let elem = elements[z];
-        // console.debug('clearControls', elem.name);
-
-        let tagName = elem.tagName.toUpperCase();
-        let elemType = (elem.type) ? elem.type.toUpperCase() : '';
-        // console.debug(tagName, elemType, elem.name);
-        if (tagName == 'SPAN') {
-            elem.innerHTML = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+    const getCurrentVal = (tag, type, el) => {
+        if(tag === 'SPAN') return el.innerHTML;
+        if(type === 'CHECKBOX' || type === 'RADIO') return el.checked;
+        if(type === 'SELECT-MULTIPLE') {
+            return Array.from(el.options).filter(o => o.selected).map(o => o.value).toString();
         }
-        else if (elemType == 'CHECKBOX' || elemType == 'RADIO') {
-            // console.debug('checked', elem.dataset.defaultChecked);
-            if (elem.getAttribute('data-default-checked') != null) {
-                // console.debug('element checked');
+        return el.value;
+    };
+
+    for(const elem of elements) {
+        const tagName = elem.tagName.toUpperCase();
+        const elemType = (elem.type || "").toUpperCase();
+
+        const initialValue = getCurrentVal(tagName, elemType, elem);
+
+        if(tagName === 'SPAN') {
+            elem.innerHTML = elem.dataset.defaultValue ?? '';
+        }
+        else if(elemType === 'CHECKBOX' || elemType === 'RADIO') {
+            if(elem.dataset.defaultChecked !== undefined) {
                 elem.checked = string2bool(elem.dataset.defaultChecked);
             }
             else elem.checked = false;
         }
-        else if (elemType == 'SELECT-ONE' || elemType == 'SELECT-MULTIPLE') {
-
-            if (elem.hasAttribute('data-default-value')) {
+        else if(elemType.startsWith('SELECT')) {
+            if(elem.dataset.defaultValue !== undefined) {
                 // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute#non-existing_attributes
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
+                const raw = elem.dataset.defaultValue ?? '';
                 elem.options.selectedIndex = -1;
 
-                const raw = elem.getAttribute('data-default-value') ?? '';
                 if(elemType === 'SELECT-MULTIPLE') {
                     let values = [];
                     try {
                         const parsed = JSON.parse(raw);
                         values = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
                     } catch {
-                        // fallback: single value
-                        values = raw ? [String(raw)] : [];
+                        // Fallback for simple CSV strings or individual values
+                        values = raw ? raw.split(',').map(s => s.trim()) : [];
                     }
-                    const set = new Set(values);
-                    for(const opt of elem.options) opt.selected = set.has(opt.value);
+                    const valSet = new Set(values);
+                    for(const opt of elem.options) opt.selected = valSet.has(opt.value);
                 }
                 else {
                     elem.value = raw;
                 }
 
                 // 04.01.22, AM, selectpicker support
-                if (elem.classList.contains('selectpicker')) {
+                if(elem.classList.contains('selectpicker') && typeof jQuery !== 'undefined') {
                     jQuery(elem).selectpicker('refresh');
                 }
-
             }
             else {
                 elem.options.selectedIndex = 0;
             }
         }
         else {
-            if (elem.getAttribute('data-empty-default-value')) {
-                elem.setAttribute('data-default-value', null);
+            if(elem.dataset.emptyDefaultValue !== undefined) {
+                elem.dataset.defaultValue = null;
             }
-            elem.value = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+            elem.value = elem.dataset.defaultValue ?? '';
         }
 
         elem.classList.remove('is-invalid');
         elem.classList.remove('is-valid');
         if (elem.closest('.needs-validation')) {
             elem.closest('.needs-validation').classList.remove('was-validated');
+        }
+
+        if(triggerEvent) {
+            const newValue = getCurrentVal(tagName, elemType, elem);
+
+            if(initialValue !== newValue) {
+                const evt = (typeof triggerEvent === 'string') ? new Event(triggerEvent, {bubbles: true}) : triggerEvent;
+                elem.dispatchEvent(evt);
+            }
         }
     }
 }
