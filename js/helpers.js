@@ -534,7 +534,18 @@ Function.prototype.inheritsFrom = function (parentClassOrObject) {
  * Converts string literal true and 1 to boolean true. Everything else becomes false
  */
 function string2bool(val) {
-    return (String(val) === 'true' || val === '1');
+    return (String(val).toLowerCase() === 'true' || val === '1');
+}
+
+/**
+ * @returns {boolean}
+ */
+function normalizeBool(val)
+{
+    if(typeof val === 'string') {
+        return string2bool(val);
+    }
+    return !!val;
 }
 
 /**
