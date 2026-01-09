@@ -869,9 +869,9 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Delete multiple records at once
      */
-    public function deleteMultiple(array $filter_rules = []): RecordSet
+    public function deleteMultiple(array $filter = []): RecordSet
     {
-        $where = $this->buildFilter($filter_rules, Operator::and, true);
+        $where = $this->buildFilter($filter, Operator::and, true);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
