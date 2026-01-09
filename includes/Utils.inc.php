@@ -1622,9 +1622,9 @@ function isHTML(string $string): bool
  * Note: Valid JSON may also be a scalar value (string, number, boolean, null).
  * This function intentionally rejects those and only accepts JSON objects `{}` or arrays `[]`.
  */
-function isValidJsonContainer(string $json): bool
+function isValidJsonContainer(string $json, int $depth = 512, int $flags = 0): bool
 {
-    if (!json_validate($json)) {
+    if (!json_validate($json, $depth, $flags)) {
         return false;
     }
 
@@ -1636,9 +1636,9 @@ function isValidJsonContainer(string $json): bool
  * Tests whether a string is a valid JSON object.
  * Note: Arrays and scalar JSON values are intentionally rejected.
  */
-function isValidJsonObject(string $json): bool
+function isValidJsonObject(string $json, int $depth = 512, int $flags = 0): bool
 {
-    if (!json_validate($json)) {
+    if (!json_validate($json, $depth, $flags)) {
         return false;
     }
 
