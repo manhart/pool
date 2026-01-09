@@ -43,7 +43,7 @@ use function implode;
 use function is_array;
 use function is_null;
 use function is_numeric;
-use function isValidJSON;
+use function isValidJsonContainer;
 use function json_decode;
 use function json_encode;
 use function min;
@@ -386,7 +386,7 @@ class RecordSet extends PoolObject implements \Iterator, \Countable
     public function getValueAsJson(string $key, string $defaultJson = '{}'): mixed
     {
         $json = (string)$this->getValue($key, $defaultJson) ?: $defaultJson;
-        if (!isValidJSON($json)) {
+        if (!isValidJsonContainer($json)) {
             throw new InvalidJsonException();
         }
         return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
