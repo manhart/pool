@@ -190,6 +190,193 @@ class GUI_Module
         if (changed) input.dispatchEvent(new Event('change', {bubbles: true}));
     }
 
+    setControlDefault(control, value, {
+        setCurrent = true,
+        writeLegacyDataset = false,
+    } = {})
+    {
+        const tag = control.tagName.toLowerCase();
+        const type = (control.type || "").toLowerCase();
+
+        // Prevents an old data-empty-default-value from "destroying" our defaults later
+        if(control.hasAttribute?.("data-empty-default-value")) {
+            control.removeAttribute("data-empty-default-value");
+        }
+
+        if(type === 'checkbox') {
+            const v = !!value;
+            control.defaultChecked = v;
+            if(setCurrent) control.checked = v;
+            if(writeLegacyDataset) this.setLegacyDatasetDefaults(control, v);
+            return;
+        }
+
+        if(type === 'radio') {
+            if(value == null) {
+                control.defaultChecked = false;
+                if(setCurrent) control.checked = false;
+                if(writeLegacyDataset) this.setLegacyDatasetDefaults(control, false);
+                return;
+            }
+            const shouldBeChecked = control.value === String(value);
+            control.defaultChecked = shouldBeChecked;
+            if(setCurrent) control.checked = shouldBeChecked;
+            if(writeLegacyDataset) this.setLegacyDatasetDefaults(control, shouldBeChecked);
+            return;
+        }
+
+        if(tag === 'select') {
+            const isMultiple = !!control.multiple;
+
+            // null/undefined semantics:
+            // - select-one: "no default" -> everything false
+            // - select-multiple: empty set
+            if(value == null) {
+                for(const opt of control.options) {
+                    opt.defaultSelected = false;
+                    if(setCurrent) opt.selected = false;
+                }
+                if(writeLegacyDataset) this.setLegacyDatasetDefaults(control, null);
+
+                if(setCurrent && control.classList?.contains("selectpicker") && typeof jQuery !== "undefined") {
+                    jQuery(control).selectpicker("refresh");
+                }
+                return;
+            }
+
+            const wanted = isMultiple
+                ? new Set((Array.isArray(value) ? value : (value == null ? [] : [value])).map(String))
+                : new Set([String(value)]);
+
+            for(const opt of control.options) {
+                const on = wanted.has(opt.value);
+                opt.defaultSelected = on;
+                if(setCurrent) opt.selected = on;
+            }
+
+            if(writeLegacyDataset) {
+                if(isMultiple) this.setLegacyDatasetDefaults(control, Array.from(wanted));
+                else this.setLegacyDatasetDefaults(control, value);
+            }
+
+            // selectpicker support (as in clearControls)
+            if(setCurrent && control.classList?.contains("selectpicker") && typeof jQuery !== "undefined") {
+                jQuery(control).selectpicker("refresh");
+            }
+            return;
+        }
+
+        // input/textarea defaultValue
+        const v = value ?? "";
+        control.defaultValue = String(v);
+        if(setCurrent) control.value = control.defaultValue;
+        if(writeLegacyDataset) this.setLegacyDatasetDefaults(control, control.defaultValue);
+    }
+
+    setLegacyDatasetDefaults(control, value)
+    {
+        const tag = control.tagName.toUpperCase();
+        const type = (control.type || "").toUpperCase();
+
+        // SPAN: clearControls uses data-default-value and sets innerHTML
+        if(tag === "SPAN") {
+            if(value === null || value === undefined) control.removeAttribute("data-default-value");
+            else control.setAttribute("data-default-value", String(value));
+            return;
+        }
+
+        // Checkbox/Radio: clearControls uses data-default-checked + elem.dataset.defaultChecked (string2bool)
+        if(type === "CHECKBOX" || type === "RADIO") {
+            control.setAttribute("data-default-checked", normalizeBool(value).toString()); // "true"/"false"
+            return;
+        }
+
+        // Select: clearControls uses data-default-value and sets elem.value
+        if(type === "SELECT-ONE") {
+            if(value === null || value === undefined) control.removeAttribute("data-default-value");
+            else control.setAttribute("data-default-value", String(value));
+            return;
+        }
+
+        // SELECT-MULTIPLE: clearControls uses data-default-value and sets elem.value if select-one
+        if(type === "SELECT-MULTIPLE") {
+            const arr = Array.isArray(value) ? value : (value == null ? [] : [value]);
+            control.setAttribute("data-default-value", JSON.stringify(arr.map(String))); // für gepatchtes clearControls
+            return;
+        }
+
+        // All other inputs/textareas: clearControls uses data-default-value
+        if(value === null || value === undefined) control.removeAttribute("data-default-value");
+        else control.setAttribute("data-default-value", String(value));
+    }
+
+    /**
+     * Applies initial/default values to form controls and (optionally) mirrors them into legacy
+     * `data-default-*` attributes for backward compatibility with older `clearControls()` logic.
+     *
+     * The `initialValues` object maps field names to values. For array/object values, the function
+     * targets fields named `name[]` (PHP-style) and distributes values by index.
+     *
+     * Supported mapping rules:
+     * - Primitive (string/number/bool/null): applied to all matching fields by name.
+     * - Array: values are distributed by index (optionally remapped via `indexMapper`).
+     * - Object (index -> value): values are applied only for existing numeric indices.
+     *
+     * Default state behavior:
+     * - Text inputs / textarea: sets `defaultValue` (and optionally `value`)
+     * - Checkbox: sets `defaultChecked` (and optionally `checked`)
+     * - Radio: sets `defaultChecked` based on matching `value` (and optionally `checked`)
+     * - Select: sets `option.defaultSelected` (and optionally `option.selected`)
+     *
+     * Backward compatibility:
+     * If `writeLegacyDataset` is true, also writes legacy attributes used by older code:
+     * - `data-default-value` for text/select/span
+     * - `data-default-checked` for checkbox/radio
+     * - For SELECT-MULTIPLE, `data-default-value` is written as a JSON array string
+     *   (e.g. '["A","B"]') to support patched legacy reset code.
+     *
+     * Notes:
+     * - Controls must exist in the DOM when this runs (otherwise nothing will be found).
+     * - This function intentionally does not dispatch change/input events.
+     *
+     * @param {Object<string, any>} initialValues
+     *   Mapping of control names to initial values. Arrays/objects imply `name[]` fields.
+     * @param {ParentNode} rootNode
+     *   DOM node within which controls are searched (typically a <form> or <fieldset>).
+     * @param {Object} [opts]
+     * @param {boolean} [opts.setCurrent=true]
+     *   If true, sets the current UI state to match the defaults (value/checked/selected).
+     * @param {(index:number, length:number)=>number} [opts.indexMapper=(x)=>x]
+     *   Remaps indices when distributing array values across multiple `name[]` controls.
+     * @param {boolean} [opts.writeLegacyDataset=false]
+     *   If true, mirrors defaults into legacy `data-default-*` attributes.
+     * @returns {void}
+     */
+    applyInitialDefaults(initialValues, rootNode, {setCurrent = true, writeLegacyDataset = false, indexMapper = x => x} = {})
+    {
+        for(const [name, dataItem] of Object.entries(initialValues ?? {})) {
+            const isArr = Array.isArray(dataItem);
+            const isObj = dataItem !== null && typeof dataItem === "object" && !isArr;
+
+            const htmlName = (isArr || isObj) ? `${name}[]` : name;
+            const selector = `[name="${htmlName}"]`;
+            const fields = rootNode.querySelectorAll(selector);
+
+            fields.forEach((field, index) => {
+                let v;
+
+                if(isArr) v = dataItem[indexMapper(index, dataItem.length)];
+                else if(isObj) {
+                    if(!Object.prototype.hasOwnProperty.call(dataItem, index)) return;
+                    v = dataItem[index];
+                }
+                else v = dataItem;
+
+                this.setControlDefault(field, v, {setCurrent, writeLegacyDataset});
+            });
+        }
+    }
+
     /**
      * parses the response as JSON
      * @param {Response} response
@@ -524,7 +711,6 @@ class GUI_Module
     {
         return this.#parent;
     }
-
 
     /**
      * Creates a new unique GUI_Module. Makes the module globally known with $ in front of the name
