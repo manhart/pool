@@ -1052,9 +1052,9 @@ function clearControls(elementsInput, triggerEvent = null)
                 // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute#non-existing_attributes
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
                 const raw = elem.dataset.defaultValue ?? '';
-                elem.options.selectedIndex = -1;
 
                 if(elemType === 'SELECT-MULTIPLE') {
+                    elem.options.selectedIndex = -1;
                     let values = [];
                     try {
                         const parsed = JSON.parse(raw);
@@ -1067,6 +1067,8 @@ function clearControls(elementsInput, triggerEvent = null)
                     for(const opt of elem.options) opt.selected = valSet.has(opt.value);
                 }
                 else {
+                    if(elem.value === raw) continue;
+                    // elem.options.selectedIndex = -1;
                     elem.value = raw;
                 }
 
