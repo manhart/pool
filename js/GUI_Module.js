@@ -378,6 +378,80 @@ class GUI_Module
     }
 
     /**
+     * Extracts the current logical form state from the DOM.
+     *
+     * Differences to FormData:
+     *  - includes unchecked checkboxes as false
+     *  - includes unselected radio groups as null
+     *  - preserves name[] ordering
+     *  - optionally includes <input type="hidden">
+     *
+     * @param {HTMLFormElement} form
+     * @param {Object} [opts]
+     * @param {boolean} [opts.includeHidden=false]
+     * @returns {Object<string, any>}
+     */
+    getCurrentFormValues(form, opts = {})
+    {
+        const {
+            includeHidden = false
+        } = opts;
+
+        const values = {};
+        const fields = form.querySelectorAll('input, select, textarea');
+
+        const radioSeen = new Set();
+
+        for(const el of fields) {
+            if(el.disabled || !el.name) continue;
+
+            const type = (el.type || '').toLowerCase();
+            const tag = el.tagName.toLowerCase();
+            const name = el.name;
+
+            if(type === 'hidden' && !includeHidden) {
+                continue;
+            }
+
+            // PHP-style name[]
+            if(name.endsWith('[]')) {
+                const base = name.slice(0, -2);
+                values[base] ??= [];
+                if(type === 'checkbox') {
+                    values[base].push(!!el.checked);
+                }
+                else {
+                    values[base].push(el.value);
+                }
+                continue;
+            }
+
+            if(type === 'checkbox') {
+                values[name] = !!el.checked;
+                continue;
+            }
+
+            if(type === 'radio') {
+                if(radioSeen.has(name)) continue;
+                radioSeen.add(name);
+                const checked = form.querySelector(`input[type="radio"][name="${CSS.escape(name)}"]:checked`);
+                values[name] = checked ? checked.value : null;
+                continue;
+            }
+
+            if(tag === 'select' && el.multiple) {
+                values[name] = Array.from(el.selectedOptions).map(o => o.value);
+                continue;
+            }
+
+            values[name] = el.value;
+        }
+
+        return values;
+    }
+
+
+    /**
      * parses the response as JSON
      * @param {Response} response
      * @returns {Promise<*>}
