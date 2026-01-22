@@ -18,6 +18,14 @@ final class ArrayHelper
     }
 
     /**
+     * Removes all null values from the given array.
+     */
+    public static function filterOutNulls(array $array): array
+    {
+        return array_filter($array, fn($value) => $value !== null);
+    }
+
+    /**
      * Recursively compares two arrays for content equality.
      * - For associative arrays, the order of keys does not matter.
      * - For indexed (numerical) arrays, order and value equality is required.
