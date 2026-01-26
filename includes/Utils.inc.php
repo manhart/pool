@@ -272,21 +272,13 @@ function removeBeginningSlash(string $value): string
 
 /**
  * Creates directories recursively e.g. /var/log/prog/main/ups.log if prog and main don't exist, they are created.
- *
- * @return boolean success
  */
 function mkdirs(string $strPath, int $mode = 0777): bool
 {
-    if (@is_dir($strPath)) {
-        return true;
-    }
-
-    $pStrPath = dirname($strPath);
-    if (!mkdirs($pStrPath, $mode)) {
-        return false;
-    }
-
-    return @mkdir($strPath, $mode);
+    if (@is_dir($strPath)) return true;
+    //Check for an existing file to avoid triggering an expensive system-level IO error and to prevent mkdir() from throwing a warning if the path is blocked by a file.
+    if (@file_exists($strPath)) return false;
+    return @mkdir($strPath, $mode, true);
 }
 
 /**
