@@ -767,12 +767,16 @@ function hyphenation(string $word): array
  */
 function moveFile(string $source, string $dest): bool
 {
-    if (!file_exists($source)) return false;
+    if (!@file_exists($source)) return false;
     $destDir = dirname($dest);
-    if (!is_dir($destDir) && !mkdir($destDir, 0755, true)) return false;
-    if (!copy($source, $dest)) return false;
-    if (!unlink($source)) return false;
-    return true;
+    if (!mkdirs($destDir, 0755)) return false;
+    // rename() for atomic performance
+    if (@rename($source, $dest)) return true;
+    // Fallback for cross-partition moves if rename fails
+    if (@copy($source, $dest)) {
+        return @unlink($source);
+    }
+    return false;
 }
 
 /**
