@@ -10,12 +10,10 @@
 
 namespace pool\classes\Core;
 
-use Countable;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
-use Iterator;
 use JetBrains\PhpStorm\Pure;
 use JsonException;
 use pool\classes\Database\DataInterface;
@@ -45,7 +43,7 @@ use function implode;
 use function is_array;
 use function is_null;
 use function is_numeric;
-use function isValidJSON;
+use function isValidJsonContainer;
 use function json_decode;
 use function json_encode;
 use function min;
@@ -67,7 +65,7 @@ use const SORT_STRING;
  * @package pool\classes\Core
  * @since 2003-07-10
  */
-class RecordSet extends PoolObject implements Iterator, Countable
+class RecordSet extends PoolObject implements \Iterator, \Countable
 {
     /**
      * @var array records
@@ -348,6 +346,28 @@ class RecordSet extends PoolObject implements Iterator, Countable
         return (string)$this->getValue($key, $default);
     }
 
+    /**
+     * Returns the current record row as a numerically indexed value list.
+     * Optionally extracts only the specified fields and preserves their order.
+     */
+    public function getValueList(?array $fields = null): array
+    {
+        $row = $this->records[$this->index] ?? [];
+
+        // No field filter: return all values in natural order
+        if ($fields === null) {
+            return array_values($row);
+        }
+
+        // Fast path: the row already contains exactly the requested fields in the same order
+        if (array_keys($row) === $fields) {
+            return array_values($row);
+        }
+
+        // Fallback: extract only the requested fields, preserving order
+        return array_map(fn($f) => $row[$f] ?? null, $fields);
+    }
+
     #[Pure]
     /**
      * Returns a value of the current record
@@ -366,7 +386,7 @@ class RecordSet extends PoolObject implements Iterator, Countable
     public function getValueAsJson(string $key, string $defaultJson = '{}'): mixed
     {
         $json = (string)$this->getValue($key, $defaultJson) ?: $defaultJson;
-        if (!isValidJSON($json)) {
+        if (!isValidJsonContainer($json)) {
             throw new InvalidJsonException();
         }
         return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
@@ -399,6 +419,15 @@ class RecordSet extends PoolObject implements Iterator, Countable
     public function getLastInsertID(): int
     {
         return $this->getValueAsInt('last_insert_id');
+    }
+
+    #[Pure]
+    /**
+     * Shorthand for getValueAsInt('id')
+     */
+    public function getID(): int
+    {
+        return $this->getValueAsInt('id');
     }
 
     #[Pure]

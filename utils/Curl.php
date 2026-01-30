@@ -25,7 +25,7 @@ use function fclose;
 use function filter_var;
 use function fopen;
 use function http_build_query;
-use function isValidJSON;
+use function isValidJsonContainer;
 use function json_decode;
 use function json_encode;
 use function strlen;
@@ -260,7 +260,7 @@ final class Curl
         };
 
         try {
-            $response['data'] = (str_contains($response['contentType'] ?? '', 'application/json') && isValidJSON($response['body'])) ?
+            $response['data'] = (str_contains($response['contentType'] ?? '', 'application/json') && isValidJsonContainer($response['body'])) ?
                 json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR) : null;
         } catch (JsonException $e) {
             $response['data'] = null;

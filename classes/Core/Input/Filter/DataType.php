@@ -19,7 +19,6 @@ use function htmlentities;
 use function is_array;
 use function is_numeric;
 use function is_string;
-use function isValidJSON;
 use function strcspn;
 use function strlen;
 
@@ -43,7 +42,7 @@ enum DataType
     // case BIDI_TEXT; // bidirectional text
     case BOOL; // = 0, 1, '0', '1', 'true', 'false', 'on', 'off', 'yes', 'no'
     case ARRAY; // = is_array
-    case JSON; // = isValidJSON
+    case JSON; // = json_validate
     case EMAIL; // = FILTER_VALIDATE_EMAIL
     case URL; // = FILTER_VALIDATE_URL
     case NO_HTML; // encode html with html entities
@@ -74,7 +73,7 @@ enum DataType
             },
             self::ARRAY => static fn($value) => is_array($value) ? $value :
                 throw new InvalidArgumentException('Value is not an array.'),
-            self::JSON => static fn($value) => isValidJSON($value) ? $value :
+            self::JSON => static fn($value) => json_validate($value) ? $value :
                 throw new InvalidArgumentException('Value is not valid JSON.'),
             self::EMAIL => static fn($value) => is_string(filter_var($value, FILTER_VALIDATE_EMAIL)) ? $value :
                 throw new InvalidArgumentException('Value is not a valid email address.'),

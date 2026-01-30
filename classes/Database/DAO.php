@@ -24,6 +24,7 @@ use pool\classes\Database\Exception\DatabaseConnectionException;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
+use pool\classes\Exception\SecurityException;
 use Stringable;
 
 use function addEndingSlash;
@@ -396,7 +397,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      *
      * @see self::fetchData()
      */
-    public static function fetchDataStatic($pk, ...$fields)
+    public static function fetchDataStatic(array|int|string $pk, ...$fields)
     {
         return static::create(throws: true)->fetchData($pk, ...$fields);
     }
@@ -433,6 +434,14 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public function getForeignKeys(): array
     {
         return $this->fk;
+    }
+
+    /**
+     * Returns primary key
+     */
+    public function getForeignKey(): array
+    {
+        return $this->fk ?? [];
     }
 
     /**
@@ -562,7 +571,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         array $filter_rules,
         ?Operator $operator = Operator::and,
         bool $skip_next_operator = false,
-        string $initialOperator = ' and',
+        string $initialOperator = ' '.Operator::and->value,
     ): string {
         $operator ??= Operator::and;
         if (!$filter_rules) {//not filter anything (terminate floating operators)
@@ -575,13 +584,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
-        $mappedOperator = $this->mapOperator($operator);
+        $mappedOperator = $operator->value;
         foreach ($filter_rules as $record) {
             if (!$record) continue;
             $skipAutomaticOperator = $skip_next_operator;
             if ($skip_next_operator = !is_array($record)) {//record is a manual operator/SQL-command/parentheses
-                if ($record instanceof Operator) $record = $this->mapOperator($record);
-                $queryParts[] = " $record "; //operator e.g. or, and
+                $conditionalPart = $record instanceof Operator ? $record->value : $record;
+                $queryParts[] = " $conditionalPart "; //operator or parentheses e.g., OR, AND, XOR, (, )
                 continue;
             }
             if (is_array($record[0])) {// nesting detected
@@ -595,48 +604,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return implode('', $queryParts);
     }
 
-    /**
-     * Map operator to SQL
-     */
-    protected function mapOperator(Operator $operator): string
-    {
-        return match ($operator) {
-            Operator::equal => '=',
-            Operator::notEqual => '!=',
-            Operator::greater => '>',
-            Operator::greaterEqual => '>=',
-            Operator::less => '<',
-            Operator::lessEqual => '<=',
-            Operator::like => 'like',
-            Operator::notLike => 'not like',
-            Operator::in => 'in',
-            Operator::notIn => 'not in',
-            Operator::is => 'is',
-            Operator::isNot => 'is not',
-            Operator::isNull => 'is null',
-            Operator::isNotNull => 'is not null',
-            Operator::between => 'between',
-            Operator::notBetween => 'not between',
-            Operator::exists => 'exists',
-            Operator::notExists => 'not exists',
-            Operator::all => 'all',
-            Operator::any => 'any',
-            Operator::or => 'or',
-            Operator::and => 'and',
-            Operator::xor => 'xor',
-            Operator::not => 'not',
-        };
-    }
-
     private function assembleFilterRecord(array $record): string
     {
         $field = $this->translateValues ? //get field 'name'
             $this->translateValues($record[0]) : $record[0];//inject replace command?
+
         if (!($record[1] instanceof Operator) && !is_string($record[1])) // we assume that if an operator does not exist, an equal operator is meant
             array_splice($record, 1, 0, [Operator::equal]);
         $rawInnerOperator = $record[1];
         $innerOperator = match (true) {
-            $rawInnerOperator instanceof Operator => $this->mapOperator($rawInnerOperator),
+            $rawInnerOperator instanceof Operator => $rawInnerOperator->value,
             default => $this->operatorMap[$rawInnerOperator] ?? $rawInnerOperator,
         };
 
@@ -646,17 +623,21 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
         if (is_array($values)) {//multi value operation
-            if ($innerOperator === 'between') {
+            if ($innerOperator === Operator::between->value || $innerOperator === Operator::notBetween->value) {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
-                $value .= " {$this->mapOperator(Operator::and)} ";
+                $value .= ' '.Operator::and->value.' ';
                 $value .= /* max */
                     $this->escapeValue($values[1], $noEscape, $noQuotes);
             } else {//enlist all values e.g., in, not in
                 //apply the quotation rules
                 $values = array_map(fn($value) => $this->escapeValue($value, $noEscape, $noQuotes), $values);
                 $value = implode(', ', $values);//for some reason '0' is false
-                $values = $value === '' ? 'NULL' : $value;//https://www.php.net/manual/en/language.types.boolean.php#112190
+                if ($value === '') {
+                    return 'false';
+                } else {
+                    $values = $value;
+                }//https://www.php.net/manual/en/language.types.boolean.php#112190
                 $value = "($values)";
             }
         } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
@@ -787,8 +768,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * Executes sql statement and returns RecordSet
      *
      * @param string $sql sql statement to execute
-     * @throws mysqli_sql_exception
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|DAOException|mysqli_sql_exception
      */
     protected function execute(string $sql, ?callable $customCallback = null): RecordSet
     {
@@ -931,9 +911,9 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Delete multiple records at once
      */
-    public function deleteMultiple(array $filter_rules = []): RecordSet
+    public function deleteMultiple(array $filter = []): RecordSet
     {
-        $where = $this->buildFilter($filter_rules, Operator::and, true);
+        $where = $this->buildFilter($filter, Operator::and, true);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
@@ -1049,8 +1029,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $where = $this->buildWhere($pk, $this->pk);
         if ($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
-            $this->raiseError(__FILE__, __LINE__, $error_msg);
-            die($error_msg);
+            throw new SecurityException($error_msg);
         }
 
         /** @noinspection SqlResolve */
@@ -1143,8 +1122,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $where = $this->buildFilter($filter_rules, Operator::and, true);
         if ($where === $this->dummyWhere) {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
-            $this->raiseError(__FILE__, __LINE__, $error_msg);
-            die($error_msg);
+            throw new SecurityException($error_msg);
         }
 
         /** @noinspection SqlResolve */
@@ -1268,11 +1246,20 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $aliasForInserted = '';
         $isMaria = true;//@todo check if MariaDB or MySQL
         if (!$isMaria) $aliasForInserted = ' AS new';
+        $primaryKey = $this->getPrimaryKey();
         if ($onDuplicate === true) {
-            $nonPkCols = array_values(array_diff($columns, $this->getPrimaryKey()));
+            $nonPkCols = array_values(array_diff($columns, $primaryKey));
             /** @noinspection PhpRedundantOptionalArgumentInspection */
             $onDuplicate = $isMaria ? $this->valuesForColumns($nonPkCols) : /* mysql */
                 $this->valuesForColumnsAlias($nonPkCols, 'new');
+        }
+        // If the table has a single primary key and the PK is not already
+        // part of the ON DUPLICATE KEY UPDATE list, automatically inject
+        // `pk = LAST_INSERT_ID(pk)` so that LAST_INSERT_ID() returns the
+        // existing key on UPDATE as well as the newly generated key on INSERT.
+        if (count($primaryKey) === 1 && !isset($onDuplicate[$primaryKey[0]])) {
+            $col = $this->encloseColumnName($primaryKey[0]);
+            $onDuplicate[$primaryKey[0]] = new SqlStatement("LAST_INSERT_ID($col)");
         }
         $updateList = $this->buildAssignmentList($onDuplicate);
         if ($updateList) $updateClause = "ON DUPLICATE KEY UPDATE $updateList";

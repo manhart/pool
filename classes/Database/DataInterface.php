@@ -362,7 +362,8 @@ class DataInterface extends PoolObject
             $query_resource = $interface::query($sql, $dbname);
         } catch (Exception $e) {
             if (!$useExceptions && $e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
-                throw $e;
+                if (IS_TESTSERVER) throw new mysqli_sql_exception($e->getMessage()." SQL Statement: $sql", previous: $e);
+                else throw $e;
             }
         }
         if ($query_resource ??= false) {//success
@@ -415,10 +416,9 @@ class DataInterface extends PoolObject
             if ($useExceptions) {
                 throw new DAOException($error_msg, previous: $e ?? null);
             }
-            $interface->raiseError(__FILE__, __LINE__, $error_msg);//can this be replaced with an Exception?
             $error = $interface->getError();
             $error['sql'] = $sql;
-            $RecordSet = (new RecordSet())->addError($error);
+            $RecordSet = new RecordSet()->addError($error);
         }
 
         // SQL Statement Performance Logging:
@@ -900,7 +900,8 @@ class DataInterface extends PoolObject
     /**
      * Get information about a column
      *
-     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function getColumnMetadata(string $databaseAlias, string $table, string $field): array
     {

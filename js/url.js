@@ -140,7 +140,7 @@ class Url
      * Sets a parameter value. Overwrites any existing values.
      *
      * @param {string|Object} key The parameter name or an object of key-value pairs.
-     * @param {string|string[]} [val] The parameter value or array of values (if key is string).
+     * @param {string|number|null} [val] The parameter value or array of values (if key is string).
      * @returns {this}
      *
      * @example

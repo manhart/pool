@@ -272,21 +272,13 @@ function removeBeginningSlash(string $value): string
 
 /**
  * Creates directories recursively e.g. /var/log/prog/main/ups.log if prog and main don't exist, they are created.
- *
- * @return boolean success
  */
 function mkdirs(string $strPath, int $mode = 0777): bool
 {
-    if (@is_dir($strPath)) {
-        return true;
-    }
-
-    $pStrPath = dirname($strPath);
-    if (!mkdirs($pStrPath, $mode)) {
-        return false;
-    }
-
-    return @mkdir($strPath, $mode);
+    if (@is_dir($strPath)) return true;
+    //Check for an existing file to avoid triggering an expensive system-level IO error and to prevent mkdir() from throwing a warning if the path is blocked by a file.
+    if (@file_exists($strPath)) return false;
+    return @mkdir($strPath, $mode, true);
 }
 
 /**
@@ -775,12 +767,16 @@ function hyphenation(string $word): array
  */
 function moveFile(string $source, string $dest): bool
 {
-    if (!file_exists($source)) return false;
+    if (!@file_exists($source)) return false;
     $destDir = dirname($dest);
-    if (!is_dir($destDir) && !mkdir($destDir, 0755, true)) return false;
-    if (!copy($source, $dest)) return false;
-    if (!unlink($source)) return false;
-    return true;
+    if (!mkdirs($destDir, 0755)) return false;
+    // rename() for atomic performance
+    if (@rename($source, $dest)) return true;
+    // Fallback for cross-partition moves if rename fails
+    if (@copy($source, $dest)) {
+        return @unlink($source);
+    }
+    return false;
 }
 
 /**
@@ -1618,15 +1614,32 @@ function isHTML(string $string): bool
 }
 
 /**
- * Simple test if string is JSON
+ * Simple test if a string is a JSON container (object or array).
+ * Note: Valid JSON may also be a scalar value (string, number, boolean, null).
+ * This function intentionally rejects those and only accepts JSON objects `{}` or arrays `[]`.
  */
-function isValidJSON(string $string): bool
+function isValidJsonContainer(string $json, int $depth = 512, int $flags = 0): bool
 {
-    if ($string !== '' && $string[0] !== '{' && $string[0] !== '[') {
+    if (!json_validate($json, $depth, $flags)) {
         return false;
     }
-    json_decode($string);
-    return json_last_error() === JSON_ERROR_NONE;
+
+    $first = ltrim($json)[0] ?? null;
+    return $first === '{' || $first === '[';
+}
+
+/**
+ * Tests whether a string is a valid JSON object.
+ * Note: Arrays and scalar JSON values are intentionally rejected.
+ */
+function isValidJsonObject(string $json, int $depth = 512, int $flags = 0): bool
+{
+    if (!json_validate($json, $depth, $flags)) {
+        return false;
+    }
+
+    $first = ltrim($json)[0] ?? null;
+    return $first === '{';
 }
 
 /**

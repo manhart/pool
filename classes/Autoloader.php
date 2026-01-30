@@ -27,14 +27,8 @@ use const pool\PWD_TILL_CLASSES;
 
 class Autoloader
 {
-    /**
-     * @var Autoloader
-     */
     private static Autoloader $PoolLoader;
 
-    /**
-     * @return Autoloader
-     */
     public static function getLoader(): Autoloader
     {
         if (isset(self::$PoolLoader)) {
@@ -54,9 +48,6 @@ class Autoloader
 
     /**
      * Loads POOL classes and GUIs
-     *
-     * @param string $class
-     * @return string|false
      */
     public function loadClass(string $class): string|false
     {
@@ -79,8 +70,7 @@ class Autoloader
     /**
      * Autoloader for POOL Classes
      *
-     * @param string $className Klasse
-     * @return string|false
+     * @param string $className Fully qualified class name
      */
     public static function autoloadClass(string $className): string|false
     {
@@ -117,7 +107,7 @@ class Autoloader
     }
 
     /**
-     * If file exists, require it from the file system.
+     * Loads the file from the filesystem if it exists.
      */
     public static function requireFile(string $file): bool
     {

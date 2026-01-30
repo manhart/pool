@@ -98,5 +98,5 @@ interface DatabaseAccessObjectInterface
     /**
      * Delete multiple records at once
      */
-    public function deleteMultiple(array $filter_rules = []): RecordSet;
+    public function deleteMultiple(array $filter = []): RecordSet;
 }

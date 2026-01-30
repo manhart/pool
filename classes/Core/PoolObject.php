@@ -11,18 +11,17 @@ declare(strict_types = 1);
 
 namespace pool\classes\Core;
 
+use JetBrains\PhpStorm\Pure;
 use ReflectionClass;
 use stdClass;
 
 use function dirname;
-use function error_reporting;
 use function get_parent_class;
 use function realpath;
 use function strlen;
 use function substr_compare;
-use function trigger_error;
 
-use const E_USER_NOTICE;
+use const pool\NAMESPACE_SEPARATOR;
 
 /**
  * Core class for all POOL objects. Provides basic functionality for all POOL objects.
@@ -63,6 +62,17 @@ class PoolObject extends stdClass
     private ReflectionClass $ReflectionClass;
 
     /**
+     * Returns the fully qualified class name
+     *
+     * @return string fully qualified class name
+     */
+    #[Pure]
+    public static function theClass(): string
+    {
+        return static::class;
+    }
+
+    /**
      * Determines the full name of the class of the object, stores it temporarily and returns it. Also contains namespaces.
      */
     public function getClass(): string
@@ -71,13 +81,25 @@ class PoolObject extends stdClass
     }
 
     /**
-     * Returns the fully qualified class name
-     *
-     * @return string fully qualified class name
+     * @param string $class Fully qualified class name (e.g. __CLASS__)
+     * @return array{0:string,1:string} Tupel: [shortName, namespace]
      */
-    public static function theClass(): string
+    #[Pure]
+    static public function splitClassName(string $class): array
     {
-        return static::class;
+        $pos = strrpos($class, NAMESPACE_SEPARATOR);
+
+        if ($pos === false) {
+            return [
+                $class,
+                '',
+            ];
+        }
+
+        return [
+            substr($class, $pos + 1),
+            substr($class, 0, $pos),
+        ];
     }
 
     /**
@@ -116,8 +138,6 @@ class PoolObject extends stdClass
 
     /**
      * Determines whether the class is inside the POOL (base library)
-     *
-     * @return bool
      */
     protected function isPOOL(): bool
     {
@@ -126,24 +146,6 @@ class PoolObject extends stdClass
             $this->isPOOL = substr_compare($this->getClassFile(), $poolRealpath, 0, strlen($poolRealpath)) === 0;
         }
         return $this->isPOOL;
-    }
-
-    /**
-     * Raises a PHP error
-     *
-     * @param string $file Use __FILE__ if you want to use the file where the error occurred.
-     * @param int $line Use __LINE__, if you want to use the line where the error occurred.
-     * @param string $msg The error message
-     */
-    protected function raiseError(string $file, int $line, string $msg, $error_level = E_USER_NOTICE): void
-    {
-        if (error_reporting() === 0) {
-            return;
-        }
-        $error = $msg;
-        $error .= ' in class '.$this->getClassName().', file '.$file.', line '.$line;
-
-        trigger_error($error, $error_level);
     }
 
     /**

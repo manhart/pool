@@ -1463,7 +1463,7 @@ class GUI_Table extends GUI_Module
      */
     public function parseColumns(string $columns): array
     {
-        if (isValidJSON($columns)) {
+        if (isValidJsonContainer($columns)) {
             $columns = json_decode($columns, true);
         } else {
             $columnsArray = explode(';', $columns);
@@ -1529,7 +1529,7 @@ class GUI_Table extends GUI_Module
     public function buildFilter(MySQL_DAO $DAO, string $search, string $filter, array $mandatoryFilter = [], array $searchFilter = []): array
     {
         $filterRules = [];
-        if (isValidJSON($filter)) {
+        if (isValidJsonContainer($filter)) {
             $filterRules = json_decode($filter, JSON_OBJECT_AS_ARRAY, 512, JSON_THROW_ON_ERROR);
         }
 

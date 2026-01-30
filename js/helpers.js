@@ -145,7 +145,7 @@ function isAlien(a) {
 }
 
 function isArray(a) {
-    return isObject(a) && a.constructor == Array;
+    return isObject(a) && a.constructor === Array;
 }
 
 function isBoolean(a) {
@@ -164,7 +164,7 @@ function isEmpty(o) {
             // }
         }
     } else {
-        return (o == '' || o == 0 || o == null);
+        return (o === '' || o === 0 || o == null);
     }
     return true;
 }
@@ -186,7 +186,7 @@ function isObject(a) {
 }
 
 function isString(a) {
-    return typeof a == 'string';
+    return typeof a === 'string';
 }
 
 function isUndefined(a) {
@@ -194,11 +194,11 @@ function isUndefined(a) {
 }
 
 function isInt(n) {
-    return n != "" && !isNaN(n) && Math.round(n) == n;
+    return n !== "" && !isNaN(n) && Math.round(n) == n;
 }
 
 function isFloat(n) {
-    return n != "" && !isNaN(n) && Math.round(n) != n;
+    return n !== "" && !isNaN(n) && Math.round(n) != n;
 }
 
 
@@ -294,32 +294,39 @@ function int2pix(px) {
 /**
  * Adds an option to a select element at a specific position.
  *
- * @param {HTMLSelectElement} selectElement - The select element to add the option to.
- * @param {string} caption - The text to display for the option.
+ * @param {HTMLSelectElement} select - The select element to add the option to.
+ * @param {string} label - The text to display for the option.
  * @param {string} value - The value of the option.
  * @param {boolean} [selected=false] - Whether the option should be selected.
- * @param {number} [position=-1] - The position to insert the option at. Default is -1 (end position).
+ * @param {number} [position=-1] - If the position is outside the range 0..length-1, the option is appended.
  * @returns {HTMLOptionElement} - The created option element.
  */
-function addOption(selectElement, caption, value, selected = false, position = -1) {
-    const optionElement = document.createElement('OPTION');
-    optionElement.text = caption;
-    optionElement.value = value;
-    optionElement.selected = selected;
+function addOption(select, label, value, selected = false, position = -1)
+{
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    if(selected) opt.selected = true;
 
-    if(position < 0 || position > selectElement.options.length) {
-        selectElement.add(optionElement);
+    const opts = select.options;
+
+    if(position < 0 || position >= opts.length) {
+        select.append(opt);
     }
     else {
-        selectElement.insertBefore(optionElement, selectElement.options[position]);
+        select.insertBefore(opt, opts[position]);
     }
-    return optionElement;
+    return opt;
 }
 
-function clearSelect(selectElement) {
-    for (let i = selectElement.options.length - 1; i >= 0; i--) {
-        selectElement.options[i] = null;
-    }
+/**
+ * Clears all options from a select element.
+ *
+ * @param {HTMLSelectElement} select
+ */
+function clearSelect(select)
+{
+    select.replaceChildren();
 }
 
 /**
@@ -331,13 +338,13 @@ function clearSelect(selectElement) {
  * @link http://www.overset.com/2008/09/01/javascript-natural-sort-algorithm/
  */
 function str_natsort(a, b, order) {
-    var retval = 0;
+    let retval = 0;
 
-    var isDesc = (order == 'desc' || order == 'des');
+    const isDesc = (order === 'desc' || order === 'des');
     // die einfache Version reichte nicht aus.
     // return (a.toLowerCase()>b.toLowerCase()?1:-1)*(order=="asc"?1:-1);
 
-    // setup temp-scope variables for comparison evauluation
+    // setup temp-scope variables for comparison evaluation
     var re = /(-?[0-9\.]+)/g,
         x = a.toString().toLowerCase() || '',
         y = b.toString().toLowerCase() || '',
@@ -527,7 +534,18 @@ Function.prototype.inheritsFrom = function (parentClassOrObject) {
  * Converts string literal true and 1 to boolean true. Everything else becomes false
  */
 function string2bool(val) {
-    return (String(val) === 'true' || val === '1');
+    return (String(val).toLowerCase() === 'true' || val === '1');
+}
+
+/**
+ * @returns {boolean}
+ */
+function normalizeBool(val)
+{
+    if(typeof val === 'string') {
+        return string2bool(val);
+    }
+    return !!val;
 }
 
 /**
@@ -994,61 +1012,95 @@ function fillControls(containerSelector, rowSet, autoSearchControlsWithinContain
 /**
  * Empties the contents of the elements
  *
- * @param {array|object|string} array of elements (input fields) or a selector
+ * @param {array|object|string} elementsInput array of elements (input fields) or a selector
+ * @param {Event|string} triggerEvent triggerEvent optional event object or event name (string) on change
  */
-function clearControls(elements) {
+function clearControls(elementsInput, triggerEvent = null)
+{
+    let elements = elementsInput;
     if (isString(elements)) {
-        elements = explode(',', elements, false);
-        elements = document.querySelectorAll(elements);
+        const selector = elements.split(',').map(s => s.trim()).join(',');
+        elements = document.querySelectorAll(selector);
     }
 
-    for (let z = 0; z < elements.length; z++) {
-        let elem = elements[z];
-        // console.debug('clearControls', elem.name);
-
-        let tagName = elem.tagName.toUpperCase();
-        let elemType = (elem.type) ? elem.type.toUpperCase() : '';
-        // console.debug(tagName, elemType, elem.name);
-        if (tagName == 'SPAN') {
-            elem.innerHTML = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+    const getCurrentVal = (tag, type, el) => {
+        if(tag === 'SPAN') return el.innerHTML;
+        if(type === 'CHECKBOX' || type === 'RADIO') return el.checked;
+        if(type === 'SELECT-MULTIPLE') {
+            return Array.from(el.options).filter(o => o.selected).map(o => o.value).toString();
         }
-        else if (elemType == 'CHECKBOX' || elemType == 'RADIO') {
-            // console.debug('checked', elem.dataset.defaultChecked);
-            if (elem.getAttribute('data-default-checked') != null) {
-                // console.debug('element checked');
+        return el.value;
+    };
+
+    for(const elem of elements) {
+        const tagName = elem.tagName.toUpperCase();
+        const elemType = (elem.type || "").toUpperCase();
+
+        const initialValue = getCurrentVal(tagName, elemType, elem);
+
+        if(tagName === 'SPAN') {
+            elem.innerHTML = elem.dataset.defaultValue ?? '';
+        }
+        else if(elemType === 'CHECKBOX' || elemType === 'RADIO') {
+            if(elem.dataset.defaultChecked !== undefined) {
                 elem.checked = string2bool(elem.dataset.defaultChecked);
             }
             else elem.checked = false;
         }
-        else if (elemType == 'SELECT-ONE' || elemType == 'SELECT-MULTIPLE') {
-
-            if (elem.hasAttribute('data-default-value')) {
+        else if(elemType.startsWith('SELECT')) {
+            if(elem.dataset.defaultValue !== undefined) {
                 // https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute#non-existing_attributes
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
-                elem.options.selectedIndex = -1;
-                elem.value = elem.getAttribute('data-default-value') ?? '';
+                const raw = elem.dataset.defaultValue ?? '';
 
-                // 04.01.22, AM, selectpicker support
-                if (elem.classList.contains('selectpicker')) {
-                    jQuery(elem).selectpicker('refresh');
+                if(elemType === 'SELECT-MULTIPLE') {
+                    elem.options.selectedIndex = -1;
+                    let values = [];
+                    try {
+                        const parsed = JSON.parse(raw);
+                        values = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
+                    } catch {
+                        // Fallback for simple CSV strings or individual values
+                        values = raw ? raw.split(',').map(s => s.trim()) : [];
+                    }
+                    const valSet = new Set(values);
+                    for(const opt of elem.options) opt.selected = valSet.has(opt.value);
+                }
+                else {
+                    if(elem.value === raw) continue;
+                    // elem.options.selectedIndex = -1;
+                    elem.value = raw;
                 }
 
+                // 04.01.22, AM, selectpicker support
+                if(elem.classList.contains('selectpicker') && typeof jQuery !== 'undefined') {
+                    jQuery(elem).selectpicker('refresh');
+                }
             }
             else {
                 elem.options.selectedIndex = 0;
             }
         }
         else {
-            if (elem.getAttribute('data-empty-default-value')) {
-                elem.setAttribute('data-default-value', null);
+            if(elem.dataset.emptyDefaultValue !== undefined) {
+                elem.dataset.defaultValue = null;
             }
-            elem.value = (elem.getAttribute('data-default-value') != null) ? elem.getAttribute('data-default-value') : '';
+            elem.value = elem.dataset.defaultValue ?? '';
         }
 
         elem.classList.remove('is-invalid');
         elem.classList.remove('is-valid');
         if (elem.closest('.needs-validation')) {
             elem.closest('.needs-validation').classList.remove('was-validated');
+        }
+
+        if(triggerEvent) {
+            const newValue = getCurrentVal(tagName, elemType, elem);
+
+            if(initialValue !== newValue) {
+                const evt = (typeof triggerEvent === 'string') ? new Event(triggerEvent, {bubbles: true}) : triggerEvent;
+                elem.dispatchEvent(evt);
+            }
         }
     }
 }
@@ -1134,21 +1186,25 @@ function findPropertyDescriptor(object, propertyName) {
 /**
  * Trigger an event
  *
- * @param element Element
- * @param type Event Type
+ * @param {HTMLElement} element
+ * @param {string} type Event Type
+ * @param {object} options
  */
-function triggerEvent(element, type) {
-    if ('createEvent' in document) {
-        // modern browsers, IE9+
-        let Event = document.createEvent('HTMLEvents');
-        Event.initEvent(type, false, true);
-        element.dispatchEvent(Event);
-    } else {
-        // IE 8
-        let Event = document.createEventObject();
-        Event.eventType = type;
-        element.fireEvent('on' + Event.eventType, Event);
-    }
+function triggerEvent(element, type, options = {})
+{
+    const {
+        bubbles = true,
+        cancelable = true,
+        composed = false,
+        detail
+    } = options;
+
+    const event = detail !== undefined
+        ? new CustomEvent(type, {bubbles, cancelable, composed, detail})
+        : new Event(type, {bubbles, cancelable, composed});
+
+    element.dispatchEvent(event);
+    return event;
 }
 
 /**
@@ -1402,4 +1458,113 @@ const parseFloatByLocale = (str, locale = null) =>
         throw new RangeError('The locale provided is not valid.');
     }
     return parseFloat(Array.from(str, c => c === thousandsSep ? '' : c === decimalSep ? '.' : c).join(''));
+}
+
+/**
+ * Extends a data container (plain object or FormData) with additional key-value pairs, preserving the appropriate structure for each type.
+ */
+function extendData(data, additions)
+{
+    if(!additions || typeof additions !== 'object') {
+        return data;
+    }
+
+    if(data instanceof FormData) {
+        for(const [key, value] of Object.entries(additions)) {
+            data.append(key, value);
+        }
+        return data;
+    }
+
+    if(data && typeof data === 'object') {
+        return {...data, ...additions};
+    }
+
+    return data;
+}
+
+/**
+ * Copies text to clipboard.
+ * Works in IE11 (via execCommand) and modern browsers (via Clipboard API).
+ * Uses callbacks instead of Promises to ensure IE11 compatibility without polyfills.
+ *
+ * @param {string} text - Text to copy
+ * @param {function} [onSuccess] - Callback on success
+ * @param {function} [onError] - Callback on error
+ * @param {boolean} [isSensitive=false] - If true, blocks copying on non-HTTPS pages
+ */
+function copyTextToClipboard(text, onSuccess, onError, isSensitive)
+{
+    // Default to false if not provided
+    isSensitive = isSensitive || false;
+
+    // 1. Security Check: Block sensitive data on insecure contexts (HTTP)
+    // noinspection ES6ConvertVarToLetConst
+    var isSecure = window.isSecureContext;
+    if(isSecure === undefined) {
+        // Fallback check for older browsers
+        isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    }
+
+    if(isSensitive && !isSecure) {
+        // noinspection ES6ConvertVarToLetConst
+        var securityError = new Error("Security Restriction: Sensitive data cannot be copied over an insecure connection (HTTP).");
+        console.warn(securityError.message);
+        if(onError) onError(securityError);
+        return;
+    }
+
+    // 2. Try Modern API (Only if available and secure)
+    if(navigator.clipboard && isSecure) {
+        navigator.clipboard.writeText(text).then(function() {
+            if(onSuccess) onSuccess();
+        }).catch(function(err) {
+            if(onError) onError(err);
+        });
+        return;
+    }
+
+    // 3. Legacy Fallback (IE11, older Chrome/FF, HTTP)
+    // noinspection ES6ConvertVarToLetConst
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    // Avoid scrolling to the bottom
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.width = "2em";
+    textArea.style.height = "2em";
+    textArea.style.padding = "0";
+    textArea.style.border = "none";
+    textArea.style.outline = "none";
+    textArea.style.boxShadow = "none";
+    textArea.style.background = "transparent";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    // Critical for Mobile/iOS compatibility
+    try {
+        textArea.setSelectionRange(0, 99999);
+    } catch(e) {
+        // Ignore if the browser doesn't support this
+    }
+
+    try {
+        // noinspection ES6ConvertVarToLetConst
+        var successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if(successful) {
+            if(onSuccess) onSuccess();
+        }
+        else {
+            if(onError) onError(new Error("Fallback: execCommand returned false"));
+        }
+    } catch(err) {
+        document.body.removeChild(textArea);
+        if(onError) onError(err);
+    }
 }

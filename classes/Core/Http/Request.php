@@ -30,6 +30,8 @@ final class Request
 
     private static ?bool $isAjax = null;
 
+    private static ?bool $hasBasicAuth = null;
+
     private static ?Input $inputServer = null;
 
     private static ?HttpMethod $method = null;
@@ -232,6 +234,24 @@ final class Request
     {
         return self::$isAjax ??= self::header('X-Requested-With') === 'XMLHttpRequest';
     }
+
+    public static function hasBasicAuth(): bool
+    {
+        return self::$hasBasicAuth ??= self::getBasicAuthentication() !== null;
+    }
+
+    public static function getBasicAuthentication(): ?array
+    {
+        $auth = self::header('Authorization') ?? self::inputServer()->getVar('REDIRECT_HTTP_AUTHORIZATION') ?? null;
+        $magic = 'basic ';
+        if (!$auth || stripos($auth, $magic) !== 0) return null;
+        $decoded = base64_decode(substr($auth, strlen($magic)), true);
+        if (!is_string($decoded)) return null;
+        $credentialPair = explode(':', $decoded, 2);
+        if (count(array_filter($credentialPair)) < 2) return null;
+        return $credentialPair;
+    }
+
 
     public static function isSecure(): bool
     {

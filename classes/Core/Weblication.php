@@ -27,6 +27,7 @@ use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Cookie;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Input\Session;
+use pool\classes\Exception\FileNotFoundException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\Exception\RuntimeException;
@@ -572,10 +573,11 @@ class Weblication extends Component
         return $this->commonSkinFolder;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getCommonSkinPath(string $additionalDir = '', bool $absolute = true): string
     {
-        $path = '';
-
         # Ordner Skins
         $folder_skins = addEndingSlash(PWD_TILL_SKINS).$this->getCommonSkinFolder();
         if ($absolute) {
@@ -595,15 +597,7 @@ class Weblication extends Component
         } elseif (is_dir($folder_skin_dir)) {
             $path = $folder_skin_dir;
         } else {
-            $this->raiseError(
-                __FILE__,
-                __LINE__,
-                sprintf(
-                    'Path \'%s\' and \'%s\' not found (@getCommonSkinPath)!',
-                    $folder_skin_dir,
-                    $folder_language_dir,
-                ),
-            );
+            throw new FileNotFoundException("Path '$folder_skin_dir' and '$folder_language_dir' in ".__METHOD__.'not found.');
         }
 
         return $path;
@@ -623,10 +617,10 @@ class Weblication extends Component
      * Liefert einen Pfad zum Skin-Verzeichnis zurück. Wenn der Parameter $additionalDir gef�llt wird, wird er an das Skin-Verzeichnis dran geh�ngt.
      *
      * @param string $additionalDir Unterverzeichnis vom Skin-Verzeichnis
+     * @throws FileNotFoundException
      */
     public function getSkinPath(string $additionalDir = '', bool $absolute = true): string
     {
-        $path = '';
         $skin = addEndingSlash($this->skin);
         $language = addEndingSlash($this->language);
 
@@ -649,15 +643,7 @@ class Weblication extends Component
         } elseif (is_dir($folder_skin_dir)) {
             $path = $folder_skin_dir;
         } else {
-            $this->raiseError(
-                __FILE__,
-                __LINE__,
-                sprintf(
-                    'Path \'%s\' and \'%s\' not found (@getSkinPath)!',
-                    $folder_skin_dir,
-                    $folder_language_dir,
-                ),
-            );
+            throw new FileNotFoundException("Path '$folder_skin_dir' and '$folder_language_dir' in ".__METHOD__.' not found.');
         }
 
         return $path;
@@ -691,6 +677,7 @@ class Weblication extends Component
      *
      * @param string $filename wanted image
      * @return string Filename or empty string in case of failure
+     * @throws FileNotFoundException
      */
     public function findImage(string $filename, ?string $skin = null): string
     {
@@ -712,8 +699,7 @@ class Weblication extends Component
             return $folder_images.$filename;
         }
 
-        $this->raiseError(__FILE__, __LINE__, sprintf('Image \'%s\' not found (@Weblication->findImage)!', $folder_images.$filename));
-        return '';
+        throw new FileNotFoundException("Image '$folder_images$filename' ".__METHOD__.' not found.');
     }
 
     /**
@@ -827,7 +813,7 @@ class Weblication extends Component
      * @return string Bei Erfolg Pfad und Dateiname des gefunden StyleSheets. Im Fehlerfall ''.
      **@see Weblication::findTemplate()
      */
-    public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false, bool $raiseError = true): string
+    public function findStyleSheet(string $filename, string $classFolder = '', bool $baseLib = false, bool $throws = true): string
     {
         $elementSubFolder = $this->cssFolder;
         $language = $this->language;
@@ -844,8 +830,8 @@ class Weblication extends Component
             return $stylesheet;
         }
 
-        if ($raiseError)
-            $this->raiseError(__FILE__, __LINE__, sprintf('StyleSheet \'%s\' not found (@Weblication->findStyleSheet)!', $filename));
+        if ($throws)
+            throw new FileNotFoundException("Requested StyleSheet '$filename' in ".__METHOD__." not found.");
         else {
             $this->cacheItem($memKey, '', static::CACHE_FILE_ACCESS);
         }
@@ -923,7 +909,7 @@ class Weblication extends Component
         string $filename,
         string $classFolder = '',
         bool $baseLib = false,
-        bool $raiseError = true,
+        bool $throws = true,
         bool $clientSideRelativePath = true,
     ): string {
         //memcache
@@ -948,8 +934,8 @@ class Weblication extends Component
             }
         }
         //premium error handling @todo replace
-        if ($raiseError)
-            $this->raiseError(__FILE__, __LINE__, sprintf('JavaScript \'%s\' not found (@findJavaScript)!', $filename));
+        if ($throws)
+            throw new FileNotFoundException("Requested JavaScript '$filename' in ".__METHOD__." not found.");
         else {
             $this->cacheItem($memKey, '', static::CACHE_FILE_ACCESS);
         }
@@ -1441,20 +1427,19 @@ class Weblication extends Component
     /**
      * Terminates Ajax requests with a caller-defined error
      */
-    public function denyAJAX_Request(string $messageKey, ?string $defaultMessage, int $response_code, string $errorType): void
+    public function denyAJAX_Request(string $messageKey, ?string $defaultMessage, int $response_code, string $errorType): never
     {
-        if (self::isAjax()) {
-            header('Content-Type: application/json', true, $response_code);
-            $message = $this->getTranslator()->getTranslation($messageKey, $defaultMessage);
-            $return = [
-                'success' => false,
-                'error' => [
-                    'type' => $errorType,
-                    'message' => $message,
-                ],
-            ];
-            die(json_encode($return));
-        }
+        if (Request::hasBasicAuth()) header('WWW-Authenticate: Basic realm="Restricted Area"');
+        header('Content-Type: application/json', true, $response_code);
+        $message = $this->getTranslator()->getTranslation($messageKey, $defaultMessage);
+        $return = [
+            'success' => false,
+            'error' => [
+                'type' => $errorType,
+                'message' => $message,
+            ],
+        ];
+        die(json_encode($return));
     }
 
     public function logout(): void

@@ -36,17 +36,15 @@ use const pool\NAMESPACE_SEPARATOR;
  */
 class GUI_HeadData extends GUI_Module
 {
-    public const ROBOTS_NOINDEX = 'noindex';    # verbieten Sie einem Suchprogramm, Inhalte aus der HTML-Datei an seine Suchdatenbank zu uebermitteln.
-    public const ROBOTS_INDEX = 'index';        # Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (index = Indizierung).
-    public const ROBOTS_NOFOLLOW = 'nofollow';    # Damit erlauben Sie einem Suchprogramm, Inhalte aus der aktuellen HTML-Datei an seine Suchdatenbank zu uebermitteln (nofollow = nicht folgen). Sie verbieten dem Suchprogramm jedoch, untergeordnete Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen.
-    public const ROBOTS_FOLLOW = 'follow';        # Damit erlauben Sie einem Suchprogramm ausdruecklich, Inhalte aus der aktuellen HTML-Datei und aus untergeordneten Dateien Ihres Projekts, zu denen Verweise fuehren, zu besuchen und an seine Suchdatenbank zu uebermitteln (follow = folgen).
-    // @var integer Datei von Originaladresse laden; z.B. 12 Stunden = 43200; (vertraegt auch String siehe Selfhtml)
-    // @access private
-    var $Expires = 0;
+    /**
+     * @var integer Datei von Originaladresse laden; z. B. 12 Stunden = 43200; (verträgt auch String, siehe Selfhtml)
+     */
+    private int $expires = 0;
 
-    // @var boolean Anweisung an den Browser: keinen Cache benutzen, sondern von Originalseite laden
-    // @access private
-    var $BrowserNoCache = true;
+    /**
+     * @var boolean Anweisung an den Browser: keinen Cache benutzen, sondern von Originalseite laden
+     */
+    private bool $browserNoCache = true;
 
     /**
      * Control the proxy cache
@@ -62,63 +60,53 @@ class GUI_HeadData extends GUI_Module
      */
     private array $metaRefresh = [];
 
-    /**
-     * @var string
-     */
     private string $title = 'Unknown page title';
 
-    // @var string Beschreibung des Html Dokuments (Seite)
+    // @var string Beschreibung des HTML Dokuments (Seite)
     private string $description = '';
 
-    // @var string Suchmaschinenen-Robot Anweisungen
-    private string $robots = self::ROBOTS_NOFOLLOW;
+    /**
+     * Active robots directives.
+     *
+     * Stored as a map of directive-value => RobotsDirective for deduplication.
+     * Default: "nofollow".
+     *
+     * @var array<string, RobotsDirective>
+     */
+    private array $robots = [RobotsDirective::NOFOLLOW->value => RobotsDirective::NOFOLLOW];
+
+    /**
+     * JavaScript Files
+     */
+    private array $javaScriptFiles = [];
 
     /**
      * StyleSheet Files
-     *
-     * @var array
      */
     private array $styleSheetFiles = [];
 
     /**
      * Media for StyleSheets
-     *
-     * @var array
      */
     private array $styleSheetsMedia = [];
 
     /**
-     * @var array javascript file names to prevent double inclusion
-     */
-    private array $javaScriptFiles = [];
-
-    //@var string Base Target
-
-    /**
-     * base target: _blank, _self (browser default), _parent, _top
-     *
-     * @var string
+     * Base target: _blank, _self (browser default), _parent, _top
      */
     private string $baseTarget = '_self';
 
     /**
-     * base href
-     *
-     * @var string
+     * Base href
      */
     private string $baseHref;
 
     /**
      * X-UA-Compatible Meta Tag
-     *
-     * @var string
      */
     private string $xuaCompatible = '';
 
     /**
-     * Zeichensatz im Header einer HTML Datei
-     *
-     * @var string $charset Zeichensatz
+     * Zeichensatz im Header einer HTML-Datei
      */
     private string $charset = 'UTF-8';
 
@@ -133,9 +121,7 @@ class GUI_HeadData extends GUI_Module
     private $addFileFct = null;
 
     /**
-     * data for the client
-     *
-     * @var array
+     * Data for the client
      */
     private array $clientData = [];
 
@@ -159,34 +145,34 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Setzt den X-UA-Compatbile Meta Tag, um den Browser den Standard-Rendermode vorzugeben.
-     *
+     * Setzt den X-UA-Compatible Meta Tag, um den Browser den Standard-Render Mode vorzugeben.
      */
-    public function setXuaCompatible(string $xuaCompatible)
+    public function setXuaCompatible(string $xuaCompatible): self
     {
         $this->xuaCompatible = $xuaCompatible;
+        return $this;
     }
 
     /**
      * Setzt die Sekunden, wann der Browser die Datei von der Originaldatei laden soll (und nicht aus dem Cache).
-     * z.B. 12 Stunden = 43200; (vertraegt auch String siehe Selfhtml)
+     * z. B. 12 Stunden = 43200; (verträgt auch String, siehe Selfhtml)
      *
-     * @access public
-     * @param integer $expire Anzahl in Sekunden. 0 bedeutet der Browser muss immer von der Originaldatei laden
+     * @param int $expire Anzahl in Sekunden. 0 bedeutet, der Browser muss immer von der Originaldatei laden
      */
-    public function setExpires($expire)
+    public function setExpires(int $expire): self
     {
-        $this->Expires = $expire;
+        $this->expires = $expire;
+        return $this;
     }
 
     /**
      * Teilt dem Browser mit, dass er keinen Cache verwenden soll (je nach Browserinterpretation gleich zu expire=0)
      *
-     * @param boolean $bValue Wahr NoCache, Falsch mit Cache
+     * @param boolean $value Wahr NoCache, Falsch mit Cache
      */
-    function setBrowserNoCache($bValue)
+    public function setBrowserNoCache(bool $value): void
     {
-        $this->BrowserNoCache = $bValue;
+        $this->browserNoCache = $value;
     }
 
     /**
@@ -201,9 +187,7 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Setzt den Seitentitel und MetaTags!
-     *
-     * @param string $title Titel (darf nicht leer sein; Titel muss vorhanden sein)
+     * Setzt den Seitentitel und MetaTags
      */
     public function setTitle(string $title): static
     {
@@ -211,10 +195,6 @@ class GUI_HeadData extends GUI_Module
         return $this;
     }
 
-    /**
-     * @param string $description
-     * @return void
-     */
     public function setDescription(string $description): void
     {
         $this->description = $description;
@@ -222,8 +202,6 @@ class GUI_HeadData extends GUI_Module
 
     /**
      * Setzt Content-Charset
-     *
-     * @param string $charset Zeichensatz
      */
     public function setCharset(string $charset): static
     {
@@ -232,7 +210,7 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Gibt den gesetzten Seitentitel wieder zurueck
+     * Gibt den gesetzten Seitentitel wieder zurück
      *
      * @return string Titel der Seite
      **/
@@ -242,14 +220,39 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Gibt Suchmaschinen Robots Anweisungen, was er auf dieser Seite tun soll. Siehe head.class.php Konstanten im oberen Bereich!!
-     * z.b. Indexierung oder keine Indexierung, Follow etc.
+     * Assign robot directives controlling search engine behavior.
+     * Accepts a single directive or an array; duplicates are merged.
+     * - "noindex" overrides "index"
+     * - "nofollow" overrides "follow"
      *
-     * @param string $sRobots Uebergabe von ROBOT_ Konstanten
-     **/
-    function setRobots(string $sRobots)
+     * @param RobotsDirective|array<RobotsDirective> $directives
+     */
+    public function setRobotsDirective(RobotsDirective|array $directives): static
     {
-        $this->robots = $sRobots;
+        $arr = is_array($directives) ? $directives : [$directives];
+
+        foreach ($arr as $dir) {
+            $this->robots[$dir->value] = $dir;
+        }
+
+        // --- normalize robots / conflict check ---
+        if (isset($this->robots['noindex']) && isset($this->robots['index'])) {
+            unset($this->robots['index']);
+        }
+        if (isset($this->robots['nofollow']) && isset($this->robots['follow'])) {
+            unset($this->robots['follow']);
+        }
+        return $this;
+    }
+
+    /**
+     * Returns a string suitable for <meta name="robots" content="...">.
+     *
+     * Example: "noindex, nofollow"
+     */
+    private function getRobotsTagValue(): string
+    {
+        return implode(', ', array_map(fn(RobotsDirective $d) => $d->value, $this->robots));
     }
 
     /**
@@ -258,7 +261,7 @@ class GUI_HeadData extends GUI_Module
      * @param integer $seconds Sekunden in den ein Refresh gemacht werden soll
      * @param string $url Auf welche Url weitergeleitet werden soll
      **/
-    function setMetaRefresh($seconds, $url)
+    function setMetaRefresh(int $seconds, string $url): void
     {
         $this->metaRefresh['seconds'] = $seconds;
         $this->metaRefresh['url'] = $url;
@@ -286,13 +289,9 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Add stylesheet file to the page
-     *
-     * @param string $file
-     * @param null $media
-     * @return GUI_HeadData
+     * Add a stylesheet file to the page
      */
-    public function addStyleSheet(string $file, $media = null): self
+    public function addStyleSheet(string $file, ?string $media = null): self
     {
         if ($file == '') return $this;
         if ($this->addFileFct) $file = call_user_func($this->addFileFct, $file);
@@ -303,11 +302,10 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * Add a javascript file to the page
+     * Add a JavaScript file to the page
      *
      * @param string $file file
      * @param array $attributes (optional)
-     * @return GUI_HeadData
      */
     public function addJavaScript(string $file, array $attributes = []): self
     {
@@ -337,10 +335,6 @@ class GUI_HeadData extends GUI_Module
         return $this;
     }
 
-    /**
-     * @param callable $fct
-     * @return GUI_HeadData
-     */
     public function onAddFile(callable $fct): self
     {
         $this->addFileFct = $fct;
@@ -371,41 +365,38 @@ class GUI_HeadData extends GUI_Module
     }
 
     /**
-     * @param Module $Module
-     * @param array|null $initOptions
      * @param string|null $jsClassName if null, the Module's class name is used
-     * @return GUI_HeadData
      */
-    public function setClientData(Module $Module, ?array $initOptions = null, ?string $jsClassName = null): self
+    public function setClientData(Module $module, ?array $initOptions = null, ?string $jsClassName = null): self
     {
-        $clientData =& $this->clientData[$Module->getName()];
+        $clientData = &$this->clientData[$module->getName()];
         $clientData ??= [
-            'className' => $jsClassName ?? $Module->getClassName(),
-            'fullyQualifiedClassName' => $Module::class,
-            'parentModuleName' => $Module->getParent()?->getName(),
+            'className' => $jsClassName ?? $module->getClassName(),
+            'fullyQualifiedClassName' => $module::class,
+            'parentModuleName' => $module->getParent()?->getName(),
         ];
-        if (!$initOptions) return $this;
-        $existingInitOptions =& $clientData['initOptions'];
+        $existingInitOptions = &$clientData['initOptions'];
         $existingInitOptions ??= [];
-        $existingInitOptions += $initOptions;
+        if ($initOptions) $existingInitOptions += $initOptions;
         return $this;
     }
 
     /**
-     * Gibt die fertigen Html Kopfdaten zurueck.
+     * Gibt die fertigen HTML-Kopfdaten zurück.
      *
      * @return string Content (Kopfdaten)
+     * @throws \JsonException
      */
     public function finalize(): string
     {
-        $Url = new Url(false);
+        $url = new Url(false);
 
         $this->Template->setVars([
-            'EXPIRES' => $this->Expires,
+            'EXPIRES' => $this->expires,
             'LANGUAGE' => $this->Weblication->getLanguage(),
             'TITLE' => $this->title,
             'DESCRIPTION' => $this->description,
-            'ROBOTS' => $this->robots,
+            'ROBOTS' => $this->getRobotsTagValue(),
             'BASE_HREF' => $this->baseHref,
             'BASE_TARGET' => $this->baseTarget,
             'CHARSET' => $this->charset,
@@ -417,7 +408,7 @@ class GUI_HeadData extends GUI_Module
                     JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION,
                 ),
             ),
-            'SCRIPT' => $Url->getUrl(),
+            'SCRIPT' => $url->getUrl(),
         ],
         );
 
@@ -428,7 +419,7 @@ class GUI_HeadData extends GUI_Module
             $this->Template->leaveBlock();
         }
 
-        if ($this->BrowserNoCache) {
+        if ($this->browserNoCache) {
             $this->Template->newBlock('BROWSERNOCACHE');
         }
 

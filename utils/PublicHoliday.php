@@ -26,22 +26,18 @@ class PublicHoliday
     /**
      * @var int key constant of PublicHolidays
      */
-    private int $key;
+    private readonly int $key;
 
     /**
      * @var DateTimeInterface Date
      */
-    private DateTimeInterface $Date;
+    private readonly DateTimeInterface $Date;
 
     /**
-     * @var string name of holiday
+     * @var null|string name of holiday
      */
-    private string $name = '';
+    private ?string $name = null;
 
-    /**
-     * @param int $key
-     * @param DateTimeInterface $Date
-     */
     public function __construct(int $key, DateTimeInterface $Date)
     {
         $this->key = $key;
@@ -49,9 +45,7 @@ class PublicHoliday
     }
 
     /**
-     * returns date
-     *
-     * @return DateTimeInterface
+     * Return date
      */
     public function getDate(): DateTimeInterface
     {
@@ -59,15 +53,10 @@ class PublicHoliday
     }
 
     /**
-     * returns name of holiday
-     *
-     * @return string
+     * Returns name of holiday
      */
     public function getName(): string
     {
-        if (!$this->name) {
-            $this->name = PublicHolidays::getHolidayName($this->key);
-        }
-        return $this->name;
+        return $this->name ??= PublicHolidays::getHolidayName($this->key);
     }
 }

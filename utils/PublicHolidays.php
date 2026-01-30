@@ -22,7 +22,6 @@ namespace pool\utils;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
-use Exception;
 use pool\classes\Core\PoolObject;
 
 final class PublicHolidays extends PoolObject
@@ -33,50 +32,50 @@ final class PublicHolidays extends PoolObject
      * @see https://www.welt-der-zahlen.info/berechnung.html
      */
 
-    const NEUJAHRSTAG = 0;
-    const HEILIGEDREIKOENIGE = 1;
-    const ROSENMONTAG = 2;
-    const ASCHERMITTWOCH = 3;
-    const FRAUENTAG = 4;
-    const GRUENDONNERSTAG = 5;
-    const KARFREITAG = 6;
-    const OSTERSONNTAG = 7;
-    const OSTERMONTAG = 8;
-    const TAGDERARBEIT = 9;
-    const CHRISTIHIMMELFAHRT = 10;
-    const PFINGSTSONNTAG = 11;
-    const PFINGSTMONTAG = 12;
-    const FRONLEICHNAM = 13;
-    const AUGSBURGERFRIEDENSFEST = 14;
-    const MARIAEHIMMELFAHRT = 15;
-    const TAGDERDEUTSCHENEINHEIT = 16;
-    const REFORMATIONSTAG = 17;
-    const ALLERHEILIGEN = 18;
-    const BUSSUNDBETTAG = 19;
-    const ERSTERWEIHNACHTSTAG = 20;
-    const ZWEITERWEIHNACHTSTAG = 21;
+    const int NEUJAHRSTAG = 0;
+    const int HEILIGEDREIKOENIGE = 1;
+    const int ROSENMONTAG = 2;
+    const int ASCHERMITTWOCH = 3;
+    const int FRAUENTAG = 4;
+    const int GRUENDONNERSTAG = 5;
+    const int KARFREITAG = 6;
+    const int OSTERSONNTAG = 7;
+    const int OSTERMONTAG = 8;
+    const int TAGDERARBEIT = 9;
+    const int CHRISTIHIMMELFAHRT = 10;
+    const int PFINGSTSONNTAG = 11;
+    const int PFINGSTMONTAG = 12;
+    const int FRONLEICHNAM = 13;
+    const int AUGSBURGERFRIEDENSFEST = 14;
+    const int MARIAEHIMMELFAHRT = 15;
+    const int TAGDERDEUTSCHENEINHEIT = 16;
+    const int REFORMATIONSTAG = 17;
+    const int ALLERHEILIGEN = 18;
+    const int BUSSUNDBETTAG = 19;
+    const int ERSTERWEIHNACHTSTAG = 20;
+    const int ZWEITERWEIHNACHTSTAG = 21;
     /**
      * Bundesländer
      *
      * @see https://www.datenportal.bmbf.de/portal/de/G122.html
      */
 
-    const STATE_BADENWUERTTEMBERG = 'BW';
-    const STATE_BAYERN = 'BY';
-    const STATE_BERLIN = 'BE';
-    const STATE_BRANDENBURG = 'BB';
-    const STATE_BREMEN = 'HB';
-    const STATE_HAMBURG = 'HH';
-    const STATE_HESSEN = 'HE';
-    const STATE_MECKLENBURGVORPOMMERN = 'MV';
-    const STATE_NIEDERSACHSEN = 'NI';
-    const STATE_NORDRHEINWESTFALEN = 'NW';
-    const STATE_RHEINLANDPFALZ = 'RP';
-    const STATE_SAARLAND = 'SL';
-    const STATE_SACHSEN = 'SN';
-    const STATE_SACHSENANHALT = 'ST';
-    const STATE_SCHLESWIGHOLSTEIN = 'SH';
-    const STATE_THUERINGEN = 'TH';
+    const string STATE_BADENWUERTTEMBERG = 'BW';
+    const string STATE_BAYERN = 'BY';
+    const string STATE_BERLIN = 'BE';
+    const string STATE_BRANDENBURG = 'BB';
+    const string STATE_BREMEN = 'HB';
+    const string STATE_HAMBURG = 'HH';
+    const string STATE_HESSEN = 'HE';
+    const string STATE_MECKLENBURGVORPOMMERN = 'MV';
+    const string STATE_NIEDERSACHSEN = 'NI';
+    const string STATE_NORDRHEINWESTFALEN = 'NW';
+    const string STATE_RHEINLANDPFALZ = 'RP';
+    const string STATE_SAARLAND = 'SL';
+    const string STATE_SACHSEN = 'SN';
+    const string STATE_SACHSENANHALT = 'ST';
+    const string STATE_SCHLESWIGHOLSTEIN = 'SH';
+    const string STATE_THUERINGEN = 'TH';
 
     /**
      * Welche Feiertage in welchem Bundesland
@@ -316,20 +315,21 @@ final class PublicHolidays extends PoolObject
      */
     private array $publicHolidays = [];
 
+    /** @var PublicHolidays|null Request-Cache */
+    private static ?PublicHolidays $instance = null;
+
     /**
-     * checks date for a holiday
-     *
-     * @param DateTimeInterface $Date
-     * @param string $state
-     * @return bool
+     * Checks date for a holiday
      */
     static function check(DateTimeInterface $Date, string $state = ''): bool
     {
+        $self = self::$instance ??= new PublicHolidays();
+
         $year = (int)$Date->format('Y');
-        $date = $Date->format(PHP_MARIADB_DATE_FORMAT);
-        $PublicHolidays = new PublicHolidays();
-        foreach ($PublicHolidays->getLegalHolidays($year, $state) as $Holiday) {
-            if ($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
+        $date = $Date->format('Y-m-d');
+
+        foreach ($self->getLegalHolidays($year, $state) as $holiday) {
+            if ($holiday->format('Y-m-d') === $date) {
                 return true;
             }
         }
@@ -337,308 +337,192 @@ final class PublicHolidays extends PoolObject
     }
 
     /**
-     * returns legal german holidays
+     * Returns legal German holidays
      *
-     * @param int $year
-     * @param string $state
-     * @return array
      * @throws \pool\classes\Exception\InvalidArgumentException
      */
     public function getLegalHolidays(int $year, string $state = ''): array
     {
-        try {
-            $this->factory($year);
-        } catch (Exception) {
-        }
+        $this->factory($year);
 
         if ($state == '') {
             return $this->publicHolidays[$year]['legal'];
         }
 
         if (!isset($this->publicHolidaysByState[$state])) {
-            throw new \pool\classes\Exception\InvalidArgumentException("state $state unknown");
+            throw new \pool\classes\Exception\InvalidArgumentException("State $state unknown");
         }
 
-        $holidays = [];
+        $out = [];
         foreach ($this->publicHolidaysByState[$state] as $key) {
-            $holidays[$key] = $this->publicHolidays[$year]['legal'][$key];
+            $out[$key] = $this->publicHolidays[$year]['legal'][$key];
         }
-        return $holidays;
+        return $out;
     }
 
     /**
-     * creates internally all holidays of a year.
-     *
-     * @param int $year
-     * @return void
-     * @throws Exception
-     */
-    private function factory(int $year): void
-    {
-        if (isset($this->publicHolidays[$year])) {
-            // already created
-            return;
-        }
-        $Date = new DateTimeImmutable($year.'-01-01');
-        $this->publicHolidays[$year]['legal'][self::NEUJAHRSTAG] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-01-06');
-        $this->publicHolidays[$year]['legal'][self::HEILIGEDREIKOENIGE] = $Date;
-
-        $EasterSunday = $this->calculateEasterSunday($year);
-
-        $Date = $EasterSunday->modify('-46 days');
-        $this->publicHolidays[$year]['other'][self::ASCHERMITTWOCH] = $Date;
-
-        $Date = $EasterSunday->modify('-48 days');
-        $this->publicHolidays[$year]['other'][self::ROSENMONTAG] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-03-08');
-        $this->publicHolidays[$year]['legal'][self::FRAUENTAG] = $Date;
-
-
-        $Date = $EasterSunday->modify('-3 days');
-        $this->publicHolidays[$year]['other'][self::GRUENDONNERSTAG] = $Date;
-
-        $Date = $EasterSunday->modify('-2 days');
-        $this->publicHolidays[$year]['legal'][self::KARFREITAG] = $Date;
-
-        $Date = $EasterSunday;
-        $this->publicHolidays[$year]['legal'][self::OSTERSONNTAG] = $Date;
-
-        $Date = $EasterSunday->modify('+1 days');
-        $this->publicHolidays[$year]['legal'][self::OSTERMONTAG] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-05-01');
-        $this->publicHolidays[$year]['legal'][self::TAGDERARBEIT] = $Date;
-
-        $Date = $EasterSunday->modify('+39 days');
-        $this->publicHolidays[$year]['legal'][self::CHRISTIHIMMELFAHRT] = $Date;
-
-        $Date = $EasterSunday->modify('+49 days');
-        $this->publicHolidays[$year]['legal'][self::PFINGSTSONNTAG] = $Date;
-
-        $Date = $EasterSunday->modify('+50 days');
-        $this->publicHolidays[$year]['legal'][self::PFINGSTMONTAG] = $Date;
-
-        $Date = $EasterSunday->modify('+60 days');
-        $this->publicHolidays[$year]['legal'][self::FRONLEICHNAM] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-08-08');
-        $this->publicHolidays[$year]['legal'][self::AUGSBURGERFRIEDENSFEST] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-08-15');
-        $this->publicHolidays[$year]['legal'][self::MARIAEHIMMELFAHRT] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-10-03');
-        $this->publicHolidays[$year]['legal'][self::TAGDERDEUTSCHENEINHEIT] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-10-31');
-        $this->publicHolidays[$year]['legal'][self::REFORMATIONSTAG] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-11-01');
-        $this->publicHolidays[$year]['legal'][self::ALLERHEILIGEN] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-11-22');
-        while ($Date->format('N') != 3) {
-            $Date = $Date->modify('-1 days');
-        }
-        $this->publicHolidays[$year]['legal'][self::BUSSUNDBETTAG] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-12-25');
-        $this->publicHolidays[$year]['legal'][self::ERSTERWEIHNACHTSTAG] = $Date;
-
-        $Date = new DateTimeImmutable($year.'-12-26');
-        $this->publicHolidays[$year]['legal'][self::ZWEITERWEIHNACHTSTAG] = $Date;
-    }
-
-    /**
-     * calculate easter sunday
-     *
-     * @param int $year
-     * @return DateTimeImmutable
-     */
-    public function calculateEasterSunday(int $year): DateTimeImmutable
-    {
-        $os = self::gauss($year);
-
-        $monat = 3;
-
-        // $os may be the 32. March = 1. April
-        if (31 < $os) {
-            $os = $os % 31;
-            $monat = 4;
-        }
-
-        return new DateTimeImmutable("$year-$monat-$os");
-    }
-
-    /**
-     * @see https://de.wikipedia.org/wiki/Gau%C3%9Fsche_Osterformel
-     * @param int $year
-     * @return int
-     */
-    private static function gauss(int $year): int
-    {
-        $a = self::mod($year, 19);
-        $b = self::mod($year, 4);
-        $c = self::mod($year, 7);
-        $H1 = self::div($year, 100);
-        $H2 = self::div($year, 400);
-        $N = 4 + $H1 - $H2;
-        $M = 15 + $H1 - $H2 - self::div(8 * $H1 + 13, 25);
-        $d = self::mod(19 * $a + $M, 30);
-        $e = self::mod(2 * $b + 4 * $c + 6 * $d + $N, 7);
-        $o = 22 + $d + $e;
-
-        if ($o == 57) {
-            $o = 50;
-        }
-
-        if ($d == 28 && $e == 6 && $a > 10) {
-            $o = 49;
-        }
-
-        return $o;
-    }
-
-    /**
-     * modulus
-     *
-     * @param int $a
-     * @param int $b
-     * @return int
-     */
-    private static function mod(int $a, int $b): int
-    {
-        return $a % $b;
-    }
-
-    /**
-     * divide
-     *
-     * @param int $a
-     * @param int $b
-     * @return int
-     */
-    private static function div(int $a, int $b): int
-    {
-        return intval($a / $b);
-    }
-
-    /**
-     * returns the holiday as an PublicHoliday object
-     *
-     * @param DateTime $Date
-     * @param string $state
-     * @return PublicHoliday|null
-     * @throws Exception
+     * Returns the holiday as a PublicHoliday object
      */
     static function which(DateTime $Date, string $state = ''): ?PublicHoliday
     {
+        $self = self::$instance ??= new PublicHolidays();
+
         $year = (int)$Date->format('Y');
+        $date = $Date->format('Y-m-d');
 
-        $date = $Date->format(PHP_MARIADB_DATE_FORMAT);
-
-        $PublicHolidays = new PublicHolidays();
-        foreach ($PublicHolidays->getLegalHolidays($year, $state) as $key => $Holiday) {
-            if ($Holiday->format(PHP_MARIADB_DATE_FORMAT) == $date) {
-                return new PublicHoliday($key, $Holiday);
+        foreach ($self->getLegalHolidays($year, $state) as $key => $holiday) {
+            if ($holiday->format('Y-m-d') === $date) {
+                return new PublicHoliday($key, $holiday);
             }
         }
         return null;
     }
 
     /**
-     * Returns the German name of the holiday.
-     *
-     * @param int $key
-     * @return string|void
+     * Internally creates all holidays of a year.
      */
-    static function getHolidayName(int $key)
+    private function factory(int $year): void
     {
-        switch ($key) {
-            case self::NEUJAHRSTAG:
-                return 'Neujahrstag';
-
-            case self::HEILIGEDREIKOENIGE:
-                return 'Heilige Drei Könige';
-
-            case self::FRAUENTAG:
-                return 'Frauentag';
-
-            case self::KARFREITAG:
-                return 'Karfreitag';
-
-            case self::OSTERSONNTAG:
-                return 'Ostersonntag';
-
-            case self::OSTERMONTAG:
-                return 'Ostermontag';
-
-            case self::TAGDERARBEIT:
-                return 'Tag der Arbeit';
-
-            case self::CHRISTIHIMMELFAHRT:
-                return 'Christi Himmelfahrt';
-
-            case self::PFINGSTMONTAG:
-                return 'Pfingstmontag';
-
-            case self::PFINGSTSONNTAG:
-                return 'Pfingstsonntag';
-
-            case self::FRONLEICHNAM:
-                return 'Fronleichnam';
-
-            case self::MARIAEHIMMELFAHRT:
-                return 'Mariä Himmelfahrt';
-
-            case self::TAGDERDEUTSCHENEINHEIT:
-                return 'Tag der Deutschen Einheit';
-
-            case self::REFORMATIONSTAG:
-                return 'Reformationstag';
-
-            case self::ALLERHEILIGEN:
-                return 'Allerheiligen';
-
-            case self::BUSSUNDBETTAG:
-                return 'Buß- und Bettag';
-
-            case self::ERSTERWEIHNACHTSTAG:
-                return '1. Weihnachtstag';
-
-            case self::ZWEITERWEIHNACHTSTAG:
-                return '2. Weihnachtstag';
+        if (isset($this->publicHolidays[$year])) {
+            return;// already created
         }
+        $easterSunday = $this->calculateEasterSunday($year);
+
+        $phLegal = [];
+        $phOther = [];
+
+        /* legal */
+        $phLegal[self::NEUJAHRSTAG] = new DateTimeImmutable("$year-01-01");
+        $phLegal[self::HEILIGEDREIKOENIGE] = new DateTimeImmutable("$year-01-06");
+        $phLegal[self::FRAUENTAG] = new DateTimeImmutable("$year-03-08");
+        $phLegal[self::KARFREITAG] = $easterSunday->modify('-2 days');
+        $phLegal[self::OSTERSONNTAG] = $easterSunday;
+        $phLegal[self::OSTERMONTAG] = $easterSunday->modify('+1 days');
+        $phLegal[self::TAGDERARBEIT] = new DateTimeImmutable("$year-05-01");
+        $phLegal[self::CHRISTIHIMMELFAHRT] = $easterSunday->modify('+39 days');
+        $phLegal[self::PFINGSTSONNTAG] = $easterSunday->modify('+49 days');
+        $phLegal[self::PFINGSTMONTAG] = $easterSunday->modify('+50 days');
+        $phLegal[self::FRONLEICHNAM] = $easterSunday->modify('+60 days');
+        $phLegal[self::AUGSBURGERFRIEDENSFEST] = new DateTimeImmutable("$year-08-08");
+        $phLegal[self::MARIAEHIMMELFAHRT] = new DateTimeImmutable("$year-08-15");
+        $phLegal[self::TAGDERDEUTSCHENEINHEIT] = new DateTimeImmutable("$year-10-03");
+        $phLegal[self::REFORMATIONSTAG] = new DateTimeImmutable("$year-10-31");
+        $phLegal[self::ALLERHEILIGEN] = new DateTimeImmutable("$year-11-01");
+        $phLegal[self::ERSTERWEIHNACHTSTAG] = new DateTimeImmutable("$year-12-25");
+        $phLegal[self::ZWEITERWEIHNACHTSTAG] = new DateTimeImmutable("$year-12-26");
+
+        /* other */
+        $phOther[self::ASCHERMITTWOCH] = $easterSunday->modify('-46 days');
+        $phOther[self::ROSENMONTAG] = $easterSunday->modify('-48 days');
+        $phOther[self::GRUENDONNERSTAG] = $easterSunday->modify('-3 days');
+
+        $bb = new DateTimeImmutable("$year-11-22");
+        while ($bb->format('N') != 3) {
+            $bb = $bb->modify('-1 days');
+        }
+        $phLegal[self::BUSSUNDBETTAG] = $bb;
+        $this->publicHolidays[$year] = [
+            'legal' => $phLegal,
+            'other' => $phOther,
+        ];
+    }
+
+    /**
+     * Calculate easter sunday
+     */
+    public function calculateEasterSunday(int $year): DateTimeImmutable
+    {
+        $day = self::gauss($year);
+
+        $month = 3;
+        if ($day > 31) {
+            $month = 4;
+            $day -= 31;
+        }
+
+        return new DateTimeImmutable("$year-$month-$day");
+    }
+
+    /**
+     * @see https://de.wikipedia.org/wiki/Gau%C3%9Fsche_Osterformel
+     */
+    private static function gauss(int $year): int
+    {
+        $a = $year % 19;
+        $b = $year % 4;
+        $c = $year % 7;
+
+        $H1 = intdiv($year, 100);
+        $H2 = intdiv($year, 400);
+
+        $N = 4 + $H1 - $H2;
+        $M = 15 + $H1 - $H2 - intdiv(8 * $H1 + 13, 25);
+
+        $d = (19 * $a + $M) % 30;
+        $e = (2 * $b + 4 * $c + 6 * $d + $N) % 7;
+
+        $o = 22 + $d + $e;
+
+        if ($o == 57) {
+            return 50;
+        }
+
+        if ($d == 28 && $e == 6 && $a > 10) {
+            return 49;
+        }
+
+        return $o;
+    }
+
+    /**
+     * Returns the German name of the holiday.
+     */
+    static function getHolidayName(int $key): string
+    {
+        static $MAP = [
+            self::NEUJAHRSTAG => 'Neujahrstag',
+            self::HEILIGEDREIKOENIGE => 'Heilige Drei Könige',
+            self::FRAUENTAG => 'Frauentag',
+            self::KARFREITAG => 'Karfreitag',
+            self::OSTERSONNTAG => 'Ostersonntag',
+            self::OSTERMONTAG => 'Ostermontag',
+            self::TAGDERARBEIT => 'Tag der Arbeit',
+            self::CHRISTIHIMMELFAHRT => 'Christi Himmelfahrt',
+            self::PFINGSTMONTAG => 'Pfingstmontag',
+            self::PFINGSTSONNTAG => 'Pfingstsonntag',
+            self::FRONLEICHNAM => 'Fronleichnam',
+            self::MARIAEHIMMELFAHRT => 'Mariä Himmelfahrt',
+            self::TAGDERDEUTSCHENEINHEIT => 'Tag der Deutschen Einheit',
+            self::REFORMATIONSTAG => 'Reformationstag',
+            self::ALLERHEILIGEN => 'Allerheiligen',
+            self::BUSSUNDBETTAG => 'Buß- und Bettag',
+            self::ERSTERWEIHNACHTSTAG => '1. Weihnachtstag',
+            self::ZWEITERWEIHNACHTSTAG => '2. Weihnachtstag',
+        ];
+
+        return $MAP[$key] ?? '';
     }
 
     /**
      * Calculates public holidays for a specified period of time
-     *
-     * @param DateTimeInterface $FromDate
-     * @param DateTimeInterface $ToDate
-     * @return array
      */
-    public function getLegalHolidaysByRange(DateTimeInterface $FromDate, DateTimeInterface $ToDate): array
+    public function getLegalHolidaysByRange(DateTimeInterface $fromDate, DateTimeInterface $toDate): array
     {
-        $holidaysByRange = [];
-        $fromYear = (int)$FromDate->format('Y');
-        $toYear = (int)$ToDate->format('Y');
+        $out = [];
 
-        for ($i = $fromYear; $i <= $toYear; $i++) {
-            try {
-                $this->factory($i);
-            } catch (Exception) {
-            }
+        $fromYear = (int)$fromDate->format('Y');
+        $toYear = (int)$toDate->format('Y');
 
-            foreach ($this->publicHolidays as $key => $Holiday) {
-                if ($FromDate <= $Holiday and $Holiday <= $ToDate) {
-                    $holidaysByRange[$key] = $Holiday;
+        for ($year = $fromYear; $year <= $toYear; $year++) {
+            $this->factory($year);
+
+            foreach ($this->publicHolidays[$year]['legal'] as $key => $date) {
+                if ($date >= $fromDate && $date <= $toDate) {
+                    $out[$key] = $date;
                 }
             }
         }
-        return $holidaysByRange;
+
+        return $out;
     }
 }

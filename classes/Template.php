@@ -173,6 +173,8 @@ class TempCoreHandle extends TempHandle
 
     private string $varEnd = TEMP_VAR_END;
 
+    private ?TempCoreHandle $inheritFrom = null;
+
     /**
      * Konstruktor: benoetigt Handle-Typ und Verzeichnis zum Template.
      * Array fuer Variablen Container und Block Container werden angelegt.
@@ -275,6 +277,11 @@ class TempCoreHandle extends TempHandle
             $this->setVar($key, $value, $convert);
         }
         return $this;
+    }
+
+    public function getVars(): array
+    {
+        return $this->varList;
     }
 
     /**
@@ -380,19 +387,20 @@ class TempCoreHandle extends TempHandle
     {
         $content = $this->content;
 
-        $search = [];
-        $replace = [];
-        foreach ($this->varList as $key => $val) {
-            $search[] = "$this->varStart$key$this->varEnd";
-            $replace[] = $val;
+        $varList = $this->varList;
+        if ($this->inheritFrom) {
+            $varList = array_merge($this->inheritFrom->getVars(), $varList);
         }
+        if (count($varList)) {
+            $varPairs = [];
+            foreach ($varList as $key => $val) {
+                $varPairs["$this->varStart$key$this->varEnd"] = $val;
+            }
 
-        $sizeOfVarList = count($this->varList);
-        $iterations = 0;
-        $count = 1;
-        while ($count && $iterations < $sizeOfVarList) {
-            $content = str_replace($search, $replace, $content, $count);
-            $iterations++;
+            do {
+                $oldContent = $content;
+                $content = strtr($content, $varPairs);
+            } while ($oldContent !== $content);
         }
 
         $replace_pairs = [];
@@ -449,6 +457,11 @@ class TempCoreHandle extends TempHandle
             }
         }
         return null;
+    }
+
+    public function inheritVariablesFrom(TempCoreHandle|null $coreHandle): void
+    {
+        $this->inheritFrom = $coreHandle;
     }
 }
 
@@ -539,9 +552,6 @@ class TempBlock extends TempCoreHandle
  **/
 class TempFile extends TempCoreHandle
 {
-    /**
-     * @var string filename
-     */
     private string $filename;
 
     /**
@@ -553,9 +563,6 @@ class TempFile extends TempCoreHandle
         $this->loadFile($filename);
     }
 
-    /**
-     * @return string filename
-     */
     public function getFilename(): string
     {
         return $this->filename;
@@ -948,7 +955,7 @@ class Template extends PoolObject
      *
      * @param string $handle Handle-Name
      */
-    public function newBlock(string $handle): ?TempBlock
+    public function newBlock(string $handle, bool $inheritVariables = false): ?TempBlock
     {
         if ($this->activeFile instanceof TempFile || $this->activeFile instanceof TempSimple) {
             if ((!isset($this->ActiveBlock)) || ($this->ActiveBlock->getHandle() !== $handle)) {
@@ -958,6 +965,10 @@ class Template extends PoolObject
             if ($this->ActiveBlock) {
                 // added 2.5.06 Alex M.
                 $this->ActiveBlock->setParentheses($this->varStart, $this->varEnd);
+
+                if ($inheritVariables) {
+                    $this->ActiveBlock->inheritVariablesFrom($this->activeFile);
+                }
 
                 if ($this->ActiveBlock->allowParse()) {
                     $this->ActiveBlock->parse();
