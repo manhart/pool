@@ -367,6 +367,7 @@ class Log
         $message = $text;
         $message = self::processPlaceholders($configurationName, $extra, $message);
         $MailMsg = self::$facilities[$configurationName][self::OUTPUT_MAIL]['MailMsg'];
+        $MailMsg->setSubject(str_replace('{LogLevel}', ucfirst(self::$TEXT_LEVEL[$level]), $MailMsg->getSubject()));
         $MailMsg->setBody($message);
         self::$facilities[$configurationName][self::OUTPUT_MAIL]['Mailer']->send($MailMsg);
     }
