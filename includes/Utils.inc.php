@@ -1292,20 +1292,28 @@ function downloadFile(string $sourceFile, string $destFile): false|int
 }
 
 /**
- * Die Funktion prueft mit Shell-Kommandos, ob ein entferntes Verzeichnis gemountet ist.
- *
- * @param string $mountPoint (der exakte Mount-Point(so wie er in der /etc/fstab steht.))
- * @return int [0|1]
+ * Checks whether a mount point exists and is currently mounted.
  */
-function isMounted(string $mountPoint): int
+function isMounted(string $mountPoint): bool
 {
-    if (is_dir($mountPoint)) { # man kann nur in ein Verzeichnis rein-mounten
-        $mountPoint = removeEndingSlash($mountPoint);
-        $cmd = "mount | grep \"$mountPoint\" | wc -l | tr -d \" \"";
-        return intval(shell_exec($cmd));
+    if (!is_dir($mountPoint)) return false;
+
+    $mountPoint = removeEndingSlash($mountPoint);
+    if (is_readable('/proc/mounts')) {
+        $lines = file('/proc/mounts', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        for ($i = count($lines) - 1; $i >= 0; $i--) {
+            $parts = explode(' ', $lines[$i], 3);
+            $mountedAt = $parts[1] ?? '';
+            if ($mountedAt === '') continue;
+            $mountedAt = str_replace(['\\040', '\\011', '\\012'], [' ', "\t", "\n"], $mountedAt);
+            if ($mountedAt === $mountPoint) return true;
+        }
+        return false;
     }
 
-    return 0;
+    $mountPointEscaped = escapeshellarg($mountPoint);
+    $cmd = "mount | awk '{print $3}' | grep -Fx -- $mountPointEscaped | wc -l | tr -d \" \"";
+    return intval(shell_exec($cmd)) > 0;
 }
 
 /**
