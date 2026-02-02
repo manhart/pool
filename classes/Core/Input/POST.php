@@ -18,8 +18,8 @@ namespace pool\classes\Core\Input;
  */
 class POST extends Input
 {
-    public function __construct(int $superglobals = Input::POST)
+    public function __construct(int $superglobals = Input::POST, array $filter = [])
     {
-        parent::__construct($superglobals);
+        parent::__construct($superglobals, $filter);
     }
 }

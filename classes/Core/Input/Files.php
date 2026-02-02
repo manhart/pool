@@ -18,8 +18,8 @@ namespace pool\classes\Core\Input;
  */
 class Files extends Input
 {
-    public function __construct(int $superglobals = Input::FILES)
+    public function __construct(int $superglobals = Input::FILES, array $filter = [])
     {
-        parent::__construct($superglobals);
+        parent::__construct($superglobals, $filter);
     }
 }

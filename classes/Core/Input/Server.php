@@ -18,8 +18,8 @@ namespace pool\classes\Core\Input;
  */
 class Server extends Input
 {
-    public function __construct(int $superglobals = Input::SERVER)
+    public function __construct(int $superglobals = Input::SERVER, array $filter = [])
     {
-        parent::__construct($superglobals);
+        parent::__construct($superglobals, $filter);
     }
 }

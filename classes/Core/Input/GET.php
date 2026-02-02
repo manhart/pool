@@ -19,13 +19,8 @@ namespace pool\classes\Core\Input;
  */
 class GET extends Input
 {
-    /**
-     * Initialize GET with the superglobal $_GET
-     *
-     * @param int $superglobals
-     */
-    public function __construct(int $superglobals = Input::GET)
+    public function __construct(int $superglobals = Input::GET, array $filter = [])
     {
-        parent::__construct($superglobals);
+        parent::__construct($superglobals, $filter);
     }
 }

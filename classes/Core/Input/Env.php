@@ -18,8 +18,8 @@ namespace pool\classes\Core\Input;
  */
 class Env extends Input
 {
-    function __construct(int $superglobals = Input::ENV)
+    function __construct(int $superglobals = Input::ENV, array $filter = [])
     {
-        parent::__construct($superglobals);
+        parent::__construct($superglobals, $filter);
     }
 }
