@@ -46,6 +46,7 @@ enum DataType
     case EMAIL; // = FILTER_VALIDATE_EMAIL
     case URL; // = FILTER_VALIDATE_URL
     case NO_HTML; // encode html with html entities
+    case ALPHA; // only a-z, A-Z
     case ALPHANUMERIC;// only a-z, A-Z, 0-9, _
     case ALPHANUMERIC_SPACE; // only a-z, A-Z, 0-9, _, space
     case ALPHANUMERIC_SPACE_PUNCTUATION; // only a-z, A-Z, 0-9, _, space, ., ,;:!?()-+/&
@@ -80,6 +81,8 @@ enum DataType
             self::URL => static fn($value) => is_string(filter_var($value, FILTER_VALIDATE_URL)) ? $value :
                 throw new InvalidArgumentException('Value is not a valid URL.'),
             self::NO_HTML => static fn($value) => htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE),
+            self::ALPHA => static fn($value) => ctype_alpha($value) ? $value :
+                throw new InvalidArgumentException('Value contains non-alphabetic characters.'),
             self::ALPHANUMERIC => static fn($value) => strcspn($value, $alphaNum) === 0 ? $value :
                 throw new InvalidArgumentException('Value is not alphanumeric.'),
             self::ALPHANUMERIC_SPACE => static fn($value) => strcspn($value, "$alphaNum ") === 0 ? $value :
@@ -92,7 +95,10 @@ enum DataType
         return match ($dataType) {
             self::ANY => $filter,
             default => static function ($value) use ($filter) {
-                return $value === chr(0) ? null : $filter($value);
+                if ($value === null || $value === chr(0)) {
+                    return null;
+                }
+                return $filter($value);
             }
         };
     }
