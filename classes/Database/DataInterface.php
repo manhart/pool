@@ -525,7 +525,7 @@ class DataInterface extends PoolObject
     }
 
     /**
-     * @throws DatabaseConnectionException
+     * @throws DatabaseConnectionException|InvalidArgumentException
      */
     private function openNewDBConnection(ConnectionMode $mode, string $databaseAlias): Connection
     {
@@ -741,7 +741,7 @@ class DataInterface extends PoolObject
      * The ROLLBACK statement rolls back (ends) a transaction, destroying any changes to SQL-data so that they never become visible to subsequent
      * transactions.
      *
-     * @throws Exception
+     * @throws DatabaseConnectionException|InvalidArgumentException
      */
     public static function rollback(string $databaseAlias): bool
     {

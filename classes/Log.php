@@ -50,9 +50,9 @@ class Log
 
     private static bool $dao_strip_tags = true;
 
-    const EXIT_LEVEL = 'exit';
-    const COMMON = 'common';
-    const SQL_LOG_NAME = 'ResultSetSql';
+    const string EXIT_LEVEL = 'exit';
+    const string COMMON = 'common';
+    const string SQL_LOG_NAME = 'ResultSetSql';
 
     /**
      * @var array facilities
@@ -76,6 +76,7 @@ class Log
      *
      * @param string $configurationName name of the configuration. Default is "common". You can have more configurations for different purposes.
      * @param array $facilities array of facilities
+     * @throws Exception
      */
     public static function setup(array $facilities, string $configurationName = Log::COMMON): void
     {
@@ -248,7 +249,7 @@ class Log
     }
 
     /**
-     * Writes info message
+     * Writes an info message
      */
     public static function info(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -256,7 +257,7 @@ class Log
     }
 
     /**
-     * Writes warning message
+     * Writes a warning message
      */
     public static function warn(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -280,7 +281,7 @@ class Log
     }
 
     /**
-     * Write message
+     * Write a message
      */
     public static function message(string $text, int $level = self::LEVEL_INFO, array $extra = [], string $configurationName = Log::COMMON): void
     {
@@ -366,6 +367,7 @@ class Log
     {
         $message = $text;
         $message = self::processPlaceholders($configurationName, $extra, $message);
+        /** @var Nette\Mail\Message $MailMsg */
         $MailMsg = self::$facilities[$configurationName][self::OUTPUT_MAIL]['MailMsg'];
         $MailMsg->setSubject(str_replace('{LogLevel}', ucfirst(self::$TEXT_LEVEL[$level]), $MailMsg->getSubject()));
         $MailMsg->setBody($message);
@@ -375,6 +377,7 @@ class Log
     public static function writeDAO(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = $text;
+        /** @var DAO\MySQL_DAO $DAO */
         $DAO = self::$facilities[$configurationName][self::OUTPUT_DAO]['DAO'];
         if (self::$dao_strip_tags && isHTML($message)) {
             // no html
