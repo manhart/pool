@@ -336,7 +336,7 @@ class GUI_Module extends Module
             //pump content through searchGUIs
             $content = $TemplateFile->getContent();
             $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
-            $TemplateFile->setContent($newContent, false);
+            if ($newContent !== $content) $TemplateFile->setContent($newContent, false);
         }
     }
 
@@ -788,6 +788,7 @@ class GUI_Module extends Module
      */
     private function pasteChildren(string $content): string
     {
+        if (!$this->childModules) return $content;
         $replace_pairs = [];
         /** @var GUI_Module $GUI */
         foreach ($this->childModules as $GUI) {
