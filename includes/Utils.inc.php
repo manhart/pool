@@ -1149,7 +1149,7 @@ function checkRegExOutcome(string $regEX, string $content): bool
 function packArray(Closure $closure, ...$namedValues): array
 {
     return array_merge(
-        (new ReflectionFunction($closure))->getClosureUsedVariables(),
+        new ReflectionFunction($closure)->getClosureUsedVariables(),
         $namedValues,
     );
 }
@@ -1174,17 +1174,6 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
     }
     array_multisort($sortarr, $sortorder, $sorttype, $hauptArray);
     return $hauptArray;
-}
-
-/**
- * Checks if it is an Ajax call (XmlHttpRequest)
- * More specifically, whether the $_SERVER['HTTP_X_REQUESTED_WITH'] variable is set to XMLHttpRequest.
- *
- * @deprecated
- */
-function isAjax(): bool
-{
-    return Request::isAjax();
 }
 
 /**
