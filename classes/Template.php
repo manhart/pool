@@ -340,20 +340,16 @@ class TempCoreHandle extends TempHandle
     {
         // Matches Blocks like <!-- XXX handle -->freeform-text<!-- END handle -->
         $pattern = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*?)<!-- END \2 -->/s';
-        preg_match_all($pattern, $templateContent, $matches, PREG_SET_ORDER);
-        //        $pattern = '/<!-- (?<type>[A-Z]{2,}) (?<handle>[^>]+) -->(?<content>.*?)<!-- END \k<handle> -->/s';
-        //        $count = preg_match_all($pattern, $templateContent, $matches, PREG_SET_ORDER);
-        checkRegExOutcome($pattern, $templateContent);
-        $changes = [];
-        foreach ($matches as $match) {
+        $count = 0;
+        $content = preg_replace_callback($pattern, function (array $match) use (&$count) {
             //the entire Comment Block
             $fullMatchText = $match[0];
             //the XXX Tag part
             $kind = $match[1];
             //the handle part
-            $handle = ($match[2]);
+            $handle = $match[2];
             //the freeform-text part
-            $tagContent = ($match[3]);
+            $tagContent = $match[3];
 
             $value = match ($kind) {
                 TEMP_BLOCK_IDENT => $this->createBlock($handle, $this->getDirectory(), $tagContent, $this->charset, $this->hooks)->getPlaceholder(),
@@ -364,12 +360,16 @@ class TempCoreHandle extends TempHandle
                 default => IS_DEVELOP ? "Unknown block $kind" : '',
             };
 
-            if ($value !== $fullMatchText)
-                //made a change
-                $changes[$fullMatchText] = $value;
-        }
-        $this->content = strtr($this->content, $changes);
-        return count($changes);
+            if ($value !== $fullMatchText) {
+                $count++;
+                return $value;
+            }
+            return $fullMatchText;
+        }, $templateContent);
+        checkRegExOutcome($pattern, $templateContent);
+        $content ??= $templateContent;
+        $this->content = $content;
+        return $count;
     }
 
     public function getBlockList(): array
