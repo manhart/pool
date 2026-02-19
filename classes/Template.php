@@ -404,7 +404,7 @@ class TempCoreHandle extends TempHandle
         }
 
         $replace_pairs = [];
-        Template::getTranslator()?->translateWithRegEx($content, Translator::CURLY_TAG_REGEX, $replace_pairs);
+        if (str_contains($content, 'TRANSL')) Template::getTranslator()?->translateWithRegEx($content, Translator::CURLY_TAG_REGEX, $replace_pairs);
         foreach ($this->blockList as $block) {
             if ($block->allowParse()) {
                 $block->parse();
@@ -420,7 +420,7 @@ class TempCoreHandle extends TempHandle
             if ($clearParsedContent) $file->clearParsedContent();
         }
 
-        $content = strtr($content, $replace_pairs);
+        if ($replace_pairs) $content = strtr($content, $replace_pairs);
 
         if (!$returnContent) {
             $this->parsedContent = $content;
