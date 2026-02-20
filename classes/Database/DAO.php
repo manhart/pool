@@ -65,12 +65,14 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * don't escape the value in the (sql) query
      */
     public const int DAO_NO_ESCAPE = 2;
+
     /**
-     * Data types
+     * Data types (Bitmask: types + flags (NULLABLE is a flag))
      */
-    public const int STRING = 1;
-    public const int INT = 2;
-    public const int FLOAT = 3;
+    public const int NULLABLE = 1;
+    public const int STRING = 2;
+    public const int INT = 4;
+    public const int FLOAT = 8;
 
     /**
      * @var string|null Name of the table / file / view (must be declared in derived class)
@@ -377,7 +379,14 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     #[Pure]
     public static function castValue(mixed $value, mixed $targetType): mixed
     {
-        return match ($targetType) {
+        if (!is_int($targetType)) return $value;
+        $baseType = $targetType & ~self::NULLABLE;
+
+        if ($value === null && ($targetType & self::NULLABLE) !== 0) {// Null-Handling
+            return null;
+        }
+
+        return match ($baseType) {
             self::STRING => (string)$value,
             self::INT => (int)$value,
             self::FLOAT => (float)$value,
