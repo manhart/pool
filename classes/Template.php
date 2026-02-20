@@ -29,6 +29,7 @@
 
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\Weblication;
+use pool\classes\Exception\FileNotFoundException;
 use pool\classes\translator\Translator;
 
 const TEMP_VAR_START = '{';
@@ -570,12 +571,12 @@ class TempFile extends TempCoreHandle
 
     /**
      * loads the template file
+     *
+     * @throws UnexpectedValueException|FileNotFoundException|RuntimeException
      */
-    private function loadFile(string $filename)
+    private function loadFile(string $filename): void
     {
-        if (!$filename) {
-            throw new \pool\classes\Exception\UnexpectedValueException('No template file given.');
-        }
+        if (!$filename) throw new \pool\classes\Exception\UnexpectedValueException('No template file given.');
         $this->filename = $filename;
         $filePath = buildFilePath($this->getDirectory(), $filename);
         $weblication = Weblication::getInstance();
@@ -590,21 +591,29 @@ class TempFile extends TempCoreHandle
                 $filePath = Template::attemptFileTranslation($filePath, $weblication->getLanguage());
         }
 
-        if ($fileExists && ($fileTime = filemtime($filePath)) && $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE)) {
-            $this->setContent($content);
-            return;
+        $fileTime = $fileExists ? @filemtime($filePath) : false;
+        if ($fileExists && $fileTime !== false) {
+            $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE);
+            if ($content) {
+                $this->setContent($content);
+                return;
+            }
         }
 
         // fopen is faster than file_get_contents
         if (!$fileExists || false === ($fh = @fopen($filePath, 'rb'))) {
-            throw new \pool\classes\Exception\RuntimeException("Template file $filePath not found.");
+            throw new FileNotFoundException("Template file $filePath not found.");
         }
-        // fread must be greater than 0
-        $content = fread($fh, filesize($filePath) + 1);
+        $content = stream_get_contents($fh);
         fclose($fh);
+        if ($content === false) {
+            throw new \pool\classes\Exception\RuntimeException("Template file $filePath could not be read.");
+        }
         $this->setContent($content);
         /** @noinspection PhpUndefinedVariableInspection */
-        $weblication->cacheItem("$fileTime:$filePath", $content, Weblication::CACHE_FILE);
+        if ($fileTime !== false) {
+            $weblication->cacheItem("$fileTime:$filePath", $content, Weblication::CACHE_FILE);
+        }
     }
 
     /**
@@ -792,7 +801,7 @@ class Template extends PoolObject
         $dir === '' && $dir = './';
         $dir = addEndingSlash($dir);
         if (!is_dir($dir)) {
-            throw new \pool\classes\Exception\UnexpectedValueException("Directory \"$dir\" not found!");
+            throw new \pool\classes\Exception\UnexpectedValueException(__CLASS__." could not find the directory $dir.");
         }
         $this->dir = $dir;
     }
