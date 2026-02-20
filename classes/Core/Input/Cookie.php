@@ -18,14 +18,9 @@ namespace pool\classes\Core\Input;
  */
 class Cookie extends Input
 {
-    /**
-     * Initialize the Cookie with the default superglobal $_COOKIE
-     *
-     * @param int $superglobals
-     */
-    public function __construct(int $superglobals = Input::COOKIE)
+    public function __construct(int $superglobals = Input::COOKIE, array $filter = [])
     {
-        parent::__construct($superglobals);
+        parent::__construct($superglobals, $filter);
     }
 
     /**

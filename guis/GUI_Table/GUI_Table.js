@@ -359,9 +359,18 @@ class GUI_Table extends GUI_Module
     {
         // filterData is required by the filterControl extension of the bs table as soon as the bs-table is changed to server-side pagination.
         this.filterData = filterData;
-        for(let column in this.filterData) {
+        for(const column in this.filterData) {
+            // bootstrap-table 1.24.2+ "obj" uses value for both label and value; use "var" to preserve keys as values
+            // keep globals tidy under a single namespace __btFilterData (var: does not resolve dot-paths)
+            const safeColumn = column.replace(/[^a-zA-Z0-9_$]/g, '_');
+            if(!window.__btFilterData) {
+                window.__btFilterData = {};
+            }
+            const globalName = `__btFilterData_${this.getName()}_${safeColumn}`;
+            window[globalName] = this.filterData[column];
+            window.__btFilterData[globalName] = true; // registry for potential cleanup
             this.setColumnOptions(column, {
-                filterData: 'obj:$' + this.getName() + '.filterData.' + column
+                filterData: `var:${globalName}`
             });
         }
     }
@@ -1097,6 +1106,18 @@ class GUI_Table extends GUI_Module
         this.pageIds = [];
         this.selections = [];
         this.rendered = false;
+
+        /*if(window.__btFilterData) {
+            for(let key in window.__btFilterData) {
+                if(!window.__btFilterData.hasOwnProperty(key)) {
+                    continue;
+                }
+                if(key.startsWith('__btFilterData_' + this.getName() + '_')) {
+                    delete window[key];
+                    delete window.__btFilterData[key];
+                }
+            }
+        }*/
         this.getTable().bootstrapTable('destroy');
     }
 

@@ -29,6 +29,7 @@
 
 use pool\classes\Core\PoolObject;
 use pool\classes\Core\Weblication;
+use pool\classes\Exception\FileNotFoundException;
 use pool\classes\translator\Translator;
 
 const TEMP_VAR_START = '{';
@@ -340,20 +341,16 @@ class TempCoreHandle extends TempHandle
     {
         // Matches Blocks like <!-- XXX handle -->freeform-text<!-- END handle -->
         $pattern = '/<!-- ([A-Z]{2,}) ([^>]+) -->(.*?)<!-- END \2 -->/s';
-        preg_match_all($pattern, $templateContent, $matches, PREG_SET_ORDER);
-        //        $pattern = '/<!-- (?<type>[A-Z]{2,}) (?<handle>[^>]+) -->(?<content>.*?)<!-- END \k<handle> -->/s';
-        //        $count = preg_match_all($pattern, $templateContent, $matches, PREG_SET_ORDER);
-        checkRegExOutcome($pattern, $templateContent);
-        $changes = [];
-        foreach ($matches as $match) {
+        $count = 0;
+        $content = preg_replace_callback($pattern, function (array $match) use (&$count) {
             //the entire Comment Block
             $fullMatchText = $match[0];
             //the XXX Tag part
             $kind = $match[1];
             //the handle part
-            $handle = ($match[2]);
+            $handle = $match[2];
             //the freeform-text part
-            $tagContent = ($match[3]);
+            $tagContent = $match[3];
 
             $value = match ($kind) {
                 TEMP_BLOCK_IDENT => $this->createBlock($handle, $this->getDirectory(), $tagContent, $this->charset, $this->hooks)->getPlaceholder(),
@@ -364,12 +361,16 @@ class TempCoreHandle extends TempHandle
                 default => IS_DEVELOP ? "Unknown block $kind" : '',
             };
 
-            if ($value !== $fullMatchText)
-                //made a change
-                $changes[$fullMatchText] = $value;
-        }
-        $this->content = strtr($this->content, $changes);
-        return count($changes);
+            if ($value !== $fullMatchText) {
+                $count++;
+                return $value;
+            }
+            return $fullMatchText;
+        }, $templateContent);
+        checkRegExOutcome($pattern, $templateContent);
+        $content ??= $templateContent;
+        $this->content = $content;
+        return $count;
     }
 
     public function getBlockList(): array
@@ -393,18 +394,30 @@ class TempCoreHandle extends TempHandle
         }
         if (count($varList)) {
             $varPairs = [];
+            $needsLoop = false;
             foreach ($varList as $key => $val) {
                 $varPairs["$this->varStart$key$this->varEnd"] = $val;
+                if (!$needsLoop && str_contains($val, $this->varStart)) {
+                    $needsLoop = true;
+                }
             }
 
-            do {
-                $oldContent = $content;
+            if ($needsLoop) {
+                $maxIterations = 16;
+                for ($i = 0; $i < $maxIterations; $i++) {
+                    $oldContent = $content;
+                    $content = strtr($content, $varPairs);
+                    if ($oldContent === $content) {
+                        break;
+                    }
+                }
+            } elseif ($varPairs) {
                 $content = strtr($content, $varPairs);
-            } while ($oldContent !== $content);
+            }
         }
 
         $replace_pairs = [];
-        Template::getTranslator()?->translateWithRegEx($content, Translator::CURLY_TAG_REGEX, $replace_pairs);
+        if (str_contains($content, 'TRANSL')) Template::getTranslator()?->translateWithRegEx($content, Translator::CURLY_TAG_REGEX, $replace_pairs);
         foreach ($this->blockList as $block) {
             if ($block->allowParse()) {
                 $block->parse();
@@ -420,7 +433,7 @@ class TempCoreHandle extends TempHandle
             if ($clearParsedContent) $file->clearParsedContent();
         }
 
-        $content = strtr($content, $replace_pairs);
+        if ($replace_pairs) $content = strtr($content, $replace_pairs);
 
         if (!$returnContent) {
             $this->parsedContent = $content;
@@ -570,12 +583,12 @@ class TempFile extends TempCoreHandle
 
     /**
      * loads the template file
+     *
+     * @throws UnexpectedValueException|FileNotFoundException|RuntimeException
      */
-    private function loadFile(string $filename)
+    private function loadFile(string $filename): void
     {
-        if (!$filename) {
-            throw new \pool\classes\Exception\UnexpectedValueException('No template file given.');
-        }
+        if (!$filename) throw new \pool\classes\Exception\UnexpectedValueException('No template file given.');
         $this->filename = $filename;
         $filePath = buildFilePath($this->getDirectory(), $filename);
         $weblication = Weblication::getInstance();
@@ -590,21 +603,29 @@ class TempFile extends TempCoreHandle
                 $filePath = Template::attemptFileTranslation($filePath, $weblication->getLanguage());
         }
 
-        if ($fileExists && ($fileTime = filemtime($filePath)) && $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE)) {
-            $this->setContent($content);
-            return;
+        $fileTime = $fileExists ? @filemtime($filePath) : false;
+        if ($fileExists && $fileTime !== false) {
+            $content = $weblication->getCachedItem("$fileTime:$filePath", Weblication::CACHE_FILE);
+            if ($content) {
+                $this->setContent($content);
+                return;
+            }
         }
 
         // fopen is faster than file_get_contents
         if (!$fileExists || false === ($fh = @fopen($filePath, 'rb'))) {
-            throw new \pool\classes\Exception\RuntimeException("Template file $filePath not found.");
+            throw new FileNotFoundException("Template file $filePath not found.");
         }
-        // fread must be greater than 0
-        $content = fread($fh, filesize($filePath) + 1);
+        $content = stream_get_contents($fh);
         fclose($fh);
+        if ($content === false) {
+            throw new \pool\classes\Exception\RuntimeException("Template file $filePath could not be read.");
+        }
         $this->setContent($content);
         /** @noinspection PhpUndefinedVariableInspection */
-        $weblication->cacheItem("$fileTime:$filePath", $content, Weblication::CACHE_FILE);
+        if ($fileTime !== false) {
+            $weblication->cacheItem("$fileTime:$filePath", $content, Weblication::CACHE_FILE);
+        }
     }
 
     /**
@@ -792,7 +813,7 @@ class Template extends PoolObject
         $dir === '' && $dir = './';
         $dir = addEndingSlash($dir);
         if (!is_dir($dir)) {
-            throw new \pool\classes\Exception\UnexpectedValueException("Directory \"$dir\" not found!");
+            throw new \pool\classes\Exception\UnexpectedValueException(__CLASS__." could not find the directory $dir.");
         }
         $this->dir = $dir;
     }
@@ -883,14 +904,14 @@ class Template extends PoolObject
             if ($handle !== $this->activeHandle) {
                 $this->activeHandle = $handle;
                 $this->activeFile = $this->FileList[$handle];
-                unset($this->ActiveBlock);
+                $this->ActiveBlock = null;
             }
         } else {
             foreach ($this->FileList as $TempFile) {
                 if ($obj = $TempFile->findFile($handle)) {
                     $this->activeHandle = $handle;
                     $this->activeFile = $obj;
-                    unset($this->ActiveBlock);
+                    $this->ActiveBlock = null;
                     break;
                 }
             }
@@ -976,8 +997,9 @@ class Template extends PoolObject
                     $this->ActiveBlock->setAllowParse(true);
                 }
                 return $this->ActiveBlock;
-            } else
-                unset($this->ActiveBlock);
+            } else {
+                $this->ActiveBlock = null;
+            }
         }
         return null;
     }
@@ -1018,7 +1040,7 @@ class Template extends PoolObject
     public function leaveBlock(): static
     {
         // Referenz zum aktiven Block aufheben
-        unset($this->ActiveBlock);
+        $this->ActiveBlock = null;
         return $this;
     }
 
@@ -1158,7 +1180,8 @@ class Template extends PoolObject
     public function reset(): void
     {
         $this->activeHandle = '';
-        unset($this->activeFile, $this->ActiveBlock);
+        $this->activeFile = null;
+        $this->ActiveBlock = null;
         $this->FileList = [];
     }
 }

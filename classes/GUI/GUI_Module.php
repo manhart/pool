@@ -336,7 +336,7 @@ class GUI_Module extends Module
             //pump content through searchGUIs
             $content = $TemplateFile->getContent();
             $newContent = $this->searchGUIs($content, $recurse, $autoLoadFiles);
-            $TemplateFile->setContent($newContent, false);
+            if ($newContent !== $content) $TemplateFile->setContent($newContent, false);
         }
     }
 
@@ -359,7 +359,7 @@ class GUI_Module extends Module
     {
         // search for GUIs like [\namespace\GUI_ClassName(key=val)] or [GUI_ClassName] in the content of the template
         $reg = '/\[([\w\x5c]*GUI_\w+)(\([^()]*\))?]/mU';
-        $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER);
+        $bResult = preg_match_all($reg, $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 
         if (!$bResult) {//no GUIs
             return $content;
@@ -369,8 +369,11 @@ class GUI_Module extends Module
         $newContent = [];
         $caret = 0;
         foreach ($matches as $match) {
-            [$pattern, $guiName, $params] = $match + [2 => '']; /* 2: params; php doesn't allow null coalescing when destructuring arrays  */
-            $params = trim($params, '()');
+            [$pattern, $guiName, $params] = $match + [2 => ['', 0]]; /* 2: params; php doesn't allow null coalescing when destructuring arrays  */
+            $guiTag = $pattern[0];
+            $matchStart = $pattern[1];//beginning of this Match
+            $guiName = $guiName[0];
+            $params = trim($params[0], '()');
             //try building the GUI found
             $new_GUI = self::createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
             $moduleName = $new_GUI->getName();
@@ -386,14 +389,12 @@ class GUI_Module extends Module
             $this->insertModule($new_GUI);
             unset($new_GUI);
 
-            //find the beginning of this Match
-            $beginningOfMatch = strpos($content, $pattern, $caret);
             //save content between Matches
-            $newContent[] = substr($content, $caret, $beginningOfMatch - $caret);
+            $newContent[] = substr($content, $caret, $matchStart - $caret);
             //insert identifier
             $newContent[] = $guiIdentifier;
             //move caret to end of this match
-            $caret = $beginningOfMatch + strlen($pattern);
+            $caret = $matchStart + strlen($guiTag);
         }//end foreach
         //add remainder
         $newContent[] = substr($content, $caret);
@@ -787,6 +788,7 @@ class GUI_Module extends Module
      */
     private function pasteChildren(string $content): string
     {
+        if (!$this->childModules) return $content;
         $replace_pairs = [];
         /** @var GUI_Module $GUI */
         foreach ($this->childModules as $GUI) {

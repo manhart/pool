@@ -140,24 +140,26 @@ final class Date
         return $jahr;
     }
 
-    /**
-     * Validates a given date string against a specified format.
-     *
-     * @noinspection PhpUnhandledExceptionInspection
-     */
-    public static function isValidDateString(string $date, string $format = 'Y-m-d H:i:s', ?DateTimeZone $timeZone = null, bool $strict = true): bool
-    {
+   /** @noinspection PhpUnhandledExceptionInspection */
+    public static function validateAndParseDate(string|null $date, string $format = 'Y-m-d H:i:s', ?DateTimeZone $timeZone = null, bool $strict = true): DateTime|null {
+        if (!$date) return null;
         $dateTime = DateTime::createFromFormat($format, $date, $timeZone ?? new DateTimeZone(date_default_timezone_get()));
-        if ($dateTime === false) return false;
-        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return false;
-        return !$strict || $dateTime->format($format) === $date;
+        if ($dateTime === false) return null;
+        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return null;
+        if ($strict && $dateTime->format($format) !== $date) return null;
+        return $dateTime;
     }
 
-    /**
-     * Validates a given time string
+    /** Validates a given date string against a specified format. *
      */
-    public static function isValidTimeString(string $time, bool $strict = true): bool
+    public static function isValidDateString(string|null $date, string $format = 'Y-m-d H:i:s', ?DateTimeZone $timeZone = null, bool $strict = true): bool
     {
+        return (bool)self::validateAndParseDate($date, $format, $timeZone, $strict);
+    }
+
+    public static function validateAndParseTimeString(string|null $time, bool $strict = true):DateTime|null
+    {
+        if (!$time) return null;
         $timeParts = explode(':', $time, 3);
         $countTimeParts = count($timeParts);
 
@@ -165,9 +167,16 @@ final class Date
         $format = implode(':', array_slice($formatParts, 0, $countTimeParts));
 
         $dateTime = DateTime::createFromFormat($format, $time);
-        if ($dateTime === false) return false;
-        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return false;
-        return !$strict || $dateTime->format($format) === $time;
+        if ($dateTime === false) return null;
+        if (!Date::isParseErrorFree(DateTime::getLastErrors())) return null;
+        if ($strict && $dateTime->format($format) !== $time) return null;
+        return $dateTime;
+    }
+
+    /** Validates a given time string */
+    public static function isValidTimeString(string|null $time, bool $strict = true): bool
+    {
+        return (bool)self::validateAndParseTimeString($time, $strict);
     }
 
     public static function getDayOfWeek(\DateTimeInterface $date, bool $short = false, ?string $locale = null): string
