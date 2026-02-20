@@ -394,14 +394,26 @@ class TempCoreHandle extends TempHandle
         }
         if (count($varList)) {
             $varPairs = [];
+            $needsLoop = false;
             foreach ($varList as $key => $val) {
                 $varPairs["$this->varStart$key$this->varEnd"] = $val;
+                if (!$needsLoop && str_contains($val, $this->varStart)) {
+                    $needsLoop = true;
+                }
             }
 
-            do {
-                $oldContent = $content;
+            if ($needsLoop) {
+                $maxIterations = 16;
+                for ($i = 0; $i < $maxIterations; $i++) {
+                    $oldContent = $content;
+                    $content = strtr($content, $varPairs);
+                    if ($oldContent === $content) {
+                        break;
+                    }
+                }
+            } elseif ($varPairs) {
                 $content = strtr($content, $varPairs);
-            } while ($oldContent !== $content);
+            }
         }
 
         $replace_pairs = [];
@@ -892,14 +904,14 @@ class Template extends PoolObject
             if ($handle !== $this->activeHandle) {
                 $this->activeHandle = $handle;
                 $this->activeFile = $this->FileList[$handle];
-                unset($this->ActiveBlock);
+                $this->ActiveBlock = null;
             }
         } else {
             foreach ($this->FileList as $TempFile) {
                 if ($obj = $TempFile->findFile($handle)) {
                     $this->activeHandle = $handle;
                     $this->activeFile = $obj;
-                    unset($this->ActiveBlock);
+                    $this->ActiveBlock = null;
                     break;
                 }
             }
@@ -985,8 +997,9 @@ class Template extends PoolObject
                     $this->ActiveBlock->setAllowParse(true);
                 }
                 return $this->ActiveBlock;
-            } else
-                unset($this->ActiveBlock);
+            } else {
+                $this->ActiveBlock = null;
+            }
         }
         return null;
     }
@@ -1027,7 +1040,7 @@ class Template extends PoolObject
     public function leaveBlock(): static
     {
         // Referenz zum aktiven Block aufheben
-        unset($this->ActiveBlock);
+        $this->ActiveBlock = null;
         return $this;
     }
 
@@ -1167,7 +1180,8 @@ class Template extends PoolObject
     public function reset(): void
     {
         $this->activeHandle = '';
-        unset($this->activeFile, $this->ActiveBlock);
+        $this->activeFile = null;
+        $this->ActiveBlock = null;
         $this->FileList = [];
     }
 }
