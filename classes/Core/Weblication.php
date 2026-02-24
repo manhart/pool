@@ -1018,6 +1018,7 @@ class Weblication extends Component
     public function setup(array $settings = []): static
     {
         $this->initializeSettings($settings);
+        $this->refreshFileAccessCacheState();
         $this->setupTranslator($settings);
         return $this;
     }
@@ -1044,14 +1045,18 @@ class Weblication extends Component
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
         $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
         $this->setVersion($settings['application.version'] ?? $this->getVersion());
-        if ($this->getCachedItem('workingDirectory') !== self::$workingDirectory || $this->getCachedItem("version") !== $this->getVersion()) {
+
+        $this->isInitialized = true;
+    }
+
+    protected function refreshFileAccessCacheState(): void
+    {
+        if ($this->getCachedItem('workingDirectory') !== self::$workingDirectory || $this->getCachedItem('version') !== $this->getVersion()) {
             // clear fs cache
             $this->clearCache(self::CACHE_FILE_ACCESS);
             $this->cacheItem('version', $this->getVersion());
             $this->cacheItem('workingDirectory', self::$workingDirectory);
         }
-
-        $this->isInitialized = true;
     }
 
     /**
