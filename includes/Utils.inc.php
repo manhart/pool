@@ -434,7 +434,9 @@ function formatDateTime(int|string $datetime, string $format): string
 {
     if (!is_numeric($datetime)) {
         $timestamp = strtotime($datetime);
-        if ($timestamp !== -1) $datetime = $timestamp;
+        if ($timestamp !== false) {
+            $datetime = $timestamp;
+        }
     }
     return (new DateTime("@$datetime"))->format($format);
 }
@@ -540,7 +542,8 @@ function sanitizeFilename(string $filename, bool $lowerCase = true): string
 
     // lowercase for windows/unix interoperability http://support.microsoft.com/kb/100625
     if ($lowerCase) {
-        $filename = mb_strtolower($filename, mb_detect_encoding($filename));
+        $encoding = mb_detect_encoding($filename);
+        $filename = ($encoding === false) ? mb_strtolower($filename) : mb_strtolower($filename, $encoding);
     } else {
         $pattern = '/[^a-zA-Z0-9\-. _]+/';
     }
@@ -944,7 +947,9 @@ function makeRelativePathFrom(?string $here, string $toThis, bool $normalize = f
     $vectorArr = array_udiff_assoc(
         $toThisArr,
         $hereArr,
-        function ($a, $b) use (&$tripped) { return $tripped != 0 ? $tripped : $tripped = strcmp($a, $b); },
+        static function ($a, $b) use (&$tripped) {
+            return $tripped !== 0 ? $tripped : $tripped = strcmp($a, $b);
+        },
     );
     //calculate the size of the common part not included in target
     $commonCount = count($toThisArr) - count($vectorArr);
@@ -1351,7 +1356,14 @@ function utf8_to_rtf(string $utf8_text): string
     ];
     $new_str = $utf8_text;
     foreach ($utf8_patterns as $pattern) {
-        $new_str = preg_replace("/($pattern)/e", "'\u'.hexdec(bin2hex(iconv('UTF-8', 'UTF-16BE', '$1'))).'?'", $new_str);
+        $regex = "/($pattern)/";
+        $new_str = preg_replace_callback($regex, static function (array $matches) {
+            $utf16 = iconv('UTF-8', 'UTF-16BE', $matches[1]);
+            if ($utf16 === false) {
+                return $matches[1];
+            }
+            return '\\u' . hexdec(bin2hex($utf16)) . '?';
+        }, $new_str);
     }
 
     return $new_str;
@@ -1554,7 +1566,7 @@ function base64url_encode(string $data): string
 function base64url_decode($token): string|false
 {
     $length = strlen($token);
-    if ($length == 0) return false;
+    if ($length === 0) return false;
 
     $numPaddingChars = (int)$token[$length - 1];
     $token = substr($token, 0, -1);
@@ -1897,7 +1909,7 @@ function hasTrait(object $object, string $trait, bool $recursive = true): bool
  */
 function removeConsecutiveDuplicates(array $input): array
 {
-    return array_reduce($input, function ($carry, $item) {
+    return array_reduce($input, static function ($carry, $item) {
         if (empty($carry) || end($carry) !== $item) {
             $carry[] = $item;
         }
