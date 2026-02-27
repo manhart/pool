@@ -207,26 +207,29 @@ function calculateAppointmentSeries(int $from, ?int $to, int $intervall = 7, int
 /**
  * Determines if a given year is a leap year.
  */
-function isLeapYear(string $year = ''): bool
+function isLeapYear(int|string $year = ''): bool
 {
-    $year = empty($year) ? date('Y') : $year;
-
-    if (preg_match('/\D/', $year)) {
-        return false;
+    if ($year === '') {
+        $year = (int)date('Y');
+    }
+    elseif (is_string($year)) {
+        if (!ctype_digit($year)) {
+            return false;
+        }
+        $year = (int)$year;
     }
 
-    $year = (int)$year;
     if ($year < 1000) { // before four digit year
         return false;
     }
 
     if ($year < 1582) { // Gregorian Calendar start year
         // before Gregorio XIII - 1582
-        return ($year % 4 == 0);
-    } else {
-        // after Gregorio XIII - 1582
-        return ((($year % 4 == 0) and ($year % 100 != 0)) or ($year % 400 == 0));
+        return ($year % 4 === 0);
     }
+
+    // after Gregorio XIII - 1582
+    return ($year % 4 === 0 && $year % 100 !== 0) || ($year % 400 === 0);
 }
 
 /**
