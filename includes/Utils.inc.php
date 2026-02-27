@@ -384,39 +384,47 @@ function remove_extension(string $file = ''): string
  **/
 function shorten(string $str = '', int $len = 150, string|int $more = 1, bool $backtrack = true): string
 {
-    if ($str == '') return $str;
-    if (is_array($str)) return '';
+    if ($str === '') {
+        return $str;
+    }
     $str = trim($str);
 
-    // if it's les than the size given, then return it
-    if (strlen($str) <= $len) return $str;
-
-    // else get that size of text
-    $encoding = @mb_detect_encoding($str);
-    if ($encoding === false) {
-        $str = substr($str, 0, $len);
-        $encoding = ini_get('default_charset');
-    } else {
-        $str = mb_substr($str, 0, $len, $encoding);
+    $useMb = function_exists('mb_strlen');
+    $encoding = null;
+    if ($useMb) {
+        // Fast path for UTF-8, fallback to detected or default charset.
+        if (mb_check_encoding($str, 'UTF-8')) {
+            $encoding = 'UTF-8';
+        }
+        else {
+            $encoding = mb_detect_encoding($str) ?: (ini_get('default_charset') ?: 'UTF-8');
+        }
     }
 
-    // backtrack to the end of a word
-    if ($str != '') {
-        // check to see if there are any spaces left
-        if (!substr_count($str, ' ')) {
-            if ($more) $str .= (($more === 1) ? '...' : $more);
+    // if it's less than the size given, then return it
+    $strlen = $useMb ? mb_strlen($str, $encoding) : strlen($str);
+    if ($strlen <= $len) return $str;
 
+    // else get that size of text
+    $str = $useMb ? mb_substr($str, 0, $len, $encoding) : substr($str, 0, $len);
+
+    // backtrack to the end of a word
+    if ($str !== '') {
+        // check to see if there are any spaces left
+        $lastSpace = $useMb ? mb_strrpos($str, ' ', 0, $encoding) : strrpos($str, ' ');
+        if ($lastSpace === false) {
+            if ($more) $str .= (($more === 1) ? '...' : $more);
             return $str;
         }
 
         // backtrack
         if ($backtrack) {
-            while (strlen($str) && ($str[strlen($str) - 1] != ' ')) {
-                $str = mb_substr($str, 0, -1, $encoding);
-            }
+            $str = $useMb ? mb_substr($str, 0, $lastSpace, $encoding) : substr($str, 0, $lastSpace);
         }
-        $str = mb_substr($str, 0, -1, $encoding);
-        if ($more) $str .= (($more == 1) ? '...' : $more);
+        else {
+            $str = $useMb ? mb_substr($str, 0, -1, $encoding) : substr($str, 0, -1);
+        }
+        if ($more) $str .= (($more === 1) ? '...' : $more);
     }
 
     return $str;
