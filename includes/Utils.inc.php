@@ -31,8 +31,9 @@ function getMicroTime(int $seed = 1): float
 
 /**
  * pray ()
- * Erweiterte var_dump Funktion mit formatierter Ausgabe
- * Durchlaeuft die Argumente (Arrays/Objects) rekursiv und gibt eine formatierte Liste aus.
+ *
+ * Erweiterte var_dump Funktion mit formatierter Ausgabe.
+ * Durchläuft die Argumente (Arrays/Objects) rekursiv und gibt eine formatierte Liste aus.
  * Optional werden Funktionsnamen von Objekten ausgegeben.
  * Es zeigt alle Variablen an, die es finden kann.
  * @method static
@@ -54,8 +55,8 @@ function pray(mixed $data, bool $functions = false): string
                 if ($type === "array" || $type === "object") {
                     $result .= sprintf("<li>(%s) <b>%s</b>:\n", $type, $key);
 
-                    if (strtolower($key) !== 'owner' and (strtolower($key) !== 'weblication')
-                        && strtolower($key) !== 'parent' and strtolower($key) !== 'backtrace') { // prevent recursion
+                    if (strtolower($key) !== 'owner' && (strtolower($key) !== 'weblication')
+                        && strtolower($key) !== 'parent' && strtolower($key) !== 'backtrace') { // prevent recursion
                         $result .= pray($value, $functions);
                     } else {
                         $result .= 'no follow, infinite loop';
@@ -96,7 +97,7 @@ function formatBytes(int $bytes, bool $shortVersion = false, int $decimals = 2, 
     $units = [['B', 'Bytes'], ['KB', 'KBytes'], ['MB', 'MBytes'], ['GB', 'GBytes'], ['TB', 'TBytes']];
     $level = min((int)log($bytes, 1024), count($units) - 1);
     $unit = $blank.$units[$level][(int)!$shortVersion];
-    return number_format($bytes / pow(1024, $level), $decimals, ',', '.').$unit;
+    return number_format($bytes / (1024 ** $level), $decimals, ',', '.') . $unit;
 }
 
 /**
@@ -120,7 +121,7 @@ function abbreviateNumber(int $number, int $decimals = 2, string $decimal_separa
     $units = ['', 'K', 'M', 'B', 'T', 'Q'];
     $level = min((int)log($number, 1000), count($units) - 1);
     $unit = $level ? "$blank$units[$level]" : '';
-    return number_format($number / pow(1000, $level), $decimals, $decimal_separator, $thousands_separator).$unit;
+    return number_format($number / (1000 ** $level), $decimals, $decimal_separator, $thousands_separator) . $unit;
 }
 
 /**
@@ -207,9 +208,9 @@ function calculateAppointmentSeries(int $from, ?int $to, int $intervall = 7, int
 /**
  * Determines if a given year is a leap year.
  */
-function isLeapYear(int|string $year = ''): bool
+function isLeapYear(null|int|string $year = null): bool
 {
-    if ($year === '') {
+    if ($year === null || $year === '') {
         $year = (int)date('Y');
     }
     elseif (is_string($year)) {
@@ -237,10 +238,8 @@ function isLeapYear(int|string $year = ''): bool
  */
 function addEndingSlash(string $value): string
 {
-    if ($value != '') {
-        if ($value[-1] != '/' && $value[-1] != '\\') {
-            $value .= '/';
-        }
+    if (($value !== '') && $value[-1] !== '/' && $value[-1] !== '\\') {
+        $value .= '/';
     }
 
     return $value;
@@ -297,10 +296,10 @@ function mkdirs(string $strPath, int $mode = 0777): bool
 function hex_encode(string $text): string
 {
     $encoded = '';
-    if (strlen($text) > 0) {
+    if ($text !== '') {
         $encoded = bin2hex($text);
         $encoded = chunk_split($encoded, 2, '%');
-        $encoded = '%'.substr($encoded, 0, strlen($encoded) - 1);
+        $encoded = '%' . substr($encoded, 0, -1);
     }
 
     return $encoded;
@@ -346,11 +345,7 @@ function deleteDir(string $dir, bool $rmSelf = true): bool
     }
     closedir($handle);
 
-    if ($rmSelf && !rmdir($dir)) {
-        return false;
-    }
-
-    return true;
+    return !($rmSelf && !rmdir($dir));
 }
 
 /**
@@ -449,7 +444,7 @@ function formatDateTime(int|string $datetime, string $format): string
             $datetime = $timestamp;
         }
     }
-    return (new DateTime("@$datetime"))->format($format);
+    return new DateTime("@$datetime")->format($format);
 }
 
 /**
@@ -490,10 +485,7 @@ function getContentFromPHPFile(string $includeFile): string
 {
     ob_start();
     include($includeFile);
-    $content = ob_get_contents();
-    ob_end_clean();
-
-    return $content;
+    return ob_get_clean();
 }
 
 /**
@@ -505,7 +497,7 @@ function arrayToAttr(array $array): string
 {
     $strHtmlTagAttr = '';
     foreach ($array as $key => $value) {
-        if ($strHtmlTagAttr != '') $strHtmlTagAttr .= ' ';
+        if ($strHtmlTagAttr !== '') $strHtmlTagAttr .= ' ';
         $strHtmlTagAttr .= $key.'="'.$value.'"';
     }
 
@@ -682,7 +674,7 @@ function shellFileExists(string $file, string $remote = ''): bool
 {
     $file = escapeshellarg($file);
     $cmd = 'test -e '.$file.' && echo 1 || echo 0';
-    if ($remote != '') $cmd = "$remote \"$cmd\"";
+    if ($remote !== '') $cmd = "$remote \"$cmd\"";
     exec($cmd, $arrOutFileExists);
     if (!isset($arrOutFileExists[0]))
         return false;
@@ -752,18 +744,18 @@ function hyphenation(string $word): array
 
         for ($i = 2; $i < $wordLen - 1; $i++) {
             $c0 = $word[$i - 1];
-            if (!$allowHyphenation and in_array($c0, $vowels)) {
+            if (!$allowHyphenation && in_array($c0, $vowels)) {
                 $allowHyphenation = true;
             }
             if ($allowHyphenation) {
                 $c = $word[$i];
                 $c1 = $word[$i + 1];
                 $v = $c0.$c;
-                if ($v == 'ch' and $i > 2 and $word[$i - 2] == 's') {
+                if ($v === 'ch' && $i > 2 && $word[$i - 2] === 's') {
                     $v = 'sch';
                 }
-                if (in_array($c1, $vowels) and !in_array($c, $vowels) and
-                    !in_array($c, $divider) and !in_array($c0, $divider)) {
+                if (in_array($c1, $vowels) && !in_array($c, $vowels) &&
+                    !in_array($c, $divider) && !in_array($c0, $divider)) {
                     if (in_array($v, $splices)) {
                         $hyphenationPositions[] = ($i - strlen($v) + 1);
                     } else {
@@ -795,7 +787,7 @@ function moveFile(string $source, string $dest): bool
 }
 
 /**
- * Read out directory: creates file list
+ * Read out directory: creates a file list
  *
  * @param string $path root directory
  * @param boolean $absolute return file with (absolute) full path otherwise only with relative $subDir/$filename
@@ -811,7 +803,7 @@ function readFiles(string $path, bool $absolute = true, string $filePattern = '/
     if ($handle = opendir($path)) {
         while (false !== ($fileName = readdir($handle))) {
             $file = $path.$fileName;
-            if (is_file($file) and preg_match($filePattern, $fileName)) {
+            if (is_file($file) && preg_match($filePattern, $fileName)) {
                 $files[] = ($absolute) ? $file : $subDir.$fileName;
             }
         }
@@ -832,7 +824,7 @@ function &getNestedArrayValueReference(array &$arr, array $keys): mixed
 {
     //go through each key in the access string
     foreach ($keys as $key) {
-        if ($arr != null && !is_array($arr)) {
+        if ($arr !== null && !is_array($arr)) {
             $subtree = implode('.', $keys);
             assert(isset($lastKey));
             throw new Exception("Tried to access subtree of value: '$arr' accessing: $subtree @$lastKey");
@@ -1079,20 +1071,18 @@ function readFilesRecursive(string $path, bool $absolute = true, string $filePat
     $path = addEndingSlash($path).addEndingSlash($subdir);
     $res = @opendir($path);
     if (!$res) {
-        throw new Exception('Pfad '.$path.' existiert nicht oder ist kein Verzeichnis oder hat keine Zugriffsberechtigung!');
+        throw new \pool\classes\Exception\FileNotFoundException("Path $path does not exist or is not readable.");
     }
     while (($filename = readdir($res)) !== false) {
         $file = $path.$filename;
         $fileRelative = addEndingSlash($subdir).$filename;
 
-        $filetyp = filetype($file);
-        switch ($filetyp) {
+        $filetype = filetype($file);
+        switch ($filetype) {
             case 'dir':
                 $dir = $filename;
-                if ($dirPattern) {
-                    if (!preg_match($dirPattern, $dir)) {
-                        continue 2;
-                    }
+                if ($dirPattern && !preg_match($dirPattern, $dir)) {
+                    continue 2;
                 }
                 $subdirectory = $fileRelative;
                 $files = array_merge(readFilesRecursive($root, $absolute, $filePattern, $dirPattern, $subdirectory, $callback), $files);
@@ -1101,16 +1091,14 @@ function readFilesRecursive(string $path, bool $absolute = true, string $filePat
                 break;
 
             case 'file':
-                if ($filePattern) {
-                    if (!preg_match($filePattern, $filename)) {
-                        continue 2;
-                    }
+                if ($filePattern && !preg_match($filePattern, $filename)) {
+                    continue 2;
                 }
                 $file = ($absolute) ? $file : $fileRelative;
-                if ($callback != null) {
-                    $file = call_user_func($callback, $file);
+                if ($callback !== null) {
+                    $file = $callback($file);
                 }
-                if ($file != '') {
+                if ($file !== '') {
                     $files[] = $file;
                 }
                 break;
@@ -1152,6 +1140,7 @@ function checkRegExOutcome(string $regEX, string $content): bool
     }
     if (!empty($detailsFile))
         $errormessage .= ' Details have been saved to: '.$detailsFile;
+    /** @noinspection ForgottenDebugOutputInspection */
     error_log($errormessage);
     return false;
 }
@@ -1187,7 +1176,7 @@ function multisort(array $hauptArray, string $columnName, int $sorttype = SORT_S
         $sortarr[] = $row[$columnName];
     }
 
-    if ($sorttype == SORT_STRING) {
+    if ($sorttype === SORT_STRING) {
         $sortarr = array_map('strtolower', $sortarr);
     }
     array_multisort($sortarr, $sortorder, $sorttype, $hauptArray);
@@ -1295,7 +1284,7 @@ function serveFile(string $file, ?string $downloadName = null, ?string $mimetype
  */
 function downloadFile(string $sourceFile, string $destFile): false|int
 {
-    return file_put_contents($destFile, fopen($sourceFile, 'r'), LOCK_EX);
+    return file_put_contents($destFile, fopen($sourceFile, 'rb'), LOCK_EX);
 }
 
 /**
@@ -1320,7 +1309,7 @@ function isMounted(string $mountPoint): bool
 
     $mountPointEscaped = escapeshellarg($mountPoint);
     $cmd = "mount | awk '{print $3}' | grep -Fx -- $mountPointEscaped | wc -l | tr -d \" \"";
-    return intval(shell_exec($cmd)) > 0;
+    return (int)shell_exec($cmd) > 0;
 }
 
 /**
@@ -1338,16 +1327,17 @@ function legibleColor(string $hexcolor, string $dark = '#000000', string $light 
 
 /**
  * Erzeugt einen zuf�lligen Farbcode
+ * @throws \Random\RandomException
  */
 function randColor(): string
 {
-    $red = dechex(mt_rand(0, 255));
-    $green = dechex(mt_rand(0, 255));
-    $blue = dechex(mt_rand(0, 255));
+    $red = dechex(random_int(0, 255));
+    $green = dechex(random_int(0, 255));
+    $blue = dechex(random_int(0, 255));
 
     $rgb = $red.$green.$blue;
 
-    if ($red == $green && $green == $blue) $rgb = substr($rgb, 0, 3);
+    if ($red === $green && $green === $blue) $rgb = substr($rgb, 0, 3);
 
     return '#'.$rgb;
 }
@@ -1436,7 +1426,7 @@ function formatDuration(int $minutes): string
 
 function format24hTime(int $minutes): string
 {
-    $minutes = $minutes % 1440; // 1440 Minuten pro Tag
+    $minutes %= 1440; // 1440 Minuten pro Tag
     if ($minutes < 0) {
         $minutes += 1440;
     }
@@ -1452,6 +1442,7 @@ function format24hTime(int $minutes): string
  *
  * @param int $bytes Anzahl Zeichen
  * @param int $parts Anzahl Blöcke
+ * @throws \Random\RandomException
  */
 function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []): string
 {
@@ -1472,8 +1463,8 @@ function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []
             $code .= $options['delimiter'];
         }
         for ($b = 0; $b < $bytes; $b++) {
-            $key = (mt_rand(1, 100) <= $options['numbers'] ? 0 : 1);
-            $byte = chr(mt_rand($ascii[$key][0], $ascii[$key][1]));
+            $key = (random_int(1, 100) <= $options['numbers'] ? 0 : 1);
+            $byte = chr(random_int($ascii[$key][0], $ascii[$key][1]));
             $code .= $byte;
         }
     }
@@ -1487,8 +1478,8 @@ function pool_generate_code(int $bytes = 10, int $parts = 1, array $options = []
 
 function getFieldData($array, $column): array
 {
-    return array_filter($array, function ($key) use ($column) {
-        return ($key == $column);
+    return array_filter($array, static function ($key) use ($column) {
+        return ($key === $column);
     }, ARRAY_FILTER_USE_KEY);
 }
 
@@ -1515,13 +1506,12 @@ function createPathFromLastChars($chars, int $numberOfDirectories = 4): string
  */
 function nextFreeFilename(string $dir, string $filename, string $delimiter = '-'): string
 {
-    if ($filename == '') {
+    if ($filename === '') {
         return '';
     }
     $filepath = addEndingSlash($dir).$filename;
     if (file_exists($filepath)) {
         $info = pathinfo($filepath);
-        // echo pray($info);
 
         $filenameNoExtension = $info['filename'];
         $extension = $info['extension'];
@@ -1534,7 +1524,7 @@ function nextFreeFilename(string $dir, string $filename, string $delimiter = '-'
             $filenameNoNumber = mb_substr($filenameNoExtension, 0, $pos);
             $nr = mb_substr($filenameNoExtension, $pos + 1);
             if (is_numeric($nr)) {
-                $nr = intval($nr) + 1;
+                $nr = (int)$nr + 1;
                 $newFilename = $filenameNoNumber.$delimiter.sprintf('%02d', $nr).'.'.$extension;
             } else {
                 $nr = 1;
@@ -1542,9 +1532,9 @@ function nextFreeFilename(string $dir, string $filename, string $delimiter = '-'
             }
         }
         return nextFreeFilename($dir, $newFilename, $delimiter);
-    } else {
-        return $filename;
     }
+
+    return $filename;
 }
 
 /**
@@ -1556,16 +1546,16 @@ function base64url_encode(string $data): string
     $data = base64_encode($data);
 
     $length = strlen($data);
-    if ($length == 0) return '';
+    if ($length === 0) return '';
 
     $numPaddingChars = 0;
-    while ($data[$length - 1] == '=') {
+    while ($data[$length - 1] === '=') {
         $numPaddingChars++;
         $data = substr($data, 0, -1);
         $length--;
     }
 
-    $data = $data.$numPaddingChars;
+    $data .= $numPaddingChars;
     return strtr($data, '+/', '-_');
 }
 
@@ -1695,7 +1685,7 @@ function decamelize(string $string, string $separator = '-'): string
  */
 function buildHtmlAttributes(array $attributes): string
 {
-    $attributes = implode(' ', array_map(function ($k, $v) {
+    $attributes = implode(' ', array_map(static function ($k, $v) {
         if (is_array($v)) $v = implode(' ', $v);
         return ((is_int($k)) ? $v : $k.'="'.htmlspecialchars($v).'"');
     }, array_keys($attributes), $attributes));
@@ -1845,12 +1835,12 @@ function str_contains_any(string $haystack, array $needles, bool $case_sensitive
  */
 function curry(Closure $closure, ...$args): Closure
 {
-    return fn(...$more) => $closure(...$args, ...$more);
+    return static fn(...$more) => $closure(...$args, ...$more);
 }
 
 function containThrowable(Closure $closure, ?Closure $fallbackHandler = null): Closure
 {
-    return function (...$args) use ($closure, $fallbackHandler) {
+    return static function (...$args) use ($closure, $fallbackHandler) {
         try {
             return $closure(...$args);
         } catch (Throwable $error) {
@@ -1861,7 +1851,7 @@ function containThrowable(Closure $closure, ?Closure $fallbackHandler = null): C
 
 function containException(Closure $closure, $fallbackHandler = null): Closure
 {
-    return function (...$args) use ($closure, $fallbackHandler) {
+    return static function (...$args) use ($closure, $fallbackHandler) {
         try {
             return $closure(...$args);
         } catch (Exception $error) {
@@ -1912,7 +1902,7 @@ function array_promoteColumnToKey(array $array, string|int $column): array
  */
 function hasTrait(object $object, string $trait, bool $recursive = true): bool
 {
-    return in_array($trait, $recursive ? class_uses_recursive($object) : class_uses($object));
+    return in_array($trait, $recursive ? class_uses_recursive($object) : class_uses($object), true);
 }
 
 /**
