@@ -434,9 +434,9 @@ class GUI_Module extends Module
         // construct namespace according to PSR-4 standards
         $after = get_declared_classes();
         $newClasses = array_values(array_diff($after, $before));
-        if (count($newClasses) === 0 || count($newClasses) > 1) {
+        if (count($newClasses) === 0 || !str_ends_with($newClasses[0], $GUIClassName)) {
             throw new ModulNotFoundException(
-                "Error while creating the class '$GUIClassName'. Autoloading found the file '$fileName' but could not find the class. No new class or more than one new class was declared after including the file.",
+                "Error while creating the class '$GUIClassName'. Autoloading found the file '$fileName' but could not find the class.",
             );
         }
         $nameSpaceClassName = $newClasses[0];
