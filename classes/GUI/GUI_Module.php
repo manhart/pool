@@ -426,15 +426,20 @@ class GUI_Module extends Module
     {
         if (class_exists($GUIClassName, false)) return $GUIClassName;
         // attempt autoload
+        $before = get_declared_classes();
         if (!$fileName = self::autoloadGUIModule($GUIClassName, $ParentGUI))
             throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
 
         if (class_exists($GUIClassName, false)) return $GUIClassName;
         // construct namespace according to PSR-4 standards
-        $docRoot = addEndingSlash(DIR_DOCUMENT_ROOT);
-        /** @noinspection PhpUndefinedConstantInspection */
-        $baseNameSpace = defined('BASE_NAMESPACE_PATH') ? BASE_NAMESPACE_PATH : '';
-        $nameSpaceClassName = str_replace([$docRoot, '/'], [$baseNameSpace, NAMESPACE_SEPARATOR], remove_extension($fileName));
+        $after = get_declared_classes();
+        $newClasses = array_values(array_diff($after, $before));
+        if (count($newClasses) === 0 || !str_ends_with($newClasses[0], $GUIClassName)) {
+            throw new ModulNotFoundException(
+                "Error while creating the class '$GUIClassName'. Autoloading found the file '$fileName' but could not find the class.",
+            );
+        }
+        $nameSpaceClassName = $newClasses[0];
         if (class_exists($nameSpaceClassName, false)) return $nameSpaceClassName;
         throw new ModulNotFoundException("Your namespace for '$GUIClassName' doesn't match PSR-4 standards. Expected '$nameSpaceClassName'");
     }

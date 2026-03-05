@@ -1030,6 +1030,22 @@ class Weblication extends Component
     {
         if ($this->isInitialized) return;
 
+        if (!defined('IS_DEVELOP')) {
+            define('IS_DEVELOP', false);
+        }
+
+        if (!defined('IS_STAGING')) {
+            define('IS_STAGING', false);
+        }
+
+        if (!defined('IS_PRODUCTION')) {
+            define('IS_PRODUCTION', !IS_DEVELOP && !IS_STAGING);
+        }
+
+        if (!defined('IS_TESTSERVER')) {
+            define('IS_TESTSERVER', IS_DEVELOP || IS_STAGING);
+        }
+
         $this->setupMemory($settings['memcached.servers'] ?? '', $settings['memcached.ttl'] ?? self::CACHE_TTL);
         // determine the relative client und server path from the application to the pool
         if (!\pool\IS_CLI) {

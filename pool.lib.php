@@ -33,6 +33,14 @@ namespace pool
         define('DIR_APP_ROOT', dirname($_SERVER['SCRIPT_FILENAME']));//includes a symlinked directory
     }
 
+    if (!defined('DIR_DOCUMENT_ROOT')) {
+        $docRoot = $_SERVER['_BaseNamespacePath']
+            ?? $_SERVER['DOCUMENT_ROOT']
+            ?? (isset($_SERVER['SCRIPT_FILENAME']) ? dirname($_SERVER['SCRIPT_FILENAME']) : null)
+            ?? dirname(DIR_POOL_ROOT);
+        define('DIR_DOCUMENT_ROOT', $docRoot);
+    }
+
     const PWD_TILL_INCLUDES = 'includes'; // todo remove after refactoring to PSR-4
     const PWD_TILL_CLASSES = 'classes'; // todo remove after refactoring to PSR-4
     const PWD_TILL_GUIS = 'guis'; // todo remove after refactoring to PSR-4

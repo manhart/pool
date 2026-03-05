@@ -358,7 +358,7 @@ class TempCoreHandle extends TempHandle
                 TEMP_INCLUDESCRIPT_IDENT => $this->createScript($handle, $this->getDirectory(), $tagContent, $this->charset)->getPlaceholder(),
                 TEMP_SESSION_IDENT => $_SESSION[$tagContent] ?? '',
                 TEMP_TRANSL_IDENT => Template::getTranslator()?->translateTag($handle, $tagContent) ?? $tagContent,
-                default => IS_DEVELOP ? "Unknown block $kind" : '',
+                default => defined('IS_DEVELOP') && IS_DEVELOP ? "Unknown block $kind" : '',
             };
 
             if ($value !== $fullMatchText) {
@@ -1149,7 +1149,7 @@ class Template extends PoolObject
         if (!$this->activeFile)
             return '';
         $parsedContent = $this->activeFile->getParsedContent();
-        if ($this->activeFile instanceof TempFile && constant("IS_DEVELOP")) {
+        if ($this->activeFile instanceof TempFile && (defined('IS_DEVELOP') && IS_DEVELOP)) {
             $name = $this->activeFile->getFilename();
             if (str_ends_with($name, '.html')) {
                 $parsedContent = "<!-- begin $name -->$parsedContent<!-- end $name -->";
