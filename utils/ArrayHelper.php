@@ -22,7 +22,7 @@ final class ArrayHelper
      */
     public static function filterOutNulls(array $array): array
     {
-        return array_filter($array, fn($value) => $value !== null);
+        return array_filter($array, static fn($value) => $value !== null);
     }
 
     /**
