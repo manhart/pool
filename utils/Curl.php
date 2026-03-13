@@ -68,7 +68,7 @@ final class Curl
 
         curl_exec($ch);
         $isValid = curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200;
-        curl_close($ch);
+        self::closeHandle($ch);
 
         return $isValid;
     }
@@ -86,7 +86,7 @@ final class Curl
 
         curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        self::closeHandle($ch);
 
         // 2xx, 3xx and 4xx are considered as alive
         return ($httpCode >= 200 && $httpCode < 300) || ($httpCode >= 400 && $httpCode < 500);
@@ -117,7 +117,7 @@ final class Curl
 
         $result = curl_exec($ch);
         $error_msg = curl_errno($ch) ? curl_error($ch).' (Error code: '.curl_errno($ch).')' : null;
-        curl_close($ch);
+        self::closeHandle($ch);
         fclose($fp);
 
         return !$error_msg ? $result : throw new RuntimeException("Error while downloading file: $error_msg");
@@ -134,6 +134,17 @@ final class Curl
             }
         }
         return $normalized;
+    }
+
+    /**
+     * Avoid calling deprecated curl_close() on PHP 8.5+.
+     */
+    private static function closeHandle(&$handle): void
+    {
+        if (PHP_VERSION_ID < 80500 && $handle !== null) {
+            curl_close($handle);
+        }
+        $handle = null;
     }
 
     /**
@@ -182,7 +193,7 @@ final class Curl
         $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
         $curl_errno = curl_errno($curl);
         $error_msg = $curl_errno ? curl_error($curl).' (Error code: '.$curl_errno.')' : null;
-        curl_close($curl);
+        self::closeHandle($curl);
 
         return ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType, 'error' => $error_msg, 'errno' => $curl_errno];
     }
@@ -230,7 +241,7 @@ final class Curl
         $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
         $curl_errno = curl_errno($curl);
         $error_msg = $curl_errno ? curl_error($curl)." (Error code: $curl_errno)" : null;
-        curl_close($curl);
+        self::closeHandle($curl);
 
         return ['body' => $response, 'statusCode' => $httpStatusCode, 'contentType' => $contentType, 'error' => $error_msg, 'errno' => $curl_errno];
     }
