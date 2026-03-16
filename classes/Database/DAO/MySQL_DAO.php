@@ -236,7 +236,8 @@ class MySQL_DAO extends DAO
             return [];
         }
         $filter = [];
-        $defined_filter = [];
+        $definedFilter = [];
+        $hasSearchFilter = false;
         foreach ($columns as $column) {
             $originalExpr = $column['expr'] ?? $column; // column or expression
             $filterExpr = match ($column['type'] ?? '') {
@@ -247,12 +248,12 @@ class MySQL_DAO extends DAO
             };
             $columnName = $column['alias'] ?? $column;
             if (isset($definedSearchKeywords[$columnName])) {//found additional metadata
-                $operator = 'like';
+                $operator = Operator::like;
                 /** @var string $filterByValue */
                 $filterByValue = $definedSearchKeywords[$columnName];//get keyword for column name?
                 switch (($column['filterControl'] ?? false ?: 'input')) {//type of input?
                     case 'select':
-                        $operator = is_array($filterByValue) ? 'in' : 'equal';
+                        $operator = is_array($filterByValue) ? Operator::in : Operator::equal;
                         break;
                     case 'datepicker':
                         if ($filterByValue) {//non-empty
@@ -266,15 +267,18 @@ class MySQL_DAO extends DAO
                         $filterByValue = "%$filterByValue%";
                 }
                 $filterByColumn = $column['filterByDbColumn'] ?? false ?: $filterExpr;
-                $defined_filter[] = [$filterByColumn, $operator, $filterByValue];
+                $definedFilter[] = [$filterByColumn, $operator, $filterByValue];
             } elseif ($searchString) {//column not filtered -> look for searchString
-                array_push($filter, [$filterExpr, 'like', "%$searchString%"], 'or');
+                if ($hasSearchFilter) {
+                    $filter[] = Operator::or;
+                }
+                $filter[] = [$filterExpr, Operator::equal, "%$searchString%"];
+                $hasSearchFilter = true;
             }//add condition, one column must match the searchString
         }
-        array_pop($filter);//remove trailing or
-        return ($defined_filter && $filter) ?
-            array_merge(['('], $filter, [')'], ['and'], $defined_filter) ://both combined
-            ($defined_filter ?: $filter);//the only filled one
+        return ($definedFilter && $filter) ?
+            array_merge(['('], $filter, [')'], ['and'], $definedFilter) ://both combined
+            ($definedFilter ?: $filter);//the only filled one
     }
 
     /**
