@@ -78,9 +78,7 @@ class MySQL_DAO extends DAO
         }
 
         $this->setColumns(...$this->columns);
-        $escapedColumns = array_map(fn($column) => "$this->quotedTable.$column", $this->escapedColumns);
-        // Concatenate the columns into a single string
-        $this->column_list = implode(', ', $escapedColumns);
+        $this->rebuildSelectColumnList(true);
     }
 
     /**

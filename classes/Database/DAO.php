@@ -836,10 +836,34 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $this->defaultColumns ??= ($this->columns ?: false);
         $this->columns = $columns;
         // Escape each column
-        $this->escapedColumns = array_map([$this, 'encloseColumnName'], $this->columns);
+        $this->escapedColumns = array_map($this->encloseColumnName(...), $this->columns);
         // Concatenate the columns into a single string
         $this->column_list = implode(', ', $this->escapedColumns);
         return $this;
+    }
+
+    /**
+     * Rebuilds the SELECT column list from normalized/escaped column values.
+     */
+    protected function rebuildSelectColumnList(bool $qualifySimpleColumnsWithQuotedTable = false): void
+    {
+        if (!$this->columns) {
+            $this->escapedColumns = [];
+            $this->column_list = '*';
+            return;
+        }
+
+        $compiledColumns = [];
+        foreach ($this->columns as $idx => $column) {
+            $escaped = $this->escapedColumns[$idx] ?? $column;
+            if ($qualifySimpleColumnsWithQuotedTable && $this->shouldPrefixColumn($column) && !str_contains($escaped, '.')) {
+                $escaped = "$this->quotedTable.$escaped";
+            }
+            $compiledColumns[] = $escaped;
+        }
+
+        $this->escapedColumns = $compiledColumns;
+        $this->column_list = implode(', ', $compiledColumns);
     }
 
     /**
@@ -1239,10 +1263,15 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public function encloseColumnName(string $column): string
     {
         // is it necessary to wrap the column?
-        if (strtr($column, $this->preCalculatedNonWrapSymbols) !== $column) {
-            return $column;
+        if ($this->shouldPrefixColumn($column)) {
+            return $this->wrapSymbols($column);
         }
-        return $this->wrapSymbols($column);
+        return $column;
+    }
+
+    protected function shouldPrefixColumn(string $column): bool
+    {
+        return strtr($column, $this->preCalculatedNonWrapSymbols) === $column;
     }
 
     protected function valuesForColumns(array $columns): array
