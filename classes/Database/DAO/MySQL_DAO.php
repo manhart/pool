@@ -12,13 +12,11 @@ namespace pool\classes\Database\DAO;
 
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
+use pool\classes\Database\Operator;
 use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
 
-use function array_map;
 use function array_merge;
-use function array_pop;
-use function array_push;
 use function date_parse;
 use function explode;
 use function implode;
@@ -48,12 +46,23 @@ class MySQL_DAO extends DAO
     ];
 
     /**
+     * @var array<string, array> Cached field metadata by column name.
+     */
+    private array $fieldInfoByColumn = [];
+
+    /**
      * Constructor.
      */
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
         parent::__construct($databaseAlias, $table);
         $this->rebuildColumnList();
+    }
+
+    public function fetchColumns(): static
+    {
+        $this->fieldInfoByColumn = [];
+        return parent::fetchColumns();
     }
 
     /**
@@ -69,9 +78,7 @@ class MySQL_DAO extends DAO
         }
 
         $this->setColumns(...$this->columns);
-        $escapedColumns = array_map(fn($column) => "$this->quotedTable.$column", $this->escapedColumns);
-        // Concatenate the columns into a single string
-        $this->column_list = implode(', ', $escapedColumns);
+        $this->rebuildSelectColumnList(true);
     }
 
     /**
@@ -139,22 +146,16 @@ class MySQL_DAO extends DAO
      */
     public function getColumnDataType(string $column): string
     {
-        if (!$this->field_list) {
-            $this->fetchColumns();
+        $field = $this->getFieldInfo($column);
+        $buf = explode(' ', $field['COLUMN_TYPE'] ?? '');
+        $type = $buf[0] ?? '';
+        if ($type === '') {
+            throw new DAOException("Column $column type not found in table $this->table");
         }
-
-        // Loop through each field to find the matching column
-        foreach ($this->field_list as $field) {
-            if ($field['COLUMN_NAME'] === $column) {
-                $buf = explode(' ', $field['COLUMN_TYPE']);
-                $type = $buf[0];
-                if (($pos = strpos($type, '(')) !== false) {
-                    $type = substr($type, 0, $pos);
-                }
-                return $type;
-            }
+        if (($pos = strpos($type, '(')) !== false) {
+            $type = substr($type, 0, $pos);
         }
-        throw new DAOException("Column $column not found in table $this->table");
+        return $type;
     }
 
     /**
@@ -162,14 +163,29 @@ class MySQL_DAO extends DAO
      */
     public function getColumnInfo(string $column): array
     {
+        return $this->getFieldInfo($column);
+    }
+
+    private function getFieldInfo(string $column): array
+    {
         if (!$this->field_list) {
+            $this->fieldInfoByColumn = [];
             $this->fetchColumns();
         }
-        foreach ($this->field_list as $field) {
-            if ($field['COLUMN_NAME'] === $column) {
-                return $field;
+
+        if (!$this->fieldInfoByColumn) {
+            foreach ($this->field_list as $field) {
+                $columnName = $field['COLUMN_NAME'] ?? null;
+                if (is_string($columnName) && $columnName !== '') {
+                    $this->fieldInfoByColumn[$columnName] = $field;
+                }
             }
         }
+
+        if (isset($this->fieldInfoByColumn[$column])) {
+            return $this->fieldInfoByColumn[$column];
+        }
+
         throw new DAOException("Column $column not found in table $this->table");
     }
 
@@ -197,6 +213,12 @@ class MySQL_DAO extends DAO
         return array_map(function ($val) {
             return "$this->tableAlias.$val";
         }, $this->getColumns());
+        $columnsWithAlias = [];
+        $aliasPrefix = "$this->tableAlias.";
+        foreach ($this->getColumns() as $column) {
+            $columnsWithAlias[] = $aliasPrefix.$column;
+        }
+        return $columnsWithAlias;
     }
 
     /**
@@ -236,7 +258,8 @@ class MySQL_DAO extends DAO
             return [];
         }
         $filter = [];
-        $defined_filter = [];
+        $definedFilter = [];
+        $hasSearchFilter = false;
         foreach ($columns as $column) {
             $originalExpr = $column['expr'] ?? $column; // column or expression
             $filterExpr = match ($column['type'] ?? '') {
@@ -247,12 +270,12 @@ class MySQL_DAO extends DAO
             };
             $columnName = $column['alias'] ?? $column;
             if (isset($definedSearchKeywords[$columnName])) {//found additional metadata
-                $operator = 'like';
+                $operator = Operator::like;
                 /** @var string $filterByValue */
                 $filterByValue = $definedSearchKeywords[$columnName];//get keyword for column name?
                 switch (($column['filterControl'] ?? false ?: 'input')) {//type of input?
                     case 'select':
-                        $operator = is_array($filterByValue) ? 'in' : 'equal';
+                        $operator = is_array($filterByValue) ? Operator::in : Operator::equal;
                         break;
                     case 'datepicker':
                         if ($filterByValue) {//non-empty
@@ -266,15 +289,18 @@ class MySQL_DAO extends DAO
                         $filterByValue = "%$filterByValue%";
                 }
                 $filterByColumn = $column['filterByDbColumn'] ?? false ?: $filterExpr;
-                $defined_filter[] = [$filterByColumn, $operator, $filterByValue];
+                $definedFilter[] = [$filterByColumn, $operator, $filterByValue];
             } elseif ($searchString) {//column not filtered -> look for searchString
-                array_push($filter, [$filterExpr, 'like', "%$searchString%"], 'or');
+                if ($hasSearchFilter) {
+                    $filter[] = Operator::or;
+                }
+                $filter[] = [$filterExpr, Operator::equal, "%$searchString%"];
+                $hasSearchFilter = true;
             }//add condition, one column must match the searchString
         }
-        array_pop($filter);//remove trailing or
-        return ($defined_filter && $filter) ?
-            array_merge(['('], $filter, [')'], ['and'], $defined_filter) ://both combined
-            ($defined_filter ?: $filter);//the only filled one
+        return ($definedFilter && $filter) ?
+            array_merge(['('], $filter, [')'], ['and'], $definedFilter) ://both combined
+            ($definedFilter ?: $filter);//the only filled one
     }
 
     /**
