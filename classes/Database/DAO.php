@@ -835,10 +835,19 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $this->defaultColumns ??= ($this->columns ?: false);
         $this->columns = $columns;
+        if (!$this->columns) {
+            $this->escapedColumns = [];
+            $this->column_list = '*';
+            return $this;
+        }
+
         // Escape each column
-        $this->escapedColumns = array_map([$this, 'encloseColumnName'], $this->columns);
-        // Concatenate the columns into a single string
-        $this->column_list = implode(', ', $this->escapedColumns);
+        $escapedColumns = [];
+        foreach ($columns as $column) {
+            $escapedColumns[] = $this->encloseColumnName($column);
+        }
+        $this->escapedColumns = $escapedColumns;
+        $this->column_list = implode(', ', $escapedColumns);
         return $this;
     }
 
@@ -1239,10 +1248,15 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public function encloseColumnName(string $column): string
     {
         // is it necessary to wrap the column?
-        if (strtr($column, $this->preCalculatedNonWrapSymbols) !== $column) {
-            return $column;
+        if ($this->shouldPrefixColumn($column)) {
+            return $this->wrapSymbols($column);
         }
-        return $this->wrapSymbols($column);
+        return $column;
+    }
+
+    protected function shouldPrefixColumn(string $column): bool
+    {
+        return strtr($column, $this->preCalculatedNonWrapSymbols) === $column;
     }
 
     protected function valuesForColumns(array $columns): array
