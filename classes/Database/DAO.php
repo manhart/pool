@@ -848,10 +848,19 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $this->defaultColumns ??= ($this->columns ?: false);
         $this->columns = $columns;
+        if (!$this->columns) {
+            $this->escapedColumns = [];
+            $this->column_list = '*';
+            return $this;
+        }
+
         // Escape each column
-        $this->escapedColumns = array_map($this->encloseColumnName(...), $this->columns);
-        // Concatenate the columns into a single string
-        $this->column_list = implode(', ', $this->escapedColumns);
+        $escapedColumns = [];
+        foreach ($columns as $column) {
+            $escapedColumns[] = $this->encloseColumnName($column);
+        }
+        $this->escapedColumns = $escapedColumns;
+        $this->column_list = implode(', ', $escapedColumns);
         return $this;
     }
 

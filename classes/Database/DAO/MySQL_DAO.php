@@ -78,7 +78,6 @@ class MySQL_DAO extends DAO
         }
 
         $this->setColumns(...$this->columns);
-        $this->rebuildSelectColumnList(true);
     }
 
     /**
