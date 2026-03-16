@@ -46,12 +46,23 @@ class MySQL_DAO extends DAO
     ];
 
     /**
+     * @var array<string, array> Cached field metadata by column name.
+     */
+    private array $fieldInfoByColumn = [];
+
+    /**
      * Constructor.
      */
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
         parent::__construct($databaseAlias, $table);
         $this->rebuildColumnList();
+    }
+
+    public function fetchColumns(): static
+    {
+        $this->fieldInfoByColumn = [];
+        return parent::fetchColumns();
     }
 
     /**
@@ -137,22 +148,16 @@ class MySQL_DAO extends DAO
      */
     public function getColumnDataType(string $column): string
     {
-        if (!$this->field_list) {
-            $this->fetchColumns();
+        $field = $this->getFieldInfo($column);
+        $buf = explode(' ', $field['COLUMN_TYPE'] ?? '');
+        $type = $buf[0] ?? '';
+        if ($type === '') {
+            throw new DAOException("Column $column type not found in table $this->table");
         }
-
-        // Loop through each field to find the matching column
-        foreach ($this->field_list as $field) {
-            if ($field['COLUMN_NAME'] === $column) {
-                $buf = explode(' ', $field['COLUMN_TYPE']);
-                $type = $buf[0];
-                if (($pos = strpos($type, '(')) !== false) {
-                    $type = substr($type, 0, $pos);
-                }
-                return $type;
-            }
+        if (($pos = strpos($type, '(')) !== false) {
+            $type = substr($type, 0, $pos);
         }
-        throw new DAOException("Column $column not found in table $this->table");
+        return $type;
     }
 
     /**
@@ -160,14 +165,29 @@ class MySQL_DAO extends DAO
      */
     public function getColumnInfo(string $column): array
     {
+        return $this->getFieldInfo($column);
+    }
+
+    private function getFieldInfo(string $column): array
+    {
         if (!$this->field_list) {
+            $this->fieldInfoByColumn = [];
             $this->fetchColumns();
         }
-        foreach ($this->field_list as $field) {
-            if ($field['COLUMN_NAME'] === $column) {
-                return $field;
+
+        if (!$this->fieldInfoByColumn) {
+            foreach ($this->field_list as $field) {
+                $columnName = $field['COLUMN_NAME'] ?? null;
+                if (is_string($columnName) && $columnName !== '') {
+                    $this->fieldInfoByColumn[$columnName] = $field;
+                }
             }
         }
+
+        if (isset($this->fieldInfoByColumn[$column])) {
+            return $this->fieldInfoByColumn[$column];
+        }
+
         throw new DAOException("Column $column not found in table $this->table");
     }
 
