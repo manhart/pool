@@ -12,13 +12,11 @@ namespace pool\classes\Database\DAO;
 
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
+use pool\classes\Database\Operator;
 use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
 
-use function array_map;
 use function array_merge;
-use function array_pop;
-use function array_push;
 use function date_parse;
 use function explode;
 use function implode;
@@ -197,6 +195,12 @@ class MySQL_DAO extends DAO
         return array_map(function ($val) {
             return "$this->tableAlias.$val";
         }, $this->getColumns());
+        $columnsWithAlias = [];
+        $aliasPrefix = "$this->tableAlias.";
+        foreach ($this->getColumns() as $column) {
+            $columnsWithAlias[] = $aliasPrefix.$column;
+        }
+        return $columnsWithAlias;
     }
 
     /**
