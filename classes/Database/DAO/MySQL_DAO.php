@@ -209,9 +209,6 @@ class MySQL_DAO extends DAO
      */
     public function getColumnsWithTableAlias(): array
     {
-        return array_map(function ($val) {
-            return "$this->tableAlias.$val";
-        }, $this->getColumns());
         $columnsWithAlias = [];
         $aliasPrefix = "$this->tableAlias.";
         foreach ($this->getColumns() as $column) {
