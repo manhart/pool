@@ -19,7 +19,6 @@ use pool\classes\translator\Translator;
 use function array_merge;
 use function date_parse;
 use function explode;
-use function implode;
 use function is_string;
 use function sprintf;
 use function strpos;
