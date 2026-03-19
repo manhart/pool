@@ -424,24 +424,48 @@ class GUI_Module extends Module
      */
     private static function findGUIModule(string $GUIClassName, ?Module $ParentGUI): string
     {
+        // Fast path: class is already declared (no autoload needed).
         if (class_exists($GUIClassName, false)) return $GUIClassName;
-        // attempt autoload
+        // Snapshot declared classes to detect what this autoload call added.
         $before = get_declared_classes();
         if (!$fileName = self::autoloadGUIModule($GUIClassName, $ParentGUI))
             throw new ModulNotFoundException("Error while creating the class '$GUIClassName'");
 
         if (class_exists($GUIClassName, false)) return $GUIClassName;
-        // construct namespace according to PSR-4 standards
+        // Try the freshly declared classes first.
         $after = get_declared_classes();
         $newClasses = array_values(array_diff($after, $before));
-        if (count($newClasses) === 0 || !str_ends_with($newClasses[0], $GUIClassName)) {
-            throw new ModulNotFoundException(
-                "Error while creating the class '$GUIClassName'. Autoloading found the file '$fileName' but could not find the class.",
-            );
+        $classNameSuffix = NAMESPACE_SEPARATOR.$GUIClassName;
+
+        foreach ($newClasses as $newClass) {
+            if ($newClass === $GUIClassName || str_ends_with($newClass, $classNameSuffix)) {
+                return $newClass;
+            }
         }
-        $nameSpaceClassName = $newClasses[0];
-        if (class_exists($nameSpaceClassName, false)) return $nameSpaceClassName;
-        throw new ModulNotFoundException("Your namespace for '$GUIClassName' doesn't match PSR-4 standards. Expected '$nameSpaceClassName'");
+
+        // require_once may return true even when the file was loaded before.
+        // In that case no "new class" exists anymore, so we match declared classes by suffix.
+        $matchingClasses = array_values(
+            array_filter(
+                $after,
+                static fn(string $declaredClass): bool => $declaredClass === $GUIClassName || str_ends_with($declaredClass, $classNameSuffix),
+            ),
+        );
+
+        if (count($matchingClasses) > 0) {
+            // Prefer a namespaced class over a global fallback.
+            foreach ($matchingClasses as $matchingClass) {
+                if (str_contains($matchingClass, NAMESPACE_SEPARATOR)) {
+                    return $matchingClass;
+                }
+            }
+
+            return $matchingClasses[0];
+        }
+
+        throw new ModulNotFoundException(
+            "Error while creating the class '$GUIClassName'. Autoloading found the file '$fileName' but could not find the class.",
+        );
     }
 
     /**
