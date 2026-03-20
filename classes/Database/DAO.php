@@ -843,7 +843,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         // Escape each column
         $escapedColumns = [];
-        $defaultColumnsLookup = array_flip($this->defaultColumns);
+        $defaultColumnsLookup = array_flip($this->defaultColumns ?: []);
         foreach ($columns as $column) {
             $isDefaultColumn = isset($defaultColumnsLookup[$column]);
             $escapedColumns[] = $this->encloseColumnName($column, $isDefaultColumn);
