@@ -289,7 +289,7 @@ class MySQL_DAO extends DAO
                 if ($hasSearchFilter) {
                     $filter[] = Operator::or;
                 }
-                $filter[] = [$filterExpr, Operator::equal, "%$searchString%"];
+                $filter[] = [$filterExpr, Operator::like, "%$searchString%"];
                 $hasSearchFilter = true;
             }//add condition, one column must match the searchString
         }
