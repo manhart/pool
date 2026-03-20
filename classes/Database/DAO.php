@@ -843,8 +843,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         // Escape each column
         $escapedColumns = [];
+        $defaultColumnsLookup = array_flip($this->defaultColumns);
         foreach ($columns as $column) {
-            $escapedColumns[] = $this->encloseColumnName($column);
+            $isDefaultColumn = isset($defaultColumnsLookup[$column]);
+            $escapedColumns[] = $this->encloseColumnName($column, $isDefaultColumn);
         }
         $this->escapedColumns = $escapedColumns;
         $this->column_list = implode(', ', $escapedColumns);
@@ -1245,11 +1247,17 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Quote column name
      */
-    public function encloseColumnName(string $column): string
+    public function encloseColumnName(string $column, bool $addTableIdentifier = false): string
     {
         // is it necessary to wrap the column?
         if ($this->shouldPrefixColumn($column)) {
-            return $this->wrapSymbols($column);
+            $wrappedColumn = $this->wrapSymbols($column);
+
+            if ($addTableIdentifier) {
+                $wrappedTable = $this->quotedTableAlias ?: $this->quotedTable;
+                return "$wrappedTable.$wrappedColumn";
+            }
+            return $wrappedColumn;
         }
         return $column;
     }
