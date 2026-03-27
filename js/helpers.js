@@ -46,6 +46,7 @@ function cancelEvent(evt) {
     }
     evt.preventDefault();
     evt.stopPropagation();
+    return true;
 }
 
 /**
