@@ -857,11 +857,11 @@ class RecordSet extends PoolObject implements \Iterator, \Countable
      * Searches column and value within the result set and returns index on success. Otherwise, false.
      *
      * @param string|array $fieldName field name
-     * @param string|array $value value to search for
+     * @param mixed $value value to search for
      * @param bool $begin start from the beginning
      * @return int|false index or false
      */
-    public function find(string|array $fieldName, string|array $value, bool $begin = true): false|int
+    public function find(string|array $fieldName, mixed $value, bool $begin = true): false|int
     {
         if ($fieldName === '') {
             return false;
