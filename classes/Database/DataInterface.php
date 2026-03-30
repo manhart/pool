@@ -33,6 +33,8 @@ use function defined;
 use function file_exists;
 use function in_array;
 use function is_array;
+use function is_bool;
+use function is_float;
 use function is_int;
 use function is_string;
 use function ltrim;
@@ -210,6 +212,7 @@ class DataInterface extends PoolObject
      * database = (array)|(string) Databases to connect to
      * port = (int) Port to connect to
      * charset = (string) Character set for the connection
+     * mysqliNativeIntFloat = (bool) Enable MYSQLI_OPT_INT_AND_FLOAT_NATIVE for MySQLi/mysqlnd connections
      * auth = (array) Authentication Array, Default 'mysql_auth'
      * force_backend_read = (bool) Enforce read operations over the master host for write operations
      *
@@ -624,17 +627,47 @@ class DataInterface extends PoolObject
         $query_resource ??= $this->query_resource;
 
         $rowSet = [];
+        $castColumns = self::getPhpTypeCastColumns($metaData);
         while (($row = $this->driver->fetch($query_resource))) {
-            if ($metaData)// convert to php types
-                foreach ($row as $col => $val) {
-                    if (isset($metaData['columns'][$col]) && $val !== null)
-                        settype($row[$col], $metaData['columns'][$col]['phpType']);
+            if ($castColumns) {
+                foreach ($castColumns as $col => $phpType) {
+                    if (!array_key_exists($col, $row) || $row[$col] === null || !self::requiresPhpTypeCast($row[$col], $phpType)) {
+                        continue;
+                    }
+                    settype($row[$col], $phpType);
                 }
+            }
             if ($callbackOnFetchRow)
                 $row = $callbackOnFetchRow($row);
             $rowSet[] = $row;
         }
         return $rowSet;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function getPhpTypeCastColumns(array $metaData): array
+    {
+        $castColumns = [];
+        foreach ($metaData['columns'] ?? [] as $column => $columnMetaData) {
+            $phpType = $columnMetaData['phpType'] ?? null;
+            if (!$phpType || $phpType === 'string') {
+                continue;
+            }
+            $castColumns[$column] = $phpType === 'boolean' ? 'bool' : $phpType;
+        }
+        return $castColumns;
+    }
+
+    private static function requiresPhpTypeCast(mixed $value, string $phpType): bool
+    {
+        return match ($phpType) {
+            'int' => !is_int($value),
+            'float' => !is_float($value),
+            'bool' => !is_bool($value),
+            default => true,
+        };
     }
 
     /**

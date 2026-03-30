@@ -22,6 +22,7 @@ use function mysqli_connect_error;
 use function mysqli_init;
 use function parse_url;
 
+use const MYSQLI_OPT_INT_AND_FLOAT_NATIVE;
 use const MYSQLI_STORE_RESULT;
 use const MYSQLI_USE_RESULT;
 use const PHP_URL_SCHEME;
@@ -63,6 +64,9 @@ class MySQLi extends Driver
         ...$options
     ): Connection {
         $this->mysqli = mysqli_init();
+        if (($options['mysqliNativeIntFloat'] ?? true) && defined('MYSQLI_OPT_INT_AND_FLOAT_NATIVE')) {
+            $this->mysqli->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+        }
         $scheme = parse_url($hostname, PHP_URL_SCHEME);
         $connectionParameters = parse_url(($scheme ? '' : '//').$hostname);
         try {
