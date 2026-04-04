@@ -1,54 +1,241 @@
 <?php
-/** @noinspection PhpMultipleClassesDeclarationsInOneFile */
+/*
+ * This file is part of POOL (PHP Object-Oriented Library)
+ *
+ * (c) Alexander Manhart <alexander@manhart-it.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-// TODO: this should be in ./src/pool/tests - but tests are not working there!?!
 declare(strict_types = 1);
 
-namespace g7portal\tests;
+namespace pool\tests;
 
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\DAO\MySQL_DAO;
-use pool\classes\Database\Join;
 use pool\classes\Database\Operator;
+use pool\classes\Exception\SecurityException;
 
-final class DAOTest extends TestCase
+class DAOTest extends TestCase
 {
-    #[Test]
-    public function testNewSetJoinMethod(): void
+    public function testGetMultipleWithoutConditionsOmitsWhereClause(): void
     {
-        $sqlStatement =
-            "SELECT User.emailAddress, UserDescription.firstname, UserDescription.lastname FROM `testDB`.`User` LEFT JOIN testDB.UserDescription AS `UserDescription` ON (testDB.User.idUser = `UserDescription`.idUser) WHERE 1=1 and User.emailAddress like '%@group-7.de' and User.deleted = false ORDER BY UserDescription.lastname ASC LIMIT 0, 10";
+        $sql = $this->sqlFrom(
+            TestUserDao::create()
+                ->setColumns('emailAddress')
+                ->getMultiple(),
+        );
 
-        $dao = MOCK_DAO_A::create()
-            ->setColumns(
-                'User.emailAddress',
-                'UserDescription.firstname',
-                'UserDescription.lastname',
-            )
-            ->setJoins([
-                new Join(MOCK_DAO_B::class),
-            ])
-            ->getMultiple(
-                filter: [
-                    ['User.emailAddress', Operator::like, '%@group-7.de'],
-                    ['User.deleted', Operator::equal, false],
+        $this->assertSame(
+            'SELECT `User`.`emailAddress` FROM `testDB`.`User`',
+            $sql,
+        );
+    }
+
+    public function testGetMultipleWithFilterBuildsWhereClause(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()
+                ->setColumns('emailAddress', 'deleted')
+                ->getMultiple(
+                    filter: [
+                        ['emailAddress', Operator::like, '%@mail.local'],
+                        ['deleted', Operator::equal, false],
+                    ],
+                    sorting: ['emailAddress' => 'ASC'],
+                    limit: [0, 10],
+                ),
+        );
+
+        $this->assertSame(
+            "SELECT `User`.`emailAddress`, `User`.`deleted` FROM `testDB`.`User` WHERE emailAddress like '%@mail.local' and deleted = false ORDER BY emailAddress ASC LIMIT 0, 10",
+            $sql,
+        );
+    }
+
+    public function testGetMultipleCombinesIdAndFilterWithAnd(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()
+                ->setColumns('emailAddress')
+                ->getMultiple(
+                    id: 5,
+                    filter: [['deleted', Operator::equal, false]],
+                ),
+        );
+
+        $this->assertSame(
+            'SELECT `User`.`emailAddress` FROM `testDB`.`User` WHERE idUser=5 AND deleted = false',
+            $sql,
+        );
+    }
+
+    public function testGetMultipleWithParenthesizedFilterDoesNotInjectLeadingAnd(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()
+                ->setColumns('deleted')
+                ->getMultiple(filter: [
+                    '(',
+                    ['deleted', Operator::equal, false],
+                    ')',
+                ]),
+        );
+
+        $this->assertSame(
+            'SELECT `User`.`deleted` FROM `testDB`.`User` WHERE ( deleted = false )',
+            $sql,
+        );
+    }
+
+    public function testGetCountWithoutConditionsOmitsWhereClause(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()->getCount(),
+        );
+
+        $this->assertSame(
+            'SELECT COUNT(*) AS `count` FROM `User`',
+            $sql,
+        );
+    }
+
+    public function testGetCountWithGroupedCollisionFilterBuildsWhereClause(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()->getCount(filter: [
+                '(',
+                ['emailAddress', Operator::like, '%@mail.local'],
+                Operator::or,
+                ['deleted', Operator::equal, false],
+                ') and',
+                ['idUser', Operator::notEqual, 5],
+            ]),
+        );
+
+        $this->assertSame(
+            "SELECT COUNT(*) AS `count` FROM `User` WHERE ( emailAddress like '%@mail.local' or deleted = false ) and idUser != 5",
+            $sql,
+        );
+    }
+
+    public function testGetCountWithNestedGroupFilterBuildsWhereClause(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()->getCount(filter: [
+                [
+                    [
+                        ['emailAddress', Operator::equal, 'user@mail.local'],
+                        ['deleted', Operator::equal, false],
+                    ],
+                    Operator::or,
                 ],
-                sorting: ['UserDescription.lastname' => 'ASC'],
-                limit: [0, 10],
-            )
-            ->getRaw();
+                ['idUser', Operator::notEqual, 5],
+            ]),
+        );
 
-        $cleanedSQL = preg_replace('/\s+/', ' ', trim($dao[0]));
+        $this->assertSame(
+            "SELECT COUNT(*) AS `count` FROM `User` WHERE (emailAddress = 'user@mail.local' or deleted = false) and idUser != 5",
+            $sql,
+        );
+    }
 
-        $this->assertSame($sqlStatement, $cleanedSQL);
+    public function testGetMultipleWithHavingBuildsHavingClause(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()
+                ->setColumns('deleted')
+                ->getMultiple(
+                    groupBy: ['deleted' => 'ASC'],
+                    having: [
+                        '(',
+                        ['deleted', Operator::equal, false],
+                        ')',
+                    ],
+                ),
+        );
+
+        $this->assertSame(
+            'SELECT `User`.`deleted` FROM `testDB`.`User` GROUP BY deleted ASC HAVING ( deleted = false )',
+            $sql,
+        );
+    }
+
+    public function testDeleteMultipleWithoutFilterOmitsWhereClause(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()->deleteMultiple(),
+        );
+
+        $this->assertSame(
+            'DELETE FROM `User`',
+            $sql,
+        );
+    }
+
+    public function testDeleteBuildsWhereClauseFromPrimaryKey(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()->delete(5),
+        );
+
+        $this->assertSame(
+            'DELETE FROM `User` WHERE idUser=5',
+            $sql,
+        );
+    }
+
+    public function testUpdateBuildsWhereClauseFromPrimaryKey(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()->update([
+                'idUser' => 5,
+                'deleted' => true,
+            ]),
+        );
+
+        $this->assertSame(
+            'UPDATE `User` SET `deleted`=true WHERE idUser=5',
+            $sql,
+        );
+    }
+
+    public function testUpdateMultipleWithoutFilterThrowsSecurityException(): void
+    {
+        $this->expectException(SecurityException::class);
+
+        TestUserDao::create()->updateMultiple(
+            data: ['deleted' => true],
+            filter_rules: [],
+        );
+    }
+
+    public function testUpdateMultipleWithFilterBuildsWhereClause(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create()->updateMultiple(
+                data: ['deleted' => true],
+                filter_rules: [['idUser', Operator::notEqual, 5]],
+            ),
+        );
+
+        $this->assertSame(
+            'UPDATE `User` SET `deleted`=true WHERE idUser != 5',
+            $sql,
+        );
+    }
+
+    private function sqlFrom(RecordSet $recordSet): string
+    {
+        $sql = $recordSet->getRaw()[0] ?? '';
+        return preg_replace('/\s+/', ' ', trim((string)$sql)) ?? '';
     }
 }
 
-class TestDAO extends MySQL_DAO
+class SqlCapturingMySqlDao extends MySQL_DAO
 {
-    // has to be overwritten! dependency of 'real_escape_string' to a real mysqli connection!
     public function escapeSQL(mixed $value): string
     {
         return (string)$value;
@@ -60,7 +247,7 @@ class TestDAO extends MySQL_DAO
     }
 }
 
-class MOCK_DAO_A extends TestDAO
+class TestUserDao extends SqlCapturingMySqlDao
 {
     protected static ?string $databaseName = 'testDB';
 
@@ -79,34 +266,5 @@ class MOCK_DAO_A extends TestDAO
         'deactivated',
         'creator',
         'created',
-    ];
-}
-
-class MOCK_DAO_B extends TestDAO
-{
-    protected static ?string $databaseName = 'testDB';
-
-    protected static ?string $tableName = 'UserDescription';
-
-    protected array $pk = [
-        'idUserDescription',
-    ];
-
-    protected array $fk = [
-        [
-            'columnName' => 'idUser',
-            'constraintName' => 'fk_User',
-            'referencedTableName' => 'User',
-            'referencedColumnName' => 'idUser',
-            'fullTableName' => 'testDB.User',
-        ],
-    ];
-
-    protected array $columns = [
-        'idUserDescription',
-        'idUser',
-        'salutation',
-        'lastname',
-        'firstname',
     ];
 }

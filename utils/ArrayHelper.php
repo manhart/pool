@@ -26,6 +26,14 @@ final class ArrayHelper
     }
 
     /**
+     * Removes empty string values from the array while preserving all other values.
+     */
+    public static function filterEmptyStrings(array $array): array
+    {
+        return array_filter($array, static fn($value) => $value !== '');
+    }
+
+    /**
      * Recursively compares two arrays for content equality.
      * - For associative arrays, the order of keys does not matter.
      * - For indexed (numerical) arrays, order and value equality is required.

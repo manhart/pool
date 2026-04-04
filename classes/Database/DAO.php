@@ -187,11 +187,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected string $column_list = '*';
 
-    /**
-     * @var string Dummy always true where clause
-     */
-    protected string $dummyWhere = '1=1';
-
     protected string $quotedTableAlias = '';
 
     protected bool $throwsOnError = false;
@@ -495,7 +490,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     ): RecordSet {
         $optionsStr = implode(' ', $options);
         $joins = $this->buildJoins();
-        $whereClause = $this->buildWhere($id, $key).$this->buildFilter($filter);
+        $whereClause = $this->buildWhereClause($id, $key, $filter);
         $groupByClause = $this->buildGroupBy($groupBy);
         $havingClause = $this->buildHaving($having);
         $sortingClause = $this->buildSorting($sorting);
@@ -505,8 +500,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $sql = <<<SQL
             SELECT $optionsStr $this->column_list
             FROM $this $joins
-            WHERE
-                $whereClause
+            $whereClause
             $groupByClause
             $havingClause
             $sortingClause
@@ -518,11 +512,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Build where condition
      */
-    protected function buildWhere(null|int|string|array $id, null|string|array $key): string
+    protected function buildWhere(null|int|string|array $id, null|string|array $key, bool $legacy = true): string
     {
         $conditions = [];
         if (is_null($id)) {
-            return $this->dummyWhere;
+            return $legacy ? '1=1' : '';
         }
         $alias = $this->tableAlias ? "$this->tableAlias." : '';
         if (is_null($key)) {
@@ -544,6 +538,36 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             $conditions[] = "$alias$key={$this->escapeValue($id)}";
         }
         return implode(' AND ', $conditions);
+    }
+
+    /**
+     * Builds a WHERE clause from prebuilt conditions.
+     */
+    protected function buildWhereClause(
+        null|int|string|array $id = null,
+        null|string|array $key = null,
+        array $filter = [],
+        ?Operator $operator = Operator::and,
+    ): string {
+        $conditions = [];
+
+        $idCondition = $id !== null ? $this->buildWhere($id, $key, false) : '';
+        if ($idCondition !== '')
+            $conditions[] = $idCondition;
+
+        $filterCondition = $filter ? $this->buildFilter($filter, $operator, true, '') : '';
+        if ($filterCondition !== '')
+            $conditions[] = $filterCondition;
+
+        $where = implode(' AND ', $conditions);
+        if ($where === '') {
+            return '';
+        }
+
+        return <<<SQL
+            WHERE
+                $where
+            SQL;
     }
 
     /**
@@ -571,7 +595,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      *
      * @param array $filter_rules Filter rules in the following format [[columnName, operator, value], ...]
      * @param Operator|null $operator Logical operator for combining all conditions
-     * @param boolean $skip_next_operator false skips first logical operator
+     * @param boolean $skip_next_operator true skips the first logical operator
      * @param string $initialOperator Initial logical operator, if the first rule is not an array and not a logical operator
      * @return string conditions for where clause
      * @see MySQL_DAO::$operatorMap
@@ -584,7 +608,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     ): string {
         $operator ??= Operator::and;
         if (!$filter_rules) {//not filter anything (terminate floating operators)
-            return $skip_next_operator ? $this->dummyWhere : '';
+            return '';
         }
 
         $queryParts = [];
@@ -603,7 +627,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 continue;
             }
             if (is_array($record[0])) {// nesting detected
-                $record = "({$this->buildFilter($record[0], $record[1] ?? null, true)})";
+                $nestedFilter = $this->buildFilter($record[0], $record[1] ?? null, true);
+                if ($nestedFilter === '') {
+                    continue;
+                }
+                $record = "($nestedFilter)";
             } else {//normal record
                 $record = $this->assembleFilterRecord($record);
             }
@@ -732,7 +760,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     protected function buildHaving(array $filter_rules): string
     {
-        $query = $this->buildFilter($filter_rules, Operator::and, false, '');
+        $query = $this->buildFilter($filter_rules, Operator::and, true, '');
         if ($query) {
             $query = " HAVING $query";
         }
@@ -957,14 +985,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function deleteMultiple(array $filter = []): RecordSet
     {
-        $where = $this->buildFilter($filter, Operator::and, true);
+        $where = $this->buildWhereClause(filter: $filter);
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
             DELETE
             FROM $this->quotedTable
-            WHERE
-                $where
+            $where
             SQL;
         return $this->execute($sql);
     }
@@ -974,16 +1001,15 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function delete(int|string|array $id): RecordSet
     {
-        $where = $this->buildWhere($id, $this->pk);
-        if ($where === $this->dummyWhere) {
-            throw new DAOException("Delete maybe wrong! Do you really want to delete all records in the table: $this->table");
+        $where = $this->buildWhereClause($id, $this->pk);
+        if ($where === '') {
+            throw new SecurityException("Delete maybe wrong! Do you really want to delete all records in the table: $this->table");
         }
         /** @noinspection SqlResolve */
         $sql = <<<SQL
             DELETE
             FROM $this->quotedTable
-            WHERE
-                $where
+            $where
             SQL;
         return $this->execute($sql);
     }
@@ -1070,8 +1096,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             return new RecordSet();
         }
 
-        $where = $this->buildWhere($pk, $this->pk);
-        if ($where === $this->dummyWhere) {
+        $where = $this->buildWhereClause($pk, $this->pk);
+        if ($where === '') {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             throw new SecurityException($error_msg);
         }
@@ -1081,8 +1107,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             UPDATE $this->quotedTable
             SET
                 $assignmentList
-            WHERE
-                $where
+            $where
             SQL;
         return $this->execute($sql);
     }
@@ -1163,8 +1188,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             return new RecordSet();
         }
 
-        $where = $this->buildFilter($filter_rules, Operator::and, true);
-        if ($where === $this->dummyWhere) {
+        $where = $this->buildWhereClause(filter: $filter_rules);
+        if ($where === '') {
             $error_msg = "Update maybe wrong! Do you really want to update all records in the table: $this->table?";
             throw new SecurityException($error_msg);
         }
@@ -1174,8 +1199,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             UPDATE $this->quotedTable
             SET
                 $set
-            WHERE
-                $where
+            $where
             SQL;
         return $this->execute($sql);
     }
@@ -1211,13 +1235,12 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter = []): RecordSet
     {
-        $whereClause = $this->buildWhere($id, $key).' '.$this->buildFilter($filter);
+        $whereClause = $this->buildWhereClause($id, $key, $filter);
         $count = $this->wrapSymbols('count');
         $sql = <<<SQL
             SELECT COUNT(*) AS $count
             FROM $this->quotedTable $this->quotedTableAlias
-            WHERE
-                $whereClause
+            $whereClause
             SQL;
         return $this->execute($sql);
     }
