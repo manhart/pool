@@ -19,7 +19,6 @@ use pool\classes\translator\Translator;
 use function array_merge;
 use function date_parse;
 use function explode;
-use function implode;
 use function is_string;
 use function sprintf;
 use function strpos;
@@ -56,28 +55,13 @@ class MySQL_DAO extends DAO
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
         parent::__construct($databaseAlias, $table);
-        $this->rebuildColumnList();
+        $this->setColumns(...$this->columns);
     }
 
     public function fetchColumns(): static
     {
         $this->fieldInfoByColumn = [];
         return parent::fetchColumns();
-    }
-
-    /**
-     * Rebuild column list
-     *
-     * @todo rethink / rework rebuildColumnList
-     */
-    private function rebuildColumnList(): void
-    {
-        // Columns are predefined as property "columns".
-        if (!$this->columns) {
-            return;
-        }
-
-        $this->setColumns(...$this->columns);
     }
 
     /**
@@ -209,9 +193,6 @@ class MySQL_DAO extends DAO
      */
     public function getColumnsWithTableAlias(): array
     {
-        return array_map(function ($val) {
-            return "$this->tableAlias.$val";
-        }, $this->getColumns());
         $columnsWithAlias = [];
         $aliasPrefix = "$this->tableAlias.";
         foreach ($this->getColumns() as $column) {
@@ -293,7 +274,7 @@ class MySQL_DAO extends DAO
                 if ($hasSearchFilter) {
                     $filter[] = Operator::or;
                 }
-                $filter[] = [$filterExpr, Operator::equal, "%$searchString%"];
+                $filter[] = [$filterExpr, Operator::like, "%$searchString%"];
                 $hasSearchFilter = true;
             }//add condition, one column must match the searchString
         }

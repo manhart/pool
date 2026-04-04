@@ -1,7 +1,7 @@
 <?php
 /**
- * POOL (PHP Log Oriented Library): die Datei Log.class.php enthält die Klasse Log zum Loggen von Ablaeufen in Dateien.
- * Letzte aenderung am: $Date: 2006/02/21 10:47:29 $
+ * POOL (PHP Log Oriented Library): die Datei Log.class.php enthält die Klasse Log zum Loggen von Abläufen in Dateien.
+ * Letzte Änderung am: $Date: 2006/02/21 10:47:29 $
  *
  * @version $Id: Log.class.php,v 1.6 2006/02/21 10:47:29 manhart Exp $
  * @version $Revision 1.0$
@@ -13,21 +13,27 @@
  */
 
 use pool\classes\Core\PoolObject;
+use pool\classes\Exception\FileOperationException;
 
 /**
- * Die Grundklasse, der Uhrahn aller Objekte.
- * Die Klasse Log verf�gt �ber folgende Verhalten:
+ * Die Klasse Log verfügt über folgende Verhalten:
  * - stellt eine Art Debug-Modus bereit.
- * - Objektinstanzen erzeugen, verwalten und aufl�sen.
- * - auf objektspezifische Informationen �ber den Klassentyp und die Instanz zugreifen.
- * - enth�lt Fehler�berpr�fung und kann Fehler ausl�sen.
- * - stellt ein Verfahren bereit mit dem ein Inhalt eines Objekts einem anderen zugewiesen werden kann.
+ * - Objektinstanzen erzeugen, verwalten und auflösen.
+ * - auf objektspezifische Informationen über den Klassentyp und die Instanz zugreifen.
+ * - enthält Fehlerüberprüfung und kann Fehler auslösen.
+ * - stellt ein Verfahren bereit, mit dem ein Inhalt eines Objekts einem anderen zugewiesen werden kann.
  * Log wird nie direkt instantiiert. Obwohl keine Programmiersprachenelemente zum Verhindern der Instantiierung verwendet werden, ist Log eine abstrakte Klasse.
  *
  * @author Alexander Manhart <alexander@manhart-it.de>
  */
 class LogFile extends PoolObject
 {
+    private const string DEFAULT_MODE = 'ab';
+    private const int DEFAULT_MAX_FILE_SIZE = 2097152;
+    private const string DEFAULT_DATE_TIME_FORMAT = '[d.m.Y H:i:s]';
+    private const string ROTATED_FILE_SUFFIX = '.gz.tar';
+    private const string SID_FORMAT = '%04d';
+
     /**
      * Datei
      *
@@ -35,67 +41,55 @@ class LogFile extends PoolObject
      */
     private readonly string $file;
 
-    private string $mode = 'ab';
+    private string $mode = self::DEFAULT_MODE;
 
     /**
      * Datei-Resource
      *
      * @var resource $fp
      */
-    private mixed $fp;
+    private mixed $fp = null;
 
     /**
      * Logfiles rotieren (Standard ausgeschaltet)
-     *
-     * @access private
-     * @var boolean
      */
-    var $logRotate = false;
+    private bool $logRotate = false;
 
     /**
      * Maximale Dateigr��e des Logfiles (standard 2 MB)
-     *
-     * @access private
-     * @var string
      */
-    var $maxFileSize = 2097152;
+    private int $maxFileSize = 2097152;
 
     /**
      * Rotiert die Datei beginnend mit einem neuen Tag
      *
      * @var boolean
      */
-    var $rotateByDate = false;
+    public bool $rotateByDate = false;
 
     /**
      * Trennzeichen
-     *
-     * @access private
-     * @var string
      */
-    var $separator = "\t";
+    public string $separator = "\t";
 
     /**
      * Zeilenumbruch
-     *
-     * @access private
-     * @var string
      */
-    var $lineFeed = "\n";
+    public string $lineFeed = "\n";
 
     /**
      * Speichert die geschriebenen Zeilen zwischen
      *
      * @var array
      */
-    var $cache = [];
+    public array $cache = [];
 
     /**
      * Cache aktiviert
      *
      * @var boolean
      */
-    protected $enableCache = false;
+    protected bool $enableCache = false;
 
     private int $sid = 0;
 
@@ -106,7 +100,7 @@ class LogFile extends PoolObject
      *
      * @var string
      */
-    private string $formatDateTime = '[d.m.Y H:i:s]';
+    private string $formatDateTime = self::DEFAULT_DATE_TIME_FORMAT;
 
     /**
      * Konstruktor
@@ -116,15 +110,12 @@ class LogFile extends PoolObject
         $this->file = $file;
         try {
             $this->sid = random_int(0, 9999);
-        } catch (Exception $e) {
+        } catch (Exception) {
             $this->sid = 0;
         }
     }
 
-    /**
-     * @param bool $rotateByDate
-     */
-    function activateLogRotate($rotateByDate = false)
+    public function activateLogRotate(bool $rotateByDate = false): void
     {
         $this->logRotate = true;
         $this->rotateByDate = $rotateByDate;
@@ -133,15 +124,13 @@ class LogFile extends PoolObject
     /**
      * Deaktiviert Log-Session
      */
-    function disableSID()
+    public function disableSID(): void
     {
         $this->withSID = false;
     }
 
     /**
      * Open the file
-     *
-     * @return bool
      */
     private function open(): bool
     {
@@ -163,10 +152,8 @@ class LogFile extends PoolObject
 
     /**
      * Rotiert das Logfile
-     *
-     * @param string $file
      */
-    function rotate($file)
+    public function rotate(string $file): void
     {
         $reOpen = false;
         if ($this->opened()) {
@@ -175,70 +162,55 @@ class LogFile extends PoolObject
         }
 
         $nr = 1;
-        while (file_exists($file.'.'.$nr.'.gz.tar')) {
+        while (file_exists($file.'.'.$nr.self::ROTATED_FILE_SUFFIX)) {
             $nr++;
         }
         $Tar = new Tar();
-        if (version_compare(phpversion(), '4.3.0', '>=')) {
-            $Tar->addData(basename($file), file_get_contents($file));
-        } else {
-            $Tar->addFile($file);
-        }
-        $Tar->toTar($file.'.'.$nr.'.gz.tar', true);
+        $Tar->addData(basename($file), file_get_contents($file));
+        $Tar->toTar($file.'.'.$nr.self::ROTATED_FILE_SUFFIX, true);
         @unlink($file);
 
         if ($reOpen) {
-            $this->fp = fopen($this->file, 'ab');
+            $this->fp = fopen($this->file, self::DEFAULT_MODE);
         }
     }
 
     /**
-     * Logging aktiviert? bzw. File geoeffnet
-     *
-     * @return boolean
+     * Logging aktiviert? bzw. File geöffnet
      */
     private function opened(): bool
     {
-        return isset($this->fp) && is_resource($this->fp);
+        return is_resource($this->fp);
     }
 
     /**
-     * Setzt die maximale Dateigroesse
-     *
-     * @param int $fileSize
+     * Setzt die maximale Dateigröße
      */
-    function setMaxFileSize($fileSize = 2097152)
+    public function setMaxFileSize(int $fileSize = self::DEFAULT_MAX_FILE_SIZE): void
     {
         $this->maxFileSize = $fileSize;
     }
 
     /**
      * Trennzeichen (Standard \t)
-     *
-     * @param string $separator
      */
-    function setSeparator($separator)
+    public function setSeparator(string $separator): void
     {
         $this->separator = $separator;
     }
 
     /**
      * Zeilenumbruch setzen (Standard Unix \n)
-     *
-     * @param string $lineFeed
      */
-    function setLineFeed($lineFeed)
+    public function setLineFeed(string $lineFeed): void
     {
         $this->lineFeed = $lineFeed;
     }
 
     /**
      * Setzt das Format f�r den Zeitstempel
-     *
-     * @param string $format
-     * @return LogFile
      */
-    public function setFormatDateTime(string $format = '[d.m.Y H:i:s]'): static
+    public function setFormatDateTime(string $format = self::DEFAULT_DATE_TIME_FORMAT): static
     {
         $this->formatDateTime = $format;
         return $this;
@@ -246,38 +218,34 @@ class LogFile extends PoolObject
 
     /**
      * Creating Formatted Initial Strings
-     *
-     * @return string
      */
     protected function generateFormattedInitialLogString(): string
     {
         try {
             $microTime = microtime(true);
             $microseconds = sprintf('%06d', ($microTime - floor($microTime)) * 1000000);
-            $formattedDateTime = (new DateTime(date('Y-m-d H:i:s').".$microseconds"))->format($this->formatDateTime);
+            $formattedDateTime = new DateTime(date('Y-m-d H:i:s').".$microseconds")->format($this->formatDateTime);
         } catch (Exception) {
             $formattedDateTime = (string)time();
         }
         return $formattedDateTime.(($this->withSID) ? $this->separator.'{'.
-                sprintf('%04d', $this->sid).'}' : '').$this->separator.'%s';
+                sprintf(self::SID_FORMAT, $this->sid).'}' : '').$this->separator.'%s';
     }
 
     /**
      * Adds a log entry.
-     *
-     * @param string $text
      */
     public function addLine(string $text): false|int
     {
         if (!$this->opened()) {
-            $this->open();
+            $file = IS_TESTSERVER ? $this->file : basename($this->file);
+            if (!$this->open()) throw new FileOperationException("Could not open log file: $file");
         }
         $text = sprintf($this->generateFormattedInitialLogString(), $text);
         if ($this->enableCache) {
             $this->cache[] = $text;
         }
         $text .= $this->lineFeed;
-
         return fwrite($this->fp, $text);
     }
 

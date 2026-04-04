@@ -43,11 +43,68 @@ class Session extends Input
     public function start(): void
     {
         if (!$this->session_started) {
-            $this->session_started = session_start();
+            $this->session_started = $this->startNativeSession();
         } elseif ($this->autoClose) {
-            @session_start(); // reopen session
-            $this->reInit();
+            if ($this->startNativeSession()) {
+                $this->reInit();
+            }
         }
+    }
+
+    /**
+     * Start PHP session, with a single retry for transient memcached lock hiccups.
+     */
+    private function startNativeSession(): bool
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return true;
+        }
+
+        $isMemcached = $this->isMemcachedSessionHandler();
+        $attempts = $isMemcached ? 2 : 1;
+
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            if ($this->startSessionOnce($isMemcached)) {
+                return true;
+            }
+            if ($attempt < $attempts) {
+                usleep(200000); // 200ms warten
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Wrap session_start to suppress noisy, known memcached lock warnings.
+     */
+    private function startSessionOnce(bool $suppressWarnings): bool
+    {
+        if ($suppressWarnings) {
+            // Avoid @session_start(): it hides all warnings and makes debugging harder.
+            // We only suppress the two known transient memcached lock warnings here;
+            // every other warning still goes through the default error handler.
+            set_error_handler(static function (int $severity, string $message): bool {
+                return $severity === E_WARNING
+                    && (str_contains($message, 'Unable to clear session lock record')
+                        || str_contains($message, 'Failed to write session lock'));
+            });
+        }
+
+        try {
+            $started = session_start();
+        }
+        finally {
+            if ($suppressWarnings) {
+                restore_error_handler();
+            }
+        }
+
+        return $started || session_status() === PHP_SESSION_ACTIVE;
+    }
+
+    private function isMemcachedSessionHandler(): bool
+    {
+        return ini_get('session.save_handler') === 'memcached';
     }
 
     /**
@@ -197,7 +254,7 @@ class Session extends Input
      */
     public function write_close(): static
     {
-        if ($this->autoClose) {
+        if ($this->autoClose && session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
         return $this;

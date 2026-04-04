@@ -188,11 +188,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected string $column_list = '*';
 
     /**
-     * @var array|string[] Contains the opening and closing characters for escaping column and table names
-     */
-    protected array $symbolQuote = ['`', '`'];
-
-    /**
      * @var string Dummy always true where clause
      */
     protected string $dummyWhere = '1=1';
@@ -202,6 +197,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected bool $throwsOnError = false;
 
     private array|false|null $defaultColumns;
+
+    /**
+     * @var array|string[] Contains the opening and closing characters for escaping column and table names
+     */
+    protected array $symbolQuote = ['`', '`'];
 
     /**
      * @var array|string[] Contains the characters that do not need to be escaped
@@ -856,8 +856,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         // Escape each column
         $escapedColumns = [];
+        $defaultColumnsLookup = array_flip($this->defaultColumns ?: []);
         foreach ($columns as $column) {
-            $escapedColumns[] = $this->encloseColumnName($column);
+            $isDefaultColumn = isset($defaultColumnsLookup[$column]);
+            $escapedColumns[] = $this->encloseColumnName($column, $isDefaultColumn);
         }
         $this->escapedColumns = $escapedColumns;
         $this->column_list = implode(', ', $escapedColumns);
@@ -1311,11 +1313,17 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Quote column name
      */
-    public function encloseColumnName(string $column): string
+    public function encloseColumnName(string $column, bool $addTableIdentifier = false): string
     {
         // is it necessary to wrap the column?
         if ($this->shouldPrefixColumn($column)) {
-            return $this->wrapSymbols($column);
+            $wrappedColumn = $this->wrapSymbols($column);
+
+            if ($addTableIdentifier) {
+                $wrappedTable = $this->quotedTableAlias ?: $this->quotedTable;
+                return "$wrappedTable.$wrappedColumn";
+            }
+            return $wrappedColumn;
         }
         return $column;
     }

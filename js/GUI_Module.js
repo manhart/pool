@@ -586,16 +586,27 @@ class GUI_Module
                 const encoded = responseTypeEncoded === responseType ? '' : ' (encoded)';
                 throw new Error(`Unrecognized response type ${responseTypeEncoded}${encoded} requested`);
         }
-        const promise = fetch(endpointURL, reqOptions).then(responseHandler,
-            this.onFetchNetworkError);
+        const promise = fetch(endpointURL, reqOptions).then(responseHandler, this.onFetchNetworkError);
         //add a default handler
         promise.then = this.getThenMod(this.onAjax_UnhandledException).bind(promise);
         return promise;
     }
 
-    onFetchNetworkError = () => alert('Netzwerkfehler');
+    isAbortError = error =>
+        error?.name === 'AbortError' ||
+        (typeof DOMException !== 'undefined' &&
+            error instanceof DOMException &&
+            error.name === 'AbortError');
+
+    onFetchNetworkError = error => {
+        if(this.isAbortError(error)) throw error;
+        alert('Netzwerkfehler');
+    }
+
     onAjax_UnhandledException = e =>
     {
+        if(this.isAbortError(e)) return;
+
         if (e instanceof PoolAjaxResponseError) {
             console.warn('Caught unhandled Ajax Error of Server-type: ' + e.serverSideType);
             if (e.cause) console.warn(e.cause)
