@@ -183,11 +183,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected string $column_list = '*';
 
     /**
-     * @var array|string[] Contains the opening and closing characters for escaping column and table names
-     */
-    protected array $symbolQuote = ['`', '`'];
-
-    /**
      * @var string Dummy always true where clause
      */
     protected string $dummyWhere = '1=1';
@@ -197,6 +192,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     protected bool $throwsOnError = false;
 
     private array|false|null $defaultColumns;
+
+    /**
+     * @var array|string[] Contains the opening and closing characters for escaping column and table names
+     */
+    protected array $symbolQuote = ['`', '`'];
 
     /**
      * @var array|string[] Contains the characters that do not need to be escaped

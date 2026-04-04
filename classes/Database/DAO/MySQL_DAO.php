@@ -55,28 +55,13 @@ class MySQL_DAO extends DAO
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
         parent::__construct($databaseAlias, $table);
-        $this->rebuildColumnList();
+        $this->setColumns(...$this->columns);
     }
 
     public function fetchColumns(): static
     {
         $this->fieldInfoByColumn = [];
         return parent::fetchColumns();
-    }
-
-    /**
-     * Rebuild column list
-     *
-     * @todo rethink / rework rebuildColumnList
-     */
-    private function rebuildColumnList(): void
-    {
-        // Columns are predefined as property "columns".
-        if (!$this->columns) {
-            return;
-        }
-
-        $this->setColumns(...$this->columns);
     }
 
     /**
