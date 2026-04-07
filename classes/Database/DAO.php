@@ -25,7 +25,6 @@ use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Exception\SecurityException;
-use Stringable;
 
 use function addEndingSlash;
 use function array_diff;
@@ -55,7 +54,7 @@ use function strtolower;
  * @package pool\classes\Database
  * @since 2003/07/10
  */
-abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, Stringable
+abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, \Stringable
 {
     /**
      * don't quote the value in the (sql) query
@@ -67,7 +66,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public const int DAO_NO_ESCAPE = 2;
 
     /**
-     * Data types (Bitmask: types + flags (NULLABLE is a flag))
+     * Data types (Bitmask: types and flags (NULLABLE is a flag))
      */
     public const int NULLABLE = 1;
     public const int STRING = 2;
@@ -550,7 +549,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $sortingClause = $this->buildSorting($sorting);
         $limitClause = $this->buildLimit($limit);
 
-        /** @noinspection SqlResolve */
         $sql = <<<SQL
             SELECT $optionsStr $select
             FROM $from
@@ -572,7 +570,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $whereClause = $this->buildWhereClause($id, $key, $filter);
         $count = $this->wrapSymbols('count');
 
-        /** @noinspection SqlResolve */
         $sql = <<<SQL
             SELECT COUNT(*) AS $count
             FROM $from
@@ -670,7 +667,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
-        if (is_array($values)) {//multi value operation
+        if (is_array($values)) {//multi-value operation
             if ($innerOperator === Operator::between->value || $innerOperator === Operator::notBetween->value) {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
@@ -691,7 +688,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
             $expression = $this->commands[$values->name];
             $value = $expression instanceof Closure ?
-                $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
+                $expression($field) : $expression;//TODO? Edge case with translatedValues and Command Default
         } elseif ($values instanceof DateTimeInterface) {//format date-objects
             $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
             $value = "'$dateTime'";
@@ -945,10 +942,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $where = $this->buildWhereClause(filter: $filter);
 
-        /** @noinspection SqlResolve */
+        /** @noinspection SqlWithoutWhere */
         $sql = <<<SQL
             DELETE
-            FROM $this->quotedTable
+            FROM $this
             $where
             SQL;
         return $this->execute($sql);
@@ -963,10 +960,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         if ($where === '') {
             throw new SecurityException("Delete maybe wrong! Do you really want to delete all records in the table: $this->table");
         }
-        /** @noinspection SqlResolve */
+        /** @noinspection SqlWithoutWhere */
         $sql = <<<SQL
             DELETE
-            FROM $this->quotedTable
+            FROM $this
             $where
             SQL;
         return $this->execute($sql);
