@@ -443,16 +443,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
     {
-        $where = $this->buildWhere($id ?? 0, $key);
-
-        /** @noinspection SqlResolve */
-        $sql = <<<SQL
-            SELECT $this->column_list
-            FROM $this
-            WHERE
-                $where
-            SQL;
-        return $this->execute($sql);
+        return $this->selectFrom($this, $id, $key);
     }
 
     /**
@@ -475,25 +466,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         array $having = [],
         array $options = [],
     ): RecordSet {
-        $optionsStr = implode(' ', $options);
-
-        $whereClause = $this->buildWhereClause($id, $key, $filter);
-        $groupByClause = $this->buildGroupBy($groupBy);
-        $havingClause = $this->buildHaving($having);
-        $sortingClause = $this->buildSorting($sorting);
-        $limitClause = $this->buildLimit($limit);
-
-        /** @noinspection SqlResolve */
-        $sql = <<<SQL
-            SELECT $optionsStr $this->column_list
-            FROM $this
-            $whereClause
-            $groupByClause
-            $havingClause
-            $sortingClause
-            $limitClause
-            SQL;
-        return $this->execute($sql);
+        return $this->selectFrom($this, $id, $key, $filter, $sorting, $limit, $groupBy, $having, $options);
     }
 
     /**
@@ -555,6 +528,57 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             WHERE
                 $where
             SQL;
+    }
+
+    protected function selectFrom(
+        string $from,
+        null|int|string|array $id = null,
+        null|string|array $key = null,
+        array $filter = [],
+        array $sorting = [],
+        array $limit = [],
+        array $groupBy = [],
+        array $having = [],
+        array $options = [],
+        ?string $select = null,
+    ): RecordSet {
+        $optionsStr = implode(' ', $options);
+        $select ??= $this->column_list;
+        $whereClause = $this->buildWhereClause($id, $key, $filter);
+        $groupByClause = $this->buildGroupBy($groupBy);
+        $havingClause = $this->buildHaving($having);
+        $sortingClause = $this->buildSorting($sorting);
+        $limitClause = $this->buildLimit($limit);
+
+        /** @noinspection SqlResolve */
+        $sql = <<<SQL
+            SELECT $optionsStr $select
+            FROM $from
+            $whereClause
+            $groupByClause
+            $havingClause
+            $sortingClause
+            $limitClause
+            SQL;
+        return $this->execute($sql);
+    }
+
+    protected function countFrom(
+        string $from,
+        null|int|string|array $id = null,
+        null|string|array $key = null,
+        array $filter = [],
+    ): RecordSet {
+        $whereClause = $this->buildWhereClause($id, $key, $filter);
+        $count = $this->wrapSymbols('count');
+
+        /** @noinspection SqlResolve */
+        $sql = <<<SQL
+            SELECT COUNT(*) AS $count
+            FROM $from
+            $whereClause
+            SQL;
+        return $this->execute($sql);
     }
 
     /**
@@ -1169,14 +1193,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter = []): RecordSet
     {
-        $whereClause = $this->buildWhereClause($id, $key, $filter);
-        $count = $this->wrapSymbols('count');
-        $sql = <<<SQL
-            SELECT COUNT(*) AS $count
-            FROM $this->quotedTable $this->quotedTableAlias
-            $whereClause
-            SQL;
-        return $this->execute($sql);
+        return $this->countFrom($this, $id, $key, $filter);
     }
 
     /**
