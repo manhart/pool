@@ -448,12 +448,14 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
-     * @see \MySQL_DAO::buildWhere
-     * @see MySQL_DAO::buildFilter
-     * @see MySQL_DAO::buildGroupBy
-     * @see MySQL_DAO::buildHaving
-     * @see MySQL_DAO::buildSorting
-     * @see MySQL_DAO::buildLimit
+     * @see DAO::selectFrom()
+     * @see DAO::buildWhereClause()
+     * @see DAO::buildWhere()
+     * @see DAO::buildFilter()
+     * @see DAO::buildGroupBy()
+     * @see DAO::buildHaving()
+     * @see DAO::buildSorting()
+     * @see DAO::buildLimit()
      */
     public function getMultiple(
         null|int|string|array $id = null,
@@ -856,6 +858,26 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
+     * Temporarily overrides the selected columns and restores the previous column state afterward.
+     */
+    protected function withColumns(array $columns, callable $callback): mixed
+    {
+        $columnsState = $this->columns;
+        $escapedColumns = $this->escapedColumns;
+        $columnList = $this->column_list;
+
+        try {
+            $this->setColumns(...$columns);
+            return $callback();
+        }
+        finally {
+            $this->columns = $columnsState;
+            $this->escapedColumns = $escapedColumns;
+            $this->column_list = $columnList;
+        }
+    }
+
+    /**
      * @return array|string[] The value getColumns would return if this DAO had just been created
      * @see self::getColumns()
      */
@@ -1126,7 +1148,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         }
         $sql = '';
         foreach ($ResultSet as $row) {
-            $sql .= "INSERT INTO $this->quotedTable (";
+            $sql .= "INSERT INTO $this (";
             $sql .= implode(',', array_keys($row));
             $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.chr(10);
         }
