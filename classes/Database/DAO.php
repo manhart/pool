@@ -25,7 +25,6 @@ use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Exception\SecurityException;
-use Stringable;
 
 use function addEndingSlash;
 use function array_diff;
@@ -55,7 +54,7 @@ use function strtolower;
  * @package pool\classes\Database
  * @since 2003/07/10
  */
-abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, Stringable
+abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, \Stringable
 {
     /**
      * don't quote the value in the (sql) query
@@ -67,7 +66,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public const int DAO_NO_ESCAPE = 2;
 
     /**
-     * Data types (Bitmask: types + flags (NULLABLE is a flag))
+     * Data types (Bitmask: types and flags (NULLABLE is a flag))
      */
     public const int NULLABLE = 1;
     public const int STRING = 2;
@@ -455,28 +454,20 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
     {
-        $joins = $this->buildJoins();
-        $where = $this->buildWhere($id ?? 0, $key);
-
-        /** @noinspection SqlResolve */
-        $sql = <<<SQL
-            SELECT $this->column_list
-            FROM $this $joins
-            WHERE
-                $where
-            SQL;
-        return $this->execute($sql);
+        return $this->selectFrom($this, $id, $key);
     }
 
     /**
      * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
-     * @see \MySQL_DAO::buildWhere
-     * @see MySQL_DAO::buildFilter
-     * @see MySQL_DAO::buildGroupBy
-     * @see MySQL_DAO::buildHaving
-     * @see MySQL_DAO::buildSorting
-     * @see MySQL_DAO::buildLimit
+     * @see DAO::selectFrom()
+     * @see DAO::buildWhereClause()
+     * @see DAO::buildWhere()
+     * @see DAO::buildFilter()
+     * @see DAO::buildGroupBy()
+     * @see DAO::buildHaving()
+     * @see DAO::buildSorting()
+     * @see DAO::buildLimit()
      */
     public function getMultiple(
         null|int|string|array $id = null,
@@ -488,25 +479,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         array $having = [],
         array $options = [],
     ): RecordSet {
-        $optionsStr = implode(' ', $options);
-        $joins = $this->buildJoins();
-        $whereClause = $this->buildWhereClause($id, $key, $filter);
-        $groupByClause = $this->buildGroupBy($groupBy);
-        $havingClause = $this->buildHaving($having);
-        $sortingClause = $this->buildSorting($sorting);
-        $limitClause = $this->buildLimit($limit);
-
-        /** @noinspection SqlResolve */
-        $sql = <<<SQL
-            SELECT $optionsStr $this->column_list
-            FROM $this $joins
-            $whereClause
-            $groupByClause
-            $havingClause
-            $sortingClause
-            $limitClause
-            SQL;
-        return $this->execute($sql);
+        return $this->selectFrom($this, $id, $key, $filter, $sorting, $limit, $groupBy, $having, $options);
     }
 
     /**
@@ -568,6 +541,56 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             WHERE
                 $where
             SQL;
+    }
+
+    protected function selectFrom(
+        string $from,
+        null|int|string|array $id = null,
+        null|string|array $key = null,
+        array $filter = [],
+        array $sorting = [],
+        array $limit = [],
+        array $groupBy = [],
+        array $having = [],
+        array $options = [],
+        ?string $select = null,
+    ): RecordSet {
+        $optionsStr = implode(' ', $options);
+        $select ??= $this->column_list;
+        $joins = $this->buildJoins();
+        $whereClause = $this->buildWhereClause($id, $key, $filter);
+        $groupByClause = $this->buildGroupBy($groupBy);
+        $havingClause = $this->buildHaving($having);
+        $sortingClause = $this->buildSorting($sorting);
+        $limitClause = $this->buildLimit($limit);
+
+        $sql = <<<SQL
+            SELECT $optionsStr $select
+            FROM $from $joins
+            $whereClause
+            $groupByClause
+            $havingClause
+            $sortingClause
+            $limitClause
+            SQL;
+        return $this->execute($sql);
+    }
+
+    protected function countFrom(
+        string $from,
+        null|int|string|array $id = null,
+        null|string|array $key = null,
+        array $filter = [],
+    ): RecordSet {
+        $whereClause = $this->buildWhereClause($id, $key, $filter);
+        $count = $this->wrapSymbols('count');
+
+        $sql = <<<SQL
+            SELECT COUNT(*) AS $count
+            FROM $from
+            $whereClause
+            SQL;
+        return $this->execute($sql);
     }
 
     /**
@@ -659,7 +682,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
-        if (is_array($values)) {//multi value operation
+        if (is_array($values)) {//multi-value operation
             if ($innerOperator === Operator::between->value || $innerOperator === Operator::notBetween->value) {
                 $value = /* min */
                     $this->escapeValue($values[0], $noEscape, $noQuotes);
@@ -680,7 +703,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
             $expression = $this->commands[$values->name];
             $value = $expression instanceof Closure ?
-                $expression($field) : $expression;//TODO? Edgecase with translatedValues and Command Default
+                $expression($field) : $expression;//TODO? Edge case with translatedValues and Command Default
         } elseif ($values instanceof DateTimeInterface) {//format date-objects
             $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
             $value = "'$dateTime'";
@@ -848,6 +871,26 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
+     * Temporarily overrides the selected columns and restores the previous column state afterward.
+     */
+    protected function withColumns(array $columns, callable $callback): mixed
+    {
+        $columnsState = $this->columns;
+        $escapedColumns = $this->escapedColumns;
+        $columnList = $this->column_list;
+
+        try {
+            $this->setColumns(...$columns);
+            return $callback();
+        }
+        finally {
+            $this->columns = $columnsState;
+            $this->escapedColumns = $escapedColumns;
+            $this->column_list = $columnList;
+        }
+    }
+
+    /**
      * @return array|string[] The value getColumns would return if this DAO had just been created
      * @see self::getColumns()
      */
@@ -987,10 +1030,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $where = $this->buildWhereClause(filter: $filter);
 
-        /** @noinspection SqlResolve */
+        /** @noinspection SqlWithoutWhere */
         $sql = <<<SQL
             DELETE
-            FROM $this->quotedTable
+            FROM $this
             $where
             SQL;
         return $this->execute($sql);
@@ -1005,10 +1048,10 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         if ($where === '') {
             throw new SecurityException("Delete maybe wrong! Do you really want to delete all records in the table: $this->table");
         }
-        /** @noinspection SqlResolve */
+        /** @noinspection SqlWithoutWhere */
         $sql = <<<SQL
             DELETE
-            FROM $this->quotedTable
+            FROM $this
             $where
             SQL;
         return $this->execute($sql);
@@ -1104,7 +1147,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-            UPDATE $this->quotedTable
+            UPDATE $this
             SET
                 $assignmentList
             $where
@@ -1154,7 +1197,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $assignments = [];
         foreach ($data as $column => $value) {
-            $assignments[] = "`$column`={$this->formatSqlValue($value, $column)}";
+            $assignments[] = "{$this->encloseColumnName($column)}={$this->formatSqlValue($value, $column)}";
         }
         return implode(', ', $assignments);
     }
@@ -1171,7 +1214,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         }
         $sql = '';
         foreach ($ResultSet as $row) {
-            $sql .= "INSERT INTO $this->quotedTable (";
+            $sql .= "INSERT INTO $this (";
             $sql .= implode(',', array_keys($row));
             $sql .= ') VALUES (\''.implode('\',\'', array_values($row)).'\');'.chr(10);
         }
@@ -1196,7 +1239,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-            UPDATE $this->quotedTable
+            UPDATE $this
             SET
                 $set
             $where
@@ -1235,14 +1278,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function getCount(null|int|string|array $id = null, null|string|array $key = null, array $filter = []): RecordSet
     {
-        $whereClause = $this->buildWhereClause($id, $key, $filter);
-        $count = $this->wrapSymbols('count');
-        $sql = <<<SQL
-            SELECT COUNT(*) AS $count
-            FROM $this->quotedTable $this->quotedTableAlias
-            $whereClause
-            SQL;
-        return $this->execute($sql);
+        return $this->countFrom($this, $id, $key, $filter);
     }
 
     /**

@@ -97,7 +97,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'SELECT COUNT(*) AS `count` FROM `User`',
+            'SELECT COUNT(*) AS `count` FROM `testDB`.`User`',
             $sql,
         );
     }
@@ -116,7 +116,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            "SELECT COUNT(*) AS `count` FROM `User` WHERE ( emailAddress like '%@mail.local' or deleted = false ) and idUser != 5",
+            "SELECT COUNT(*) AS `count` FROM `testDB`.`User` WHERE ( emailAddress like '%@mail.local' or deleted = false ) and idUser != 5",
             $sql,
         );
     }
@@ -137,7 +137,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            "SELECT COUNT(*) AS `count` FROM `User` WHERE (emailAddress = 'user@mail.local' or deleted = false) and idUser != 5",
+            "SELECT COUNT(*) AS `count` FROM `testDB`.`User` WHERE (emailAddress = 'user@mail.local' or deleted = false) and idUser != 5",
             $sql,
         );
     }
@@ -170,7 +170,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'DELETE FROM `User`',
+            'DELETE FROM `testDB`.`User`',
             $sql,
         );
     }
@@ -182,7 +182,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'DELETE FROM `User` WHERE idUser=5',
+            'DELETE FROM `testDB`.`User` WHERE idUser=5',
             $sql,
         );
     }
@@ -197,7 +197,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'UPDATE `User` SET `deleted`=true WHERE idUser=5',
+            'UPDATE `testDB`.`User` SET `deleted`=true WHERE idUser=5',
             $sql,
         );
     }
@@ -222,7 +222,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'UPDATE `User` SET `deleted`=true WHERE idUser != 5',
+            'UPDATE `testDB`.`User` SET `deleted`=true WHERE idUser != 5',
             $sql,
         );
     }
