@@ -1081,7 +1081,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-            UPDATE $this->quotedTable
+            UPDATE $this
             SET
                 $assignmentList
             $where
@@ -1131,7 +1131,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $assignments = [];
         foreach ($data as $column => $value) {
-            $assignments[] = "`$column`={$this->formatSqlValue($value, $column)}";
+            $assignments[] = "{$this->encloseColumnName($column)}={$this->formatSqlValue($value, $column)}";
         }
         return implode(', ', $assignments);
     }
@@ -1173,7 +1173,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         /** @noinspection SqlResolve */
         $sql = <<<SQL
-            UPDATE $this->quotedTable
+            UPDATE $this
             SET
                 $set
             $where

@@ -170,7 +170,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'DELETE FROM `User`',
+            'DELETE FROM `testDB`.`User`',
             $sql,
         );
     }
@@ -182,7 +182,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'DELETE FROM `User` WHERE idUser=5',
+            'DELETE FROM `testDB`.`User` WHERE idUser=5',
             $sql,
         );
     }
@@ -197,7 +197,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'UPDATE `User` SET `deleted`=true WHERE idUser=5',
+            'UPDATE `testDB`.`User` SET `deleted`=true WHERE idUser=5',
             $sql,
         );
     }
@@ -222,7 +222,7 @@ class DAOTest extends TestCase
         );
 
         $this->assertSame(
-            'UPDATE `User` SET `deleted`=true WHERE idUser != 5',
+            'UPDATE `testDB`.`User` SET `deleted`=true WHERE idUser != 5',
             $sql,
         );
     }
