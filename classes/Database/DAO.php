@@ -636,7 +636,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         $queryParts = [];
         $firstRule = $filter_rules[0] ?? null;
-        if (!is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non-joining operator
+        if ($initialOperator !== '' && !is_array($firstRule) && !isset($this->validLogicalOperators[strtolower($firstRule)])) {//1. rule is a non-joining operator
             $queryParts[] = $initialOperator;
         }//* we add an initial 'and' operator.
 
