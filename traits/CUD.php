@@ -41,20 +41,7 @@ trait CUD
     abstract protected function idUser();
 
     /**
-     * @param DAO $DAO
-     * @param array|null $dataMask
-     * @param string $successMessage
-     * @param array $verbs
      * @param string|null $rowName the name used to identify the read-back section of the generated result
-     * @param array $collisionFilter
-     * @param string|Closure $collisionMessage
-     * @param array|null $data
-     * @param Closure|null $savePreHook
-     * @param Closure|null $savePostHook
-     * @param Closure|null $rowGenerator
-     * @param Closure|null $updateOverride
-     * @param Closure|null $insertOverride
-     * @return array
      */
     protected function cudSave(
         DAO $DAO,
@@ -75,12 +62,13 @@ trait CUD
             throw new InvalidArgumentException('Attempted to perform save operation without any data');
         $rowName ??= 'row';
         $pk = $DAO->getPrimaryKey()[0];
+        $table = $DAO::getTableName();
         [&$result, &$persistId, &$row, &$success, &$message] = Weblication::makeResultArray(
             ...([$pk => (int)($this->getInput()->getVar($pk) ?? $data[$pk] ?? 0), $rowName => []]),
             success: false,
             message: '',
         );
-        $collisionFilter[] = [$pk, Operator::notEqual, $persistId];
+        $collisionFilter[] = ["$table.$pk", Operator::notEqual, $persistId];
         if (count($collisionFilter) > 1 && $DAO->getCount(filter: $collisionFilter)->getCountValue()) {
             $message = is_string($collisionMessage) ? $collisionMessage : $collisionMessage->call($this, $DAO, $persistId, $pk);
             return $result;
