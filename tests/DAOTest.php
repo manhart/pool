@@ -12,22 +12,21 @@ declare(strict_types = 1);
 
 namespace pool\tests;
 
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use pool\classes\Core\RecordSet;
+use pool\classes\Database\Commands;
 use pool\classes\Database\DAO\MySQL_DAO;
 use pool\classes\Database\JoinType;
 use pool\classes\Database\Operator;
+use pool\classes\Database\SqlStatement;
 use pool\classes\Exception\SecurityException;
 
 class DAOTest extends TestCase
 {
     public function testGetMultipleWithoutConditionsOmitsWhereClause(): void
     {
-        $sql = $this->sqlFrom(
-            TestUserDao::create()
-                ->setColumns('emailAddress')
-                ->getMultiple(),
-        );
+        $sql = $this->sqlFrom(TestUserDao::create(throws: true)->setColumns('emailAddress')->getMultiple());
 
         $this->assertSame(
             'SELECT `User`.`emailAddress` FROM `testDB`.`User`',
@@ -38,7 +37,7 @@ class DAOTest extends TestCase
     public function testGetMultipleWithFilterBuildsWhereClause(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()
+            TestUserDao::create(throws: true)
                 ->setColumns('emailAddress', 'deleted')
                 ->getMultiple(
                     filter: [
@@ -59,7 +58,7 @@ class DAOTest extends TestCase
     public function testGetMultipleCombinesIdAndFilterWithAnd(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()
+            TestUserDao::create(throws: true)
                 ->setColumns('emailAddress')
                 ->getMultiple(
                     id: 5,
@@ -76,7 +75,7 @@ class DAOTest extends TestCase
     public function testGetMultipleWithParenthesizedFilterDoesNotInjectLeadingAnd(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()
+            TestUserDao::create(throws: true)
                 ->setColumns('deleted')
                 ->getMultiple(filter: [
                     '(',
@@ -94,7 +93,7 @@ class DAOTest extends TestCase
     public function testGetCountWithoutConditionsOmitsWhereClause(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()->getCount(),
+            TestUserDao::create(throws: true)->getCount(),
         );
 
         $this->assertSame(
@@ -106,7 +105,7 @@ class DAOTest extends TestCase
     public function testGetCountWithGroupedCollisionFilterBuildsWhereClause(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()->getCount(filter: [
+            TestUserDao::create(throws: true)->getCount(filter: [
                 '(',
                 ['emailAddress', Operator::like, '%@mail.local'],
                 Operator::or,
@@ -125,7 +124,7 @@ class DAOTest extends TestCase
     public function testGetCountWithNestedGroupFilterBuildsWhereClause(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()->getCount(filter: [
+            TestUserDao::create(throws: true)->getCount(filter: [
                 [
                     [
                         ['emailAddress', Operator::equal, 'user@mail.local'],
@@ -146,7 +145,7 @@ class DAOTest extends TestCase
     public function testGetMultipleWithHavingBuildsHavingClause(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()
+            TestUserDao::create(throws: true)
                 ->setColumns('deleted')
                 ->getMultiple(
                     groupBy: ['deleted' => 'ASC'],
@@ -167,7 +166,7 @@ class DAOTest extends TestCase
     public function testDeleteMultipleWithoutFilterOmitsWhereClause(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()->deleteMultiple(),
+            TestUserDao::create(throws: true)->deleteMultiple(),
         );
 
         $this->assertSame(
@@ -179,7 +178,7 @@ class DAOTest extends TestCase
     public function testDeleteBuildsWhereClauseFromPrimaryKey(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()->delete(5),
+            TestUserDao::create(throws: true)->delete(5),
         );
 
         $this->assertSame(
@@ -191,7 +190,7 @@ class DAOTest extends TestCase
     public function testUpdateBuildsWhereClauseFromPrimaryKey(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()->update([
+            TestUserDao::create(throws: true)->update([
                 'idUser' => 5,
                 'deleted' => true,
             ]),
@@ -207,7 +206,7 @@ class DAOTest extends TestCase
     {
         $this->expectException(SecurityException::class);
 
-        TestUserDao::create()->updateMultiple(
+        TestUserDao::create(throws: true)->updateMultiple(
             data: ['deleted' => true],
             filter_rules: [],
         );
@@ -216,7 +215,7 @@ class DAOTest extends TestCase
     public function testUpdateMultipleWithFilterBuildsWhereClause(): void
     {
         $sql = $this->sqlFrom(
-            TestUserDao::create()->updateMultiple(
+            TestUserDao::create(throws: true)->updateMultiple(
                 data: ['deleted' => true],
                 filter_rules: [['idUser', Operator::notEqual, 5]],
             ),
@@ -224,6 +223,130 @@ class DAOTest extends TestCase
 
         $this->assertSame(
             'UPDATE `testDB`.`User` SET `deleted`=true WHERE idUser != 5',
+            $sql,
+        );
+    }
+
+    public function testUpdateWithCommandUsesRawSqlExpression(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)->update([
+                'idUser' => 5,
+                'deleted' => Commands::Reset,
+            ]),
+        );
+
+        $this->assertSame(
+            'UPDATE `testDB`.`User` SET `deleted`=DEFAULT(deleted) WHERE idUser=5',
+            $sql,
+        );
+    }
+
+    public function testUpdateWithSqlStatementKeepsStatementUnquoted(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)->update([
+                'idUser' => 5,
+                'created' => new SqlStatement('CURRENT_TIMESTAMP()'),
+            ]),
+        );
+
+        $this->assertSame(
+            'UPDATE `testDB`.`User` SET `created`=CURRENT_TIMESTAMP() WHERE idUser=5',
+            $sql,
+        );
+    }
+
+    public function testUpdateWithDateTimeFormatsAssignmentValue(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)->update([
+                'idUser' => 5,
+                'created' => new DateTimeImmutable('2024-02-03 04:05:06'),
+            ]),
+        );
+
+        $this->assertSame(
+            "UPDATE `testDB`.`User` SET `created`='2024-02-03 04:05:06' WHERE idUser=5",
+            $sql,
+        );
+    }
+
+    public function testUpdateWithArrayKeepsLegacyFirstElementBehavior(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)->update([
+                'idUser' => 5,
+                'user' => ['first', 'second'],
+            ]),
+        );
+
+        $this->assertSame(
+            "UPDATE `testDB`.`User` SET `user`='first' WHERE idUser=5",
+            $sql,
+        );
+    }
+
+    public function testGetMultipleWithSqlStatementFilterKeepsStatementUnquoted(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)
+                ->setColumns('created')
+                ->getMultiple(filter: [
+                    ['created', Operator::greaterEqual, new SqlStatement('CURRENT_DATE()')],
+                ]),
+        );
+
+        $this->assertSame(
+            'SELECT `User`.`created` FROM `testDB`.`User` WHERE created >= CURRENT_DATE()',
+            $sql,
+        );
+    }
+
+    public function testGetMultipleWithDateTimeFilterFormatsDateValue(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)
+                ->setColumns('created')
+                ->getMultiple(filter: [
+                    ['created', Operator::equal, new DateTimeImmutable('2024-02-03 04:05:06')],
+                ]),
+        );
+
+        $this->assertSame(
+            "SELECT `User`.`created` FROM `testDB`.`User` WHERE created = '2024-02-03 04:05:06'",
+            $sql,
+        );
+    }
+
+    public function testGetMultipleWithDateTimeFilterSupportsCustomFormatString(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)
+                ->setColumns('created')
+                ->getMultiple(filter: [
+                    ['created', Operator::equal, new DateTimeImmutable('2024-02-03 04:05:06'), 'Y-m-d'],
+                ]),
+        );
+
+        $this->assertSame(
+            "SELECT `User`.`created` FROM `testDB`.`User` WHERE created = '2024-02-03'",
+            $sql,
+        );
+    }
+
+    public function testGetMultipleWithNoQuoteAndNoEscapeFlagsKeepsRawFilterLiteral(): void
+    {
+        $sql = $this->sqlFrom(
+            TestUserDao::create(throws: true)
+                ->setColumns('emailAddress')
+                ->getMultiple(filter: [
+                    ['emailAddress', Operator::equal, 'User.emailAddress', TestUserDao::DAO_NO_QUOTES | TestUserDao::DAO_NO_ESCAPE],
+                ]),
+        );
+
+        $this->assertSame(
+            'SELECT `User`.`emailAddress` FROM `testDB`.`User` WHERE emailAddress = User.emailAddress',
             $sql,
         );
     }

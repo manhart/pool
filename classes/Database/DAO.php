@@ -741,6 +741,27 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $noQuotes ? $value : "'$value'"; //quote
     }
 
+    private function toSqlLiteral(mixed $value, ?string $field = null, false|int $noEscape = false, false|int $noQuotes = false, ?string $dateFormat = null): string
+    {
+        if ($value instanceof Commands) {//TODO? Edge case with translatedValues and Command Default
+            $expression = $this->commands[$value->name];
+            return $expression instanceof Closure ? $expression($field ?? '') : $expression;
+        }
+        if ($value instanceof SqlStatement) {
+            return $value->getStatement();
+        }
+        if ($value instanceof DateTimeInterface) {
+            return "'{$value->format($dateFormat ?? 'Y-m-d H:i:s')}'";
+        }
+
+        return match (gettype($value)) {
+            'NULL' => 'NULL',
+            'boolean' => bool2string($value),
+            'double', 'integer' => (string)$value,
+            default => (string)$this->escapeValue($value, $noEscape, $noQuotes),
+        };
+    }
+
     /**
      * @throws DatabaseConnectionException|InvalidArgumentException
      */
@@ -818,6 +839,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $quoteSettings = is_int($record[3] ?? false) ? $record[3] : 0;
         $noQuotes = $quoteSettings & self::DAO_NO_QUOTES;
         $noEscape = $quoteSettings & self::DAO_NO_ESCAPE;
+        $dateFormat = is_string($record[3] ?? null) ? $record[3] : null;
         if (is_array($values)) {//multi-value operation
             if ($innerOperator === Operator::between->value || $innerOperator === Operator::notBetween->value) {
                 $value = /* min */
@@ -836,27 +858,14 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 }//https://www.php.net/manual/en/language.types.boolean.php#112190
                 $value = "($values)";
             }
-        } elseif ($values instanceof Commands) {//resolve reserved keywords TODO add parameters to commands
-            $expression = $this->commands[$values->name];
-            $value = $expression instanceof Closure ?
-                $expression($field) : $expression;//TODO? Edge case with translatedValues and Command Default
-        } elseif ($values instanceof DateTimeInterface) {//format date-objects
-            $dateTime = $values->format($record[3] ?? 'Y-m-d H:i:s');
-            $value = "'$dateTime'";
-        } else {
-            $value = match (gettype($values)) {//handle by type
-                'NULL' => match ($rawInnerOperator) {
-                    Operator::is, Operator::isNot => 'true',
-                    Operator::isNull, Operator::isNotNull => '',
-                    default => 'NULL'
-                },
-                'boolean' => bool2string($values),
-                'double', 'integer' => $values,//float and int
-                default => match ($values instanceof SqlStatement) {
-                    true => $values->getStatement(),
-                    default => $this->escapeValue($values, $noEscape, $noQuotes),
-                }
+        } elseif (is_null($values)) {
+            $value = match ($rawInnerOperator) {
+                Operator::is, Operator::isNot => 'true',
+                Operator::isNull, Operator::isNotNull => '',
+                default => 'NULL'
             };
+        } else {
+            $value = $this->toSqlLiteral($values, $field, $noEscape, $noQuotes, $dateFormat);
         }
         return "$field $innerOperator $value";
     }
@@ -1416,26 +1425,9 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $columnMeta = $this->getMetaData('columns')[$column] ?? [];
         $type = $columnMeta['type'] ?? '';
-        if (is_null($value)) {
-            return 'NULL';
-        }
-        if (is_bool($value)) {
-            return bool2string($value);
-        }
         if (is_array($value)) {
             //if(in_array($type, ['json', 'text', 'mediumtext', 'longtext'])) return json_encode($value);
             return is_null($value[0]) ? 'NULL' : $this->escapeValue($value[0]);//? json_encode would make more sense? Where is it used?
-        }
-        if ($value instanceof Commands) {
-            // reserved keywords don't need to be masked
-            $expression = $this->commands[$value->name];
-            return $expression instanceof Closure ? $expression($column) : $expression;
-        }
-        if ($value instanceof SqlStatement) {
-            return $value->getStatement();
-        }
-        if ($value instanceof DateTimeInterface) {
-            return "'{$value->format('Y-m-d H:i:s')}'";
         }
         if (is_int($value) || is_float($value)) {
             return match ($type) {
@@ -1444,7 +1436,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
                 default => (string)$value,
             };
         }
-        return "'{$this->escapeSQL($value)}'";
+        return $this->toSqlLiteral($value, $column);
     }
 
     /**
