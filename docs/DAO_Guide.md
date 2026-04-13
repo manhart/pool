@@ -198,6 +198,34 @@ $result = Order::create()->getMultiple(
 
 Voraussetzung: Der Prefix muss als Key in `getRelations()` vorhanden sein (d.h. in `$generatedRelations` oder `$customRelations`).
 
+### Auto-Join deaktivieren
+
+Wenn die Erkennung stört (z.B. qualifizierte Spalten werden zwar im Query verwendet, sollen aber nicht implizit joinen), gibt es zwei Abstufungen:
+
+**Pro Query** — `withoutAutoJoin()`:
+
+```php
+$result = Order::create()
+    ->withoutAutoJoin()
+    ->with('Customer')                                    // explizit erzwingen
+    ->getMultiple(filter: [['Item.category', Operator::equal, 'A']]);
+// 'Item.category' im Filter triggert KEINEN JOIN — nur 'Customer' wird gejoint.
+```
+
+Das Flag wird nach der Query automatisch zurückgesetzt.
+
+**Pro DAO-Klasse** — `$autoJoin`-Property:
+
+```php
+class Order extends DAO
+{
+    protected bool $autoJoin = false;   // gilt für alle Queries dieses DAOs
+    // ...
+}
+```
+
+In beiden Fällen funktionieren `with()` und `join()` weiterhin — nur die Prefix-Erkennung aus Query-Parametern ist abgeschaltet.
+
 ---
 
 ## `with()` — explizite Anforderung

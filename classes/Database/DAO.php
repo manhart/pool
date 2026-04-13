@@ -266,6 +266,18 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     private array $requestedRelations = [];
 
     /**
+     * Whether auto-join detection from filter/sorting/groupBy/having/columns is enabled by default.
+     * Set to false in a subclass to opt out of auto-detection — $customRelations, $generatedRelations,
+     * with() and join() still work, but qualified column prefixes no longer trigger implicit joins.
+     */
+    protected bool $autoJoin = true;
+
+    /**
+     * Per-query override flag. Set by withoutAutoJoin(). Reset after each buildJoins() call.
+     */
+    private bool $suppressAutoJoin = false;
+
+    /**
      * Defines the default commands.
      */
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
@@ -421,6 +433,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public static function getDatabaseName(): string
     {
         return static::$databaseName;
+    }
+
+    public static function getSchemaName(): ?string
+    {
+        return static::$schemaName;
     }
 
     public static function getTableName(): string
@@ -579,6 +596,17 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $this->runtimeRelations[$alias] = $relation;
         $this->requestedRelations[$alias] = true;
+        return $this;
+    }
+
+    /**
+     * Disable auto-join detection for the next query. Qualified column prefixes
+     * (e.g. 'Customer.name') will not trigger implicit joins; only with() and join()
+     * still produce JOIN clauses. Reset after the next query.
+     */
+    public function withoutAutoJoin(): static
+    {
+        $this->suppressAutoJoin = true;
         return $this;
     }
 
@@ -1094,18 +1122,24 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     private function buildJoins(array $filter, array $sorting, array $groupBy, array $having): string
     {
         $relations = $this->getRelations();
+        if (!$relations) return '';
         $toJoin = $this->requestedRelations;
+
+        $autoJoinEnabled = $this->autoJoin && !$this->suppressAutoJoin;
 
         // Auto-detect table prefixes from all query parameters
         $rootAlias = $this->tableAlias ?: $this->table;
-        foreach ($this->extractTablePrefixes($filter, $having, $sorting, $groupBy) as $prefix) {
-            if ($prefix !== $rootAlias && isset($relations[$prefix])) {
-                $toJoin[$prefix] = true;
+        if ($autoJoinEnabled) {
+            foreach ($this->extractTablePrefixes($filter, $having, $sorting, $groupBy) as $prefix) {
+                if ($prefix !== $rootAlias && isset($relations[$prefix])) {
+                    $toJoin[$prefix] = true;
+                }
             }
         }
 
         $this->requestedRelations = [];
         $this->runtimeRelations = [];
+        $this->suppressAutoJoin = false;
 
         if (!$toJoin) return '';
 
@@ -1117,7 +1151,6 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
 
         $parts = [];
         foreach ($sorted as $alias) {
-            if (!isset($relations[$alias])) continue;
             $parts[] = $this->buildRelationSQL($alias, $relations[$alias], $rootAlias);
         }
 

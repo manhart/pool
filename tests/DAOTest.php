@@ -605,6 +605,82 @@ class DAOTest extends TestCase
     }
 
     // =========================================================================
+    // Auto-join opt-out: withoutAutoJoin() and $autoJoin property
+    // =========================================================================
+
+    public function testWithoutAutoJoinSuppressesPrefixDetection(): void
+    {
+        $sql = $this->sqlFrom(
+            TestOrderDao::create()
+                ->withoutAutoJoin()
+                ->getMultiple(filter: [['Item.name', Operator::equal, 'Widget']]),
+        );
+
+        $this->assertStringNotContainsString('JOIN', $sql);
+    }
+
+    public function testWithoutAutoJoinStillHonoursExplicitWith(): void
+    {
+        $sql = $this->sqlFrom(
+            TestOrderDao::create()
+                ->withoutAutoJoin()
+                ->with('Item')
+                ->getMultiple(filter: [['Item.name', Operator::equal, 'Widget']]),
+        );
+
+        $this->assertStringContainsString('LEFT JOIN `testDB`.`Item` AS `Item`', $sql);
+    }
+
+    public function testWithoutAutoJoinStillHonoursRuntimeJoin(): void
+    {
+        $sql = $this->sqlFrom(
+            TestOrderDao::create()
+                ->withoutAutoJoin()
+                ->join('Alias', [
+                    'target'    => TestItemDao::class,
+                    'columnMap' => ['idItem' => 'idItem'],
+                    'joinType'  => JoinType::inner,
+                ])
+                ->getMultiple(filter: [['Item.name', Operator::equal, 'Widget']]),
+        );
+
+        $this->assertStringContainsString('INNER JOIN', $sql);
+        $this->assertStringContainsString('`Alias`', $sql);
+    }
+
+    public function testWithoutAutoJoinIsResetAfterQuery(): void
+    {
+        $dao = TestOrderDao::create();
+        $dao->withoutAutoJoin()->getMultiple(filter: [['Item.name', Operator::equal, 'Widget']]);
+
+        $sql = $this->sqlFrom(
+            $dao->getMultiple(filter: [['Item.name', Operator::equal, 'Widget']]),
+        );
+        $this->assertStringContainsString('LEFT JOIN `testDB`.`Item` AS `Item`', $sql);
+    }
+
+    public function testAutoJoinPropertyDisablesPrefixDetection(): void
+    {
+        $sql = $this->sqlFrom(
+            TestOrderNoAutoJoin::create()
+                ->getMultiple(filter: [['Item.name', Operator::equal, 'Widget']]),
+        );
+
+        $this->assertStringNotContainsString('JOIN', $sql);
+    }
+
+    public function testAutoJoinPropertyStillHonoursExplicitWith(): void
+    {
+        $sql = $this->sqlFrom(
+            TestOrderNoAutoJoin::create()
+                ->with('Item')
+                ->getMultiple(filter: [['Item.name', Operator::equal, 'Widget']]),
+        );
+
+        $this->assertStringContainsString('LEFT JOIN `testDB`.`Item` AS `Item`', $sql);
+    }
+
+    // =========================================================================
     // countFrom / getCount — relation system
     // =========================================================================
 
@@ -713,6 +789,12 @@ class TestOrderDao extends SqlCapturingMySqlDao
             'columnMap' => ['idItem' => 'idItem'],
         ],
     ];
+}
+
+/** TestOrderDao variant with $autoJoin disabled — prefix detection must be opt-in via with() */
+class TestOrderNoAutoJoin extends TestOrderDao
+{
+    protected bool $autoJoin = false;
 }
 
 /** TestOrderDao with customRelations overriding Item join type to INNER */
