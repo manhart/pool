@@ -1132,15 +1132,42 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     {
         $prefixes = [];
 
-        $extractFromRules = function (array $rules) use (&$prefixes, &$extractFromRules): void {
+        $quoteStart = $this->symbolQuote[0];
+        $quoteEnd = $this->symbolQuote[1];
+        $quotes = $quoteStart.$quoteEnd;
+
+        $qS = preg_quote($quoteStart, '/');
+        $qE = preg_quote($quoteEnd, '/');
+        // Sucht nach: (Bezeichner) gefolgt von einem Punkt und einem (Bezeichner)
+        // der negative Lookahead (?!\s*\.) sorgt dafür, dass bei db.table.column
+        // nur "table" (vor dem letzten Punkt) gematcht wird.
+        // /(`[^`]+`|\w+)\s*\.\s*(?:`[^`]+`|\w+)(?!\s*\.)/u
+        // $pattern = "/({$qS}[^$qE]+$qE|\w+)\s*\.\s*(?:{$qS}[^$qE]+$qE|\w+)(?!\s*\.)/u";
+        $pattern = "/({$qS}[^$qE]++$qE|\w++)\s*\.\s*(?:{$qS}[^$qE]++$qE|\w++)(?!\s*\.)/u";
+
+        $extractPrefixes = static function (string $expr) use (&$prefixes, $pattern, $quotes): void {
+            if (!str_contains($expr, '.')) {
+                return;// No dot, i.e. no table-column structure, skip
+            }
+            if (preg_match('/^\s*\(*\s*SELECT\b/i', $expr)) {
+                return;// Subselect detected, skip
+            }
+            if (preg_match_all($pattern, $expr, $matches)) {
+                foreach ($matches[1] as $match) {
+                    $prefixes[trim($match, $quotes)] = true;
+                }
+            }
+        };
+
+        $extractFromRules = function (array $rules) use (&$extractFromRules, $extractPrefixes): void {
             foreach ($rules as $rule) {
                 if (!is_array($rule)) continue;
                 if (is_array($rule[0])) {
                     $extractFromRules($rule[0]);
                     continue;
                 }
-                if (is_string($rule[0]) && str_contains($rule[0], '.')) {
-                    $prefixes[explode('.', $rule[0], 2)[0]] = true;
+                if (is_string($rule[0])) {
+                    $extractPrefixes($rule[0]);
                 }
             }
         };
@@ -1148,16 +1175,13 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $extractFromRules($filter);
         $extractFromRules($having);
 
-        foreach (array_merge(array_keys($sorting), array_keys($groupBy)) as $col) {
-            if (is_string($col) && str_contains($col, '.')) {
-                $prefixes[explode('.', $col, 2)[0]] = true;
-            }
+        /* @todo SqlStatement */
+        foreach (array_merge(array_keys($sorting), array_keys($groupBy)) as $expr) {
+            $extractPrefixes($expr);
         }
 
-        foreach ($this->columns as $col) {
-            if (str_contains($col, '.')) {
-                $prefixes[explode('.', $col, 2)[0]] = true;
-            }
+        foreach ($this->columns as $expr) {
+            $extractPrefixes($expr);
         }
 
         return array_keys($prefixes);
@@ -1171,7 +1195,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $changed = true;
         while ($changed) {
             $changed = false;
-            foreach (array_keys($toJoin) as $alias) {
+            foreach ($toJoin as $alias => $_) {
                 $source = $relations[$alias]['source'] ?? null;
                 if ($source !== null && !isset($toJoin[$source])) {
                     $toJoin[$source] = true;
@@ -1200,7 +1224,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             $sorted[] = $alias;
         };
 
-        foreach (array_keys($toJoin) as $alias) {
+        foreach ($toJoin as $alias => $_) {
             $visit($alias);
         }
 
