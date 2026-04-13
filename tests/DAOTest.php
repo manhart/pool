@@ -705,6 +705,18 @@ class DAOTest extends TestCase
         $this->assertStringNotContainsString('JOIN', $sql);
     }
 
+    public function testGetCountIgnoresQualifiedColumnsInDaoColumnList(): void
+    {
+        // $this->columns contains qualified references (e.g. via createWithColumns),
+        // but countFrom selects COUNT(*) — it must not trigger joins from columns.
+        $sql = $this->sqlFrom(
+            TestOrderDao::createWithColumns('Order.idOrder', 'Item.name')->getCount(),
+        );
+
+        $this->assertStringContainsString('SELECT COUNT(*)', $sql);
+        $this->assertStringNotContainsString('JOIN', $sql);
+    }
+
     public function testGetCountWithExplicitWithAddsJoin(): void
     {
         $sql = $this->sqlFrom(

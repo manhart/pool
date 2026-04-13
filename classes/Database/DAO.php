@@ -720,7 +720,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     ): RecordSet {
         $optionsStr = implode(' ', $options);
         $select ??= $this->column_list;
-        $joins = $this->buildJoins($filter, $sorting, $groupBy, $having);
+        $joins = $this->buildJoins($filter, $sorting, $groupBy, $having, $this->columns);
         $whereClause = $this->buildWhereClause($id, $key, $filter);
         $groupByClause = $this->buildGroupBy($groupBy);
         $havingClause = $this->buildHaving($having);
@@ -745,7 +745,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         null|string|array $key = null,
         array $filter = [],
     ): RecordSet {
-        $joins = $this->buildJoins($filter, [], [], []);
+        $joins = $this->buildJoins($filter);
         $whereClause = $this->buildWhereClause($id, $key, $filter);
         $count = $this->wrapSymbols('count');
 
@@ -1115,11 +1115,12 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * Detection order per query parameter group:
      *   filter/having : $rule[0] column name  (e.g. 'Customer.name')
      *   sorting/groupBy : array keys
-     *   columns       : $this->columns array entries
+     *   columns       : passed-in column expressions (selectFrom passes $this->columns,
+     *                   countFrom passes [] since COUNT(*) has no projections)
      * Final join set = auto-detected prefixes ∪ with()-requested aliases, topologically sorted.
      * After building, requestedRelations and runtimeRelations are reset for the next call.
      */
-    private function buildJoins(array $filter, array $sorting, array $groupBy, array $having): string
+    private function buildJoins(array $filter, array $sorting = [], array $groupBy = [], array $having = [], array $columns = []): string
     {
         $relations = $this->getRelations();
         if (!$relations) return '';
@@ -1130,7 +1131,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         // Auto-detect table prefixes from all query parameters
         $rootAlias = $this->tableAlias ?: $this->table;
         if ($autoJoinEnabled) {
-            foreach ($this->extractTablePrefixes($filter, $having, $sorting, $groupBy) as $prefix) {
+            foreach ($this->extractTablePrefixes($filter, $having, $sorting, $groupBy, $columns) as $prefix) {
                 if ($prefix !== $rootAlias && isset($relations[$prefix])) {
                     $toJoin[$prefix] = true;
                 }
@@ -1158,10 +1159,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     }
 
     /**
-     * Extracts table alias prefixes (e.g. 'Customer' from 'Customer.name') from filter/having rules
-     * and from keys of sorting/groupBy arrays. Skips the root table alias.
+     * Extracts table alias prefixes (e.g. 'Customer' from 'Customer.name') from filter/having rules,
+     * from keys of sorting/groupBy arrays, and from the passed-in column expressions.
+     * Skips the root table alias.
      */
-    private function extractTablePrefixes(array $filter, array $having, array $sorting, array $groupBy): array
+    private function extractTablePrefixes(array $filter, array $having, array $sorting, array $groupBy, array $columns): array
     {
         $prefixes = [];
 
@@ -1213,7 +1215,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             $extractPrefixes($expr);
         }
 
-        foreach ($this->columns as $expr) {
+        foreach ($columns as $expr) {
             $extractPrefixes($expr);
         }
 
