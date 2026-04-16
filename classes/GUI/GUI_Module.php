@@ -929,14 +929,20 @@ class GUI_Module extends Module
             $parameters = $ReflectionMethod->getParameters();
             $isVariadicParameter = $parameters[$numberOfParameters - 1]->isVariadic();
             if ($isVariadicParameter) array_pop($parameters);
-            foreach ($parameters as $Parameter) {
-                $parameterName = $Parameter->getName();
-                $value = $arguments->getVar($parameterName) ?? ($Parameter->isOptional() ? $Parameter->getDefaultValue()
-                    : throw new MissingArgumentException("Missing parameter $parameterName"));
+            foreach ($parameters as $parameter) {
+                $parameterName = $parameter->getName();
+                $value = $arguments->getVar($parameterName);
+                if ($value === null) {
+                    $value = match (true) {
+                        $parameter->isOptional() => $parameter->getDefaultValue(),
+                        $parameter->allowsNull() => null,
+                        default => throw new MissingArgumentException("Missing parameter $parameterName"),
+                    };
+                }
                 $arguments->delVar($parameterName);
                 if (is_string($value)) {
-                    if ($Parameter->hasType() && $Parameter->getType()->getName() !== 'mixed') {
-                        $value = match ($Parameter->getType()->getName()) {
+                    if ($parameter->hasType() && $parameter->getType()->getName() !== 'mixed') {
+                        $value = match ($parameter->getType()->getName()) {
                             'float' => (float)$value,
                             'int' => (int)$value,
                             'bool' => filter_var($value, FILTER_VALIDATE_BOOL),
