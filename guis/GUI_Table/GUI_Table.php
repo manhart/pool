@@ -16,6 +16,7 @@ use pool\classes\Core\Input\Input;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DAO\MySQL_DAO;
+use pool\classes\Database\Operator;
 use pool\classes\GUI\GUI_Module;
 
 /**
@@ -1278,10 +1279,11 @@ class GUI_Table extends GUI_Module
 
             $assoc = [
                 'expr' => $expr, // select expression
-                'alias' => $column['field'], // alias name
+                'alias' => $column['field'], // original field name as alias name
                 'type' => $column['poolType'] ?? '', // data type
                 'filterControl' => $filterControl, // filterControl
                 'filterByDbColumn' => $filterByDbColumn, // column
+                'field' => $column['field'], // original field name
             ];
 
             $searchable = $column['searchable'] ?? $this->getColumnProperty('searchable')['value'];
@@ -1538,7 +1540,7 @@ class GUI_Table extends GUI_Module
         if ($filterRules && $mandatoryFilter) {
             array_unshift($filterRules, '(');
             $filterRules[] = ')';
-            $filterRules[] = 'AND';
+            $filterRules[] = Operator::and;
         }
         return array_merge($filterRules, $mandatoryFilter);
     }
