@@ -242,15 +242,24 @@ class MySQL_DAO extends DAO
         $hasSearchFilter = false;
         foreach ($columns as $column) {
             $originalExpr = $column['expr'] ?? $column; // column or expression
-            $filterExpr = match ($column['type'] ?? '') {
+            $columnMeta = $this->getMetaData('columns')[$column['field']] ?? [];
+            $columnPhpType =
+                $columnMeta['phpType'] ?? '';
+            $filterExpr = match ($column['type'] ?? '') {// poolType
                 'date', 'date.time' => //temporal type
                 ($sqlTimeFormat = Weblication::getInstance()->getDefaultFormat("mysql.date_format.{$column['type']}")) ?//try fetch format-string
                     "DATE_FORMAT($originalExpr, '$sqlTimeFormat')" : $originalExpr,//set SQL to format temporal value
                 default => $originalExpr//unchanged
             };
             $columnName = $column['alias'] ?? $column;
+            // Use exact matching for numeric columns.
+            // Partial LIKE searches on numbers are usually not useful and can force full table scans.
+            [$operator, $searchString] = match ($columnPhpType) {
+                'int', 'bool' => [Operator::equal, (int)$searchString],
+                'float' => [Operator::equal, (float)$searchString],
+                default => [Operator::like, $searchString],
+            };
             if (isset($definedSearchKeywords[$columnName])) {//found additional metadata
-                $operator = Operator::like;
                 /** @var string $filterByValue */
                 $filterByValue = $definedSearchKeywords[$columnName];//get keyword for column name?
                 switch (($column['filterControl'] ?? false ?: 'input')) {//type of input?
@@ -264,22 +273,29 @@ class MySQL_DAO extends DAO
                         $filterByValue .= '%';//empty -> '%'
                         // 29.04.2022, AM, no automatically date_format necessary; override filterByColumn
                         $filterExpr = $originalExpr;
+                        $operator = Operator::like;
                         break;
                     default:
-                        $filterByValue = "%$filterByValue%";
+                        $filterByValue = match ($columnPhpType) {
+                            'int', 'bool' => (int)$filterByValue,
+                            'float' => (float)$filterByValue,
+                            default => $filterByValue,
+                        };
+                        $filterByValue = $operator === Operator::like ? "%$filterByValue%" : $filterByValue;
                 }
                 $filterByColumn = $column['filterByDbColumn'] ?? false ?: $filterExpr;
                 $definedFilter[] = [$filterByColumn, $operator, $filterByValue];
-            } elseif ($searchString) {//column not filtered -> look for searchString
+            } elseif ($searchString) {//column isn't filtered -> look for searchString
                 if ($hasSearchFilter) {
                     $filter[] = Operator::or;
                 }
-                $filter[] = [$filterExpr, Operator::like, "%$searchString%"];
+                $searchValue = $operator === Operator::like ? "%$searchString%" : $searchString;
+                $filter[] = [$filterExpr, $operator, $searchValue];
                 $hasSearchFilter = true;
             }//add condition, one column must match the searchString
         }
         return ($definedFilter && $filter) ?
-            array_merge(['('], $filter, [')'], ['and'], $definedFilter) ://both combined
+            array_merge(['('], $filter, [')'], [Operator::and], $definedFilter) ://both combined
             ($definedFilter ?: $filter);//the only filled one
     }
 
