@@ -41,6 +41,7 @@ use pool\classes\translator\TranslationProviderFactory_nop;
 use pool\classes\translator\TranslationProviderFactory_ResourceFile;
 use pool\classes\translator\Translator;
 use pool\guis\GUI_HeadData\GUI_HeadData;
+use pool\utils\HtmlMinifier;
 use Template;
 
 use function addEndingSlash;
@@ -92,6 +93,13 @@ class Weblication extends Component
     public const string REQUEST_PARAM_MODULE = 'module';
     public const string REQUEST_PARAM_METHOD = 'method';
     public const string REQUEST_PARAM_SCHEMA = 'schema';
+    /**
+     * HTML minify modes for {@see self::setHtmlMinify()}.
+     * OFF: no minify. LEAN: single-pass, collapse newline-indented whitespace. FULL: LEAN + drop comments.
+     */
+    public const int MINIFY_OFF = HtmlMinifier::MODE_OFF;
+    public const int MINIFY_LEAN = HtmlMinifier::MODE_LEAN;
+    public const int MINIFY_FULL = HtmlMinifier::MODE_FULL;
 
     /**
      * Is this request an ajax call
@@ -168,6 +176,16 @@ class Weblication extends Component
      * @var string Default charset
      */
     private string $charset = 'utf-8';
+
+    /**
+     * @var int one of self::MINIFY_OFF|MINIFY_LEAN|MINIFY_FULL
+     */
+    private int $htmlMinify = self::MINIFY_OFF;
+
+    /**
+     * @var array options forwarded to {@see HtmlMinifier::minify()}
+     */
+    private array $htmlMinifyOptions = [];
 
     /**
      * @var int Default charset
@@ -463,6 +481,28 @@ class Weblication extends Component
     {
         $this->progId = $progId;
         return $this;
+    }
+
+    /**
+     * Configure HTML output minification. Applied once in {@see self::render()} to the full
+     * response body. AJAX responses are never minified.
+     *
+     * @param int $mode one of self::MINIFY_OFF|MINIFY_LEAN|MINIFY_FULL
+     * @param array $options forwarded to {@see HtmlMinifier::minify()}, e.g. ['remove_comments' => true]
+     */
+    public function setHtmlMinify(int $mode, array $options = []): static
+    {
+        $this->htmlMinify = $mode;
+        $this->htmlMinifyOptions = $options;
+        return $this;
+    }
+
+    /**
+     * Current HTML minify mode.
+     */
+    public function getHtmlMinify(): int
+    {
+        return $this->htmlMinify;
     }
 
     /**
@@ -1007,6 +1047,8 @@ class Weblication extends Component
      *   application.charset
      *   application.locale
      *   application.version
+     *   application.htmlMinify - sets the minify mode (MINIFY_OFF, MINIFY_LEAN, MINIFY_FULL)
+     *   application.htmlMinifyOptions - array of options for the minifier
      *   application.launchModule - sets the main module that is launched
      *   application.session.className - overrides default session class
      *   application.languages - array of languages
@@ -1061,6 +1103,11 @@ class Weblication extends Component
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
         $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
         $this->setVersion($settings['application.version'] ?? $this->getVersion());
+
+        // HTML Minifier Settings
+        if (isset($settings['application.htmlMinify'])) {
+            $this->setHtmlMinify((int)$settings['application.htmlMinify'], $settings['application.htmlMinifyOptions'] ?? []);
+        }
 
         $this->isInitialized = true;
     }
@@ -1304,7 +1351,11 @@ class Weblication extends Component
     public function render(): static
     {
         if ($this->run($this->getLaunchModule())) {
-            echo $this->Main->render();
+            $html = $this->Main->render();
+            if ($this->htmlMinify !== self::MINIFY_OFF && !self::$isAjax) {
+                $html = HtmlMinifier::minify($html, $this->htmlMinify, $this->htmlMinifyOptions);
+            }
+            echo $html;
         }
 
         $measurePageSpeed = IS_DEVELOP || ((int)($_REQUEST['measurePageSpeed'] ?? 0));
@@ -1334,11 +1385,9 @@ class Weblication extends Component
         $mainGUI->searchGUIsInPreloadedContent();
 
         if ($this->hasFrame()) {
-            //Seitentitel (= Project)
-            $Header = $this->getFrame()->getHeadData();
-
-            $Header->setTitle($this->title);
-            if ($this->charset) $Header->setCharset($this->charset);
+            $htmlHead = $this->getFrame()->getHeadData();
+            $htmlHead->setTitle($this->title);
+            if ($this->charset) $htmlHead->setCharset($this->charset);
         }
         return $this;
     }
@@ -1360,6 +1409,7 @@ class Weblication extends Component
      * Error handling wrapper around finalizeContent of the Main-GUI
      *
      * @return string website content
+     * @deprecated
      */
     protected function finalizeContent(): string
     {
