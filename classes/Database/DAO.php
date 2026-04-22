@@ -1177,19 +1177,16 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         // der negative Lookahead (?!\s*\.) sorgt dafür, dass bei db.table.column
         // nur "table" (vor dem letzten Punkt) gematcht wird.
         // /(`[^`]+`|\w+)\s*\.\s*(?:`[^`]+`|\w+)(?!\s*\.)/u
-        // $pattern = "/({$qS}[^$qE]+$qE|\w+)\s*\.\s*(?:{$qS}[^$qE]+$qE|\w+)(?!\s*\.)/u";
-        $pattern = "/({$qS}[^$qE]++$qE|\w++)\s*\.\s*(?:{$qS}[^$qE]++$qE|\w++)(?!\s*\.)/u";
+        // $pattern = "/({$qS}[^$qE]++$qE|\w++)\s*\.\s*(?:{$qS}[^$qE]++$qE|\w++)(?!\s*\.)/u";
+        $pattern = "/^\s*\(*\s*SELECT\b.* (*SKIP)(*F) | ({$qS}[^$qE]++$qE|\w++)\s*\.\s*(?:{$qS}[^$qE]++$qE|\w++)(?!\s*\.)/isux";
 
         $extractPrefixes = static function (string $expr) use (&$prefixes, $pattern, $quotes): void {
             if (!str_contains($expr, '.')) {
                 return;// No dot, i.e. no table-column structure, skip
             }
-            if (preg_match('/^\s*\(*\s*SELECT\b/i', $expr)) {
-                return;// Subselect detected, skip
-            }
             if (preg_match_all($pattern, $expr, $matches)) {
                 foreach ($matches[1] as $match) {
-                    $prefixes[trim($match, $quotes)] = true;
+                    if ($match !== '') $prefixes[trim($match, $quotes)] = true;
                 }
             }
         };
