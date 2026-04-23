@@ -481,25 +481,26 @@ class GUI_Module
      */
     request(ajaxMethod, data = {}, options = {})
     {
+        if((options === null || typeof options !== 'object')) {
+            options = {};
+        }
         // the data attribute is a simplification for parameter passing. POST => body = data. GET => query = data.
-        let key = 'query';
-        if (options.method) {
-            switch (options.method) {
-                case 'GET':
-                    break;
-                case 'POST':
-                    key = 'body';
-                    break;
-                default:
-                    throw new Error(`Unrecognized request Method ${options.method}`);
-            }
+        let key;
+        switch(options.method ??= 'POST') {
+            case 'GET':
+                key = 'query';
+                break;
+            case 'POST':
+                key = 'body';
+                break;
+            default:
+                throw new Error(`Unrecognized request Method ${options.method}`);
         }
         options[key] = data;
-
         const {
             headers,
             query = null,
-            method = 'GET',
+            method,
             module = this.getFullyQualifiedClassName(),
             moduleName = this.getName(),
             body,
@@ -515,6 +516,7 @@ class GUI_Module
             },
             ...extraOpts
         };
+
 
         let defaultContentType = 'application/json';
 
