@@ -15,6 +15,10 @@
  * @see https://github.com/manhart/pool
  */
 
+/**
+ * @noinspection PhpUnused
+ */
+
 declare(strict_types = 1);
 
 namespace pool\classes\Core;
@@ -70,7 +74,6 @@ use function readDirs;
 use function register_shutdown_function;
 use function reset;
 use function session_status;
-use function sprintf;
 use function strrpos;
 use function substr;
 use function trim;
@@ -245,7 +248,7 @@ class Weblication extends Component
      */
     public const int LOCALE_UNCHANGED = 0;
     /**
-     * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
+     * ISO-3166 Country Code. If a locale does not have a region, the best fitting one is taken.
      */
     public const int LOCALE_FORCE_REGION = 1;
     /**

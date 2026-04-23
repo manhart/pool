@@ -72,7 +72,7 @@ class GUI_Module extends Module
     protected bool $autoLoadFiles = true;
 
     /**
-     * Pass result unchanged as JSON string through
+     * Pass result unchanged as a JSON string through
      */
     protected bool $plainJSON = false;
 
@@ -382,7 +382,7 @@ class GUI_Module extends Module
                 $callback($new_GUI);
             }
             //get unique identifier
-            $guiIdentifier = "[{$moduleName}]";
+            $guiIdentifier = "[$moduleName]";
             //store reference for later insertion in pasteChildren()
             $new_GUI->setMarker($guiIdentifier);
             //add GUI to child-list
