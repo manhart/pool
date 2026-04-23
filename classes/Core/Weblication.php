@@ -15,6 +15,10 @@
  * @see https://github.com/manhart/pool
  */
 
+/**
+ * @noinspection PhpUnused
+ */
+
 declare(strict_types = 1);
 
 namespace pool\classes\Core;
@@ -70,7 +74,6 @@ use function readDirs;
 use function register_shutdown_function;
 use function reset;
 use function session_status;
-use function sprintf;
 use function strrpos;
 use function substr;
 use function trim;
@@ -178,9 +181,9 @@ class Weblication extends Component
     private string $charset = 'utf-8';
 
     /**
-     * @var int one of self::MINIFY_OFF|MINIFY_LEAN|MINIFY_FULL
+     * @var int one of HtmlMinifier::MODE_OFF|HtmlMinifier::MODE_LEAN|HtmlMinifier::MODE_FULL
      */
-    private int $htmlMinify = self::MINIFY_OFF;
+    private int $htmlMinify = HtmlMinifier::MODE_OFF;
 
     /**
      * @var array options forwarded to {@see HtmlMinifier::minify()}
@@ -252,7 +255,7 @@ class Weblication extends Component
      */
     public const int LOCALE_UNCHANGED = 0;
     /**
-     * ISO-3166 Country Code. If locale does not have a region, the best fitting one is taken.
+     * ISO-3166 Country Code. If a locale does not have a region, the best fitting one is taken.
      */
     public const int LOCALE_FORCE_REGION = 1;
     /**
@@ -487,7 +490,7 @@ class Weblication extends Component
      * Configure HTML output minification. Applied once in {@see self::render()} to the full
      * response body. AJAX responses are never minified.
      *
-     * @param int $mode one of self::MINIFY_OFF|MINIFY_LEAN|MINIFY_FULL
+     * @param int $mode one of HtmlMinifier::MODE_OFF|HtmlMinifier::MODE_LEAN|HtmlMinifier::MODE_FULL
      * @param array $options forwarded to {@see HtmlMinifier::minify()}, e.g. ['remove_comments' => true]
      */
     public function setHtmlMinify(int $mode, array $options = []): static
@@ -1047,7 +1050,7 @@ class Weblication extends Component
      *   application.charset
      *   application.locale
      *   application.version
-     *   application.htmlMinify - sets the minify mode (MINIFY_OFF, MINIFY_LEAN, MINIFY_FULL)
+     *   application.htmlMinify - sets the minify mode (HtmlMinifier::MODE_OFF, MODE_LEAN, MODE_FULL)
      *   application.htmlMinifyOptions - array of options for the minifier
      *   application.launchModule - sets the main module that is launched
      *   application.session.className - overrides default session class
@@ -1352,7 +1355,7 @@ class Weblication extends Component
     {
         if ($this->run($this->getLaunchModule())) {
             $html = $this->Main->render();
-            if ($this->htmlMinify !== self::MINIFY_OFF && !self::$isAjax) {
+            if ($this->htmlMinify !== HtmlMinifier::MODE_OFF && !self::$isAjax) {
                 $html = HtmlMinifier::minify($html, $this->htmlMinify, $this->htmlMinifyOptions);
             }
             echo $html;
