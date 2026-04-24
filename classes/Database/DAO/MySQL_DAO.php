@@ -254,7 +254,7 @@ class MySQL_DAO extends DAO
             $columnName = $column['alias'] ?? $column;
             // Use exact matching for numeric columns.
             // Partial LIKE searches on numbers are usually not useful and can force full table scans.
-            [$operator, $searchString] = match ($columnPhpType) {
+            [$operator, $searchStringCasted] = match ($columnPhpType) {
                 'int', 'bool' => [Operator::equal, (int)$searchString],
                 'float' => [Operator::equal, (float)$searchString],
                 default => [Operator::like, $searchString],
@@ -285,11 +285,11 @@ class MySQL_DAO extends DAO
                 }
                 $filterByColumn = $column['filterByDbColumn'] ?? false ?: $filterExpr;
                 $definedFilter[] = [$filterByColumn, $operator, $filterByValue];
-            } elseif ($searchString) {//column isn't filtered -> look for searchString
+            } elseif ($searchStringCasted) {//column isn't filtered -> look for searchString
                 if ($hasSearchFilter) {
                     $filter[] = Operator::or;
                 }
-                $searchValue = $operator === Operator::like ? "%$searchString%" : $searchString;
+                $searchValue = $operator === Operator::like ? "%$searchStringCasted%" : $searchStringCasted;
                 $filter[] = [$filterExpr, $operator, $searchValue];
                 $hasSearchFilter = true;
             }//add condition, one column must match the searchString
