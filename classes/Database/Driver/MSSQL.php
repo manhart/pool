@@ -11,6 +11,7 @@
 namespace pool\classes\Database\Driver;
 
 use pool\classes\Database\Connection;
+use pool\classes\Database\DAO\MSSQL_DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
@@ -52,10 +53,10 @@ class MSSQL extends Driver
      */
     protected static string $provider = 'sqlsrv';
 
-    /**
-     * @var resource SQLSRV connection
-     */
-    private $sqlsrv;
+    public static function getDefaultDAOClass(): string
+    {
+        return MSSQL_DAO::class;
+    }
 
     /**
      * @var string Default charset

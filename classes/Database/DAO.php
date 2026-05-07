@@ -11,7 +11,6 @@
 namespace pool\classes\Database;
 
 use Closure;
-use CustomMySQL_DAO;
 use DateTimeInterface;
 use JetBrains\PhpStorm\Pure;
 use mysqli_sql_exception;
@@ -337,12 +336,12 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             throw new DAOException("Fatal error: You can't use the static property \$tableName and the \$tableDefine parameter at the same time!", 2);
         }
 
-        // workaround
-        $className = static::class === __CLASS__ ? CustomMySQL_DAO::class : static::class;
-
         $class_exists = class_exists($tableName, false);
 
-        $driver = DataInterface::getInterfaceForResource($databaseAlias)->getDriverName();
+        $Interface = DataInterface::getInterfaceForResource($databaseAlias);
+        $driver = $Interface->getDriverName();
+        $className = static::class === __CLASS__ ? $Interface->getDefaultDAOClass() : static::class;
+
         $databaseName = DataInterface::getDatabaseForResource($databaseAlias);
         $dir = addEndingSlash(DIR_DAOS_ROOT)."$driver/$databaseName";
         $include = "$dir/$tableName.php";

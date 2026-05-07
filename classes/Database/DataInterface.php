@@ -826,6 +826,14 @@ class DataInterface extends PoolObject
     }
 
     /**
+     * Returns the driver's default DAO class for tables without generated DAO class.
+     */
+    public function getDefaultDAOClass(): string
+    {
+        return ($this->driver)::getDefaultDAOClass();
+    }
+
+    /**
      * Opens a connection to a database
      *
      * @throws Exception

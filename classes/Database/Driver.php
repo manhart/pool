@@ -85,6 +85,14 @@ abstract class Driver
     }
 
     /**
+     * Returns the default DAO class for tables without a generated DAO class.
+     */
+    public static function getDefaultDAOClass(): string
+    {
+        return \CustomMySQL_DAO::class;
+    }
+
+    /**
      * Sets the charset for the connection
      */
     abstract public function setCharset(string $charset): static;
