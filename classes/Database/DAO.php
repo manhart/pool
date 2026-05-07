@@ -236,7 +236,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         return $string ? "{$this->symbolQuote[0]}$string{$this->symbolQuote[1]}" : '';
     }
 
-    private function createCommands(): array
+    protected function createCommands(): array
     {
         return [
             Commands::Now->name => 'NOW()',
