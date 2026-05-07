@@ -589,6 +589,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     ): RecordSet {
         $optionsStr = implode(' ', $options);
         $select ??= $this->column_list;
+        $selectPrefix = $this->buildSelectPrefix($limit);
         $whereClause = $this->buildWhereClause($id, $key, $filter);
         $groupByClause = $this->buildGroupBy($groupBy);
         $havingClause = $this->buildHaving($having);
@@ -596,7 +597,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         $limitClause = $this->buildLimit($limit);
 
         $sql = <<<SQL
-            SELECT $optionsStr $select
+            SELECT $optionsStr $selectPrefix$select
             FROM $from
             $whereClause
             $groupByClause
@@ -859,6 +860,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * @param array $limit LIMIT with format [offset, length]
      * @return string LIMIT statement
      */
+    protected function buildSelectPrefix(array $limit): string
+    {
+        return '';
+    }
+
     protected function buildLimit(array $limit): string
     {
         return $limit ? ' LIMIT '.implode(', ', $limit) : '';
