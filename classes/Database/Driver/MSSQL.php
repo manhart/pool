@@ -280,7 +280,7 @@ class MSSQL extends Driver
      */
     public function releaseSavePoint(Connection $connection, string $savepoint): bool
     {
-        return is_resource($connection->rollbackToSavePoint($connection, $savepoint));
+        return is_resource($connection->rollbackToSavePoint($savepoint));
     }
 
     /**
