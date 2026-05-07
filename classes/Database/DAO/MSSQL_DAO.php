@@ -20,24 +20,6 @@ class MSSQL_DAO extends DAO
     protected array $symbolQuote = ['[', ']'];
 
     /**
-     * @inheritDoc
-     */
-    public function getColumnDataType(string $column): string
-    {
-        // TODO: Implement getColumnDataType() method.
-        return '';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getColumnInfo(string $column): array
-    {
-        // TODO: Implement getColumnInfo() method.
-        return [];
-    }
-
-    /**
      * MSSQL requires a ORDER BY-clause if there is a LIMIT-clause. By default, if nothing is given we sort by the primary key.
      */
     public function getMultiple(

@@ -19,7 +19,6 @@ use pool\classes\translator\Translator;
 use function array_merge;
 use function date_parse;
 use function explode;
-use function is_string;
 use function sprintf;
 use function strpos;
 use function substr;
@@ -45,23 +44,12 @@ class MySQL_DAO extends DAO
     ];
 
     /**
-     * @var array<string, array> Cached field metadata by column name.
-     */
-    private array $fieldInfoByColumn = [];
-
-    /**
      * Constructor.
      */
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
         parent::__construct($databaseAlias, $table);
         $this->setColumns(...$this->columns);
-    }
-
-    public function fetchColumns(): static
-    {
-        $this->fieldInfoByColumn = [];
-        return parent::fetchColumns();
     }
 
     /**
@@ -139,37 +127,6 @@ class MySQL_DAO extends DAO
             $type = substr($type, 0, $pos);
         }
         return $type;
-    }
-
-    /**
-     * Returns the column info details
-     */
-    public function getColumnInfo(string $column): array
-    {
-        return $this->getFieldInfo($column);
-    }
-
-    private function getFieldInfo(string $column): array
-    {
-        if (!$this->field_list) {
-            $this->fieldInfoByColumn = [];
-            $this->fetchColumns();
-        }
-
-        if (!$this->fieldInfoByColumn) {
-            foreach ($this->field_list as $field) {
-                $columnName = $field['COLUMN_NAME'] ?? null;
-                if (is_string($columnName) && $columnName !== '') {
-                    $this->fieldInfoByColumn[$columnName] = $field;
-                }
-            }
-        }
-
-        if (isset($this->fieldInfoByColumn[$column])) {
-            return $this->fieldInfoByColumn[$column];
-        }
-
-        throw new DAOException("Column $column not found in table $this->table");
     }
 
     /**

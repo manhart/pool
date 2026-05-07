@@ -41,10 +41,10 @@ use function file_exists;
 use function gettype;
 use function implode;
 use function is_array;
-use function is_bool;
 use function is_float;
 use function is_int;
 use function is_null;
+use function is_string;
 use function strtolower;
 
 /**
@@ -144,6 +144,11 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * @var array
      */
     protected array $field_list = [];
+
+    /**
+     * @var array<string, array> Cached field metadata by column name.
+     */
+    private array $fieldInfoByColumn = [];
 
     /**
      * @var array|true[] valid logical operators
@@ -286,9 +291,49 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      */
     public function fetchColumns(): static
     {
+        $this->fieldInfoByColumn = [];
         $columns = $this->fetchColumnsList();
         $this->setColumns(...$columns);
         return $this;
+    }
+
+    /**
+     * Returns the data type of the column
+     */
+    public function getColumnDataType(string $column): string
+    {
+        return $this->getFieldInfo($column)['DATA_TYPE'] ?? '';
+    }
+
+    /**
+     * Returns the column info details
+     */
+    public function getColumnInfo(string $column): array
+    {
+        return $this->getFieldInfo($column);
+    }
+
+    protected function getFieldInfo(string $column): array
+    {
+        if (!$this->field_list) {
+            $this->fieldInfoByColumn = [];
+            $this->fetchColumns();
+        }
+
+        if (!$this->fieldInfoByColumn) {
+            foreach ($this->field_list as $field) {
+                $columnName = $field['COLUMN_NAME'] ?? null;
+                if (is_string($columnName) && $columnName !== '') {
+                    $this->fieldInfoByColumn[$columnName] = $field;
+                }
+            }
+        }
+
+        if (isset($this->fieldInfoByColumn[$column])) {
+            return $this->fieldInfoByColumn[$column];
+        }
+
+        throw new DAOException("Column $column not found in table $this->table");
     }
 
     private function fetchColumnsList(): array
