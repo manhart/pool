@@ -26,7 +26,6 @@ use function array_key_exists;
 use function array_key_first;
 use function array_rand;
 use function array_values;
-use function assert;
 use function constant;
 use function count;
 use function defined;
@@ -350,6 +349,7 @@ class DataInterface extends PoolObject
         ?callable $callbackOnFetchRow = null,
         array $metaData = [],
         $useExceptions = false,
+        array $statementParams = [],
     ): RecordSet {
         //        $cacheKey = md5($sql);
         //        if(($rowSet = self::$memcached->get($cacheKey)) !== false) {
@@ -362,7 +362,7 @@ class DataInterface extends PoolObject
         $Stopwatch = $doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_LOG') && constant($x) === 1 ?
             Singleton::get('Stopwatch')?->start('SQL-QUERY') : null;// start time measurement
         try {//run
-            $query_resource = $interface::query($sql, $dbname);
+            $query_resource = $interface::query($sql, $dbname, $statementParams);
         } catch (Exception $e) {
             if (!$useExceptions && $e instanceof mysqli_sql_exception) {//keeping old behavior for g7Logistics
                 if (IS_TESTSERVER) throw new mysqli_sql_exception($e->getMessage()." SQL Statement: $sql", previous: $e);
@@ -461,7 +461,7 @@ class DataInterface extends PoolObject
      * @throws InvalidArgumentException|DatabaseConnectionException
      * @see DataInterface::getDBConnection
      */
-    public static function query(string $query, string $databaseAlias): mixed
+    public static function query(string $query, string $databaseAlias, array $statementParams = []): mixed
     {
         $Interface = static::getInterfaceForResource($databaseAlias);
         //Store query in attribute
@@ -487,7 +487,7 @@ class DataInterface extends PoolObject
         $Interface->totalQueries++;
 
         $Connection = $Interface->getDBConnection($databaseAlias, $mode);//connect
-        $Interface->query_resource = $Connection->query($sql);//run
+        $Interface->query_resource = $Connection->query($sql, $statementParams);
         $Interface->lastConnection = $Connection;
         if ($Interface->query_resource) $Interface->last_command = $command;
         if (defined($x = 'LOG_ENABLED') && constant($x) &&
@@ -955,12 +955,10 @@ class DataInterface extends PoolObject
     /**
      * Returns the number of rows in a query resource
      */
-    public function numRows(mixed $query_resource = null): int
+    public function numRows(mixed $query_resource = null): int|false
     {
         $query_resource ??= $this->query_resource;
-        $result = $this->lastConnection?->getNumRows($query_resource) ?? 0;
-        assert(is_int($result));
-        return $result;
+        return $this->lastConnection?->getNumRows($query_resource) ?? 0;
     }
 
     /** Mit diesem Schalter werden alle Lesevorgänge auf die Backenddatenbank umgeleitet. **/

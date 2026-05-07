@@ -62,16 +62,6 @@ class MSSQL extends Driver
      */
     private string $charset = 'UTF-8';
 
-    /**
-     * @param DataInterface $dataInterface
-     * @param string $hostname
-     * @param int $port
-     * @param string $username
-     * @param string $password
-     * @param string $database
-     * @param mixed ...$options
-     * @return resource
-     */
     public function connect(
         DataInterface $dataInterface,
         string $hostname,
@@ -132,14 +122,13 @@ class MSSQL extends Driver
     /**
      * Executes a query and returns the query result
      *
-     * @param Connection $connection
      * @param string $query SQL query
-     * @param ...$params
+     * @param array $statementParams Prepared statement values
      * @return mixed query result
      */
-    public function query(Connection $connection, string $query, ...$params): mixed
+    public function query(Connection $connection, string $query, array $statementParams = []): mixed
     {
-        return sqlsrv_query($connection->getConnection(), $query, $params);
+        return sqlsrv_query($connection->getConnection(), $query, $statementParams);
     }
 
     /**
@@ -181,9 +170,7 @@ class MSSQL extends Driver
     /**
      * Gets the number of affected rows in a previous SQL operation
      *
-     * @param Connection $connection
      * @param resource $result
-     * @return int|false
      */
     public function affectedRows(Connection $connection, mixed $result): int|false
     {
@@ -199,7 +186,7 @@ class MSSQL extends Driver
     }
 
     /**
-     * Get the columns info of a table
+     * Get the column info of a table
      */
     public function getTableColumnsInfo(Connection $connection, string $database, string $table): array
     {

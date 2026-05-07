@@ -17,6 +17,10 @@ use pool\classes\Database\DataInterface;
 use pool\classes\Database\Driver;
 use pool\classes\Database\Exception\DatabaseConnectionException;
 
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_null;
 use function mysqli_connect_errno;
 use function mysqli_connect_error;
 use function mysqli_init;
@@ -173,7 +177,7 @@ class MySQLi extends Driver
             WHERE TABLE_SCHEMA = '$database'
               AND TABLE_NAME = '$table'
             SQL;
-        $result = $this->query($connection, $query, result_mode: MYSQLI_USE_RESULT);
+        $result = @$connection->getConnection()->query($query, MYSQLI_USE_RESULT);
         $fieldList = $fields = $pk = [];
         while ($row = $this->fetch($result)) {
             $phpType = match ($row['DATA_TYPE']) {
@@ -203,11 +207,36 @@ class MySQLi extends Driver
      * Executes a query and returns the query result
      *
      * @param string $query SQL query
+     * @param array $statementParams Prepared statement values
      * @return mixed query result
      */
-    public function query(Connection $connection, string $query, ...$params): mixed
+    public function query(Connection $connection, string $query, array $statementParams = []): mixed
     {
-        return @$connection->getConnection()->query($query, $params['result_mode'] ?? MYSQLI_STORE_RESULT);
+        $mysqli = $connection->getConnection();
+        if (!$statementParams) {
+            return @$mysqli->query($query, MYSQLI_STORE_RESULT);
+        }
+
+        $types = '';
+        foreach ($statementParams as $value) {
+            $types .= match (true) {
+                is_null($value) => 's', // mysqli accepts NULL for any bind type
+                is_int($value), is_bool($value) => 'i',
+                is_float($value) => 'd',
+                default => 's',
+            };
+        }
+
+        $stmt = @$mysqli->prepare($query);
+        if (!$stmt || !$stmt->bind_param($types, ...$statementParams)) {
+            return false;
+        }
+
+        if (!@$stmt->execute()) {
+            return false;
+        }
+
+        return $stmt->field_count ? $stmt->get_result() : true;
     }
 
     /**

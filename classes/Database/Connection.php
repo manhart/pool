@@ -40,9 +40,9 @@ class Connection extends PoolObject
     /**
      * Executes a query and returns the query result
      */
-    public function query(string $query, ...$params): mixed
+    public function query(string $query, array $statementParams = []): mixed
     {
-        return $this->driver->query($this, $query, ...$params);
+        return $this->driver->query($this, $query, $statementParams);
     }
 
     /**
@@ -56,12 +56,12 @@ class Connection extends PoolObject
         }
     }
 
-    public function fetch(mixed $result): array|false
+    public function fetch(mixed $result): array|null|false
     {
         return $this->driver->fetch($result);
     }
 
-    public function getNumRows(mixed $result): int
+    public function getNumRows(mixed $result): int|false
     {
         return $this->driver->numRows($result);
     }

@@ -61,7 +61,12 @@ abstract class Driver
     /**
      * Gets the number of rows in the result set
      */
-    abstract public function numRows(mixed $result): int;
+    abstract public function numRows(mixed $result): int|false;
+
+    /**
+     * Ask the driver if the result has rows
+     */
+    abstract public function hasRows(mixed $result): bool;
 
     /**
      * Returns the default port for the driver
@@ -102,12 +107,11 @@ abstract class Driver
     /**
      * Executes a query and returns the query result
      *
-     * @param Connection $connection
      * @param string $query SQL query
-     * @param ...$params
+     * @param array $statementParams Prepared statement values
      * @return mixed query result
      */
-    abstract public function query(Connection $connection, string $query, ...$params): mixed;
+    abstract public function query(Connection $connection, string $query, array $statementParams = []): mixed;
 
     /**
      * Fetch the next row of a result set as an associative array
@@ -145,7 +149,7 @@ abstract class Driver
     abstract public function affectedRows(Connection $connection, mixed $result): int|false;
 
     /**
-     * Get the columns info of a table
+     * Get the column info of a table
      */
     abstract public function getTableColumnsInfo(Connection $connection, string $database, string $table): array;
 
