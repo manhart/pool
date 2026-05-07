@@ -14,7 +14,7 @@
   ~ @see https://github.com/manhart/pool
   -->
 
-<phpunit bootstrap="pool.lib.php" colors="true" failOnWarning="true" failOnDeprecation="true" displayDetailsOnTestsThatTriggerWarnings="true"
+<phpunit bootstrap="tests/bootstrap.php" colors="true" failOnWarning="true" failOnDeprecation="true" displayDetailsOnTestsThatTriggerWarnings="true"
          displayDetailsOnTestsThatTriggerDeprecations="true" testdox="true" testdoxSummary="true">
     <testsuites>
         <testsuite name="default">
