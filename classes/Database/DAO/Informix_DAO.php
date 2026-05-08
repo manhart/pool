@@ -21,10 +21,20 @@ class Informix_DAO extends DAO
 {
     protected array $symbolQuote = ['"', '"'];
 
+    /**
+     * Set to true for DSNs configured with DELIMIDENT=y.
+     */
+    protected static bool $delimitedIdentifiers = false;
+
     protected function __construct(?string $databaseAlias = null, ?string $table = null)
     {
         parent::__construct($databaseAlias, $table);
         $this->setColumns(...$this->columns);
+    }
+
+    protected function wrapSymbols(string $string): string
+    {
+        return static::$delimitedIdentifiers ? parent::wrapSymbols($string) : $string;
     }
 
     protected function createCommands(): array

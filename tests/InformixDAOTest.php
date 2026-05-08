@@ -21,9 +21,19 @@ use pool\classes\Exception\DAOException;
 
 class InformixDAOTest extends TestCase
 {
-    public function testGetMultipleWithoutConditionsUsesInformixIdentifierRules(): void
+    public function testGetMultipleWithoutConditionsUsesUndelimitedInformixIdentifiersByDefault(): void
     {
         $sql = $this->sqlFrom(TestInformixUserDao::create(throws: true)->setColumns('email')->getMultiple());
+
+        $this->assertSame(
+            'SELECT User.email FROM User',
+            $sql,
+        );
+    }
+
+    public function testGetMultipleCanUseDelimitedInformixIdentifiers(): void
+    {
+        $sql = $this->sqlFrom(TestInformixDelimitedUserDao::create(throws: true)->setColumns('email')->getMultiple());
 
         $this->assertSame(
             'SELECT "User"."email" FROM "User"',
@@ -48,7 +58,7 @@ class InformixDAOTest extends TestCase
 
         // language=genericsql
         $this->assertSame(
-            'SELECT SKIP 5 FIRST 10 "User"."email", "User"."deleted" FROM "User" WHERE email like \'%@mail.local\' and deleted = false ORDER BY email ASC',
+            'SELECT SKIP 5 FIRST 10 User.email, User.deleted FROM User WHERE email like \'%@mail.local\' and deleted = false ORDER BY email ASC',
             $sql,
         );
     }
@@ -62,7 +72,7 @@ class InformixDAOTest extends TestCase
         );
 
         $this->assertSame(
-            'SELECT "Orders"."order_id" FROM "testSchema"."Orders" WHERE order_id=\'ORD123\'',
+            'SELECT Orders.order_id FROM testSchema.Orders WHERE order_id=\'ORD123\'',
             $sql,
         );
     }
@@ -78,7 +88,7 @@ class InformixDAOTest extends TestCase
 
         // language=genericsql
         $this->assertSame(
-            'INSERT INTO "User" ("email","deleted") VALUES (\'user@mail.local\',false)',
+            'INSERT INTO User (email,deleted) VALUES (\'user@mail.local\',false)',
             $sql,
         );
     }
@@ -93,7 +103,7 @@ class InformixDAOTest extends TestCase
         );
 
         $this->assertSame(
-            'UPDATE "User" SET "deleted"=DEFAULT WHERE idUser=5',
+            'UPDATE User SET deleted=DEFAULT WHERE idUser=5',
             $sql,
         );
     }
@@ -105,7 +115,7 @@ class InformixDAOTest extends TestCase
         );
 
         $this->assertSame(
-            'DELETE FROM "User" WHERE idUser=5',
+            'DELETE FROM User WHERE idUser=5',
             $sql,
         );
     }
@@ -164,6 +174,11 @@ class TestInformixUserDao extends SqlCapturingInformixDao
         'email',
         'deleted',
     ];
+}
+
+class TestInformixDelimitedUserDao extends TestInformixUserDao
+{
+    protected static bool $delimitedIdentifiers = true;
 }
 
 class TestInformixSchemaDao extends SqlCapturingInformixDao
