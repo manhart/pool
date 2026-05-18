@@ -322,6 +322,10 @@ class Weblication extends Component
         self::CACHE_FILE_ACCESS => true,
     ];
 
+    private const string CACHE_NAMESPACE_HASH_ALGO = 'xxh64';
+
+    private ?string $cacheNamespace = null;
+
     /**
      * @var string working path
      */
@@ -539,7 +543,10 @@ class Weblication extends Component
      */
     public function setVersion(string $version): static
     {
-        $this->version = $version;
+        if ($this->version !== $version) {
+            $this->version = $version;
+            $this->cacheNamespace = null;
+        }
         return $this;
     }
 
@@ -1056,7 +1063,7 @@ class Weblication extends Component
     public function setup(array $settings = []): static
     {
         $this->initializeSettings($settings);
-        $this->refreshFileAccessCacheState();
+        $this->initializePoolRelativePath();
         $this->setupTranslator($settings);
         return $this;
     }
@@ -1085,13 +1092,6 @@ class Weblication extends Component
         }
 
         $this->setupMemory($settings['memcached.servers'] ?? '', $settings['memcached.ttl'] ?? self::CACHE_TTL);
-        // determine the relative client und server path from the application to the pool
-        if (!\pool\IS_CLI) {
-            $poolRelativePath = $this->getCachedItem('poolRelativePath') ?: makeRelativePathsFrom(null, DIR_POOL_ROOT); // try to find the pool
-            $poolRelativePath['clientside'] = defined('DIR_RELATIVE_DOCUMENT_ROOT') ? DIR_RELATIVE_DOCUMENT_ROOT.'/'.basename(DIR_POOL_ROOT) : $poolRelativePath['clientside'];
-            $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
-            $this->cacheItem('poolRelativePath', $poolRelativePath);
-        }
 
         // set well known setting
         $this->setName($settings['application.name'] ?? $this->getName());
@@ -1108,14 +1108,21 @@ class Weblication extends Component
         $this->isInitialized = true;
     }
 
-    protected function refreshFileAccessCacheState(): void
+    /**
+     * Initializes the relative POOL path after settings and the final application
+     * version are known. This method uses cacheItem()/getCachedItem(), whose keys
+     * include the cache namespace. The namespace depends on the app name, version,
+     * working directory, and deployed root paths, so this must run before translator,
+     * template, or asset setup performs further cached lookups.
+     */
+    protected function initializePoolRelativePath(): void
     {
-        if ($this->getCachedItem('workingDirectory') !== self::$workingDirectory || $this->getCachedItem('version') !== $this->getVersion()) {
-            // clear fs cache
-            $this->clearCache(self::CACHE_FILE_ACCESS);
-            $this->cacheItem('version', $this->getVersion());
-            $this->cacheItem('workingDirectory', self::$workingDirectory);
-        }
+        // determine the relative client und server path from the application to the pool
+        if (\pool\IS_CLI) return;
+        $poolRelativePath = $this->getCachedItem('poolRelativePath') ?: makeRelativePathsFrom(null, DIR_POOL_ROOT); // try to find the pool
+        $poolRelativePath['clientside'] = defined('DIR_RELATIVE_DOCUMENT_ROOT') ? DIR_RELATIVE_DOCUMENT_ROOT.'/'.basename(DIR_POOL_ROOT) : $poolRelativePath['clientside'];
+        $this->setPoolRelativePath($poolRelativePath['clientside'], $poolRelativePath['serverside']);
+        $this->cacheItem('poolRelativePath', $poolRelativePath);
     }
 
     /**
@@ -1566,7 +1573,24 @@ class Weblication extends Component
      */
     private function generateCacheKey(string $key, string $topic): string
     {
-        return "$topic:{$this->getName()}.$key";
+        return "$topic:{$this->getName()}:{$this->getCacheNamespace()}:$key";
+    }
+
+    /**
+     * Returns the release-aware cache namespace used to isolate cached values between deployments.
+     */
+    private function getCacheNamespace(): string
+    {
+        if ($this->cacheNamespace !== null) return $this->cacheNamespace;
+
+        clearstatcache(true);
+        $state = [$this->getVersion()];
+        $dirCommonRoot = defined('DIR_COMMON_ROOT') ? DIR_COMMON_ROOT : '';
+        foreach ([self::$workingDirectory, DIR_APP_ROOT, DIR_POOL_ROOT, $dirCommonRoot] as $path) {
+            $state[] = realpath($path) ?: $path;
+        }
+
+        return $this->cacheNamespace = hash(self::CACHE_NAMESPACE_HASH_ALGO, implode("\0", $state));
     }
 
     /**
@@ -1616,6 +1640,8 @@ class Weblication extends Component
 
     /**
      * Clear the cache for file system access (prefix "fs:")
+     *
+     * @deprecated https://www.php.net/manual/en/memcached.getallkeys.php (This method is intended for debugging purposes and should not be used at scale)
      */
     private function clearCache(string $topic = self::CACHE_ITEM): void
     {
