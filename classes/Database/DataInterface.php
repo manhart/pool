@@ -10,6 +10,7 @@
 
 namespace pool\classes\Database;
 
+use Closure;
 use Exception;
 use Log;
 use mysqli_sql_exception;
@@ -536,6 +537,9 @@ class DataInterface extends PoolObject
         $host = $this->hosts[$mode->value];
         $auth = $this->getAuth($mode);
         $credentials = $auth[$database] ?? $auth['all'] ?? [];
+        if ($credentials instanceof Closure) {
+            $credentials = $credentials();
+        }
         $db_pass = $credentials['password'] ?? '';
         $db_user = $credentials['username'] ?? '';
 
