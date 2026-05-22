@@ -770,15 +770,17 @@ function hyphenation(string $word): array
 }
 
 /**
- * Moves a file
+ * Moves a file.
+ *
+ * Uses rename() first, which is atomic on the same filesystem. The optional copy/unlink fallback supports cross-filesystem moves, but is not atomic.
  */
-function moveFile(string $source, string $dest): bool
+function moveFile(string $source, string $dest, bool $allowCopyFallback = true): bool
 {
     if (!@file_exists($source)) return false;
     $destDir = dirname($dest);
     if (!mkdirs($destDir, 0755)) return false;
-    // rename() for atomic performance
     if (@rename($source, $dest)) return true;
+    if (!$allowCopyFallback) return false;
     // Fallback for cross-partition moves if rename fails
     if (@copy($source, $dest)) {
         return @unlink($source);
