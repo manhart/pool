@@ -628,6 +628,7 @@ class GUI_Module extends Module
         $ajaxMethod = $this->ajaxMethods[$requestedMethod] ?? null;
         $Closure = $ajaxMethod['method'] ?? null;
         $this->plainJSON = $ajaxMethod['noFormat'] ?? false;
+        $hooks = $ajaxMethod['hooks'] ?? [];
         $dbInterfaces = $ajaxMethod['dbInterfaces'] ?? [];
         $logConfigurationName = $ajaxMethod['logConfigurationName'] ?? null;
 
@@ -676,6 +677,10 @@ class GUI_Module extends Module
                 // alternate: $result = $Closure->call($this, ...$args); // bind to another object possible
 
                 $result = $Closure(...$args);
+
+                if ($hooks !== []) {
+                    $this->dispatchAjaxHooks($hooks, $requestedMethod, $result);
+                }
 
                 $rollbackTransaction = $result['poolRollbackTransaction'] ?? false;
                 $statusCode = $result['poolStatusCode'] ?? null;
@@ -881,12 +886,14 @@ class GUI_Module extends Module
      * @param string $alias name of the method
      * @param Closure $method class for anonymous function
      * @param array $dbInterfaces list of database interfaces, for which transactions should be started, committed, or rolled back
+     * @param array $hooks run after the registered Ajax method completes.
      * @see GUI_Module::registerAjaxCalls()
      */
     protected function registerAjaxMethod(
         string $alias,
         Closure $method,
         bool $noFormat = false,
+        array $hooks = [],
         array $dbInterfaces = [],
         ?string $logConfigurationName = null,
         ...$meta
@@ -894,6 +901,7 @@ class GUI_Module extends Module
         $meta['alias'] = $alias;
         $meta['method'] = $method;
         $meta['noFormat'] = $noFormat;
+        $meta['hooks'] = $hooks;
         $meta['dbInterfaces'] = $dbInterfaces;
         $meta['logConfigurationName'] = $logConfigurationName;
         $this->ajaxMethods[$alias] = $meta;
@@ -970,5 +978,41 @@ class GUI_Module extends Module
         $this->provisionContent();
         if(!$this->isAjax) $this->prepareContent();
         return $this->finalizeContent();
+    }
+
+    private function runHookCallbacks(
+        array $callbacks,
+        string $requestedMethod,
+        mixed $result = null,
+    ): void {
+        foreach ($callbacks as $callback) {
+            if (is_callable($callback)) {
+                $callback($this, $requestedMethod, $result);
+            }
+        }
+    }
+
+    /**
+     * Dispatches AJAX hooks based on the outcome of the executed method.
+     * This method triggers callbacks for 'success', 'failure', and 'finally' hooks
+     * depending on the result of the AJAX operation.
+     */
+    private function dispatchAjaxHooks(
+        array $hooks,
+        string $requestedMethod,
+        mixed $result = null,
+    ): void {
+        $isSuccess = is_array($result) && (($result['success'] ?? false) === true); // attention! result[success] != result[data][success]
+
+        try {
+            if ($isSuccess) {
+                $this->runHookCallbacks($hooks['success'] ?? [], $requestedMethod, $result);
+            } else {
+                $this->runHookCallbacks($hooks['failure'] ?? [], $requestedMethod, $result);
+            }
+        }
+        finally {
+            $this->runHookCallbacks($hooks['finally'] ?? [], $requestedMethod, $result);
+        }
     }
 }
