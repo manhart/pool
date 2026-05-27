@@ -16,6 +16,7 @@
 
 use JetBrains\PhpStorm\Pure;
 use pool\classes\Core\Http\Request;
+use pool\classes\Exception\FileOperationException;
 
 /**
  * Returns the current Unix timestamp with microseconds.
@@ -767,6 +768,35 @@ function hyphenation(string $word): array
     }
 
     return $hyphenationPositions;
+}
+
+/**
+ * Atomically writes content to a file on the same filesystem.
+ *
+ * @throws FileOperationException|\Random\RandomException
+ */
+function writeFileAtomic(string $filePath, string $content): void
+{
+    $dir = dirname($filePath);
+    if (!mkdirs($dir, 0755)) {
+        throw new FileOperationException("Can't create directory: $dir");
+    }
+
+    $tmpFilePath = $filePath.'.tmp.'.bin2hex(random_bytes(3));
+    try {
+        // Store the temp file beside the final file so rename() can publish it atomically.
+        if (file_put_contents($tmpFilePath, $content) === false) {
+            throw new FileOperationException("Can't save file: $tmpFilePath");
+        }
+        if (!moveFile($tmpFilePath, $filePath, allowCopyFallback: false)) {
+            throw new FileOperationException("Can't finalize file: $filePath");
+        }
+    }
+    finally {
+        if (is_file($tmpFilePath)) {
+            @unlink($tmpFilePath);
+        }
+    }
 }
 
 /**
