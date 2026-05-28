@@ -354,9 +354,10 @@ function deleteDir(string $dir, bool $rmSelf = true): bool
  *
  * @see pathinfo() builtin function since PHP 4.0.3
  */
-function file_extension(string $file = ""): string
+function file_extension(string $file = ''): string
 {
-    return substr($file, (strrpos($file, '.') ? strrpos($file, '.') + 1 : strlen($file)), strlen($file));
+    $positionOfLastDot = strrpos($file, '.');
+    return substr($file, ($positionOfLastDot ? $positionOfLastDot + 1 : strlen($file)));
 }
 
 /**
