@@ -98,7 +98,31 @@ class GUI_Module extends Module
     protected array $cssFiles = [];
 
     /**
-     * @var array<string, string> $ajaxMethods
+     * Registered Ajax calls indexed by the client-facing alias.
+     * Possible metadata keys:
+     * - alias: registered method alias
+     * - method: closure to execute
+     * - noFormat: return plain JSON without POOL response wrapping
+     * - hooks: callbacks grouped by success, failure, and finally
+     * - dbInterfaces: database interfaces wrapped in a transaction
+     * - logConfigurationName: log configuration used for the Ajax response
+     * - recordPayload: record request and response payloads
+     * - flags: optional json_encode flags from variadic metadata
+     *
+     * @var array<string, array{
+     *     alias: string,
+     *     method: Closure,
+     *     noFormat: bool,
+     *     hooks: array{
+     *         success?: array<int, callable>,
+     *         failure?: array<int, callable>,
+     *         finally?: array<int, callable>
+     *     },
+     *     dbInterfaces: array<int, string>,
+     *     logConfigurationName: string|null,
+     *     recordPayload: bool,
+     *     flags?: int
+     * }> $ajaxMethods
      */
     protected array $ajaxMethods = [];
 
