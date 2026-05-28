@@ -1863,11 +1863,19 @@ function str_contains_any(string $haystack, array $needles, bool $case_sensitive
 
 /**
  * Currying is the process of transforming a function that takes multiple arguments into a sequence of functions.
- * You can use it as replacement for partial binding.
+ * You can use it as a replacement for partial binding.
  */
 function curry(Closure $closure, ...$args): Closure
 {
     return static fn(...$more) => $closure(...$args, ...$more);
+}
+
+/**
+ * Creates a closure that passes the result of the first closure into the second closure.
+ */
+function composite(Closure $main, Closure $second): Closure
+{
+    return static fn(...$args) => $second(...$main(...$args));
 }
 
 function containThrowable(Closure $closure, ?Closure $fallbackHandler = null): Closure
