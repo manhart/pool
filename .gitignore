@@ -8,3 +8,4 @@ composer.lock
 /guis/*/*/*.html
 /guis/*/*.json
 .phpunit.result.cache
+/tests/_output/
