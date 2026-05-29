@@ -1417,51 +1417,6 @@ class Weblication extends Component
     }
 
     /**
-     * Main logic of the front controller. compile main content.
-     * @deprecated
-     */
-    protected function prepareContent(): void
-    {
-        $this->Main->provisionContent();
-        if (!$this->Main->isAjax()) {
-            $this->Main->prepareContent();
-        }
-    }
-
-    /**
-     * Return finished HTML content
-     * Error handling wrapper around finalizeContent of the Main-GUI
-     *
-     * @return string website content
-     * @deprecated
-     */
-    protected function finalizeContent(): string
-    {
-        return $this->Main->finalizeContent();
-    }
-
-    /**
-     * Creates an array with given default values / structure for ajax results
-     *
-     * @return mixed
-     * @deprecated
-     */
-    public static function makeAjaxArray(&...$result): array
-    {
-        foreach ($result as $key => &$value) {
-            $value ??= match ($key) {
-                'success' => false,
-                'message' => '',
-                'row', 'rows', 'data' => [],
-                'count' => 0,
-                default => null
-            };
-        }
-        return $result;
-    }
-
-    #[Pure]
-    /**
      * Creates an array with references to the variadic default values for ajax results
      *
      * @return array<int|string, mixed>
