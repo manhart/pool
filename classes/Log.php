@@ -53,6 +53,7 @@ class Log
     const string EXIT_LEVEL = 'exit';
     const string COMMON = 'common';
     const string SQL_LOG_NAME = 'ResultSetSql';
+    const string AJAX_CALL_LOG = 'ajaxCallLog';
 
     /**
      * @var array facilities
