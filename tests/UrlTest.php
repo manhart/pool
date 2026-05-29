@@ -8,8 +8,16 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types = 1);
+
+namespace pool\tests;
+
 use PHPUnit\Framework\TestCase;
 use pool\classes\Core\Url;
+
+if (!class_exists(Url::class, false)) {
+    require_once __DIR__.'/bootstrap.php';
+}
 
 
 class UrlTest extends TestCase

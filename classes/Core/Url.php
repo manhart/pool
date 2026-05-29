@@ -141,7 +141,7 @@ class Url extends PoolObject implements Stringable, JsonSerializable
     {
         // initialize with the current url
         $this->scheme = Request::scheme();
-        $this->host = Request::host();
+        $this->host = Request::host() ?? '';
         $this->port = Request::port();
         $this->path = Request::scriptName();
         if ($preserveQuery) {
