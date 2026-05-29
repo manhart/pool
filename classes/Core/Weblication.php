@@ -15,16 +15,12 @@
  * @see https://github.com/manhart/pool
  */
 
-/**
- * @noinspection PhpUnused
- */
-
 declare(strict_types = 1);
 
 namespace pool\classes\Core;
 
 use Exception;
-use JetBrains\PhpStorm\Pure;
+use Log;
 use Locale;
 use pool\classes\Cache\Memory;
 use pool\classes\Core\Http\Request;
@@ -98,9 +94,9 @@ class Weblication extends Component
     public const string REQUEST_PARAM_SCHEMA = 'schema';
 
     /**
-     * Is this request an ajax call
+     * Is this request an ajax call?
      */
-    static public bool $isAjax = false;
+    private static bool $isAjax = false;
 
     /**
      * Titel der Weblication
@@ -122,6 +118,9 @@ class Weblication extends Component
      */
     private GUI_Module $Main;
 
+    /**
+     * @noinspection PhpGetterAndSetterCanBeReplacedWithPropertyHooksInspection
+     */
     private ?GUI_CustomFrame $Frame = null;
 
     /**
@@ -136,17 +135,15 @@ class Weblication extends Component
      */
     private static ?Weblication $Instance = null;
 
-    public Input $Input;
-
     /**
-     * client-side path to the pool
+     * Client-side path to the pool
      *
      * @var string
      */
     private string $poolClientSideRelativePath = 'pool';
 
     /**
-     * server-side path to the pool
+     * Server-side path to the pool
      *
      * @var string
      */
@@ -159,6 +156,9 @@ class Weblication extends Component
      */
     private string $skin = 'default';
 
+    /**
+     * @noinspection PhpGetterAndSetterCanBeReplacedWithPropertyHooksInspection
+     */
     private ?array $skins = null;
 
     /**
@@ -222,9 +222,9 @@ class Weblication extends Component
     private string $language = '';
 
     /**
-     * @var null|string an identifier used to get language, culture, or regionally-specific behavior
+     * @var string an identifier used to get language, culture, or regionally-specific behavior
      */
-    private ?string $locale = '';
+    private string $locale = '';
 
     /**
      * @var string used as fallback
@@ -240,6 +240,7 @@ class Weblication extends Component
      * Cookie for the application
      *
      * @var Cookie|null
+     * @noinspection PhpGetterAndSetterCanBeReplacedWithPropertyHooksInspection
      */
     private ?Cookie $Cookie = null;
 
@@ -298,14 +299,15 @@ class Weblication extends Component
     private bool $isInitialized = false;
 
     /**
-     * @var Memory Cache (Memcached)
+     * @var Memory|null Cache (Memcached)
      */
-    private readonly Memory $memory;
+    private ?Memory $memory = null;
 
     /**
      * @var int Cache time to live
      */
     private const int CACHE_TTL = 86400;
+
     /**
      * Types of caching
      */
@@ -332,8 +334,8 @@ class Weblication extends Component
     private static string $workingDirectory;
 
     /**
-     * is not allowed to call from outside to prevent from creating multiple instances,
-     * to use the singleton, you have to obtain the instance from Singleton::getInstance() instead
+     * is not allowed to call from outside to prevent from creating multiple instances;
+     * to use the singleton, you have to get the instance from Singleton::getInstance() instead
      */
     final private function __construct()
     {
@@ -358,6 +360,10 @@ class Weblication extends Component
         return self::$Instance;
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     * @noinspection PhpUnused
+     */
     public static function hasInstance(): bool
     {
         return static::$Instance !== null;
@@ -385,8 +391,8 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert den Ordner (Namen) der aktuellen Designvorlagen und Bilder zurueck.
-     * (wird derzeit fuer die Bilder und Html Templates missbraucht)
+     * Liefert den Ordner (Namen) der aktuellen Designvorlagen und Bilder zurück.
+     * (wird derzeit für die Bilder und Html Templates missbraucht)
      *
      * @return string Name des Designs (Skin)
      */
@@ -458,7 +464,7 @@ class Weblication extends Component
     }
 
     /**
-     * All kinds of formats. There are predefined ones: datetime, date and time
+     * All kinds of formats. There are predefined ones: datetime, date, and time
      */
     public function setDefaultFormats(array $formats): static
     {
@@ -476,6 +482,9 @@ class Weblication extends Component
 
     /**
      * Set an application id
+     *
+     * @psalm-suppress PossiblyUnusedMethod
+     * @noinspection PhpUnused
      */
     public function setProgId(int $progId): static
     {
@@ -499,6 +508,9 @@ class Weblication extends Component
 
     /**
      * Current HTML minify mode.
+     *
+     * @psalm-suppress PossiblyUnusedMethod
+     * @noinspection PhpUnused
      */
     public function getHtmlMinify(): int
     {
@@ -507,6 +519,9 @@ class Weblication extends Component
 
     /**
      * Get an application id (if set)
+     *
+     * @psalm-suppress PossiblyUnusedMethod
+     * @noinspection PhpUnused
      */
     public function getProgId(): ?int
     {
@@ -514,7 +529,7 @@ class Weblication extends Component
     }
 
     /**
-     * Is this request an ajax call
+     * Is this request an ajax call?
      */
     public static function isAjax(): bool
     {
@@ -522,7 +537,7 @@ class Weblication extends Component
     }
 
     /**
-     * Set default schema/layout, if request loads none
+     * Set the default schema /layout if the request loads none
      */
     public function setDefaultSchema(string $default = 'index'): static
     {
@@ -568,7 +583,7 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert das Haupt-GUI (meistens erstes GUI, das im Startscript uebergeben wurde).
+     * Liefert das Haupt-GUI (meistens das erste GUI, das im Startscript übergeben wurde).
      */
     public function getMain(): GUI_Module
     {
@@ -604,6 +619,9 @@ class Weblication extends Component
 
     /**
      * Sets a common skin folder
+     *
+     * @psalm-suppress PossiblyUnusedMethod
+     * @noinspection PhpUnused
      */
     public function setCommonSkinFolder(string $skinName): static
     {
@@ -611,6 +629,9 @@ class Weblication extends Component
         return $this;
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     */
     public function getCommonSkinFolder(): string
     {
         return $this->commonSkinFolder;
@@ -657,10 +678,12 @@ class Weblication extends Component
     }
 
     /**
-     * Liefert einen Pfad zum Skin-Verzeichnis zurück. Wenn der Parameter $additionalDir gef�llt wird, wird er an das Skin-Verzeichnis dran geh�ngt.
+     * Liefert einen Pfad zum Skin-Verzeichnis zurück. Wenn der Parameter $additionalDir gefüllt wird, wird er an das Skin-Verzeichnis dran gehängt.
      *
      * @param string $additionalDir Unterverzeichnis vom Skin-Verzeichnis
      * @throws FileNotFoundException
+     * @psalm-suppress PossiblyUnusedMethod
+     * @noinspection PhpUnused
      */
     public function getSkinPath(string $additionalDir = '', bool $absolute = true): string
     {
@@ -693,9 +716,11 @@ class Weblication extends Component
     }
 
     /**
-     * list skins
+     * List skins
      *
      * @return array skins
+     * @psalm-suppress PossiblyUnusedMethod
+     * @noinspection PhpUnused
      */
     public function getSkins(): array
     {
@@ -762,9 +787,9 @@ class Weblication extends Component
                 $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] =
                     is_dir(PWD_TILL_SKINS.'/'.$this->commonSkinFolder.'/'.$subFolder);
             }
-            return $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'];
+            return $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] === true;
         }
-        return $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'];
+        return $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] === true;
     }
 
     /**
@@ -784,7 +809,7 @@ class Weblication extends Component
                 $this->hasSkinFolder[$skinName][$subFolder]['__exists'] = is_dir("$skinFolder/$skinName/$subFolder");
             }
             if (is_null($language) && is_null($translated)) {
-                return $this->hasSkinFolder[$skinName][$subFolder]['__exists'];
+                return $this->hasSkinFolder[$skinName][$subFolder]['__exists'] === true;
             }
 
             if ($this->hasSkinFolder[$skinName][$subFolder]['__exists']) {
@@ -793,7 +818,7 @@ class Weblication extends Component
                     $this->hasSkinFolder[$skinName][$subFolder][$language]['__exists'] = is_dir("$skinFolder/$skinName/$subFolder/$language");
                 }
                 if (is_null($translated)) {
-                    return $this->hasSkinFolder[$skinName][$subFolder][$language]['__exists'];
+                    return $this->hasSkinFolder[$skinName][$subFolder][$language]['__exists'] === true;
                 }
 
                 if ($this->hasSkinFolder[$skinName][$subFolder][$language]['__exists']) {
@@ -802,20 +827,20 @@ class Weblication extends Component
                         $this->hasSkinFolder[$skinName][$subFolder][$language][$translated]['__exists'] =
                             is_dir("$skinFolder/$skinName/$subFolder/$language/$translated");
                     }
-                    return $this->hasSkinFolder[$skinName][$subFolder][$language][$translated]['__exists'];
+                    return $this->hasSkinFolder[$skinName][$subFolder][$language][$translated]['__exists'] === true;
                 }
             }
         }
 
-        return $this->hasSkinFolder[$skinName]['__exists'];
+        return $this->hasSkinFolder[$skinName]['__exists'] === true;
     }
 
     /**
-     * Sucht das uebergebene Template in einer fest vorgegebenen Verzeichnisstruktur.
-     * Zuerst im Ordner skins, als naechstes im guis Ordner. Wird der Parameter baseLib auf true gesetzt,
+     * Sucht das übergebene Template in einer fest vorgegebenen Verzeichnisstruktur.
+     * Zuerst beginnt die Suche im Ordner skins, als nächstes im "guis" Ordner. Wird der Parameter baseLib auf true gesetzt,
      * wird abschliessend noch in der baseLib gesucht.<br>
-     * Reihenfolge: <s>skin-translated+subdirTranslated</s> (<b>common-skin-translated</b> common-skin skin-translated skin) GUIs-Projekt+ <i>(..?skins of
-     * Projekt Common?..)</i> GUIs-Common+ ((..???..) GUIs-Baselib)
+     * Reihenfolge: "<s>skin-translated+subdirTranslated</s>" (<b>common-skin-translated</b> common-skin skin-translated skin) GUIs-Projekt+ <i>(..?skins of
+     * Projekt Common?..)</i> GUIs-Common+ ((..???..) GUIs base lib)
      *
      * @param string $filename Template Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
@@ -839,15 +864,15 @@ class Weblication extends Component
 
         $msg = "Template $filename in ".__METHOD__." not found!";
         if ($baseLib && !$this->getPoolServerSideRelativePath()) {
-            // if nothing was found, we give a hint to uninformed useres that the path has not been set.
+            // if nothing was found, we give a hint to uninformed users that the path has not been set.
             $msg .= ' You need to set the path to the pool with Weblication->setPoolRelativePath().';
         }
         throw new TemplateNotFoundException($msg);
     }
 
     /**
-     * Sucht das uebergebene StyleSheet in einer fest vorgegebenen Verzeichnisstruktur.
-     * Zuerst im Ordner skins, als naechstes im guis Ordner.<br>
+     * Sucht das übergebene StyleSheet in einer fest vorgegebenen Verzeichnisstruktur.
+     * Zuerst im Ordner skins, als nächstes im guis Ordner.<br>
      * Reihenfolge: common-skin+ skin+ GUIs-Projekt+ (..? skins ?..) GUIs-Common+ (BaseLib xor Common-common-skin)
      *
      * @param string $filename StyleSheet Dateiname
@@ -921,7 +946,7 @@ class Weblication extends Component
             if (file_exists($file)) {
                 $translatedFile = buildFilePath($place, $language, $filename);
                 if (Template::isCacheTranslations() && file_exists($translatedFile)) {
-                    // Language specific Ordner
+                    // Language-specific Ordner
                     $finds[] = $translatedFile;
                 } elseif ($translate && Template::isCacheTranslations()) {
                     //Create Translated file and put it in the language folder
@@ -937,10 +962,10 @@ class Weblication extends Component
     }
 
     /**
-     * Sucht das uebergebene JavaScript in einer fest vorgegebenen Verzeichnisstruktur.
-     * Sucht im Ordner ./javascripts/ anschliessend in ./guis/$classFolder/ und ggf. noch in /poolcommons/guis/$classFolder/.
+     * Sucht das übergebene JavaScript in einer fest vorgegebenen Verzeichnisstruktur.
+     * Sucht im Ordner ./javascripts/ anschließend in ./guis/$classFolder/ und ggf. noch in /poolcommons/guis/$classFolder/.
      * Wird der dritte Parameter benutzt, wird ausgehend von /pool/ anstelle des aktuellen Arbeitsverzeichnisses gesucht.
-     * JavaScripts aus der Hauptbibliothek koennen nicht ueberschrieben werden (macht auch keinen Sinn).
+     * JavaScripts aus der Hauptbibliothek können nicht überschrieben werden (ergibt auch keinen Sinn).
      *
      * @param string $filename JavaScript Dateiname
      * @param string $classFolder Unterordner (guis/*) zur Klasse
@@ -1022,7 +1047,7 @@ class Weblication extends Component
             for ($i = 0; $i < $count; $i += 2) {
                 $name = $segments[$i];
                 $value = $segments[$i + 1] ?? null;
-                $valueDecoded = $value !== null ? rawurldecode($value) : null;// decode once after server's decode
+                $valueDecoded = $value !== null ? rawurldecode($value) : null;// decode once after servers decode
                 $input->setVar($name, $valueDecoded);
             }
         }
@@ -1093,7 +1118,7 @@ class Weblication extends Component
 
         $this->setupMemory($settings['memcached.servers'] ?? '', $settings['memcached.ttl'] ?? self::CACHE_TTL);
 
-        // set well known setting
+        // set well-known setting
         $this->setName($settings['application.name'] ?? $this->getName());
         $this->setTitle($settings['application.title'] ?? $this->getTitle());
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
@@ -1151,7 +1176,7 @@ class Weblication extends Component
                 throw new SessionDisabledException();
 
             case PHP_SESSION_NONE:
-                // setting ini is only possible, if the session is not started yet
+                // setting ini is only possible if the session is not started yet
                 $sessionConfig = [
                     'session.name' => $session_name,
                     'session.use_trans_sid' => $useTransSID,
@@ -1214,26 +1239,28 @@ class Weblication extends Component
      */
     public static function getRequestedAjaxModule(): string
     {
-        return $_REQUEST[self::REQUEST_PARAM_MODULE] ?? '';
+        $module = $_REQUEST[self::REQUEST_PARAM_MODULE] ?? '';
+        return is_string($module) ? $module : '';
     }
 
     /**
-     * Return requested ajax method
+     * Return the requested ajax method
      */
     public static function getRequestedAjaxMethod(): string
     {
-        return $_REQUEST[self::REQUEST_PARAM_METHOD] ?? '';
+        $method = $_REQUEST[self::REQUEST_PARAM_METHOD] ?? '';
+        return is_string($method) ? $method : '';
     }
 
     /**
      * Sets the locale for this Weblication instance
-     * This defines the application-level locale used by POOL (e.g. for translation, formatting, etc.).
+     * This defines the application-level locale used by POOL (e.g., for translation, formatting, etc.).
      * Optionally, the process-level locale (libc / ICU) can also be synchronized.
      * Note:
-     * - Since PHP 8.0, number and string functions are locale-independent.
+     * - Since PHP 8.0, number and string functions have been locale-independent.
      * ⚠ Both `setlocale()` and `Locale::setDefault()` modify global process state.
      *     Under PHP-FPM these changes persist per worker until it is recycled.
-     *     Therefore synchronization should only occur once per request, if at all.
+     *     Therefore, synchronization should only occur once per request, if at all.
      *
      * @see https://php.watch/versions/8.0/float-to-string-locale-independent
      * @see https://wiki.php.net/rfc/strtolower-ascii
@@ -1256,14 +1283,6 @@ class Weblication extends Component
     }
 
     /**
-     * @return string returns the fallback locale
-     */
-    protected function getDefaultLocale(): string
-    {
-        return $this->defaultLocale;
-    }
-
-    /**
      * Returns the determined locale (of the browser) if it has not been overwritten. Format: [language[_region][.charset][@modifier]]
      *
      * @see Weblication::setLocale()
@@ -1271,8 +1290,9 @@ class Weblication extends Component
      */
     public function getLocale(int $type = self::LOCALE_UNCHANGED): string
     {
-        if (!$this->locale) {
-            $this->setLocale($this->getTranslator()->getPrimaryLocale());
+        if ($this->locale === '') {
+            $locale = $this->getTranslator()->getPrimaryLocale();
+            $this->setLocale($locale !== '' ? $locale : $this->defaultLocale);
         }
 
         if ($type === self::LOCALE_UNCHANGED) {
@@ -1283,14 +1303,14 @@ class Weblication extends Component
 
         // with region
         if ($type & self::LOCALE_FORCE_REGION && !(str_contains($locale, '_') || str_contains($locale, '-'))) {
-            $locale = Language::getBestLocale($locale, $this->getDefaultLocale());
+            $locale = Language::getBestLocale($locale, $this->defaultLocale);
         }
         // with charset
         if ($type & self::LOCALE_FORCE_CHARSET && $this->charset && !str_contains($locale, '.')) {
             $locale = "$locale.$this->charset";
         }
         // without charset
-        if ($type & self::LOCALE_WITHOUT_CHARSET && $pos = strrpos($locale, '.')) {
+        if ($type & self::LOCALE_WITHOUT_CHARSET && ($pos = strrpos($locale, '.')) !== false) {
             $locale = substr($locale, 0, $pos);
         }
         return $locale;
@@ -1342,7 +1362,8 @@ class Weblication extends Component
      */
     public function getLaunchModule(): string
     {
-        return $_GET[self::REQUEST_PARAM_MODULE] ?? $this->launchModule;
+        $requestedModule = $_GET[self::REQUEST_PARAM_MODULE] ?? $this->launchModule;
+        return is_string($requestedModule) ? $requestedModule : '';
     }
 
     /**
@@ -1443,10 +1464,11 @@ class Weblication extends Component
     /**
      * Creates an array with references to the variadic default values for ajax results
      *
-     * @return mixed
+     * @return array<int|string, mixed>
      */
     public static function &makeResultArray(...$defaults): array
     {
+        $result = [];
         $references = [&$result];
         foreach ($defaults as $key => $value) {
             $result[$key] ??= $value;
@@ -1598,7 +1620,7 @@ class Weblication extends Component
      */
     private function isMemoryAvailable(): bool
     {
-        return ($this->memory ?? false) && $this->memory->isAvailable();
+        return $this->memory !== null && $this->memory->isAvailable();
     }
 
     /**
@@ -1618,6 +1640,8 @@ class Weblication extends Component
 
     /**
      * Cache an item if memory is available
+     *
+     * @psalm-suppress UnusedReturnValue
      */
     public function cacheItem(string $key, mixed $item, string $topic = self::CACHE_ITEM): bool
     {
@@ -1638,26 +1662,6 @@ class Weblication extends Component
         return $this->memory->get($memKey);
     }
 
-    /**
-     * Clear the cache for file system access (prefix "fs:")
-     *
-     * @deprecated https://www.php.net/manual/en/memcached.getallkeys.php (This method is intended for debugging purposes and should not be used at scale)
-     */
-    private function clearCache(string $topic = self::CACHE_ITEM): void
-    {
-        if (!$this->isMemoryAvailable()) return;
-        if (!self::$cacheItem[$topic]) return;
-        $allKeys = $this->memory->getAllKeys();
-        if ($allKeys === false) return;
-        $keys = [];
-        foreach ($allKeys as $key) {
-            if (str_starts_with($key, $topic)) {
-                $keys[] = $key;
-            }
-        }
-        $this->memory->deleteMulti($keys);
-    }
-
     public static function getCoreRequestParameters(): array
     {
         return [
@@ -1668,7 +1672,7 @@ class Weblication extends Component
     }
 
     /**
-     * En- disables Caching
+     * En-/disables Caching
      *
      * @todo control individual caching topics
      */
