@@ -44,6 +44,7 @@ use pool\classes\translator\Translator;
 use pool\guis\GUI_HeadData\GUI_HeadData;
 use pool\utils\HtmlMinifier;
 use Template;
+use Throwable;
 
 use function addEndingSlash;
 use function array_merge;
