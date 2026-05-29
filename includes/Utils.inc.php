@@ -1873,6 +1873,11 @@ function curry(Closure $closure, ...$args): Closure
 
 /**
  * Creates a closure that passes the result of the first closure into the second closure.
+ * @template TResult
+ *
+ * @param Closure(mixed...): array $main
+ * @param Closure(mixed...): TResult $second
+ * @return Closure(mixed...): TResult
  */
 function composite(Closure $main, Closure $second): Closure
 {

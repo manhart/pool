@@ -201,9 +201,7 @@ final class Language
     /**
      * Provides the best matching locale.
      *
-     * @param string $languageCode
      * @param string $defaultLocale If nothing was found, the default locale is returned.
-     * @return string
      */
     public static function getBestLocale(string $languageCode, string $defaultLocale = ''): string
     {
