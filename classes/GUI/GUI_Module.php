@@ -28,6 +28,7 @@ use pool\classes\Core\Http\Request;
 use pool\classes\Core\Input\Filter\DataType;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
+use pool\classes\Core\Reflection\ReflectableFunction;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\FileOperationException;
@@ -39,6 +40,7 @@ use pool\utils\StringHelper;
 use Random\RandomException;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionFunctionAbstract;
 use TempBlock;
 use Template;
 use Throwable;
@@ -116,7 +118,7 @@ class GUI_Module extends Module
      *
      * @var array<string, array{
      *     alias: string,
-     *     method: Closure,
+     *     method: Closure|ReflectableFunction,
      *     noFormat: bool,
      *     hooks: array{
      *         success?: array<int, callable>,
@@ -662,7 +664,7 @@ class GUI_Module extends Module
         $logConfigurationName = $ajaxMethod['logConfigurationName'] ?? null;
         $recordMode = $ajaxMethod['recordPayload'] ?? null;
 
-        if (!$Closure instanceof Closure) {
+        if (!$Closure instanceof Closure && !$Closure instanceof ReflectableFunction ) {
             if (is_callable([$this, $requestedMethod]))// 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
                 return $this->respondToAjaxCall(
                     null,
@@ -685,7 +687,7 @@ class GUI_Module extends Module
 
         // @todo validate parameters?
         try {
-            $ReflectionMethod = new ReflectionFunction($Closure);
+            $ReflectionMethod = reflectFunction($Closure);
         } catch (ReflectionException $e) {
             return $this->respondToAjaxCall(null, $e->getMessage(), __METHOD__, 'reflection', 500,
                 logConfigurationName: $logConfigurationName, logLevel: Log::LEVEL_ERROR);
@@ -971,7 +973,7 @@ class GUI_Module extends Module
      * Adds a closed method (Closure) as an Ajax call. Only Ajax methods are callable by the client.
      *
      * @param string $alias name of the method
-     * @param Closure $method class for anonymous function
+     * @param Closure|ReflectableFunction $method class for anonymous function
      * @param array $dbInterfaces list of database interfaces, for which transactions should be started, committed, or rolled back
      * @param array $hooks run after the registered Ajax method completes.
      * @param AjaxPayloadRecordMode|null $recordPayload request and response payload recording mode; null disables recording.
@@ -979,7 +981,7 @@ class GUI_Module extends Module
      */
     protected function registerAjaxMethod(
         string $alias,
-        Closure $method,
+        Closure|ReflectableFunction $method,
         bool $noFormat = false,
         array $hooks = [],
         array $dbInterfaces = [],
@@ -1013,12 +1015,12 @@ class GUI_Module extends Module
     /**
      * Prepares and returns an array of method arguments based on the given reflection method and input arguments.
      *
-     * @param ReflectionFunction $ReflectionMethod The reflection of the method whose arguments are being prepared.
+     * @param ReflectionFunctionAbstract $ReflectionMethod The reflection of the method whose arguments are being prepared.
      * @param Input $arguments The input containing the argument values.
      * @return array Prepared arguments.
      * @throws MissingArgumentException|ReflectionException If a required argument is missing.
      */
-    private function prepareMethodArguments(ReflectionFunction $ReflectionMethod, Input $arguments): array
+    private static function prepareMethodArguments(ReflectionFunctionAbstract $ReflectionMethod, Input $arguments): array
     {
         $args = [];
 
@@ -1054,7 +1056,7 @@ class GUI_Module extends Module
             }
         }
         if ($numberOfParameters && $isVariadicParameter) {
-            $arguments->delVars($this->Weblication::getCoreRequestParameters());
+            $arguments->delVars(Weblication::getCoreRequestParameters());
             $args = [...$args, ...$arguments->getData()];
         }
         return $args;

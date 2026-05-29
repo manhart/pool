@@ -16,6 +16,7 @@
 
 use JetBrains\PhpStorm\Pure;
 use pool\classes\Core\Http\Request;
+use pool\classes\Core\Reflection\ReflectableFunction;
 use pool\classes\Exception\FileOperationException;
 
 /**
@@ -1904,6 +1905,14 @@ function containException(Closure $closure, $fallbackHandler = null): Closure
             return $fallbackHandler instanceof Closure ? $fallbackHandler($error) : $fallbackHandler;
         }
     };
+}
+
+/**
+ * Wraps the reflection options of native Closure and POOL ReflectableFunction
+ * @throws ReflectionException
+ */
+function reflectFunction(Closure|ReflectableFunction $closure): ReflectionFunctionAbstract {
+    return $closure instanceof Closure ? new ReflectionFunction($closure) : $closure->reflect();
 }
 
 class Pointer implements JsonSerializable
