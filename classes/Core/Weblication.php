@@ -24,23 +24,11 @@ use Exception;
 use Log;
 use Locale;
 use pool\classes\Cache\Memory;
-use pool\classes\Core\Http\Request;
-use pool\classes\Core\Input\Cookie;
-use pool\classes\Core\Input\Input;
-use pool\classes\Core\Input\Session;
-use pool\classes\Exception\FileNotFoundException;
-use pool\classes\Exception\InvalidArgumentException;
-use pool\classes\Exception\ModulNotFoundException;
-use pool\classes\Exception\RuntimeException;
-use pool\classes\Exception\SessionDisabledException;
-use pool\classes\Exception\TemplateNotFoundException;
-use pool\classes\GUI\Builtin\GUI_CustomFrame;
-use pool\classes\GUI\GUI_Module;
+use pool\classes\Core\{Http\Request, Input\Cookie, Input\Input, Input\Session};
+use pool\classes\Exception\{FileNotFoundException, InvalidArgumentException, ModulNotFoundException, RuntimeException, SessionDisabledException, TemplateNotFoundException};
+use pool\classes\GUI\{Builtin\GUI_CustomFrame, GUI_Module};
 use pool\classes\Language;
-use pool\classes\translator\TranslationProviderFactory;
-use pool\classes\translator\TranslationProviderFactory_nop;
-use pool\classes\translator\TranslationProviderFactory_ResourceFile;
-use pool\classes\translator\Translator;
+use pool\classes\translator\{TranslationProviderFactory, TranslationProviderFactory_nop, TranslationProviderFactory_ResourceFile, Translator};
 use pool\guis\GUI_HeadData\GUI_HeadData;
 use pool\utils\HtmlMinifier;
 use Template;
@@ -184,6 +172,11 @@ class Weblication extends Component
      * @var int one of HtmlMinifier::MODE_OFF|HtmlMinifier::MODE_LEAN|HtmlMinifier::MODE_FULL
      */
     private int $htmlMinify = HtmlMinifier::MODE_OFF;
+
+    /**
+     * Directory for optional raw AJAX payload recording.
+     */
+    private string $ajaxPayloadRecordDir = '';
 
     /**
      * @var Closure[]
@@ -1093,6 +1086,7 @@ class Weblication extends Component
      *   application.htmlMinify - sets the minify mode (HtmlMinifier::MODE_OFF, MODE_LEAN, MODE_FULL)
      *   application.htmlMinifyOptions - array of options for the minifier
      *   application.launchModule - sets the main module that is launched
+     *   application.ajaxPayloadRecordDir - directory where opt-in AJAX payload request/response JSON files are written
      *   application.session.className - overrides default session class
      *   application.languages - array of languages
      *   application.translator Instance of Translator
@@ -1139,6 +1133,7 @@ class Weblication extends Component
         $this->setCharset($settings['application.charset'] ?? $this->getCharset());
         $this->setLaunchModule($settings['application.launchModule'] ?? $this->getLaunchModule());
         $this->setVersion($settings['application.version'] ?? $this->getVersion());
+        $this->setAjaxPayloadRecordDir($settings['application.ajaxPayloadRecordDir'] ?? $this->getAjaxPayloadRecordDir());
 
         // HTML Minifier Settings
         if (isset($settings['application.htmlMinify'])) {
@@ -1247,6 +1242,17 @@ class Weblication extends Component
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    public function setAjaxPayloadRecordDir(string $ajaxPayloadRecordDir): static
+    {
+        $this->ajaxPayloadRecordDir = $ajaxPayloadRecordDir;
+        return $this;
+    }
+
+    public function getAjaxPayloadRecordDir(): string
+    {
+        return $this->ajaxPayloadRecordDir;
     }
 
     public function deferAfterResponse(Closure $callback): void

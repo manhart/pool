@@ -21,6 +21,7 @@ use Closure;
 use Exception;
 use JetBrains\PhpStorm\Pure;
 use Log;
+use pool\classes\Core\AjaxPayloadRecordMode;
 use pool\classes\Autoloader;
 use pool\classes\Core\Component;
 use pool\classes\Core\Http\Request;
@@ -29,16 +30,20 @@ use pool\classes\Core\Input\Input;
 use pool\classes\Core\Module;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DataInterface;
+use pool\classes\Exception\FileOperationException;
 use pool\classes\Exception\MissingArgumentException;
 use pool\classes\Exception\ModulNotFoundException;
 use pool\classes\GUI\Builtin\GUI_CustomFrame;
 use pool\guis\GUI_Schema\GUI_Schema;
 use pool\utils\StringHelper;
+use Random\RandomException;
 use ReflectionException;
 use ReflectionFunction;
 use TempBlock;
 use Template;
 use Throwable;
+
+use function writeFileAtomic;
 
 use const pool\NAMESPACE_SEPARATOR;
 use const pool\PWD_TILL_GUIS;
@@ -106,7 +111,7 @@ class GUI_Module extends Module
      * - hooks: callbacks grouped by success, failure, and finally
      * - dbInterfaces: database interfaces wrapped in a transaction
      * - logConfigurationName: log configuration used for the Ajax response
-     * - recordPayload: record request and response payloads
+     * - recordPayload: request and response payload recording mode
      * - flags: optional json_encode flags from variadic metadata
      *
      * @var array<string, array{
@@ -120,7 +125,7 @@ class GUI_Module extends Module
      *     },
      *     dbInterfaces: array<int, string>,
      *     logConfigurationName: string|null,
-     *     recordPayload: bool,
+     *     recordPayload: AjaxPayloadRecordMode|null,
      *     flags?: int
      * }> $ajaxMethods
      */
@@ -655,6 +660,7 @@ class GUI_Module extends Module
         $hooks = $ajaxMethod['hooks'] ?? [];
         $dbInterfaces = $ajaxMethod['dbInterfaces'] ?? [];
         $logConfigurationName = $ajaxMethod['logConfigurationName'] ?? null;
+        $recordMode = $ajaxMethod['recordPayload'] ?? null;
 
         if (!$Closure instanceof Closure) {
             if (is_callable([$this, $requestedMethod]))// 03.11.2022 @todo remove is_callable and the ReflectionMethod that depends on it
@@ -728,16 +734,21 @@ class GUI_Module extends Module
         } else {
             $potentialErrorType = 'undefined (Spurious output by invoked method)';
         }
-        return $this->respondToAjaxCall(
+        $statusCode ??= 200;
+        $response = $this->respondToAjaxCall(
             $result,
             $errorText,
             "$callingClassName:$requestedMethod",
             $potentialErrorType,
-            $statusCode ?? 200,
+            $statusCode,
             $ajaxMethod['flags'] ?? 0,
             $logConfigurationName,
-            $errorText ? Log::LEVEL_ERROR : Log::LEVEL_INFO
+            $errorText ? Log::LEVEL_ERROR : Log::LEVEL_INFO,
         );
+        if ($recordMode !== null) {
+            $this->dispatchAjaxPayloadRecording($recordMode, $requestedMethod, $response, $statusCode, $logConfigurationName);
+        }
+        return $response;
     }
 
     /**
@@ -772,6 +783,58 @@ class GUI_Module extends Module
         $error = json_last_error_msg().' in '.$callingMethod.': '.print_r($clientData, true);
         $clientData = ['data' => [], 'success' => false, 'error' => ['message' => $error, 'type' => 'syntax']];
         return json_encode($clientData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
+    }
+
+    /**
+     * @throws FileOperationException|RandomException
+     */
+    protected function recordAjaxPayload(string $method, string $requestBody, string $response, int $statusCode, ?string $logConfigurationName): void
+    {
+        $basePath = $this->getAjaxPayloadRecordBasePath($method);
+        if ($basePath === '') return;
+
+        writeFileAtomic("$basePath.request.json", $requestBody);
+        writeFileAtomic("$basePath.response.json", $response);
+    }
+
+    protected function prepareAjaxPayloadRecordRequestBody(string $requestBody): string
+    {
+        return $requestBody;
+    }
+
+    private function dispatchAjaxPayloadRecording(AjaxPayloadRecordMode $mode, string $method, string $response, int $statusCode, ?string $logConfigurationName): void
+    {
+        $requestBody = Request::body();
+        $record = function () use ($method, $requestBody, $response, $statusCode, $logConfigurationName): void {
+            try {
+                $this->recordAjaxPayload($method, $this->prepareAjaxPayloadRecordRequestBody($requestBody), $response, $statusCode, $logConfigurationName);
+            } catch (Throwable $recordingError) {
+                Log::message(
+                    'recordAjaxPayload failed: '.$recordingError->getMessage(),
+                    Log::LEVEL_ERROR,
+                    ['className' => $this->getClassName(), 'method' => $method],
+                    $logConfigurationName ?? Log::COMMON,
+                );
+            }
+        };
+        $mode === AjaxPayloadRecordMode::AfterResponse ? $this->Weblication->deferAfterResponse($record) : $record();
+    }
+
+    /**
+     * @throws FileOperationException|RandomException
+     */
+    protected function getAjaxPayloadRecordBasePath(string $method): string
+    {
+        $recordDir = $this->Weblication?->getAjaxPayloadRecordDir() ?? '';
+        if ($recordDir === '') return '';
+
+        $methodDir = sanitizeFilename($method) ?: 'ajax';
+        $dir = buildDirPath($recordDir, $methodDir, date('Y-m-d'));
+        if (!mkdirs($dir, 0755)) {
+            throw new FileOperationException("Can't create directory: $dir");
+        }
+
+        return $dir.date('His').'_'.bin2hex(random_bytes(4));
     }
 
     /**
@@ -911,6 +974,7 @@ class GUI_Module extends Module
      * @param Closure $method class for anonymous function
      * @param array $dbInterfaces list of database interfaces, for which transactions should be started, committed, or rolled back
      * @param array $hooks run after the registered Ajax method completes.
+     * @param AjaxPayloadRecordMode|null $recordPayload request and response payload recording mode; null disables recording.
      * @see GUI_Module::registerAjaxCalls()
      */
     protected function registerAjaxMethod(
@@ -920,6 +984,7 @@ class GUI_Module extends Module
         array $hooks = [],
         array $dbInterfaces = [],
         ?string $logConfigurationName = null,
+        ?AjaxPayloadRecordMode $recordPayload = null,
         ...$meta
     ): self {
         $meta['alias'] = $alias;
@@ -928,6 +993,7 @@ class GUI_Module extends Module
         $meta['hooks'] = $hooks;
         $meta['dbInterfaces'] = $dbInterfaces;
         $meta['logConfigurationName'] = $logConfigurationName;
+        $meta['recordPayload'] = $recordPayload;
         $this->ajaxMethods[$alias] = $meta;
         return $this;
     }
