@@ -975,18 +975,18 @@ class GUI_Module extends Module
      * @param string $alias name of the method
      * @param Closure|ReflectableFunction $method class for anonymous function
      * @param array $dbInterfaces list of database interfaces, for which transactions should be started, committed, or rolled back
-     * @param array $hooks run after the registered Ajax method completes.
      * @param AjaxPayloadRecordMode|null $recordPayload request and response payload recording mode; null disables recording.
+     * @param array $hooks run after the registered Ajax method completes.
      * @see GUI_Module::registerAjaxCalls()
      */
     protected function registerAjaxMethod(
         string $alias,
         Closure|ReflectableFunction $method,
         bool $noFormat = false,
-        array $hooks = [],
         array $dbInterfaces = [],
         ?string $logConfigurationName = null,
         ?AjaxPayloadRecordMode $recordPayload = null,
+        array $hooks = [],
         ...$meta
     ): self {
         $meta['alias'] = $alias;
