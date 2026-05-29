@@ -19,6 +19,7 @@ declare(strict_types = 1);
 
 namespace pool\classes\Core;
 
+use Closure;
 use Exception;
 use Log;
 use Locale;
@@ -55,7 +56,10 @@ use function date_default_timezone_get;
 use function defined;
 use function explode;
 use function extension_loaded;
+use function fastcgi_finish_request;
 use function file_exists;
+use function flush;
+use function function_exists;
 use function hasHtmlContentType;
 use function header;
 use function ini_get;
@@ -66,6 +70,8 @@ use function is_subclass_of;
 use function json_encode;
 use function makeRelativePathsFrom;
 use function microtime;
+use function ob_end_flush;
+use function ob_get_level;
 use function readDirs;
 use function register_shutdown_function;
 use function reset;
@@ -177,6 +183,15 @@ class Weblication extends Component
      * @var int one of HtmlMinifier::MODE_OFF|HtmlMinifier::MODE_LEAN|HtmlMinifier::MODE_FULL
      */
     private int $htmlMinify = HtmlMinifier::MODE_OFF;
+
+    /**
+     * @var Closure[]
+     */
+    private array $afterResponseCallbacks = [];
+
+    private bool $shutdownHandlerRegistered = false;
+
+    private bool $pageSpeedMeasurementScheduled = false;
 
     /**
      * @var array options forwarded to {@see HtmlMinifier::minify()}
@@ -780,8 +795,7 @@ class Weblication extends Component
             $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists'] = is_dir(PWD_TILL_SKINS.'/'.$this->commonSkinFolder);
         }
         if ($subFolder !== null && $this->hasCommonSkinFolder[$this->commonSkinFolder]['__exists']) {
-            if (!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] =
-                null;
+            if (!isset($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = null;
             if (is_null($this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder])) {
                 $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder] = [];
                 $this->hasCommonSkinFolder[$this->commonSkinFolder][$subFolder]['__exists'] =
@@ -1234,6 +1248,65 @@ class Weblication extends Component
         return $this->title;
     }
 
+    public function deferAfterResponse(Closure $callback): void
+    {
+        $this->afterResponseCallbacks[] = $callback;
+        $this->registerShutdownHandler();
+    }
+
+    public function runDeferredAfterResponseCallbacks(): void
+    {
+        if ($this->afterResponseCallbacks === []) {
+            return;
+        }
+
+        $callbacks = $this->afterResponseCallbacks;
+        $this->afterResponseCallbacks = [];
+
+        $this->finishResponse();
+
+        foreach ($callbacks as $callback) {
+            try {
+                $callback();
+            } catch (Throwable $exception) {
+                Log::error('deferAfterResponse callback failed: '.$exception->getMessage(), ['exception' => $exception::class]);
+            }
+        }
+    }
+
+    private function registerShutdownHandler(): void
+    {
+        if ($this->shutdownHandlerRegistered) {
+            return;
+        }
+
+        register_shutdown_function($this->runShutdownHandler(...));
+        $this->shutdownHandlerRegistered = true;
+    }
+
+    private function runShutdownHandler(): void
+    {
+        $this->printPageSpeedMeasurement();
+        $this->runDeferredAfterResponseCallbacks();
+    }
+
+    private function finishResponse(): void
+    {
+        if (function_exists('fastcgi_finish_request')) {
+            @fastcgi_finish_request();
+            return;
+        }
+
+        if (!\pool\IS_CLI) {
+            while (ob_get_level() > 0) {
+                if (!@ob_end_flush()) {
+                    break;
+                }
+            }
+        }
+        @flush();
+    }
+
     /**
      * Returns requested ajax module
      */
@@ -1455,24 +1528,33 @@ class Weblication extends Component
      */
     public function measurePageSpeed(): void
     {
-        register_shutdown_function(static function () {
-            // print only when html content type is set
-            if (!hasHtmlContentType()) {
-                return;
-            }
+        $this->pageSpeedMeasurementScheduled = true;
+        $this->registerShutdownHandler();
+    }
 
-            $timeSpent = microtime(true) - POOL_START;
-            $htmlStartTags = $htmlCloseTags = '';
-            if (\pool\IS_CLI) {
-                $what = 'Script';
-            } else {
-                $what = 'Page';
-                $color = $timeSpent > 0.2 ? 'danger' : 'success';
-                $htmlStartTags = "<footer class=\"container-fluid text-center\"><p class=\"fw-bold text-$color\">";
-                $htmlCloseTags = '</p></footer>';
-            }
-            echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
-        });
+    private function printPageSpeedMeasurement(): void
+    {
+        if (!$this->pageSpeedMeasurementScheduled) {
+            return;
+        }
+        $this->pageSpeedMeasurementScheduled = false;
+
+        // print only when html content type is set
+        if (!hasHtmlContentType()) {
+            return;
+        }
+
+        $timeSpent = microtime(true) - POOL_START;
+        $htmlStartTags = $htmlCloseTags = '';
+        if (\pool\IS_CLI) {
+            $what = 'Script';
+        } else {
+            $what = 'Page';
+            $color = $timeSpent > 0.2 ? 'danger' : 'success';
+            $htmlStartTags = "<footer class=\"container-fluid text-center\"><p class=\"fw-bold text-$color\">";
+            $htmlCloseTags = '</p></footer>';
+        }
+        echo "$htmlStartTags$what was generated in $timeSpent sec.$htmlCloseTags";
     }
 
     /**
@@ -1502,7 +1584,7 @@ class Weblication extends Component
     }
 
     /**
-     * Setup AppTranslator and TemplateTranslator
+     * Set up AppTranslator and TemplateTranslator
      *
      * @throws Exception
      */
