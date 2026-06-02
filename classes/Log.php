@@ -233,6 +233,11 @@ class Log
         return self::$facilities[$configurationName][Log::OUTPUT_SCREEN]['withExtra'] ?? false;
     }
 
+    private static function outputWithExtra(string $configurationName, string $output): array|bool
+    {
+        return self::$facilities[$configurationName][$output]['withExtra'] ?? self::screenWithExtra($configurationName);// backward compatibility; @todo clean code would be: false
+    }
+
     /**
      * Returns whether the output with the name of the level is requested
      */
@@ -331,7 +336,8 @@ class Log
                 }
             }
 
-            $message = self::processPlaceholders($configurationName, $extra, $message);
+            [$message, $remainingExtra] = self::processExtra($configurationName, Log::OUTPUT_SCREEN, $extra, $message);
+            $message = self::appendExtraToText($message, $remainingExtra);
             $message = ($withDate ? date('Y-m-d H:i:s').' | ' : '').$message;
             $message .= $withLineBreak ? \pool\LINE_BREAK : '';
 
@@ -340,6 +346,11 @@ class Log
             fwrite($std, $message);
             fclose($std);
         } else {
+            [$message, $remainingExtra] = self::processExtra($configurationName, Log::OUTPUT_SCREEN, $extra, $message);
+            if ($remainingExtra) {
+                $message .= '<pre>'.htmlspecialchars(self::formatExtra($remainingExtra, true), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</pre>';
+            }
+
             if ($isHTML) {
                 $foundHeadline = preg_match_all('/<\/(h[1-6]+|p)>$/m', $message);
                 if (!$foundHeadline) {
@@ -367,7 +378,10 @@ class Log
     public static function writeMail(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = $text;
-        $message = self::processPlaceholders($configurationName, $extra, $message);
+        [$message, $remainingExtra] = self::processExtra($configurationName, Log::OUTPUT_MAIL, $extra, $message);
+        if ($remainingExtra) {
+            $message .= "\n\nExtra:\n".self::formatExtra($remainingExtra, true);
+        }
         /** @var Nette\Mail\Message $MailMsg */
         $MailMsg = self::$facilities[$configurationName][self::OUTPUT_MAIL]['MailMsg'];
         $MailMsg->setSubject(str_replace('{LogLevel}', ucfirst(self::$TEXT_LEVEL[$level]), $MailMsg->getSubject()));
@@ -430,16 +444,62 @@ class Log
         return realpath($file);
     }
 
-    private static function processPlaceholders(string $configurationName, array $extra, string $message): string
+    private static function processExtra(string $configurationName, string $output, array $extra, string $message): array
     {
-        $withExtra = self::screenWithExtra($configurationName);
-        if ($withExtra && $extra) {
-            $placeholders = [];
-            array_walk($extra, static function ($value, $key) use (&$placeholders) {
-                $placeholders["{{$key}}"] = $value;
-            });
+        $withExtra = self::outputWithExtra($configurationName, $output);
+        if (!$withExtra || !$extra) {
+            return [$message, []];
+        }
+
+        $placeholders = [];
+        $remainingExtra = $extra;
+        foreach ($extra as $key => $value) {
+            $value = self::formatPlaceholderValue($value);
+            $foundPlaceholder = false;
+            // {{key}} also matches the legacy {key} pattern; strtr() applies the longest matching key first.
+            foreach (['{{'.$key.'}}', '{'.$key.'}'] as $placeholder) {
+                if (!str_contains($message, $placeholder)) continue;
+
+                $placeholders[$placeholder] = $value;
+                $foundPlaceholder = true;
+            }
+            if (!$foundPlaceholder) continue;
+
+            unset($remainingExtra[$key]);
+        }
+
+        if ($placeholders) {
             $message = strtr($message, $placeholders);
         }
-        return $message;
+
+        return [$message, $remainingExtra];
+    }
+
+    private static function appendExtraToText(string $message, array $extra): string
+    {
+        if (!$extra) return $message;
+
+        $formattedExtra = self::formatExtra($extra);
+        if (isEmptyString($message)) return "extra: $formattedExtra";
+
+        return "$message | extra: $formattedExtra";
+    }
+
+    private static function formatPlaceholderValue(mixed $value): string
+    {
+        if ($value === null) return '';
+        if (is_bool($value)) return $value ? '1' : '';
+        if (is_scalar($value)) return (string)$value;
+
+        return self::formatExtra($value);
+    }
+
+    private static function formatExtra(mixed $extra, bool $pretty = false): string
+    {
+        $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR;
+        if ($pretty) $flags |= JSON_PRETTY_PRINT;
+
+        $formatted = json_encode($extra, $flags);
+        return $formatted === false ? '[unencodable extra]' : $formatted;
     }
 }
