@@ -87,6 +87,34 @@ function isGermanFloat(value) {
     return true;
 }
 
+/**
+ * Formats the given number of bytes into a human-readable size.
+ *
+ * @param {number|string} bytes
+ * @param {boolean} shortVersion
+ * @param {number} decimals
+ * @param {string} blank
+ * @param {number} base
+ * @param {?string} locale - BCP-47 locale; empty/null falls back to the page language, then the browser default
+ * @returns {string}
+ */
+function formatBytes(bytes, shortVersion = false, decimals = 2, blank = ' ', base = 1024, locale = null) {
+    bytes = Number(bytes);
+    if (!Number.isFinite(bytes)) return '';
+    if (bytes < 0) return '-';
+    if (bytes === 0) return `0${blank}${shortVersion ? 'B' : 'Bytes'}`;
+
+    const units = [['B', 'Bytes'], ['KB', 'KBytes'], ['MB', 'MBytes'], ['GB', 'GBytes'], ['TB', 'TBytes']];
+    const level = Math.max(0, Math.min(Math.floor(Math.log(bytes) / Math.log(base)), units.length - 1));
+    const value = bytes / Math.pow(base, level);
+    const loc = locale || document.documentElement.lang || navigator.language;
+
+    return value.toLocaleString(loc, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    }) + blank + units[level][shortVersion ? 0 : 1];
+}
+
 // wahr, wenn das Zeichen ein Buchstabe ist
 function isAlpha(ch) {
     if (((ch >= 'a') && (ch <= 'z')) || ((ch >= 'A') && (ch <= 'Z')))
