@@ -235,7 +235,7 @@ class Log
 
     private static function outputWithExtra(string $configurationName, string $output): array|bool
     {
-        return self::$facilities[$configurationName][$output]['withExtra'] ?? self::screenWithExtra($configurationName);// backward compatibility; @todo clean code would be: false
+        return self::$facilities[$configurationName][$output]['withExtra'] ?? false;
     }
 
     /**
@@ -447,6 +447,9 @@ class Log
     private static function processExtra(string $configurationName, string $output, array $extra, string $message): array
     {
         $withExtra = self::outputWithExtra($configurationName, $output);
+        if (!$withExtra && $output !== Log::OUTPUT_SCREEN) {
+            $withExtra = self::screenWithExtra($configurationName);// backward compatibility: non-screen outputs historically reused OUTPUT_SCREEN.withExtra.
+        }
         if (!$withExtra || !$extra) {
             return [$message, []];
         }
