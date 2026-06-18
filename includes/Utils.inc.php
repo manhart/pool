@@ -802,6 +802,37 @@ function writeFileAtomic(string $filePath, string $content): void
 }
 
 /**
+ * Atomically copies a file on the same filesystem.
+ *
+ * This prevents readers from seeing a partial destination file, but does not fsync the temp file or directory. Source permissions and mtime are not preserved.
+ *
+ * @throws FileOperationException|\Random\RandomException
+ */
+function copyFileAtomic(string $sourceFilePath, string $filePath): void
+{
+    $dir = dirname($filePath);
+    if (!mkdirs($dir, 0755)) {
+        throw new FileOperationException("Can't create directory: $dir");
+    }
+
+    $tmpFilePath = $filePath.'.tmp.'.bin2hex(random_bytes(3));
+    try {
+        // Store the temp file beside the final file so rename() can publish it atomically.
+        if (!copy($sourceFilePath, $tmpFilePath)) {
+            throw new FileOperationException("Can't copy file: $sourceFilePath -> $tmpFilePath");
+        }
+        if (!moveFile($tmpFilePath, $filePath, allowCopyFallback: false)) {
+            throw new FileOperationException("Can't finalize file: $filePath");
+        }
+    }
+    finally {
+        if (is_file($tmpFilePath)) {
+            @unlink($tmpFilePath);
+        }
+    }
+}
+
+/**
  * Moves a file.
  *
  * Uses rename() first, which is atomic on the same filesystem. The optional copy/unlink fallback supports cross-filesystem moves, but is not atomic.
