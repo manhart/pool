@@ -172,6 +172,9 @@ class MySQLi extends Driver
                 COLUMN_NAME,
                 DATA_TYPE,
                 COLUMN_TYPE,
+                CHARACTER_MAXIMUM_LENGTH,
+                NUMERIC_PRECISION,
+                NUMERIC_SCALE,
                 COLUMN_KEY
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = '$database'
