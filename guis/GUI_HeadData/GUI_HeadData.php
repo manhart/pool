@@ -434,9 +434,13 @@ class GUI_HeadData extends GUI_Module
         }
 
         $z = 0;
+        $pathInfo = Request::pathInfo() ?? '';
+        $dirCount = substr_count($pathInfo, '/');
+        $leavePathInfo = implode('/', array_fill(0, $dirCount, '..'));
         foreach ($this->styleSheetFiles as $css) {
             $this->Template->newBlock('STYLESHEET');
-            $this->Template->setVar('FILENAME', $css);
+            $clientFilePath = buildFilePath($leavePathInfo, $css);
+            $this->Template->setVar('FILENAME', $clientFilePath);
             if (!is_null($this->styleSheetsMedia[$z])) { // Media
                 $this->Template->setVar('MEDIA', ' media="'.$this->styleSheetsMedia[$z].'"');
             } else {
@@ -447,7 +451,8 @@ class GUI_HeadData extends GUI_Module
 
         foreach ($this->javaScriptFiles as $js) {
             $this->Template->newBlock('JAVASCRIPT');
-            $this->Template->setVar('FILENAME', $js['file']);
+            $clientFilePath = buildFilePath($leavePathInfo ,$js['file']);
+            $this->Template->setVar('FILENAME', $clientFilePath);
             $attributes = '';
             if (isset($js['attributes'])) {
                 $attributes = buildHtmlAttributes($js['attributes']);
