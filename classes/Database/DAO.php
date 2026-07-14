@@ -849,7 +849,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             if ($this->translateValues) {
                 $column = $this->translateValues($column);
             }
-            $sql[] = "$column $sort";
+            $direction = strtoupper(trim((string)$sort)) === 'ASC' ? 'ASC' : 'DESC';
+            $sql[] = "$column $direction";
         }
         return ' ORDER BY '.implode(', ', $sql);
     }
