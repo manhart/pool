@@ -155,6 +155,22 @@ class LogTest extends TestCase
         self::assertStringContainsString('Error Written error.', $contents);
     }
 
+    public function testScreenStreamReturnsConfiguredCliStream(): void
+    {
+        $configurationName = uniqid('log-test-', true);
+        \Log::setup([
+            \Log::OUTPUT_SCREEN => [
+                'level' => \Log::LEVEL_INFO,
+                'stream' => \STDERR,
+            ],
+        ], $configurationName);
+
+        self::assertSame(
+            \STDERR,
+            $this->invokePrivateStatic('screenStream', [$configurationName]),
+        );
+    }
+
     private function setupScreenLogWithExtra(): string
     {
         $configurationName = uniqid('log-test-', true);

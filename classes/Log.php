@@ -74,6 +74,7 @@ class Log
      * -withDate - shows the date with every line
      * -withLineBreak - make a line break after each message
      * -showLevelNameAtTheBeginning - prints the caption of the level (debug, info, warn, error, fatal) at the beginning of the message
+     * -stream - optionally routes all CLI screen output to a stream resource
      *
      * @param string $configurationName name of the configuration. Default is "common". You can have more configurations for different purposes.
      * @param array $facilities array of facilities
@@ -233,6 +234,14 @@ class Log
         return self::$facilities[$configurationName][Log::OUTPUT_SCREEN]['withExtra'] ?? false;
     }
 
+    /**
+     * @return resource|null
+     */
+    private static function screenStream(string $configurationName): mixed
+    {
+        return self::$facilities[$configurationName][Log::OUTPUT_SCREEN]['stream'] ?? null;
+    }
+
     private static function outputWithExtra(string $configurationName, string $output): array|bool
     {
         return self::$facilities[$configurationName][$output]['withExtra'] ?? false;
@@ -341,10 +350,8 @@ class Log
             $message = ($withDate ? date('Y-m-d H:i:s').' | ' : '').$message;
             $message .= $withLineBreak ? \pool\LINE_BREAK : '';
 
-            $filename = (self::LEVEL_ERROR & $level or self::LEVEL_FATAL & $level) ? 'php://stderr' : 'php://stdout';
-            $std = fopen($filename, 'w');
-            fwrite($std, $message);
-            fclose($std);
+            $stream = self::screenStream($configurationName) ?? ((self::LEVEL_ERROR & $level or self::LEVEL_FATAL & $level) ? \STDERR : \STDOUT);
+            fwrite($stream, $message);
         } else {
             [$message, $remainingExtra] = self::processExtra($configurationName, Log::OUTPUT_SCREEN, $extra, $message);
             if ($remainingExtra) {
