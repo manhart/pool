@@ -19,6 +19,22 @@ use function trim;
 final class StringHelper
 {
     /**
+     * Shortens a string in the middle while preserving both ends.
+     */
+    public static function shortenMiddle(string $value, int $maxLength, string $ellipsis = '...'): string
+    {
+        if (mb_strlen($value, 'UTF-8') <= $maxLength) return $value;
+
+        $availableLength = $maxLength - mb_strlen($ellipsis, 'UTF-8');
+        if ($availableLength < 2) return mb_substr($value, 0, $maxLength, 'UTF-8');
+
+        $prefixLength = intdiv($availableLength, 2);
+        $suffixLength = $availableLength - $prefixLength;
+
+        return mb_substr($value, 0, $prefixLength, 'UTF-8').$ellipsis.mb_substr($value, -$suffixLength, null, 'UTF-8');
+    }
+
+    /**
      * Unwraps the string if enclosed by the given character.
      */
     public static function unwrap(string $value, string $char): string
