@@ -71,6 +71,12 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     public const int STRING = 2;
     public const int INT = 4;
     public const int FLOAT = 8;
+    /** @var int DateTime
+     * @see \DateTime */
+    public const int DT = 16;
+    /** @var int DateTimeImmutable
+     * @see \DateTimeImmutable */
+    public const int DTI = 32;
 
     /**
      * @var string|null Name of the table / file / view (must be declared in derived class)
@@ -428,6 +434,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             self::STRING => (string)$value,
             self::INT => (int)$value,
             self::FLOAT => (float)$value,
+            self::DT => new RecordSet([['' => $value]])->getValueAsDateTime(''),
+            self::DTI => new RecordSet([['' => $value]])->getValueAsDateTimeImmutable(''),
             default => $value,
         };
     }
@@ -437,7 +445,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      *
      * @see self::fetchData()
      */
-    public static function fetchDataStatic(array|int|string $pk, ...$fields)
+    public static function fetchDataStatic(array|int|string|false $pk, ...$fields)
     {
         return static::create(throws: true)->fetchData($pk, ...$fields);
     }
@@ -451,7 +459,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively
      * @see static::get()
      */
-    public function fetchData(array|int|string $pk, ...$fields): mixed
+    public function fetchData(array|int|string|false $pk, ...$fields): mixed
     {
         $fields = $fields ?: $this->getPrimaryKey();
         if (!array_is_list($fields)) {//cast instructions exist
@@ -484,8 +492,9 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
      *
      * @see \MySQL_DAO::buildWhere
      */
-    public function get(null|int|string|array $id, null|string|array $key = null): RecordSet
+    public function get(null|int|string|array|false $id, null|string|array $key = null): RecordSet
     {
+        if ($id === false) return new RecordSet();
         return $this->selectFrom($this, $id, $key);
     }
 
