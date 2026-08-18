@@ -15,6 +15,7 @@ use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
+use pool\classes\LogJournald;
 
 /**
  * Class Log
@@ -27,6 +28,14 @@ class Log
     const string OUTPUT_SCREEN = 'screen';
     const string OUTPUT_SYSTEM = 'system';
     const string OUTPUT_FILE = 'file';
+    /**
+     * Journald Native Protocol via UNIX Datagramm socket <br> Options:
+     * - socketPath: File path of the journald socket, defaults to `/run/systemd/journal/socket`
+     * - tag: 'syslog identifier' for use with `journalctl -t [tag]` defaults to the first available value of: <br> constant JOB_NAME, <br>Name of the Weblication, <br>POOL_LOG_$configurationName
+     * @see LogJournald::sendLog() provides underlying functionality
+     * @see self::writeJournald()
+     */
+    const string OUTPUT_JOURNALD = 'journald';
     const string OUTPUT_DAO = 'dao';
     const string OUTPUT_MAIL = 'mail';
     const int LEVEL_NONE = 0;
@@ -122,6 +131,20 @@ class Log
         }
         $facilities[self::OUTPUT_FILE]['level'] = (int)$level;
 
+        $level = self::$facilities[$configurationName][self::OUTPUT_JOURNALD]['level'] ?? 0;
+        if (isset($facilities[self::OUTPUT_JOURNALD])) {
+            $facility = $facilities[self::OUTPUT_JOURNALD];
+            if (is_array($facility)) {
+                $level = $facility['level'] ?? 0;
+                $socketPath = $facility['socketPath'] ?? null;
+
+                $LogJournald = $socketPath === null ? new LogJournald() : new LogJournald($socketPath);
+                $facilities[self::OUTPUT_JOURNALD]['LogJournald'] = $LogJournald;
+            } else {
+                $level = $facility;
+            }
+        }
+        $facilities[self::OUTPUT_JOURNALD]['level'] = (int)$level;
 
         $level = self::$facilities[$configurationName][self::OUTPUT_MAIL]['level'] ?? 0;
         if (isset($facilities[self::OUTPUT_MAIL])) {
@@ -308,6 +331,10 @@ class Log
             self::writeFile($text, $level, $extra, $configurationName);
         }
 
+        if (self::getLevel($configurationName, self::OUTPUT_JOURNALD) & $level) {
+            self::writeJournald($text, $level, $extra, $configurationName);
+        }
+
         if (self::getLevel($configurationName, self::OUTPUT_MAIL) & $level) {
             self::writeMail($text, $level, $extra, $configurationName);
         }
@@ -380,6 +407,18 @@ class Log
             $message .= ' '.json_encode($extra);
         }
         self::$facilities[$configurationName][self::OUTPUT_FILE]['LogFile']->addLine($message);
+    }
+
+    public static function writeJournald(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
+    {
+        $facility = self::$facilities[$configurationName][self::OUTPUT_JOURNALD];
+        /** @var LogJournald $journaldLogger */
+        $journaldLogger = $facility['LogJournald'];
+        $weblication = Weblication::hasInstance() ? Weblication::getInstance() : null;
+        $jobname = defined('JOB_NAME') ? JOB_NAME : null;
+        $jobname = is_string($jobname) ? $jobname : null;
+        $tag = $facility['tag'] ?? $jobname ?? $weblication?->getName() ?? "POOL_LOG_$configurationName";
+        $journaldLogger->sendLog($text, $level, $extra, $tag);
     }
 
     public static function writeMail(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void

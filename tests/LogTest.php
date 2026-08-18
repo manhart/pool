@@ -12,7 +12,10 @@ declare(strict_types = 1);
 
 namespace pool\tests;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use pool\classes\Core\Weblication;
 use ReflectionMethod;
 
 if (!class_exists(\Log::class, false)) {
@@ -186,6 +189,119 @@ class LogTest extends TestCase
         return $configurationName;
     }
 
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testJournaldLog(): void
+    {
+        $socketPath = sys_get_temp_dir().'/pool-journald-'.bin2hex(random_bytes(8)).'.sock';
+        $server = socket_create(AF_UNIX, SOCK_DGRAM, 0);
+
+        self::assertInstanceOf(\Socket::class, $server);
+        self::assertTrue(socket_bind($server, $socketPath));
+        self::assertTrue(socket_set_nonblock($server));
+
+        $receive = static function (bool $expectNoMessage = false) use ($server): string {
+            $payload = '';
+            $bytesReceived = socket_recv($server, $payload, 65535, 0);
+            if (!$expectNoMessage){
+                self::assertNotFalse($bytesReceived, 'No Journald datagram received.');
+                self::assertGreaterThan(0, $bytesReceived);
+                return rtrim($payload, "\n");
+            } else {
+                self::assertFalse($bytesReceived, 'Unexpected Journald datagram received.');
+                $errorCode = socket_last_error($server);
+                self::assertSame(SOCKET_EAGAIN, $errorCode);
+                return '';
+            }
+        };
+
+        try {
+            //fallback tag, associative extras, malformed extras, string priority, duplicate message and tag.
+            self::assertFalse(Weblication::hasInstance(), 'This test requires a fresh Weblication state.');
+            $configName = $this->setupJournaldLog($socketPath);
+            \Log::info('primary-message', [
+                'PRIORITY' => '3',
+                'MESSAGE' => 'extra-message',
+                'SYSLOG_IDENTIFIER' => 'extra-tag',
+                'ASSOC_FIELD' => 'associative',
+                'garbage',
+            ], $configName);
+            $received = $receive();
+            $expected = <<< EOF
+PRIORITY=3
+MESSAGE=extra-message
+SYSLOG_IDENTIFIER=extra-tag
+ASSOC_FIELD=associative
+MESSAGE=primary-message
+SYSLOG_IDENTIFIER=POOL_LOG_$configName
+EOF;
+            self::assertSame($expected, $received);
+
+            //Weblication tag, empty message, malformed extra tuples, log::debug, no extra priority
+            Weblication::getInstance()->setName('POOL_APP');
+            $configName = $this->setupJournaldLog($socketPath);
+            \Log::debug('', [
+                [123, 'ignored-non-string-key'],
+                ['TOO', 'MANY', 'VALUES'],
+                ['TOO_FEW_VALUES'],
+                [],
+            ], $configName);
+            $received = $receive();
+            $expected = <<< EOF
+PRIORITY=7
+SYSLOG_IDENTIFIER=POOL_APP
+EOF;
+            self::assertSame($expected, $received);
+
+            //batch job tag, tuple extras, integer priority, malformed extras, 0 message, 0 tag
+            define('JOB_NAME', 'MY_BATCH_JOB');
+            $configName = $this->setupJournaldLog($socketPath);
+            \Log::warn( '0', [
+                    ['PRIORITY', 2],
+                    ['TUPLE_FIELD', 'tuple'],
+                    ['MESSAGE', 'extra-message'],
+                    ['SYSLOG_IDENTIFIER', 0],
+                    ['SYSLOG_IDENTIFIER', '0'],
+                ], $configName);
+            $received = $receive();
+            $expected = <<< EOF
+PRIORITY=2
+TUPLE_FIELD=tuple
+MESSAGE=extra-message
+SYSLOG_IDENTIFIER=0
+SYSLOG_IDENTIFIER=0
+MESSAGE=0
+SYSLOG_IDENTIFIER=MY_BATCH_JOB
+EOF;
+            self::assertSame($expected, $received);
+
+            //Explicit configured tag, invalid extra priority, Log::warn
+            $configName = $this->setupJournaldLog($socketPath, 'configured-tag');
+            \Log::warn("multi\nline\rmessage\0!", [
+                'PRIORITY' => '8',
+                ['PRIORITY', 0, 'garbage'],
+            ], $configName);
+            $received = $receive();
+            $encodedMessage = "\x14\0\0\0\0\0\0\0multi\nline\rmessage\0!";
+            $expected = <<< EOF
+PRIORITY=4
+MESSAGE
+$encodedMessage
+SYSLOG_IDENTIFIER=configured-tag
+EOF;
+            self::assertSame($expected, $received);
+
+            //test level filter
+            $configName = $this->setupJournaldLog($socketPath, level: \Log::LEVEL_ERROR);
+            \Log::warn('', configurationName: $configName);
+            $receive(true);
+        } finally {
+            socket_close($server);
+            @unlink($socketPath);
+        }
+    }
+
     private function setupFileLog(string $logFile, int $level): string
     {
         $configurationName = uniqid('log-test-', true);
@@ -194,6 +310,23 @@ class LogTest extends TestCase
                 'level' => $level,
                 'file' => $logFile,
             ],
+            \Log::EXIT_LEVEL => \Log::LEVEL_NONE,
+        ], $configurationName);
+        return $configurationName;
+    }
+
+    private function setupJournaldLog(string $socketPath, ?string $tag = null, int $level = \Log::LEVEL_ALL): string
+    {
+        $configurationName = uniqid('log-test-', true);
+        $conf = [
+            'level' => $level,
+            'socketPath' => $socketPath,
+        ];
+        if ($tag) {
+            $conf['tag'] = $tag;
+        }
+        \Log::setup([
+            \Log::OUTPUT_JOURNALD => $conf,
             \Log::EXIT_LEVEL => \Log::LEVEL_NONE,
         ], $configurationName);
         return $configurationName;
