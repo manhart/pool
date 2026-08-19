@@ -323,6 +323,16 @@ class Log
      */
     public static function message(string $text, int $level = self::LEVEL_INFO, array $extra = [], string $configurationName = Log::COMMON): void
     {
+        if (!isset(self::$facilities[$configurationName])) {
+            $error_level = match ($level) {
+                self::LEVEL_INFO => E_USER_NOTICE,
+                self::LEVEL_WARN, self::LEVEL_ERROR, self::LEVEL_FATAL => E_USER_WARNING,
+                default => null
+            };
+            if (!$error_level) return;
+            trigger_error($text, $error_level);
+            return;
+        }
         if (self::getLevel($configurationName, self::OUTPUT_SCREEN) & $level) {
             self::writeScreen($text, $level, $extra, $configurationName);
         }
