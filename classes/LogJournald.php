@@ -87,7 +87,9 @@ class LogJournald extends PoolObject
                 if (!$hasValidPriority) continue;//ignore bad value
                 $dataHasDefinedPriority += 1;
             }
-            $data[] = [$fieldName, $fieldValue];
+            $seperatedFieldName = preg_replace(['/\s/', "/([[:lower:]])([[:upper:]])/"], ['_', '$1_$2'], $fieldName);
+            $cleanFieldName = mb_strtoupper($seperatedFieldName);
+            $data[] = [$cleanFieldName, $fieldValue];
         }
         $priority = $this->syslogPriorityMap[$level] ?? null;
         if ($priority !== null && !$dataHasDefinedPriority) $data[] = ['PRIORITY', $priority];
