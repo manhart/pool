@@ -631,37 +631,33 @@ class DataInterface extends PoolObject
         $query_resource ??= $this->query_resource;
 
         $rowSet = [];
-        $castColumns = self::getPhpTypeCastColumns($metaData);
         while (($row = $this->driver->fetch($query_resource))) {
-            if ($castColumns) {
-                foreach ($castColumns as $col => $phpType) {
-                    if (!array_key_exists($col, $row) || $row[$col] === null || !self::requiresPhpTypeCast($row[$col], $phpType)) {
-                        continue;
-                    }
-                    settype($row[$col], $phpType);
+            foreach ($metaData['columns'] ?? [] as $col => $types) {
+                $dbType = $types['type'] ?? null;
+                $phpType = $types['phpType'] ?? null;
+                if (!array_key_exists($col, $row) || $row[$col] === null) continue;
+                if (!self::requiresPhpTypeCast($row[$col], $phpType)) continue;
+                $isValidCast = match ($dbType) {
+                    'tinyint', 'boolean' => in_array($row[$col], [0, 1, '0', '1'], true) && in_array($phpType, ['int', 'float', 'double', 'bool', 'boolean']),
+                    'smallint', 'mediumint', 'int', 'bigint' => is_numeric($row[$col]) && in_array($phpType, ['int', 'float', 'double']),
+                    'float', 'double' => is_numeric($row[$col]) && in_array($phpType, ['float', 'double']),
+                    default => true,
+                };
+                if (!$isValidCast) {
+                    $value = shorten($row[$col], 100);
+                    Log::warn(
+                        "Refusing potentially harmful typecast in column $col, '$dbType' to '$phpType' for given value '$value'",
+                        ['trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7)],
+                    );
+                    continue;
                 }
+                settype($row[$col], $phpType);
             }
             if ($callbackOnFetchRow)
                 $row = $callbackOnFetchRow($row);
             $rowSet[] = $row;
         }
         return $rowSet;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private static function getPhpTypeCastColumns(array $metaData): array
-    {
-        $castColumns = [];
-        foreach ($metaData['columns'] ?? [] as $column => $columnMetaData) {
-            $phpType = $columnMetaData['phpType'] ?? null;
-            if (!$phpType || $phpType === 'string') {
-                continue;
-            }
-            $castColumns[$column] = $phpType === 'boolean' ? 'bool' : $phpType;
-        }
-        return $castColumns;
     }
 
     private static function requiresPhpTypeCast(mixed $value, string $phpType): bool
