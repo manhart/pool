@@ -36,6 +36,7 @@ class LogJournald extends PoolObject
     /** @var array<int, int> $syslogPriorityMap https://en.wikipedia.org/wiki/Syslog#Severity_level */
     private array $syslogPriorityMap = [
         Log::LEVEL_DEBUG => self::SYSLOG_LEVEL_DEBUG,
+        Log::LEVEL_NOTICE => self::SYSLOG_LEVEL_NOTICE,
         Log::LEVEL_INFO => self::SYSLOG_LEVEL_INFO,
         Log::LEVEL_WARN => self::SYSLOG_LEVEL_WARNING,
         Log::LEVEL_ERROR => self::SYSLOG_LEVEL_ERROR,

@@ -43,18 +43,21 @@ class Log
     const int LEVEL_ERROR = 2;
     const int LEVEL_WARN = 4;
     const int LEVEL_INFO = 8;
-    const int LEVEL_DEBUG = 16;
+    const int LEVEL_NOTICE = 16;
+    const int LEVEL_DEBUG = 32;
     const int LEVEL_UNTIL_ERROR = 3;
     const int LEVEL_UNTIL_WARN = 7;
     const int LEVEL_UNTIL_INFO = 15;
-    const int LEVEL_ALL = 31;
+    const int LEVEL_UNTIL_NOTICE = 31;
+    const int LEVEL_ALL = 63;
 
     private static array $TEXT_LEVEL = [
         1 => 'fatal',
         2 => 'error',
         4 => 'warn',
         8 => 'info',
-        16 => 'debug',
+        16 => 'notice',
+        32 => 'debug',
     ];
 
     private static bool $dao_strip_tags = true;
@@ -79,10 +82,10 @@ class Log
 
     /**
      * Facility entities/properties for OUTPUT_SCREEN:
-     * -level - defines the level (LEVEL_DEBUG, LEVEL_INFO, LEVEL_WARN, LEVEL_ERROR, LEVEL_FATAL) at which the message should be displayed
+     * -level - defines the level (LEVEL_DEBUG, LEVEL_INFO, LEVEL_NOTICE, LEVEL_WARN, LEVEL_ERROR, LEVEL_FATAL) at which the message should be displayed
      * -withDate - shows the date with every line
      * -withLineBreak - make a line break after each message
-     * -showLevelNameAtTheBeginning - prints the caption of the level (debug, info, warn, error, fatal) at the beginning of the message
+     * -showLevelNameAtTheBeginning - prints the caption of the level (debug, info, notice, warn, error, fatal) at the beginning of the message
      * -stream - optionally routes all CLI screen output to a stream resource
      *
      * @param string $configurationName name of the configuration. Default is "common". You can have more configurations for different purposes.
@@ -279,11 +282,19 @@ class Log
     }
 
     /**
-     * Writes debug message
+     * Writes a debug message
      */
     public static function debug(string $text, array $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_DEBUG, $extra, $configurationName);
+    }
+
+    /**
+     * Writes a notice message
+     */
+    public static function notice(string $text, array $extra = [], string $configurationName = Log::COMMON): void
+    {
+        self::message($text, self::LEVEL_NOTICE, $extra, $configurationName);
     }
 
     /**
@@ -325,7 +336,7 @@ class Log
     {
         if (!isset(self::$facilities[$configurationName])) {
             $error_level = match ($level) {
-                self::LEVEL_INFO => E_USER_NOTICE,
+                self::LEVEL_INFO, self::LEVEL_NOTICE => E_USER_NOTICE,
                 self::LEVEL_WARN, self::LEVEL_ERROR, self::LEVEL_FATAL => E_USER_WARNING,
                 default => null
             };

@@ -158,6 +158,22 @@ class LogTest extends TestCase
         self::assertStringContainsString('Error Written error.', $contents);
     }
 
+    public function testNoticeRoutesToFileAndAllIncludesNewLevels(): void
+    {
+        self::assertSame(\Log::LEVEL_NOTICE, \Log::LEVEL_ALL & \Log::LEVEL_NOTICE);
+        self::assertSame(\Log::LEVEL_DEBUG, \Log::LEVEL_ALL & \Log::LEVEL_DEBUG);
+
+        $logFile = $this->tempLogFile();
+        $configurationName = $this->setupFileLog($logFile, \Log::LEVEL_NOTICE);
+
+        \Log::notice('Shipment requires attention.', configurationName: $configurationName);
+        \Log::close();
+
+        $contents = file_get_contents($logFile);
+        self::assertIsString($contents);
+        self::assertStringContainsString('Notice Shipment requires attention.', $contents);
+    }
+
     public function testScreenStreamReturnsConfiguredCliStream(): void
     {
         $configurationName = uniqid('log-test-', true);
@@ -189,6 +205,33 @@ class LogTest extends TestCase
         return $configurationName;
     }
 
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testNoticeUsesJournaldPriority(): void
+    {
+        $socketPath = sys_get_temp_dir().'/pool-journald-'.bin2hex(random_bytes(8)).'.sock';
+        $server = socket_create(AF_UNIX, SOCK_DGRAM, 0);
+
+        self::assertInstanceOf(\Socket::class, $server);
+        self::assertTrue(socket_bind($server, $socketPath));
+
+        try {
+            $configurationName = $this->setupJournaldLog($socketPath);
+            \Log::notice('notice-message', configurationName: $configurationName);
+
+            $payload = '';
+            $bytesReceived = socket_recv($server, $payload, 65535, 0);
+            self::assertNotFalse($bytesReceived, 'No Journald datagram received.');
+            self::assertGreaterThan(0, $bytesReceived);
+            self::assertSame(
+                "PRIORITY=5\nMESSAGE=notice-message\nSYSLOG_IDENTIFIER=POOL_LOG_$configurationName",
+                rtrim($payload, "\n"),
+            );
+        } finally {
+            socket_close($server);
+            @unlink($socketPath);
+        }
+    }
 
     #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
