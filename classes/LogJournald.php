@@ -87,7 +87,10 @@ class LogJournald extends PoolObject
                 if (!$hasValidPriority) continue;//ignore bad value
                 $dataHasDefinedPriority += 1;
             }
-            $seperatedFieldName = preg_replace(['/\s/', "/([[:lower:]])([[:upper:]])/"], ['_', '$1_$2'], $fieldName);
+            if (!is_string($fieldName)) continue;
+            if (!ctype_alpha($fieldName[0])) continue;
+            if (!ctype_alnum(str_replace(['-', '_'], '', $fieldName))) continue;
+            $seperatedFieldName = preg_replace(['/\s/', "/([[:lower:]])([[:upper:]])/", "/-/"], ['_', '$1_$2', '_'], $fieldName);
             $cleanFieldName = mb_strtoupper($seperatedFieldName);
             $data[] = [$cleanFieldName, $fieldValue];
         }

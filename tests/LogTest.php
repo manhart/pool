@@ -225,6 +225,7 @@ class LogTest extends TestCase
                 'MESSAGE' => 'extra-message',
                 'SYSLOG_IDENTIFIER' => 'extra-tag',
                 'ASSOC_FIELD' => 'associative',
+                123 => 'ignored-non-string-key',
                 'garbage',
             ], $configName);
             $received = $receive();
@@ -238,17 +239,25 @@ SYSLOG_IDENTIFIER=POOL_LOG_$configName
 EOF;
             self::assertSame($expected, $received);
 
-            //Weblication tag, empty message, malformed extra tuples, log::debug, no extra priority
+            //Weblication tag, empty message, malformed extra tuples, key-transform, log::debug, no extra priority
             Weblication::getInstance()->setName('POOL_APP');
             $configName = $this->setupJournaldLog($socketPath);
             \Log::debug('', [
-                [123, 'ignored-non-string-key'],
+                [],
+                [123, 'invalid-field-type-and-name'],
+                ['123', 'invalid-field-name1'],
+                ['Ж', 'invalid-field-name2'],
+                ['ABC!', 'invalid-field-name3'],
+                ['1A', 'invalid-field-name4'],
+                ['_A', 'invalid-protected-field-name'],
+                ['a123-camelCase_Field', 'fixable-field-name'],
                 ['TOO', 'MANY', 'VALUES'],
                 ['TOO_FEW_VALUES'],
                 [],
             ], $configName);
             $received = $receive();
             $expected = <<< EOF
+A123_CAMEL_CASE_FIELD=fixable-field-name
 PRIORITY=7
 SYSLOG_IDENTIFIER=POOL_APP
 EOF;
