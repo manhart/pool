@@ -334,14 +334,14 @@ class Log
      */
     public static function message(string $text, int $level = self::LEVEL_INFO, array $extra = [], string $configurationName = Log::COMMON): void
     {
-        if (!isset(self::$facilities[$configurationName])) {
+        if (!self::isConfigurationAvailable($configurationName)) {
             $error_level = match ($level) {
                 self::LEVEL_INFO, self::LEVEL_NOTICE => E_USER_NOTICE,
                 self::LEVEL_WARN, self::LEVEL_ERROR, self::LEVEL_FATAL => E_USER_WARNING,
                 default => null
             };
-            if (!$error_level) return;
-            trigger_error($text, $error_level);
+            if ($text === '' || !$error_level) return;
+            if (IS_TESTSERVER) trigger_error($text, $error_level);
             return;
         }
         if (self::getLevel($configurationName, self::OUTPUT_SCREEN) & $level) {
@@ -571,5 +571,10 @@ class Log
 
         $formatted = json_encode($extra, $flags);
         return $formatted === false ? '[unencodable extra]' : $formatted;
+    }
+
+    private static function isConfigurationAvailable(string $configurationName): bool
+    {
+        return isset(self::$facilities[$configurationName]);
     }
 }

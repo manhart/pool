@@ -158,6 +158,44 @@ class LogTest extends TestCase
         self::assertStringContainsString('Error Written error.', $contents);
     }
 
+    public function testEmptyMessageWithoutConfigurationDoesNotTriggerError(): void
+    {
+        $triggeredErrors = [];
+        set_error_handler(static function (int $errorLevel, string $message) use (&$triggeredErrors): bool {
+            $triggeredErrors[] = [$errorLevel, $message];
+            return true;
+        });
+
+        try {
+            \Log::message('', \Log::LEVEL_INFO, configurationName: __METHOD__);
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame([], $triggeredErrors);
+    }
+
+    public function testMessageWithoutConfigurationTriggersMappedErrorLevel(): void
+    {
+        $triggeredErrors = [];
+        set_error_handler(static function (int $errorLevel, string $message) use (&$triggeredErrors): bool {
+            $triggeredErrors[] = [$errorLevel, $message];
+            return true;
+        });
+
+        try {
+            \Log::message('Missing info log.', \Log::LEVEL_INFO, configurationName: __METHOD__.'-info');
+            \Log::message('Missing error log.', \Log::LEVEL_ERROR, configurationName: __METHOD__.'-error');
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame([
+            [E_USER_NOTICE, 'Missing info log.'],
+            [E_USER_WARNING, 'Missing error log.'],
+        ], $triggeredErrors);
+    }
+
     public function testNoticeRoutesToFileAndAllIncludesNewLevels(): void
     {
         self::assertSame(\Log::LEVEL_NOTICE, \Log::LEVEL_ALL & \Log::LEVEL_NOTICE);
