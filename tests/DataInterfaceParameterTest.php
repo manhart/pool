@@ -22,6 +22,38 @@ use pool\classes\Database\Driver;
 
 class DataInterfaceParameterTest extends TestCase
 {
+    public function testFetchRowSetSkipsColumnsWithoutPhpType(): void
+    {
+        $driver = new CapturingDriver();
+        $driver->rows = [[
+            'untyped' => '12',
+            'typed' => '12',
+        ]];
+        $interface = DataInterface::createDataInterface([
+            'host' => 'fake',
+            'database' => ['pool_test_fetch_types' => 'fake_db'],
+            'auth' => 'pool_test_no_auth',
+        ], $driver);
+
+        try {
+            $rowSet = $interface->fetchRowSet((object)[], metaData: [
+                'columns' => [
+                    'untyped' => ['type' => 'int'],
+                    'typed' => ['type' => 'int', 'phpType' => 'int'],
+                ],
+            ]);
+
+            $this->assertSame([[
+                'untyped' => '12',
+                'typed' => 12,
+            ]], $rowSet);
+        }
+        finally {
+            $interface->unregister();
+            $interface->close();
+        }
+    }
+
     public function testQueryWithoutParamsPassesEmptyParams(): void
     {
         $driver = new CapturingDriver();
@@ -113,6 +145,8 @@ class CapturingDriver extends Driver
 
     public array $queries = [];
 
+    public array $rows = [];
+
     public function __construct()
     {
         parent::__construct();
@@ -156,7 +190,7 @@ class CapturingDriver extends Driver
 
     public function fetch(mixed $result): array|null|false
     {
-        return false;
+        return array_shift($this->rows) ?? false;
     }
 
     public function free(mixed $result): void
