@@ -635,7 +635,7 @@ class DataInterface extends PoolObject
             foreach ($metaData['columns'] ?? [] as $col => $types) {
                 $dbType = $types['type'] ?? null;
                 $phpType = $types['phpType'] ?? null;
-                if (!array_key_exists($col, $row) || $row[$col] === null) continue;
+                if (!$phpType || !array_key_exists($col, $row) || $row[$col] === null) continue;
                 if (!self::requiresPhpTypeCast($row[$col], $phpType)) continue;
                 $isValidCast = match ($dbType) {
                     'tinyint', 'boolean' => in_array($row[$col], [0, 1, '0', '1'], true) && in_array($phpType, ['int', 'float', 'double', 'bool', 'boolean']),
