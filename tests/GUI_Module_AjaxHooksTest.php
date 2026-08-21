@@ -88,8 +88,11 @@ final class GUI_Module_AjaxHooksTest extends TestCase
     public function ajaxHooksAreNotDispatchedWhenAjaxMethodThrows(): void
     {
         $gui = new GUI_TestModule($this->app);
-        $payload = $this->invokeAjaxMethod($gui, 'testAjaxMethodThrows');
+        [$payload, $triggeredErrors] = $this->captureTriggeredErrors(
+            fn(): array => $this->invokeAjaxMethod($gui, 'testAjaxMethodThrows'),
+        );
 
+        $this->assertSame([[E_USER_WARNING, 'boom']], $triggeredErrors);
         $this->assertFalse($payload['success']);
         $this->assertSame('boom', $payload['error']['message']);
         $this->assertSame(RuntimeException::class, $payload['error']['type']);
@@ -184,6 +187,23 @@ final class GUI_Module_AjaxHooksTest extends TestCase
         $response = $invokeAjaxMethod->invoke($gui, $method);
 
         return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    private function captureTriggeredErrors(callable $callback): array
+    {
+        $triggeredErrors = [];
+        set_error_handler(static function (int $errorLevel, string $message) use (&$triggeredErrors): bool {
+            $triggeredErrors[] = [$errorLevel, $message];
+            return true;
+        });
+
+        try {
+            $result = $callback();
+        } finally {
+            restore_error_handler();
+        }
+
+        return [$result, $triggeredErrors];
     }
 }
 

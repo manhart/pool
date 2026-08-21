@@ -92,9 +92,12 @@ final class GUI_ModuleTest extends TestCase
     public function payloadRecorderIsDeferredByDefaultWithFinalResponseWhenAjaxMethodThrows(): void
     {
         $gui = new GUI_ModulePayloadRecordingTestModule($this->app);
-        $response = $this->invokeAjaxMethod($gui, 'recordedException');
+        [$response, $triggeredErrors] = $this->captureTriggeredErrors(
+            fn(): string => $this->invokeAjaxMethod($gui, 'recordedException'),
+        );
         $payload = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
+        $this->assertSame([[E_USER_WARNING, 'boom']], $triggeredErrors);
         $this->assertFalse($payload['success']);
         $this->assertSame('boom', $payload['error']['message']);
         $this->assertSame([], GUI_ModulePayloadRecordingTestModule::$recordings);
@@ -122,8 +125,11 @@ final class GUI_ModuleTest extends TestCase
         $this->assertTrue($payload['success']);
         $this->assertSame('recordingThrows', $payload['data']['message']);
 
-        $this->app->runDeferredAfterResponseCallbacks();
+        [, $triggeredErrors] = $this->captureTriggeredErrors(
+            $this->app->runDeferredAfterResponseCallbacks(...),
+        );
 
+        $this->assertSame([[E_USER_WARNING, 'recordAjaxPayload failed: recording failed']], $triggeredErrors);
         $this->assertSame([], GUI_ModulePayloadRecordingTestModule::$recordings);
     }
 
@@ -139,8 +145,11 @@ final class GUI_ModuleTest extends TestCase
             $calls[] = 'second';
         });
 
-        $this->app->runDeferredAfterResponseCallbacks();
+        [, $triggeredErrors] = $this->captureTriggeredErrors(
+            $this->app->runDeferredAfterResponseCallbacks(...),
+        );
 
+        $this->assertSame([[E_USER_WARNING, 'deferAfterResponse callback failed: deferred failed']], $triggeredErrors);
         $this->assertSame(['second'], $calls);
     }
 
@@ -244,6 +253,23 @@ final class GUI_ModuleTest extends TestCase
     {
         $reflectionProperty = new ReflectionProperty(Request::class, 'body');
         $reflectionProperty->setValue(null, $body);
+    }
+
+    private function captureTriggeredErrors(callable $callback): array
+    {
+        $triggeredErrors = [];
+        set_error_handler(static function (int $errorLevel, string $message) use (&$triggeredErrors): bool {
+            $triggeredErrors[] = [$errorLevel, $message];
+            return true;
+        });
+
+        try {
+            $result = $callback();
+        } finally {
+            restore_error_handler();
+        }
+
+        return [$result, $triggeredErrors];
     }
 }
 
