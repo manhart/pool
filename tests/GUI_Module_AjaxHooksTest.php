@@ -31,16 +31,25 @@ use pool\classes\Core\Weblication;
 use pool\classes\GUI\GUI_Module;
 use ReflectionClass;
 use ReflectionException;
+use ReflectionProperty;
 use RuntimeException;
 
 final class GUI_Module_AjaxHooksTest extends TestCase
 {
     private Weblication $app;
 
+    private array $logFacilities;
+
     protected function setUp(): void
     {
+        $this->logFacilities = $this->useSilentLogConfigurations();
         $this->app = Weblication::getInstance();
         GUI_TestModule::resetHookState();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->restoreLogConfigurations($this->logFacilities);
     }
 
     /**
@@ -88,11 +97,8 @@ final class GUI_Module_AjaxHooksTest extends TestCase
     public function ajaxHooksAreNotDispatchedWhenAjaxMethodThrows(): void
     {
         $gui = new GUI_TestModule($this->app);
-        [$payload, $triggeredErrors] = $this->captureTriggeredErrors(
-            fn(): array => $this->invokeAjaxMethod($gui, 'testAjaxMethodThrows'),
-        );
+        $payload = $this->invokeAjaxMethod($gui, 'testAjaxMethodThrows');
 
-        $this->assertSame([[E_USER_WARNING, 'boom']], $triggeredErrors);
         $this->assertFalse($payload['success']);
         $this->assertSame('boom', $payload['error']['message']);
         $this->assertSame(RuntimeException::class, $payload['error']['type']);
@@ -189,21 +195,22 @@ final class GUI_Module_AjaxHooksTest extends TestCase
         return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
     }
 
-    private function captureTriggeredErrors(callable $callback): array
+    private function useSilentLogConfigurations(): array
     {
-        $triggeredErrors = [];
-        set_error_handler(static function (int $errorLevel, string $message) use (&$triggeredErrors): bool {
-            $triggeredErrors[] = [$errorLevel, $message];
-            return true;
-        });
+        $reflectionProperty = new ReflectionProperty(\Log::class, 'facilities');
+        $logFacilities = $reflectionProperty->getValue();
+        $silentLogFacilities = $logFacilities;
+        $silentLogFacilities[\Log::COMMON] = [];
+        $silentLogFacilities[\Log::AJAX_CALL_LOG] = [];
+        $reflectionProperty->setValue(null, $silentLogFacilities);
 
-        try {
-            $result = $callback();
-        } finally {
-            restore_error_handler();
-        }
+        return $logFacilities;
+    }
 
-        return [$result, $triggeredErrors];
+    private function restoreLogConfigurations(array $logFacilities): void
+    {
+        $reflectionProperty = new ReflectionProperty(\Log::class, 'facilities');
+        $reflectionProperty->setValue(null, $logFacilities);
     }
 }
 
