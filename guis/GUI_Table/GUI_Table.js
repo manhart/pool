@@ -22,6 +22,10 @@ jQuery().bootstrapTable.columnDefaults.filterDatepickerOptions = {
  */
 class GUI_Table extends GUI_Module
 {
+    dateTimeSourceTimezone = null;
+    dateTimeDisplayTimezone = null;
+    dateTimeFormat = 'yyyy-MM-dd HH:mm';
+
     /* > ES7
     static const STYLE_DEFAULT = 'toast';
     static const STYLE_ERROR = 'error';
@@ -136,6 +140,10 @@ class GUI_Table extends GUI_Module
             poolOptions = options['poolOptions'];
             delete options['poolOptions'];
         }
+
+        this.dateTimeSourceTimezone = poolOptions.dateTimeSourceTimezone ?? null;
+        this.dateTimeDisplayTimezone = poolOptions.dateTimeDisplayTimezone ?? null;
+        this.dateTimeFormat = poolOptions['date.time.luxon'] ?? this.dateTimeFormat;
 
         this.formats['time'] = '%H:%M';
         if('time.strftime' in poolOptions) {
@@ -1190,6 +1198,32 @@ class GUI_Table extends GUI_Module
 
     strftime(value, row, index, field, format)
     {
+        if(this.dateTimeSourceTimezone && this.dateTimeDisplayTimezone && this.getColumnOptions(field).poolType === 'date.time') {
+            if(!value || value === '0000-00-00 00:00:00') return '';
+
+            return this._usePoolFormatter(value, field, row, () => {
+                let dateTime = luxon.DateTime.fromSQL(value, {
+                    zone: this.dateTimeSourceTimezone,
+                    setZone: true,
+                });
+                if(!dateTime.isValid) {
+                    dateTime = luxon.DateTime.fromISO(value, {
+                        zone: this.dateTimeSourceTimezone,
+                        setZone: true,
+                    });
+                }
+                if(!dateTime.isValid) return '';
+
+                const displayDateTime = dateTime
+                    .setLocale(document.documentElement.lang)
+                    .setZone(this.dateTimeDisplayTimezone);
+                const formattedDateTime = displayDateTime.toFormat(this.dateTimeFormat);
+                return this.dateTimeDisplayTimezone === this.dateTimeSourceTimezone
+                    ? formattedDateTime
+                    : `${formattedDateTime} (UTC${displayDateTime.toFormat('ZZ')})`;
+            });
+        }
+
         // 09.12.21, AM, fallback: handle empty english database format (should be handled server-side!!)
         if(value == '0000-00-00 00:00:00' || value == '0000-00-00') {
             value = '';

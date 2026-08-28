@@ -12,12 +12,17 @@
 namespace pool\guis\GUI_Table;
 
 use Configurable;
+use DateTimeImmutable;
+use DateTimeZone;
+use InvalidArgumentException;
 use pool\classes\Core\Input\Input;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DAO\MySQL_DAO;
 use pool\classes\Database\Operator;
+use pool\classes\Exception\LogicException;
 use pool\classes\GUI\GUI_Module;
+use pool\includes\Resources;
 
 /**
  * Class GUI_Table
@@ -1105,6 +1110,31 @@ class GUI_Table extends GUI_Module
     public const int RENDER_ONDOMLOADED = 2;
     //    private string $version = '1.19.1';
 
+    /**
+     * Enables timezone-aware date-time formatting and filtering.
+     * Existing tables remain unchanged until both timezones are configured.
+     */
+    public function setDateTimezones(string $sourceTimezone, string $displayTimezone): static
+    {
+        static $identifiers = null;
+        $identifiers ??= array_fill_keys(DateTimeZone::listIdentifiers(), true);
+        foreach ([$sourceTimezone, $displayTimezone] as $timezone) {
+            if (!isset($identifiers[$timezone])) throw new InvalidArgumentException($timezone);
+        }
+
+        $this->poolOptions['dateTimeSourceTimezone'] = $sourceTimezone;
+        $this->poolOptions['dateTimeDisplayTimezone'] = $displayTimezone;
+        return $this;
+    }
+
+    protected function hasDateTimezones(): bool
+    {
+        return isset(
+            $this->poolOptions['dateTimeSourceTimezone'],
+            $this->poolOptions['dateTimeDisplayTimezone'],
+        );
+    }
+
     public function init(?int $superglobals = Input::EMPTY): void
     {
         $this->Defaults->addVar('framework', 'bs4');
@@ -1125,6 +1155,7 @@ class GUI_Table extends GUI_Module
         $this->poolOptions['time.strftime'] = $this->poolOptions['time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.time');
         $this->poolOptions['date.strftime'] = $this->poolOptions['date.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date');
         $this->poolOptions['date.time.strftime'] = $this->poolOptions['date.time.strftime'] ?? $this->Weblication->getDefaultFormat('strftime.date.time');
+        $this->poolOptions['date.time.luxon'] = $this->poolOptions['date.time.luxon'] ?? $this->Weblication->getDefaultFormat('luxon.date.time');
         $this->poolOptions['number'] = $this->poolOptions['number'] ?? $this->Weblication->getDefaultFormat('number');
 
         if ($this->Input->getVar('columns') != null) {
@@ -1145,7 +1176,11 @@ class GUI_Table extends GUI_Module
         $fw = $this->getVar('framework');
         $tpl = $this->Weblication->findTemplate("tpl_table_$fw.html", 'GUI_Table', true);
         $this->Template->setFilePath('stdout', $tpl);
-        $this->Weblication->getFrame()?->getHeadData()?->addClientWebAsset('js', self::class, baseLib: true);
+        $headData = $this->Weblication->getFrame()?->getHeadData();
+        if ($this->hasDateTimezones() && $headData) {
+            Resources\JS__luxon::addResourceTo($headData, IS_PRODUCTION);
+        }
+        $headData?->addClientWebAsset('js', self::class, baseLib: true);
         parent::loadFiles();
         return $this;
     }
@@ -1530,6 +1565,11 @@ class GUI_Table extends GUI_Module
      */
     public function buildFilter(MySQL_DAO $DAO, string $search, string $filter, array $mandatoryFilter = [], array $searchFilter = []): array
     {
+        if ($this->hasDateTimezones()) {
+            [$filter, $dateFilters] = $this->extractTimezoneTableDateFilters($filter);
+            $mandatoryFilter = array_merge($mandatoryFilter, $dateFilters);
+        }
+
         $filterRules = [];
         if (isValidJsonContainer($filter)) {
             $filterRules = json_decode($filter, JSON_OBJECT_AS_ARRAY, 512, JSON_THROW_ON_ERROR);
@@ -1543,6 +1583,120 @@ class GUI_Table extends GUI_Module
             $filterRules[] = Operator::and;
         }
         return array_merge($filterRules, $mandatoryFilter);
+    }
+
+    /**
+     * Converts table datepicker values from the configured display timezone to half-open source-timezone intervals.
+     */
+    protected function extractTimezoneTableDateFilters(string $filter): array
+    {
+        if (!$this->hasDateTimezones()) return [$filter, []];
+
+        $filterValues = isValidJsonContainer($filter)
+            ? json_decode($filter, true, 512, JSON_THROW_ON_ERROR)
+            : [];
+        $dateFilters = [];
+        $sourceTimezone = $this->poolOptions['dateTimeSourceTimezone'];
+        $displayTimezone = $this->poolOptions['dateTimeDisplayTimezone'];
+
+        foreach ($this->getDBColumns('searchable') as $column) {
+            if (($column['type'] ?? '') !== 'date.time' || ($column['filterControl'] ?? '') !== 'datepicker') continue;
+
+            $field = $column['field'];
+            $date = $filterValues[$field] ?? null;
+            unset($filterValues[$field]);
+            $this->addTimezoneDateRange(
+                $dateFilters,
+                $column['expr'],
+                $date,
+                $date,
+                $sourceTimezone,
+                $displayTimezone,
+            );
+        }
+
+        return [
+            $filterValues ? json_encode($filterValues, JSON_THROW_ON_ERROR) : '',
+            $dateFilters,
+        ];
+    }
+
+    /**
+     * Builds an explicit date-time range filter using the configured display and source timezones.
+     *
+     * @throws InvalidArgumentException if the field is not a searchable date-time column
+     * @throws LogicException if a non-empty range is used without configured timezones
+     */
+    public function buildDateTimeRangeFilter(string $field, ?string $dateFrom, ?string $dateUntil): array
+    {
+        $column = array_find(
+            $this->getDBColumns('searchable'),
+            fn(array $column): bool => $column['field'] === $field,
+        );
+        if (!$column || $column['type'] !== 'date.time') {
+            throw new InvalidArgumentException($field);
+        }
+
+        if (($dateFrom === null || $dateFrom === '') && ($dateUntil === null || $dateUntil === '')) return [];
+        if (!$this->hasDateTimezones()) {
+            throw new LogicException('Date-time timezones are not configured');
+        }
+
+        $filter = [];
+        $this->addTimezoneDateRange(
+            $filter,
+            $column['expr'],
+            $dateFrom,
+            $dateUntil,
+            $this->poolOptions['dateTimeSourceTimezone'],
+            $this->poolOptions['dateTimeDisplayTimezone'],
+        );
+        return $filter;
+    }
+
+    private function addTimezoneDateRange(
+        array &$filter,
+        string $dbColumn,
+        mixed $dateFrom,
+        mixed $dateUntil,
+        string $sourceTimezone,
+        string $displayTimezone,
+    ): void {
+        foreach ([$dateFrom, $dateUntil] as $date) {
+            if ($date === null || $date === '') continue;
+            if (!is_string($date)) {
+                throw new InvalidArgumentException(is_scalar($date) ? (string)$date : get_debug_type($date));
+            }
+        }
+        if ($dateFrom !== null && $dateFrom !== '') {
+            $filter[] = [
+                $dbColumn,
+                Operator::greaterEqual,
+                $this->convertDateBoundary($dateFrom, $displayTimezone, $sourceTimezone, false),
+            ];
+        }
+        if ($dateUntil !== null && $dateUntil !== '') {
+            $filter[] = [
+                $dbColumn,
+                Operator::less,
+                $this->convertDateBoundary($dateUntil, $displayTimezone, $sourceTimezone, true),
+            ];
+        }
+    }
+
+    private function convertDateBoundary(
+        string $date,
+        string $displayTimezone,
+        string $sourceTimezone,
+        bool $until,
+    ): DateTimeImmutable {
+        $dateTime = DateTimeImmutable::createFromFormat('!Y-m-d', $date, new DateTimeZone($displayTimezone));
+        $errors = DateTimeImmutable::getLastErrors();
+        if (!$dateTime || $dateTime->format('Y-m-d') !== $date || ($errors && ($errors['warning_count'] || $errors['error_count']))) {
+            throw new InvalidArgumentException($date);
+        }
+        if ($until) $dateTime = $dateTime->modify('+1 day');
+        return $dateTime->setTimezone(new DateTimeZone($sourceTimezone));
     }
 
     /**

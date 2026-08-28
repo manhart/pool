@@ -285,6 +285,7 @@ class Weblication extends Component
         'strftime.date.time' => '%d.%m.%Y %H:%M', // needed in js
         'strftime.date.time.short' => '%d.%m.%y %H:%M', // needed in js
         'strftime.date.time.sec' => '%d.%m.%Y %H:%M:%S', // needed in js
+        'luxon.date.time' => 'dd.MM.yyyy HH:mm', // needed for timezone-aware date formatting in js
         'moment.date' => 'DD.MM.YYYY', // needed for moment js
         'moment.date.time' => 'DD.MM.YYYY HH:mm', // needed for moment js
         'moment.date.time.sec' => 'DD.MM.YYYY HH:mm:ss', // needed for moment js
