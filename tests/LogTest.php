@@ -16,6 +16,8 @@ use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use pool\classes\Core\Weblication;
+use pool\classes\Exception\RuntimeException;
+use pool\classes\LogJournald;
 use ReflectionMethod;
 
 if (!class_exists(\Log::class, false)) {
@@ -390,6 +392,64 @@ EOF;
             socket_close($server);
             @unlink($socketPath);
         }
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testJournaldFailureDoesNotInterruptOtherLogFacilities(): void
+    {
+        $socketPath = sys_get_temp_dir().'/pool-journald-missing-'.bin2hex(random_bytes(8)).'.sock';
+        $logFile = $this->tempLogFile();
+        $errorLogFile = $this->tempLogFile();
+        $previousErrorLog = ini_set('error_log', $errorLogFile);
+        $configurationName = uniqid('log-test-', true);
+
+        try {
+            \Log::setup([
+                \Log::OUTPUT_FILE => [
+                    'level' => \Log::LEVEL_ERROR,
+                    'file' => $logFile,
+                ],
+                \Log::OUTPUT_JOURNALD => [
+                    'level' => \Log::LEVEL_ERROR,
+                    'socketPath' => $socketPath,
+                    'tag' => 'journald-failure-test',
+                ],
+                \Log::EXIT_LEVEL => \Log::LEVEL_NONE,
+            ], $configurationName);
+
+            \Log::error('first-message', ['PRIVATE_CONTEXT' => 'must-not-be-repeated'], $configurationName);
+            \Log::error('second-message', configurationName: $configurationName);
+
+            $fileLog = file_get_contents($logFile);
+            self::assertIsString($fileLog);
+            self::assertStringContainsString('first-message', $fileLog);
+            self::assertStringContainsString('second-message', $fileLog);
+
+            $errorLog = file_get_contents($errorLogFile);
+            self::assertIsString($errorLog);
+            self::assertSame(1, substr_count($errorLog, 'Journald output disabled after transmission failure'));
+            self::assertStringContainsString('configuration="'.$configurationName.'"', $errorLog);
+            self::assertStringContainsString('tag="journald-failure-test"', $errorLog);
+            self::assertStringContainsString('level="error"', $errorLog);
+            self::assertStringContainsString('socket="'.$socketPath.'"', $errorLog);
+            self::assertStringContainsString(RuntimeException::class, $errorLog);
+            self::assertStringNotContainsString('first-message', $errorLog);
+            self::assertStringNotContainsString('must-not-be-repeated', $errorLog);
+        } finally {
+            if ($previousErrorLog !== false) ini_set('error_log', $previousErrorLog);
+            @unlink($logFile);
+            @unlink($errorLogFile);
+        }
+    }
+
+    public function testDirectJournaldLoggerStillThrowsOnTransmissionFailure(): void
+    {
+        $socketPath = sys_get_temp_dir().'/pool-journald-missing-'.bin2hex(random_bytes(8)).'.sock';
+        $journaldLogger = new LogJournald($socketPath);
+
+        $this->expectException(RuntimeException::class);
+        $journaldLogger->sendLog('message', \Log::LEVEL_ERROR);
     }
 
     private function setupFileLog(string $logFile, int $level): string
