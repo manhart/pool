@@ -31,11 +31,7 @@ class Log
     /**
      * Journald Native Protocol via UNIX Datagramm socket <br> Options:
      * - socketPath: File path of the journald socket, defaults to `/run/systemd/journal/socket`
-     * - tag: 'syslog identifier' for use with `journalctl -t [tag]` defaults to the first available value of: <br>
-     * constant JOB_NAME, <br>Name of the Weblication, <br>POOL_LOG_$configurationName
-     * Journald is an optional, non-blocking output. Initialization or transmission failures disable it for the
-     * current configuration and are reported once via error_log().
-     *
+     * - tag: 'syslog identifier' for use with `journalctl -t [tag]` defaults to the first available value of: <br> constant JOB_NAME, <br>Name of the Weblication, <br>POOL_LOG_$configurationName
      * @see LogJournald::sendLog() provides underlying functionality
      * @see self::writeJournald()
      */
@@ -145,16 +141,8 @@ class Log
                 $level = $facility['level'] ?? 0;
                 $socketPath = $facility['socketPath'] ?? null;
 
-                try {
-                    $LogJournald = $socketPath === null ? new LogJournald() : new LogJournald($socketPath);
-                    $facilities[self::OUTPUT_JOURNALD]['LogJournald'] = $LogJournald;
-                } catch (Throwable $e) {
-                    $level = self::LEVEL_NONE;
-                    $tag = $facility['tag'] ?? null;
-                    $tag = is_string($tag) ? $tag : null;
-                    $reportedSocketPath = is_string($socketPath) ? $socketPath : null;
-                    self::reportJournaldFailure($configurationName, $e, 'initialization', $tag, $reportedSocketPath);
-                }
+                $LogJournald = $socketPath === null ? new LogJournald() : new LogJournald($socketPath);
+                $facilities[self::OUTPUT_JOURNALD]['LogJournald'] = $LogJournald;
             } else {
                 $level = $facility;
             }
@@ -444,51 +432,14 @@ class Log
 
     public static function writeJournald(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
     {
-        $tag = null;
-        $socketPath = null;
-        try {
-            $facility = self::$facilities[$configurationName][self::OUTPUT_JOURNALD];
-            $socketPath = $facility['socketPath'] ?? null;
-            /** @var LogJournald $journaldLogger */
-            $journaldLogger = $facility['LogJournald'];
-            $weblication = Weblication::hasInstance() ? Weblication::getInstance() : null;
-            $jobname = defined('JOB_NAME') ? JOB_NAME : null;
-            $jobname = is_string($jobname) ? $jobname : null;
-            $tag = $facility['tag'] ?? $jobname ?? $weblication?->getName() ?? "POOL_LOG_$configurationName";
-            $journaldLogger->sendLog($text, $level, $extra, $tag);
-        } catch (Throwable $e) {
-            self::$facilities[$configurationName][self::OUTPUT_JOURNALD]['level'] = self::LEVEL_NONE;
-            $tag = is_string($tag) ? $tag : null;
-            $reportedSocketPath = is_string($socketPath) ? $socketPath : null;
-            self::reportJournaldFailure($configurationName, $e, 'transmission', $tag, $reportedSocketPath, $level);
-        }
-    }
-
-    private static function reportJournaldFailure(
-        string $configurationName,
-        Throwable $error,
-        string $phase,
-        ?string $tag,
-        ?string $socketPath,
-        ?int $level = null,
-    ): void {
-        $context = [
-            'configuration' => $configurationName,
-            'tag' => $tag ?? '[unknown]',
-        ];
-        if ($level !== null) {
-            $context['level'] = self::$TEXT_LEVEL[$level] ?? (string)$level;
-        }
-        $context['socket'] = $socketPath ?? '/run/systemd/journal/socket';
-
-        $formattedContext = [];
-        foreach ($context as $key => $value) {
-            $formattedContext[] = "$key=".self::formatExtra($value);
-        }
-        $errorMessage = str_replace(["\r", "\n"], ['\\r', '\\n'], $error->getMessage());
-        $errorType = $error::class;
-
-        error_log("Journald output disabled after $phase failure (".implode(', ', $formattedContext).")".": $errorType: $errorMessage");
+        $facility = self::$facilities[$configurationName][self::OUTPUT_JOURNALD];
+        /** @var LogJournald $journaldLogger */
+        $journaldLogger = $facility['LogJournald'];
+        $weblication = Weblication::hasInstance() ? Weblication::getInstance() : null;
+        $jobname = defined('JOB_NAME') ? JOB_NAME : null;
+        $jobname = is_string($jobname) ? $jobname : null;
+        $tag = $facility['tag'] ?? $jobname ?? $weblication?->getName() ?? "POOL_LOG_$configurationName";
+        $journaldLogger->sendLog($text, $level, $extra, $tag);
     }
 
     public static function writeMail(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
