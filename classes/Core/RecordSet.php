@@ -20,6 +20,7 @@ use pool\classes\Database\DataInterface;
 use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\InvalidJsonException;
+use pool\utils\DateTimeHelper;
 use UConverter;
 
 use function abs;
@@ -477,18 +478,7 @@ class RecordSet extends PoolObject implements \Iterator, \Countable
     public function getValueAsDateTime(string $key, ?DateTime $default = null, ?DateTimeZone $timezone = null): ?DateTime
     {
         $value = $this->getValue($key, $default);
-        if (!$value || $value === DataInterface::ZERO_DATE || $value === DataInterface::ZERO_DATETIME)
-            return $default;
-        if ($value instanceof DateTime)
-            return $value;
-
-        try {
-            if (is_numeric($value) && !str_contains($value, '-'))
-                return new DateTime(timezone: $timezone)->setTimestamp($value);
-            return new DateTime($value, $timezone);
-        } catch (Exception) {
-        }
-        return $default;
+        return DateTimeHelper::toDateTime($value, $timezone) ?? $default;
     }
 
     #[Pure]
@@ -497,8 +487,8 @@ class RecordSet extends PoolObject implements \Iterator, \Countable
      */
     public function getValueAsDateTimeImmutable(string $key, ?DateTimeImmutable $default = null, ?DateTimeZone $timezone = null): ?DateTimeImmutable
     {
-        $dt = $this->getValueAsDateTime($key, $default, $timezone);
-        return $dt instanceof DateTime ? DateTimeImmutable::createFromMutable($dt) : $default;
+        $value = $this->getValue($key, $default);
+        return DateTimeHelper::toDateTimeImmutable($value, $timezone) ?? $default;
     }
 
     /**

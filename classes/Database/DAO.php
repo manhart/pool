@@ -25,6 +25,8 @@ use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Exception\SecurityException;
 
+use pool\utils\DateTimeHelper;
+
 use function addEndingSlash;
 use function array_diff;
 use function array_flip;
@@ -434,8 +436,8 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             self::STRING => (string)$value,
             self::INT => (int)$value,
             self::FLOAT => (float)$value,
-            self::DT => new RecordSet([['' => $value]])->getValueAsDateTime(''),
-            self::DTI => new RecordSet([['' => $value]])->getValueAsDateTimeImmutable(''),
+            self::DT => DateTimeHelper::toDateTime($value),
+            self::DTI => DateTimeHelper::toDateTimeImmutable($value),
             default => $value,
         };
     }
