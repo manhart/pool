@@ -158,6 +158,86 @@ class LogTest extends TestCase
         self::assertStringContainsString('Error Written error.', $contents);
     }
 
+    public function testSetupReplacesAllFacilitiesForNamedConfiguration(): void
+    {
+        $logFile = $this->tempLogFile();
+        $configurationName = $this->setupFileLog($logFile, \Log::LEVEL_INFO);
+
+        \Log::info('Before replacement.', configurationName: $configurationName);
+        \Log::setup([], $configurationName);
+        \Log::info('After replacement.', configurationName: $configurationName);
+        \Log::close();
+
+        $contents = file_get_contents($logFile);
+        self::assertIsString($contents);
+        self::assertStringContainsString('Before replacement.', $contents);
+        self::assertStringNotContainsString('After replacement.', $contents);
+    }
+
+    public function testSetupDoesNotRetainOmittedJournaldLevel(): void
+    {
+        $configurationName = uniqid('log-test-', true);
+        $stream = fopen('php://memory', 'w+');
+        self::assertIsResource($stream);
+
+        \Log::setup([
+            \Log::OUTPUT_JOURNALD => [
+                'level' => \Log::LEVEL_ERROR,
+                'socketPath' => '/missing/journald.sock',
+            ],
+        ], $configurationName);
+        \Log::setup([
+            \Log::OUTPUT_SCREEN => [
+                'level' => \Log::LEVEL_ERROR,
+                'stream' => $stream,
+                'withDate' => false,
+            ],
+        ], $configurationName);
+
+        \Log::error('Screen only.', configurationName: $configurationName);
+        rewind($stream);
+
+        self::assertSame("Error: Screen only.\n", stream_get_contents($stream));
+        fclose($stream);
+    }
+
+    public function testSetupOnlyReplacesNamedConfiguration(): void
+    {
+        $firstLogFile = $this->tempLogFile();
+        $secondLogFile = $this->tempLogFile();
+        $firstConfigurationName = $this->setupFileLog($firstLogFile, \Log::LEVEL_INFO);
+        $secondConfigurationName = $this->setupFileLog($secondLogFile, \Log::LEVEL_INFO);
+
+        \Log::setup([], $firstConfigurationName);
+        \Log::info('Disabled configuration.', configurationName: $firstConfigurationName);
+        \Log::info('Unchanged configuration.', configurationName: $secondConfigurationName);
+        \Log::close();
+
+        self::assertSame('', file_get_contents($firstLogFile));
+        self::assertStringContainsString('Unchanged configuration.', file_get_contents($secondLogFile));
+    }
+
+    public function testFailedSetupKeepsPreviousConfiguration(): void
+    {
+        $logFile = $this->tempLogFile();
+        $configurationName = $this->setupFileLog($logFile, \Log::LEVEL_INFO);
+
+        try {
+            \Log::setup([
+                \Log::OUTPUT_FILE => [
+                    'level' => \Log::LEVEL_INFO,
+                    'file' => [],
+                ],
+            ], $configurationName);
+            self::fail('Invalid file configuration should fail.');
+        } catch (\TypeError) {
+            \Log::info('Previous configuration remains active.', configurationName: $configurationName);
+            \Log::close();
+        }
+
+        self::assertStringContainsString('Previous configuration remains active.', file_get_contents($logFile));
+    }
+
     public function testEmptyMessageWithoutConfigurationDoesNotTriggerError(): void
     {
         $triggeredErrors = [];
