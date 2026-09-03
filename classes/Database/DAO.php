@@ -455,7 +455,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Shorthand for fetching one or multiple values of a record
      *
-     * @param array|int|string $pk a unique identifier uses an array [$pk, $column] to specify the primary key column or search field. $pk and $column each can also be a list as is
+     * @param array|int|string|false $pk a unique identifier uses an array [$pk, $column] to specify the primary key column or search field. $pk and $column each can also be a list as is
      *     usual with DAO::get()
      * @param mixed ...$fields a list of columns to retrieve if omitted will return the associated primary key (useful for reverse lookup)
      * @return array|mixed the result, returns a list if multiple columns were queried should there be no matching record returns null or an empty list respectively

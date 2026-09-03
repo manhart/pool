@@ -697,7 +697,7 @@ class DataInterface extends PoolObject
         return $row;
     }
 
-    private static function needsPhpTypeCast(mixed $value, string $phpType): bool
+    private static function needsPhpTypeCast(mixed $value, string|int $phpType): bool
     {
         return match ($phpType) {
             'int', 'integer' => !is_int($value),
