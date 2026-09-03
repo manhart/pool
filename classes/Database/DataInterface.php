@@ -21,6 +21,7 @@ use pool\classes\Exception\DAOException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
 use pool\classes\Utils\Singleton;
+use pool\utils\DateTimeHelper;
 use Stopwatch;
 
 use function array_key_exists;
@@ -47,7 +48,9 @@ use function substr;
 class DataInterface extends PoolObject
 {
     /**
-     * Date and time constants (@todo rethink maybe move to a separate database class?)
+     * Date and time constants
+     *
+     * @todo Move date sentinel constants out of DataInterface into a shared date/time context.
      */
     public const string ZERO_DATE = '0000-00-00';
     public const string ZERO_TIME = '00:00:00';
@@ -630,29 +633,10 @@ class DataInterface extends PoolObject
     {
         $query_resource ??= $this->query_resource;
 
+        $columns = $metaData['columns'] ?? [];
         $rowSet = [];
         while (($row = $this->driver->fetch($query_resource))) {
-            foreach ($metaData['columns'] ?? [] as $col => $types) {
-                $dbType = $types['type'] ?? null;
-                $phpType = $types['phpType'] ?? null;
-                if (!$phpType || !array_key_exists($col, $row) || $row[$col] === null) continue;
-                if (!self::requiresPhpTypeCast($row[$col], $phpType)) continue;
-                $isValidCast = match ($dbType) {
-                    'tinyint', 'boolean' => in_array($row[$col], [0, 1, '0', '1'], true) && in_array($phpType, ['int', 'float', 'double', 'bool', 'boolean']),
-                    'smallint', 'mediumint', 'int', 'bigint' => is_numeric($row[$col]) && in_array($phpType, ['int', 'float', 'double']),
-                    'float', 'double' => is_numeric($row[$col]) && in_array($phpType, ['float', 'double']),
-                    default => true,
-                };
-                if (!$isValidCast) {
-                    $value = shorten($row[$col], 100);
-                    Log::warn(
-                        "Refusing potentially harmful typecast in column $col, '$dbType' to '$phpType' for given value '$value'",
-                        ['trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7)],
-                    );
-                    continue;
-                }
-                settype($row[$col], $phpType);
-            }
+            $row = self::castRowToPhpTypes($row, $columns);
             if ($callbackOnFetchRow)
                 $row = $callbackOnFetchRow($row);
             $rowSet[] = $row;
@@ -660,12 +644,66 @@ class DataInterface extends PoolObject
         return $rowSet;
     }
 
-    private static function requiresPhpTypeCast(mixed $value, string $phpType): bool
+    /**
+     * Casts row values according to column metadata
+     */
+    private static function castRowToPhpTypes(array $row, array $columns): array
+    {
+        foreach ($columns as $col => $columnMeta) {
+            $phpType = $columnMeta['phpType'] ?? null;
+            if (!$phpType || !isset($row[$col])) continue;
+
+            $value = $row[$col];
+            if (!self::needsPhpTypeCast($value, $phpType)) continue;
+
+            $dbType = $columnMeta['type'] ?? null;
+
+            $safeCast = match ($dbType) {
+                'tinyint', 'boolean' =>
+                    in_array($value, [0, 1, '0', '1'], true)
+                    && in_array($phpType, ['int', 'integer', 'float', 'double', 'bool', 'boolean'], true),
+                'smallint', 'mediumint', 'int', 'bigint' =>
+                    is_numeric($value)
+                    && in_array($phpType, ['int', 'integer', 'float', 'double'], true),
+                'float', 'double' =>
+                    is_numeric($value)
+                    && in_array($phpType, ['float', 'double'], true),
+                'date', 'datetime', 'timestamp' => in_array($phpType, [DAO::DT, DAO::DTI, 'DateTime', 'DateTimeImmutable'], true),
+                default => true,
+            };
+
+            if (!$safeCast) {
+                $value = shorten($value, 100);
+                Log::warn(
+                    "Refusing potentially harmful typecast in column $col, '$dbType' to '$phpType' for given value '$value'",
+                    ['trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7)],
+                );
+                continue;
+            }
+
+            $casted = match ($phpType) {
+                DAO::DT, 'DateTime' => DateTimeHelper::toDateTime($value),
+                DAO::DTI, 'DateTimeImmutable' => DateTimeHelper::toDateTimeImmutable($value),
+                default => false,
+            };
+
+            if ($casted !== false) {
+                $row[$col] = $casted;
+                continue;
+            }
+
+            settype($row[$col], $phpType);
+        }
+        return $row;
+    }
+
+    private static function needsPhpTypeCast(mixed $value, string $phpType): bool
     {
         return match ($phpType) {
-            'int' => !is_int($value),
-            'float' => !is_float($value),
-            'bool' => !is_bool($value),
+            'int', 'integer' => !is_int($value),
+            'float', 'double' => !is_float($value),
+            'bool', 'boolean' => !is_bool($value),
+            'string' => !is_string($value),
             default => true,
         };
     }
