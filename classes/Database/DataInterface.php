@@ -8,6 +8,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types = 1);
+
 namespace pool\classes\Database;
 
 use Closure;
@@ -227,7 +229,7 @@ class DataInterface extends PoolObject
     public function setOptions(array $connectionOptions): bool
     {
         // $this->persistence = array_key_exists('persistence', $Packet) ? $Packet['persistence'] : false;
-        $this->force_backend_read = $connectionOptions['force_backend_read'] ?? false;
+        $this->force_backend_read = boolval($connectionOptions['force_backend_read'] ?? false);
 
         // @todo maybe switch to a connectionString
         $this->available_hosts = $connectionOptions['host'] ??
@@ -240,7 +242,7 @@ class DataInterface extends PoolObject
             $dataBases[0] ?? throw new InvalidArgumentException('DataInterface::setOptions Bad Packet: no key "database"');
 
         if (array_key_exists('port', $connectionOptions)) {
-            $this->port = $connectionOptions['port'];
+            $this->port = (int)$connectionOptions['port'];
         }
 
         if (array_key_exists('charset', $connectionOptions)) {
@@ -416,7 +418,7 @@ class DataInterface extends PoolObject
                     throw new InvalidArgumentException("Unknown command: '{$interface->getLastQueryCommand()}' in $sql");
             }
         } else {//statement failed
-            $error_msg = $e ?? null?->getMessage() ?? "{$interface->getErrorAsText()} SQL Statement failed: $sql";
+            $error_msg = isset($e) ? $e->getMessage() : "{$interface->getErrorAsText()} SQL Statement failed: $sql";
             // SQL Statement Error Logging:
             if ($doLogging && defined($x = 'ACTIVATE_RESULTSET_SQL_ERROR_LOG') && constant($x) === 1)
                 Log::error($error_msg, configurationName: Log::SQL_LOG_NAME);
@@ -673,7 +675,7 @@ class DataInterface extends PoolObject
             };
 
             if (!$safeCast) {
-                $value = shorten($value, 100);
+                $value = shorten((string)$value, 100);
                 Log::warn(
                     "Refusing potentially harmful typecast in column $col, '$dbType' to '$phpType' for given value '$value'",
                     ['trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 7)],
