@@ -201,6 +201,111 @@ class LogTest extends TestCase
         fclose($stream);
     }
 
+    public function testSetupDoesNotRetainOmittedExitLevel(): void
+    {
+        $configurationName = uniqid('log-test-', true);
+        \Log::setup([\Log::EXIT_LEVEL => \Log::LEVEL_FATAL], $configurationName);
+        \Log::setup([], $configurationName);
+
+        self::assertSame(
+            \Log::LEVEL_NONE,
+            $this->invokePrivateStatic('getExitLevel', [$configurationName]),
+        );
+    }
+
+    public function testSetupRejectsScalarFacilitiesThatRequireOptions(): void
+    {
+        foreach ([\Log::OUTPUT_FILE, \Log::OUTPUT_MAIL, \Log::OUTPUT_DAO] as $output) {
+            try {
+                \Log::setup([$output => \Log::LEVEL_ALL], uniqid('log-test-', true));
+                self::fail("Scalar $output facility should be rejected.");
+            } catch (\pool\classes\Exception\InvalidArgumentException $e) {
+                self::assertSame("Log facility '$output' requires an array configuration.", $e->getMessage());
+            }
+        }
+    }
+
+    public function testSetupAcceptsScalarLevelFacilities(): void
+    {
+        $levels = [
+            [\Log::LEVEL_INFO, \Log::LEVEL_INFO],
+            ['8', 8],
+            [true, 1],
+            [8.9, 8],
+            ['abc', 0],
+        ];
+        foreach ([\Log::OUTPUT_SCREEN, \Log::OUTPUT_SYSTEM] as $output) {
+            foreach ($levels as [$level, $expected]) {
+                $configurationName = uniqid('log-test-', true);
+                \Log::setup([$output => $level], $configurationName);
+
+                self::assertSame($expected, $this->invokePrivateStatic('getLevel', [$configurationName, $output]));
+            }
+        }
+    }
+
+    public function testSetupAcceptsScalarJournaldLevel(): void
+    {
+        $configurationName = uniqid('log-test-', true);
+        \Log::setup([\Log::OUTPUT_JOURNALD => (string)\Log::LEVEL_INFO], $configurationName);
+        $facilities = (new \ReflectionProperty(\Log::class, 'facilities'))->getValue();
+
+        self::assertSame(\Log::LEVEL_INFO, $facilities[$configurationName][\Log::OUTPUT_JOURNALD]['level']);
+        self::assertInstanceOf(
+            \pool\classes\LogJournald::class,
+            $facilities[$configurationName][\Log::OUTPUT_JOURNALD]['LogJournald'],
+        );
+    }
+
+    public function testSetupNormalizesLegacyScalarOptionsWithStrictTypes(): void
+    {
+        $configurationName = uniqid('log-test-', true);
+        \Log::setup([
+            \Log::OUTPUT_SCREEN => [
+                'withDate' => 1,
+                'withLineBreak' => 0,
+                'withExtra' => '1',
+                'showLevelNameAtTheBeginning' => '0',
+            ],
+        ], $configurationName);
+
+        self::assertTrue($this->invokePrivateStatic('screenWithDate', [$configurationName]));
+        self::assertFalse($this->invokePrivateStatic('screenWithLineBreak', [$configurationName]));
+        self::assertTrue($this->invokePrivateStatic('screenWithExtra', [$configurationName]));
+        self::assertFalse($this->invokePrivateStatic('showLevelNameAtTheBeginning', [
+            $configurationName,
+            \Log::OUTPUT_SCREEN,
+        ]));
+    }
+
+    public function testRejectedScalarFacilityKeepsPreviousConfiguration(): void
+    {
+        $logFile = $this->tempLogFile();
+        $configurationName = $this->setupFileLog($logFile, \Log::LEVEL_INFO);
+
+        try {
+            \Log::setup([\Log::OUTPUT_FILE => \Log::LEVEL_INFO], $configurationName);
+            self::fail('Scalar file facility should be rejected.');
+        } catch (\pool\classes\Exception\InvalidArgumentException) {
+            \Log::info('Previous configuration remains active.', configurationName: $configurationName);
+            \Log::close();
+        }
+
+        self::assertStringContainsString('Previous configuration remains active.', file_get_contents($logFile));
+    }
+
+    public function testSetupRejectsIncompleteFacilityArrays(): void
+    {
+        foreach ([\Log::OUTPUT_FILE, \Log::OUTPUT_MAIL, \Log::OUTPUT_DAO] as $output) {
+            try {
+                \Log::setup([$output => ['level' => \Log::LEVEL_ALL]], uniqid('log-test-', true));
+                self::fail("Incomplete $output facility should be rejected.");
+            } catch (\pool\classes\Exception\InvalidArgumentException $e) {
+                self::assertStringContainsString("Log facility '$output' requires", $e->getMessage());
+            }
+        }
+    }
+
     public function testSetupOnlyReplacesNamedConfiguration(): void
     {
         $firstLogFile = $this->tempLogFile();
@@ -224,12 +329,12 @@ class LogTest extends TestCase
 
         try {
             \Log::setup([
-                \Log::OUTPUT_FILE => [
+                \Log::OUTPUT_JOURNALD => [
                     'level' => \Log::LEVEL_INFO,
-                    'file' => [],
+                    'socketPath' => [],
                 ],
             ], $configurationName);
-            self::fail('Invalid file configuration should fail.');
+            self::fail('Invalid Journald configuration should fail.');
         } catch (\TypeError) {
             \Log::info('Previous configuration remains active.', configurationName: $configurationName);
             \Log::close();

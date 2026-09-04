@@ -8,6 +8,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types = 1);
+
 use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
 use pool\classes\Core\Input\Input;
@@ -83,47 +85,51 @@ class Log
     }
 
     /**
+     * Replaces all facilities for the named configuration. Facilities omitted from
+     * the passed array are disabled, and an omitted exit level is reset to LEVEL_NONE.
+     * Configurations with other names remain unchanged.
+     *
      * Facility entities/properties for OUTPUT_SCREEN:
      * -level - defines the level (LEVEL_DEBUG, LEVEL_INFO, LEVEL_NOTICE, LEVEL_WARN, LEVEL_ERROR, LEVEL_FATAL) at which the message should be displayed
      * -withDate - shows the date with every line
      * -withLineBreak - make a line break after each message
      * -showLevelNameAtTheBeginning - prints the caption of the level (debug, info, notice, warn, error, fatal) at the beginning of the message
      * -stream - optionally routes all CLI screen output to a stream resource
-     * Replaces all facilities for the named configuration. Facilities omitted from
-     * the passed array are disabled; configurations with other names remain unchanged.
      *
-     * @param string $configurationName name of the configuration. Default is "common". You can have more configurations for different purposes.
      * @param array $facilities complete set of facilities for this configuration
-     * @throws Exception
+     * @param string $configurationName name of the configuration. Default is "common". You can have more configurations for different purposes.
+     * @throws InvalidArgumentException if a facility configuration is invalid
+     * @throws Exception if a configured facility cannot be initialized
+     * @throws TypeError if a nested option has an unsupported type
      */
     public static function setup(array $facilities, string $configurationName = Log::COMMON): void
     {
         $configuration = [
-            self::OUTPUT_SCREEN => self::normalizeFacilityConfiguration($facilities[self::OUTPUT_SCREEN] ?? null),
-            self::OUTPUT_SYSTEM => self::normalizeFacilityConfiguration($facilities[self::OUTPUT_SYSTEM] ?? null),
-            self::OUTPUT_FILE => self::normalizeFacilityConfiguration($facilities[self::OUTPUT_FILE] ?? null),
-            self::OUTPUT_JOURNALD => self::normalizeFacilityConfiguration($facilities[self::OUTPUT_JOURNALD] ?? null),
-            self::OUTPUT_MAIL => self::normalizeFacilityConfiguration($facilities[self::OUTPUT_MAIL] ?? null),
-            self::OUTPUT_DAO => self::normalizeFacilityConfiguration($facilities[self::OUTPUT_DAO] ?? null),
+            self::OUTPUT_SCREEN => self::normalizeFacilityConfiguration(self::OUTPUT_SCREEN, $facilities[self::OUTPUT_SCREEN] ?? null),
+            self::OUTPUT_SYSTEM => self::normalizeFacilityConfiguration(self::OUTPUT_SYSTEM, $facilities[self::OUTPUT_SYSTEM] ?? null),
+            self::OUTPUT_FILE => self::normalizeFacilityConfiguration(self::OUTPUT_FILE, $facilities[self::OUTPUT_FILE] ?? null),
+            self::OUTPUT_JOURNALD => self::normalizeFacilityConfiguration(self::OUTPUT_JOURNALD, $facilities[self::OUTPUT_JOURNALD] ?? null),
+            self::OUTPUT_MAIL => self::normalizeFacilityConfiguration(self::OUTPUT_MAIL, $facilities[self::OUTPUT_MAIL] ?? null),
+            self::OUTPUT_DAO => self::normalizeFacilityConfiguration(self::OUTPUT_DAO, $facilities[self::OUTPUT_DAO] ?? null),
             self::EXIT_LEVEL => (int)($facilities[self::EXIT_LEVEL] ?? self::LEVEL_NONE),
         ];
 
-        if (is_array($facilities[self::OUTPUT_FILE] ?? null)) {
-            $logFile = new LogFile($configuration[self::OUTPUT_FILE]['file'] ?? '');
+        if (isset($facilities[self::OUTPUT_FILE])) {
+            $logFile = new LogFile($configuration[self::OUTPUT_FILE]['file']);
             $logFile->setSeparator(' ');
             $configuration[self::OUTPUT_FILE]['LogFile'] = $logFile;
         }
 
-        if (is_array($facilities[self::OUTPUT_JOURNALD] ?? null)) {
+        if (isset($facilities[self::OUTPUT_JOURNALD])) {
             $socketPath = $configuration[self::OUTPUT_JOURNALD]['socketPath'] ?? null;
             $configuration[self::OUTPUT_JOURNALD]['LogJournald'] = $socketPath === null
                 ? new LogJournald()
                 : new LogJournald($socketPath);
         }
 
-        if (is_array($facilities[self::OUTPUT_MAIL] ?? null)) {
+        if (isset($facilities[self::OUTPUT_MAIL])) {
             $from = $configuration[self::OUTPUT_MAIL]['from'] ?? G7SYSTEM_DEFAULT_MAIL_ADDRESS;
-            $to = $configuration[self::OUTPUT_MAIL]['to'] ?? '';
+            $to = $configuration[self::OUTPUT_MAIL]['to'];
             $subject = $configuration[self::OUTPUT_MAIL]['subject']
                 ?? \pool\classes\Core\Http\Request::host().' '.Weblication::getInstance()->getName().' reports';
 
@@ -135,9 +141,9 @@ class Log
             $configuration[self::OUTPUT_MAIL]['MailMsg'] = $MailMsg;
         }
 
-        if (is_array($facilities[self::OUTPUT_DAO] ?? null)) {
+        if (isset($facilities[self::OUTPUT_DAO])) {
             $DAO = $configuration[self::OUTPUT_DAO]['DAO'] ?? null;
-            $tableDefine = $configuration[self::OUTPUT_DAO]['tableDefine'] ?? '';
+            $tableDefine = $configuration[self::OUTPUT_DAO]['tableDefine'] ?? null;
             $host = $configuration[self::OUTPUT_DAO]['host'] ?? MYSQL_HOST;
             $charset = $configuration[self::OUTPUT_DAO]['charset'] ?? 'utf8';
 
@@ -152,16 +158,11 @@ class Log
                         'charset' => $charset,
                     ]);
                 }
-                /** @var DAO\MySQL_DAO $table */
+                /** @var DAO\MySQL_DAO|string $table */
                 $table = $tableDefine[1];
-                if (is_object($table)) {
-                    if (!$table instanceof DAO\MySQL_DAO) {
-                        throw new RuntimeException('Invalid DAO class');
-                    }
-                    $DAO = $table::create(databaseName: $databaseName);
-                } elseif (is_string($table)) {
-                    $DAO = DAO\MySQL_DAO::create($table, $databaseName);
-                }
+                $DAO = $table instanceof DAO\MySQL_DAO
+                    ? $table::create(databaseName: $databaseName)
+                    : DAO\MySQL_DAO::create($table, $databaseName);
 
                 $DAO->fetchColumns();
             }
@@ -180,18 +181,51 @@ class Log
     }
 
     /**
-     * @param array<string, mixed>|int|null $facilityConfiguration
+     * @param array<string, mixed>|bool|float|int|string|null $facilityConfiguration
      * @return array<string, mixed>
      */
-    private static function normalizeFacilityConfiguration(array|int|null $facilityConfiguration): array
+    private static function normalizeFacilityConfiguration(string $output, array|bool|float|int|string|null $facilityConfiguration): array
     {
+        if ($facilityConfiguration === null) return ['level' => self::LEVEL_NONE];
         if (!is_array($facilityConfiguration)) {
-            $facilityConfiguration = ['level' => $facilityConfiguration];
+            if (!in_array($output, [self::OUTPUT_SCREEN, self::OUTPUT_SYSTEM, self::OUTPUT_JOURNALD], true)) {
+                throw new InvalidArgumentException("Log facility '$output' requires an array configuration.");
+            }
+            return ['level' => (int)$facilityConfiguration];
+        }
+        if ($output === self::OUTPUT_FILE && (!is_string($facilityConfiguration['file'] ?? null) || $facilityConfiguration['file'] === '')) {
+            throw new InvalidArgumentException("Log facility '$output' requires a non-empty string option 'file'.");
+        }
+        if ($output === self::OUTPUT_MAIL && (!is_string($facilityConfiguration['to'] ?? null) || $facilityConfiguration['to'] === '')) {
+            throw new InvalidArgumentException("Log facility '$output' requires a non-empty string option 'to'.");
+        }
+        if ($output === self::OUTPUT_DAO) {
+            $dao = $facilityConfiguration['DAO'] ?? null;
+            $tableDefine = $facilityConfiguration['tableDefine'] ?? null;
+            $validTableDefine = is_array($tableDefine) && isset($tableDefine[0], $tableDefine[1])
+                && is_string($tableDefine[0]) && (is_string($tableDefine[1]) || $tableDefine[1] instanceof DAO\MySQL_DAO);
+            if (!$dao instanceof DAO\MySQL_DAO && !$validTableDefine) {
+                throw new InvalidArgumentException("Log facility '$output' requires a MySQL_DAO option 'DAO' or a valid 'tableDefine'.");
+            }
+        }
+        foreach (['withDate', 'withLineBreak', 'showLevelNameAtTheBeginning'] as $option) {
+            if (isset($facilityConfiguration[$option]) && is_scalar($facilityConfiguration[$option])) {
+                $facilityConfiguration[$option] = (bool)$facilityConfiguration[$option];
+            }
+        }
+        if (isset($facilityConfiguration['withExtra']) && is_scalar($facilityConfiguration['withExtra'])) {
+            $facilityConfiguration['withExtra'] = (bool)$facilityConfiguration['withExtra'];
         }
         $facilityConfiguration['level'] = (int)($facilityConfiguration['level'] ?? self::LEVEL_NONE);
         return $facilityConfiguration;
     }
 
+    /**
+     * Closes the file handle owned by a replaced configuration.
+     *
+     * DAO data interfaces may be shared and remain open until Log::close().
+     * Journald sockets are closed by LogJournald::__destruct().
+     */
     private static function closeFileFacility(?array $configuration): void
     {
         $logFile = $configuration[self::OUTPUT_FILE]['LogFile'] ?? null;
