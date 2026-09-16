@@ -1576,7 +1576,7 @@ function copyTextToClipboard(text, onSuccess, onError, isSensitive)
 
     // Critical for Mobile/iOS compatibility
     try {
-        textArea.setSelectionRange(0, 99999);
+        textArea.setSelectionRange(0, textArea.value.length);
     } catch(e) {
         // Ignore if the browser doesn't support this
     }
