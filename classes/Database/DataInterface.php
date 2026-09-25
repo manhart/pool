@@ -407,6 +407,7 @@ class DataInterface extends PoolObject
                 case 'OPTIMIZE':
                 case 'ANALYZE':
                 case 'CHECK':
+                case 'CALL': // Stored procedures
                     $affected_rows = $interface->affectedRows();
                     $row = [//id of inserted record or number of rows
                             0 => $last_insert_id ?? $affected_rows,
