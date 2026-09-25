@@ -13,16 +13,62 @@ declare(strict_types = 1);
 namespace pool\tests;
 
 use DateTimeImmutable;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use pool\classes\Core\RecordSet;
 use pool\classes\Database\Commands;
 use pool\classes\Database\DAO\MySQL_DAO;
 use pool\classes\Database\Operator;
+use pool\classes\Database\SelectLock;
 use pool\classes\Database\SqlStatement;
 use pool\classes\Exception\SecurityException;
 
 class DAOTest extends TestCase
 {
+    public static function selectLocks(): iterable
+    {
+        yield 'exclusive' => [[SelectLock::forUpdate], 'FOR UPDATE'];
+        yield 'shared, wait' => [[SelectLock::lockInShareMode, SelectLock::wait(5)], 'LOCK IN SHARE MODE WAIT 5'];
+        yield 'no wait' => [[SelectLock::forUpdate, SelectLock::nowait], 'FOR UPDATE NOWAIT'];
+        yield 'skip locked' => [[SelectLock::forUpdate, SelectLock::skipLocked], 'FOR UPDATE SKIP LOCKED'];
+        yield 'explicit SQL clause' => [[new SqlStatement('FOR UPDATE WAIT 10')], 'FOR UPDATE WAIT 10'];
+    }
+
+    #[DataProvider('selectLocks')]
+    public function testSelectLocksFollowSortingAndLimitWithoutLeakingIntoNextQuery(array $options, string $suffix): void
+    {
+        $dao = TestUserDao::createWithColumns('emailAddress');
+        $sql = $this->sqlFrom($dao->getMultiple(
+            7, filter: [['deleted', Operator::equal, false]],
+            sorting: ['idUser' => 'ASC'], limit: [1], options: ['DISTINCT', ...$options],
+        ));
+        $this->assertSame(
+            "SELECT DISTINCT `User`.`emailAddress` FROM `testDB`.`User` WHERE idUser=7 AND deleted = false ORDER BY idUser ASC LIMIT 1 $suffix",
+            $sql,
+        );
+        $this->assertSame('SELECT `User`.`emailAddress` FROM `testDB`.`User` WHERE idUser=7', $this->sqlFrom($dao->get(7)));
+    }
+
+    public function testSelectFromKeepsJoinAndSelectModifiersWhenAddingLock(): void
+    {
+        $dao = new class extends TestUserDao {
+            public function __construct() { parent::__construct(); }
+
+            public function joined(): RecordSet
+            {
+                return $this->selectFrom(
+                    "$this LEFT JOIN Profile ON Profile.idUser = User.idUser",
+                    filter: [['User.idUser', Operator::equal, 7]], options: ['DISTINCT', SelectLock::forUpdate],
+                );
+            }
+        };
+        $dao->setColumns('emailAddress');
+        $this->assertSame(
+            'SELECT DISTINCT `User`.`emailAddress` FROM `testDB`.`User` LEFT JOIN Profile ON Profile.idUser = User.idUser WHERE User.idUser = 7 FOR UPDATE',
+            $this->sqlFrom($dao->joined()),
+        );
+    }
+
     public function testGetMultipleWithoutConditionsOmitsWhereClause(): void
     {
         $sql = $this->sqlFrom(TestUserDao::create(throws: true)->setColumns('emailAddress')->getMultiple());

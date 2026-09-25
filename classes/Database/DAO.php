@@ -10,6 +10,7 @@
 
 namespace pool\classes\Database;
 
+use BackedEnum;
 use Closure;
 use DateTimeInterface;
 use JetBrains\PhpStorm\Pure;
@@ -503,6 +504,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
     /**
      * Returns all data records of the assembled SQL statement as a pool\classes\Core\ResultSet
      *
+     * @param array<string|BackedEnum|SqlStatement> $options Dialect-specific SELECT options.
      * @see DAO::selectFrom()
      * @see DAO::buildWhereClause()
      * @see DAO::buildWhere()
@@ -598,7 +600,7 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
         array $options = [],
         ?string $select = null,
     ): RecordSet {
-        $optionsStr = implode(' ', $options);
+        [$optionsStr, $lockingClause] = $this->buildSelectOptions($options);
         $select ??= $this->column_list;
         $selectPrefix = $this->buildSelectPrefix($limit);
         $whereClause = $this->buildWhereClause($id, $key, $filter);
@@ -615,8 +617,24 @@ abstract class DAO extends PoolObject implements DatabaseAccessObjectInterface, 
             $havingClause
             $sortingClause
             $limitClause
+            $lockingClause
             SQL;
         return $this->execute($sql);
+    }
+
+    /**
+     * Build SELECT modifiers and a dialect-specific trailing clause.
+     *
+     * @param array<string|BackedEnum|SqlStatement> $options SQL options in statement order.
+     * @return array{string, string} SELECT modifiers and trailing clause.
+     */
+    protected function buildSelectOptions(array $options): array
+    {
+        foreach ($options as $key => $option) {
+            if ($option instanceof BackedEnum) $options[$key] = $option->value;
+            elseif ($option instanceof SqlStatement) $options[$key] = $option->getStatement();
+        }
+        return [implode(' ', $options), ''];
     }
 
     protected function countFrom(

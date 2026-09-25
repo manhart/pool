@@ -10,9 +10,12 @@
 
 namespace pool\classes\Database\DAO;
 
+use BackedEnum;
 use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Database\Operator;
+use pool\classes\Database\SelectLock;
+use pool\classes\Database\SqlStatement;
 use pool\classes\Exception\DAOException;
 use pool\classes\translator\Translator;
 
@@ -50,6 +53,28 @@ class MySQL_DAO extends DAO
     {
         parent::__construct($databaseAlias, $table);
         $this->setColumns(...$this->columns);
+    }
+
+    /**
+     * Place MySQL/MariaDB locking clauses after ORDER BY and LIMIT.
+     *
+     * @param array<string|BackedEnum|SqlStatement> $options Strings are SELECT modifiers; SelectLock and SqlStatement are trailing clauses.
+     * @return array{string, string} SELECT modifiers and trailing locking clause.
+     */
+    protected function buildSelectOptions(array $options): array
+    {
+        $modifiers = [];
+        $locking = [];
+        foreach ($options as $option) {
+            if ($option instanceof SelectLock) {
+                $locking[] = $option->value;
+            } elseif ($option instanceof SqlStatement) {
+                $locking[] = $option->getStatement();
+            } else {
+                $modifiers[] = $option instanceof BackedEnum ? $option->value : $option;
+            }
+        }
+        return [implode(' ', $modifiers), implode(' ', $locking)];
     }
 
     /**
