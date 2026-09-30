@@ -321,18 +321,17 @@ class Weblication extends Component
     /**
      * Types of caching
      */
-    public const string CACHE_FILE_ACCESS = 'fileAccess';
-    public const string CACHE_FILE = 'file';
-    public const string CACHE_ITEM = 'item';
+    public const int CACHE_FILE_ACCESS = 1;
+    public const int CACHE_FILE = 2;
+    public const int CACHE_ITEM = 4;
+    public const int CACHE_MODULE_PARAMS = 8;
+
+    public const int CACHE_ALL = self::CACHE_FILE_ACCESS | self::CACHE_FILE | self::CACHE_ITEM | self::CACHE_MODULE_PARAMS;
 
     /**
-     * Enable or disable caching of different types
+     * Enabled cache types
      */
-    private static array $cacheItem = [
-        self::CACHE_ITEM => true,
-        self::CACHE_FILE => true,
-        self::CACHE_FILE_ACCESS => true,
-    ];
+    private static int $cacheTypes = self::CACHE_ALL;
 
     private const string CACHE_NAMESPACE_HASH_ALGO = 'xxh64';
 
@@ -1638,7 +1637,7 @@ class Weblication extends Component
     /**
      * Generate a cache key
      */
-    private function generateCacheKey(string $key, string $topic): string
+    private function generateCacheKey(string $key, int $topic): string
     {
         return "$topic:{$this->getName()}:{$this->getCacheNamespace()}:$key";
     }
@@ -1686,23 +1685,26 @@ class Weblication extends Component
     /**
      * Cache an item if memory is available
      *
+     * @param int $topic A single cache type
      * @psalm-suppress UnusedReturnValue
      */
-    public function cacheItem(string $key, mixed $item, string $topic = self::CACHE_ITEM): bool
+    public function cacheItem(string $key, mixed $item, int $topic = self::CACHE_ITEM): bool
     {
+        if (!(self::$cacheTypes & $topic)) return false;
         if (!$this->isMemoryAvailable()) return false;
-        if (!self::$cacheItem[$topic]) return false;
         $memKey = $this->generateCacheKey($key, $topic);
         return $this->memory->setValue($memKey, $item);
     }
 
     /**
      * Returns the cached item or false if the item was not found or memory is not available
+     *
+     * @param int $topic A single cache type
      */
-    public function getCachedItem(string $key, string $topic = self::CACHE_ITEM): mixed
+    public function getCachedItem(string $key, int $topic = self::CACHE_ITEM): mixed
     {
+        if (!(self::$cacheTypes & $topic)) return false;
         if (!$this->isMemoryAvailable()) return false;
-        if (!self::$cacheItem[$topic]) return false;
         $memKey = $this->generateCacheKey($key, $topic);
         return $this->memory->get($memKey);
     }
@@ -1717,14 +1719,16 @@ class Weblication extends Component
     }
 
     /**
-     * En-/disables Caching
+     * Enables or disables the selected cache types.
      *
-     * @todo control individual caching topics
+     * @param int $types Cache types combined with bitwise OR
      */
-    public static function caching(bool $enable = true): void
+    public static function caching(bool $enable = true, int $types = self::CACHE_ALL): void
     {
-        static::$cacheItem[static::CACHE_ITEM] = $enable;
-        static::$cacheItem[static::CACHE_FILE] = $enable;
-        static::$cacheItem[static::CACHE_FILE_ACCESS] = $enable;
+        if ($enable) {
+            self::$cacheTypes |= $types;
+        } else {
+            self::$cacheTypes &= ~$types;
+        }
     }
 }
