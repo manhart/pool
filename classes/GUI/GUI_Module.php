@@ -408,6 +408,11 @@ class GUI_Module extends Module
             //try building the GUI found
             $new_GUI = self::createGUIModule($guiName, $this->getOwner(), $this, $params, $autoLoadFiles, $recurse);
             $moduleName = $new_GUI->getName();
+            if (!Request::isAjax()) {
+                $app = $this->Weblication;
+                $key = $app->getModuleParamsCacheKey($new_GUI::class, $moduleName);
+                $app->cacheItem($key, $params, Weblication::CACHE_MODULE_PARAMS);
+            }
             if (isset($this->onCreationCallbacks[$moduleName])) {
                 $callback = $this->onCreationCallbacks[$moduleName];
                 $callback($new_GUI);

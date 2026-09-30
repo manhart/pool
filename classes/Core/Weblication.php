@@ -1482,7 +1482,14 @@ class Weblication extends Component
             throw new InvalidArgumentException('The application name must be defined.');
         }
 
-        $mainGUI = GUI_Module::createGUIModule($className, $this, search: false);
+        // Preserving internal parameters across requests requires Memcached.
+        $params = '';
+        if (self::$isAjax) {
+            $key = $this->getModuleParamsCacheKey($className, $_GET['moduleName'] ?? '');
+            $params = $this->getCachedItem($key, self::CACHE_MODULE_PARAMS) ?: '';
+        }
+
+        $mainGUI = GUI_Module::createGUIModule($className, $this, params: $params, search: false);
         //maybe an Ajax Call could run here and return its result
         $this->setMain($mainGUI);
 
@@ -1494,6 +1501,15 @@ class Weblication extends Component
             if ($this->charset) $htmlHead->setCharset($this->charset);
         }
         return $this;
+    }
+
+    /**
+     * Identifies template module parameters within the current schema.
+     */
+    public function getModuleParamsCacheKey(string $className, string $moduleName): string
+    {
+        $schema = ($_GET[self::REQUEST_PARAM_SCHEMA] ?? '') ?: $this->getDefaultSchema();
+        return "$schema:$className:$moduleName";
     }
 
     /**
