@@ -10,6 +10,7 @@
 
 namespace pool\utils;
 
+use CurlHandle;
 use JsonException;
 use pool\classes\Exception\InvalidArgumentException;
 use pool\classes\Exception\RuntimeException;
@@ -148,22 +149,10 @@ final class Curl
     }
 
     /**
-     * POST Request
-     *
-     * @param array $options Optional cURL options. Note: If you define CURLOPT_HTTPHEADER here,
-     *                       it will override any automatically generated headers (e.g., Content-Type).
-     * @param array $headers Optional headers to be added to the request as key-value pairs (merged unless CURLOPT_HTTPHEADER is already set).
-     * @return array{
-     *     body: string,
-     *     statusCode: int,
-     *     contentType: ?string,
-     *     error: ?string,
-     *     errno: ?int
-     * }
-     * @throws InvalidArgumentException
      * @throws JsonException
+     * @see self::post()
      */
-    public static function post(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded', array $headers = []): array
+    public static function preparePost(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded', array $headers = []): CurlHandle
     {
         [$postData, $autoHttpHeader] = match ($contentType) {
             'application/x-www-form-urlencoded' => [http_build_query($data), true],
@@ -187,7 +176,29 @@ final class Curl
         );
 
         curl_setopt_array($curl, $options);
+        return $curl;
+    }
 
+
+    /**
+     * POST Request
+     *
+     * @param array $options Optional cURL options. Note: If you define CURLOPT_HTTPHEADER here,
+     *                       it will override any automatically generated headers (e.g., Content-Type).
+     * @param array $headers Optional headers to be added to the request as key-value pairs (merged unless CURLOPT_HTTPHEADER is already set).
+     * @return array{
+     *     body: string,
+     *     statusCode: int,
+     *     contentType: ?string,
+     *     error: ?string,
+     *     errno: ?int
+     * }
+     * @throws InvalidArgumentException
+     * @throws JsonException
+     */
+    public static function post(string $url, array $data, array $options = [], string $contentType = 'application/x-www-form-urlencoded', array $headers = []): array
+    {
+        $curl = self::preparePost($url, $data, $options, $contentType, $headers);
         $response = curl_exec($curl);
         $httpStatusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);

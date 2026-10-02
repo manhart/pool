@@ -1965,9 +1965,19 @@ class Pointer implements JsonSerializable
         return $this->val;
     }
 
-    public function setVal(mixed $val): void
+    public function setVal(mixed $val): self
     {
         $this->val = $val;
+        return $this;
+    }
+
+    public function setValRef(mixed &$val): self {
+        $this->val =& $val;
+        return $this;
+    }
+
+    public function &getRef(): mixed {
+        return $this->val;
     }
 
     public function jsonSerialize(): mixed
@@ -2002,4 +2012,15 @@ function removeConsecutiveDuplicates(array $input): array
         }
         return $carry;
     }, []);
+}
+
+/**
+ * turns a float into a DateInterval
+ * @see DateInterval
+ * @link https://bugs.php.net/bug.php?id=53831 They forgot to implement subsecond precision from the spec in their constructor, but 'not a bug because I feel like it'
+ */
+function dateIntervalFromFloat(float $intervalSeconds): DateInterval {
+    $dateInterval = new DateInterval("P0D");//Zero length interval magic, because who would need a default constructor?
+    $dateInterval->f = $intervalSeconds;
+    return $dateInterval;
 }
