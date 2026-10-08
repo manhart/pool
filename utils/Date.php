@@ -20,6 +20,16 @@ use const STR_PAD_LEFT;
 
 final class Date
 {
+    /** Convert numeric ICU date patterns (year, month, day) to PHP format. */
+    public static function icuToPhpDateFormat(string $pattern): string
+    {
+        return strtr($pattern, [
+            'yyyy' => 'Y', 'yy' => 'y', 'y' => 'Y',
+            'MM' => 'm', 'M' => 'n',
+            'dd' => 'd', 'd' => 'j',
+        ]);
+    }
+
     public static function hasChanged(string|\DateTimeInterface|null $new, string|\DateTimeInterface|null $existing): bool
     {
         if (!$new xor !$existing) {
