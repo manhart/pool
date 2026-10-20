@@ -732,13 +732,27 @@ class GUI_Module extends Module
             $statusCode = 400;
         }
 
-        $errorText = trim(ob_get_clean());
-
         if (isset($e)) {//ups
+            // Preserve the original AJAX error if logging fails.
+            $exceptionText = "$callingClassName:$requestedMethod\n$e";
+            try {
+                Log::error($exceptionText, [
+                    'event' => 'exception',
+                    'exceptionType' => $e::class,
+                    'className' => $callingClassName,
+                    'method' => $requestedMethod,
+                ]);
+            } catch (Throwable) {
+                error_log($exceptionText);
+            }
+            // Discard buffered output, including any screen logging.
+            ob_end_clean();
+
             $result = IS_DEVELOP ? $e->getTraceAsString() : '';
             $errorText = $e->getMessage();
             $potentialErrorType = $e::class;
         } else {
+            $errorText = trim(ob_get_clean());
             $potentialErrorType = 'undefined (Spurious output by invoked method)';
         }
         $statusCode ??= 200;

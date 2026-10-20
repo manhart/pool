@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 use pool\classes\Core\AjaxPayloadRecordMode;
 use pool\classes\Core\Http\Request;
 use pool\classes\Core\Weblication;
+use pool\classes\Exception\DAOException;
 use pool\classes\GUI\GUI_Module;
 use ReflectionClass;
 use ReflectionException;
@@ -113,6 +114,100 @@ final class GUI_ModuleTest extends TestCase
         $this->assertSame('{"payload":"test"}', GUI_ModulePayloadRecordingTestModule::$recordings[0]['requestBody']);
         $this->assertSame($response, GUI_ModulePayloadRecordingTestModule::$recordings[0]['response']);
         $this->assertSame(418, GUI_ModulePayloadRecordingTestModule::$recordings[0]['statusCode']);
+    }
+
+    #[Test]
+    public function ajaxExceptionLogsFullChainAndJournalContextWithoutChangingResponse(): void
+    {
+        mkdir($this->recordRoot);
+        $logFile = $this->recordRoot.'/exceptions.log';
+        $ajaxLogFile = $this->recordRoot.'/ajax.log';
+        $socketPath = $this->recordRoot.'/journal.sock';
+        $server = socket_create(AF_UNIX, SOCK_DGRAM, 0);
+        self::assertInstanceOf(\Socket::class, $server);
+        self::assertTrue(socket_bind($server, $socketPath));
+        self::assertTrue(socket_set_nonblock($server));
+
+        try {
+            \Log::setup([
+                \Log::OUTPUT_SCREEN => ['level' => \Log::LEVEL_ERROR, 'stream' => fopen('php://output', 'w')],
+                \Log::OUTPUT_FILE => ['level' => \Log::LEVEL_ERROR, 'file' => $logFile],
+                \Log::OUTPUT_JOURNALD => ['level' => \Log::LEVEL_ERROR, 'socketPath' => $socketPath],
+            ]);
+            \Log::setup([
+                \Log::OUTPUT_FILE => ['level' => \Log::LEVEL_ALL, 'file' => $ajaxLogFile],
+            ], \Log::AJAX_CALL_LOG);
+            $gui = new GUI_ModulePayloadRecordingTestModule($this->app);
+            $cause = new RuntimeException('execute command denied: '.str_repeat('database details ', 200));
+            $exception = new RuntimeException('Unable to save', previous: new DAOException('Query failed', previous: $cause));
+            $gui->exception = $exception;
+            $className = $gui->getClassName();
+
+            $response = $this->invokeAjaxMethod($gui, 'recordedException');
+            $payload = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+            self::assertFalse($payload['success']);
+            self::assertSame(['message' => 'Unable to save', 'type' => RuntimeException::class], $payload['error']);
+            self::assertSame(IS_DEVELOP ? $exception->getTraceAsString() : '', $payload['data']);
+            self::assertSame(418, http_response_code());
+            self::assertStringNotContainsString($cause->getMessage(), $response);
+
+            $log = file_get_contents($logFile);
+            self::assertStringContainsString("$className:recordedException\n$exception", $log);
+            self::assertSame(1, substr_count($log, "$className:recordedException\n"));
+            $ajaxLog = file_get_contents($ajaxLogFile);
+            self::assertStringContainsString('Unable to save', $ajaxLog);
+            self::assertStringNotContainsString('execute command denied', $ajaxLog);
+
+            $journal = '';
+            self::assertGreaterThan(0, socket_recv($server, $journal, 65535, 0));
+            self::assertStringContainsString("EVENT=exception\n", $journal);
+            self::assertStringContainsString("EXCEPTION_TYPE=RuntimeException\n", $journal);
+            self::assertStringContainsString("CLASS_NAME=$className\n", $journal);
+            self::assertStringContainsString("METHOD=recordedException\n", $journal);
+            self::assertStringContainsString("PRIORITY=3\n", $journal);
+            self::assertStringContainsString((string)$exception, $journal);
+
+            $success = json_decode($this->invokeAjaxMethod($gui, 'recordedSuccess'), true, 512, JSON_THROW_ON_ERROR);
+            self::assertTrue($success['success']);
+            self::assertSame(200, http_response_code());
+            self::assertSame($log, file_get_contents($logFile));
+            self::assertFalse(socket_recv($server, $journal, 65535, 0));
+            self::assertSame(SOCKET_EAGAIN, socket_last_error($server));
+        } finally {
+            \Log::setup([]);
+            \Log::setup([], \Log::AJAX_CALL_LOG);
+            socket_close($server);
+            unlink($socketPath);
+        }
+    }
+
+    #[Test]
+    public function unavailableJournalPreservesAjaxErrorAndLogsToPhp(): void
+    {
+        mkdir($this->recordRoot);
+        $logFile = $this->recordRoot.'/php-error.log';
+        $previousLogFile = ini_set('error_log', $logFile);
+        try {
+            \Log::setup([
+                \Log::OUTPUT_JOURNALD => [
+                    'level' => \Log::LEVEL_ERROR,
+                    'socketPath' => $this->recordRoot.'/missing.sock',
+                ],
+            ]);
+            $gui = new GUI_ModulePayloadRecordingTestModule($this->app);
+            $gui->exception = new RuntimeException('Unable to save', previous: new DAOException('execute command denied'));
+
+            $response = $this->invokeAjaxMethod($gui, 'recordedException');
+            $payload = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+            self::assertFalse($payload['success']);
+            self::assertSame(['message' => 'Unable to save', 'type' => RuntimeException::class], $payload['error']);
+            self::assertSame(418, http_response_code());
+            self::assertStringNotContainsString('execute command denied', $response);
+            self::assertStringContainsString((string)$gui->exception, file_get_contents($logFile));
+        } finally {
+            \Log::setup([]);
+            ini_set('error_log', $previousLogFile);
+        }
     }
 
     /**
@@ -292,6 +387,8 @@ class GUI_ModulePayloadRecordingTestModule extends GUI_Module
 
     public static AjaxPayloadRecordMode $recordMode = AjaxPayloadRecordMode::AfterResponse;
 
+    public ?\Throwable $exception = null;
+
     public static function resetRecordingState(): void
     {
         self::$recordings = [];
@@ -314,7 +411,7 @@ class GUI_ModulePayloadRecordingTestModule extends GUI_Module
 
     public function recordedException(): never
     {
-        throw new RuntimeException('boom');
+        throw $this->exception ?? new RuntimeException('boom');
     }
 
     public function recordingThrows(): array
