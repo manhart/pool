@@ -68,6 +68,18 @@ final class GUI_ModuleTest extends TestCase
         }
     }
 
+    #[Test]
+    public function ajaxInvocationConvertsNumericStringsForNumericUnions(): void
+    {
+        $gui = new GUI_ModulePayloadRecordingTestModule($this->app);
+        $gui->setVar('value', '42');
+        $response = $this->invokeAjaxMethod($gui, 'numericUnion');
+        $payload = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertTrue($payload['success']);
+        self::assertSame(42, $payload['data']);
+    }
+
     /**
      * @throws JsonException
      * @throws ReflectionException
@@ -401,6 +413,7 @@ class GUI_ModulePayloadRecordingTestModule extends GUI_Module
         $this->registerAjaxMethod('recordedException', $this->recordedException(...), recordPayload: self::$recordMode);
         $this->registerAjaxMethod('recordingThrows', $this->recordingThrows(...), recordPayload: self::$recordMode);
         $this->registerAjaxMethod('notRecorded', $this->notRecorded(...));
+        $this->registerAjaxMethod('numericUnion', static fn(int|float $value): int|float => $value);
     }
 
     public function recordedSuccess(): array

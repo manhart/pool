@@ -41,6 +41,7 @@ use Random\RandomException;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
+use ReflectionNamedType;
 use TempBlock;
 use Template;
 use Throwable;
@@ -1059,9 +1060,11 @@ class GUI_Module extends Module
                     };
                 }
                 $arguments->delVar($parameterName);
-                if (is_string($value)) {
-                    if ($parameter->hasType() && $parameter->getType()->getName() !== 'mixed') {
-                        $value = match ($parameter->getType()->getName()) {
+                $type = $parameter->getType();
+                // Keep union values unchanged; PHP handles their types when invoking the method.
+                if (is_string($value) && (!$type || $type instanceof ReflectionNamedType)) {
+                    if ($type && $type->getName() !== 'mixed') {
+                        $value = match ($type->getName()) {
                             'float' => (float)$value,
                             'int' => (int)$value,
                             'bool' => filter_var($value, FILTER_VALIDATE_BOOL),
