@@ -181,14 +181,14 @@ class Informix extends Driver
     public function getLastId(Connection $connection): int|string
     {
         /** @noinspection SqlResolve */
-        $result = $this->query($connection, "SELECT DBINFO('sqlca.sqlerrd1') AS LAST_ID FROM systables WHERE tabid = 1");
+        $result = $this->query($connection, "SELECT DBINFO('sqlca.sqlerrd1') AS last_id FROM systables WHERE tabid = 1");
         if (!$result) {
             return 0;
         }
 
-        $row = $this->fetch($result) ?: ['LAST_ID' => 0];
+        $row = $this->fetch($result) ?: [];
         $this->free($result);
-        return $row['LAST_ID'] ?: 0;
+        return $row['last_id'] ?? 0 ?: 0;
     }
 
     public function getTableColumnsInfo(Connection $connection, string $database, string $table): array
