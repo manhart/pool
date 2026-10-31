@@ -24,7 +24,7 @@ use DateTimeInterface;
 class PublicHoliday
 {
     /**
-     * @var int key constant of PublicHolidays
+     * @var int key constant of GermanPublicHolidays
      */
     private readonly int $key;
 
@@ -57,6 +57,6 @@ class PublicHoliday
      */
     public function getName(): string
     {
-        return $this->name ??= PublicHolidays::getHolidayName($this->key);
+        return $this->name ??= GermanPublicHolidays::getHolidayName($this->key);
     }
 }

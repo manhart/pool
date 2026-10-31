@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /*
  * This file is part of POOL (PHP Object-Oriented Library)
  *
@@ -15,8 +16,6 @@
  * @see https://github.com/manhart/pool
  */
 
-declare(strict_types = 1);
-
 namespace pool\utils;
 
 use DateTime;
@@ -24,7 +23,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use pool\classes\Core\PoolObject;
 
-final class PublicHolidays extends PoolObject
+final class GermanPublicHolidays extends PoolObject
 {
     /**
      * Feiertage (Public Holidays)
@@ -76,6 +75,18 @@ final class PublicHolidays extends PoolObject
     const string STATE_SACHSENANHALT = 'ST';
     const string STATE_SCHLESWIGHOLSTEIN = 'SH';
     const string STATE_THUERINGEN = 'TH';
+
+    private const array NATIONWIDE_HOLIDAYS = [
+        self::NEUJAHRSTAG => true,
+        self::KARFREITAG => true,
+        self::OSTERMONTAG => true,
+        self::TAGDERARBEIT => true,
+        self::CHRISTIHIMMELFAHRT => true,
+        self::PFINGSTMONTAG => true,
+        self::TAGDERDEUTSCHENEINHEIT => true,
+        self::ERSTERWEIHNACHTSTAG => true,
+        self::ZWEITERWEIHNACHTSTAG => true,
+    ];
 
     /**
      * Welche Feiertage in welchem Bundesland
@@ -315,20 +326,21 @@ final class PublicHolidays extends PoolObject
      */
     private array $publicHolidays = [];
 
-    /** @var PublicHolidays|null Request-Cache */
-    private static ?PublicHolidays $instance = null;
+    /** @var GermanPublicHolidays|null Request-Cache */
+    private static ?GermanPublicHolidays $instance = null;
 
     /**
-     * Checks date for a holiday
+     * Checks nationwide holidays, or the holidays of the given state.
      */
     static function check(DateTimeInterface $Date, string $state = ''): bool
     {
-        $self = self::$instance ??= new PublicHolidays();
+        $self = self::$instance ??= new GermanPublicHolidays();
 
         $year = (int)$Date->format('Y');
         $date = $Date->format('Y-m-d');
 
-        foreach ($self->getLegalHolidays($year, $state) as $holiday) {
+        $holidays = $state === '' ? $self->getNationwideHolidays($year) : $self->getLegalHolidays($year, $state);
+        foreach ($holidays as $holiday) {
             if ($holiday->format('Y-m-d') === $date) {
                 return true;
             }
@@ -337,8 +349,25 @@ final class PublicHolidays extends PoolObject
     }
 
     /**
+     * Returns German holidays that apply nationwide in the given year.
+     *
+     * @return array<int, DateTimeImmutable> Dates keyed by holiday constants.
+     */
+    public function getNationwideHolidays(int $year): array
+    {
+        $this->factory($year);
+
+        $keys = self::NATIONWIDE_HOLIDAYS;
+        // The Reformation anniversary was a nationwide holiday only in 2017.
+        if ($year === 2017) $keys[self::REFORMATIONSTAG] = true;
+
+        return array_intersect_key($this->publicHolidays[$year]['legal'], $keys);
+    }
+
+    /**
      * Returns legal German holidays
      *
+     * @param string $state State code (BY) or ISO 3166-2 code (DE-BY); empty returns all German holidays.
      * @throws \pool\classes\Exception\InvalidArgumentException
      */
     public function getLegalHolidays(int $year, string $state = ''): array
@@ -349,6 +378,8 @@ final class PublicHolidays extends PoolObject
             return $this->publicHolidays[$year]['legal'];
         }
 
+        // Strip after the empty check so a bare "DE-" fails instead of returning all states.
+        $state = str_starts_with($state, 'DE-') ? substr($state, 3) : $state;
         if (!isset($this->publicHolidaysByState[$state])) {
             throw new \pool\classes\Exception\InvalidArgumentException("State $state unknown");
         }
@@ -357,20 +388,22 @@ final class PublicHolidays extends PoolObject
         foreach ($this->publicHolidaysByState[$state] as $key) {
             $out[$key] = $this->publicHolidays[$year]['legal'][$key];
         }
-        return $out;
+        // Include nationwide one-off holidays in every state.
+        return $out + $this->getNationwideHolidays($year);
     }
 
     /**
-     * Returns the holiday as a PublicHoliday object
+     * Returns a nationwide holiday, or a holiday of the given state, as a PublicHoliday object.
      */
     static function which(DateTime $Date, string $state = ''): ?PublicHoliday
     {
-        $self = self::$instance ??= new PublicHolidays();
+        $self = self::$instance ??= new GermanPublicHolidays();
 
         $year = (int)$Date->format('Y');
         $date = $Date->format('Y-m-d');
 
-        foreach ($self->getLegalHolidays($year, $state) as $key => $holiday) {
+        $holidays = $state === '' ? $self->getNationwideHolidays($year) : $self->getLegalHolidays($year, $state);
+        foreach ($holidays as $key => $holiday) {
             if ($holiday->format('Y-m-d') === $date) {
                 return new PublicHoliday($key, $holiday);
             }

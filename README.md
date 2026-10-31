@@ -26,6 +26,7 @@ Key features are:
 - Simple logging
 - Simple error handling
 - Cross browser compatibility
+- German public holiday calculations and international holiday queries
 
 ## Security Vulnerabilities
 
