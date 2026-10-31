@@ -53,6 +53,9 @@ final class GermanPublicHolidays extends PoolObject
     const int BUSSUNDBETTAG = 19;
     const int ERSTERWEIHNACHTSTAG = 20;
     const int ZWEITERWEIHNACHTSTAG = 21;
+    const int WELTKINDERTAG = 22;
+    const int TAGDERBEFREIUNG = 23;
+    const int TAGDESVOLKSAUFSTANDS = 24;
     /**
      * Bundesländer
      *
@@ -88,8 +91,22 @@ final class GermanPublicHolidays extends PoolObject
         self::ZWEITERWEIHNACHTSTAG => true,
     ];
 
+    private const array HOLIDAY_START_YEARS = [
+        self::STATE_BERLIN => [self::FRAUENTAG => 2019],
+        self::STATE_BREMEN => [self::REFORMATIONSTAG => 2018],
+        self::STATE_HAMBURG => [self::REFORMATIONSTAG => 2018],
+        self::STATE_MECKLENBURGVORPOMMERN => [self::FRAUENTAG => 2023],
+        self::STATE_NIEDERSACHSEN => [self::REFORMATIONSTAG => 2018],
+        self::STATE_SCHLESWIGHOLSTEIN => [self::REFORMATIONSTAG => 2018],
+        self::STATE_THUERINGEN => [self::WELTKINDERTAG => 2019],
+    ];
+
     /**
      * Welche Feiertage in welchem Bundesland
+     *
+     * Municipal holidays are included only if they apply in more than half
+     * of the state's municipalities. This includes Assumption in Bavaria,
+     * but excludes Augsburg's Friedensfest and Corpus Christi in SN and TH.
      *
      * @see https://www.feiertage.net/bundeslaender.php
      */
@@ -103,7 +120,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::FRONLEICHNAM,
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
@@ -118,8 +134,10 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::FRONLEICHNAM,
+            // Nager.Date omits Assumption Day in BY because it is not a statewide holiday.
+            // POOL includes it because it applies in a majority of Bavaria's municipalities.
+            // Discussion: https://github.com/nager/Nager.Date/issues/1185
             self::MARIAEHIMMELFAHRT,
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
@@ -132,17 +150,18 @@ final class GermanPublicHolidays extends PoolObject
             self::KARFREITAG,
             self::OSTERMONTAG,
             self::TAGDERARBEIT,
+            self::TAGDERBEFREIUNG,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
+            self::TAGDESVOLKSAUFSTANDS,
             self::TAGDERDEUTSCHENEINHEIT,
-            self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
             self::ZWEITERWEIHNACHTSTAG,
         ],
         self::STATE_BRANDENBURG => [
             self::NEUJAHRSTAG,
             self::KARFREITAG,
+            self::OSTERSONNTAG,
             self::OSTERMONTAG,
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
@@ -160,7 +179,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
@@ -173,7 +191,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
@@ -186,7 +203,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::FRONLEICHNAM,
             self::TAGDERDEUTSCHENEINHEIT,
             self::ERSTERWEIHNACHTSTAG,
@@ -194,12 +210,12 @@ final class GermanPublicHolidays extends PoolObject
         ],
         self::STATE_MECKLENBURGVORPOMMERN => [
             self::NEUJAHRSTAG,
+            self::FRAUENTAG,
             self::KARFREITAG,
             self::OSTERMONTAG,
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
@@ -212,7 +228,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::TAGDERDEUTSCHENEINHEIT,
             self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
@@ -225,7 +240,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::FRONLEICHNAM,
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
@@ -239,7 +253,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::FRONLEICHNAM,
             self::TAGDERDEUTSCHENEINHEIT,
             self::ALLERHEILIGEN,
@@ -253,7 +266,6 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::FRONLEICHNAM,
             self::MARIAEHIMMELFAHRT,
             self::TAGDERDEUTSCHENEINHEIT,
@@ -268,11 +280,9 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
-            self::FRONLEICHNAM,
-            self::MARIAEHIMMELFAHRT,
             self::TAGDERDEUTSCHENEINHEIT,
-            self::ALLERHEILIGEN,
+            self::REFORMATIONSTAG,
+            self::BUSSUNDBETTAG,
             self::ERSTERWEIHNACHTSTAG,
             self::ZWEITERWEIHNACHTSTAG,
         ],
@@ -284,9 +294,8 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::TAGDERDEUTSCHENEINHEIT,
-            self::ALLERHEILIGEN,
+            self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
             self::ZWEITERWEIHNACHTSTAG,
         ],
@@ -297,9 +306,8 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
             self::TAGDERDEUTSCHENEINHEIT,
-            self::ALLERHEILIGEN,
+            self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
             self::ZWEITERWEIHNACHTSTAG,
         ],
@@ -310,10 +318,9 @@ final class GermanPublicHolidays extends PoolObject
             self::TAGDERARBEIT,
             self::CHRISTIHIMMELFAHRT,
             self::PFINGSTMONTAG,
-            self::PFINGSTSONNTAG,
-            self::FRONLEICHNAM,
+            self::WELTKINDERTAG,
             self::TAGDERDEUTSCHENEINHEIT,
-            self::ALLERHEILIGEN,
+            self::REFORMATIONSTAG,
             self::ERSTERWEIHNACHTSTAG,
             self::ZWEITERWEIHNACHTSTAG,
         ],
@@ -386,7 +393,11 @@ final class GermanPublicHolidays extends PoolObject
 
         $out = [];
         foreach ($this->publicHolidaysByState[$state] as $key) {
-            $out[$key] = $this->publicHolidays[$year]['legal'][$key];
+            // One-off holidays have no date outside their designated years.
+            $holiday = $this->publicHolidays[$year]['legal'][$key] ?? null;
+            if ($holiday && $year >= (self::HOLIDAY_START_YEARS[$state][$key] ?? 0)) {
+                $out[$key] = $holiday;
+            }
         }
         // Include nationwide one-off holidays in every state.
         return $out + $this->getNationwideHolidays($year);
@@ -432,12 +443,16 @@ final class GermanPublicHolidays extends PoolObject
         $phLegal[self::OSTERSONNTAG] = $easterSunday;
         $phLegal[self::OSTERMONTAG] = $easterSunday->modify('+1 days');
         $phLegal[self::TAGDERARBEIT] = new DateTimeImmutable("$year-05-01");
+        // Berlin's one-off holidays apply only in these years.
+        if ($year === 2020 || $year === 2025) $phLegal[self::TAGDERBEFREIUNG] = new DateTimeImmutable("$year-05-08");
         $phLegal[self::CHRISTIHIMMELFAHRT] = $easterSunday->modify('+39 days');
         $phLegal[self::PFINGSTSONNTAG] = $easterSunday->modify('+49 days');
         $phLegal[self::PFINGSTMONTAG] = $easterSunday->modify('+50 days');
         $phLegal[self::FRONLEICHNAM] = $easterSunday->modify('+60 days');
+        if ($year === 2028) $phLegal[self::TAGDESVOLKSAUFSTANDS] = new DateTimeImmutable("$year-06-17");
         $phLegal[self::AUGSBURGERFRIEDENSFEST] = new DateTimeImmutable("$year-08-08");
         $phLegal[self::MARIAEHIMMELFAHRT] = new DateTimeImmutable("$year-08-15");
+        $phLegal[self::WELTKINDERTAG] = new DateTimeImmutable("$year-09-20");
         $phLegal[self::TAGDERDEUTSCHENEINHEIT] = new DateTimeImmutable("$year-10-03");
         $phLegal[self::REFORMATIONSTAG] = new DateTimeImmutable("$year-10-31");
         $phLegal[self::ALLERHEILIGEN] = new DateTimeImmutable("$year-11-01");
@@ -520,11 +535,15 @@ final class GermanPublicHolidays extends PoolObject
             self::OSTERSONNTAG => 'Ostersonntag',
             self::OSTERMONTAG => 'Ostermontag',
             self::TAGDERARBEIT => 'Tag der Arbeit',
+            self::TAGDERBEFREIUNG => 'Tag der Befreiung',
             self::CHRISTIHIMMELFAHRT => 'Christi Himmelfahrt',
             self::PFINGSTMONTAG => 'Pfingstmontag',
             self::PFINGSTSONNTAG => 'Pfingstsonntag',
             self::FRONLEICHNAM => 'Fronleichnam',
+            self::TAGDESVOLKSAUFSTANDS => 'Tag des Volksaufstandes',
+            self::AUGSBURGERFRIEDENSFEST => 'Augsburger Hohes Friedensfest',
             self::MARIAEHIMMELFAHRT => 'Mariä Himmelfahrt',
+            self::WELTKINDERTAG => 'Weltkindertag',
             self::TAGDERDEUTSCHENEINHEIT => 'Tag der Deutschen Einheit',
             self::REFORMATIONSTAG => 'Reformationstag',
             self::ALLERHEILIGEN => 'Allerheiligen',

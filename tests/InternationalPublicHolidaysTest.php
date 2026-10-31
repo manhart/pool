@@ -18,7 +18,7 @@ final class InternationalPublicHolidaysTest extends TestCase
     public function testGermanDatesMatchIndividualChecksAcrossStatesAndLeapYear(): void
     {
         new ReflectionProperty(InternationalPublicHolidays::class, 'apiUrl')->setValue(InternationalPublicHolidays::getInstance(), 'invalid-url');
-        foreach (['', 'BY', 'HE', 'HH'] as $state) {
+        foreach (['', 'BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH'] as $state) {
             $dates = InternationalPublicHolidays::getHolidayDates(2024, 'DE', $state === '' ? null : "DE-$state");
             for ($day = new DateTimeImmutable('2024-01-01'); $day->format('Y') === '2024'; $day = $day->modify('+1 day')) {
                 self::assertSame(InternationalPublicHolidays::check($day, $state), isset($dates[$day->format('Y-m-d')]));
@@ -28,6 +28,42 @@ final class InternationalPublicHolidaysTest extends TestCase
         self::assertArrayNotHasKey('2024-01-06', InternationalPublicHolidays::getHolidayDates(2024, 'DE', 'DE-HH'));
         // A bare state code previously fell back silently to all German states.
         self::assertSame(InternationalPublicHolidays::getHolidayDates(2024, 'DE', 'DE-BY'), InternationalPublicHolidays::getHolidayDates(2024, 'DE', 'BY'));
+    }
+
+    public function testGermanStateCorrectionsAndSpecialYearsAreAvailableWithoutTheApi(): void
+    {
+        new ReflectionProperty(InternationalPublicHolidays::class, 'apiUrl')->setValue(InternationalPublicHolidays::getInstance(), 'invalid-url');
+        foreach ([
+            ['2018-03-08', 'BE', false],
+            ['2019-03-08', 'BE', true],
+            ['2022-03-08', 'MV', false],
+            ['2023-03-08', 'MV', true],
+            ['2018-09-20', 'TH', false],
+            ['2019-09-20', 'TH', true],
+            ['2026-08-15', 'SN', false],
+            ['2026-08-15', 'BY', true],
+            ['2026-08-08', 'BY', false],
+            ['2026-11-18', 'SN', true],
+            ['2026-11-01', 'ST', false],
+            ['2026-10-31', 'ST', true],
+            ['2016-10-31', 'SH', false],
+            ['2017-10-31', 'SH', true],
+            ['2018-10-31', 'SH', true],
+            ['2020-05-08', 'BE', true],
+            ['2021-05-08', 'BE', false],
+            ['2025-05-08', 'BE', true],
+            ['2026-05-08', 'BE', false],
+            ['2027-06-17', 'BE', false],
+            ['2028-06-17', 'BE', true],
+            ['2029-06-17', 'BE', false],
+            ['2025-05-08', '', false],
+            ['2028-06-17', '', false],
+        ] as [$date, $state, $expected]) {
+            $day = new DateTimeImmutable($date);
+            $dates = InternationalPublicHolidays::getHolidayDates((int)$day->format('Y'), 'DE', $state ? "DE-$state" : null);
+            self::assertSame($expected, isset($dates[$date]), "$state $date");
+            self::assertSame($expected, InternationalPublicHolidays::check($day, $state, 'DE'), "$state $date");
+        }
     }
 
     public function testDefaultCheckUsesBavariaAndGermanyWithoutAnApiRequest(): void
