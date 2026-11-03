@@ -20,6 +20,7 @@ use Log;
 use pool\classes\Core\PoolObject;
 use pool\classes\Exception\FileOperationException;
 use pool\classes\Exception\RuntimeException;
+use pool\classes\LogExtraInterface;
 use Socket;
 
 class LogJournald extends PoolObject
@@ -65,12 +66,13 @@ class LogJournald extends PoolObject
      * @throws FileOperationException
      * @throws RuntimeException
      */
-    public function sendLog(?string $message, int $level, array $extra = [], ?string $tag = null): void {
+    public function sendLog(?string $message, int $level, array|LogExtraInterface $extra = [], ?string $tag = null): void {
+        $extraArray = $extra instanceof LogExtraInterface ? $extra->getLogData() : $extra;
         $syslogPriorityList = range(self::SYSLOG_LEVEL_EMERGENCY, self::SYSLOG_LEVEL_DEBUG);
         $syslogPriorityList = array_merge($syslogPriorityList, array_map(strval(...), $syslogPriorityList));
         $dataHasDefinedPriority = 0;
         $data = [];
-        foreach ($extra as $key => $value){
+        foreach ($extraArray as $key => $value){
             if (is_int($key) && is_array($value)){//tuple structure
                 if (count($value) !== 2) continue;
                 $fieldName = $value[0];
@@ -119,7 +121,7 @@ class LogJournald extends PoolObject
             [$logField, $rawLogDatum] = $datum;
             if (!is_string($logField)) continue;
             $isLogDatumStringable = is_string($rawLogDatum) || $rawLogDatum instanceof \Stringable;
-            $logDatum = $isLogDatumStringable ? (string)$rawLogDatum : print_r($rawLogDatum, true);
+            $logDatum = $isLogDatumStringable ? (string)$rawLogDatum : var_export($rawLogDatum, true);
             if (str_contains($logDatum, "\n")) {
                 $len = strlen($logDatum);
                 $lenBin = pack('Vxxxx', $len);

@@ -17,6 +17,7 @@ use pool\classes\Core\Weblication;
 use pool\classes\Database\DAO;
 use pool\classes\Database\DataInterface;
 use pool\classes\Exception\InvalidArgumentException;
+use pool\classes\LogExtraInterface;
 use pool\classes\LogJournald;
 
 /**
@@ -293,7 +294,7 @@ class Log
     /**
      * Writes a debug message
      */
-    public static function debug(string $text, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function debug(string $text, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_DEBUG, $extra, $configurationName);
     }
@@ -301,7 +302,7 @@ class Log
     /**
      * Writes a notice message
      */
-    public static function notice(string $text, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function notice(string $text, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_NOTICE, $extra, $configurationName);
     }
@@ -309,7 +310,7 @@ class Log
     /**
      * Writes an info message
      */
-    public static function info(string $text, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function info(string $text, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_INFO, $extra, $configurationName);
     }
@@ -317,7 +318,7 @@ class Log
     /**
      * Writes a warning message
      */
-    public static function warn(string $text, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function warn(string $text, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_WARN, $extra, $configurationName);
     }
@@ -325,7 +326,7 @@ class Log
     /**
      * Writes an error message
      */
-    public static function error(string $text, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function error(string $text, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_ERROR, $extra, $configurationName);
     }
@@ -333,7 +334,7 @@ class Log
     /**
      * Writes a fatal error message
      */
-    public static function fatal(string $text, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function fatal(string $text, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         self::message($text, self::LEVEL_FATAL, $extra, $configurationName);
     }
@@ -341,7 +342,7 @@ class Log
     /**
      * Write a message
      */
-    public static function message(string $text, int $level = self::LEVEL_INFO, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function message(string $text, int $level = self::LEVEL_INFO, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         if (!self::isConfigurationAvailable($configurationName)) {
             $error_level = match ($level) {
@@ -378,7 +379,7 @@ class Log
         }
     }
 
-    public static function writeScreen(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function writeScreen(string $text, int $level, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         // todo format
         $isHTML = isHTML($text);
@@ -430,16 +431,17 @@ class Log
         }
     }
 
-    public static function writeFile(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function writeFile(string $text, int $level, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
+        $extraArray = $extra instanceof LogExtraInterface ? $extra->getLogData() : $extra;
         $message = ucfirst(self::$TEXT_LEVEL[$level]).' '.$text;
-        if (!empty($extra)) {
-            $message .= ' '.json_encode($extra);
+        if (!empty($extraArray)) {
+            $message .= ' '.json_encode($extraArray);
         }
         self::$facilities[$configurationName][self::OUTPUT_FILE]['LogFile']->addLine($message);
     }
 
-    public static function writeJournald(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function writeJournald(string $text, int $level, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         $facility = self::$facilities[$configurationName][self::OUTPUT_JOURNALD];
         /** @var LogJournald $journaldLogger */
@@ -451,7 +453,7 @@ class Log
         $journaldLogger->sendLog($text, $level, $extra, $tag);
     }
 
-    public static function writeMail(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function writeMail(string $text, int $level, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
         $message = $text;
         [$message, $remainingExtra] = self::processExtra($configurationName, Log::OUTPUT_MAIL, $extra, $message);
@@ -465,8 +467,9 @@ class Log
         self::$facilities[$configurationName][self::OUTPUT_MAIL]['Mailer']->send($MailMsg);
     }
 
-    public static function writeDAO(string $text, int $level, array $extra = [], string $configurationName = Log::COMMON): void
+    public static function writeDAO(string $text, int $level, array|LogExtraInterface $extra = [], string $configurationName = Log::COMMON): void
     {
+        $extraArray = $extra instanceof LogExtraInterface ? $extra->getLogData() : $extra;
         $message = $text;
         /** @var DAO\MySQL_DAO $DAO */
         $DAO = self::$facilities[$configurationName][self::OUTPUT_DAO]['DAO'];
@@ -480,7 +483,7 @@ class Log
             [
                 'message' => substr($message, 0, 2048),
                 'level' => self::$TEXT_LEVEL[$level],
-            ] + $extra,
+            ] + $extraArray,
         );
         $Data = $Data->filter($DAO->getColumns());
         $DAO->insert($Data->getData());
@@ -520,19 +523,20 @@ class Log
         return realpath($file);
     }
 
-    private static function processExtra(string $configurationName, string $output, array $extra, string $message): array
+    private static function processExtra(string $configurationName, string $output, array|LogExtraInterface $extra, string $message): array
     {
+        $extraArray = $extra instanceof LogExtraInterface ? $extra->getLogData() : $extra;
         $withExtra = self::outputWithExtra($configurationName, $output);
         if (!$withExtra && $output !== Log::OUTPUT_SCREEN) {
             $withExtra = self::screenWithExtra($configurationName);// backward compatibility: non-screen outputs historically reused OUTPUT_SCREEN.withExtra.
         }
-        if (!$withExtra || !$extra) {
+        if (!$withExtra || !$extraArray) {
             return [$message, []];
         }
 
         $placeholders = [];
-        $remainingExtra = $extra;
-        foreach ($extra as $key => $value) {
+        $remainingExtra = $extraArray;
+        foreach ($extraArray as $key => $value) {
             $value = self::formatPlaceholderValue($value);
             $foundPlaceholder = false;
             // {{key}} also matches the legacy {key} pattern; strtr() applies the longest matching key first.
