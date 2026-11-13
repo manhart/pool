@@ -23,6 +23,7 @@ use function constant;
 use function defined;
 use function explode;
 use function implode;
+use function is_string;
 use function odbc_autocommit;
 use function odbc_close;
 use function odbc_commit;
@@ -39,6 +40,7 @@ use function odbc_rollback;
 use function range;
 use function str_contains;
 use function str_replace;
+use function strlen;
 
 class Informix extends Driver
 {
@@ -138,7 +140,7 @@ class Informix extends Driver
             return false;
         }
 
-        return @odbc_execute($stmt, $statementParams) ? $stmt : false;
+        return @odbc_execute($stmt, self::bindableParams($statementParams)) ? $stmt : false;
     }
 
     public function fetch(mixed $result): array|null|false
@@ -406,5 +408,21 @@ class Informix extends Driver
         }
         $this->free($result);
         return true;
+    }
+
+    /**
+     * odbc_execute() binds the content of a file for a parameter wrapped in single quotes; a trailing space prevents that.
+     *
+     * @see https://www.php.net/manual/en/function.odbc-execute.php (parameter params)
+     */
+    public static function bindableParams(array $statementParams): array
+    {
+        return array_map(
+            static fn(mixed $param): mixed
+                => is_string($param) && strlen($param) > 2 && $param[0] === "'" && $param[-1] === "'"
+                ? "$param "
+                : $param,
+            $statementParams,
+        );
     }
 }
