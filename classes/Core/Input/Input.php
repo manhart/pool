@@ -249,7 +249,7 @@ class Input extends PoolObject implements Countable
             return;
         }
 
-        if (Request::contentType() !== 'application/json') {
+        if (!str_starts_with(Request::contentType() ?? '', 'application/json')) {
             return;
         }
 
