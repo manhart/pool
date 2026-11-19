@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace pool\utils;
 
 use DateTimeInterface;
+use Log;
+use pool\classes\Cache\Memory;
 use pool\classes\Exception\RuntimeException;
 
 use function in_array;
@@ -25,6 +27,9 @@ use const CURLOPT_TIMEOUT;
 
 class InternationalPublicHolidays
 {
+    private const int CACHE_REFRESH_INTERVAL = 30 * 86400;
+    private const int CACHE_RETRY_INTERVAL = 3600;
+
     /**
      * Singleton instance
      */
@@ -103,7 +108,34 @@ class InternationalPublicHolidays
     public function getPublicHolidays(int $year, string $countryCode): array
     {
         $cache = &$this->cache[$year][$countryCode];
-        return $cache ??= $this->makeApiRequest($this->apiUrl."PublicHolidays/$year/$countryCode");
+        return $cache ??= $this->loadPublicHolidays($year, $countryCode);
+    }
+
+    /** Share yearly API results across requests and retain them during API outages. */
+    private function loadPublicHolidays(int $year, string $countryCode): array
+    {
+        $memory = extension_loaded('memcached') && Memory::hasInstance() && Memory::getInstance()->isAvailable()
+            ? Memory::getInstance()
+            : null;
+        // Separate results from different API endpoints, including test servers.
+        $key = 'pool:publicHolidays:v1:'.hash('sha256', $this->apiUrl).":$countryCode:$year";
+        $cached = $memory?->getValue($key);
+        if ($cached && $cached['refreshAfter'] > time()) return $cached['holidays'];
+
+        $refreshAfter = time() + self::CACHE_REFRESH_INTERVAL;
+        try {
+            $holidays = $this->makeApiRequest($this->apiUrl."PublicHolidays/$year/$countryCode");
+        } catch (RuntimeException $exception) {
+            if (!$cached) throw $exception;
+
+            $holidays = $cached['holidays'];
+            $refreshAfter = time() + self::CACHE_RETRY_INTERVAL;
+            Log::warn("Holiday API request failed for $countryCode/$year; using cached data. ".$exception->getMessage());
+        }
+
+        // Keep the last successful data; refreshAfter controls when to refresh it.
+        $memory?->setValue($key, ['holidays' => $holidays, 'refreshAfter' => $refreshAfter], expiration: 0);
+        return $holidays;
     }
 
     /**
